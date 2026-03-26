@@ -11,9 +11,9 @@ export default function NotesHomeSection({
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-4 border-b border-border/30 pb-6">
         <div className="text-xs uppercase tracking-[0.14em] text-text-tertiary">{eyebrow}</div>
-        <div className="max-w-3xl space-y-3">
+        <div className="space-y-3">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-text-secondary">{description}</p>
+          <p className="text-sm leading-relaxed text-text-secondary">{description}</p>
         </div>
       </header>
     </section>

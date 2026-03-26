@@ -184,8 +184,8 @@ const ComposerForm = memo(function ComposerForm({
         onChange={handleFileChange}
       />
 
-      <ComposerShell isDraftMode={isDraftMode}>
-        <form action={formAction}>
+      <ComposerShell>
+        <form action={formAction} className="flex flex-col gap-1.5">
           {/* Route context — read by form action from FormData */}
           <input type="hidden" name="noteId" value={noteId ?? ''} />
           <input type="hidden" name="chatId" value={chatId ?? ''} />
@@ -262,6 +262,7 @@ const ComposerInput = memo(function ComposerInput({
     <textarea
       ref={ref}
       name="draft"
+      rows={1}
       data-testid="composer-input"
       value={draft}
       onChange={(e) => store.dispatch({ type: 'SET_DRAFT', text: e.target.value })}
@@ -271,7 +272,7 @@ const ComposerInput = memo(function ComposerInput({
       aria-label="Compose message or note"
       className={[
         'body-1 w-full resize-none border-0 bg-transparent p-0 text-text-primary outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
-        isDraftMode ? 'min-h-24 max-h-64' : 'max-h-48 min-h-6',
+        isDraftMode ? 'min-h-7 max-h-56' : 'min-h-6 max-h-40',
       ].join(' ')}
     />
   );

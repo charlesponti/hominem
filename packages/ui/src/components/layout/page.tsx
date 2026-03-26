@@ -4,11 +4,11 @@ import { cn } from '../../lib/utils';
 import type { PageMaxWidth } from './page.types';
 
 const maxWidthMap: Record<PageMaxWidth, string> = {
-  sm: 'max-w-2xl',
-  md: 'max-w-3xl',
-  lg: 'max-w-5xl',
-  xl: 'max-w-7xl',
-  full: 'max-w-full',
+  sm: 'page-width-sm',
+  md: 'page-width-md',
+  lg: 'page-width-lg',
+  xl: 'page-width-xl',
+  full: 'page-width-full',
 };
 
 interface PageProps extends React.ComponentProps<'main'> {
@@ -37,10 +37,11 @@ interface PageProps extends React.ComponentProps<'main'> {
  *   <SignInForm />
  * </Page>
  */
-function Page({ maxWidth = 'lg', padded = true, className, ...props }: PageProps) {
+function Page({ maxWidth = 'lg', padded = true, className, style, ...props }: PageProps) {
   return (
     <main
-      className={cn('w-full mx-auto', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
+      className={cn('w-full', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
+      style={{ marginInline: 'auto', ...style }}
       {...props}
     />
   );
@@ -56,13 +57,14 @@ interface ContainerProps extends React.ComponentProps<'div'> {
  * Use `Page` for top-level route shells.
  * Use `Container` for nested content regions that need their own constraint.
  */
-function Container({ maxWidth = 'lg', padded = true, className, ...props }: ContainerProps) {
+function Container({ maxWidth = 'lg', padded = true, className, style, ...props }: ContainerProps) {
   return (
     <div
-      className={cn('w-full mx-auto', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
+      className={cn('w-full', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
+      style={{ marginInline: 'auto', ...style }}
       {...props}
     />
   );
 }
 
-export { Page, Container, type PageProps, type ContainerProps, type PageMaxWidth };
+export { Container, Page, type ContainerProps, type PageMaxWidth, type PageProps };

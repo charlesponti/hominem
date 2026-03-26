@@ -99,7 +99,7 @@ export function ChatMessages({
         style={shouldUseVirtualScrolling ? { height: '100%', width: '100%', overflow: 'auto' } : {}}
       >
         {error ? (
-          <div className="mx-auto mb-6 w-full max-w-3xl rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm">
+          <div className="mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4">
             <div className="mb-1 text-sm font-semibold text-destructive">Something went wrong</div>
             <div className="text-xs text-destructive/70">
               {error instanceof Error ? error.message : String(error)}
@@ -108,7 +108,7 @@ export function ChatMessages({
         ) : null}
 
         {isLoading || (messages.length === 0 && status === 'idle') ? (
-          <div className="mx-auto w-full max-w-3xl space-y-5">
+          <div className="w-full space-y-5">
             <ChatShimmerMessage />
             <ChatShimmerMessage />
             <ChatShimmerMessage />
@@ -116,10 +116,7 @@ export function ChatMessages({
         ) : null}
 
         {shouldUseVirtualScrolling ? (
-          <div
-            className="relative mx-auto w-full max-w-3xl"
-            style={{ height: `${virtualizer.getTotalSize()}px` }}
-          >
+          <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
             {virtualItems?.map((virtualItem) => {
               const message = messages[virtualItem.index];
               if (!message) return null;
@@ -163,7 +160,7 @@ export function ChatMessages({
             })}
           </div>
         ) : (
-          <div className="mx-auto w-full max-w-3xl">
+          <div className="w-full">
             <div className="flex flex-col gap-6">
               {messages.length === 0
                 ? null
@@ -203,7 +200,7 @@ export function ChatMessages({
           <button
             type="button"
             onClick={handleScrollToBottom}
-            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border-subtle bg-background/95 px-3.5 py-1.5 text-xs text-text-secondary shadow-low backdrop-blur-sm transition-colors hover:bg-surface hover:text-foreground"
+            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border-subtle bg-background/95 px-3.5 py-1.5 text-xs text-text-secondary backdrop-blur-sm transition-colors hover:bg-surface hover:text-foreground"
             aria-label="Jump to bottom"
           >
             <ChevronDown className="size-3.5" aria-hidden />

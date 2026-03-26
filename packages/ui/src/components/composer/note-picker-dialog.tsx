@@ -66,10 +66,9 @@ export const NotePickerDialog = memo(
           // Positioned above the composer via the shell's relative context
           'note-picker-panel',
           'fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+80px)] top-auto',
-          'm-0 mx-auto w-[calc(100%-1rem)] max-w-[calc(780px-1rem)]',
+          'm-0 mx-auto w-[calc(100%-1rem)] max-w-191',
           'max-h-[min(420px,50dvh)] flex-col',
           'rounded-2xl border border-border/40 bg-background p-0',
-          'shadow-[0_-4px_32px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)]',
           'open:flex',
           'backdrop:bg-transparent',
         )}
@@ -127,7 +126,7 @@ export const NotePickerDialog = memo(
                     type="button"
                     onClick={() => toggleNote(note)}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface',
+                      'flex w-full items-center gap-3 rounded-lg py-2.5 text-left transition-colors hover:bg-surface',
                       isSelected && 'bg-surface',
                     )}
                   >

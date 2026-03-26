@@ -1,10 +1,10 @@
 import type { Note } from '@hominem/rpc/types/notes.types';
 import { Button } from '@hominem/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -64,7 +64,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl rounded-xl border border-border-subtle bg-surface p-6 shadow-low">
+    <div className="w-full rounded-xl border border-border-subtle bg-surface p-6">
       {/* Title row */}
       <div className="flex items-start gap-4">
         <input

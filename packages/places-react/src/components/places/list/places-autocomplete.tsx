@@ -7,8 +7,8 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useGeolocation } from '../../../hooks/use-geolocation';
 import {
-  type GooglePlacePrediction,
-  useGooglePlacesAutocomplete,
+    type GooglePlacePrediction,
+    useGooglePlacesAutocomplete,
 } from '../../../hooks/use-google-places-autocomplete';
 
 function PlacesAutocomplete({
@@ -152,7 +152,7 @@ function PlacesAutocomplete({
                   variant="ghost"
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
-                    'flex items-center px-3 py-2 w-full text-left overflow-x-hidden',
+                    'flex items-center py-2 w-full text-left overflow-x-hidden',
                     'hover:bg-muted focus:bg-muted void-focus',
                     selectedIndex === index && 'bg-muted',
                   )}

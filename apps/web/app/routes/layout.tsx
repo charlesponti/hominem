@@ -1,6 +1,7 @@
 import { usePasskeyAuth, useSafeAuth } from '@hominem/auth';
 import { useRpcMutation } from '@hominem/rpc/react';
 import { PasskeyEnrollmentBanner, useToast } from '@hominem/ui';
+import { Container } from '@hominem/ui/components/layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
 import {
   Composer,
@@ -154,11 +155,11 @@ export default function Layout() {
             id="main-content"
             className="mt-14 flex-1 pb-[calc(env(safe-area-inset-bottom)+112px)] md:mt-16"
           >
-            <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+            <Container maxWidth="md" padded={false}>
               <Suspense fallback={<LoadingScreen />}>
                 <Outlet />
               </Suspense>
-            </div>
+            </Container>
           </main>
         </div>
         {isAuthenticated ? (

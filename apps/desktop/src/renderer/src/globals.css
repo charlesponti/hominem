@@ -96,7 +96,6 @@ body {
 .desktop-shell__topbar,
 .desktop-shell__hero,
 .desktop-shell__panel {
-  @apply shadow-low;
   background: var(--surface);
   border: 1px solid var(--border);
 }
@@ -278,7 +277,7 @@ body {
 }
 
 .desktop-auth__panel {
-  @apply rounded-md shadow-medium;
+  @apply rounded-md;
   width: min(100%, 480px);
   padding: var(--space-6);
   border: 1px solid var(--border);

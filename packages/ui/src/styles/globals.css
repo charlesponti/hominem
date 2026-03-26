@@ -624,20 +624,6 @@
   transition-duration: 150ms;
 }
 
-/* ====== SHADOW UTILITIES ====== */
-
-@utility shadow-low {
-  box-shadow: var(--shadow-low);
-}
-
-@utility shadow-medium {
-  box-shadow: var(--shadow-medium);
-}
-
-@utility shadow-high {
-  box-shadow: var(--shadow-high);
-}
-
 /* ====== BORDER RADIUS UTILITIES ====== */
 
 @utility rounded-sm {
@@ -703,9 +689,46 @@
 /* Layout and helper utilities that work well in @layer */
 
 @layer utilities {
+  /* PDL: .container only adds horizontal padding.
+   * Centering (margin-inline: auto) and width constraints are
+   * the responsibility of layout components (Page, Container, Center). */
   .container {
-    @apply mx-auto w-full max-w-5xl px-4 sm:px-6;
+    @apply w-full px-4 sm:px-6;
+    margin-inline: auto;
   }
+}
+
+/* ====== PAGE-WIDTH TOKENS ====== */
+/* Used exclusively by Page / Container / Center layout components. */
+/* Leaf components must never use these directly — pass width via props or
+ * wrap content in a layout primitive. */
+
+@utility page-width-sm {
+  max-inline-size: min(100%, 42rem);
+}
+
+@utility page-width-md {
+  max-inline-size: min(100%, 48rem);
+}
+
+@utility page-width-lg {
+  max-inline-size: min(100%, 64rem);
+}
+
+@utility page-width-xl {
+  max-inline-size: min(100%, 80rem);
+}
+
+@utility page-width-full {
+  max-inline-size: 100%;
+}
+
+/* Center — logical-property centering utility.
+ * Apply on any layout wrapper that should be horizontally centered.
+ * Replaces the anti-pattern of mx-auto on leaf components. */
+@utility center-layout {
+  margin-inline: auto;
+  width: 100%;
 }
 
 /* ====== COMPONENT CLASSES ====== */
@@ -781,13 +804,11 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-md);
     padding: 1rem;
-    box-shadow: var(--shadow-low);
   }
 
   /* Elevated card variant */
   .card-elevated {
-    background-color: var(--color-bg-elevated);
-    box-shadow: var(--shadow-medium);
+    background-color: var(--color-bg-elevatePd);
   }
 
   /* Input component */

@@ -130,14 +130,14 @@ function UpdateGuardClient({
     <>
       {offlineMessage && !isDev && (
         <div className="fixed inset-x-0 bottom-16 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2 shadow-medium">
+          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2">
             <span className="text-sm text-text-primary">{offlineMessage}</span>
           </div>
         </div>
       )}
       {(offlineReady || needRefresh) && !isDev && (
         <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2 shadow-medium">
+          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2">
             <span className="text-sm text-text-primary">
               {offlineReady ? 'App ready to work offline' : 'New content available'}
             </span>

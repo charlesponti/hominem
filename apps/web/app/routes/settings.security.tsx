@@ -1,5 +1,6 @@
 import { usePasskeyAuth } from '@hominem/auth';
 import { PasskeyManagement } from '@hominem/ui';
+import { Container } from '@hominem/ui/components/layout';
 import { useCallback } from 'react';
 import { redirect } from 'react-router';
 
@@ -38,7 +39,7 @@ export default function SecuritySettingsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl py-8">
+    <Container maxWidth="sm" className="py-8">
       <header className="mb-8">
         <h1 className="text-xl font-semibold text-foreground">Security</h1>
         <p className="mt-1 text-sm text-text-secondary">
@@ -52,6 +53,6 @@ export default function SecuritySettingsPage() {
         onAdd={handleAdd}
         onDelete={handleDelete}
       />
-    </div>
+    </Container>
   );
 }

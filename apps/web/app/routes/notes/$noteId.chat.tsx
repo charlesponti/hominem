@@ -28,7 +28,7 @@ export default function NoteChatRedirect({ loaderData }: { loaderData: { noteId:
 
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-(--composer-resting-height,112px)">
-      <div className="max-w-md text-center px-6">
+      <div className="text-center px-6">
         <p className="text-base font-semibold text-foreground">
           {note?.title ? `"${note.title}"` : 'This note'}
         </p>

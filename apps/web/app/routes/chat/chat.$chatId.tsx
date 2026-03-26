@@ -4,7 +4,7 @@ import { deriveSessionSource } from '@hominem/chat-services/ui';
 import { useRpcQuery, useRpcMutation } from '@hominem/rpc/react';
 import type { ArtifactType } from '@hominem/rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
-import { ClassificationReview } from '@hominem/ui/ai-elements';
+import { ClassificationReview } from '@hominem/ui/chat';
 import { Chat } from '@hominem/ui/chat';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';

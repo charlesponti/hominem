@@ -1,10 +1,9 @@
-import type { SessionSource } from '@hominem/chat-services/types';
-import type { ArtifactType } from '@hominem/chat-services/types';
+import type { ArtifactType, SessionSource } from '@hominem/chat-services/types';
 import { Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { filterMessagesByQuery } from '../../types/chat';
 import type { ExtendedMessage } from '../../types/chat';
+import { filterMessagesByQuery } from '../../types/chat';
 import { ChatMessages } from './chat-messages';
 import type { ChatRenderIcon } from './chat.types';
 import { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay';
@@ -122,7 +121,7 @@ export function Chat({
       {/* Floating search — appears on Cmd+F, invisible otherwise */}
       {isSearchOpen && (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-10 px-4">
-          <div className="pointer-events-auto mx-auto flex max-w-3xl items-center gap-2.5 rounded-2xl border border-border-subtle bg-background/95 px-3.5 py-2.5 shadow-low backdrop-blur-sm">
+          <div className="pointer-events-auto flex w-full items-center gap-2.5 rounded-2xl border border-border-subtle bg-background/95 py-2.5 backdrop-blur-sm">
             <Search className="size-4 shrink-0 text-text-tertiary" aria-hidden />
             <input
               ref={searchInputRef}
@@ -165,7 +164,7 @@ export function Chat({
       />
 
       {speechErrorMessage ? (
-        <div className="mx-auto mb-3 w-full max-w-3xl rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive/80">
+        <div className="mb-3 w-full rounded-xl border border-destructive/30 bg-destructive/5 py-2 text-xs text-destructive/80">
           {speechErrorMessage}
         </div>
       ) : null}

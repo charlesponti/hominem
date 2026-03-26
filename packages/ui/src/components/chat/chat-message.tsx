@@ -1,53 +1,127 @@
 import type { ChatMessageToolCall } from '@hominem/rpc/types/chat.types';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import {
-  AlertCircle,
-  Check,
-  Copy,
-  Edit2,
-  MoreVertical,
-  RotateCcw,
-  Save,
-  Share2,
-  Trash2,
-  Volume2,
-  VolumeX,
-  X,
+    AlertCircle,
+    Check,
+    Copy,
+    Edit2,
+    MoreVertical,
+    RotateCcw,
+    Save,
+    Share2,
+    Trash2,
+    Volume2,
+    VolumeX,
+    X,
 } from 'lucide-react';
 import {
-  memo,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type KeyboardEvent,
+    memo,
+    useEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type CSSProperties,
+    type FormEvent,
+    type HTMLAttributes,
+    type KeyboardEvent,
+    type ReactNode,
 } from 'react';
 
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
 import { useMessageEdit } from '../../lib/hooks/use-message-edit';
 import { cn, copyToClipboard } from '../../lib/utils';
 import type { ExtendedMessage } from '../../types/chat';
-import {
-  MarkdownContent,
-  Message,
-  MessageAnnotations,
-  MessageContent,
-  Reasoning,
-  Tool,
-  ToolInput,
-} from '../ai-elements';
+import { MarkdownContent, Reasoning, Tool, ToolInput } from '../ai-elements';
 import { Inline, Stack } from '../layout';
 import { Button } from '../ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Form } from '../ui/form';
 import { Textarea } from '../ui/textarea';
+
+function Message({
+  from,
+  className,
+  children,
+  ...props
+}: {
+  from: 'user' | 'assistant' | 'system';
+  className?: string;
+  children: ReactNode;
+} & HTMLAttributes<HTMLDivElement>) {
+  const isUser = from === 'user';
+  const isSystem = from === 'system';
+
+  return (
+    <div
+      data-role={from}
+      className={cn(
+        'flex w-full py-2',
+        isSystem ? 'justify-center' : isUser ? 'justify-end' : 'justify-start',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MessageContent({
+  children,
+  className,
+  align = 'start',
+  width = 'transcript',
+  style,
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+  align?: 'start' | 'end' | 'center';
+  width?: 'transcript' | 'bubble' | 'full';
+  style?: CSSProperties;
+} & HTMLAttributes<HTMLDivElement>) {
+  const maxWidth = width === 'bubble' ? '36rem' : width === 'transcript' ? '44rem' : undefined;
+
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col',
+        align === 'end' && 'items-end text-right',
+        align === 'center' && 'items-center text-center',
+        width !== 'full' && 'w-full',
+        className,
+      )}
+      style={{ ...style, ...(maxWidth ? { maxWidth } : undefined) }}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MessageAnnotations({
+  children,
+  className,
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+} & HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn('mt-2 flex flex-wrap gap-1 body-4 text-text-tertiary', className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface ChatMessageProps {
   message: ExtendedMessage;
@@ -223,7 +297,7 @@ export const ChatMessage = memo(function ChatMessage({
             hasContent && (
               <>
                 {isUser ? (
-                  <div className="inline-block max-w-[34rem] rounded-2xl border border-subtle bg-emphasis-highest px-4 py-3 text-white shadow-low">
+                  <div className="inline-block max-w-136 rounded-2xl border border-subtle bg-emphasis-highest px-4 py-2 text-sm text-white">
                     <MarkdownContent content={message.content} isStreaming={isStreaming} />
                   </div>
                 ) : (
@@ -236,7 +310,7 @@ export const ChatMessage = memo(function ChatMessage({
           )}
 
           {showDebug && (
-            <div className="w-full rounded-md border border-subtle bg-surface px-3 py-2 font-mono text-[11px] leading-relaxed text-text-secondary">
+            <div className="w-full rounded-md border border-subtle bg-surface py-2 font-mono text-[11px] leading-relaxed text-text-secondary">
               <div>ID: {message.id}</div>
               <div>Role: {message.role}</div>
               <div>Created: {message.createdAt}</div>

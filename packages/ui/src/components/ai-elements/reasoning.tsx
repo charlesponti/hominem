@@ -18,11 +18,11 @@ export function Reasoning({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={cn('rounded-md border bg-muted/50', className)} {...props}>
+    <div className={cn('rounded-md border bg-muted/50 px-3', className)} {...props}>
       <Button
         variant="ghost"
         size="sm"
-        className="flex w-full items-center justify-between px-3 py-2 text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center justify-between py-2 text-muted-foreground hover:text-foreground"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">

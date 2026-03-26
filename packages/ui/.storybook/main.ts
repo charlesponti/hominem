@@ -14,14 +14,18 @@ const config: StorybookConfig = {
   addons: ['@storybook/addon-docs', '@storybook/addon-vitest'],
   framework: {
     name: '@storybook/react-vite',
-    options: {
-      reactDocgenTypescriptOptions: {
-        propFilter: (prop) =>
-          prop.parent ? !prop.parent.fileName.includes('node_modules') : true,
-      },
+    options: {},
+  },
+  docs: {
+    defaultName: 'Documentation',
+  },
+  typescript: {
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      propFilter: (prop) =>
+        prop.parent ? !prop.parent.fileName.includes('node_modules') : true,
     },
   },
-  docs: { autodocs: 'tag' },
   viteFinal: async (config) => {
     config.plugins = [tailwindcss(), tsconfigPaths(), ...(config.plugins ?? [])]
     return config

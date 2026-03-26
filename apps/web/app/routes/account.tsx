@@ -1,6 +1,7 @@
 import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@hominem/ui/card';
+import { Container } from '@hominem/ui/components/layout';
 import { useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router';
 
@@ -37,7 +38,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-8">
+    <Container maxWidth="sm" className="py-8">
       <header className="mb-8">
         <h1 className="text-xl font-semibold text-foreground">Profile</h1>
         <p className="mt-1 text-sm text-text-secondary">Manage your account</p>
@@ -74,6 +75,6 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </Container>
   );
 }

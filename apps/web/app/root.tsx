@@ -3,14 +3,14 @@ import { COMMON_FONT_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
 import {
-  data,
-  isRouteErrorResponse,
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useRevalidator,
+    data,
+    isRouteErrorResponse,
+    Links,
+    Meta,
+    Outlet,
+    Scripts,
+    ScrollRestoration,
+    useRevalidator,
 } from 'react-router';
 
 import { WEB_BRAND } from '~/lib/brand';
@@ -22,8 +22,8 @@ import type { Route } from './+types/root';
 import './globals.css';
 import { HonoProvider } from './lib/api';
 import { authConfig, getServerSession } from './lib/auth.server';
-import './lib/i18n';
 import { serverEnv } from './lib/env';
+import './lib/i18n';
 
 const ICON_VERSION = '20260314';
 
@@ -162,7 +162,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <main className="pt-16 p-4 container">
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (

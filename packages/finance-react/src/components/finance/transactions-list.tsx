@@ -84,7 +84,7 @@ export function TransactionsList({
 }: TransactionsListProps) {
   if (loading) {
     return (
-      <div className="space-y-0 mx-auto border border-border overflow-hidden">
+      <div className="space-y-0 border border-border overflow-hidden">
         {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map((key) => (
           <div key={key} className="p-4 sm:p-6 border-b border-muted last:border-b-0">
             <div className="flex items-start gap-4">
@@ -108,7 +108,7 @@ export function TransactionsList({
 
   if (error) {
     return (
-      <div className="p-8 text-center border border-destructive/50 bg-destructive/10 max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-destructive/50 bg-destructive/10">
         <div className="text-destructive font-medium">{error}</div>
       </div>
     );
@@ -116,7 +116,7 @@ export function TransactionsList({
 
   if (transactions.length === 0) {
     return (
-      <div className="p-8 text-center border border-border bg-muted max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-border bg-muted">
         <div className="flex flex-col items-center gap-3">
           <div className="size-12 bg-muted flex items-center justify-center">
             <DollarSign className="size-6 text-muted-foreground" />
@@ -131,7 +131,7 @@ export function TransactionsList({
   }
 
   return (
-    <div className="mx-auto border border-border overflow-hidden">
+    <div className="border border-border overflow-hidden">
       {transactions.map((transaction) => (
         <TransactionListItem
           key={transaction.id}

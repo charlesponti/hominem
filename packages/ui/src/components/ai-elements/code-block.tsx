@@ -75,7 +75,7 @@ export default function CodeBlock({ language, code, isCopied, onCopy }: CodeBloc
       <SyntaxHighlighter
         language={language}
         style={oneDark}
-        customStyle={{ margin: 0, fontSize: '0.875rem' }}
+        customStyle={{ margin: 0, fontSize: 'var(--font-size-sm, 0.875rem)' }}
         PreTag="div"
       >
         {code}

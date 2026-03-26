@@ -39,7 +39,7 @@ const ToggleGroup = React.forwardRef<
   <ToggleGroupPrimitive.Root
     ref={ref}
     className={cn(
-      'inline-flex items-center justify-center overflow-hidden  border border-input bg-transparent shadow-sm',
+      'inline-flex items-center justify-center overflow-hidden  border border-input bg-transparent',
       className,
     )}
     {...props}

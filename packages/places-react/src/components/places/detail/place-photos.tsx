@@ -22,7 +22,7 @@ export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhot
     return (
       <div className="h-80 flex items-center justify-center border border-dashed border-border">
         <div className="text-center">
-          <ImageIcon className="w-16 h-16 text-muted-foreground mx-auto mb-2" />
+          <ImageIcon className="w-16 h-16 text-muted-foreground mb-2" />
           <p className="text-muted-foreground text-sm">No photos available</p>
         </div>
       </div>
@@ -50,7 +50,7 @@ export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhot
               {hasFailed ? (
                 <div className="w-full h-full flex items-center justify-center bg-muted">
                   <div className="text-center">
-                    <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                    <ImageIcon className="w-12 h-12 text-muted-foreground mb-2" />
                     <p className="text-muted-foreground text-xs">Failed to load</p>
                   </div>
                 </div>

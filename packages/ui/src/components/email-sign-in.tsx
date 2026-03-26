@@ -1,5 +1,7 @@
 import { useFetcher } from 'react-router';
 
+import { Container } from './layout';
+
 export interface EmailSignInProps {
   actionData:
     | {
@@ -16,7 +18,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-base p-4">
-      <div className="w-full max-w-md space-y-8">
+      <Container maxWidth="sm" className="space-y-8">
         <div className="text-center">
           <h2 className="heading-1 text-primary mb-2">Sign in with Email</h2>
           <p className="body-3 text-secondary">Enter your email to receive a verification code</p>
@@ -56,7 +58,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
         <div className="text-center body-4 text-secondary">
           <p>You'll receive a one-time code to sign in.</p>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

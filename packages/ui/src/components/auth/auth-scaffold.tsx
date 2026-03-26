@@ -1,3 +1,5 @@
+import { Container } from '../layout';
+
 interface AuthScaffoldProps {
   children: React.ReactNode;
   title: string;
@@ -9,7 +11,7 @@ interface AuthScaffoldProps {
 export function AuthScaffold({ children, title, description, logo, className }: AuthScaffoldProps) {
   return (
     <div className={`min-h-screen flex items-center justify-center bg-base p-4 ${className ?? ''}`}>
-      <div className="w-full max-w-md">
+      <Container maxWidth="sm">
         <div className="text-center mb-8">
           {logo ? (
             <img src={logo} alt="" className="w-24 h-24 mx-auto mb-4 object-contain" />
@@ -21,7 +23,7 @@ export function AuthScaffold({ children, title, description, logo, className }: 
         </div>
 
         <div className="bg-surface border border-default rounded-md p-4">{children}</div>
-      </div>
+      </Container>
     </div>
   );
 }

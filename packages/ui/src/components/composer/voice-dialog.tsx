@@ -104,7 +104,7 @@ export const VoiceDialog = memo(
           setError(null);
           inputRef.current?.focus();
         }}
-        className="m-auto w-full max-w-sm rounded-3xl border border-border bg-background p-6 shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex open:flex-col open:gap-4"
+        className="m-auto w-full max-w-sm rounded-3xl border border-border bg-background p-6 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex open:flex-col open:gap-4"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">Voice input</h2>

@@ -276,7 +276,7 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
       return (
         <>
-          <SidebarTrigger className="fixed left-3 top-3 z-40 size-9 rounded-full border border-border/70 bg-background/90 shadow-sm backdrop-blur md:hidden supports-[backdrop-filter]:bg-background/75" />
+          <SidebarTrigger className="fixed left-3 top-3 z-40 size-9 rounded-full border border-border/70 bg-background/90 backdrop-blur md:hidden supports-[backdrop-filter]:bg-background/75" />
           <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
             <SheetContent
               data-sidebar="sidebar"
@@ -347,7 +347,7 @@ const Sidebar = React.forwardRef<
                 side === 'left' ? 'left-full ml-3' : 'right-full mr-3',
               )}
             >
-              <SidebarTrigger className="size-9 rounded-full border border-border/70 bg-background/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/75" />
+              <SidebarTrigger className="size-9 rounded-full border border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75" />
             </div>
           </div>
         </div>

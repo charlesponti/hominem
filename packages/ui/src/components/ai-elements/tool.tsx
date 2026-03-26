@@ -35,12 +35,12 @@ export function Tool({
   };
 
   return (
-    <div className={cn('rounded-md border', statusColors[status], className)} {...props}>
+    <div className={cn('rounded-md border', statusColors[status], 'px-3', className)} {...props}>
       <Button
         variant="ghost"
         size="sm"
         className={cn(
-          'flex w-full items-center justify-between px-3 py-2',
+          'flex w-full items-center justify-between py-2',
           status === 'running' && 'cursor-wait',
         )}
         onClick={() => setIsOpen(!isOpen)}

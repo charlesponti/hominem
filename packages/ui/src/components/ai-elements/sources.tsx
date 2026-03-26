@@ -19,11 +19,11 @@ export function Sources({ sources, className, children, ...props }: SourcesProps
   if (!sources?.length && !children) return null;
 
   return (
-    <div className={cn('rounded-md border', className)} {...props}>
+    <div className={cn('rounded-md border px-3', className)} {...props}>
       <Button
         variant="ghost"
         size="sm"
-        className="flex w-full items-center justify-between px-3 py-2 text-muted-foreground"
+        className="flex w-full items-center justify-between py-2 text-muted-foreground"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">

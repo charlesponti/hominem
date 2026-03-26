@@ -3,11 +3,11 @@ import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@hominem/ui/components/ui/card';
 import { cn } from '@hominem/ui/lib/utils';
 import { AlertCircle, Building2, Link } from 'lucide-react';
@@ -148,9 +148,9 @@ export function PlaidLink({
 
   if (variant === 'card') {
     return (
-      <Card className={cn('w-full max-w-md', className)}>
+      <Card className={cn('w-full', className)}>
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center border border-primary">
+          <div className="mb-4 flex size-12 items-center justify-center border border-primary">
             <Building2 className="size-6 text-primary" />
           </div>
           <CardTitle>Connect Your Bank Account</CardTitle>

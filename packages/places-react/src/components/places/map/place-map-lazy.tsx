@@ -5,7 +5,7 @@ const PlaceMapLazy = lazy(() => import('./place-map').then((m) => ({ default: m.
 
 const MapPlaceholder = () => (
   <div className="flex flex-1 relative overflow-hidden size-full border border-border h-[300px]">
-    <div className="flex items-center justify-center max-w-[300px] mx-auto min-h-full">
+    <div className="flex flex-1 items-center justify-center">
       <Loading size="xl" />
     </div>
   </div>

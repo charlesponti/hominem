@@ -10,7 +10,7 @@ interface ChatHeaderProps {
 export function ChatHeader({ searchQuery, searchInputRef, onChangeSearchQuery }: ChatHeaderProps) {
   return (
     <div className="shrink-0 border-b border-border-subtle bg-background px-4 py-2.5">
-      <div className="mx-auto flex w-full max-w-3xl items-center gap-2.5">
+      <div className="flex w-full items-center gap-2.5">
         <Search className="size-4 shrink-0 text-text-tertiary" aria-hidden />
         <input
           ref={searchInputRef}

@@ -54,7 +54,7 @@ export function ConversationScrollButton({ onClick, className }: ConversationScr
     <Button
       variant="outline"
       size="icon"
-      className={cn('size-8 rounded-full shadow-md', className)}
+      className={cn('size-8 rounded-full', className)}
       onClick={onClick}
     >
       <ChevronDown className="size-4" />

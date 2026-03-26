@@ -191,7 +191,7 @@ export function AttachmentHoverCard({
     >
       {children}
       {isOpen && (
-        <div className="absolute z-50 bottom-full mb-2 left-0 w-48 p-2 rounded-md border bg-background shadow-lg">
+        <div className="absolute z-50 bottom-full mb-2 left-0 w-48 p-2 rounded-md border bg-background">
           Preview content
         </div>
       )}

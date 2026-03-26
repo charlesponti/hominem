@@ -38,7 +38,7 @@ export function VoiceModeOverlay({
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/72 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-elevated p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-elevated p-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.08em] text-text-tertiary">Voice mode</p>

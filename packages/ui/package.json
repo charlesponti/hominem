@@ -64,6 +64,8 @@
     "./components/typography/heading.native": "./src/components/typography/heading.native.tsx",
     "./components/chat/chat.types": "./src/components/chat/chat.types.ts",
     "./components/chat/*": "./src/components/chat/*.tsx",
+    "./components/layout": "./src/components/layout/index.ts",
+    "./components/layout/*": "./src/components/layout/*.tsx",
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./lib/gsap": "./src/lib/gsap/sequences.ts",

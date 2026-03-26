@@ -5,7 +5,10 @@ export { ChatMessages } from './chat-messages';
 export { ChatSearchModal } from './chat-search-modal';
 export { ChatShimmerMessage } from './chat-shimmer-message';
 export { ChatThinkingIndicator } from './chat-thinking-indicator';
+export { ChatVoiceModal } from './chat-voice-modal';
+export { ContextAnchor } from './context-anchor';
 export { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay';
+export { ClassificationReview } from './classification-review';
 export type {
   ChatIconName,
   ChatMessageItem,
