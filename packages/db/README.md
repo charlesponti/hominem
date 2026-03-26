@@ -1,8 +1,8 @@
-# @hominem/db — public surface
+# @hominem/db
 
 This package exposes compiled runtime and types only. Do NOT import source files from `@hominem/db/src`.
 
-Public surface (what consumers may import):
+Public surface:
 
 - `@hominem/db` — runtime API (compiled `build/index.js`) and types (`build/index.d.ts`)
 - `@hominem/db/schema/*` — compiled schema objects (`build/schema/*.schema.js`)
@@ -17,8 +17,8 @@ Rationale
 
 Keeping the package restricted to compiled outputs prevents accidental coupling to source files and makes the public API explicit and stable.
 
-Sqitch transition
+Database workflow
 
-- Sqitch scaffolding now lives alongside Goose in this package.
-- The rebuild blueprint is in [docs/database-management-rebuild.md](/Users/charlesponti/Developer/hominem/docs/database-management-rebuild.md).
-- The initial change decomposition is in [packages/db/sqitch-change-inventory.md](/Users/charlesponti/Developer/hominem/packages/db/sqitch-change-inventory.md).
+- Goose is the only migration runner.
+- The workflow rebuild is documented in [docs/database-management-rebuild.md](/Users/charlesponti/Developer/hominem/docs/database-management-rebuild.md).
+- Use root commands from [Makefile](/Users/charlesponti/Developer/hominem/Makefile) for migrate, reset, status, type generation, and fresh-database verification.

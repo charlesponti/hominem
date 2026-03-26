@@ -1,10 +1,12 @@
-import { Args, Command } from '@oclif/core';
+import { Args } from '@oclif/core';
 import { z } from 'zod';
 
 import type { JsonValue } from '@/contracts';
 
 import { loadConfigV2, saveConfigV2, setPathValue } from '@/config';
+import { failCommand } from '@/utils/command-errors';
 import { JsonValueSchema } from '@/json-value-schema';
+import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 
 function parseValue(raw: string): JsonValue {
@@ -32,7 +34,7 @@ const outputSchema = z.object({
   value: JsonValueSchema,
 });
 
-export default class ConfigSet extends Command {
+export default class ConfigSet extends JsonCommand {
   static description = 'Writes a scalar or JSON object value at a dot-path selector.';
   static summary = 'Set config values';
 
@@ -49,38 +51,20 @@ export default class ConfigSet extends Command {
     }),
   };
 
-  static override flags = {};
-
-  static enableJsonFlag = true;
-
   async run(): Promise<z.infer<typeof outputSchema>> {
     const { args } = await this.parse(ConfigSet);
 
-    let config: Awaited<ReturnType<typeof loadConfigV2>>;
-    try {
-      config = await loadConfigV2();
-    } catch (error) {
-      this.error(
-        `Failed to load config: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        {
-          exit: 3,
-          code: 'CONFIG_READ_FAILED',
-        },
-      );
-    }
+    const config = await loadConfigV2();
 
     const value = parseValue(args.value);
     const updated = setPathValue(config as Record<string, JsonValue>, args.path, value);
     try {
       await saveConfigV2(updated as typeof config);
     } catch (error) {
-      this.error(
-        `Failed to persist config: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        {
-          exit: 3,
-          code: 'CONFIG_WRITE_FAILED',
-        },
-      );
+      failCommand(this, 'Failed to persist config', error as Error | string | undefined, {
+        exit: 3,
+        code: 'CONFIG_WRITE_FAILED',
+      });
     }
 
     const output = {

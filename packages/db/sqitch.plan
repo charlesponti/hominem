@@ -1,9 +1,0 @@
-%syntax-version=1.0.0
-%project=hominem_db
-%uri=https://github.com/charlesponti/hominem/tree/main/packages/db
-
-extensions # install required postgres extensions
-app-current-user-id-fn [extensions] # create app_current_user_id()
-app-is-service-role-fn [extensions] # create app_is_service_role()
-set-updated-at-fn [extensions] # create set_updated_at()
-users-table [extensions set-updated-at-fn] # create users table, index, and updated_at trigger

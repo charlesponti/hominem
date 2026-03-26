@@ -58,14 +58,9 @@
     "prepare": "bun run build",
     "typecheck": "bunx tsgo --noEmit",
     "kysely-codegen": "kysely-codegen",
-    "sqitch:plan": "bash ../../scripts/run-sqitch.sh plan",
-    "sqitch:status": "bash ../../scripts/run-sqitch.sh status",
-    "sqitch:deploy": "bash ../../scripts/run-sqitch.sh deploy",
-    "sqitch:verify": "bash ../../scripts/run-sqitch.sh verify",
-    "sqitch:revert": "bash ../../scripts/run-sqitch.sh revert",
-    "goose:up": "goose -dir ./migrations postgres \"$DATABASE_URL\" up",
-    "goose:down": "goose -dir ./migrations postgres \"$DATABASE_URL\" down",
-    "goose:status": "goose -dir ./migrations postgres \"$DATABASE_URL\" status"
+    "goose:up": "bash ../../scripts/run-goose.sh up",
+    "goose:down": "bash ../../scripts/run-goose.sh down",
+    "goose:status": "bash ../../scripts/run-goose.sh status"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",

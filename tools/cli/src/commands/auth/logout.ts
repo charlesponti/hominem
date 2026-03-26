@@ -1,22 +1,18 @@
-import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { AuthError, logout } from '@/utils/auth';
+import { failCommand } from '@/utils/command-errors';
+import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 
 const outputSchema = z.object({
   loggedOut: z.literal(true),
 });
 
-export default class AuthLogout extends Command {
+export default class AuthLogout extends JsonCommand {
   static description =
     'Deletes locally stored machine-client credentials without revoking remote sessions.';
   static summary = 'Logout and clear tokens';
-
-  static override flags = {};
-  static override args = {};
-
-  static enableJsonFlag = true;
 
   async run(): Promise<z.infer<typeof outputSchema>> {
     try {
@@ -25,7 +21,7 @@ export default class AuthLogout extends Command {
       });
     } catch (error) {
       if (error instanceof AuthError) {
-        this.error(`Logout failed: ${error.message}`, {
+        failCommand(this, 'Logout failed', error.message, {
           exit: 2,
           code: error.code,
         });

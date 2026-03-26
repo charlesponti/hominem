@@ -33,11 +33,11 @@ jobs:
           install-goose: "true"
 
       - name: Check migration status
-        run: goose -dir packages/db/migrations postgres "${DATABASE_URL}" status
+        run: bash ./scripts/run-goose.sh status
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Run database migrations
-        run: goose -dir packages/db/migrations postgres "${DATABASE_URL}" up
+        run: bash ./scripts/run-goose.sh up
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

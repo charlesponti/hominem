@@ -1,5 +1,5 @@
 name: Initialize Database Schema with Goose
-description: Install Goose CLI and apply database migrations
+description: Apply Goose migrations to a target database
 
 inputs:
   environment:
@@ -23,7 +23,6 @@ runs:
     - name: Ensure database URL available
       shell: bash
       run: |
-        # workflow should already provide DATABASE_URL via env for prod or test
         if [ -z "$DATABASE_URL" ]; then
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" >> $GITHUB_ENV
         fi
@@ -36,4 +35,4 @@ runs:
           echo "Migrations directory not found: $MIGRATIONS_DIR"
           exit 1
         fi
-        goose -dir "$MIGRATIONS_DIR" postgres "$DATABASE_URL" up
+        GOOSE_MIGRATIONS_DIR="$MIGRATIONS_DIR" bash "${GITHUB_WORKSPACE}/scripts/run-goose.sh" up

@@ -1,9 +1,10 @@
-import { Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import { z } from 'zod';
 
 import { getConfigPath, loadConfigV2 } from '@/config';
 import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
+import { failCommand } from '@/utils/command-errors';
+import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 
 const outputSchema = z.object({
@@ -16,13 +17,9 @@ const outputSchema = z.object({
   ),
 });
 
-export default class SystemDoctor extends Command {
+export default class SystemDoctor extends JsonCommand {
   static description = 'Run CLI diagnostics';
   static summary = 'Run CLI diagnostics';
-
-  static override flags = {};
-
-  static enableJsonFlag = true;
 
   async run(): Promise<z.infer<typeof outputSchema>> {
     const checks: Array<{ id: string; status: 'pass' | 'warn' | 'fail'; message: string }> = [];
@@ -54,7 +51,7 @@ export default class SystemDoctor extends Command {
     try {
       tokens = await getStoredTokens();
     } catch (error) {
-      this.error(error instanceof Error ? error.message : 'Failed to read auth state', {
+      failCommand(this, 'Failed to read auth state', error as Error | string | undefined, {
         exit: 3,
         code: 'AUTH_STATUS_FAILED',
       });

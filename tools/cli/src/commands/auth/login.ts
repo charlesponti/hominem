@@ -1,7 +1,9 @@
-import { Command, Flags } from '@oclif/core';
+import { Flags } from '@oclif/core';
 import { z } from 'zod';
 
 import { AuthError, interactiveLogin } from '@/utils/auth';
+import { failCommand } from '@/utils/command-errors';
+import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 
 const outputSchema = z.object({
@@ -10,7 +12,7 @@ const outputSchema = z.object({
   baseUrl: z.string(),
 });
 
-export default class AuthLogin extends Command {
+export default class AuthLogin extends JsonCommand {
   static description =
     'Starts the CLI device-code authentication flow and stores machine-client tokens.';
   static summary = 'Authenticate the CLI';
@@ -34,10 +36,6 @@ export default class AuthLogin extends Command {
     }),
   };
 
-  static override args = {};
-
-  static enableJsonFlag = true;
-
   async run(): Promise<z.infer<typeof outputSchema>> {
     const { flags } = await this.parse(AuthLogin);
 
@@ -56,17 +54,14 @@ export default class AuthLogin extends Command {
       });
     } catch (error) {
       if (error instanceof AuthError) {
-        this.error(`Authentication failed: ${error.message}`, {
+        failCommand(this, 'Authentication failed', error.message, {
           exit: 2,
           code: error.code,
         });
       }
-      this.error(
-        `Authentication flow failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        {
-          exit: 2,
-        },
-      );
+      failCommand(this, 'Authentication flow failed', error as Error | string | undefined, {
+        exit: 2,
+      });
     }
 
     const output = {

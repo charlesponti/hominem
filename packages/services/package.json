@@ -26,6 +26,10 @@
       "types": "./src/types.ts",
       "default": "./src/types.ts"
     },
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./src/errors.ts"
+    },
     "./env": {
       "types": "./src/env.ts",
       "default": "./src/env.ts"

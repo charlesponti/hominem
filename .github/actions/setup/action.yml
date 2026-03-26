@@ -1,5 +1,5 @@
 name: Setup Environment
-description: Setup Bun, install dependencies, build packages, and optionally install Goose CLI
+description: Setup Bun, install dependencies, build packages, and optionally install Goose
 
 inputs:
   bun-version:

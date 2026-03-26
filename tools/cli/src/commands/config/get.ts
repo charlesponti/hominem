@@ -1,17 +1,18 @@
-import { Args, Command } from '@oclif/core';
+import { Args } from '@oclif/core';
 import { z } from 'zod';
 
 import type { JsonValue } from '@/contracts';
 
 import { getPathValue, loadConfigV2 } from '@/config';
 import { JsonValueSchema } from '@/json-value-schema';
+import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 
 const outputSchema = z.object({
   value: JsonValueSchema,
 });
 
-export default class ConfigGet extends Command {
+export default class ConfigGet extends JsonCommand {
   static description = 'Reads full config document or a dot-path selector.';
   static summary = 'Get config values';
 
@@ -23,25 +24,10 @@ export default class ConfigGet extends Command {
     }),
   };
 
-  static override flags = {};
-
-  static enableJsonFlag = true;
-
   async run(): Promise<z.infer<typeof outputSchema>> {
     const { args } = await this.parse(ConfigGet);
 
-    let config: Awaited<ReturnType<typeof loadConfigV2>>;
-    try {
-      config = await loadConfigV2();
-    } catch (error) {
-      this.error(
-        `Failed to load config: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        {
-          exit: 3,
-          code: 'CONFIG_READ_FAILED',
-        },
-      );
-    }
+    const config = await loadConfigV2();
 
     if (!args.path) {
       const output = { value: config as JsonValue };
