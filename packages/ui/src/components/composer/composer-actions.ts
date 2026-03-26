@@ -17,14 +17,26 @@ import type { ComposerPosture } from './composer-presentation';
 
 export function buildNoteContext(attachedNotes: ReadonlyArray<Note>): string {
   if (attachedNotes.length === 0) return '';
+
   const sections = attachedNotes.map(
     (note) => `### ${note.title ?? 'Untitled note'}\n\n${note.content}`,
   );
+
   return `<context>\n${sections.join('\n\n---\n\n')}\n</context>\n\n`;
 }
 
 export function toNoteTitle(text: string, fallback = ''): string {
   return text.slice(0, CHAT_TITLE_MAX_LENGTH) || fallback;
+}
+
+export function appendTranscriptToDraft(text: string, transcript: string): string {
+  const trimmedTranscript = transcript.trim();
+
+  if (trimmedTranscript.length === 0) {
+    return text;
+  }
+
+  return text.trim().length > 0 ? `${text}\n${trimmedTranscript}` : trimmedTranscript;
 }
 
 // ─── resolveComposerActions (kept for unit tests) ─────────────────────────────

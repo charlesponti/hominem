@@ -12,20 +12,16 @@ import type { ReactNode } from 'react';
 
 export function ComposerShell({ children }: { children: ReactNode }) {
   return (
-    <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-3 pb-[max(env(safe-area-inset-bottom),10px)]">
-      <div className="page-width-lg w-full" style={{ marginInline: 'auto' }}>
+    <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-5 pb-[max(env(safe-area-inset-bottom),12px)]">
+      <div className="page-width-compose w-full" style={{ marginInline: 'auto' }}>
         <div
           className={[
-            'pointer-events-auto flex w-full flex-col gap-1.5 rounded-2xl',
+            'pointer-events-auto flex w-full flex-col gap-2.5 composer-shell-surface',
             // Surface
             'border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)]/95 backdrop-blur-xl',
-            // Shadow — lifts away from the page
-            'shadow-[0_-4px_32px_rgba(28,25,23,0.05),0_2px_12px_rgba(28,25,23,0.03)]',
-            // Layout
-            'px-3.5 py-3',
             // Focus-within: ambient accent glow — the composer "wakes up"
             'transition-shadow duration-300',
-            'focus-within:shadow-[0_-4px_32px_rgba(212,165,116,0.08),0_0_0_1px_rgba(212,165,116,0.15),0_2px_12px_rgba(28,25,23,0.03)]',
+            'focus-within:composer-shell-focus',
             // GPU compositing hint
             'will-change-[transform,box-shadow]',
           ].join(' ')}

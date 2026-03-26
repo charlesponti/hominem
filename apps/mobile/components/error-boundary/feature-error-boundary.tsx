@@ -6,6 +6,7 @@ import {
   type BoundaryState,
 } from '~/utils/error-boundary/contracts';
 import { logError } from '~/utils/error-boundary/log-error';
+
 import { FeatureErrorFallback } from './feature-error-fallback';
 
 interface Props {
@@ -43,10 +44,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <FeatureErrorFallback
-          featureName={this.props.featureName}
-          onReset={this.handleReset}
-        />
+        <FeatureErrorFallback featureName={this.props.featureName} onReset={this.handleReset} />
       );
     }
 

@@ -36,14 +36,34 @@ jobs:
   static-lint:
     name: static:lint
     runs-on: ubuntu-latest
+    env:
+      DEV_DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
     permissions:
       contents: read
       packages: read
+    services:
+      postgres:
+        image: ghcr.io/hackefeller/postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hominem-test
+        ports:
+          - 4433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
         with:
           install-flags: "--force"
+      - name: 🏗️ Initialize test database schema
+        uses: ./.github/actions/db-setup
+        with:
+          environment: test
       - name: 🔬 Lint
         run: bun run lint
         timeout-minutes: 10

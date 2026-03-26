@@ -6,6 +6,7 @@ import {
   type BoundaryState,
 } from '~/utils/error-boundary/contracts';
 import { logError } from '~/utils/error-boundary/log-error';
+
 import { RootErrorFallback } from './root-error-fallback';
 
 interface Props {
@@ -41,12 +42,7 @@ export class RootErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      return (
-        <RootErrorFallback
-          error={this.state.error}
-          onReset={this.handleReset}
-        />
-      );
+      return <RootErrorFallback error={this.state.error} onReset={this.handleReset} />;
     }
 
     return this.props.children;

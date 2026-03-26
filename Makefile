@@ -6,6 +6,48 @@ include .env
 export
 endif
 
+# Cross-make pretty printing helpers (use in all Makefiles via $(call info,...) etc.)
+NO_COLOR ?= 0
+COLOR_ENABLED := $(strip $(if $(filter 0,$(NO_COLOR)),1,0))
+
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+RED := \033[0;31m
+BLUE := \033[0;34m
+BOLD := \033[1m
+RESET := \033[0m
+
+define _color
+	$(if $(COLOR_ENABLED),printf '%b' '$(1)'; true)
+endef
+
+define info
+	@$(call _color,$(BLUE)$(BOLD)[info] $(RESET))
+	@echo $(1)
+endef
+
+define success
+	@$(call _color,$(GREEN)$(BOLD)[success] $(RESET))
+	@echo $(1)
+endef
+
+define warn
+	@$(call _color,$(YELLOW)$(BOLD)[warn] $(RESET))
+	@echo $(1)
+endef
+
+define error
+	@$(call _color,$(RED)$(BOLD)[error] $(RESET))
+	@echo $(1)
+endef
+
+# Quiet command mode (default prints commands, VERBOSE=1 prints them)
+ifeq ($(VERBOSE),1)
+Q :=
+else
+Q := @
+endif
+
 DOCKER_COMPOSE := docker compose
 DOCKER_LOCAL := $(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml
 DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
@@ -185,17 +227,16 @@ lint:
 	npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' packages/db/migrations/*.sql
 	bun turbo run lint --no-cache
 	$(MAKE) db-verify-types
-	@echo "── tsc: standard typecheck across all workspaces ────────────────"
+	@echo "── tsc: standard typecheck across all workspaces ────────────────\n"
 	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
-	@echo "── knip: unused files / exports / dependencies ──────────────────"
+	@echo "── knip: unused files / exports / dependencies ──────────────────\n"
 	bun run knip
-	@echo "── tsc --noUnusedLocals across all workspaces ───────────────────"
+	@echo "── tsc --noUnusedLocals across all workspaces ───────────────────\n"
 	@for package in $(UNUSED_TS_PACKAGES); do \
 		echo "Checking $$package"; \
-		bun --cwd $$package x tsc --noEmit --noUnusedLocals --noUnusedParameters || exit 1; \
-	done
+		( cd $$package && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters ) || exit 1; \
+		done
 
-# Clean build artifacts and dependencies
 clean:
 	bun turbo run clean
 	find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete

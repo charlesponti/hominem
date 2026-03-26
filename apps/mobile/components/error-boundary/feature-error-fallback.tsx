@@ -17,13 +17,7 @@ export const FeatureErrorFallback = ({ featureName, onReset }: Props) => {
       <Text variant="body" color="text-tertiary">
         {createFeatureFallbackLabel(featureName)}
       </Text>
-      <Button
-        variant="outline"
-        size="sm"
-        style={styles.button}
-        onPress={onReset}
-        title="Retry"
-      />
+      <Button variant="outline" size="sm" style={styles.button} onPress={onReset} title="Retry" />
     </View>
   );
 };

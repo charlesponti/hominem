@@ -17,7 +17,7 @@ import {
   setMobileComposerText,
   type MobileComposerAttachment,
   type MobileComposerMode,
-} from './mobile-composer-state';
+} from './composer-state.mobile';
 
 type InputContextValue = {
   message: string;

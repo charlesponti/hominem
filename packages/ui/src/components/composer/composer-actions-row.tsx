@@ -68,10 +68,10 @@ function ActionButton({
       disabled={disabled}
       data-testid={isPrimary ? 'composer-primary' : 'composer-secondary'}
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-xl transition-all duration-150',
+        'flex shrink-0 items-center justify-center rounded-full transition-all duration-150',
         isPrimary
-          ? 'size-10'
-          : 'size-9 border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]',
+          ? 'control-default'
+          : 'control-default border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]',
         isPrimary &&
           (disabled
             ? 'cursor-not-allowed bg-[var(--color-bg-inset)] text-[var(--color-text-tertiary)]'
@@ -113,15 +113,15 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
   const showVoiceAsPrimary = showsVoiceButton && !hasContent;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       {presentation.posture !== 'note-query' && !showVoiceAsPrimary && (
         <ActionButton
           intent={secondaryIntent(presentation.posture)}
           icon={
             presentation.secondaryActionIcon === 'circle-plus' ? (
-              <CirclePlus className="size-4" />
+              <CirclePlus className="icon-md" />
             ) : (
-              <MessageSquare className="size-4" />
+              <MessageSquare className="icon-md" />
             )
           }
           label={presentation.secondaryActionLabel}
@@ -131,7 +131,7 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
       )}
       {showVoiceAsPrimary ? (
         <ActionButton
-          icon={<Mic className="size-4" />}
+          icon={<Mic className="icon-md" />}
           label="Voice note"
           disabled={isPending || formPending}
           variant="primary"
@@ -142,9 +142,9 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
           intent={primaryIntent(presentation.posture)}
           icon={
             presentation.primaryActionIcon === 'circle-plus' ? (
-              <CirclePlus className="size-4" />
+              <CirclePlus className="icon-md" />
             ) : (
-              <ArrowUp className="size-4" strokeWidth={2.5} />
+              <ArrowUp className="icon-md" strokeWidth={2.5} />
             )
           }
           label={presentation.primaryActionLabel}

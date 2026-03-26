@@ -1,13 +1,12 @@
-import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants';
 import { useApiClient } from '@hominem/rpc/react';
+import { toNoteTitle } from '@hominem/ui/composer';
 import { CHAT_UPLOAD_MAX_FILE_COUNT } from '@hominem/utils/upload';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { donateAddNoteIntent } from '~/lib/intent-donation';
@@ -24,19 +23,19 @@ import { chatKeys } from '~/utils/services/notes/query-keys';
 import { useCreateNote } from '~/utils/services/notes/use-create-note';
 
 import { useMobileWorkspace } from '../workspace/mobile-workspace-context';
-import { useInputContext } from './input-context';
 import {
   appendUploadedAssetsToDraft,
   applyVoiceTranscriptToDraft,
   removeAttachmentFromDraft,
-} from './mobile-composer-actions';
+} from './composer-actions.mobile';
+import { MobileComposerAttachments } from './composer-attachments.mobile';
+import { deriveMobileComposerPresentation } from './composer-config.mobile';
+import { MobileComposerFooter } from './composer-footer.mobile';
 import {
   getCameraModalComponent,
   getVoiceSessionModalComponent,
-} from './mobile-composer-modal-loader';
-import { MobileComposerAttachments } from './mobile-composer-attachments';
-import { deriveMobileComposerPresentation } from './mobile-composer-config';
-import { MobileComposerFooter } from './mobile-composer-footer';
+} from './composer-modal-loader.mobile';
+import { useInputContext } from './input-context';
 
 export const MobileComposer = () => {
   const client = useApiClient();
@@ -93,7 +92,7 @@ export const MobileComposer = () => {
   const createChatFromDraft = async () => {
     const trimmedMessage = message.trim();
     const fileIds = getUploadedAttachmentIds();
-    const chatTitle = trimmedMessage.slice(0, CHAT_TITLE_MAX_LENGTH) || 'New conversation';
+    const chatTitle = toNoteTitle(trimmedMessage, 'New conversation');
     const chat = await client.chats.create({
       title: chatTitle,
     });

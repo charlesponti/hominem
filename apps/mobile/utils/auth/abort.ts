@@ -2,32 +2,32 @@ export function createAbortSignalWithTimeout(
   timeoutMs: number,
   externalSignal?: AbortSignal,
 ): {
-  cleanup: () => void
-  signal: AbortSignal
+  cleanup: () => void;
+  signal: AbortSignal;
 } {
-  const controller = new AbortController()
+  const controller = new AbortController();
 
   const abort = () => {
-    controller.abort()
-  }
+    controller.abort();
+  };
 
   if (externalSignal) {
     if (externalSignal.aborted) {
-      abort()
+      abort();
     } else {
-      externalSignal.addEventListener('abort', abort, { once: true })
+      externalSignal.addEventListener('abort', abort, { once: true });
     }
   }
 
   const timeoutId = setTimeout(() => {
-    controller.abort()
-  }, timeoutMs)
+    controller.abort();
+  }, timeoutMs);
 
   return {
     signal: controller.signal,
     cleanup: () => {
-      clearTimeout(timeoutId)
-      externalSignal?.removeEventListener('abort', abort)
+      clearTimeout(timeoutId);
+      externalSignal?.removeEventListener('abort', abort);
     },
-  }
+  };
 }

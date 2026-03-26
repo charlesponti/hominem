@@ -5,3 +5,4 @@ process.env.GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'test-key';
 process.env.R2_ENDPOINT = process.env.R2_ENDPOINT || 'https://example.com';
 process.env.R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || 'fake';
 process.env.R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || 'fake';
+process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || 'test-key';

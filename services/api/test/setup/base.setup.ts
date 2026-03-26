@@ -14,6 +14,7 @@ vi.mock('zod', async (importOriginal) => {
 
 process.env.NODE_ENV = 'test'
 process.env.AUTH_CAPTCHA_SECRET_KEY = ''
+process.env.OPENROUTER_API_KEY = 'test-openrouter-key'
 process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com'
 process.env.R2_ACCESS_KEY_ID = 'test-access-key-id'
 process.env.R2_SECRET_ACCESS_KEY = 'test-secret-access-key'

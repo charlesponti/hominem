@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest';
 
-import { deriveMobileComposerPresentation } from '../../components/input/mobile-composer-config'
+import { deriveMobileComposerPresentation } from '../../components/input/composer-config.mobile';
 
 describe('mobile composer presentation', () => {
   it('returns inbox capture defaults', () => {
@@ -17,8 +17,8 @@ describe('mobile composer presentation', () => {
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'capture',
-    })
-  })
+    });
+  });
 
   it('returns note drafting defaults', () => {
     expect(
@@ -34,8 +34,8 @@ describe('mobile composer presentation', () => {
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'draft',
-    })
-  })
+    });
+  });
 
   it('returns chat reply posture', () => {
     expect(
@@ -51,8 +51,8 @@ describe('mobile composer presentation', () => {
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'reply',
-    })
-  })
+    });
+  });
 
   it('returns search posture without create actions', () => {
     expect(
@@ -68,6 +68,6 @@ describe('mobile composer presentation', () => {
       showsAttachmentButton: false,
       showsVoiceButton: false,
       posture: 'search',
-    })
-  })
-})
+    });
+  });
+});

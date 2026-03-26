@@ -141,6 +141,7 @@
 
   --content-width-bubble: 36rem;
   --content-width-transcript: 44rem;
+  --content-width-composer: 52rem;
 
   /* ====== BORDER RADIUS ====== */
   /* Tight, precise scale */
@@ -150,7 +151,23 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-icon: 22%;
+
+  /* ====== INTERACTION DENSITY ====== */
+
+  --control-height-compact: 32px;
+  --control-height-default: 34px;
+  --control-height-comfortable: 40px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --composer-padding-x: 16px;
+  --composer-padding-top: 12px;
+  --composer-padding-bottom: 10px;
+  --composer-row-gap: 8px;
+  --composer-input-min-height: 44px;
+  --composer-input-min-height-draft: 48px;
 
   /* ====== SHADOWS ====== */
   /* Warm-tinted, extremely subtle */
@@ -158,6 +175,10 @@
   --shadow-low: 0 1px 3px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.02);
   --shadow-medium: 0 4px 16px rgba(28, 25, 23, 0.06), 0 2px 4px rgba(28, 25, 23, 0.03);
   --shadow-high: 0 12px 40px rgba(28, 25, 23, 0.08), 0 4px 12px rgba(28, 25, 23, 0.04);
+  --shadow-composer-resting: 0 -4px 32px rgba(28, 25, 23, 0.05), 0 2px 12px rgba(28, 25, 23, 0.03);
+  --shadow-composer-focus:
+    0 -4px 32px rgba(212, 165, 116, 0.08), 0 0 0 1px rgba(212, 165, 116, 0.15),
+    0 2px 12px rgba(28, 25, 23, 0.03);
 
   /* ====== GLASS MORPHISM ====== */
 
@@ -246,6 +267,10 @@
   --shadow-low: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
   --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.15);
   --shadow-high: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-composer-resting: 0 -4px 24px rgba(0, 0, 0, 0.28), 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-composer-focus:
+    0 -4px 24px rgba(212, 165, 116, 0.16), 0 0 0 1px rgba(212, 165, 116, 0.22),
+    0 2px 10px rgba(0, 0, 0, 0.2);
 
   --glass-background: rgba(10, 10, 10, 0.8);
 
@@ -816,6 +841,50 @@
   border-radius: var(--radius-xl);
 }
 
+@utility rounded-2xl {
+  border-radius: var(--radius-2xl);
+}
+
+/* ====== DENSITY UTILITIES ====== */
+
+.control-compact {
+  width: var(--control-height-compact);
+  height: var(--control-height-compact);
+}
+
+.control-default {
+  width: var(--control-height-default);
+  height: var(--control-height-default);
+}
+
+.control-comfortable {
+  width: var(--control-height-comfortable);
+  height: var(--control-height-comfortable);
+}
+
+.icon-sm {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.icon-md {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.icon-lg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+
+.body-1-compact {
+  font-size: 16px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
 /* ── list-row ──
  * Apply to every <li> in an interactive list (sidebar nav, menu, feed rows).
  * All direct children stretch to full row height. */
@@ -877,6 +946,10 @@
   max-inline-size: min(100%, 80rem);
 }
 
+.page-width-compose {
+  max-inline-size: min(100%, var(--content-width-composer));
+}
+
 @utility page-width-full {
   max-inline-size: 100%;
 }
@@ -884,6 +957,18 @@
 @utility center-layout {
   margin-inline: auto;
   width: 100%;
+}
+
+.composer-shell-surface {
+  border-radius: var(--radius-2xl);
+  padding-inline: var(--composer-padding-x);
+  padding-top: var(--composer-padding-top);
+  padding-bottom: var(--composer-padding-bottom);
+  box-shadow: var(--shadow-composer-resting);
+}
+
+.composer-shell-focus {
+  box-shadow: var(--shadow-composer-focus);
 }
 
 /* ====== COMPONENT CLASSES ====== */

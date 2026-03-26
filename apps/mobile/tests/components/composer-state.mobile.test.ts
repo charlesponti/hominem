@@ -4,7 +4,7 @@ import {
   setMobileComposerContext,
   setMobileComposerRecording,
   setMobileComposerText,
-} from '../../components/input/mobile-composer-state'
+} from '../../components/input/composer-state.mobile';
 
 describe('mobile composer state', () => {
   it('starts with an inbox draft and no staged content', () => {
@@ -14,17 +14,17 @@ describe('mobile composer state', () => {
       attachments: [],
       isRecording: false,
       mode: 'text',
-    })
-  })
+    });
+  });
 
   it('preserves draft content while switching workspace contexts', () => {
-    const initialState = createInitialMobileComposerState()
-    const withText = setMobileComposerText(initialState, 'Draft a note about today')
+    const initialState = createInitialMobileComposerState();
+    const withText = setMobileComposerText(initialState, 'Draft a note about today');
     const withAttachment = setMobileComposerAttachments(withText, [
       { id: 'asset-1', name: 'receipt.png', type: 'image' },
-    ])
-    const withVoice = setMobileComposerRecording(withAttachment, true)
-    const inChat = setMobileComposerContext(withVoice, 'chat')
+    ]);
+    const withVoice = setMobileComposerRecording(withAttachment, true);
+    const inChat = setMobileComposerContext(withVoice, 'chat');
 
     expect(inChat).toEqual({
       context: 'chat',
@@ -32,6 +32,6 @@ describe('mobile composer state', () => {
       attachments: [{ id: 'asset-1', name: 'receipt.png', type: 'image' }],
       isRecording: true,
       mode: 'text',
-    })
-  })
-})
+    });
+  });
+});

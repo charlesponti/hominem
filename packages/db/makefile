@@ -1,16 +1,12 @@
-include .env
-export
+ROOT := ../..
+
+.PHONY: goose-up goose-down goose-status
 
 goose-up:
-	@echo "Migrating application database..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" up
-	@echo "Migrating test database..."
-	goose -dir ./migrations postgres "$(TEST_DATABASE_URL)" up
+	$(MAKE) -C $(ROOT) goose-up
 
 goose-down:
-	@echo "Rolling back latest migration on application database..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" down
+	$(MAKE) -C $(ROOT) goose-down
 
 goose-status:
-	@echo "Application database migration status..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" status
+	$(MAKE) -C $(ROOT) goose-status

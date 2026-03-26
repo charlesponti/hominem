@@ -20,12 +20,7 @@ export const RootErrorFallback = ({ error, onReset }: Props) => {
       <Text variant="body" color="text-tertiary" style={styles.message}>
         {createRootFallbackMessage(error)}
       </Text>
-      <Button
-        variant="primary"
-        style={styles.button}
-        onPress={onReset}
-        title="Try Again"
-      />
+      <Button variant="primary" style={styles.button} onPress={onReset} title="Try Again" />
     </View>
   );
 };

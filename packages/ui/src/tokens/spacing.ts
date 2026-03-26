@@ -24,6 +24,7 @@ export const spacing = {
 export const contentWidths = {
   bubble: '36rem', // Compact message bubble width (576px)
   transcript: '44rem', // Standard transcript/content width (704px)
+  composer: '52rem', // Floating composer width (832px)
 } as const;
 
 export type SpacingToken = keyof typeof spacing;

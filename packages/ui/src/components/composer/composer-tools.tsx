@@ -36,7 +36,7 @@ function ToolButton({
       disabled={disabled}
       aria-pressed={active || undefined}
       className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150',
+        'flex control-default shrink-0 items-center justify-center rounded-full transition-all duration-150',
         disabled && 'cursor-not-allowed opacity-40',
         active
           ? 'bg-[var(--color-accent-subtle)] text-[var(--color-accent)]'
@@ -80,10 +80,10 @@ export const ComposerTools = memo(function ComposerTools({
   }, []);
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
       {presentation.showsNotePicker && (
         <ToolButton
-          icon={<BookOpen className="size-4" />}
+          icon={<BookOpen className="icon-md" />}
           label="Attach notes as context"
           onClick={() => notePickerDialogRef.current?.showModal()}
           active={attachedNotesCount > 0}
@@ -92,7 +92,7 @@ export const ComposerTools = memo(function ComposerTools({
       )}
       {presentation.showsAttachmentButton && (
         <ToolButton
-          icon={<Plus className="size-4" />}
+          icon={<Plus className="icon-md" />}
           label="Add attachment"
           onClick={() => fileInputRef.current?.click()}
           active={false}
@@ -101,7 +101,7 @@ export const ComposerTools = memo(function ComposerTools({
       )}
       {isTouchDeviceState && presentation.showsAttachmentButton && (
         <ToolButton
-          icon={<Camera className="size-4" />}
+          icon={<Camera className="icon-md" />}
           label="Take photo"
           onClick={() => cameraInputRef.current?.click()}
           active={false}

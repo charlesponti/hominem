@@ -1,7 +1,7 @@
 import type { Note } from '@hominem/rpc/types';
 import { notesTokensNative } from '@hominem/ui/tokens';
-import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
+import { Link } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -151,197 +151,189 @@ const useStyles = makeStyles((t) =>
 );
 
 export const NoteListItem = memo(
-  ({
-    item,
-    label,
-    itemIndex,
-  }: {
-    item: Note;
-    label: string;
-    itemIndex?: number;
-  }) => {
-  const styles = useStyles();
-  const translateX = useSharedValue(0);
-  const itemHeight = useSharedValue(64);
-  const iconBackgroundColor = useSharedValue<string>(theme.colors['bg-inset']);
-  const iconName = useSharedValue<AppIconName>('check');
-  const isMutating = useSharedValue(false);
-  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dueDate = item.scheduledFor ? parseScheduledForValue(item.scheduledFor) : null;
-  const title = getPrimaryLine(label);
-  const preview = getPreviewLine(label);
+  ({ item, label, itemIndex }: { item: Note; label: string; itemIndex?: number }) => {
+    const styles = useStyles();
+    const translateX = useSharedValue(0);
+    const itemHeight = useSharedValue(64);
+    const iconBackgroundColor = useSharedValue<string>(theme.colors['bg-inset']);
+    const iconName = useSharedValue<AppIconName>('check');
+    const isMutating = useSharedValue(false);
+    const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const dueDate = item.scheduledFor ? parseScheduledForValue(item.scheduledFor) : null;
+    const title = getPrimaryLine(label);
+    const preview = getPreviewLine(label);
 
-  useEffect(() => {
-    return () => {
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, []);
+    useEffect(() => {
+      return () => {
+        if (errorTimeoutRef.current) {
+          clearTimeout(errorTimeoutRef.current);
+        }
+      };
+    }, []);
 
-  const iconStyle = useAnimatedStyle(() => ({
-    backgroundColor: iconBackgroundColor.value,
-  }));
+    const iconStyle = useAnimatedStyle(() => ({
+      backgroundColor: iconBackgroundColor.value,
+    }));
 
-  const resetErrorState = useCallback(() => {
-    iconName.value = 'circle-check';
-    iconBackgroundColor.value = withTiming(theme.colors['bg-inset'], {
-      duration: VOID_MOTION_DURATION_STANDARD,
+    const resetErrorState = useCallback(() => {
+      iconName.value = 'circle-check';
+      iconBackgroundColor.value = withTiming(theme.colors['bg-inset'], {
+        duration: VOID_MOTION_DURATION_STANDARD,
+      });
+      isMutating.value = false;
+    }, [iconName, iconBackgroundColor, isMutating]);
+
+    const deleteFocusItem = useDeleteNote({
+      onSuccess: () => {
+        isMutating.value = false;
+      },
+      onError: () => {
+        if (errorTimeoutRef.current) {
+          clearTimeout(errorTimeoutRef.current);
+        }
+        errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
+      },
     });
-    isMutating.value = false;
-  }, [iconName, iconBackgroundColor, isMutating]);
 
-  const deleteFocusItem = useDeleteNote({
-    onSuccess: () => {
-      isMutating.value = false;
-    },
-    onError: () => {
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-      errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
-    },
-  });
-
-  const completeItem = useNoteComplete({
-    onSuccess: () => {
-      iconBackgroundColor.value = withTiming(theme.colors.success, {
-        duration: VOID_MOTION_DURATION_STANDARD,
-      });
-      isMutating.value = false;
-    },
-    onError: () => {
-      iconName.value = 'circle-xmark';
-      iconBackgroundColor.value = withTiming(theme.colors.destructive, {
-        duration: VOID_MOTION_DURATION_STANDARD,
-      });
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-      errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
-    },
-  });
-
-  const panHandler = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .activeOffsetY([-1000, 1000])
-    .simultaneousWithExternalGesture(Gesture.Native())
-    .onChange((event) => {
-      if (event.numberOfPointers > 1) return;
-
-      const { translationX, translationY } = event;
-      if (Math.abs(translationX) > Math.abs(translationY)) {
-        translateX.value = translationX;
-      }
-    })
-    .onEnd(() => {
-      if (isMutating.value) return;
-
-      if (translateX.value > SWIPE_THRESHOLD) {
-        isMutating.value = true;
-        translateX.value = withTiming(0);
-        completeItem.mutate(item.id);
-      } else if (translateX.value < -SWIPE_THRESHOLD) {
-        isMutating.value = true;
-        translateX.value = withTiming(-itemHeight.value, {}, () => {
-          deleteFocusItem.mutate(item.id);
+    const completeItem = useNoteComplete({
+      onSuccess: () => {
+        iconBackgroundColor.value = withTiming(theme.colors.success, {
+          duration: VOID_MOTION_DURATION_STANDARD,
         });
-      } else {
-        translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD });
-      }
+        isMutating.value = false;
+      },
+      onError: () => {
+        iconName.value = 'circle-xmark';
+        iconBackgroundColor.value = withTiming(theme.colors.destructive, {
+          duration: VOID_MOTION_DURATION_STANDARD,
+        });
+        if (errorTimeoutRef.current) {
+          clearTimeout(errorTimeoutRef.current);
+        }
+        errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
+      },
     });
 
-  const combinedGesture = panHandler;
+    const panHandler = Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .activeOffsetY([-1000, 1000])
+      .simultaneousWithExternalGesture(Gesture.Native())
+      .onChange((event) => {
+        if (event.numberOfPointers > 1) return;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+        const { translationX, translationY } = event;
+        if (Math.abs(translationX) > Math.abs(translationY)) {
+          translateX.value = translationX;
+        }
+      })
+      .onEnd(() => {
+        if (isMutating.value) return;
 
-  const leftActionStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value > 0 ? translateX.value / SWIPE_THRESHOLD : 0,
-  }));
+        if (translateX.value > SWIPE_THRESHOLD) {
+          isMutating.value = true;
+          translateX.value = withTiming(0);
+          completeItem.mutate(item.id);
+        } else if (translateX.value < -SWIPE_THRESHOLD) {
+          isMutating.value = true;
+          translateX.value = withTiming(-itemHeight.value, {}, () => {
+            deleteFocusItem.mutate(item.id);
+          });
+        } else {
+          translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD });
+        }
+      });
 
-  const rightActionStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value < 0 ? -translateX.value / SWIPE_THRESHOLD : 0,
-  }));
+    const combinedGesture = panHandler;
 
-  const onDeleteMenuItemPress = useCallback(() => {
-    deleteFocusItem.mutate(item.id);
-  }, [deleteFocusItem, item.id]);
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: translateX.value }],
+    }));
 
-  const itemInfo = (
-    <Reanimated.View style={[styles.itemContainer, animatedStyle]}>
-      <View style={styles.itemRow}>
-        <View style={styles.itemContent}>
-          <View style={styles.focusInfoContainer}>
-            <Reanimated.Text style={[listStyles.text, styles.title]}>{title}</Reanimated.Text>
-            <Reanimated.Text style={[listStyles.text, styles.preview]}>{preview}</Reanimated.Text>
+    const leftActionStyle = useAnimatedStyle(() => ({
+      opacity: translateX.value > 0 ? translateX.value / SWIPE_THRESHOLD : 0,
+    }));
+
+    const rightActionStyle = useAnimatedStyle(() => ({
+      opacity: translateX.value < 0 ? -translateX.value / SWIPE_THRESHOLD : 0,
+    }));
+
+    const onDeleteMenuItemPress = useCallback(() => {
+      deleteFocusItem.mutate(item.id);
+    }, [deleteFocusItem, item.id]);
+
+    const itemInfo = (
+      <Reanimated.View style={[styles.itemContainer, animatedStyle]}>
+        <View style={styles.itemRow}>
+          <View style={styles.itemContent}>
+            <View style={styles.focusInfoContainer}>
+              <Reanimated.Text style={[listStyles.text, styles.title]}>{title}</Reanimated.Text>
+              <Reanimated.Text style={[listStyles.text, styles.preview]}>{preview}</Reanimated.Text>
+            </View>
+            <FocusDueDate dueDate={dueDate} />
           </View>
-          <FocusDueDate dueDate={dueDate} />
+          <Reanimated.View style={[styles.icon, iconStyle]}>
+            <AppIcon name={iconName.value} size={20} color={theme.colors['icon-primary']} />
+          </Reanimated.View>
         </View>
-        <Reanimated.View style={[styles.icon, iconStyle]}>
-          <AppIcon name={iconName.value} size={20} color={theme.colors['icon-primary']} />
-        </Reanimated.View>
-      </View>
-    </Reanimated.View>
-  );
+      </Reanimated.View>
+    );
 
-  if (item.status === 'archived') {
+    if (item.status === 'archived') {
+      return (
+        <View
+          testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}
+          style={[styles.container]}
+        >
+          {itemInfo}
+        </View>
+      );
+    }
+
     return (
       <View
         testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}
         style={[styles.container]}
       >
-        {itemInfo}
+        <Reanimated.View style={[styles.leftAction, leftActionStyle]}>
+          <Text style={[styles.actionText, styles.completeActionText]}>Complete</Text>
+        </Reanimated.View>
+        <Reanimated.View style={[styles.rightAction, rightActionStyle]}>
+          <Text style={[styles.actionText, styles.deleteActionText]}>Delete</Text>
+        </Reanimated.View>
+        <ContextMenu.Root>
+          <Link
+            asChild
+            href={{
+              pathname: '/(protected)/(tabs)/focus/[id]' as RelativePathString,
+              params: { id: item.id },
+            }}
+          >
+            <ContextMenu.Trigger style={styles.triggerFull}>
+              <GestureDetector gesture={combinedGesture}>{itemInfo}</GestureDetector>
+            </ContextMenu.Trigger>
+          </Link>
+          <ContextMenu.Content
+            alignOffset={10}
+            loop={false}
+            avoidCollisions={true}
+            collisionPadding={12}
+          >
+            <ContextMenu.Label>Actions</ContextMenu.Label>
+            <ContextMenu.Item key="delete" onSelect={onDeleteMenuItemPress}>
+              <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
+              <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
+            </ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu.Root>
       </View>
     );
-  }
-
-  return (
-    <View
-      testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}
-      style={[styles.container]}
-    >
-      <Reanimated.View style={[styles.leftAction, leftActionStyle]}>
-        <Text style={[styles.actionText, styles.completeActionText]}>Complete</Text>
-      </Reanimated.View>
-      <Reanimated.View style={[styles.rightAction, rightActionStyle]}>
-        <Text style={[styles.actionText, styles.deleteActionText]}>Delete</Text>
-      </Reanimated.View>
-      <ContextMenu.Root>
-        <Link
-          asChild
-          href={{
-            pathname: '/(protected)/(tabs)/focus/[id]' as RelativePathString,
-            params: { id: item.id },
-          }}
-        >
-          <ContextMenu.Trigger style={styles.triggerFull}>
-            <GestureDetector gesture={combinedGesture}>{itemInfo}</GestureDetector>
-          </ContextMenu.Trigger>
-        </Link>
-        <ContextMenu.Content
-          alignOffset={10}
-          loop={false}
-          avoidCollisions={true}
-          collisionPadding={12}
-        >
-          <ContextMenu.Label>Actions</ContextMenu.Label>
-          <ContextMenu.Item key="delete" onSelect={onDeleteMenuItemPress}>
-            <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
-            <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
-          </ContextMenu.Item>
-        </ContextMenu.Content>
-      </ContextMenu.Root>
-    </View>
-  );
-},
-(prev, next) =>
-  prev.item.id === next.item.id &&
-  prev.label === next.label &&
-  prev.itemIndex === next.itemIndex &&
-  prev.item.status === next.item.status &&
-  prev.item.scheduledFor === next.item.scheduledFor,
+  },
+  (prev, next) =>
+    prev.item.id === next.item.id &&
+    prev.label === next.label &&
+    prev.itemIndex === next.itemIndex &&
+    prev.item.status === next.item.status &&
+    prev.item.scheduledFor === next.item.scheduledFor,
 );
 
 NoteListItem.displayName = 'NoteListItem';

@@ -11,11 +11,10 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from './auth/auth-analytics';
 import { createAbortSignalWithTimeout } from './auth/abort';
+import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from './auth/auth-analytics';
 import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
 import { runAuthBoot } from './auth/boot';
-import { runSignOut } from './auth/sign-out';
 import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils';
 import {
   clearPersistedSessionCookies,
@@ -23,6 +22,7 @@ import {
   persistSessionCookieFromHeaders,
   persistSessionCookieHeader,
 } from './auth/session-cookie';
+import { runSignOut } from './auth/sign-out';
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types';
 import { API_BASE_URL, E2E_TESTING } from './constants';
 import { LocalStore } from './local-store';

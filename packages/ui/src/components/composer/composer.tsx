@@ -3,6 +3,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import type { ChangeEvent } from 'react';
 import { memo, useActionState, useRef } from 'react';
 
+import { cn } from '../../lib/utils';
 import { AttachedNotesList } from './attached-notes-list';
 import { buildNoteContext, toNoteTitle } from './composer-actions';
 import { ComposerActionsRow } from './composer-actions-row';
@@ -160,7 +161,6 @@ const ComposerForm = memo(function ComposerForm({
     }
   }
 
-  const isDraftMode = presentation.posture === 'draft';
   const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton;
 
   return (
@@ -185,7 +185,7 @@ const ComposerForm = memo(function ComposerForm({
       />
 
       <ComposerShell>
-        <form action={formAction} className="flex flex-col gap-1.5">
+        <form action={formAction} className="flex flex-col gap-(--composer-row-gap)">
           {/* Route context — read by form action from FormData */}
           <input type="hidden" name="noteId" value={noteId ?? ''} />
           <input type="hidden" name="chatId" value={chatId ?? ''} />
@@ -198,11 +198,10 @@ const ComposerForm = memo(function ComposerForm({
           <ComposerInput
             ref={inputRef}
             placeholder={presentation.placeholder}
-            isDraftMode={isDraftMode}
             isPending={isPending}
           />
 
-          <div className="mt-auto flex shrink-0 items-center justify-between">
+          <div className="mt-auto flex shrink-0 items-center justify-between gap-3">
             <ComposerTools
               fileInputRef={fileInputRef}
               cameraInputRef={cameraInputRef}
@@ -238,12 +237,10 @@ const ComposerForm = memo(function ComposerForm({
 const ComposerInput = memo(function ComposerInput({
   ref,
   placeholder,
-  isDraftMode,
   isPending,
 }: {
   ref: React.RefObject<HTMLTextAreaElement | null>;
   placeholder: string;
-  isDraftMode: boolean;
   isPending: boolean;
 }) {
   const store = useComposerStore();
@@ -273,10 +270,9 @@ const ComposerInput = memo(function ComposerInput({
       placeholder={placeholder}
       disabled={isPending}
       aria-label="Compose message or note"
-      className={[
-        'body-1 w-full resize-none border-0 bg-transparent p-0 text-[var(--color-text-primary)] outline-none field-sizing-content overflow-y-auto placeholder:text-[var(--color-text-tertiary)]/50 focus:outline-none',
-        isDraftMode ? 'min-h-7 max-h-56' : 'min-h-6 max-h-40',
-      ].join(' ')}
+      className={cn(
+        'body-1-compact w-full resize-none border-0 bg-transparent p-0 text-[15px] text-[var(--color-text-primary)] leading-[1.45] outline-none field-sizing-content overflow-y-auto placeholder:text-[var(--color-text-tertiary)]/50 focus:outline-none',
+      )}
     />
   );
 });

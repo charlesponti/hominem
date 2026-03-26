@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest';
 
 import {
   appendUploadedAssetsToDraft,
   applyVoiceTranscriptToDraft,
   removeAttachmentFromDraft,
-} from '../../components/input/mobile-composer-actions'
-import { createInitialMobileComposerState } from '../../components/input/mobile-composer-state'
+} from '../../components/input/composer-actions.mobile';
+import { createInitialMobileComposerState } from '../../components/input/composer-state.mobile';
 
 describe('mobile composer actions', () => {
   it('maps uploaded assets into shared draft attachments', () => {
@@ -35,7 +35,7 @@ describe('mobile composer actions', () => {
           textContent: 'Quarterly summary',
         },
       },
-    ])
+    ]);
 
     expect(state.attachments).toEqual([
       {
@@ -69,22 +69,22 @@ describe('mobile composer actions', () => {
           textContent: 'Quarterly summary',
         },
       },
-    ])
-  })
+    ]);
+  });
 
   it('appends a voice transcript to existing draft text', () => {
     const initialState = {
       ...createInitialMobileComposerState(),
       text: 'Existing draft',
-    }
+    };
 
     expect(applyVoiceTranscriptToDraft(initialState, 'captured idea')).toEqual({
       ...initialState,
       mode: 'text',
       isRecording: false,
       text: 'Existing draft\ncaptured idea',
-    })
-  })
+    });
+  });
 
   it('removes an attachment from the shared draft', () => {
     const initialState = {
@@ -93,10 +93,10 @@ describe('mobile composer actions', () => {
         { id: 'one', name: 'one.png', type: 'image' },
         { id: 'two', name: 'two.pdf', type: 'document' },
       ],
-    }
+    };
 
     expect(removeAttachmentFromDraft(initialState, 'one').attachments).toEqual([
       { id: 'two', name: 'two.pdf', type: 'document' },
-    ])
-  })
-})
+    ]);
+  });
+});
