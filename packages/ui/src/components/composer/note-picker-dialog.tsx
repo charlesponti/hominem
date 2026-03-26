@@ -1,10 +1,10 @@
 /**
  * NotePickerDialog
  *
- * Native <dialog> that replaces the GSAP-animated bottom sheet.
+ * Floating panel that rises from the composer bar instead of a viewport-bottom sheet.
  * Open/close: caller calls notePickerDialogRef.current.showModal() / .close().
- * Animation: CSS @starting-style slide-up — zero JS, zero GSAP.
- * State: only a local search query string (useState is the right tool here).
+ * Animation: CSS @starting-style scale-up from composer — zero JS.
+ * State: only a local search query string.
  */
 
 import type { Note } from '@hominem/rpc/types/notes.types';
@@ -29,7 +29,6 @@ export const NotePickerDialog = memo(
     const store = useComposerStore();
     const attachedNotes = useComposerSlice((s) => s.attachedNotes);
 
-    // Local search state — not global, not in the store
     const [query, setQuery] = useState('');
 
     const filtered = useMemo(() => {
@@ -63,36 +62,40 @@ export const NotePickerDialog = memo(
           setQuery('');
           inputRef.current?.focus();
         }}
-        // Positioned at viewport bottom via CSS; slides up on open via @starting-style
-        className="note-picker-dialog fixed inset-x-0 bottom-0 top-auto m-0 max-h-[70dvh] w-full max-w-none flex-col rounded-t-3xl border-t border-border/60 bg-background p-0 shadow-xl open:flex backdrop:bg-black/30 backdrop:backdrop-blur-sm"
+        className={cn(
+          // Positioned above the composer via the shell's relative context
+          'note-picker-panel',
+          'fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+80px)] top-auto',
+          'm-0 mx-auto w-[calc(100%-1rem)] max-w-[calc(780px-1rem)]',
+          'max-h-[min(420px,50dvh)] flex-col',
+          'rounded-2xl border border-border/40 bg-background p-0',
+          'shadow-[0_-4px_32px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)]',
+          'open:flex',
+          'backdrop:bg-transparent',
+        )}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-md bg-border/60" />
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-border/60 px-5 pb-3 pt-2">
-          <h2 className="text-base font-semibold text-foreground">Attach notes</h2>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/30 px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Attach notes</h2>
           {attachedNotes.length > 0 && (
-            <span className="text-xs text-text-tertiary">{attachedNotes.length} selected</span>
+            <span className="rounded-full bg-foreground px-2 py-0.5 text-[11px] font-medium text-background">
+              {attachedNotes.length}
+            </span>
           )}
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
             onClick={close}
-            className="ml-auto rounded-full"
+            className="ml-auto flex size-7 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-surface hover:text-foreground"
             aria-label="Close note picker"
           >
-            <X className="size-4" />
-          </Button>
+            <X className="size-3.5" />
+          </button>
         </div>
 
         {/* Search */}
-        <div className="px-4 py-2">
-          <div className="flex items-center gap-2 rounded-md border border-border/60 bg-bg-surface px-3 py-2">
-            <Search className="size-4 shrink-0 text-text-tertiary" aria-hidden="true" />
+        <div className="shrink-0 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2">
+            <Search className="size-3.5 shrink-0 text-text-tertiary" aria-hidden="true" />
             <input
               type="search"
               value={query}
@@ -106,13 +109,13 @@ export const NotePickerDialog = memo(
 
         {/* Note list */}
         <ul
-          className="flex-1 overflow-y-auto divide-y divide-border/50 px-1"
+          className="flex-1 overflow-y-auto overscroll-contain px-1.5 pb-1.5"
           role="listbox"
           aria-label="Notes"
           aria-multiselectable="true"
         >
           {filtered.length === 0 ? (
-            <li className="flex items-center justify-center py-10 text-sm text-text-tertiary">
+            <li className="flex items-center justify-center py-8 text-sm text-text-tertiary">
               No notes found
             </li>
           ) : (
@@ -124,27 +127,23 @@ export const NotePickerDialog = memo(
                     type="button"
                     onClick={() => toggleNote(note)}
                     className={cn(
-                      'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-surface',
-                      isSelected && 'bg-bg-surface',
+                      'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface',
+                      isSelected && 'bg-surface',
                     )}
                   >
                     <div
                       className={cn(
-                        'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors',
+                        'flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors',
                         isSelected
                           ? 'border-foreground bg-foreground text-background'
-                          : 'border-border/60 bg-background text-text-tertiary',
+                          : 'border-border/60 text-text-tertiary',
                       )}
                       aria-hidden="true"
                     >
-                      {isSelected ? (
-                        <Check className="size-3.5" />
-                      ) : (
-                        <FileText className="size-3.5" />
-                      )}
+                      {isSelected ? <Check className="size-3" /> : <FileText className="size-3" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-foreground">
+                      <div className="truncate text-[13px] font-medium text-foreground">
                         {note.title || 'Untitled note'}
                       </div>
                       {note.excerpt && (
@@ -152,10 +151,10 @@ export const NotePickerDialog = memo(
                           {note.excerpt}
                         </div>
                       )}
-                      <div className="mt-0.5 text-xs text-text-tertiary">
-                        {getTimeAgo(note.updatedAt)}
-                      </div>
                     </div>
+                    <span className="shrink-0 text-[11px] text-text-tertiary">
+                      {getTimeAgo(note.updatedAt)}
+                    </span>
                   </button>
                 </li>
               );
@@ -163,19 +162,19 @@ export const NotePickerDialog = memo(
           )}
         </ul>
 
-        {/* Footer */}
-        <div className="border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3">
-          <Button
-            type="button"
-            className="w-full rounded-md"
-            onClick={close}
-            disabled={attachedNotes.length === 0}
-          >
-            {attachedNotes.length > 0
-              ? `Attach ${attachedNotes.length} note${attachedNotes.length > 1 ? 's' : ''}`
-              : 'Select notes to attach'}
-          </Button>
-        </div>
+        {/* Footer — compact confirm */}
+        {attachedNotes.length > 0 && (
+          <div className="shrink-0 border-t border-border/30 px-3 py-2">
+            <Button
+              type="button"
+              size="sm"
+              className="w-full rounded-lg text-[13px]"
+              onClick={close}
+            >
+              Attach {attachedNotes.length} note{attachedNotes.length > 1 ? 's' : ''}
+            </Button>
+          </div>
+        )}
       </dialog>
     );
   }),

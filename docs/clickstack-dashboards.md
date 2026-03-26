@@ -257,3 +257,48 @@ LIMIT 20
 - Duration is in **nanoseconds** - divide by 1,000,000 for milliseconds
 - Replace `INTERVAL 1 HOUR` with desired time range
 - ClickStack requires a time column for charts - ensure `Timestamp` is included in GROUP BY for time-series
+
+## Programmatic Dashboard Creation
+
+### ClickStack Cloud API (Production)
+
+The full API is available on ClickStack Cloud / managed instances:
+
+```bash
+# List dashboards
+curl -X GET \
+  'https://api.clickhouse.cloud/v1/organizations/{orgId}/services/{serviceId}/clickstack/dashboards' \
+  --user '<keyId>:<keySecret>'
+
+# Create dashboard
+curl -X POST \
+  'https://api.clickhouse.cloud/v1/organizations/{orgId}/services/{serviceId}/clickstack/dashboards' \
+  --user '<keyId>:<keySecret>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "API Monitoring",
+    "tiles": [
+      {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 12,
+        "type": "LINE_CHART",
+        "query": "SELECT...",
+        "sourceId": "..."
+      }
+    ]
+  }'
+```
+
+### Local ClickStack (Limited API)
+
+The local `clickstack-local` image has limited API support. Options:
+
+1. **Manual creation** - Build dashboards in the UI at http://localhost:8080
+2. **Export/Import** - Some versions support exporting dashboard JSON configs
+3. **ClickHouse direct** - Store dashboard configs in ClickHouse directly if the schema supports it
+
+### Terraform (Coming Soon)
+
+ClickStack is developing a Terraform provider for infrastructure-as-code management of dashboards and alerts.

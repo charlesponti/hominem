@@ -51,7 +51,7 @@ const Digit = React.memo(function Digit({
       onKeyDown={(event) => onKeyDown(index, event)}
       onPaste={onPaste}
       className={cn(
-        'h-14 w-12 rounded-md border bg-bg-surface text-center body-2 font-semibold text-text-primary transition-all duration-120',
+        'h-14 w-12 rounded-md border bg-surface text-center body-2 font-semibold text-text-primary transition-all duration-120',
         'focus-visible:outline-none focus-visible:border-border-focus focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-accent)]',
         'disabled:cursor-not-allowed disabled:opacity-50',
         error &&

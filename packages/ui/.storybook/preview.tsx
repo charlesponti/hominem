@@ -1,10 +1,10 @@
-import type { Preview } from '@storybook/react'
 import { HonoProvider } from '@hominem/rpc/react'
+import type { Preview } from '@storybook/react'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 import { MemoryRouter } from 'react-router'
 import { handlers } from '../src/mocks/handlers'
-import '../src/styles/globals.css'
 import '../src/styles/animations.css'
+import '../src/styles/globals.css'
 
 initialize()
 
@@ -33,7 +33,7 @@ const preview: Preview = {
     (Story) => (
       <HonoProvider config={{ baseUrl: 'http://localhost:3000', getAuthToken: async () => null }}>
         <MemoryRouter>
-          <div className="p-8 min-h-screen">
+          <div className="p-8">
             <Story />
           </div>
         </MemoryRouter>

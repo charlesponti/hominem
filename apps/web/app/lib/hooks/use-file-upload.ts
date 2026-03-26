@@ -170,7 +170,7 @@ export function useFileUpload(): UseFileUploadReturn {
       const result = await uppy.upload();
       uppy.off('upload-success', handleUploadSuccess);
 
-      const completedFiles = await Promise.allSettled([...completionPromises.values()]);
+      const completedFiles = await Promise.allSettled(completionPromises.values());
 
       const newFiles = completedFiles.flatMap((entry) =>
         entry.status === 'fulfilled' ? [entry.value] : [],

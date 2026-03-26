@@ -195,7 +195,7 @@ export function Header({ brandIcon, navItems = [] }: HeaderProps) {
           paddingRight: 'var(--removed-body-scroll-bar-size, 0px)',
         }}
       >
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6 md:h-16">
           <Link
             to="/"
             prefetch="intent"

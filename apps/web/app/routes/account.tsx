@@ -37,13 +37,13 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-3xl">
+    <div className="mx-auto max-w-2xl py-8">
       <header className="mb-8">
-        <h1 className="heading-2 text-foreground">Profile</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage your account</p>
+        <h1 className="text-xl font-semibold text-foreground">Profile</h1>
+        <p className="mt-1 text-sm text-text-secondary">Manage your account</p>
       </header>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Connected Accounts</CardTitle>
@@ -62,10 +62,10 @@ export default function AccountPage() {
             <CardDescription>Manage your session.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border ">
+            <div className="flex items-center justify-between rounded-lg border border-border/30 p-4">
               <div>
-                <h3 className="font-medium">Sign Out</h3>
-                <p className="text-sm text-muted-foreground">End your current session.</p>
+                <h3 className="text-sm font-medium text-foreground">Sign Out</h3>
+                <p className="text-sm text-text-secondary">End your current session.</p>
               </div>
               <Button variant="outline" onClick={() => logout()}>
                 Sign Out

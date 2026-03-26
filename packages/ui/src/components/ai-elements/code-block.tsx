@@ -50,7 +50,7 @@ interface CodeBlockProps {
 export default function CodeBlock({ language, code, isCopied, onCopy }: CodeBlockProps) {
   return (
     <div className="relative group my-4">
-      <div className="flex items-center justify-between bg-bg-surface px-3 py-1.5 border-b border-border-subtle">
+      <div className="flex items-center justify-between bg-surface px-3 py-1.5 border-b border-border-subtle">
         <span className="text-xs font-mono text-text-tertiary">{language}</span>
         <Button
           variant="ghost"

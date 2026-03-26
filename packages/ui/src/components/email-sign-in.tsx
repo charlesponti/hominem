@@ -15,7 +15,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
   const isSubmitting = fetcher.state === 'submitting';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-bg-base p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-base p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="heading-1 text-primary mb-2">Sign in with Email</h2>

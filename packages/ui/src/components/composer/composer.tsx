@@ -1,20 +1,3 @@
-/**
- * Composer
- *
- * Architecture:
- *   Composer        — guard (no hooks, returns null when posture === 'hidden')
- *   ComposerForm    — the real component; hooks are always called consistently
- *
- * Key properties:
- *   • Zero useEffect
- *   • Zero useCallback (inline handlers close over stable store/actionsRef)
- *   • Native <form> with useActionState for submission — no manual isSubmitting,
- *     no submitLockRef, no submitBtnRef, no programmatic .click()
- *   • Voice and note picker opened via dialogRef.current.showModal() from
- *     event handlers — no showVoice/showNotePicker useState booleans
- *   • noteTitle read from layout via useNote() — no useEffect push from routes
- */
-
 import type { Note } from '@hominem/rpc/types/notes.types';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { ChangeEvent } from 'react';
@@ -25,10 +8,10 @@ import { buildNoteContext, toNoteTitle } from './composer-actions';
 import { ComposerActionsRow } from './composer-actions-row';
 import { ComposerAttachmentList } from './composer-attachment-list';
 import { appendChatAttachmentContext, appendNoteAttachments } from './composer-attachments';
-import { deriveComposerPresentation } from './composer-presentation';
 import type { ComposerPresentation } from './composer-presentation';
-import { useComposerActionsRef, useComposerSlice, useComposerStore } from './composer-provider';
+import { deriveComposerPresentation } from './composer-presentation';
 import type { ComposerMode } from './composer-provider';
+import { useComposerActionsRef, useComposerSlice, useComposerStore } from './composer-provider';
 import { ComposerShell } from './composer-shell';
 import { ComposerTools } from './composer-tools';
 import { NotePickerDialog } from './note-picker-dialog';
@@ -263,6 +246,18 @@ const ComposerInput = memo(function ComposerInput({
   const store = useComposerStore();
   const draft = useComposerSlice((s) => s.draft);
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Shift+Enter submits the form
+    if (e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
+      // Find and click the primary submit button
+      const submitBtn = ref.current?.form?.querySelector('[data-testid="composer-primary"]');
+      if (submitBtn && submitBtn instanceof HTMLButtonElement) {
+        submitBtn.click();
+      }
+    }
+  }
+
   return (
     <textarea
       ref={ref}
@@ -270,11 +265,12 @@ const ComposerInput = memo(function ComposerInput({
       data-testid="composer-input"
       value={draft}
       onChange={(e) => store.dispatch({ type: 'SET_DRAFT', text: e.target.value })}
+      onKeyDown={handleKeyDown}
       placeholder={placeholder}
       disabled={isPending}
       aria-label="Compose message or note"
       className={[
-        'w-full resize-none border-0 bg-transparent p-0 text-base leading-normal text-foreground outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
+        'body-1 w-full resize-none border-0 bg-transparent p-0 text-text-primary outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
         isDraftMode ? 'min-h-24 max-h-64' : 'max-h-48 min-h-6',
       ].join(' ')}
     />

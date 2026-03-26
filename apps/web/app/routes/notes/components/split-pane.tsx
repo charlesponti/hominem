@@ -46,7 +46,6 @@ export function SplitPane({
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isDragging) return;
-
       const container = containerRef.current;
       if (!container) return;
 
@@ -99,8 +98,10 @@ export function SplitPane({
       {/* Left Panel */}
       <div
         className={cn(
-          'h-full overflow-hidden transition-all duration-200',
-          collapsedSide === 'left' ? 'w-0' : collapsedSide === 'right' ? 'flex-1' : 'border-r',
+          'flex h-full flex-col overflow-hidden transition-all duration-200',
+          collapsedSide === 'left' && 'w-0',
+          collapsedSide === 'right' && 'flex-1',
+          collapsedSide === null && 'border-r border-border/30',
         )}
         style={
           collapsedSide === null
@@ -111,21 +112,21 @@ export function SplitPane({
         }
       >
         {collapsedSide !== 'left' && (
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-2 py-1 border-b">
-              <span className="text-xs text-muted-foreground">Note</span>
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-border/30 px-3 py-2">
+              <span className="text-xs text-text-tertiary">Note</span>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
+                size="icon"
+                className="size-6"
                 onClick={toggleCollapseLeft}
                 title="Collapse note panel"
               >
-                <PanelLeftClose className="size-4" />
+                <PanelLeftClose className="size-3.5" />
               </Button>
             </div>
             <div className="flex-1 overflow-auto">{leftPanel}</div>
-          </div>
+          </>
         )}
       </div>
 
@@ -133,8 +134,9 @@ export function SplitPane({
       {collapsedSide === null && (
         <div
           className={cn(
-            'relative flex items-center justify-center w-1 bg-border hover:bg-primary/50 cursor-col-resize transition-colors',
-            isDragging && 'bg-primary',
+            'relative flex w-1 cursor-col-resize items-center justify-center transition-colors',
+            'bg-border/30 hover:bg-foreground/20',
+            isDragging && 'bg-foreground/30',
           )}
           onMouseDown={handleMouseDown}
           onDoubleClick={handleDoubleClick}
@@ -143,15 +145,17 @@ export function SplitPane({
           tabIndex={0}
         >
           <div className="absolute inset-y-0 -left-1 -right-1" />
-          <GripVertical className="size-3 text-muted-foreground opacity-50" />
+          <GripVertical className="size-3 text-text-tertiary opacity-50" />
         </div>
       )}
 
       {/* Right Panel */}
       <div
         className={cn(
-          'h-full overflow-hidden transition-all duration-200',
-          collapsedSide === 'right' ? 'w-0' : collapsedSide === 'left' ? 'flex-1' : 'border-l',
+          'flex h-full flex-col overflow-hidden transition-all duration-200',
+          collapsedSide === 'right' && 'w-0',
+          collapsedSide === 'left' && 'flex-1',
+          collapsedSide === null && 'border-l border-border/30',
         )}
         style={
           collapsedSide === null
@@ -162,21 +166,21 @@ export function SplitPane({
         }
       >
         {collapsedSide !== 'right' && (
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-2 py-1 border-b">
-              <span className="text-xs text-muted-foreground">Chat</span>
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-border/30 px-3 py-2">
+              <span className="text-xs text-text-tertiary">Chat</span>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
+                size="icon"
+                className="size-6"
                 onClick={toggleCollapseRight}
                 title="Collapse chat panel"
               >
-                <PanelRightClose className="size-4" />
+                <PanelRightClose className="size-3.5" />
               </Button>
             </div>
             <div className="flex-1 overflow-auto">{rightPanel}</div>
-          </div>
+          </>
         )}
       </div>
 

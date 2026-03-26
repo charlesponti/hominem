@@ -33,7 +33,7 @@ export function useTelemetry() {
         environment: env.OTEL_DEPLOYMENT_ENVIRONMENT || 'development',
         otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318',
       });
-      
+
       const telemetry = initTelemetry({
         serviceName: env.OTEL_SERVICE_NAME || 'hominem-web',
         serviceVersion: env.OTEL_SERVICE_VERSION || '0.0.0',

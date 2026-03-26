@@ -27,10 +27,12 @@ export default function NoteChatRedirect({ loaderData }: { loaderData: { noteId:
   const { data: note } = useNote(noteId);
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-(--composer-resting-height,72px)">
+    <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-(--composer-resting-height,112px)">
       <div className="max-w-md text-center px-6">
-        <p className="heading-4 text-foreground">{note?.title ? `"${note.title}"` : 'This note'}</p>
-        <p className="body-2 mt-2 text-text-secondary">
+        <p className="text-base font-semibold text-foreground">
+          {note?.title ? `"${note.title}"` : 'This note'}
+        </p>
+        <p className="mt-2 text-sm text-text-secondary">
           Use the composer below to ask questions about this note or start a conversation.
         </p>
       </div>

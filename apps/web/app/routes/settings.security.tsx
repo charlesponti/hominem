@@ -38,13 +38,13 @@ export default function SecuritySettingsPage() {
   );
 
   return (
-    <div className="max-w-xl mx-auto py-8 px-4 space-y-8">
-      <div>
-        <h1 className="text-xl font-semibold">Security</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+    <div className="mx-auto max-w-2xl py-8">
+      <header className="mb-8">
+        <h1 className="text-xl font-semibold text-foreground">Security</h1>
+        <p className="mt-1 text-sm text-text-secondary">
           Manage sign-in methods and authentication settings.
         </p>
-      </div>
+      </header>
       <PasskeyManagement
         passkeys={passkeys ?? undefined}
         isLoading={isLoading}

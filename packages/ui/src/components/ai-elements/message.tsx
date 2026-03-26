@@ -85,9 +85,9 @@ export function MessageSurface({
         tone === 'user' &&
           'rounded-md bg-emphasis-highest px-4 py-3 text-primary-foreground shadow-low',
         tone === 'system' &&
-          'rounded-md border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
+          'rounded-md border border-subtle bg-surface px-3 py-2 text-text-secondary',
         tone === 'debug' &&
-          'rounded-md border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
+          'rounded-md border border-subtle bg-surface px-3 py-2 text-text-secondary',
         className,
       )}
       {...props}
@@ -106,7 +106,7 @@ export function MessageAvatar({ fallback, className }: MessageAvatarProps) {
   return (
     <div
       className={cn(
-        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-surface text-xs font-medium',
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-medium',
         className,
       )}
     >

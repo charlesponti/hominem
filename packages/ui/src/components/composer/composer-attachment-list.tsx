@@ -25,7 +25,7 @@ export const ComposerAttachmentList = memo(function ComposerAttachmentList() {
           {uploadedFiles.map((file) => (
             <div
               key={file.id}
-              className="flex items-center gap-2 rounded-md border border-border bg-bg-surface px-2 py-1"
+              className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1"
             >
               <span className="max-w-45 truncate text-xs text-foreground">{file.originalName}</span>
               <button

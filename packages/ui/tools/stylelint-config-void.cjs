@@ -54,6 +54,7 @@ module.exports = {
         'color-named': null,
       },
     },
+
     {
       files: ['**/packages/ui/src/components/ui/*.css'],
       rules: {

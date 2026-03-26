@@ -69,10 +69,10 @@ function ActionButton({
       data-testid={isPrimary ? 'composer-primary' : 'composer-secondary'}
       className={cn(
         'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        isPrimary ? 'size-10.5' : 'size-9.5 border border-border bg-bg-surface text-foreground',
+        isPrimary ? 'size-10.5' : 'size-9.5 border border-border bg-surface text-foreground',
         isPrimary &&
           (disabled
-            ? 'cursor-not-allowed bg-bg-surface text-text-tertiary'
+            ? 'cursor-not-allowed bg-surface text-text-tertiary'
             : 'bg-foreground text-background hover:bg-foreground/85'),
         !isPrimary && 'disabled:cursor-not-allowed disabled:opacity-40',
       )}

@@ -112,7 +112,7 @@ export const VoiceDialog = memo(
             type="button"
             aria-label="Close voice input"
             onClick={close}
-            className="flex size-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-bg-surface hover:text-foreground"
+            className="flex size-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-surface hover:text-foreground"
           >
             <X className="size-4" />
           </button>

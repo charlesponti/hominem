@@ -8,7 +8,6 @@ import type {
   NotesDeleteOutput,
 } from '@hominem/rpc/types/notes.types';
 import { useQueryClient } from '@tanstack/react-query';
-import type { UseQueryOptions } from '@tanstack/react-query';
 
 import { notesQueryKeys } from '~/lib/query-keys';
 

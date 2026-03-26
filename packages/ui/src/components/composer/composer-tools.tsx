@@ -36,11 +36,9 @@ function ToolButton({
       disabled={disabled}
       aria-pressed={active || undefined}
       className={cn(
-        'flex size-9.5 shrink-0 items-center justify-center rounded-full border transition-colors',
+        'flex size-7 shrink-0 items-center justify-center rounded-md transition-colors',
         disabled && 'cursor-not-allowed opacity-40',
-        active
-          ? 'border-foreground/40 bg-bg-surface text-foreground'
-          : 'border-border bg-bg-surface text-foreground',
+        active ? 'bg-foreground/8 text-foreground' : 'text-text-tertiary hover:text-foreground',
       )}
     >
       {icon}
@@ -63,14 +61,13 @@ export const ComposerTools = memo(function ComposerTools({
   presentation: ComposerPresentation;
   showsVoiceButton: boolean;
 }) {
-  // Fine-grained subscription — only re-renders when attached count changes
   const attachedNotesCount = useComposerSlice((s) => s.attachedNotes.length);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       {presentation.showsNotePicker && (
         <ToolButton
-          icon={<BookOpen className="size-4.5" />}
+          icon={<BookOpen className="size-4" />}
           label="Attach notes as context"
           onClick={() => notePickerDialogRef.current?.showModal()}
           active={attachedNotesCount > 0}
@@ -79,7 +76,7 @@ export const ComposerTools = memo(function ComposerTools({
       )}
       {presentation.showsAttachmentButton && (
         <ToolButton
-          icon={<Plus className="size-4.5" />}
+          icon={<Plus className="size-4" />}
           label="Add attachment"
           onClick={() => fileInputRef.current?.click()}
           active={false}
@@ -88,7 +85,7 @@ export const ComposerTools = memo(function ComposerTools({
       )}
       {presentation.showsAttachmentButton && (
         <ToolButton
-          icon={<Camera className="size-4.5" />}
+          icon={<Camera className="size-4" />}
           label="Take photo"
           onClick={() => cameraInputRef.current?.click()}
           active={false}
@@ -97,7 +94,7 @@ export const ComposerTools = memo(function ComposerTools({
       )}
       {showsVoiceButton && (
         <ToolButton
-          icon={<Mic className="size-4.5" />}
+          icon={<Mic className="size-4" />}
           label="Voice note"
           onClick={() => voiceDialogRef.current?.showModal()}
           active={false}

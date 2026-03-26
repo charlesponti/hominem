@@ -261,14 +261,16 @@ const chatByIdRoutes = new Hono<AppContext>()
     const accumulatedToolCalls: ToolCallEntry[] = [];
     let didGenerationFail = false;
 
+    const generationStartTime = Date.now();
     try {
       const result = await generateText({
         model: adapter,
         tools: getAvailableTools(userId),
         messages: messagesWithNewUser,
       });
+      const generationMs = Date.now() - generationStartTime;
       logger.info('[chats.send] generateText complete', {
-        elapsedMs: Date.now() - startTime,
+        generationMs,
         contentLength: result.text.length,
         toolCallCount: result.toolCalls.length,
       });
@@ -281,9 +283,11 @@ const chatByIdRoutes = new Hono<AppContext>()
         });
       }
     } catch (error) {
+      const generationMs = Date.now() - generationStartTime;
       didGenerationFail = true;
       accumulatedContent = toAssistantErrorContent(error);
       logger.error('[chats.send] generateText failed', {
+        generationMs,
         message: error instanceof Error ? error.message : String(error),
         name: error instanceof Error ? error.name : undefined,
         cause: error instanceof Error ? String(error.cause) : undefined,

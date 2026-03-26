@@ -1,8 +1,10 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useMemo, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { useAutoScroll } from '../../lib/hooks/use-auto-scroll';
 import { useScrollDetection } from '../../lib/hooks/use-scroll-detection';
+import { scrollToBottom } from '../../lib/utils';
 import type { ExtendedMessage } from '../../types/chat';
 import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
@@ -71,6 +73,12 @@ export function ChatMessages({
     checkIfNearBottom,
   });
 
+  const handleScrollToBottom = useCallback(() => {
+    const container = shouldUseVirtualScrolling ? parentRef.current : containerRef.current;
+    const lastIndex = messages.length > 0 ? messages.length - 1 : 0;
+    scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex);
+  }, [containerRef, parentRef, virtualizer, shouldUseVirtualScrolling, messages.length]);
+
   const lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined;
   const hasStreamingMessage =
     messages.length > 0 &&
@@ -83,16 +91,12 @@ export function ChatMessages({
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         ref={shouldUseVirtualScrolling ? parentRef : containerRef}
-        className="flex-1 overflow-y-auto px-4 pb-8 pt-6 sm:px-6"
+        className="flex-1 pb-8 pt-6"
         role="log"
         aria-label="Chat messages"
         aria-live="polite"
         aria-atomic="false"
-        style={
-          shouldUseVirtualScrolling
-            ? { height: '100%', width: '100%', overflow: 'auto' }
-            : {}
-        }
+        style={shouldUseVirtualScrolling ? { height: '100%', width: '100%', overflow: 'auto' } : {}}
       >
         {error ? (
           <div className="mx-auto mb-6 w-full max-w-3xl rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm">
@@ -161,38 +165,52 @@ export function ChatMessages({
         ) : (
           <div className="mx-auto w-full max-w-3xl">
             <div className="flex flex-col gap-6">
-              {messages.length === 0 ? null : (
-                messages.map((message, index) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    showDebug={showDebug}
-                    speakingId={speakingId ?? null}
-                    speechLoadingId={speechLoadingId ?? null}
-                    isStreaming={
-                      (status === 'streaming' &&
-                        index === messages.length - 1 &&
-                        message.role === 'assistant') ||
-                      Boolean(message.isStreaming)
-                    }
-                    {...(message.role === 'assistant' && {
-                      onRegenerate: () => onRegenerate?.(message.id),
-                      onSpeak,
-                    })}
-                    {...(message.role === 'user' && {
-                      onEdit: (messageId: string, newContent: string) =>
-                        onEdit?.(messageId, newContent),
-                    })}
-                    onDelete={() => onDelete?.(message.id)}
-                  />
-                ))
-              )}
+              {messages.length === 0
+                ? null
+                : messages.map((message, index) => (
+                    <ChatMessage
+                      key={message.id}
+                      message={message}
+                      showDebug={showDebug}
+                      speakingId={speakingId ?? null}
+                      speechLoadingId={speechLoadingId ?? null}
+                      isStreaming={
+                        (status === 'streaming' &&
+                          index === messages.length - 1 &&
+                          message.role === 'assistant') ||
+                        Boolean(message.isStreaming)
+                      }
+                      {...(message.role === 'assistant' && {
+                        onRegenerate: () => onRegenerate?.(message.id),
+                        onSpeak,
+                      })}
+                      {...(message.role === 'user' && {
+                        onEdit: (messageId: string, newContent: string) =>
+                          onEdit?.(messageId, newContent),
+                      })}
+                      onDelete={() => onDelete?.(message.id)}
+                    />
+                  ))}
             </div>
           </div>
         )}
       </div>
 
       {showThinking ? <ChatThinkingIndicator /> : null}
+
+      {!isNearBottom && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
+          <button
+            type="button"
+            onClick={handleScrollToBottom}
+            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border-subtle bg-background/95 px-3.5 py-1.5 text-xs text-text-secondary shadow-low backdrop-blur-sm transition-colors hover:bg-surface hover:text-foreground"
+            aria-label="Jump to bottom"
+          >
+            <ChevronDown className="size-3.5" aria-hidden />
+            Jump to bottom
+          </button>
+        </div>
+      )}
     </div>
   );
 }

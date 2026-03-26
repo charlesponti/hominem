@@ -1,5 +1,6 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
+import { LoadingScreen } from '~/components/loading';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 
@@ -21,23 +22,19 @@ export default function NoteEditPage({ loaderData }: { loaderData: { noteId: str
   const { data: note, isLoading } = useNote(noteId);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary animate-spin" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!note) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-text-secondary">Note not found</p>
+      <div className="flex h-full items-center justify-center py-20">
+        <p className="text-sm text-text-secondary">Note not found</p>
       </div>
     );
   }
 
   return (
-    <div className="pb-8 pt-10">
+    <div className="py-8">
       <NoteEditor note={note} />
     </div>
   );

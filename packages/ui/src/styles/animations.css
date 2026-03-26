@@ -354,3 +354,27 @@
 .animate-spin {
   animation: void-breezy-progress 1.2s linear infinite;
 }
+
+/* ====== NOTE PICKER PANEL ====== */
+/* Floats above the composer — appears with a subtle scale+fade. */
+
+.note-picker-panel {
+  transition:
+    opacity 150ms cubic-bezier(0, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0, 0, 0.2, 1),
+    overlay 150ms allow-discrete,
+    display 150ms allow-discrete;
+}
+
+.note-picker-panel[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Closed state & entry animation via @starting-style */
+@starting-style {
+  .note-picker-panel[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}

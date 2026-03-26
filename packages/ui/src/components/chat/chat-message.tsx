@@ -124,8 +124,7 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       ref={rowRef}
-      className="group"
-      style={{ paddingTop: 'var(--spacing-2)', paddingBottom: 'var(--spacing-2)' }}
+      className="group py-2"
       role="article"
       aria-label={`${isUser ? 'Your' : 'Message'}${timestamp ? ` from ${timestamp}` : ''}`}
     >
@@ -183,7 +182,7 @@ export const ChatMessage = memo(function ChatMessage({
                 onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                   setEditContent(event.target.value)
                 }
-                className="min-h-[100px] resize-none rounded-md border-default bg-background"
+                className="min-h-25 resize-none rounded-md border-default bg-background"
                 autoFocus
                 aria-label="Message content"
                 aria-describedby="edit-instructions"
@@ -225,10 +224,7 @@ export const ChatMessage = memo(function ChatMessage({
               <>
                 {isUser ? (
                   <div className="inline-block max-w-[34rem] rounded-2xl border border-subtle bg-emphasis-highest px-4 py-3 text-white shadow-low">
-                    <MarkdownContent
-                      content={message.content}
-                      isStreaming={isStreaming}
-                    />
+                    <MarkdownContent content={message.content} isStreaming={isStreaming} />
                   </div>
                 ) : (
                   <div className="w-full text-foreground">
@@ -240,7 +236,7 @@ export const ChatMessage = memo(function ChatMessage({
           )}
 
           {showDebug && (
-            <div className="w-full rounded-md border border-subtle bg-bg-surface px-3 py-2 font-mono text-[11px] leading-relaxed text-text-secondary">
+            <div className="w-full rounded-md border border-subtle bg-surface px-3 py-2 font-mono text-[11px] leading-relaxed text-text-secondary">
               <div>ID: {message.id}</div>
               <div>Role: {message.role}</div>
               <div>Created: {message.createdAt}</div>
@@ -252,18 +248,19 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-          <MessageAnnotations
-            className={cn('mt-0.5 text-xs text-text-tertiary/70', {
-              'justify-end': isUser,
-              'justify-start': !isUser,
-            })}
-          >
-            {timestamp && (
-              <>
-                <span title={message.createdAt}>{timestamp}</span>
-              </>
-            )}
-          </MessageAnnotations>
+          {timestamp && (
+            <MessageAnnotations
+              className={cn(
+                'mt-0.5 text-xs text-text-tertiary/70 opacity-0 transition-opacity group-hover:opacity-100',
+                {
+                  'justify-end': isUser,
+                  'justify-start': !isUser,
+                },
+              )}
+            >
+              <span title={message.createdAt}>{timestamp}</span>
+            </MessageAnnotations>
+          )}
 
           {!isStreaming && (
             <div

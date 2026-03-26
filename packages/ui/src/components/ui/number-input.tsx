@@ -48,7 +48,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         maxLength={maxLength}
         className={cn(
           'placeholder:text-text-tertiary selection:bg-accent selection:text-accent-foreground',
-          'h-10 w-full rounded-md border bg-bg-surface px-3 py-2 text-base',
+          'h-10 w-full rounded-md border bg-surface px-3 py-2 text-base',
           'transition-[color,box-shadow] duration-120 outline-none',
           'focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-accent)]',
           'disabled:cursor-not-allowed disabled:opacity-50',

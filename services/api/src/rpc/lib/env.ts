@@ -17,7 +17,7 @@ const envSchema = z.object({
   GOOGLE_API_KEY: z.string().default(''),
   OPENROUTER_API_KEY: isTest ? z.string().default('test-openrouter-key') : z.string().optional(),
   AI_PROVIDER: z.enum(['openai', 'openrouter']).default('openrouter'),
-  AI_MODEL: z.string().default('openai/gpt-4o-mini'),
+  AI_MODEL: z.string().default('openai/gpt-4o-mini-2024-07-18'),
 
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_API_KEY: z.string().default(''),

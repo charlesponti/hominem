@@ -152,9 +152,9 @@ export default function Layout() {
           <NotesHeader />
           <main
             id="main-content"
-            className="mt-14 flex-1 pb-[calc(56px+env(safe-area-inset-bottom))] md:mt-16 md:pb-12"
+            className="mt-14 flex-1 pb-[calc(env(safe-area-inset-bottom)+112px)] md:mt-16"
           >
-            <div className="mx-auto w-full max-w-5xl px-4 sm:px-8 lg:px-12">
+            <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
               <Suspense fallback={<LoadingScreen />}>
                 <Outlet />
               </Suspense>

@@ -135,7 +135,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex min-h-0 flex-col bg-background text-foreground pb-(--composer-resting-height,112px) h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)]">
+    <div className="flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <Chat
         source={resolvedSource}
         resolvedSource={resolvedSource}

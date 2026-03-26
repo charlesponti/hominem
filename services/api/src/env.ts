@@ -58,7 +58,7 @@ const serverSchema = z.object({
   // Model IDs: provider/model-name — see https://openrouter.ai/models
   OPENROUTER_API_KEY: isTest ? z.string().default('test-openrouter-key') : z.string().optional(),
   AI_PROVIDER: z.enum(['openai', 'openrouter']).default('openrouter'),
-  AI_MODEL: z.string().default('openai/gpt-4o-mini'),
+  AI_MODEL: z.string().default('openai/gpt-4o-mini-2024-07-18'),
   AI_SDK_CHAT_WEB_ENABLED: z.coerce.boolean().default(false),
   AI_SDK_CHAT_MOBILE_ENABLED: z.coerce.boolean().default(false),
   AI_SDK_TRANSCRIBE_ENABLED: z.coerce.boolean().default(false),

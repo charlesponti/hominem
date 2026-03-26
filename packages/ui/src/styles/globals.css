@@ -134,9 +134,12 @@
   --spacing-8: 64px;
 
   /* ====== BORDER RADIUS ====== */
-  /* Soft rounded corners for modern aesthetic */
+  /* Soft rounded corners — progressive scale */
 
+  --radius-sm: 6px;
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* Icon radius: 22% for squircular appearance */
   --radius-icon: 22%;
@@ -305,15 +308,15 @@
 /* ====== COLOR UTILITIES ====== */
 /* Using @utility directive for proper variant support */
 
-@utility bg-bg-base {
+@utility bg-base {
   background-color: var(--color-bg-base);
 }
 
-@utility bg-bg-surface {
+@utility bg-surface {
   background-color: var(--color-bg-surface);
 }
 
-@utility bg-bg-elevated {
+@utility bg-elevated {
   background-color: var(--color-bg-elevated);
 }
 
@@ -638,7 +641,7 @@
 /* ====== BORDER RADIUS UTILITIES ====== */
 
 @utility rounded-sm {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
 @utility rounded-md {
@@ -646,11 +649,11 @@
 }
 
 @utility rounded-lg {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
 @utility rounded-xl {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
 }
 
 /* ── list-row ────────────────────────────────────────────────────────────────
@@ -701,7 +704,7 @@
 
 @layer utilities {
   .container {
-    @apply mx-auto px-2 sm:px-0 max-w-5xl;
+    @apply mx-auto w-full max-w-5xl px-4 sm:px-6;
   }
 }
 

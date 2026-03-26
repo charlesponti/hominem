@@ -10,10 +10,10 @@ const LazyCodeBlock = lazy(() => import('./code-block'));
 function CodeBlockFallback({ language }: { language: string }) {
   return (
     <div className="relative group my-4">
-      <div className="flex items-center justify-between bg-bg-surface px-3 py-1.5 border-b border-border-subtle">
+      <div className="flex items-center justify-between bg-surface px-3 py-1.5 border-b border-border-subtle">
         <span className="text-xs font-mono text-text-tertiary">{language}</span>
       </div>
-      <div className="bg-bg-surface p-4 animate-pulse">
+      <div className="bg-surface p-4 animate-pulse">
         <div className="h-4 bg-border-subtle rounded w-3/4 mb-2" />
         <div className="h-4 bg-border-subtle rounded w-1/2" />
       </div>
@@ -73,9 +73,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
             }
 
             return (
-              <code className="bg-bg-surface px-1.5 py-0.5 rounded text-sm font-mono">
-                {children}
-              </code>
+              <code className="bg-surface px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
             );
           },
           h1: ({ children }) => <h1 className="heading-3 mt-6 mb-4 first:mt-0">{children}</h1>,
@@ -109,7 +107,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               <table className="min-w-full border-collapse border border-border">{children}</table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-bg-surface">{children}</thead>,
+          thead: ({ children }) => <thead className="bg-surface">{children}</thead>,
           tbody: ({ children }) => <tbody>{children}</tbody>,
           tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
           th: ({ children }) => (
