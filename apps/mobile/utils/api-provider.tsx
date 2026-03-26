@@ -1,10 +1,11 @@
 import type { ClientConfig } from '@hominem/rpc';
 import { HonoProvider as BaseHonoProvider } from '@hominem/rpc/react';
 import type { QueryClient } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from './auth-provider';
 import { API_BASE_URL } from './constants';
+import { ensureQueryClientOnlineManager } from './query-client';
 
 export const ApiProvider = ({
   children,
@@ -14,6 +15,11 @@ export const ApiProvider = ({
   queryClient?: QueryClient;
 }) => {
   const { getAuthHeaders } = useAuth();
+
+  useEffect(() => {
+    ensureQueryClientOnlineManager();
+  }, []);
+
   const config: ClientConfig = {
     baseUrl: API_BASE_URL,
     getAuthToken: async () => null,

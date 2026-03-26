@@ -15,6 +15,10 @@ export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedire
     return null;
   }
 
+  if (input.segments.length === 0) {
+    return input.isSignedIn ? '/(protected)/(tabs)/start' : '/(auth)';
+  }
+
   const inProtectedGroup = input.segments[0] === '(protected)';
   const inAuthGroup = input.segments[0] === '(auth)';
 

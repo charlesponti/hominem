@@ -3,12 +3,20 @@ import { QueryClient, onlineManager } from '@tanstack/react-query';
 
 import { mobileQueryDefaultOptions } from './query-client-config';
 
-// Configure React Query to use NetInfo for online status
-onlineManager.setEventListener((setOnline) => {
-  return NetInfo.addEventListener((state) => {
-    setOnline(!!state.isConnected);
+let hasConfiguredOnlineManager = false;
+
+export function ensureQueryClientOnlineManager() {
+  if (hasConfiguredOnlineManager) {
+    return;
+  }
+
+  hasConfiguredOnlineManager = true;
+  onlineManager.setEventListener((setOnline) => {
+    return NetInfo.addEventListener((state) => {
+      setOnline(!!state.isConnected);
+    });
   });
-});
+}
 
 const queryClient = new QueryClient({
   defaultOptions: mobileQueryDefaultOptions,

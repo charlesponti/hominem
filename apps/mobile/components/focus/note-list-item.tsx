@@ -150,15 +150,16 @@ const useStyles = makeStyles((t) =>
   }),
 );
 
-export const NoteListItem = ({
-  item,
-  label,
-  itemIndex,
-}: {
-  item: Note;
-  label: string;
-  itemIndex?: number;
-}) => {
+export const NoteListItem = memo(
+  ({
+    item,
+    label,
+    itemIndex,
+  }: {
+    item: Note;
+    label: string;
+    itemIndex?: number;
+  }) => {
   const styles = useStyles();
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(64);
@@ -334,4 +335,13 @@ export const NoteListItem = ({
       </ContextMenu.Root>
     </View>
   );
-};
+},
+(prev, next) =>
+  prev.item.id === next.item.id &&
+  prev.label === next.label &&
+  prev.itemIndex === next.itemIndex &&
+  prev.item.status === next.item.status &&
+  prev.item.scheduledFor === next.item.scheduledFor,
+);
+
+NoteListItem.displayName = 'NoteListItem';

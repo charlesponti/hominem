@@ -16,13 +16,14 @@ export function setAppLockEnabled(value: boolean) {
   storage.set(LOCK_ENABLED_KEY, value);
 }
 
-export function useAppLock() {
+export function useAppLock({ isActive = true }: { isActive?: boolean } = {}) {
   const enabled = getAppLockEnabled();
-  const [isUnlocked, setIsUnlocked] = useState(!enabled);
+  const shouldLock = enabled && isActive;
+  const [isUnlocked, setIsUnlocked] = useState(!shouldLock);
   const appState = useRef(AppState.currentState);
 
   const authenticate = useCallback(async () => {
-    if (!enabled) {
+    if (!shouldLock) {
       setIsUnlocked(true);
       return;
     }
@@ -44,16 +45,21 @@ export function useAppLock() {
     if (result.success) {
       setIsUnlocked(true);
     }
-  }, [enabled]);
+  }, [shouldLock]);
 
   // Authenticate on mount
   useEffect(() => {
+    if (!shouldLock) {
+      setIsUnlocked(true);
+      return;
+    }
+
     void authenticate();
-  }, [authenticate]);
+  }, [authenticate, shouldLock]);
 
   // Re-lock when app returns from background
   useEffect(() => {
-    if (!enabled) return;
+    if (!shouldLock) return;
 
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (appState.current === 'background' && nextState === 'active') {
@@ -64,7 +70,7 @@ export function useAppLock() {
     });
 
     return () => subscription.remove();
-  }, [enabled, authenticate]);
+  }, [shouldLock, authenticate]);
 
   return { isUnlocked, authenticate };
 }

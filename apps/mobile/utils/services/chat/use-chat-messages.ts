@@ -62,7 +62,6 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
 // SQLite is persistence layer only, updated after successful mutations
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const client = useApiClient();
-  const _queryClient = useQueryClient();
 
   return useQuery<MessageOutput[]>({
     queryKey: chatKeys.messages(chatId),

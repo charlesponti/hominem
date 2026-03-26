@@ -55,7 +55,9 @@ const lockStyles = StyleSheet.create({
 
 const DrawerLayout = () => {
   const { authStatus, isSignedIn } = useAuth();
-  const { isUnlocked, authenticate } = useAppLock();
+  const { isUnlocked, authenticate } = useAppLock({
+    isActive: authStatus === 'signed_in' && isSignedIn,
+  });
 
   if (authStatus === 'booting' || !isSignedIn) {
     return <ProtectedBootstrap />;

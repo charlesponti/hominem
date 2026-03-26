@@ -34,7 +34,6 @@ const formatTimestamp = (value: string) => getLocalDate(new Date(value)).localDa
 export const Chat = ({ chatId, onChatArchive, source }: ChatProps) => {
   const { speakingId, speak } = useSpeech();
   const queryClient = useQueryClient();
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const styles = useStyles();
 
   return (

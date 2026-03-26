@@ -15,7 +15,7 @@
     "lint": "bunx tsx ./scripts/check-style-tokens.ts && bunx oxlint ./app ./components ./utils ./theme ./lib",
     "format": "bunx oxfmt ./app ./components ./utils ./theme ./lib",
     "test": "bun run test:unit:auth && bunx vitest run --config vitest.config.ts tests/integration/*.integration.test.ts",
-    "test:unit:auth": "vitest run --config vitest.config.ts tests/auth-state-machine.test.ts tests/auth-provider-utils.test.ts tests/auth-route-guard.test.ts tests/startup-metrics.test.ts tests/auth-validation.test.ts tests/auth-boot.test.ts",
+    "test:unit:auth": "vitest run --config vitest.config.ts tests/auth-state-machine.test.ts tests/auth-provider-utils.test.ts tests/auth-route-guard.test.ts tests/startup-metrics.test.ts tests/auth-validation.test.ts tests/auth-boot.test.ts tests/auth-abort.test.ts tests/local-store.test.ts tests/sign-out.test.ts tests/runtime-config.test.ts",
     "test:integration:auth": "vitest run --config vitest.config.ts tests/integration/auth-contract.integration.test.ts tests/integration/auth-flow.integration.test.ts",
     "test:e2e": "detox test -c ios.sim.e2e --testPathPattern=e2e/auth.mobile.e2e.js --cleanup --retries 0",
     "test:e2e:deep-links": "detox test -c ios.sim.e2e --testPathPattern=e2e/deep-links.mobile.e2e.js --cleanup --retries 0",

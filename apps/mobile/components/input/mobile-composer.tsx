@@ -23,8 +23,6 @@ import {
 import { chatKeys } from '~/utils/services/notes/query-keys';
 import { useCreateNote } from '~/utils/services/notes/use-create-note';
 
-import { CameraModal } from '../media/camera-modal';
-import { VoiceSessionModal } from '../media/voice-session-modal';
 import { useMobileWorkspace } from '../workspace/mobile-workspace-context';
 import { useInputContext } from './input-context';
 import {
@@ -32,6 +30,10 @@ import {
   applyVoiceTranscriptToDraft,
   removeAttachmentFromDraft,
 } from './mobile-composer-actions';
+import {
+  getCameraModalComponent,
+  getVoiceSessionModalComponent,
+} from './mobile-composer-modal-loader';
 import { MobileComposerAttachments } from './mobile-composer-attachments';
 import { deriveMobileComposerPresentation } from './mobile-composer-config';
 import { MobileComposerFooter } from './mobile-composer-footer';
@@ -167,6 +169,8 @@ export const MobileComposer = () => {
     hasText: message.trim().length > 0 || attachments.length > 0,
     isRecording,
   });
+  const CameraModal = getCameraModalComponent(isCameraOpen);
+  const VoiceSessionModal = getVoiceSessionModalComponent(isVoiceModalOpen);
 
   const handlePickAttachment = async () => {
     clearErrors();
@@ -336,20 +340,24 @@ export const MobileComposer = () => {
           onPrimaryAction={handlePrimaryAction}
         />
       </View>
-      <CameraModal
-        visible={isCameraOpen}
-        onCapture={handleCameraCapture}
-        onClose={() => setIsCameraOpen(false)}
-      />
-      <VoiceSessionModal
-        onAudioTranscribed={handleVoiceTranscript}
-        onClose={() => {
-          setIsRecording(false);
-          setMode('text');
-          setIsVoiceModalOpen(false);
-        }}
-        visible={isVoiceModalOpen}
-      />
+      {CameraModal ? (
+        <CameraModal
+          visible={isCameraOpen}
+          onCapture={handleCameraCapture}
+          onClose={() => setIsCameraOpen(false)}
+        />
+      ) : null}
+      {VoiceSessionModal ? (
+        <VoiceSessionModal
+          onAudioTranscribed={handleVoiceTranscript}
+          onClose={() => {
+            setIsRecording(false);
+            setMode('text');
+            setIsVoiceModalOpen(false);
+          }}
+          visible={isVoiceModalOpen}
+        />
+      ) : null}
     </View>
   );
 };

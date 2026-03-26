@@ -12,8 +12,10 @@ import React, {
 } from 'react';
 
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from './auth/auth-analytics';
+import { createAbortSignalWithTimeout } from './auth/abort';
 import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
 import { runAuthBoot } from './auth/boot';
+import { runSignOut } from './auth/sign-out';
 import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils';
 import {
   clearPersistedSessionCookies,
@@ -133,9 +135,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       phase: 'boot',
     });
 
-    const controller = new AbortController();
-    const signal = input?.signal ?? controller.signal;
-    const timeoutId = setTimeout(() => controller.abort(), AUTH_BOOT_TIMEOUT_MS);
+    const { cleanup, signal } = createAbortSignalWithTimeout(AUTH_BOOT_TIMEOUT_MS, input?.signal);
 
     try {
       const result = await runAuthBoot({
@@ -210,7 +210,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       markStartupPhase('auth_boot_resolved');
       hasBootstrappedRef.current = true;
     } finally {
-      clearTimeout(timeoutId);
+      cleanup();
       isBootingRef.current = false;
     }
   }, []);
@@ -427,33 +427,44 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     dispatch({ type: 'SIGN_OUT_REQUESTED' });
     captureAuthAnalyticsEvent('auth_sign_out_started', {
       phase: 'sign_out',
-      email: state.user?.email ?? undefined,
+      email: userEmailRef.current ?? undefined,
     });
 
     try {
-      const sessionCookieHeader = sessionCookieHeaderRef.current;
-      if (!sessionCookieHeader) {
-        throw new Error('Missing Better Auth session for sign-out. Please try again.');
-      }
+      const result = await runSignOut({
+        getSessionCookieHeader: () => sessionCookieHeaderRef.current,
+        remoteLogout: async (sessionCookieHeader) => {
+          const response = await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
+            method: 'POST',
+            headers: { cookie: sessionCookieHeader },
+          });
 
-      const response = await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
-        method: 'POST',
-        headers: { cookie: sessionCookieHeader },
+          if (!response.ok) {
+            throw new Error('Failed to sign out. Please try again.');
+          }
+        },
+        clearLocalSession: async () => {
+          await clearPersistedSessionCookies();
+          sessionCookieHeaderRef.current = null;
+          await LocalStore.clearAllData();
+          dispatch({ type: 'SIGN_OUT_SUCCESS' });
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to sign out. Please try again.');
+      if (result.type === 'LOCAL_ONLY_SIGN_OUT' && result.error) {
+        captureAuthAnalyticsFailure('auth_sign_out_failed', {
+          phase: 'sign_out',
+          durationMs: Date.now() - startedAt,
+          email: userEmailRef.current ?? undefined,
+          error: result.error,
+          failureStage: 'network',
+        });
       }
 
-      await clearPersistedSessionCookies();
-      sessionCookieHeaderRef.current = null;
-      await LocalStore.clearAllData();
-      dispatch({ type: 'SIGN_OUT_SUCCESS' });
       captureAuthAnalyticsEvent('auth_sign_out_succeeded', {
         phase: 'sign_out',
         durationMs: Date.now() - startedAt,
-        email: state.user?.email ?? undefined,
-        statusCode: response.status,
+        email: userEmailRef.current ?? undefined,
       });
     } catch (error) {
       const resolvedError =
@@ -462,13 +473,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       captureAuthAnalyticsFailure('auth_sign_out_failed', {
         phase: 'sign_out',
         durationMs: Date.now() - startedAt,
-        email: state.user?.email ?? undefined,
+        email: userEmailRef.current ?? undefined,
         error: resolvedError,
-        failureStage: 'network',
+        failureStage: 'storage',
       });
       throw resolvedError;
     }
-  }, [state.user?.email]);
+  }, []);
 
   const updateProfile = useCallback(async (updates: Partial<User>) => {
     const current = await LocalStore.getUserProfile();
@@ -511,6 +522,18 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     isBootingRef.current = false;
   }, []);
 
+  const userEmailRef = useRef(state.user?.email);
+  userEmailRef.current = state.user?.email;
+
+  const retrySessionRecovery = useCallback(async () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+    captureAuthAnalyticsEvent('auth_session_recovery_requested', {
+      phase: 'session_recovery',
+      email: userEmailRef.current ?? undefined,
+    });
+    await bootSession({ force: true });
+  }, [bootSession]);
+
   const authStatus = state.status;
   const authError = state.error;
   const isLoadingAuth = useMemo(() => resolveIsLoadingAuth(state), [state]);
@@ -528,29 +551,40 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     };
   }, [state.user]);
 
-  const value: AuthContextType = {
-    authStatus,
-    authError,
-    isLoadingAuth,
-    isSignedIn,
-    currentUser,
-    requestEmailOtp,
-    verifyEmailOtp,
-    completePasskeySignIn,
-    signOut,
-    updateProfile,
-    getAuthHeaders,
-    clearError,
-    retrySessionRecovery: async () => {
-      dispatch({ type: 'CLEAR_ERROR' });
-      captureAuthAnalyticsEvent('auth_session_recovery_requested', {
-        phase: 'session_recovery',
-        email: state.user?.email ?? undefined,
-      });
-      await bootSession({ force: true });
-    },
-    resetAuthForE2E,
-  };
+  const value = useMemo<AuthContextType>(
+    () => ({
+      authStatus,
+      authError,
+      isLoadingAuth,
+      isSignedIn,
+      currentUser,
+      requestEmailOtp,
+      verifyEmailOtp,
+      completePasskeySignIn,
+      signOut,
+      updateProfile,
+      getAuthHeaders,
+      clearError,
+      retrySessionRecovery,
+      resetAuthForE2E,
+    }),
+    [
+      authStatus,
+      authError,
+      isLoadingAuth,
+      isSignedIn,
+      currentUser,
+      requestEmailOtp,
+      verifyEmailOtp,
+      completePasskeySignIn,
+      signOut,
+      updateProfile,
+      getAuthHeaders,
+      clearError,
+      retrySessionRecovery,
+      resetAuthForE2E,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

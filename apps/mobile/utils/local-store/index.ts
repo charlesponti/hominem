@@ -22,8 +22,13 @@ async function getStore() {
 async function initializeStore(): Promise<boolean> {
   if (store) return true;
 
-  store = await createSQLiteStore();
-  return true;
+  try {
+    store = await createSQLiteStore();
+    return true;
+  } catch (error) {
+    initializationPromise = null;
+    throw error;
+  }
 }
 
 const normalizeNull = <T>(value: T | null): T | null => {

@@ -1,17 +1,17 @@
 import { PostHog } from 'posthog-react-native';
 
-const apiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? '';
-const host = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
-const disabled = __DEV__ || !apiKey;
+import { POSTHOG_API_KEY, POSTHOG_HOST } from '~/utils/constants';
+
+const disabled = __DEV__ || !POSTHOG_API_KEY;
 
 if (disabled) {
   console.warn('[PostHog] Analytics disabled — events will not be recorded.', {
-    reason: !apiKey ? 'missing EXPO_PUBLIC_POSTHOG_API_KEY' : 'DEV mode',
+    reason: !POSTHOG_API_KEY ? 'missing EXPO_PUBLIC_POSTHOG_API_KEY' : 'DEV mode',
   });
 }
 
-export const posthog = new PostHog(apiKey, {
-  host,
+export const posthog = new PostHog(POSTHOG_API_KEY, {
+  host: POSTHOG_HOST,
   disabled,
   errorTracking: {
     autocapture: {

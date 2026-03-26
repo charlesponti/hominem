@@ -5,6 +5,8 @@ describe('mobile runtime config', () => {
     vi.resetModules()
     delete process.env.APP_VARIANT
     delete process.env.EXPO_PUBLIC_API_BASE_URL
+    delete process.env.EXPO_PUBLIC_POSTHOG_API_KEY
+    delete process.env.EXPO_PUBLIC_POSTHOG_HOST
   })
 
   afterEach(() => {
@@ -115,5 +117,28 @@ describe('mobile runtime config', () => {
     const { API_BASE_URL } = await import('../utils/constants')
 
     expect(API_BASE_URL).toBe('http://localhost:4040')
+  })
+
+  it('resolves PostHog config from Expo runtime extra', async () => {
+    vi.doMock('expo-constants', () => ({
+      default: {
+        expoConfig: {
+          extra: {
+            appVariant: 'preview',
+            apiBaseUrl: 'https://api.ponti.io',
+            posthogApiKey: 'phc_test',
+            posthogHost: 'https://eu.i.posthog.com',
+          },
+        },
+      },
+    }))
+    vi.doMock('expo-device', () => ({
+      isDevice: true,
+    }))
+
+    const { POSTHOG_API_KEY, POSTHOG_HOST } = await import('../utils/constants')
+
+    expect(POSTHOG_API_KEY).toBe('phc_test')
+    expect(POSTHOG_HOST).toBe('https://eu.i.posthog.com')
   })
 })

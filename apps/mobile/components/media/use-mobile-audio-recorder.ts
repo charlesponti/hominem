@@ -47,9 +47,6 @@ export function useMobileAudioRecorder({
   }, [recorder]);
 
   const { mutateAsync: transcribeAudio } = useAudioTranscribe({
-    onSuccess: (data) => {
-      onAudioTranscribed?.(data);
-    },
     onError: () => {
       onError?.();
     },

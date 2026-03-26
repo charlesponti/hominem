@@ -23,6 +23,8 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, getExpoExtraConfig } = require('./config/ex
     e2eTesting: string
     e2eAuthSecret: string
     mobilePasskeyEnabled: string
+    posthogApiKey: string
+    posthogHost: string
   }
 }
 
@@ -47,7 +49,11 @@ function allowsLocalNetworking(appVariant: AppVariant) {
   return appVariant !== 'production'
 }
 
-function getAppleTeamId(_appVariant: AppVariant) {
+function getAppleTeamId(appVariant: AppVariant) {
+  if (appVariant === 'preview' || appVariant === 'production') {
+    return undefined
+  }
+
   return process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL'
 }
 

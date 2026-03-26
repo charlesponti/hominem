@@ -7,6 +7,8 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
   mobilePasskeyEnabled?: string;
   e2eTesting?: string;
   e2eAuthSecret?: string;
+  posthogApiKey?: string;
+  posthogHost?: string;
   appVariant?: string;
   appScheme?: string;
 };
@@ -65,6 +67,9 @@ export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl;
 export const APP_VARIANT = appVariant;
 export const APP_SCHEME = extra.appScheme || 'hakumi';
 export const APP_NAME = BRAND.appName;
+export const POSTHOG_API_KEY = extra.posthogApiKey || process.env.EXPO_PUBLIC_POSTHOG_API_KEY || '';
+export const POSTHOG_HOST =
+  extra.posthogHost || process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
 const toBooleanFlag = (value: string | undefined) => value === 'true';
 

@@ -12,6 +12,8 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, EXPO_PROJECT_SLUG, getExpoExtraConfig } = r
     e2eTesting: string
     e2eAuthSecret: string
     mobilePasskeyEnabled: string
+    posthogApiKey: string
+    posthogHost: string
   }
 }
 
@@ -28,6 +30,8 @@ describe('expo config helpers', () => {
       e2eTesting: 'false',
       e2eAuthSecret: '',
       mobilePasskeyEnabled: 'false',
+      posthogApiKey: '',
+      posthogHost: 'https://us.i.posthog.com',
     })
   })
 
@@ -38,12 +42,16 @@ describe('expo config helpers', () => {
         EXPO_PUBLIC_E2E_AUTH_SECRET: 'secret',
         EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED: 'true',
         EXPO_PUBLIC_API_BASE_URL: 'http://localhost:4040',
+        EXPO_PUBLIC_POSTHOG_API_KEY: 'phc_test',
+        EXPO_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com',
       }),
     ).toEqual({
       apiBaseUrl: 'http://localhost:4040',
       e2eTesting: 'true',
       e2eAuthSecret: 'secret',
       mobilePasskeyEnabled: 'true',
+      posthogApiKey: 'phc_test',
+      posthogHost: 'https://eu.i.posthog.com',
     })
   })
 

@@ -10,6 +10,8 @@ function getExpoExtraConfig(env) {
     e2eTesting: getEnvValue(env.EXPO_PUBLIC_E2E_TESTING, 'false'),
     e2eAuthSecret: getEnvValue(env.EXPO_PUBLIC_E2E_AUTH_SECRET, ''),
     mobilePasskeyEnabled: getEnvValue(env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED, 'false'),
+    posthogApiKey: getEnvValue(env.EXPO_PUBLIC_POSTHOG_API_KEY, ''),
+    posthogHost: getEnvValue(env.EXPO_PUBLIC_POSTHOG_HOST, 'https://us.i.posthog.com'),
   }
 }
 
