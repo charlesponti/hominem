@@ -14,7 +14,7 @@ struct AddNoteIntent: AppIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & OpensIntent {
-    guard let url = URL(string: "hakumi://note/add") else { return .result() }
+    let url = URL(string: "hakumi://note/add")!
     return .result(opensIntent: OpenURLIntent(url))
   }
 }
@@ -26,7 +26,7 @@ struct StartChatIntent: AppIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & OpensIntent {
-    guard let url = URL(string: "hakumi://chat") else { return .result() }
+    let url = URL(string: "hakumi://chat")!
     return .result(opensIntent: OpenURLIntent(url))
   }
 }

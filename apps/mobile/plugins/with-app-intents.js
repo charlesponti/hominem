@@ -27,8 +27,9 @@ struct AddNoteIntent: AppIntent {
     static let title: LocalizedStringResource = "Add a Note"
     static let description = IntentDescription("Opens Hakumi to create a new note.")
 
-  func perform() async throws -> some IntentResult & OpensIntent {
-    .result(opensIntent: OpenURLIntent(URL(string: "hakumi://note/add")!))
+    func perform() async throws -> some IntentResult & OpensIntent {
+        let url = URL(string: "hakumi://note/add")!
+        return .result(opensIntent: OpenURLIntent(url))
     }
 }
 
@@ -39,8 +40,9 @@ struct StartChatIntent: AppIntent {
     static let title: LocalizedStringResource = "Start a Chat"
     static let description = IntentDescription("Opens Hakumi's chat assistant.")
 
-  func perform() async throws -> some IntentResult & OpensIntent {
-    .result(opensIntent: OpenURLIntent(URL(string: "hakumi://chat")!))
+    func perform() async throws -> some IntentResult & OpensIntent {
+        let url = URL(string: "hakumi://chat")!
+        return .result(opensIntent: OpenURLIntent(url))
     }
 }
 

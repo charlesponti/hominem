@@ -34,6 +34,12 @@ test:
 preview:
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --auto-submit
 
+## Reproduce the preview archive locally using EAS-managed env + xcodebuild.
+.PHONY: preview-local-archive
+preview-local-archive: _preflight-preview
+	$(EAS) env:exec preview 'APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EXPO) prebuild --platform ios --clean'
+	cd ios && xcodebuild -workspace HakumiPreview.xcworkspace -scheme HakumiPreview -configuration Release -destination 'generic/platform=iOS' -archivePath build/HakumiPreview.xcarchive archive
+
 ## Build preview → auto-submit to TestFlight. Use SIM=1 for simulator.
 .PHONY: preview-auto
 preview-auto: _preflight-preview
@@ -103,6 +109,7 @@ help:
 	@echo "  make dev                           Start local iOS dev"
 	@echo "  make test                          Run unit + integration tests"
 	@echo "  make preview                       Build preview → TestFlight"
+	@echo "  make preview-local-archive         Prebuild preview locally and archive with xcodebuild"
 	@echo "  make preview SIM=1                 Build preview for simulator"
 	@echo "  make update                        OTA update (preview, 10% rollout)"
 	@echo "  make update ROLLOUT=50             OTA update at 50% rollout"
