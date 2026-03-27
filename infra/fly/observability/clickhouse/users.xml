@@ -11,26 +11,26 @@
 
     <users>
         <default>
-            <password></password>
+            <password from_env="CLICKHOUSE_DEFAULT_PASSWORD" remove="1"></password>
             <profile>default</profile>
             <networks>
-                <ip>::/0</ip>
+                <ip>fdaa::/16</ip>
             </networks>
             <quota>default</quota>
         </default>
         <api>
-            <password>api</password>
+            <password from_env="CLICKHOUSE_API_PASSWORD" remove="1"></password>
             <profile>default</profile>
             <networks>
-                <ip>::/0</ip>
+                <ip>fdaa::/16</ip>
             </networks>
             <quota>default</quota>
         </api>
         <worker>
-            <password>worker</password>
+            <password from_env="CLICKHOUSE_WORKER_PASSWORD" remove="1"></password>
             <profile>default</profile>
             <networks>
-                <ip>::/0</ip>
+                <ip>fdaa::/16</ip>
             </networks>
             <quota>default</quota>
         </worker>
