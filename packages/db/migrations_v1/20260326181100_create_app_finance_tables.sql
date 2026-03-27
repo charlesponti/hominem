@@ -11,18 +11,6 @@ CREATE TABLE app.finance_institutions (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.finance_categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  parent_category_id uuid REFERENCES app.finance_categories(id) ON DELETE SET NULL,
-  name text NOT NULL,
-  kind text NOT NULL DEFAULT 'expense',
-  color text,
-  icon text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
 CREATE TABLE app.plaid_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -63,7 +51,6 @@ CREATE TABLE app.finance_transactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   account_id uuid NOT NULL REFERENCES app.finance_accounts(id) ON DELETE CASCADE,
-  category_id uuid REFERENCES app.finance_categories(id) ON DELETE SET NULL,
   amount numeric(14,2) NOT NULL,
   transaction_type text NOT NULL,
   description text,
@@ -83,5 +70,4 @@ CREATE TABLE app.finance_transactions (
 DROP TABLE IF EXISTS app.finance_transactions;
 DROP TABLE IF EXISTS app.finance_accounts;
 DROP TABLE IF EXISTS app.plaid_items;
-DROP TABLE IF EXISTS app.finance_categories;
 DROP TABLE IF EXISTS app.finance_institutions;

@@ -48,9 +48,6 @@ ALTER TABLE app.music_listens
     ended_at IS NULL OR ended_at >= started_at
   );
 
-ALTER TABLE app.music_likes
-  ADD CONSTRAINT app_music_likes_source_not_blank CHECK (length(btrim(source)) > 0);
-
 ALTER TABLE app.video_channels
   ADD CONSTRAINT app_video_channels_source_not_blank CHECK (length(btrim(source)) > 0),
   ADD CONSTRAINT app_video_channels_name_not_blank CHECK (length(btrim(name)) > 0),
@@ -133,18 +130,12 @@ CREATE INDEX app_music_listens_owner_started_at_idx
 CREATE INDEX app_music_listens_track_id_idx
   ON app.music_listens (track_id);
 
-CREATE UNIQUE INDEX app_music_likes_owner_track_key
-  ON app.music_likes (owner_user_id, track_id);
-
 CREATE UNIQUE INDEX app_video_channels_owner_source_external_key
   ON app.video_channels (owner_user_id, source, external_id)
   WHERE external_id IS NOT NULL;
 
 CREATE INDEX app_video_channels_owner_name_idx
   ON app.video_channels (owner_user_id, lower(name));
-
-CREATE UNIQUE INDEX app_video_subscriptions_owner_channel_key
-  ON app.video_subscriptions (owner_user_id, channel_id);
 
 CREATE INDEX app_video_views_owner_watched_at_idx
   ON app.video_views (owner_user_id, watched_at DESC);
@@ -202,10 +193,8 @@ DROP TRIGGER IF EXISTS app_music_artists_set_updated_at ON app.music_artists;
 DROP INDEX IF EXISTS app_video_views_owner_content_type_idx;
 DROP INDEX IF EXISTS app_video_views_channel_id_idx;
 DROP INDEX IF EXISTS app_video_views_owner_watched_at_idx;
-DROP INDEX IF EXISTS app_video_subscriptions_owner_channel_key;
 DROP INDEX IF EXISTS app_video_channels_owner_name_idx;
 DROP INDEX IF EXISTS app_video_channels_owner_source_external_key;
-DROP INDEX IF EXISTS app_music_likes_owner_track_key;
 DROP INDEX IF EXISTS app_music_listens_track_id_idx;
 DROP INDEX IF EXISTS app_music_listens_owner_started_at_idx;
 DROP INDEX IF EXISTS app_music_playlist_tracks_track_id_idx;
@@ -238,9 +227,6 @@ ALTER TABLE app.video_channels
   DROP CONSTRAINT IF EXISTS app_video_channels_external_id_not_blank,
   DROP CONSTRAINT IF EXISTS app_video_channels_name_not_blank,
   DROP CONSTRAINT IF EXISTS app_video_channels_source_not_blank;
-
-ALTER TABLE app.music_likes
-  DROP CONSTRAINT IF EXISTS app_music_likes_source_not_blank;
 
 ALTER TABLE app.music_listens
   DROP CONSTRAINT IF EXISTS app_music_listens_time_order_check,

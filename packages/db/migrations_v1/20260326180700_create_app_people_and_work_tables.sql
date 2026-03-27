@@ -23,35 +23,29 @@ CREATE TABLE app.people (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.person_relationships (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  person_id uuid NOT NULL REFERENCES app.people(id) ON DELETE CASCADE,
-  relationship_type text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE app.task_lists (
+CREATE TABLE app.spaces (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL,
+  description text,
   color text,
+  icon text,
+  is_ordered boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.task_list_members (
-  list_id uuid NOT NULL REFERENCES app.task_lists(id) ON DELETE CASCADE,
+CREATE TABLE app.space_members (
+  space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   added_by_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (list_id, user_id)
+  PRIMARY KEY (space_id, user_id)
 );
 
-CREATE TABLE app.task_list_invites (
+CREATE TABLE app.space_invites (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  list_id uuid NOT NULL REFERENCES app.task_lists(id) ON DELETE CASCADE,
+  space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
   inviter_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   invited_user_email text NOT NULL,
   invited_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -65,7 +59,7 @@ CREATE TABLE app.task_list_invites (
 CREATE TABLE app.tasks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  list_id uuid REFERENCES app.task_lists(id) ON DELETE SET NULL,
+  space_id uuid REFERENCES app.spaces(id) ON DELETE SET NULL,
   parent_task_id uuid REFERENCES app.tasks(id) ON DELETE SET NULL,
   title text NOT NULL,
   description text,
@@ -100,12 +94,16 @@ CREATE TABLE app.key_results (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE app.chats
+  ADD COLUMN space_id uuid REFERENCES app.spaces(id) ON DELETE SET NULL;
+
 -- +goose Down
+ALTER TABLE app.chats
+  DROP COLUMN IF EXISTS space_id;
 DROP TABLE IF EXISTS app.key_results;
 DROP TABLE IF EXISTS app.goals;
 DROP TABLE IF EXISTS app.tasks;
-DROP TABLE IF EXISTS app.task_list_invites;
-DROP TABLE IF EXISTS app.task_list_members;
-DROP TABLE IF EXISTS app.task_lists;
-DROP TABLE IF EXISTS app.person_relationships;
+DROP TABLE IF EXISTS app.space_invites;
+DROP TABLE IF EXISTS app.space_members;
+DROP TABLE IF EXISTS app.spaces;
 DROP TABLE IF EXISTS app.people;

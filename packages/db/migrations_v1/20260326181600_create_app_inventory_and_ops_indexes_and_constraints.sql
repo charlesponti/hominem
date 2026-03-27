@@ -7,9 +7,6 @@ ALTER TABLE app.possession_containers
 
 ALTER TABLE app.possessions
   ADD CONSTRAINT app_possessions_name_not_blank CHECK (length(btrim(name)) > 0),
-  ADD CONSTRAINT app_possessions_category_not_blank CHECK (
-    category IS NULL OR length(btrim(category)) > 0
-  ),
   ADD CONSTRAINT app_possessions_serial_number_not_blank CHECK (
     serial_number IS NULL OR length(btrim(serial_number)) > 0
   ),
@@ -56,18 +53,6 @@ ALTER TABLE ops.search_logs
     clicked_entity_type IS NULL OR length(btrim(clicked_entity_type)) > 0
   );
 
-ALTER TABLE ops.schema_jobs
-  ADD CONSTRAINT ops_schema_jobs_job_name_not_blank CHECK (length(btrim(job_name)) > 0),
-  ADD CONSTRAINT ops_schema_jobs_status_check CHECK (
-    status IN ('pending', 'running', 'succeeded', 'failed', 'cancelled')
-  ),
-  ADD CONSTRAINT ops_schema_jobs_time_order_check CHECK (
-    finished_at IS NULL OR started_at IS NULL OR finished_at >= started_at
-  ),
-  ADD CONSTRAINT ops_schema_jobs_error_message_not_blank CHECK (
-    error_message IS NULL OR length(btrim(error_message)) > 0
-  );
-
 CREATE INDEX app_possession_containers_owner_user_id_idx
   ON app.possession_containers (owner_user_id, updated_at DESC);
 
@@ -112,9 +97,6 @@ CREATE INDEX ops_search_logs_actor_created_at_idx
 CREATE INDEX ops_search_logs_query_idx
   ON ops.search_logs USING gin (query gin_trgm_ops);
 
-CREATE INDEX ops_schema_jobs_status_created_at_idx
-  ON ops.schema_jobs (status, created_at DESC);
-
 CREATE TRIGGER app_possession_containers_set_updated_at
   BEFORE UPDATE ON app.possession_containers
   FOR EACH ROW
@@ -130,18 +112,11 @@ CREATE TRIGGER app_possession_events_set_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER ops_schema_jobs_set_updated_at
-  BEFORE UPDATE ON ops.schema_jobs
-  FOR EACH ROW
-  EXECUTE FUNCTION public.set_updated_at();
-
 -- +goose Down
-DROP TRIGGER IF EXISTS ops_schema_jobs_set_updated_at ON ops.schema_jobs;
 DROP TRIGGER IF EXISTS app_possession_events_set_updated_at ON app.possession_events;
 DROP TRIGGER IF EXISTS app_possessions_set_updated_at ON app.possessions;
 DROP TRIGGER IF EXISTS app_possession_containers_set_updated_at ON app.possession_containers;
 
-DROP INDEX IF EXISTS ops_schema_jobs_status_created_at_idx;
 DROP INDEX IF EXISTS ops_search_logs_query_idx;
 DROP INDEX IF EXISTS ops_search_logs_actor_created_at_idx;
 DROP INDEX IF EXISTS ops_search_logs_created_at_idx;
@@ -155,12 +130,6 @@ DROP INDEX IF EXISTS app_possessions_owner_serial_number_key;
 DROP INDEX IF EXISTS app_possessions_container_id_idx;
 DROP INDEX IF EXISTS app_possessions_owner_user_id_idx;
 DROP INDEX IF EXISTS app_possession_containers_owner_user_id_idx;
-
-ALTER TABLE ops.schema_jobs
-  DROP CONSTRAINT IF EXISTS ops_schema_jobs_error_message_not_blank,
-  DROP CONSTRAINT IF EXISTS ops_schema_jobs_time_order_check,
-  DROP CONSTRAINT IF EXISTS ops_schema_jobs_status_check,
-  DROP CONSTRAINT IF EXISTS ops_schema_jobs_job_name_not_blank;
 
 ALTER TABLE ops.search_logs
   DROP CONSTRAINT IF EXISTS ops_search_logs_clicked_entity_type_not_blank,
@@ -184,7 +153,6 @@ ALTER TABLE app.possessions
   DROP CONSTRAINT IF EXISTS app_possessions_current_value_check,
   DROP CONSTRAINT IF EXISTS app_possessions_price_check,
   DROP CONSTRAINT IF EXISTS app_possessions_serial_number_not_blank,
-  DROP CONSTRAINT IF EXISTS app_possessions_category_not_blank,
   DROP CONSTRAINT IF EXISTS app_possessions_name_not_blank;
 
 ALTER TABLE app.possession_containers

@@ -11,10 +11,6 @@ ALTER TABLE app.finance_institutions
     country_code IS NULL OR country_code ~ '^[A-Z]{2}$'
   );
 
-ALTER TABLE app.finance_categories
-  ADD CONSTRAINT app_finance_categories_name_not_blank CHECK (length(btrim(name)) > 0),
-  ADD CONSTRAINT app_finance_categories_kind_check CHECK (kind IN ('expense', 'income', 'transfer'));
-
 ALTER TABLE app.plaid_items
   ADD CONSTRAINT app_plaid_items_provider_not_blank CHECK (length(btrim(provider)) > 0),
   ADD CONSTRAINT app_plaid_items_provider_item_id_not_blank CHECK (length(btrim(provider_item_id)) > 0),
@@ -75,12 +71,6 @@ CREATE UNIQUE INDEX app_finance_institutions_provider_key
 CREATE INDEX app_finance_institutions_name_idx
   ON app.finance_institutions (lower(name));
 
-CREATE UNIQUE INDEX app_finance_categories_owner_name_key
-  ON app.finance_categories (owner_user_id, parent_category_id, lower(name));
-
-CREATE INDEX app_finance_categories_owner_kind_idx
-  ON app.finance_categories (owner_user_id, kind);
-
 CREATE UNIQUE INDEX app_plaid_items_owner_provider_item_key
   ON app.plaid_items (owner_user_id, provider, provider_item_id);
 
@@ -117,17 +107,8 @@ CREATE INDEX app_finance_transactions_owner_pending_idx
   ON app.finance_transactions (owner_user_id, posted_on DESC)
   WHERE pending = true;
 
-CREATE INDEX app_finance_transactions_category_id_idx
-  ON app.finance_transactions (category_id)
-  WHERE category_id IS NOT NULL;
-
 CREATE TRIGGER app_finance_institutions_set_updated_at
   BEFORE UPDATE ON app.finance_institutions
-  FOR EACH ROW
-  EXECUTE FUNCTION public.set_updated_at();
-
-CREATE TRIGGER app_finance_categories_set_updated_at
-  BEFORE UPDATE ON app.finance_categories
   FOR EACH ROW
   EXECUTE FUNCTION public.set_updated_at();
 
@@ -150,10 +131,8 @@ CREATE TRIGGER app_finance_transactions_set_updated_at
 DROP TRIGGER IF EXISTS app_finance_transactions_set_updated_at ON app.finance_transactions;
 DROP TRIGGER IF EXISTS app_finance_accounts_set_updated_at ON app.finance_accounts;
 DROP TRIGGER IF EXISTS app_plaid_items_set_updated_at ON app.plaid_items;
-DROP TRIGGER IF EXISTS app_finance_categories_set_updated_at ON app.finance_categories;
 DROP TRIGGER IF EXISTS app_finance_institutions_set_updated_at ON app.finance_institutions;
 
-DROP INDEX IF EXISTS app_finance_transactions_category_id_idx;
 DROP INDEX IF EXISTS app_finance_transactions_owner_pending_idx;
 DROP INDEX IF EXISTS app_finance_transactions_owner_posted_on_idx;
 DROP INDEX IF EXISTS app_finance_transactions_account_posted_on_idx;
@@ -165,8 +144,6 @@ DROP INDEX IF EXISTS app_finance_accounts_owner_provider_account_key;
 DROP INDEX IF EXISTS app_plaid_items_owner_status_idx;
 DROP INDEX IF EXISTS app_plaid_items_institution_id_idx;
 DROP INDEX IF EXISTS app_plaid_items_owner_provider_item_key;
-DROP INDEX IF EXISTS app_finance_categories_owner_kind_idx;
-DROP INDEX IF EXISTS app_finance_categories_owner_name_key;
 DROP INDEX IF EXISTS app_finance_institutions_name_idx;
 DROP INDEX IF EXISTS app_finance_institutions_provider_key;
 
@@ -194,10 +171,6 @@ ALTER TABLE app.plaid_items
   DROP CONSTRAINT IF EXISTS app_plaid_items_status_check,
   DROP CONSTRAINT IF EXISTS app_plaid_items_provider_item_id_not_blank,
   DROP CONSTRAINT IF EXISTS app_plaid_items_provider_not_blank;
-
-ALTER TABLE app.finance_categories
-  DROP CONSTRAINT IF EXISTS app_finance_categories_kind_check,
-  DROP CONSTRAINT IF EXISTS app_finance_categories_name_not_blank;
 
 ALTER TABLE app.finance_institutions
   DROP CONSTRAINT IF EXISTS app_finance_institutions_country_code_check,

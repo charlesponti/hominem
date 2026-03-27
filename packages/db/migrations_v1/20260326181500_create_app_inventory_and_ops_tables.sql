@@ -15,7 +15,6 @@ CREATE TABLE app.possessions (
   container_id uuid REFERENCES app.possession_containers(id) ON DELETE SET NULL,
   name text NOT NULL,
   description text,
-  category text,
   purchase_date date,
   purchase_price numeric(12,2),
   current_value numeric(12,2),
@@ -67,20 +66,7 @@ CREATE TABLE ops.search_logs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE ops.schema_jobs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_name text NOT NULL,
-  status text NOT NULL DEFAULT 'pending',
-  started_at timestamptz,
-  finished_at timestamptz,
-  error_message text,
-  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
 -- +goose Down
-DROP TABLE IF EXISTS ops.schema_jobs;
 DROP TABLE IF EXISTS ops.search_logs;
 DROP TABLE IF EXISTS ops.audit_logs;
 DROP TABLE IF EXISTS app.possession_events;

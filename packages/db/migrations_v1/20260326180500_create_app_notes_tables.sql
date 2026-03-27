@@ -5,7 +5,6 @@ CREATE TABLE app.notes (
   parent_note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
   current_version_id uuid,
   source text,
-  folder text,
   is_locked boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -14,6 +13,7 @@ CREATE TABLE app.notes (
 CREATE TABLE app.note_versions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
+  created_by_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   version_number integer NOT NULL,
   title text,
   content text,
@@ -32,9 +32,12 @@ CREATE TABLE app.note_versions (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE app.note_versions
+  ADD CONSTRAINT app_note_versions_note_id_id_key UNIQUE (note_id, id);
+
 ALTER TABLE app.notes
-  ADD CONSTRAINT app_notes_current_version_id_fkey
-  FOREIGN KEY (current_version_id) REFERENCES app.note_versions(id) ON DELETE SET NULL
+  ADD CONSTRAINT app_notes_id_current_version_id_fkey
+  FOREIGN KEY (id, current_version_id) REFERENCES app.note_versions(note_id, id)
   DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE app.note_shares (
@@ -55,11 +58,13 @@ CREATE TABLE app.tags (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.note_tags (
-  note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
+CREATE TABLE app.tag_assignments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tag_id uuid NOT NULL REFERENCES app.tags(id) ON DELETE CASCADE,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (note_id, tag_id)
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  assigned_by_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE app.chats (
@@ -67,6 +72,9 @@ CREATE TABLE app.chats (
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
   title text NOT NULL,
+  source text,
+  archived_at timestamptz,
+  last_message_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -75,7 +83,7 @@ CREATE TABLE app.chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   chat_id uuid NOT NULL REFERENCES app.chats(id) ON DELETE CASCADE,
   author_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  parent_message_id uuid REFERENCES app.chat_messages(id) ON DELETE SET NULL,
+  parent_message_id uuid,
   role text NOT NULL,
   content text NOT NULL,
   files jsonb,
@@ -88,9 +96,9 @@ CREATE TABLE app.chat_messages (
 -- +goose Down
 DROP TABLE IF EXISTS app.chat_messages;
 DROP TABLE IF EXISTS app.chats;
-DROP TABLE IF EXISTS app.note_tags;
+DROP TABLE IF EXISTS app.tag_assignments;
 DROP TABLE IF EXISTS app.tags;
 DROP TABLE IF EXISTS app.note_shares;
-ALTER TABLE app.notes DROP CONSTRAINT IF EXISTS app_notes_current_version_id_fkey;
+ALTER TABLE app.notes DROP CONSTRAINT IF EXISTS app_notes_id_current_version_id_fkey;
 DROP TABLE IF EXISTS app.note_versions;
 DROP TABLE IF EXISTS app.notes;

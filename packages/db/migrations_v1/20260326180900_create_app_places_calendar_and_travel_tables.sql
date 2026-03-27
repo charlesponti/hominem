@@ -29,7 +29,6 @@ CREATE TABLE app.bookmarks (
   title text NOT NULL,
   description text,
   url text NOT NULL,
-  folder text,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   search_vector tsvector GENERATED ALWAYS AS (
     to_tsvector(
@@ -91,44 +90,7 @@ CREATE TABLE app.travel_trips (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.travel_flights (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  trip_id uuid REFERENCES app.travel_trips(id) ON DELETE SET NULL,
-  flight_number text,
-  airline text,
-  departure_airport text,
-  arrival_airport text,
-  departure_time timestamptz,
-  arrival_time timestamptz,
-  confirmation_code text,
-  seat text,
-  notes text,
-  provider_payload jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE app.travel_hotels (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  trip_id uuid REFERENCES app.travel_trips(id) ON DELETE SET NULL,
-  place_id uuid REFERENCES app.places(id) ON DELETE SET NULL,
-  name text NOT NULL,
-  address text,
-  check_in_date date,
-  check_out_date date,
-  confirmation_code text,
-  room_type text,
-  notes text,
-  provider_payload jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
 -- +goose Down
-DROP TABLE IF EXISTS app.travel_hotels;
-DROP TABLE IF EXISTS app.travel_flights;
 DROP TABLE IF EXISTS app.travel_trips;
 DROP TABLE IF EXISTS app.calendar_attendees;
 DROP TABLE IF EXISTS app.calendar_events;

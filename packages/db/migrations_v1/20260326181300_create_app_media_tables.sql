@@ -92,15 +92,6 @@ CREATE TABLE app.music_listens (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.music_likes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  track_id uuid NOT NULL REFERENCES app.music_tracks(id) ON DELETE CASCADE,
-  source text NOT NULL,
-  liked_at timestamptz NOT NULL DEFAULT now(),
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
 CREATE TABLE app.video_channels (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -114,14 +105,6 @@ CREATE TABLE app.video_channels (
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE app.video_subscriptions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  channel_id uuid NOT NULL REFERENCES app.video_channels(id) ON DELETE CASCADE,
-  subscribed_at timestamptz NOT NULL DEFAULT now(),
-  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE app.video_views (
@@ -148,9 +131,7 @@ CREATE TABLE app.video_views (
 
 -- +goose Down
 DROP TABLE IF EXISTS app.video_views;
-DROP TABLE IF EXISTS app.video_subscriptions;
 DROP TABLE IF EXISTS app.video_channels;
-DROP TABLE IF EXISTS app.music_likes;
 DROP TABLE IF EXISTS app.music_listens;
 DROP TABLE IF EXISTS app.music_playlist_tracks;
 DROP TABLE IF EXISTS app.music_playlists;
