@@ -12,9 +12,6 @@ primary_region = "sjc"
   internal_port = 27017
   protocol = "tcp"
 
-  [[services.ports]]
-    port = 27017
-
 [vm]
   cpu_kind = "shared"
   cpus = 1
