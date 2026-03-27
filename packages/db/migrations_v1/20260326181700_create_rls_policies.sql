@@ -134,10 +134,10 @@ ALTER TABLE app.places ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.places FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.bookmarks FORCE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_events FORCE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_attendees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_attendees FORCE ROW LEVEL SECURITY;
+ALTER TABLE app.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.events FORCE ROW LEVEL SECURITY;
+ALTER TABLE app.event_attendees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.event_attendees FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.travel_trips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.travel_trips FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.finance_institutions ENABLE ROW LEVEL SECURITY;
@@ -517,7 +517,7 @@ CREATE POLICY app_bookmarks_owner_policy ON app.bookmarks
     OR owner_user_id = auth.current_user_id()
   );
 
-CREATE POLICY app_calendar_events_owner_policy ON app.calendar_events
+CREATE POLICY app_events_owner_policy ON app.events
   FOR ALL
   USING (
     auth.is_service_role()
@@ -528,14 +528,14 @@ CREATE POLICY app_calendar_events_owner_policy ON app.calendar_events
     OR owner_user_id = auth.current_user_id()
   );
 
-CREATE POLICY app_calendar_attendees_owner_policy ON app.calendar_attendees
+CREATE POLICY app_event_attendees_owner_policy ON app.event_attendees
   FOR ALL
   USING (
     auth.is_service_role()
     OR EXISTS (
       SELECT 1
-      FROM app.calendar_events event
-      WHERE event.id = calendar_attendees.event_id
+      FROM app.events event
+      WHERE event.id = event_attendees.event_id
         AND event.owner_user_id = auth.current_user_id()
     )
   )
@@ -543,8 +543,8 @@ CREATE POLICY app_calendar_attendees_owner_policy ON app.calendar_attendees
     auth.is_service_role()
     OR EXISTS (
       SELECT 1
-      FROM app.calendar_events event
-      WHERE event.id = calendar_attendees.event_id
+      FROM app.events event
+      WHERE event.id = event_attendees.event_id
         AND event.owner_user_id = auth.current_user_id()
     )
   );
@@ -766,8 +766,8 @@ DROP POLICY IF EXISTS app_plaid_items_owner_policy ON app.plaid_items;
 DROP POLICY IF EXISTS app_finance_institutions_service_write_policy ON app.finance_institutions;
 DROP POLICY IF EXISTS app_finance_institutions_select_policy ON app.finance_institutions;
 DROP POLICY IF EXISTS app_travel_trips_owner_policy ON app.travel_trips;
-DROP POLICY IF EXISTS app_calendar_attendees_owner_policy ON app.calendar_attendees;
-DROP POLICY IF EXISTS app_calendar_events_owner_policy ON app.calendar_events;
+DROP POLICY IF EXISTS app_event_attendees_owner_policy ON app.event_attendees;
+DROP POLICY IF EXISTS app_events_owner_policy ON app.events;
 DROP POLICY IF EXISTS app_bookmarks_owner_policy ON app.bookmarks;
 DROP POLICY IF EXISTS app_places_owner_policy ON app.places;
 DROP POLICY IF EXISTS app_key_results_owner_policy ON app.key_results;
@@ -845,10 +845,10 @@ ALTER TABLE app.finance_institutions NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.finance_institutions DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app.travel_trips NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.travel_trips DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_attendees NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_attendees DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_events NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE app.calendar_events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE app.event_attendees NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE app.event_attendees DISABLE ROW LEVEL SECURITY;
+ALTER TABLE app.events NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE app.events DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app.bookmarks NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.bookmarks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app.places NO FORCE ROW LEVEL SECURITY;

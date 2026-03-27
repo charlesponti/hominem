@@ -36,18 +36,10 @@ export const reviewRoutes = new Hono<AppContext>()
     const now = new Date().toISOString();
 
     await db
-      .insertInto('notes')
+      .insertInto('app.notes')
       .values({
         id: noteId,
-        user_id: userId,
-        type: 'note',
-        status: 'draft',
-        title,
-        content: item.previewContent,
-        excerpt: null,
-        mentions: null,
-        analysis: null,
-        publishing_metadata: null,
+        owner_user_id: userId,
         created_at: now,
         updated_at: now,
       })

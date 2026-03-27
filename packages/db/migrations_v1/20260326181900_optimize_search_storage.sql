@@ -3,7 +3,7 @@ DROP INDEX IF EXISTS app.app_note_versions_search_idx;
 DROP INDEX IF EXISTS app.app_people_search_idx;
 DROP INDEX IF EXISTS app.app_places_search_idx;
 DROP INDEX IF EXISTS app.app_bookmarks_search_idx;
-DROP INDEX IF EXISTS app.app_calendar_events_search_idx;
+DROP INDEX IF EXISTS app.app_events_search_idx;
 DROP INDEX IF EXISTS app.app_music_tracks_search_idx;
 
 ALTER TABLE app.note_versions
@@ -18,7 +18,7 @@ ALTER TABLE app.places
 ALTER TABLE app.bookmarks
   DROP COLUMN IF EXISTS search_vector;
 
-ALTER TABLE app.calendar_events
+ALTER TABLE app.events
   DROP COLUMN IF EXISTS search_vector;
 
 ALTER TABLE app.music_tracks
@@ -58,8 +58,8 @@ CREATE INDEX app_bookmarks_search_idx
     )
   );
 
-CREATE INDEX app_calendar_events_search_idx
-  ON app.calendar_events
+CREATE INDEX app_events_search_idx
+  ON app.events
   USING gin (
     to_tsvector(
       'english'::regconfig,
@@ -78,7 +78,7 @@ CREATE INDEX app_music_tracks_search_idx
 
 -- +goose Down
 DROP INDEX IF EXISTS app.app_music_tracks_search_idx;
-DROP INDEX IF EXISTS app.app_calendar_events_search_idx;
+DROP INDEX IF EXISTS app.app_events_search_idx;
 DROP INDEX IF EXISTS app.app_bookmarks_search_idx;
 DROP INDEX IF EXISTS app.app_places_search_idx;
 DROP INDEX IF EXISTS app.app_people_search_idx;
@@ -114,7 +114,7 @@ ALTER TABLE app.bookmarks
     )
   ) STORED;
 
-ALTER TABLE app.calendar_events
+ALTER TABLE app.events
   ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (
     to_tsvector(
       'english'::regconfig,
@@ -142,8 +142,8 @@ CREATE INDEX app_places_search_idx
 CREATE INDEX app_bookmarks_search_idx
   ON app.bookmarks USING gin (search_vector);
 
-CREATE INDEX app_calendar_events_search_idx
-  ON app.calendar_events USING gin (search_vector);
+CREATE INDEX app_events_search_idx
+  ON app.events USING gin (search_vector);
 
 CREATE INDEX app_music_tracks_search_idx
   ON app.music_tracks USING gin (search_vector);

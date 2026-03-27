@@ -8,7 +8,7 @@ import type { Selectable } from 'kysely';
 import type { ChatMessageInput, ChatMessageOutput, ChatMessageRole } from '../contracts';
 import { ChatError } from './chat.types';
 
-type ChatMessageRow = Selectable<Database['chat_message']>;
+type ChatMessageRow = Selectable<Database['app.chat_messages']>;
 
 export type CreateMessageParams = {
   chatId: ChatMessageOutput['chatId'];
@@ -52,7 +52,7 @@ function toMessageOutput(row: ChatMessageRow): ChatMessageOutput {
   return {
     id: row.id,
     chatId: row.chat_id,
-    userId: row.user_id,
+    userId: row.author_user_id ?? '',
     role: row.role as ChatMessageRole,
     content: row.content,
     files: row.files as ChatMessageOutput['files'],
@@ -83,7 +83,7 @@ export class MessageService {
 
       const insertedMessages = await db.transaction().execute(async (trx) => {
         const newMessages = await trx
-          .insertInto('chat_message')
+          .insertInto('app.chat_messages')
           .values(
             params.map((message) => ({
               id: crypto.randomUUID(),
@@ -105,7 +105,7 @@ export class MessageService {
         }
 
         await trx
-          .updateTable('chat')
+          .updateTable('app.chats')
           .set({ updated_at: new Date() })
           .where('id', '=', chatId)
           .execute();
@@ -132,7 +132,7 @@ export class MessageService {
   ): Promise<ChatMessageOutput[]> {
     try {
       const query = db
-        .selectFrom('chat_message')
+        .selectFrom('app.chat_messages')
         .selectAll()
         .where('chat_id', '=', chatId)
         .limit(options.limit ?? 50)
@@ -153,10 +153,10 @@ export class MessageService {
   async getMessageById(messageId: string, userId: string): Promise<ChatMessageOutput | null> {
     try {
       const message = await db
-        .selectFrom('chat_message')
+        .selectFrom('app.chat_messages')
         .selectAll()
         .where('id', '=', messageId)
-        .where('user_id', '=', userId)
+        .where('author_user_id', '=', userId)
         .limit(1)
         .executeTakeFirst();
 
@@ -188,7 +188,7 @@ export class MessageService {
   }): Promise<ChatMessageOutput | null> {
     try {
       const updatedMessage = await db
-        .updateTable('chat_message')
+        .updateTable('app.chat_messages')
         .set({
           content,
           tool_calls: toolCalls as Json,
@@ -218,9 +218,9 @@ export class MessageService {
   async deleteMessage(messageId: string, userId: string): Promise<boolean> {
     try {
       await db
-        .deleteFrom('chat_message')
+        .deleteFrom('app.chat_messages')
         .where('id', '=', messageId)
-        .where('user_id', '=', userId)
+        .where('author_user_id', '=', userId)
         .execute();
 
       return true;
@@ -241,10 +241,10 @@ export class MessageService {
     try {
       // Verify chat ownership first
       const chatData = await db
-        .selectFrom('chat')
+        .selectFrom('app.chats')
         .select('id')
         .where('id', '=', chatId)
-        .where('user_id', '=', userId)
+        .where('owner_user_id', '=', userId)
         .limit(1)
         .executeTakeFirst();
 
@@ -254,7 +254,7 @@ export class MessageService {
 
       // Delete all messages created after the timestamp
       const deletedMessages = await db
-        .deleteFrom('chat_message')
+        .deleteFrom('app.chat_messages')
         .where('chat_id', '=', chatId)
         .where('created_at', '>', new Date(afterTimestamp))
         .returningAll()

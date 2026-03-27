@@ -135,6 +135,10 @@ define wait_for_db
 	@until docker exec $(2) pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
 endef
 
+# Database code generation using Kysely Codegen (generates TypeScript types from the database schema)
+db-codegen:
+	DATABASE_URL="postgres://postgres:postgres@localhost:5434/hominem" bun run --filter @hominem/db kysely-codegen -- --log-level=error
+
 # Run migrations against the local development database
 db-migrate:
 	$(call wait_for_db,dev,hominem-postgres)

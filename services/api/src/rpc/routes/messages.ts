@@ -15,7 +15,7 @@ import * as z from 'zod';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { toIsoStringOr } from '../utils/to-iso-string';
 
-function toChatMessage(row: Selectable<Database['chat_message']>): ChatMessage {
+function toChatMessage(row: Selectable<Database['app.chat_messages']>): ChatMessage {
   const now = new Date().toISOString();
   const createdAtStr = toIsoStringOr(row.created_at, now);
   const updatedAtStr = toIsoStringOr(row.updated_at, now);
@@ -23,7 +23,7 @@ function toChatMessage(row: Selectable<Database['chat_message']>): ChatMessage {
   return {
     id: row.id,
     chatId: row.chat_id,
-    userId: row.user_id,
+    userId: row.author_user_id ?? '',
     content: row.content,
     role: row.role as ChatMessage['role'],
     files: row.files ? (JSON.parse(String(row.files)) as ChatMessage['files']) : null,
@@ -49,7 +49,7 @@ const deleteMessagesAfterSchema = z.object({
 // Helper: Get message by ID with ownership check (via chat)
 async function getMessageWithOwnershipCheck(messageId: string, userId: string) {
   const message = await db
-    .selectFrom('chat_message')
+    .selectFrom('app.chat_messages')
     .selectAll()
     .where('id', '=', messageId)
     .executeTakeFirst();
@@ -60,10 +60,10 @@ async function getMessageWithOwnershipCheck(messageId: string, userId: string) {
 
   // Verify ownership via the chat
   const chat = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .selectAll()
     .where('id', '=', message.chat_id)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
 
   if (!chat) {
@@ -83,10 +83,10 @@ async function deleteMessagesAfterTimestamp(
 
   // Verify chat ownership
   const chat = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .selectAll()
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
 
   if (!chat) {
@@ -95,7 +95,7 @@ async function deleteMessagesAfterTimestamp(
 
   // Delete messages after the timestamp
   const result = await db
-    .deleteFrom('chat_message')
+    .deleteFrom('app.chat_messages')
     .where('chat_id', '=', chatId)
     .where('created_at', '>', afterDate)
     .execute();
@@ -132,7 +132,7 @@ export const messagesRoutes = new Hono<AppContext>()
     await deleteMessagesAfterTimestamp(message.chat_id, message.created_at, userId);
 
     const updatedMessage = await db
-      .updateTable('chat_message')
+      .updateTable('app.chat_messages')
       .set({
         content,
         updated_at: new Date().toISOString(),
@@ -156,7 +156,7 @@ export const messagesRoutes = new Hono<AppContext>()
 
     await getMessageWithOwnershipCheck(messageId, userId);
 
-    const result = await db.deleteFrom('chat_message').where('id', '=', messageId).execute();
+    const result = await db.deleteFrom('app.chat_messages').where('id', '=', messageId).execute();
 
     return c.json<MessagesDeleteOutput>({ success: result.length > 0 });
   })

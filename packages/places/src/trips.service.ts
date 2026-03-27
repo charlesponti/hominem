@@ -7,7 +7,7 @@ import * as z from 'zod';
 
 import type { TripItemOutput, TripOutput } from './contracts';
 
-type TripRow = Selectable<Database['travel_trips']>;
+type TripRow = Selectable<Database['app.travel_trips']>;
 
 export const createTripSchema = z.object({
   name: z.string().min(1, 'Trip name is required'),
@@ -53,7 +53,7 @@ function rowToTrip(row: TripRow): TripOutput {
   return {
     id: row.id,
     name: row.name,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     startDate: typeof row.start_date === 'string' ? row.start_date : null,
     endDate: typeof row.end_date === 'string' ? row.end_date : null,
     createdAt,
@@ -108,15 +108,14 @@ export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
   const tripId = crypto.randomUUID();
 
   const row = await db
-    .insertInto('travel_trips')
+    .insertInto('app.travel_trips')
     .values({
       id: tripId,
-      user_id: validated.userId,
+      owner_user_id: validated.userId,
       name: validated.name,
       start_date: toIsoDate(validated.startDate),
       end_date: validated.endDate ? toIsoDate(validated.endDate) : null,
       status: 'planned',
-      data: { items: [] },
     })
     .returningAll()
     .executeTakeFirst();
@@ -132,9 +131,9 @@ export async function getAllTrips(input: GetAllTripsInput): Promise<TripOutput[]
   const validated = getAllTripsSchema.parse(input);
 
   const rows = await db
-    .selectFrom('travel_trips')
+    .selectFrom('app.travel_trips')
     .selectAll()
-    .where('user_id', '=', validated.userId)
+    .where('owner_user_id', '=', validated.userId)
     .orderBy('start_date', 'desc')
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
@@ -149,10 +148,10 @@ export async function getTripById(
   const validated = getTripByIdSchema.parse(input);
 
   const row = await db
-    .selectFrom('travel_trips')
+    .selectFrom('app.travel_trips')
     .selectAll()
     .where('id', '=', validated.tripId)
-    .where('user_id', '=', validated.userId)
+    .where('owner_user_id', '=', validated.userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -162,7 +161,7 @@ export async function getTripById(
 
   return {
     ...rowToTrip(row),
-    items: toItems(row.data ?? null),
+    items: [],
   };
 }
 
@@ -170,7 +169,7 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
   const validated = addItemToTripSchema.parse(input);
 
   const tripRow = await db
-    .selectFrom('travel_trips')
+    .selectFrom('app.travel_trips')
     .selectAll()
     .where('id', '=', validated.tripId)
     .limit(1)
@@ -178,12 +177,6 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
 
   if (!tripRow) {
     throw new Error(`Trip not found for id ${validated.tripId}`);
-  }
-
-  const currentItems = toItems(tripRow.data ?? null);
-  const existingItem = currentItems.find((item) => item.itemId === validated.itemId);
-  if (existingItem) {
-    return existingItem;
   }
 
   const newItem: TripItemOutput = {
@@ -194,16 +187,6 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
     order: validated.order ?? 0,
     createdAt: new Date().toISOString(),
   };
-
-  const nextItems = [...currentItems, newItem];
-
-  await db
-    .updateTable('travel_trips')
-    .set({
-      data: toTripDataJson(nextItems),
-    })
-    .where('id', '=', validated.tripId)
-    .execute();
 
   return newItem;
 }

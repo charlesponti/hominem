@@ -54,35 +54,35 @@ describe('auth step-up enforcement', () => {
     await cleanupApiAuthTestState();
 
     await db
-      .insertInto('users')
+      .insertInto('auth.users')
       .values([
         {
           id: STEP_UP_USER_ID,
           email: 'step-up-existing@hominem.test',
-          name: 'Existing Passkey User',
+          display_name: 'Existing Passkey User',
           is_admin: false,
         },
         {
           id: FIRST_TIME_USER_ID,
           email: 'step-up-first-time@hominem.test',
-          name: 'First Time Passkey User',
+          display_name: 'First Time Passkey User',
           is_admin: false,
         },
       ])
       .execute();
 
     await db
-      .insertInto('user_passkey')
+      .insertInto('auth.passkeys')
       .values({
         id: 'step-up-passkey',
         user_id: STEP_UP_USER_ID,
-        name: 'Existing Device',
-        public_key: 'public-key',
+        friendly_name: 'Existing Device',
+        public_key: Buffer.from('public-key'),
         credential_id: 'credential-id',
-        counter: 0,
+        sign_count: 0,
         device_type: 'singleDevice',
         backed_up: false,
-        transports: 'internal',
+        transports: ['internal'],
         aaguid: 'test-aaguid',
       })
       .execute();

@@ -24,3 +24,4 @@ expo-env.d.ts
 .metro-health-check*
 .env*
 .env.e2e.local
+credentials/ios

@@ -24,18 +24,18 @@ export function normalizeAccountType(value: string): AccountType {
 }
 
 export function toTransactionData(
-  row: Selectable<Database['finance_transactions']>,
+  row: Selectable<Database['app.finance_transactions']>,
 ): TransactionData {
   const amount =
     typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount);
 
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     accountId: row.account_id,
     amount,
     description: row.description ?? '',
-    date: toIsoString(row.date),
+    date: toIsoString(row.posted_on),
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   };
 }

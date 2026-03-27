@@ -12,10 +12,10 @@ import { authMiddleware } from '../middleware/auth';
 
 async function getBookmarkWithOwnershipCheck(id: string, userId: string) {
   const bookmark = await db
-    .selectFrom('bookmarks')
+    .selectFrom('app.bookmarks')
     .selectAll()
     .where('id', '=', id)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
 
   if (!bookmark) {
@@ -31,7 +31,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const query = c.req.valid('query');
 
-    let dbQuery = db.selectFrom('bookmarks').selectAll().where('user_id', '=', userId);
+    let dbQuery = db.selectFrom('app.bookmarks').selectAll().where('owner_user_id', '=', userId);
 
     if (query.folder) {
       dbQuery = dbQuery.where('folder', '=', query.folder);
@@ -54,13 +54,12 @@ export const bookmarksRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const newBookmark = await db
-      .insertInto('bookmarks')
+      .insertInto('app.bookmarks')
       .values({
-        user_id: userId,
+        owner_user_id: userId,
         url: data.url,
-        title: data.title ?? null,
+        title: data.title,
         description: data.description ?? null,
-        folder: data.folder ?? null,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -78,17 +77,15 @@ export const bookmarksRoutes = new Hono<AppContext>()
 
     const updateData: {
       url?: string;
-      title?: string | null;
+      title?: string;
       description?: string | null;
-      folder?: string | null;
     } = {};
     if (data.url !== undefined) updateData.url = data.url;
-    if (data.title !== undefined) updateData.title = data.title ?? null;
-    if (data.description !== undefined) updateData.description = data.description ?? null;
-    if (data.folder !== undefined) updateData.folder = data.folder ?? null;
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
 
     const updatedBookmark = await db
-      .updateTable('bookmarks')
+      .updateTable('app.bookmarks')
       .set(updateData)
       .where('id', '=', id)
       .returningAll()
@@ -107,7 +104,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
     // Verify ownership first
     await getBookmarkWithOwnershipCheck(id, userId);
 
-    const result = await db.deleteFrom('bookmarks').where('id', '=', id).executeTakeFirst();
+    const result = await db.deleteFrom('app.bookmarks').where('id', '=', id).executeTakeFirst();
 
     if ((result.numDeletedRows ?? 0n) === 0n) {
       throw new NotFoundError('Bookmark not found');

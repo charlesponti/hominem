@@ -271,7 +271,7 @@ async function createEmailOtpAuthResponse(dbUser: {
       user: {
         id: dbUser.id,
         email: dbUser.email,
-        ...(dbUser.name ? { name: dbUser.name } : {}),
+        ...(dbUser.display_name ? { name: dbUser.display_name } : {}),
       },
       accessToken: access.accessToken,
       expiresIn: access.expiresIn,
@@ -315,7 +315,7 @@ async function signInWithBetterAuthEmailOtp(
     }
 
     const dbUser = await db
-      .selectFrom('users')
+      .selectFrom('auth.users')
       .selectAll()
       .where('id', '=', userId)
       .executeTakeFirst();
@@ -416,7 +416,7 @@ async function hasSatisfiedStepUp(c: Context<AppEnv>, userId: string, action: St
 
 async function userHasRegisteredPasskeys(userId: string) {
   const existingPasskey = await db
-    .selectFrom('user_passkey')
+    .selectFrom('auth.passkeys')
     .select('id')
     .where('user_id', '=', userId)
     .limit(1)
@@ -656,7 +656,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
   const existingUser = await db
-    .selectFrom('users')
+    .selectFrom('auth.users')
     .selectAll()
     .where('email', '=', email)
     .limit(1)
@@ -665,11 +665,11 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const user =
     existingUser ??
     (await db
-      .insertInto('users')
+      .insertInto('auth.users')
       .values({
         id: randomBytes(16).toString('hex'),
         email,
-        name,
+        display_name: name,
         is_admin: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -715,7 +715,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.display_name,
     },
   };
 

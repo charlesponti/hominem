@@ -11,7 +11,7 @@ export const statusRoutes = new Hono<AppEnv>();
 statusRoutes.get('/', async (c) => {
   try {
     // Simple health check using selectFrom
-    await db.selectFrom('users').select('id').limit(1).executeTakeFirst();
+    await db.selectFrom('auth.users').select('id').limit(1).executeTakeFirst();
 
     return c.json({
       status: 'ok',

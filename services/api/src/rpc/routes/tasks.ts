@@ -14,10 +14,10 @@ const taskIdParamSchema = z.object({
 // Helper: Verify task ownership
 async function getTaskWithOwnershipCheck(taskId: string, userId: string) {
   const task = await db
-    .selectFrom('tasks')
+    .selectFrom('app.tasks')
     .selectAll()
     .where('id', '=', taskId)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
 
   if (!task) {
@@ -36,7 +36,7 @@ export const tasksRoutes = new Hono<AppContext>()
     const priority = c.req.query('priority');
     const limit = c.req.query('limit') ? Math.min(Number.parseInt(c.req.query('limit')!), 100) : 50;
 
-    let query = db.selectFrom('tasks').selectAll().where('user_id', '=', userId);
+    let query = db.selectFrom('app.tasks').selectAll().where('owner_user_id', '=', userId);
 
     if (status) {
       query = query.where('status', '=', status);
@@ -59,10 +59,10 @@ export const tasksRoutes = new Hono<AppContext>()
     const { id } = c.req.valid('param');
 
     const task = await db
-      .selectFrom('tasks')
+      .selectFrom('app.tasks')
       .selectAll()
       .where('id', '=', id)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
 
     if (!task) {
@@ -76,14 +76,13 @@ export const tasksRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const newTask = await db
-      .insertInto('tasks')
+      .insertInto('app.tasks')
       .values({
-        user_id: userId,
+        owner_user_id: userId,
         title: data.title,
         description: data.description || null,
         status: data.status || 'pending',
         priority: data.priority || 'medium',
-        due_date: data.dueDate || null,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -119,7 +118,7 @@ export const tasksRoutes = new Hono<AppContext>()
         if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
 
         const updatedTask = await db
-          .updateTable('tasks')
+          .updateTable('app.tasks')
           .set(updateData)
           .where('id', '=', id)
           .returningAll()
@@ -146,7 +145,7 @@ export const tasksRoutes = new Hono<AppContext>()
       // Verify ownership first
       await getTaskWithOwnershipCheck(id, userId);
 
-      const result = await db.deleteFrom('tasks').where('id', '=', id).executeTakeFirst();
+      const result = await db.deleteFrom('app.tasks').where('id', '=', id).executeTakeFirst();
 
       if (!result.numDeletedRows) {
         throw new NotFoundError('Task not found or access denied');

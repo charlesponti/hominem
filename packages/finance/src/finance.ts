@@ -20,7 +20,7 @@ interface FinanceAccount {
   plaidAccountId?: string | null;
 }
 
-type FinanceAccountRow = Selectable<Database['finance_accounts']>;
+type FinanceAccountRow = Selectable<Database['app.finance_accounts']>;
 
 interface FinanceCategory {
   id: string;
@@ -42,13 +42,13 @@ interface FinanceTransaction {
   merchantName?: string | null;
 }
 
-type FinanceTransactionRow = Selectable<Database['finance_transactions']>;
+type FinanceTransactionRow = Selectable<Database['app.finance_transactions']>;
 
 interface FinanceAnalyticsTransaction extends FinanceTransaction {
   classification: string;
 }
 
-type TagCategoryRow = Selectable<Database['tags']>;
+type TagCategoryRow = Selectable<Database['app.tags']>;
 
 interface PlaidItem {
   id: string;
@@ -114,27 +114,27 @@ function getAffectedRows(result: unknown): number {
 }
 
 function toFinanceAccount(row: FinanceAccountRow): FinanceAccount {
-  const data = (row.data ?? {}) as Record<string, unknown>;
+  const data = (row.metadata ?? {}) as Record<string, unknown>;
   const plaidAccountId = data.plaidAccountId;
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     name: row.name,
     type: row.account_type,
-    balance: toNumber(row.balance),
-    plaidAccountId: typeof plaidAccountId === 'string' ? plaidAccountId : null,
+    balance: toNumber(row.current_balance),
+    plaidAccountId: typeof plaidAccountId === 'string' ? plaidAccountId : row.plaid_item_id,
   };
 }
 
 function toFinanceTransaction(row: FinanceTransactionRow): FinanceTransaction {
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     accountId: row.account_id,
     amount: toNumber(row.amount),
     description: row.description,
-    date: toDateOnlyString(row.date),
-    category: row.category,
+    date: toDateOnlyString(row.posted_on),
+    category: row.notes,
     merchantName: row.merchant_name,
   };
 }
@@ -142,10 +142,10 @@ function toFinanceTransaction(row: FinanceTransactionRow): FinanceTransaction {
 function toFinanceCategoryFromTag(row: TagCategoryRow): FinanceCategory {
   return {
     id: row.id,
-    userId: row.owner_id,
+    userId: row.owner_user_id,
     name: row.name,
     parentId: null,
-    icon: null,
+    icon: row.icon,
     color: row.color,
   };
 }
@@ -248,39 +248,39 @@ export async function deleteUserFinanceData(userId: string): Promise<{
   deletedPlaidItems: number;
 }> {
   const taggedItemsResult = await db
-    .deleteFrom('tagged_items')
+    .deleteFrom('app.tag_assignments')
     .where(
-      sql<boolean>`entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and entity_id in (select id from finance_transactions where user_id = ${userId})`,
+      sql<boolean>`entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and entity_id in (select id from app.finance_transactions where owner_user_id = ${userId})`,
     )
     .executeTakeFirst();
   const deletedTaggedItems = getAffectedRows(taggedItemsResult);
 
   const transactionsResult = await db
-    .deleteFrom('finance_transactions')
-    .where('user_id', '=', userId)
+    .deleteFrom('app.finance_transactions')
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
   const deletedTransactions = getAffectedRows(transactionsResult);
 
   const accountsResult = await db
-    .deleteFrom('finance_accounts')
-    .where('user_id', '=', userId)
+    .deleteFrom('app.finance_accounts')
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
   const deletedAccounts = getAffectedRows(accountsResult);
 
   let deletedBudgetGoals = 0;
-  if (await tableExists('budget_goals')) {
+  if (await tableExists('app.goals')) {
     const budgetGoalsResult = await db
-      .deleteFrom('budget_goals')
-      .where('user_id', '=', userId)
+      .deleteFrom('app.goals')
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
     deletedBudgetGoals = getAffectedRows(budgetGoalsResult);
   }
 
   let deletedPlaidItems = 0;
-  if (await tableExists('plaid_items')) {
+  if (await tableExists('app.plaid_items')) {
     const plaidItemsResult = await db
-      .deleteFrom('plaid_items')
-      .where('user_id', '=', userId)
+      .deleteFrom('app.plaid_items')
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
     deletedPlaidItems = getAffectedRows(plaidItemsResult);
   }
@@ -332,11 +332,11 @@ export async function exportFinanceData(userId: string): Promise<{
     targetAmount: number;
     targetPeriod: string;
   }> = [];
-  if (await tableExists('budget_goals')) {
+  if (await tableExists('app.goals')) {
     const budgetGoalsResult = await db
-      .selectFrom('budget_goals')
+      .selectFrom('app.goals')
       .select(['id', 'category_id', 'target_amount', 'target_period'])
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .orderBy('created_at', 'desc')
       .orderBy('id', 'asc')
       .execute();
@@ -356,21 +356,21 @@ export async function exportFinanceData(userId: string): Promise<{
   }
 
   let plaidItems: PlaidItem[] = [];
-  if (await tableExists('plaid_items')) {
+  if (await tableExists('app.plaid_items')) {
     const plaidItemsResult = await db
-      .selectFrom('plaid_items')
+      .selectFrom('app.plaid_items')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .orderBy('created_at', 'desc')
       .orderBy('id', 'asc')
       .execute();
     plaidItems = plaidItemsResult.map((row) => ({
       id: row.id,
-      userId: row.user_id,
-      itemId: row.item_id,
+      userId: row.owner_user_id,
+      itemId: row.provider_item_id,
       institutionId: row.institution_id,
       transactionsCursor: row.cursor,
-      accessToken: row.access_token,
+      accessToken: row.access_token_encrypted,
       status: row.status,
       lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
     }));
@@ -394,13 +394,13 @@ export async function createAccount(
   const data: Json = input.plaidAccountId ? { plaidAccountId: input.plaidAccountId } : {};
 
   const result = await db
-    .insertInto('finance_accounts')
+    .insertInto('app.finance_accounts')
     .values({
       id,
-      user_id: input.userId,
+      owner_user_id: input.userId,
       name: input.name,
       account_type: accountType,
-      balance,
+      current_balance: balance,
       data,
     })
     .returningAll()
@@ -415,9 +415,9 @@ export async function createAccount(
 
 export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
   const result = await db
-    .selectFrom('finance_accounts')
+    .selectFrom('app.finance_accounts')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
@@ -430,10 +430,10 @@ export async function getAccountById(
 ): Promise<FinanceAccount | null> {
   if (userId) {
     const result = await db
-      .selectFrom('finance_accounts')
+      .selectFrom('app.finance_accounts')
       .selectAll()
       .where('id', '=', accountId)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .limit(1)
       .executeTakeFirst();
     const row = result ?? null;
@@ -441,7 +441,7 @@ export async function getAccountById(
   }
 
   const result = await db
-    .selectFrom('finance_accounts')
+    .selectFrom('app.finance_accounts')
     .selectAll()
     .where('id', '=', accountId)
     .limit(1)
@@ -466,16 +466,16 @@ export async function updateAccount(
   const nextData = nextPlaidAccountId ? { plaidAccountId: nextPlaidAccountId } : {};
 
   const result = await db
-    .updateTable('finance_accounts')
+    .updateTable('app.finance_accounts')
     .set({
       name: nextName,
       account_type: nextType,
-      balance: nextBalance,
+      current_balance: nextBalance,
       data: nextData,
       updated_at: new Date(),
     })
     .where('id', '=', input.id)
-    .where('user_id', '=', existing.userId)
+    .where('owner_user_id', '=', existing.userId)
     .returningAll()
     .executeTakeFirst();
 
@@ -486,15 +486,15 @@ export async function updateAccount(
 export async function deleteAccount(accountId: string, userId?: string): Promise<boolean> {
   if (userId) {
     const result = await db
-      .deleteFrom('finance_accounts')
+      .deleteFrom('app.finance_accounts')
       .where('id', '=', accountId)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
     return getAffectedRows(result) > 0;
   }
 
   const result = await db
-    .deleteFrom('finance_accounts')
+    .deleteFrom('app.finance_accounts')
     .where('id', '=', accountId)
     .executeTakeFirst();
   return getAffectedRows(result) > 0;
@@ -519,20 +519,20 @@ export async function listAccountsWithPlaidInfo(userId: string): Promise<Finance
 
 export async function listPlaidConnectionsForUser(userId: string): Promise<PlaidItem[]> {
   const result = await db
-    .selectFrom('plaid_items')
+    .selectFrom('app.plaid_items')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .execute();
 
   return result.map((row) => ({
     id: row.id,
-    userId: row.user_id,
-    itemId: row.item_id,
+    userId: row.owner_user_id,
+    itemId: row.provider_item_id,
     institutionId: row.institution_id,
     transactionsCursor: row.cursor,
-    accessToken: row.access_token,
+    accessToken: row.access_token_encrypted,
     status: row.status,
     lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   }));
@@ -543,9 +543,9 @@ export async function getAccountsForInstitution(
   userId: string,
 ): Promise<FinanceAccount[]> {
   const result = await db
-    .selectFrom('finance_accounts')
+    .selectFrom('app.finance_accounts')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where(sql<boolean>`institution_id = ${institutionId}`)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
@@ -563,10 +563,10 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
   _userId: string,
 ): Promise<FinanceCategory[]> {
   const txCategoryResult = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .select('category')
     .distinct()
-    .where('user_id', '=', _userId)
+    .where('owner_user_id', '=', _userId)
     .where('category', 'is not', null)
     .where(sql<boolean>`category <> ''`)
     .orderBy('category', 'asc')
@@ -579,9 +579,9 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
   }
 
   const existingResult = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .select('name')
-    .where('owner_id', '=', _userId)
+    .where('owner_user_id', '=', _userId)
     .execute();
   const existingNames = new Set(
     (existingResult as Array<{ name: string }>).map((row) => row.name.toLowerCase()),
@@ -605,9 +605,9 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
 
 export async function getSpendingCategories(userId: string): Promise<FinanceCategory[]> {
   const result = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .selectAll()
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
@@ -623,10 +623,10 @@ export async function createBudgetCategory(
 ): Promise<FinanceCategory> {
   const id = input.id ?? crypto.randomUUID();
   const result = await db
-    .insertInto('tags')
+    .insertInto('app.tags')
     .values({
       id,
-      owner_id: input.userId,
+      owner_user_id: input.userId,
       name: input.name,
       color: input.color ?? null,
       description: input.icon ?? null,
@@ -646,10 +646,10 @@ export async function updateBudgetCategory(
   input: Partial<FinanceCategory>,
 ): Promise<FinanceCategory | null> {
   const existingResult = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .selectAll()
     .where('id', '=', id)
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
   const existing = existingResult ?? null;
@@ -658,13 +658,13 @@ export async function updateBudgetCategory(
   }
 
   const result = await db
-    .updateTable('tags')
+    .updateTable('app.tags')
     .set({
       name: input.name ?? existing.name,
       color: input.color === undefined ? existing.color : input.color,
     })
     .where('id', '=', id)
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .returningAll()
     .executeTakeFirst();
   const row = result ?? null;
@@ -673,9 +673,9 @@ export async function updateBudgetCategory(
 
 export async function deleteBudgetCategory(id: string, userId: string): Promise<boolean> {
   const result = await db
-    .deleteFrom('tags')
+    .deleteFrom('app.tags')
     .where('id', '=', id)
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
   return getAffectedRows(result) > 0;
 }
@@ -685,10 +685,10 @@ export async function getBudgetCategoryById(
   userId: string,
 ): Promise<FinanceCategory | null> {
   const result = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .selectAll()
     .where('id', '=', id)
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
   const row = result ?? null;
@@ -700,9 +700,9 @@ export async function checkBudgetCategoryNameExists(
   name: string,
 ): Promise<boolean> {
   const result = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .select('id')
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where('name', '=', name)
     .limit(1)
     .executeTakeFirst();
@@ -715,9 +715,9 @@ export async function getUserExpenseCategories(userId: string): Promise<FinanceC
 
 export async function getAllBudgetCategories(userId: string): Promise<FinanceCategory[]> {
   const result = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .selectAll()
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
@@ -728,34 +728,34 @@ export async function getBudgetCategoriesWithSpending(
   userId: string,
 ): Promise<Array<FinanceCategory & { spent: number }>> {
   const result = await db
-    .selectFrom('tags as tg')
-    .leftJoin('tagged_items as ti', (join) =>
+    .selectFrom('app.tags as tg')
+    .leftJoin('app.tag_assignments as ti', (join) =>
       join
         .onRef('ti.tag_id', '=', 'tg.id')
         .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
     )
-    .leftJoin('finance_transactions as t', (join) =>
+    .leftJoin('app.finance_transactions as t', (join) =>
       join
         .onRef('t.id', '=', 'ti.entity_id')
-        .onRef('t.user_id', '=', 'tg.owner_id')
+        .onRef('t.owner_user_id', '=', 'tg.owner_user_id')
         .on('t.transaction_type', '=', 'expense'),
     )
     .select([
       'tg.id',
-      'tg.owner_id',
+      'tg.owner_user_id',
       'tg.name',
       'tg.color',
       sql<number>`coalesce(sum(abs(t.amount)), 0)`.as('spent'),
     ])
-    .where('tg.owner_id', '=', userId)
-    .groupBy(['tg.id', 'tg.owner_id', 'tg.name', 'tg.color'])
+    .where('tg.owner_user_id', '=', userId)
+    .groupBy(['tg.id', 'tg.owner_user_id', 'tg.name', 'tg.color'])
     .orderBy('tg.name', 'asc')
     .orderBy('tg.id', 'asc')
     .execute();
 
   return result.map((row) => ({
     id: row.id,
-    userId: row.owner_id,
+    userId: row.owner_user_id,
     name: row.name,
     parentId: null,
     icon: null,
@@ -768,22 +768,22 @@ export async function getBudgetTrackingData(
   userId: string,
 ): Promise<{ totalBudget: number; totalSpent: number }> {
   const spentResult = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .select(sql<number>`coalesce(sum(abs(amount)), 0)`.as('total_spent'))
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where('transaction_type', '=', 'expense')
     .executeTakeFirst();
   const totalSpent = spentResult ? toNumber(spentResult.total_spent) : 0;
 
-  const hasBudgetGoals = await tableExists('budget_goals');
+  const hasBudgetGoals = await tableExists('app.goals');
   if (!hasBudgetGoals) {
     return { totalBudget: 0, totalSpent };
   }
 
   const budgetResult = await db
-    .selectFrom('budget_goals')
+    .selectFrom('app.goals')
     .select(sql<number>`coalesce(sum(target_amount), 0)`.as('total_budget'))
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
   return {
     totalBudget: budgetResult ? toNumber(budgetResult.total_budget) : 0,
@@ -793,7 +793,7 @@ export async function getBudgetTrackingData(
 
 export async function getAllInstitutions(): Promise<Institution[]> {
   const result = await db
-    .selectFrom('financial_institutions')
+    .selectFrom('app.finance_institutions')
     .selectAll()
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
@@ -803,7 +803,7 @@ export async function getAllInstitutions(): Promise<Institution[]> {
 
 export async function createInstitution(name: string): Promise<Institution> {
   const result = await db
-    .insertInto('financial_institutions')
+    .insertInto('app.finance_institutions')
     .values({
       id: crypto.randomUUID(),
       name,
@@ -888,20 +888,20 @@ export async function getTagBreakdown(
   _userId: string,
 ): Promise<Array<{ tag: string; total: number }>> {
   const result = await db
-    .selectFrom('finance_transactions as t')
-    .innerJoin('tagged_items as ti', (join) =>
+    .selectFrom('app.finance_transactions as t')
+    .innerJoin('app.tag_assignments as ti', (join) =>
       join
         .onRef('ti.entity_id', '=', 't.id')
         .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
     )
-    .innerJoin('tags as tg', (join) =>
-      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', _userId),
+    .innerJoin('app.tags as tg', (join) =>
+      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_user_id', '=', _userId),
     )
     .select([
       sql<string>`tg.name`.as('tag'),
       sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
     ])
-    .where('t.user_id', '=', _userId)
+    .where('t.owner_user_id', '=', _userId)
     .where('t.transaction_type', '=', 'expense')
     .groupBy('tg.name')
     .orderBy(sql`total`, 'desc')
@@ -918,9 +918,9 @@ export async function getTopMerchants(
   _userId: string,
 ): Promise<Array<{ merchant: string; total: number }>> {
   const result = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .select(['merchant_name as merchant', sql<number>`coalesce(sum(abs(amount)), 0)`.as('total')])
-    .where('user_id', '=', _userId)
+    .where('owner_user_id', '=', _userId)
     .where('transaction_type', '=', 'expense')
     .where('merchant_name', 'is not', null)
     .where(sql<boolean>`merchant_name <> ''`)
@@ -953,10 +953,10 @@ export async function queryAnalyticsTransactionsByContract(
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
   let query = db
-    .selectFrom('finance_transactions as t')
+    .selectFrom('app.finance_transactions as t')
     .select([
       't.id',
-      't.user_id',
+      't.owner_user_id',
       't.account_id',
       't.amount',
       't.description',
@@ -964,11 +964,11 @@ export async function queryAnalyticsTransactionsByContract(
       't.external_id',
       't.category',
       't.merchant_name',
-      sql<string>`coalesce((select min(tg_tag.name) from tagged_items ti_tag join tags tg_tag on tg_tag.id = ti_tag.tag_id and tg_tag.owner_id = ${parsed.userId} where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_tag.entity_id = t.id), t.category, ${sql.lit('Uncategorized')})`.as(
+      sql<string>`coalesce((select min(tg_tag.name) from app.tag_assignments ti_tag join app.tags tg_tag on tg_tag.id = ti_tag.tag_id and tg_tag.owner_id = ${parsed.userId} where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_tag.entity_id = t.id), t.category, ${sql.lit('Uncategorized')})`.as(
         'classification',
       ),
     ])
-    .where('t.user_id', '=', parsed.userId);
+    .where('t.owner_user_id', '=', parsed.userId);
 
   if (parsed.accountId) {
     query = query.where('t.account_id', '=', parsed.accountId);
@@ -982,15 +982,15 @@ export async function queryAnalyticsTransactionsByContract(
 
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)})))`,
+      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)})))`,
     );
   } else if (tagIds.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and ti_filter.tag_id in (${sqlValueList(tagIds)}))`,
+      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and ti_filter.tag_id in (${sqlValueList(tagIds)}))`,
     );
   } else if (tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and tg_filter.name in (${sqlValueList(tagNames)}))`,
+      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and tg_filter.name in (${sqlValueList(tagNames)}))`,
     );
   }
 
@@ -1003,7 +1003,7 @@ export async function queryAnalyticsTransactionsByContract(
 
   return result.map((row) => ({
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     accountId: row.account_id,
     amount: toNumber(row.amount),
     description: row.description ?? '',
@@ -1300,9 +1300,9 @@ export async function queryTransactionsByContract(
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
   let query = db
-    .selectFrom('finance_transactions as t')
+    .selectFrom('app.finance_transactions as t')
     .selectAll()
-    .where('t.user_id', '=', parsed.userId);
+    .where('t.owner_user_id', '=', parsed.userId);
 
   if (parsed.accountId) {
     query = query.where('t.account_id', '=', parsed.accountId);
@@ -1317,8 +1317,8 @@ export async function queryTransactionsByContract(
     query = query.where(
       sql<boolean>`exists (
         select 1
-        from tagged_items ti_filter
-        join tags tg_filter
+        from app.tag_assignments ti_filter
+        join app.tags tg_filter
           on tg_filter.id = ti_filter.tag_id
          and tg_filter.owner_id = ${parsed.userId}
         where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
@@ -1333,8 +1333,8 @@ export async function queryTransactionsByContract(
     query = query.where(
       sql<boolean>`exists (
         select 1
-        from tagged_items ti_filter
-        join tags tg_filter
+        from app.tag_assignments ti_filter
+        join app.tags tg_filter
           on tg_filter.id = ti_filter.tag_id
          and tg_filter.owner_id = ${parsed.userId}
         where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
@@ -1346,8 +1346,8 @@ export async function queryTransactionsByContract(
     query = query.where(
       sql<boolean>`exists (
         select 1
-        from tagged_items ti_filter
-        join tags tg_filter
+        from app.tag_assignments ti_filter
+        join app.tags tg_filter
           on tg_filter.id = ti_filter.tag_id
          and tg_filter.owner_id = ${parsed.userId}
         where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
@@ -1372,10 +1372,10 @@ export async function replaceTransactionTags(
   tagIds: string[],
 ): Promise<string[]> {
   const ownershipResult = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .select('id')
     .where('id', '=', transactionId)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
   if (!ownershipResult) {
@@ -1385,26 +1385,26 @@ export async function replaceTransactionTags(
   const uniqueTagIds = [...new Set(tagIds)];
   if (uniqueTagIds.length > 0) {
     const validTagResult = await db
-      .selectFrom('tags')
+      .selectFrom('app.tags')
       .select('id')
-      .where('owner_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .where(sql<boolean>`id in (${sqlValueList(uniqueTagIds)})`)
       .execute();
     const validIds = new Set((validTagResult as Array<{ id: string }>).map((row) => row.id));
     if (validIds.size !== uniqueTagIds.length) {
-      throw new Error('One or more tags are invalid for this user');
+      throw new Error('One or more app.tags are invalid for this user');
     }
   }
 
   await db
-    .deleteFrom('tagged_items')
+    .deleteFrom('app.tag_assignments')
     .where('entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
     .where('entity_id', '=', transactionId)
     .execute();
 
   for (const tagId of uniqueTagIds) {
     await db
-      .insertInto('tagged_items')
+      .insertInto('app.tag_assignments')
       .values({
         id: crypto.randomUUID(),
         tag_id: tagId,
@@ -1422,9 +1422,9 @@ export async function getTransactionTagIds(
   userId: string,
 ): Promise<string[]> {
   const result = await db
-    .selectFrom('tagged_items as ti')
-    .innerJoin('tags as tg', (join) =>
-      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', userId),
+    .selectFrom('app.tag_assignments as ti')
+    .innerJoin('app.tags as tg', (join) =>
+      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_user_id', '=', userId),
     )
     .select('ti.tag_id')
     .where('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
@@ -1441,10 +1441,10 @@ export async function createTransaction(
   const transactionType = input.amount < 0 ? 'expense' : 'income';
 
   const result = await db
-    .insertInto('finance_transactions')
+    .insertInto('app.finance_transactions')
     .values({
       id,
-      user_id: input.userId,
+      owner_user_id: input.userId,
       account_id: input.accountId,
       amount: input.amount,
       transaction_type: transactionType,
@@ -1468,10 +1468,10 @@ export async function updateTransaction(
   input: Partial<FinanceTransaction>,
 ): Promise<FinanceTransaction | null> {
   const existingResult = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .selectAll()
     .where('id', '=', id)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
   const existing = existingResult ?? null;
@@ -1490,7 +1490,7 @@ export async function updateTransaction(
   const nextType = nextAmount < 0 ? 'expense' : 'income';
 
   const updateResult = await db
-    .updateTable('finance_transactions')
+    .updateTable('app.finance_transactions')
     .set({
       amount: nextAmount,
       description: nextDescription,
@@ -1501,7 +1501,7 @@ export async function updateTransaction(
       transaction_type: nextType,
     })
     .where('id', '=', id)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .returningAll()
     .executeTakeFirst();
   const updated = updateResult ?? null;
@@ -1511,15 +1511,15 @@ export async function updateTransaction(
 export async function deleteTransaction(id: string, userId?: string): Promise<boolean> {
   if (userId) {
     const result = await db
-      .deleteFrom('finance_transactions')
+      .deleteFrom('app.finance_transactions')
       .where('id', '=', id)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
     return getAffectedRows(result) > 0;
   }
 
   const result = await db
-    .deleteFrom('finance_transactions')
+    .deleteFrom('app.finance_transactions')
     .where('id', '=', id)
     .executeTakeFirst();
   return getAffectedRows(result) > 0;
@@ -1530,9 +1530,9 @@ export async function getPlaidItemByUserAndItemId(
   itemId: string,
 ): Promise<PlaidItem | null> {
   const result = await db
-    .selectFrom('plaid_items')
+    .selectFrom('app.plaid_items')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where('item_id', '=', itemId)
     .limit(1)
     .executeTakeFirst();
@@ -1542,11 +1542,11 @@ export async function getPlaidItemByUserAndItemId(
   }
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     itemId: row.item_id,
     institutionId: row.institution_id,
     transactionsCursor: row.cursor,
-    accessToken: row.access_token,
+    accessToken: row.access_token_encrypted,
     status: row.status,
     lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
@@ -1555,10 +1555,10 @@ export async function getPlaidItemByUserAndItemId(
 export async function getPlaidItemById(id: string, userId?: string): Promise<PlaidItem | null> {
   if (userId) {
     const result = await db
-      .selectFrom('plaid_items')
+      .selectFrom('app.plaid_items')
       .selectAll()
       .where('id', '=', id)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .limit(1)
       .executeTakeFirst();
     const row = result ?? null;
@@ -1567,18 +1567,18 @@ export async function getPlaidItemById(id: string, userId?: string): Promise<Pla
     }
     return {
       id: row.id,
-      userId: row.user_id,
-      itemId: row.item_id,
+      userId: row.owner_user_id,
+      itemId: row.provider_item_id,
       institutionId: row.institution_id,
       transactionsCursor: row.cursor,
-      accessToken: row.access_token,
+      accessToken: row.access_token_encrypted,
       status: row.status,
       lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
     };
   }
 
   const result = await db
-    .selectFrom('plaid_items')
+    .selectFrom('app.plaid_items')
     .selectAll()
     .where('id', '=', id)
     .limit(1)
@@ -1589,11 +1589,11 @@ export async function getPlaidItemById(id: string, userId?: string): Promise<Pla
   }
   return {
     id: row.id,
-    userId: row.user_id,
-    itemId: row.item_id,
+    userId: row.owner_user_id,
+    itemId: row.provider_item_id,
     institutionId: row.institution_id,
     transactionsCursor: row.cursor,
-    accessToken: row.access_token,
+    accessToken: row.access_token_encrypted,
     status: row.status,
     lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
@@ -1601,7 +1601,7 @@ export async function getPlaidItemById(id: string, userId?: string): Promise<Pla
 
 export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | null> {
   const result = await db
-    .selectFrom('plaid_items')
+    .selectFrom('app.plaid_items')
     .selectAll()
     .where('item_id', '=', itemId)
     .orderBy('created_at', 'desc')
@@ -1614,11 +1614,11 @@ export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | 
   }
   return {
     id: row.id,
-    userId: row.user_id,
-    itemId: row.item_id,
+    userId: row.owner_user_id,
+    itemId: row.provider_item_id,
     institutionId: row.institution_id,
     transactionsCursor: row.cursor,
-    accessToken: row.access_token,
+    accessToken: row.access_token_encrypted,
     status: row.status,
     lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
@@ -1626,7 +1626,7 @@ export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | 
 
 export async function ensureInstitutionExists(name: string): Promise<Institution> {
   const existing = await db
-    .selectFrom('financial_institutions')
+    .selectFrom('app.finance_institutions')
     .selectAll()
     .where('name', '=', name)
     .limit(1)
@@ -1642,21 +1642,21 @@ export async function upsertPlaidItem(
   input: PlaidItem & { accessToken?: string | null },
 ): Promise<PlaidItem> {
   const existingResult = await db
-    .selectFrom('plaid_items')
+    .selectFrom('app.plaid_items')
     .selectAll()
     .where('item_id', '=', input.itemId)
-    .where('user_id', '=', input.userId)
+    .where('owner_user_id', '=', input.userId)
     .limit(1)
     .executeTakeFirst();
   const existing = existingResult ?? null;
 
   if (existing) {
     const updatedResult = await db
-      .updateTable('plaid_items')
+      .updateTable('app.plaid_items')
       .set({
         institution_id: input.institutionId ?? null,
         cursor: input.transactionsCursor ?? null,
-        access_token: input.accessToken ?? null,
+        access_token_encrypted: input.accessToken ?? null,
         status: input.status ?? 'healthy',
         last_synced_at: input.lastSyncedAt ? new Date(input.lastSyncedAt) : null,
         updated_at: new Date(),
@@ -1670,25 +1670,25 @@ export async function upsertPlaidItem(
     }
     return {
       id: updated.id,
-      userId: updated.user_id,
-      itemId: updated.item_id,
+      userId: updated.owner_user_id,
+      itemId: updated.provider_item_id,
       institutionId: updated.institution_id,
       transactionsCursor: updated.cursor,
-      accessToken: updated.access_token,
+      accessToken: updated.access_token_encrypted,
       status: updated.status,
       lastSyncedAt: toIsoStringOrNull(updated.last_synced_at),
     };
   }
 
   const createdResult = await db
-    .insertInto('plaid_items')
+    .insertInto('app.plaid_items')
     .values({
       id: input.id ?? crypto.randomUUID(),
-      user_id: input.userId,
+      owner_user_id: input.userId,
       item_id: input.itemId,
       institution_id: input.institutionId ?? null,
       cursor: input.transactionsCursor ?? null,
-      access_token: input.accessToken ?? null,
+      access_token_encrypted: input.accessToken ?? null,
       status: input.status ?? 'healthy',
       last_synced_at: input.lastSyncedAt ? new Date(input.lastSyncedAt) : null,
     })
@@ -1700,11 +1700,11 @@ export async function upsertPlaidItem(
   }
   return {
     id: created.id,
-    userId: created.user_id,
-    itemId: created.item_id,
+    userId: created.owner_user_id,
+    itemId: created.provider_item_id,
     institutionId: created.institution_id,
     transactionsCursor: created.cursor,
-    accessToken: created.access_token,
+    accessToken: created.access_token_encrypted,
     status: created.status,
     lastSyncedAt: toIsoStringOrNull(created.last_synced_at),
   };
@@ -1716,12 +1716,12 @@ export async function updatePlaidItemStatusByItemId(
   status: string,
 ): Promise<boolean> {
   const result = await db
-    .updateTable('plaid_items')
+    .updateTable('app.plaid_items')
     .set({
       status,
       updated_at: new Date(),
     })
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where('item_id', '=', itemId)
     .executeTakeFirst();
   return getAffectedRows(result) > 0;
@@ -1733,20 +1733,20 @@ export async function updatePlaidItemStatusById(
   status: string,
 ): Promise<boolean> {
   const result = await db
-    .updateTable('plaid_items')
+    .updateTable('app.plaid_items')
     .set({
       status,
       updated_at: new Date(),
     })
     .where('id', '=', id)
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
   return getAffectedRows(result) > 0;
 }
 
 export async function updatePlaidItemCursor(id: string, cursor: string | null): Promise<boolean> {
   const result = await db
-    .updateTable('plaid_items')
+    .updateTable('app.plaid_items')
     .set({
       cursor,
       updated_at: new Date(),
@@ -1762,7 +1762,7 @@ export async function updatePlaidItemSyncStatus(
   error?: string | null,
 ): Promise<boolean> {
   const result = await db
-    .updateTable('plaid_items')
+    .updateTable('app.plaid_items')
     .set({
       status,
       error: error ?? null,
@@ -1776,7 +1776,7 @@ export async function updatePlaidItemSyncStatus(
 
 export async function updatePlaidItemError(id: string, error: string | null): Promise<boolean> {
   const result = await db
-    .updateTable('plaid_items')
+    .updateTable('app.plaid_items')
     .set({
       error,
       updated_at: new Date(),
@@ -1789,14 +1789,14 @@ export async function updatePlaidItemError(id: string, error: string | null): Pr
 export async function deletePlaidItem(id: string, userId?: string): Promise<boolean> {
   if (userId) {
     const result = await db
-      .deleteFrom('plaid_items')
+      .deleteFrom('app.plaid_items')
       .where('id', '=', id)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
     return getAffectedRows(result) > 0;
   }
 
-  const result = await db.deleteFrom('plaid_items').where('id', '=', id).executeTakeFirst();
+  const result = await db.deleteFrom('app.plaid_items').where('id', '=', id).executeTakeFirst();
   return getAffectedRows(result) > 0;
 }
 
@@ -1809,9 +1809,9 @@ export async function upsertAccount(
 
   if (input.plaidAccountId) {
     const existingResult = await db
-      .selectFrom('finance_accounts')
+      .selectFrom('app.finance_accounts')
       .selectAll()
-      .where('user_id', '=', input.userId)
+      .where('owner_user_id', '=', input.userId)
       .where(sql<boolean>`data ->> 'plaidAccountId' = ${input.plaidAccountId}`)
       .limit(1)
       .executeTakeFirst();
@@ -1848,9 +1848,9 @@ export async function getUserAccounts(userId: string, itemId?: string): Promise<
   }
 
   const result = await db
-    .selectFrom('finance_accounts')
+    .selectFrom('app.finance_accounts')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where(sql<boolean>`data ->> 'plaidItemId' = ${itemId}`)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
@@ -1864,9 +1864,9 @@ export async function getAccountByPlaidId(
 ): Promise<FinanceAccount | null> {
   if (userId) {
     const result = await db
-      .selectFrom('finance_accounts')
+      .selectFrom('app.finance_accounts')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .where(sql<boolean>`data ->> 'plaidAccountId' = ${plaidAccountId}`)
       .limit(1)
       .executeTakeFirst();
@@ -1875,7 +1875,7 @@ export async function getAccountByPlaidId(
   }
 
   const result = await db
-    .selectFrom('finance_accounts')
+    .selectFrom('app.finance_accounts')
     .selectAll()
     .where(sql<boolean>`data ->> 'plaidAccountId' = ${plaidAccountId}`)
     .orderBy('created_at', 'desc')
@@ -1908,10 +1908,10 @@ export async function insertTransaction(input: {
   const id = input.id ?? crypto.randomUUID();
 
   const result = await db
-    .insertInto('finance_transactions')
+    .insertInto('app.finance_transactions')
     .values({
       id,
-      user_id: input.userId,
+      owner_user_id: input.userId,
       account_id: input.accountId,
       amount,
       transaction_type: transactionType,
@@ -1938,10 +1938,10 @@ export async function getTransactionByPlaidId(
 ): Promise<FinanceTransaction | null> {
   if (userId) {
     const result = await db
-      .selectFrom('finance_transactions')
+      .selectFrom('app.finance_transactions')
       .selectAll()
       .where('external_id', '=', plaidTransactionId)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .orderBy('date', 'desc')
       .orderBy('id', 'desc')
       .limit(1)
@@ -1951,7 +1951,7 @@ export async function getTransactionByPlaidId(
   }
 
   const result = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .selectAll()
     .where('external_id', '=', plaidTransactionId)
     .orderBy('date', 'desc')
@@ -1984,7 +1984,7 @@ export async function updatePlaidTransaction(
   }>,
 ): Promise<FinanceTransaction | null> {
   const existingResult = await db
-    .selectFrom('finance_transactions')
+    .selectFrom('app.finance_transactions')
     .selectAll()
     .where('id', '=', id)
     .limit(1)
@@ -2014,7 +2014,7 @@ export async function updatePlaidTransaction(
   const nextType = nextAmount < 0 ? 'expense' : 'income';
 
   const result = await db
-    .updateTable('finance_transactions')
+    .updateTable('app.finance_transactions')
     .set({
       amount: nextAmount,
       description: nextDescription,
@@ -2032,7 +2032,7 @@ export async function updatePlaidTransaction(
 
 export async function deletePlaidTransaction(plaidTransactionId: string): Promise<boolean> {
   const result = await db
-    .deleteFrom('finance_transactions')
+    .deleteFrom('app.finance_transactions')
     .where('external_id', '=', plaidTransactionId)
     .executeTakeFirst();
   return !!result;

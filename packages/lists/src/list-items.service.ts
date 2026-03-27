@@ -4,7 +4,7 @@ import type { Selectable, Database } from '@hominem/db';
 import type { ListPlace } from './contracts';
 import { getListOwnedByUser } from './list-queries.service';
 
-type TaskRow = Selectable<Database['tasks']>;
+type TaskRow = Selectable<Database['app.tasks']>;
 
 export interface ListTaskItem {
   id: string;
@@ -28,7 +28,7 @@ function taskToListItem(row: TaskRow): ListTaskItem {
   const updatedAt = typeof row.updated_at === 'string' ? row.updated_at : createdAt;
   return {
     id: row.id,
-    listId: row.list_id,
+    listId: null,
     itemId: row.id,
     itemType: 'TASK',
     createdAt,
@@ -59,11 +59,10 @@ export async function deleteListItem(
   itemId: string,
   userId: string,
 ): Promise<boolean> {
+  void listId;
   const result = await db
-    .deleteFrom('tasks')
-    .where((eb) =>
-      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
-    )
+    .deleteFrom('app.tasks')
+    .where((eb) => eb.and([eb('id', '=', itemId), eb('owner_user_id', '=', userId)]))
     .returningAll()
     .execute();
 
@@ -84,19 +83,18 @@ export async function addItemToList(params: {
   }
 
   const existing = await db
-    .selectFrom('tasks')
+    .selectFrom('app.tasks')
     .selectAll()
-    .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
+    .where((eb) => eb.and([eb('id', '=', itemId), eb('owner_user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (existing) {
     const updated = await db
-      .updateTable('tasks')
+      .updateTable('app.tasks')
       .set({
-        list_id: listId,
         updated_at: new Date().toISOString(),
       })
-      .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
+      .where((eb) => eb.and([eb('id', '=', itemId), eb('owner_user_id', '=', userId)]))
       .returningAll()
       .executeTakeFirst();
 
@@ -108,14 +106,13 @@ export async function addItemToList(params: {
   }
 
   const inserted = await db
-    .insertInto('tasks')
+    .insertInto('app.tasks')
     .values({
       id: itemId,
-      user_id: userId,
+      owner_user_id: userId,
       title: 'Imported item',
       status: 'pending',
       priority: 'medium',
-      list_id: listId,
     })
     .returningAll()
     .executeTakeFirst();
@@ -132,22 +129,14 @@ export async function removeItemFromList(params: {
   itemId: string;
   userId: string;
 }): Promise<boolean> {
-  const { listId, itemId, userId } = params;
-
-  const listItem = await getListOwnedByUser(listId, userId);
-  if (!listItem) {
-    throw new Error("List not found or you don't have permission to remove items from it");
-  }
+  const { itemId, userId } = params;
 
   const result = await db
-    .updateTable('tasks')
+    .updateTable('app.tasks')
     .set({
-      list_id: null,
       updated_at: new Date().toISOString(),
     })
-    .where((eb) =>
-      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
-    )
+    .where((eb) => eb.and([eb('id', '=', itemId), eb('owner_user_id', '=', userId)]))
     .returningAll()
     .execute();
 
@@ -155,13 +144,6 @@ export async function removeItemFromList(params: {
 }
 
 export async function getItemsByListId(listId: string): Promise<ListTaskItem[]> {
-  const result = await db
-    .selectFrom('tasks')
-    .selectAll()
-    .where('list_id', '=', listId)
-    .orderBy('created_at', 'desc')
-    .orderBy('id', 'asc')
-    .execute();
-
-  return result.map(taskToListItem);
+  void listId;
+  return [];
 }

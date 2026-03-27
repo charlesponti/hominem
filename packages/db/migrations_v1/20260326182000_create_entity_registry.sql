@@ -109,8 +109,8 @@ CREATE TRIGGER app_bookmarks_sync_entity_registry
   FOR EACH ROW
   EXECUTE FUNCTION app.sync_entity_registry('owner_user_id');
 
-CREATE TRIGGER app_calendar_events_sync_entity_registry
-  AFTER INSERT OR UPDATE OR DELETE ON app.calendar_events
+CREATE TRIGGER app_events_sync_entity_registry
+  AFTER INSERT OR UPDATE OR DELETE ON app.events
   FOR EACH ROW
   EXECUTE FUNCTION app.sync_entity_registry('owner_user_id');
 
@@ -200,8 +200,8 @@ FROM app.bookmarks
 ON CONFLICT DO NOTHING;
 
 INSERT INTO app.entities (entity_table, entity_id, owner_user_id, space_id)
-SELECT 'app.calendar_events'::regclass, id, owner_user_id, NULL
-FROM app.calendar_events
+SELECT 'app.events'::regclass, id, owner_user_id, NULL
+FROM app.events
 ON CONFLICT DO NOTHING;
 
 INSERT INTO app.entities (entity_table, entity_id, owner_user_id, space_id)
@@ -402,7 +402,7 @@ DROP TRIGGER IF EXISTS app_music_artists_sync_entity_registry ON app.music_artis
 DROP TRIGGER IF EXISTS app_finance_transactions_sync_entity_registry ON app.finance_transactions;
 DROP TRIGGER IF EXISTS app_finance_accounts_sync_entity_registry ON app.finance_accounts;
 DROP TRIGGER IF EXISTS app_travel_trips_sync_entity_registry ON app.travel_trips;
-DROP TRIGGER IF EXISTS app_calendar_events_sync_entity_registry ON app.calendar_events;
+DROP TRIGGER IF EXISTS app_events_sync_entity_registry ON app.events;
 DROP TRIGGER IF EXISTS app_bookmarks_sync_entity_registry ON app.bookmarks;
 DROP TRIGGER IF EXISTS app_places_sync_entity_registry ON app.places;
 DROP TRIGGER IF EXISTS app_goals_sync_entity_registry ON app.goals;

@@ -25,7 +25,7 @@ const createInstitutionSchema = z.object({
 export const institutionsRoutes = new Hono<AppContext>()
   .post('/list', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
     const institutions = await db
-      .selectFrom('financial_institutions')
+      .selectFrom('app.finance_institutions')
       .select(['id', 'name'])
       .orderBy('name', 'asc')
       .execute();
@@ -39,10 +39,10 @@ export const institutionsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json');
     const id = input.id ?? randomUUID();
 
-    await db.insertInto('financial_institutions').values({ id, name: input.name }).execute();
+    await db.insertInto('app.finance_institutions').values({ id, name: input.name }).execute();
 
     const created = await db
-      .selectFrom('financial_institutions')
+      .selectFrom('app.finance_institutions')
       .select(['id', 'name'])
       .where('id', '=', id)
       .executeTakeFirst();

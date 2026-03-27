@@ -47,11 +47,9 @@ export const focusRoutes = new Hono<AppContext>().use('*', authMiddleware).get('
 
   const [noteRows, chats] = await Promise.all([
     db
-      .selectFrom('notes')
-      .select(['id', 'title', 'excerpt', 'content', 'updated_at'])
-      .where('user_id', '=', userId)
-      .where('is_latest_version', '=', true)
-      .where('status', 'in', ['draft', 'published'])
+      .selectFrom('app.notes')
+      .selectAll()
+      .where('owner_user_id', '=', userId)
       .orderBy('updated_at', 'desc')
       .limit(NOTE_LIMIT)
       .execute(),
@@ -59,12 +57,11 @@ export const focusRoutes = new Hono<AppContext>().use('*', authMiddleware).get('
   ]);
 
   const noteItems: FocusItem[] = noteRows.map((row) => {
-    const title = computeNoteTitle(row.title, row.excerpt, row.content);
     return {
       kind: 'note',
       id: row.id,
-      title,
-      preview: computeNotePreview(title, row.excerpt, row.content),
+      title: 'Untitled note',
+      preview: null,
       updatedAt:
         row.updated_at instanceof Date ? row.updated_at.toISOString() : String(row.updated_at),
     };

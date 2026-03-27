@@ -27,7 +27,7 @@ import type { Selectable } from 'kysely';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { resolveUploadedFiles } from '../utils/uploaded-files';
 
-type NoteRow = Selectable<Database['notes']>;
+type NoteRow = Selectable<Database['app.notes']>;
 
 function toIsoString(value: Date | string | null | undefined): string {
   if (value === null || value === undefined) {
@@ -41,21 +41,21 @@ function toIsoString(value: Date | string | null | undefined): string {
 function dbToNote(row: NoteRow): Note {
   return {
     id: row.id,
-    userId: row.user_id,
-    type: row.type as Note['type'],
-    status: row.status as Note['status'],
-    title: row.title,
-    content: row.content || '',
-    excerpt: row.excerpt,
+    userId: row.owner_user_id,
+    type: 'note' as Note['type'],
+    status: 'draft' as Note['status'],
+    title: null,
+    content: '',
+    excerpt: null,
     tags: [],
-    mentions: row.mentions as NoteMention[] | null,
-    analysis: row.analysis as NoteAnalysis | null,
-    publishingMetadata: row.publishing_metadata as PublishingMetadata | null,
+    mentions: null,
+    analysis: null,
+    publishingMetadata: null,
     parentNoteId: row.parent_note_id,
-    versionNumber: row.version_number,
-    isLatestVersion: row.is_latest_version,
-    publishedAt: row.published_at ? toIsoString(row.published_at) : null,
-    scheduledFor: row.scheduled_for ? toIsoString(row.scheduled_for) : null,
+    versionNumber: 1,
+    isLatestVersion: true,
+    publishedAt: null,
+    scheduledFor: null,
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
@@ -64,9 +64,9 @@ function dbToNote(row: NoteRow): Note {
 // Helper to get note with ownership check
 async function getNoteWithOwnershipCheck(noteId: string, userId: string): Promise<Note> {
   const note = await db
-    .selectFrom('notes')
+    .selectFrom('app.notes')
     .selectAll()
-    .where((eb) => eb.and([eb('id', '=', noteId), eb('user_id', '=', userId)]))
+    .where((eb) => eb.and([eb('id', '=', noteId), eb('owner_user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (!note) {
@@ -82,15 +82,16 @@ async function hydrateNoteTags(notes: Note[]): Promise<void> {
 
   const noteIds = notes.map((n) => n.id);
   const rows = await db
-    .selectFrom('note_tags')
-    .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
-    .select(['note_tags.note_id', 'tags.name'])
-    .where('note_tags.note_id', 'in', noteIds)
+    .selectFrom('app.tag_assignments')
+    .innerJoin('app.tags', 'app.tags.id', 'app.tag_assignments.tag_id')
+    .select(['app.tag_assignments.entity_id', 'app.tags.name'])
+    .where('app.tag_assignments.entity_table', '=', 'notes')
+    .where('app.tag_assignments.entity_id', 'in', noteIds)
     .execute();
 
   const tagsByNoteId = new Map<string, ContentTag[]>();
   for (const row of rows) {
-    const noteId = row.note_id;
+    const noteId = row.entity_id;
     if (!tagsByNoteId.has(noteId)) {
       tagsByNoteId.set(noteId, []);
     }
@@ -109,7 +110,11 @@ async function syncNoteTags(
   tags: ContentTag[] | null,
 ): Promise<void> {
   // Delete existing tags
-  await db.deleteFrom('note_tags').where('note_id', '=', noteId).execute();
+  await db
+    .deleteFrom('app.tag_assignments')
+    .where('entity_table', '=', 'notes')
+    .where('entity_id', '=', noteId)
+    .execute();
 
   if (!tags || tags.length === 0) {
     return;
@@ -133,19 +138,25 @@ async function syncNoteTags(
   for (const name of tagNames) {
     // Check if tag exists
     const existing = await db
-      .selectFrom('tags')
+      .selectFrom('app.tags')
       .select('id')
-      .where((eb) => eb.and([eb('owner_id', '=', userId), eb('name', '=', name)]))
+      .where((eb) => eb.and([eb('owner_user_id', '=', userId), eb('name', '=', name)]))
       .executeTakeFirst();
 
     if (!existing) {
       // Create new tag
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
       await db
-        .insertInto('tags')
+        .insertInto('app.tags')
         .values({
           id: randomUUID(),
-          owner_id: userId,
+          owner_user_id: userId,
           name,
+          path: `/${name}`,
+          slug,
         })
         .execute();
     }
@@ -153,18 +164,19 @@ async function syncNoteTags(
 
   // Link tags to note
   const tagsToLink = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .select('id')
-    .where((eb) => eb.and([eb('owner_id', '=', userId), eb('name', 'in', tagNames)]))
+    .where((eb) => eb.and([eb('owner_user_id', '=', userId), eb('name', 'in', tagNames)]))
     .execute();
 
   if (tagsToLink.length > 0) {
     const linkValues = tagsToLink.map((tag) => ({
-      note_id: noteId,
       tag_id: tag.id,
+      entity_id: noteId,
+      entity_table: 'notes',
     }));
     await db
-      .insertInto('note_tags')
+      .insertInto('app.tag_assignments')
       .values(linkValues)
       .onConflict((oc) => oc.doNothing())
       .execute();
@@ -194,34 +206,11 @@ export const notesRoutes = new Hono<AppContext>()
     const includeAllVersions = queryParams.includeAllVersions === 'true';
 
     // Build query
-    let query = db.selectFrom('notes').selectAll().where('user_id', '=', userId);
-
-    // Filter by types
-    if (types && types.length > 0) {
-      query = query.where('type', 'in', types);
-    }
-
-    // Filter by status
-    if (status && status.length > 0) {
-      query = query.where('status', 'in', status);
-    }
-
-    // Filter by is_latest_version if not including all versions
-    if (!includeAllVersions) {
-      query = query.where('is_latest_version', '=', true);
-    }
+    let query = db.selectFrom('app.notes').selectAll().where('owner_user_id', '=', userId);
 
     // Filter by created_at if since is provided
     if (queryParams.since) {
       query = query.where('created_at', '>=', new Date(queryParams.since));
-    }
-
-    // Filter by content or title if query is provided
-    if (queryParams.query) {
-      const searchTerm = `%${queryParams.query}%`;
-      query = query.where((eb) =>
-        eb.or([eb('content', 'ilike', searchTerm), eb('title', 'ilike', searchTerm)]),
-      );
     }
 
     const allNotes = await query.execute();
@@ -232,22 +221,23 @@ export const notesRoutes = new Hono<AppContext>()
       const notesWithTags = new Set<string>();
       for (const tag of tags) {
         const tagged = await db
-          .selectFrom('note_tags')
-          .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
-          .select('note_tags.note_id')
+          .selectFrom('app.tag_assignments')
+          .innerJoin('app.tags', 'app.tags.id', 'app.tag_assignments.tag_id')
+          .select('app.tag_assignments.entity_id')
+          .where('app.tag_assignments.entity_table', '=', 'notes')
           .where((eb) =>
             eb.and([
               eb(
-                'note_tags.note_id',
+                'app.tag_assignments.entity_id',
                 'in',
                 results.map((n) => n.id),
               ),
-              eb('tags.name', '=', tag),
+              eb('app.tags.name', '=', tag),
             ]),
           )
           .execute();
 
-        tagged.forEach((t) => notesWithTags.add(t.note_id));
+        tagged.forEach((t) => notesWithTags.add(t.entity_id));
       }
       results = results.filter((n) => notesWithTags.has(n.id));
     }
@@ -300,9 +290,9 @@ export const notesRoutes = new Hono<AppContext>()
 
     // Verify ownership of at least one version
     const hasAccess = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .select('id')
-      .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
+      .where((eb) => eb.and([eb('id', '=', id), eb('owner_user_id', '=', userId)]))
       .executeTakeFirst();
 
     if (!hasAccess) {
@@ -312,7 +302,7 @@ export const notesRoutes = new Hono<AppContext>()
     // Get the root parent to find all versions
     let rootId = id;
     const directParent = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
@@ -322,7 +312,7 @@ export const notesRoutes = new Hono<AppContext>()
     }
 
     const versions = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where((eb) => eb.or([eb('id', '=', rootId), eb('parent_note_id', '=', rootId)]))
       .orderBy('created_at', 'desc')
@@ -347,18 +337,10 @@ export const notesRoutes = new Hono<AppContext>()
     const content = appendNoteAttachments(data.content, uploadedFiles);
 
     await db
-      .insertInto('notes')
+      .insertInto('app.notes')
       .values({
         id: noteId,
-        user_id: userId,
-        type: data.type || 'note',
-        status: data.status || 'draft',
-        content,
-        title: data.title || null,
-        excerpt: data.excerpt || null,
-        mentions: data.mentions || null,
-        analysis: data.analysis || null,
-        publishing_metadata: data.publishingMetadata || null,
+        owner_user_id: userId,
         created_at: now,
         updated_at: now,
       })
@@ -415,7 +397,7 @@ export const notesRoutes = new Hono<AppContext>()
     if (data.publishingMetadata !== undefined)
       updateValues.publishing_metadata = data.publishingMetadata;
 
-    await db.updateTable('notes').set(updateValues).where('id', '=', id).execute();
+    await db.updateTable('app.notes').set(updateValues).where('id', '=', id).execute();
 
     // Sync tags if provided
     if (data.tags !== undefined) {
@@ -434,14 +416,17 @@ export const notesRoutes = new Hono<AppContext>()
     const note = await getNoteWithOwnershipCheck(id, userId);
 
     // Delete associated records
-    await db.deleteFrom('note_tags').where('note_id', '=', id).execute();
-    await db.deleteFrom('note_shares').where('note_id', '=', id).execute();
+    await db
+      .deleteFrom('app.tag_assignments')
+      .where('entity_table', '=', 'notes')
+      .where('entity_id', '=', id)
+      .execute();
 
     // Delete child versions
-    await db.deleteFrom('notes').where('parent_note_id', '=', id).execute();
+    await db.deleteFrom('app.notes').where('parent_note_id', '=', id).execute();
 
     // Delete the note itself
-    await db.deleteFrom('notes').where('id', '=', id).execute();
+    await db.deleteFrom('app.notes').where('id', '=', id).execute();
 
     return c.json(note);
   })
@@ -466,11 +451,8 @@ export const notesRoutes = new Hono<AppContext>()
     };
 
     await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({
-        status: 'published',
-        publishing_metadata: newMetadata,
-        published_at: now,
         updated_at: now,
       })
       .where('id', '=', id)
@@ -489,9 +471,8 @@ export const notesRoutes = new Hono<AppContext>()
     await getNoteWithOwnershipCheck(id, userId);
 
     await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({
-        status: 'archived',
         updated_at: now,
       })
       .where('id', '=', id)
@@ -510,10 +491,8 @@ export const notesRoutes = new Hono<AppContext>()
     await getNoteWithOwnershipCheck(id, userId);
 
     await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({
-        status: 'draft',
-        published_at: null,
         updated_at: now,
       })
       .where('id', '=', id)
@@ -569,9 +548,9 @@ export const notesRoutes = new Hono<AppContext>()
 
         // Check if note exists
         const existing = await db
-          .selectFrom('notes')
+          .selectFrom('app.notes')
           .select('id')
-          .where((eb) => eb.and([eb('id', '=', noteId), eb('user_id', '=', userId)]))
+          .where((eb) => eb.and([eb('id', '=', noteId), eb('owner_user_id', '=', userId)]))
           .executeTakeFirst();
 
         if (existing) {
@@ -598,7 +577,7 @@ export const notesRoutes = new Hono<AppContext>()
           if (item.publishingMetadata !== undefined)
             updateValues.publishing_metadata = item.publishingMetadata;
 
-          await db.updateTable('notes').set(updateValues).where('id', '=', noteId).execute();
+          await db.updateTable('app.notes').set(updateValues).where('id', '=', noteId).execute();
 
           if (item.tags !== undefined) {
             await syncNoteTags(noteId, userId, item.tags);
@@ -608,18 +587,10 @@ export const notesRoutes = new Hono<AppContext>()
         } else {
           // Create
           await db
-            .insertInto('notes')
+            .insertInto('app.notes')
             .values({
               id: noteId,
-              user_id: userId,
-              type: item.type || 'note',
-              status: item.status || 'draft',
-              content: item.content,
-              title: item.title || null,
-              excerpt: item.excerpt || null,
-              mentions: item.mentions || null,
-              analysis: item.analysis || null,
-              publishing_metadata: item.publishingMetadata || null,
+              owner_user_id: userId,
               created_at: item.createdAt || now,
               updated_at: item.updatedAt || now,
             })

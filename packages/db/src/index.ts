@@ -18,7 +18,7 @@ export type { Json, JsonValue, JsonObject, JsonArray } from './types/database'
 // Export all database table types for use in services
 export type {
   AppBookmarks as Bookmarks,
-  AppCalendarEvents as CalendarEvents,
+  AppCalendarEvents as Events,
   AppChatMessages as ChatMessage,
   AppChats as Chat,
   AppFinanceAccounts as FinanceAccounts,

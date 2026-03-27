@@ -40,7 +40,7 @@ CREATE TABLE app.bookmarks (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.calendar_events (
+CREATE TABLE app.events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   place_id uuid REFERENCES app.places(id) ON DELETE SET NULL,
@@ -65,9 +65,9 @@ CREATE TABLE app.calendar_events (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE app.calendar_attendees (
+CREATE TABLE app.event_attendees (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id uuid NOT NULL REFERENCES app.calendar_events(id) ON DELETE CASCADE,
+  event_id uuid NOT NULL REFERENCES app.events(id) ON DELETE CASCADE,
   person_id uuid REFERENCES app.people(id) ON DELETE SET NULL,
   email text,
   status text NOT NULL DEFAULT 'needs_action',
@@ -92,7 +92,7 @@ CREATE TABLE app.travel_trips (
 
 -- +goose Down
 DROP TABLE IF EXISTS app.travel_trips;
-DROP TABLE IF EXISTS app.calendar_attendees;
-DROP TABLE IF EXISTS app.calendar_events;
+DROP TABLE IF EXISTS app.event_attendees;
+DROP TABLE IF EXISTS app.events;
 DROP TABLE IF EXISTS app.bookmarks;
 DROP TABLE IF EXISTS app.places;

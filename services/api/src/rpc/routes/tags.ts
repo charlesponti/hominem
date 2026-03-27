@@ -13,10 +13,10 @@ import { authMiddleware } from '../middleware/auth';
 
 async function getTagWithOwnershipCheck(id: string, userId: string) {
   const tag = await db
-    .selectFrom('tags')
+    .selectFrom('app.tags')
     .selectAll()
     .where('id', '=', id)
-    .where('owner_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .executeTakeFirst();
 
   if (!tag) {
@@ -30,9 +30,9 @@ export const tagsRoutes = new Hono<AppContext>()
   .get('/', async (c) => {
     const userId = c.get('userId')!;
     const tags = await db
-      .selectFrom('tags')
+      .selectFrom('app.tags')
       .selectAll()
-      .where('owner_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .orderBy('name', 'asc')
       .execute();
     return c.json({ success: true, data: tags });
@@ -49,13 +49,17 @@ export const tagsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const newTag = await db
-      .insertInto('tags')
+      .insertInto('app.tags')
       .values({
-        owner_id: userId,
+        owner_user_id: userId,
         name: data.name,
         color: data.color ?? null,
         description: data.description ?? null,
-        emoji_image_url: data.emojiImageUrl ?? null,
+        path: `/${data.name}`,
+        slug: data.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -83,7 +87,7 @@ export const tagsRoutes = new Hono<AppContext>()
       if (data.emojiImageUrl !== undefined) updateData.emoji_image_url = data.emojiImageUrl ?? null;
 
       const updatedTag = await db
-        .updateTable('tags')
+        .updateTable('app.tags')
         .set(updateData)
         .where('id', '=', id)
         .returningAll()
@@ -108,7 +112,7 @@ export const tagsRoutes = new Hono<AppContext>()
       // Verify ownership
       await getTagWithOwnershipCheck(id, userId);
 
-      const result = await db.deleteFrom('tags').where('id', '=', id).executeTakeFirst();
+      const result = await db.deleteFrom('app.tags').where('id', '=', id).executeTakeFirst();
 
       if ((result.numDeletedRows ?? 0n) === 0n) {
         throw new NotFoundError('Tag not found');
@@ -130,11 +134,11 @@ export const tagsRoutes = new Hono<AppContext>()
     await getTagWithOwnershipCheck(tagId, userId);
 
     const result = await db
-      .insertInto('tagged_items')
+      .insertInto('app.tag_assignments')
       .values({
         tag_id: tagId,
         entity_id: data.entityId,
-        entity_type: data.entityType,
+        entity_table: data.entityType,
       })
       .returningAll()
       .executeTakeFirst();
@@ -155,10 +159,10 @@ export const tagsRoutes = new Hono<AppContext>()
     await getTagWithOwnershipCheck(tagId, userId);
 
     const result = await db
-      .deleteFrom('tagged_items')
+      .deleteFrom('app.tag_assignments')
       .where('tag_id', '=', tagId)
       .where('entity_id', '=', entityId)
-      .where('entity_type', '=', entityType)
+      .where('entity_table', '=', entityType)
       .executeTakeFirst();
 
     if ((result.numDeletedRows ?? 0n) === 0n) {
@@ -177,20 +181,20 @@ export const tagsRoutes = new Hono<AppContext>()
 
     // Delete all current tagged items for this entity
     await db
-      .deleteFrom('tagged_items')
+      .deleteFrom('app.tag_assignments')
       .where('entity_id', '=', data.entityId)
-      .where('entity_type', '=', data.entityType)
+      .where('entity_table', '=', data.entityType)
       .execute();
 
     // Insert new tagged items
     if (data.tagIds && data.tagIds.length > 0) {
       await db
-        .insertInto('tagged_items')
+        .insertInto('app.tag_assignments')
         .values(
           data.tagIds.map((tid) => ({
             tag_id: tid,
             entity_id: data.entityId,
-            entity_type: data.entityType,
+            entity_table: data.entityType,
           })),
         )
         .execute();

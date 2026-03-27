@@ -1,53 +1,53 @@
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 
 // Universal UUID generation that works in Node.js, Bun, and browsers
 function generateUUID(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
+    return crypto.randomUUID();
   }
   // Fallback for environments without crypto.randomUUID
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 interface AccountRecord {
-  id: string
-  userId: string
-  type: string
-  provider: string
-  providerAccountId: string
-  refreshToken: string | null
-  accessToken: string | null
-  expiresAt: string | null
-  tokenType: string | null
-  scope: string | null
-  idToken: string | null
-  sessionState: string | null
+  id: string;
+  userId: string;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refreshToken: string | null;
+  accessToken: string | null;
+  expiresAt: string | null;
+  tokenType: string | null;
+  scope: string | null;
+  idToken: string | null;
+  sessionState: string | null;
 }
 
 interface AccountInsert {
-  id?: string
-  userId: string
-  type?: string
-  provider: string
-  providerAccountId: string
-  refreshToken?: string | null
-  accessToken?: string | null
-  expiresAt?: Date | null
-  tokenType?: string | null
-  scope?: string | null
-  idToken?: string | null
-  sessionState?: string | null
+  id?: string;
+  userId: string;
+  type?: string;
+  provider: string;
+  providerAccountId: string;
+  refreshToken?: string | null;
+  accessToken?: string | null;
+  expiresAt?: Date | null;
+  tokenType?: string | null;
+  scope?: string | null;
+  idToken?: string | null;
+  sessionState?: string | null;
 }
 
 interface AccountSelectRow {
-  id: string
-  user_id: string
-  provider: string
-  account_id: string
+  id: string;
+  user_id: string;
+  provider: string;
+  provider_account_id: string;
 }
 
 function toCompatRecord(row: AccountSelectRow): AccountRecord {
@@ -56,7 +56,7 @@ function toCompatRecord(row: AccountSelectRow): AccountRecord {
     userId: row.user_id,
     type: 'oauth',
     provider: row.provider,
-    providerAccountId: row.account_id,
+    providerAccountId: row.provider_account_id,
     refreshToken: null,
     accessToken: null,
     expiresAt: null,
@@ -64,117 +64,119 @@ function toCompatRecord(row: AccountSelectRow): AccountRecord {
     scope: null,
     idToken: null,
     sessionState: null,
-  }
+  };
 }
 
-export async function listAccountsByProvider(userId: string, provider: string): Promise<AccountRecord[]> {
+export async function listAccountsByProvider(
+  userId: string,
+  provider: string,
+): Promise<AccountRecord[]> {
   const rows = (await db
-    .selectFrom('user_accounts')
+    .selectFrom('auth.identities')
     .selectAll()
     .where('user_id', '=', userId)
     .where('provider', '=', provider)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
-    .execute()) as AccountSelectRow[]
+    .execute()) as AccountSelectRow[];
 
-  return rows.map(toCompatRecord)
+  return rows.map(toCompatRecord);
 }
 
 export async function getAccountByUserAndProvider(
   userId: string,
-  provider: string
+  provider: string,
 ): Promise<AccountRecord | null> {
   const row = (await db
-    .selectFrom('user_accounts')
+    .selectFrom('auth.identities')
     .selectAll()
     .where('user_id', '=', userId)
     .where('provider', '=', provider)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
-    .executeTakeFirst()) as AccountSelectRow | undefined
+    .executeTakeFirst()) as AccountSelectRow | undefined;
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row) : null;
 }
 
 export async function getAccountByProviderAccountId(
   providerAccountId: string,
-  provider: string
+  provider: string,
 ): Promise<AccountRecord | null> {
   const row = (await db
-    .selectFrom('user_accounts')
+    .selectFrom('auth.identities')
     .selectAll()
-    .where('account_id', '=', providerAccountId)
+    .where('provider_account_id', '=', providerAccountId)
     .where('provider', '=', provider)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
-    .executeTakeFirst()) as AccountSelectRow | undefined
+    .executeTakeFirst()) as AccountSelectRow | undefined;
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row) : null;
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
-  const accountId = data.id ?? generateUUID()
+  const accountId = data.id ?? generateUUID();
 
   const row = (await db
-    .insertInto('user_accounts')
+    .insertInto('auth.identities')
     .values({
       id: accountId,
       user_id: data.userId,
-      account_id: data.providerAccountId,
+      provider_account_id: data.providerAccountId,
       provider: data.provider,
+      provider_subject: data.providerAccountId, // Required field
     })
-    .onConflict((oc) =>
-      oc.columns(['account_id', 'provider', 'user_id']).doNothing()
-    )
+    .onConflict((oc) => oc.columns(['provider_account_id', 'provider', 'user_id']).doNothing())
     .returningAll()
-    .executeTakeFirst()) as AccountSelectRow | undefined
+    .executeTakeFirst()) as AccountSelectRow | undefined;
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row) : null;
 }
 
 export async function updateAccount(
   id: string,
-  updates: Partial<AccountInsert>
+  updates: Partial<AccountInsert>,
 ): Promise<AccountRecord | null> {
-  const updateData: Partial<Record<'account_id' | 'provider', string>> = {}
+  const updateData: Partial<Record<'account_id' | 'provider', string>> = {};
 
   if (updates.providerAccountId !== undefined) {
-    updateData.account_id = updates.providerAccountId
+    updateData.account_id = updates.providerAccountId;
   }
 
   if (updates.provider !== undefined) {
-    updateData.provider = updates.provider
+    updateData.provider = updates.provider;
   }
 
   if (Object.keys(updateData).length === 0) {
-    return null
+    return null;
   }
 
   const row = (await db
-    .updateTable('user_accounts')
+    .updateTable('auth.identities')
     .set(updateData)
     .where('id', '=', id)
     .returningAll()
-    .executeTakeFirst()) as AccountSelectRow | undefined
+    .executeTakeFirst()) as AccountSelectRow | undefined;
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row) : null;
 }
 
 export async function deleteAccountForUser(
   id: string,
   userId: string,
-  provider: string
+  provider: string,
 ): Promise<boolean> {
   const result = await db
-    .deleteFrom('user_accounts')
+    .deleteFrom('auth.identities')
     .where('id', '=', id)
     .where('user_id', '=', userId)
     .where('provider', '=', provider)
-    .executeTakeFirst()
+    .executeTakeFirst();
 
-  return (result.numDeletedRows ?? 0n) > 0n
+  return (result.numDeletedRows ?? 0n) > 0n;
 }
 
-export type { AccountRecord, AccountInsert }
+export type { AccountRecord, AccountInsert };

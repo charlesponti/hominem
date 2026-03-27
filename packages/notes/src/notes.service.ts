@@ -13,7 +13,7 @@ import { assertAllowedTransition, ConflictError } from './note.state.service';
 import type { UpdateNoteInput } from './types';
 import { UpdateNoteZodSchema } from './types';
 
-type NotesRow = Selectable<Database['notes']>;
+type NotesRow = Selectable<Database['app.notes']>;
 
 function toDateOrNull(value: string | Date | null | undefined): Date | null {
   if (value === null || value === undefined) {
@@ -23,26 +23,26 @@ function toDateOrNull(value: string | Date | null | undefined): Date | null {
   return value instanceof Date ? value : new Date(value);
 }
 
-function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {
+function rowToNote(row: NotesRow, tags: NoteOutput['app.tags'] = []): NoteOutput {
   const toDateStr = (d: string | Date | null | undefined): string | null =>
     typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : (d ?? null);
   return {
     id: row.id,
-    userId: row.user_id,
-    type: row.type as NoteOutput['type'],
-    status: row.status as NoteOutput['status'],
-    title: row.title,
-    content: row.content ?? '',
-    excerpt: row.excerpt,
+    userId: row.owner_user_id,
+    type: 'doc' as NoteOutput['type'],
+    status: 'draft' as NoteOutput['status'],
+    title: '',
+    content: '',
+    excerpt: null,
     tags,
-    mentions: row.mentions as NoteOutput['mentions'],
-    analysis: row.analysis as NoteOutput['analysis'],
-    publishingMetadata: row.publishing_metadata as NoteOutput['publishingMetadata'],
+    mentions: [],
+    analysis: null,
+    publishingMetadata: null,
     parentNoteId: row.parent_note_id,
-    versionNumber: row.version_number,
-    isLatestVersion: row.is_latest_version,
-    publishedAt: toDateStr(row.published_at),
-    scheduledFor: toDateStr(row.scheduled_for),
+    versionNumber: 1,
+    isLatestVersion: true,
+    publishedAt: null,
+    scheduledFor: null,
     createdAt: toDateStr(row.created_at) ?? new Date().toISOString(),
     updatedAt: toDateStr(row.updated_at) ?? new Date().toISOString(),
   };
@@ -97,24 +97,38 @@ export class NotesService {
     tags: Array<{ value: string }> | null,
   ): Promise<void> {
     if (tags === null) {
-      await db.deleteFrom('note_tags').where('note_id', '=', noteId).execute();
+      await db
+        .deleteFrom('app.tag_assignments')
+        .where('entity_table', '=', 'notes')
+        .where('entity_id', '=', noteId)
+        .execute();
       return;
     }
 
     const normalizedNames = this.normalizeTagValues(tags);
-    await db.deleteFrom('note_tags').where('note_id', '=', noteId).execute();
+    await db
+      .deleteFrom('app.tag_assignments')
+      .where('entity_table', '=', 'notes')
+      .where('entity_id', '=', noteId)
+      .execute();
 
     if (normalizedNames.length === 0) {
       return;
     }
 
     for (const name of normalizedNames) {
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
       try {
         await db
-          .insertInto('tags')
+          .insertInto('app.tags')
           .values({
-            owner_id: userId,
+            owner_user_id: userId,
             name,
+            path: `/${name}`,
+            slug,
           })
           .execute();
       } catch {
@@ -123,18 +137,19 @@ export class NotesService {
     }
 
     const tagRecords = await db
-      .selectFrom('tags')
+      .selectFrom('app.tags')
       .select('id')
-      .where('owner_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .where('name', 'in', normalizedNames)
       .execute();
 
     for (const tagRecord of tagRecords) {
       try {
         await db
-          .insertInto('note_tags')
+          .insertInto('app.tag_assignments')
           .values({
-            note_id: noteId,
+            entity_id: noteId,
+            entity_table: 'notes',
             tag_id: tagRecord.id,
           })
           .execute();
@@ -153,16 +168,17 @@ export class NotesService {
     }
 
     const rows = await db
-      .selectFrom('note_tags')
-      .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
+      .selectFrom('app.tag_assignments')
+      .innerJoin('app.tags', 'app.tags.id', 'app.tag_assignments.tag_id')
       .select((eb) => [
-        eb.ref('note_tags.note_id').as('noteId'),
-        eb.ref('tags.name').as('tagValue'),
+        eb.ref('app.tag_assignments.entity_id').as('noteId'),
+        eb.ref('app.tags.name').as('tagValue'),
       ])
-      .where('note_tags.note_id', 'in', noteIds)
-      .where('tags.owner_id', '=', userId)
-      .orderBy('note_tags.note_id', 'asc')
-      .orderBy('tags.name', 'asc')
+      .where('app.tag_assignments.entity_table', '=', 'notes')
+      .where('app.tag_assignments.entity_id', 'in', noteIds)
+      .where('app.tags.owner_user_id', '=', userId)
+      .orderBy('app.tag_assignments.entity_id', 'asc')
+      .orderBy('app.tags.name', 'asc')
       .execute();
 
     const map = new Map<string, Array<{ value: string }>>();
@@ -188,23 +204,10 @@ export class NotesService {
     }
 
     const resultRow = await db
-      .insertInto('notes')
+      .insertInto('app.notes')
       .values({
         id: input.id,
-        user_id: input.userId,
-        type: input.type ?? 'note',
-        status: input.status ?? 'draft',
-        title: input.title,
-        content: input.content ?? '',
-        excerpt: input.excerpt,
-        mentions: input.mentions,
-        analysis: input.analysis,
-        publishing_metadata: input.publishingMetadata,
-        parent_note_id: input.parentNoteId,
-        version_number: input.versionNumber,
-        is_latest_version: input.isLatestVersion,
-        published_at: toDateOrNull(input.publishedAt),
-        scheduled_for: toDateOrNull(input.scheduledFor),
+        owner_user_id: input.userId,
         created_at: toDateOrNull(input.createdAt) ?? new Date(),
         updated_at: toDateOrNull(input.updatedAt) ?? new Date(),
       })
@@ -237,33 +240,24 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to query notes');
     }
 
-    let query = db.selectFrom('notes').selectAll().where('user_id', '=', userId);
-
-    // Type filtering
-    if (filters?.types && filters.types.length > 0) {
-      query = query.where('type', 'in', filters.types);
-    }
-
-    // Status filtering
-    if (filters?.status && filters.status.length > 0) {
-      query = query.where('status', 'in', filters.status);
-    }
+    let query = db.selectFrom('app.notes').selectAll().where('owner_user_id', '=', userId);
 
     // Tag filtering (exact match)
     if (filters?.tags && filters.tags.length > 0) {
       const noteIdsWithTags = await db
-        .selectFrom('note_tags')
-        .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
-        .select('note_tags.note_id')
-        .where('tags.owner_id', '=', userId)
-        .where('tags.name', 'in', filters.tags)
+        .selectFrom('app.tag_assignments')
+        .innerJoin('app.tags', 'app.tags.id', 'app.tag_assignments.tag_id')
+        .select('app.tag_assignments.entity_id')
+        .where('app.tag_assignments.entity_table', '=', 'notes')
+        .where('app.tags.owner_user_id', '=', userId)
+        .where('app.tags.name', 'in', filters.tags)
         .execute();
 
       if (noteIdsWithTags.length === 0) {
         return { notes: [], total: 0 };
       }
 
-      const tagNoteIds = [...new Set(noteIdsWithTags.map((row) => row.note_id))];
+      const tagNoteIds = [...new Set(noteIdsWithTags.map((row) => row.entity_id))];
       query = query.where('id', 'in', tagNoteIds);
     }
 
@@ -292,9 +286,9 @@ export class NotesService {
 
     // Get total count (without pagination)
     const countResult = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .select(db.fn.countAll<number>().as('count'))
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .executeTakeFirst();
 
     const total = Number(countResult?.count ?? 0);
@@ -320,10 +314,10 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to retrieve note');
     }
     const item = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('id', '=', id)
-      .where('user_id', '=', userId)
+      .where('owner_user_id', '=', userId)
       .limit(1)
       .executeTakeFirst();
 
@@ -371,7 +365,7 @@ export class NotesService {
     updateData.updated_at = new Date();
 
     const item = await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set(updateData)
       .where('id', '=', validatedInput.id)
       .where('user_id', '=', validatedInput.userId)
@@ -393,7 +387,7 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to delete note');
     }
     const item = await db
-      .deleteFrom('notes')
+      .deleteFrom('app.notes')
       .where('id', '=', id)
       .where('user_id', '=', userId)
       .returningAll()
@@ -464,7 +458,7 @@ export class NotesService {
     }
 
     const item = await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set(updateData)
       .where('id', '=', id)
       .where('user_id', '=', userId)
@@ -491,7 +485,7 @@ export class NotesService {
     assertAllowedTransition(existingNote.status, 'archived', 'archive');
 
     const item = await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({
         status: 'archived',
         updated_at: new Date(),
@@ -521,7 +515,7 @@ export class NotesService {
     assertAllowedTransition(existingNote.status, 'draft', 'unpublish');
 
     const item = await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({
         status: 'draft',
         published_at: null,
@@ -619,7 +613,7 @@ export class NotesService {
 
     // First, get the note to find the root parent
     const note = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('id', '=', noteId)
       .where('user_id', '=', userId)
@@ -635,7 +629,7 @@ export class NotesService {
 
     // Get all versions: the root note and all notes with this root as parent
     const versions = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('user_id', '=', userId)
       .where((eb) => eb.or([eb('id', '=', rootNoteId), eb('parent_note_id', '=', rootNoteId)]))
@@ -666,7 +660,7 @@ export class NotesService {
     }
 
     let query = db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('user_id', '=', userId)
       .where('is_latest_version', '=', true);
@@ -684,8 +678,8 @@ export class NotesService {
     // Tag filtering (exact match)
     if (filters?.tags && filters.tags.length > 0) {
       const noteIdsWithTags = await db
-        .selectFrom('note_tags')
-        .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
+        .selectFrom('app.tag_assignments')
+        .innerJoin('app.tags', 'tags.id', 'note_tags.tag_id')
         .select('note_tags.note_id')
         .where('tags.owner_id', '=', userId)
         .where('tags.name', 'in', filters.tags)
@@ -723,7 +717,7 @@ export class NotesService {
 
     // Get total count (without pagination)
     const countResult = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .select(db.fn.countAll<number>().as('count'))
       .where('user_id', '=', userId)
       .where('is_latest_version', '=', true)
@@ -762,7 +756,7 @@ export class NotesService {
 
     // Find the note by ID
     const originalNote = await db
-      .selectFrom('notes')
+      .selectFrom('app.notes')
       .selectAll()
       .where('id', '=', noteId)
       .where('user_id', '=', userId)
@@ -775,7 +769,7 @@ export class NotesService {
 
     // Mark current version as not latest
     await db
-      .updateTable('notes')
+      .updateTable('app.notes')
       .set({ is_latest_version: false })
       .where('id', '=', noteId)
       .execute();
@@ -789,7 +783,7 @@ export class NotesService {
       console.error('AI generation error:', error);
       // If AI fails, restore the original note as latest and throw
       await db
-        .updateTable('notes')
+        .updateTable('app.notes')
         .set({ is_latest_version: true })
         .where('id', '=', noteId)
         .execute();
@@ -804,7 +798,7 @@ export class NotesService {
 
     // Create new note with AI-generated content
     const newNoteRow = await db
-      .insertInto('notes')
+      .insertInto('app.notes')
       .values({
         user_id: originalNote.user_id,
         type: originalNote.type,
@@ -826,7 +820,7 @@ export class NotesService {
 
     // Copy tags from original note
     const originalTags = await db
-      .selectFrom('note_tags')
+      .selectFrom('app.tag_assignments')
       .select('tag_id')
       .where('note_id', '=', originalNote.id)
       .execute();
@@ -834,7 +828,7 @@ export class NotesService {
     for (const tag of originalTags) {
       try {
         await db
-          .insertInto('note_tags')
+          .insertInto('app.tag_assignments')
           .values({
             note_id: newNote.id,
             tag_id: tag.tag_id,

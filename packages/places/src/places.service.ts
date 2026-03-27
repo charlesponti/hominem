@@ -10,7 +10,7 @@ import { googlePlaces } from './google-places.service';
 import { placeCache } from './place-cache';
 import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service';
 
-type PlaceRow = Selectable<Database['places']>;
+type PlaceRow = Selectable<Database['app.places']>;
 
 interface PlaceMeta {
   googleMapsId: string;
@@ -79,12 +79,12 @@ function toMeta(data: Json | null, fallbackGoogleMapsId: string): PlaceMeta {
 }
 
 function rowToPlaceOutput(row: PlaceRow): PlaceOutput {
-  const meta = toMeta(row.data ?? null, row.id);
+  const meta = toMeta((row as Record<string, unknown>).data as Json | null, row.id);
   const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
 
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.owner_user_id,
     name: row.name,
     description: meta.description,
     address: row.address,
@@ -181,7 +181,7 @@ export async function getPlaceById(id: string): Promise<PlaceOutput | undefined>
   }
 
   const row = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
     .where('id', '=', id)
     .limit(1)
@@ -206,7 +206,7 @@ export async function getPlaceByGoogleMapsId(
   }
 
   const row = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
     .where(sql<boolean>`data->>'googleMapsId' = ${googleMapsId}`)
     .orderBy('created_at', 'desc')
@@ -228,9 +228,9 @@ async function getPlaceByGoogleMapsIdForUser(
   googleMapsId: string,
 ): Promise<PlaceOutput | undefined> {
   const row = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
-    .where('user_id', '=', userId)
+    .where('owner_user_id', '=', userId)
     .where(sql<boolean>`data->>'googleMapsId' = ${googleMapsId}`)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
@@ -246,7 +246,7 @@ export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
   }
 
   const rows = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
     .where('id', 'in', ids)
     .orderBy('created_at', 'desc')
@@ -262,7 +262,7 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
   }
 
   const rows = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
     .where(sql<boolean>`data->>'googleMapsId' in (${sql.join(googleMapsIds)})`)
     .orderBy('created_at', 'desc')
@@ -309,7 +309,7 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
 
   if (existing) {
     const row = await db
-      .updateTable('places')
+      .updateTable('app.places')
       .set({
         name: insertValues.name,
         address: insertValues.address,
@@ -317,7 +317,6 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
         longitude: insertValues.longitude,
         place_type: insertValues.placeType,
         rating: insertValues.rating,
-        data: insertValues.data,
       })
       .where('id', '=', existing.id)
       .returningAll()
@@ -333,17 +332,16 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
   }
 
   const row = await db
-    .insertInto('places')
+    .insertInto('app.places')
     .values({
       id: insertValues.id,
-      user_id: insertValues.userId,
+      owner_user_id: insertValues.userId,
       name: insertValues.name,
       address: insertValues.address,
       latitude: insertValues.latitude,
       longitude: insertValues.longitude,
       place_type: insertValues.placeType,
       rating: insertValues.rating,
-      data: insertValues.data as unknown as Json,
     })
     .returningAll()
     .executeTakeFirst();
@@ -407,7 +405,7 @@ export async function createOrUpdatePlace(
 
   const updated = await upsertPlace({ data: merged });
   if (updated.id !== id) {
-    await db.deleteFrom('places').where('id', '=', id).execute();
+    await db.deleteFrom('app.places').where('id', '=', id).execute();
   }
   return { ...updated, id };
 }
@@ -450,9 +448,9 @@ export async function getNearbyPlacesFromLists(params: {
   const limit = params.limit ?? 20;
 
   const rows = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
-    .where('user_id', '=', params.userId)
+    .where('owner_user_id', '=', params.userId)
     .where('latitude', 'is not', null)
     .where('longitude', 'is not', null)
     .execute();
@@ -489,7 +487,7 @@ export async function getNearbyPlacesFromLists(params: {
 
 export async function deletePlaceById(id: string): Promise<boolean> {
   const result = await db
-    .deleteFrom('places')
+    .deleteFrom('app.places')
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirst();
@@ -503,7 +501,7 @@ export async function deletePlaceById(id: string): Promise<boolean> {
 
 export async function refreshAllPlaces(): Promise<{ updatedCount: number; errors: string[] }> {
   const rows = await db
-    .selectFrom('places')
+    .selectFrom('app.places')
     .selectAll()
     .where(sql<boolean>`data->>'googleMapsId' IS NOT NULL`)
     .execute();

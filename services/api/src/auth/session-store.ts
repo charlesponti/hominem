@@ -63,12 +63,12 @@ async function ensureAuthSession(input: {
 }) {
   if (input.sessionState) {
     const existing = await db
-      .selectFrom('auth_sessions')
+      .selectFrom('auth.sessions')
       .selectAll()
       .where((eb) =>
         eb.and([
           eb('user_id', '=', input.userId),
-          eb('session_state', '=', input.sessionState!),
+          eb('state', '=', input.sessionState!),
           eb('revoked_at', 'is', null),
         ]),
       )
@@ -78,7 +78,7 @@ async function ensureAuthSession(input: {
     if (existing) {
       await cacheSessionState(existing.id, 'active');
       const updated = await db
-        .updateTable('auth_sessions')
+        .updateTable('auth.sessions')
         .set({
           last_seen_at: nowIso(),
           ...(input.amr ? { amr: jsonbStringArray(input.amr) } : {}),
@@ -91,13 +91,16 @@ async function ensureAuthSession(input: {
   }
 
   const created = await db
-    .insertInto('auth_sessions')
+    .insertInto('auth.sessions')
     .values({
       id: randomUUID(),
       user_id: input.userId,
-      session_state: input.sessionState ?? randomUUID(),
+      state: input.sessionState ?? randomUUID(),
       created_at: nowIso(),
+      expires_at: toIsoFromNow(REFRESH_TTL_SECONDS),
       last_seen_at: nowIso(),
+      token_hash: randomUUID(),
+      auth_level: 'neutral',
       ...(input.amr ? { amr: jsonbStringArray(input.amr) } : {}),
       ...(input.acr ? { acr: input.acr } : {}),
       ...(input.ipHash ? { ip_hash: input.ipHash } : {}),
@@ -124,7 +127,7 @@ async function issueRefreshToken(input: {
   const raw = createRawToken();
   const tokenHash = hashToken(raw);
   const created = await db
-    .insertInto('auth_refresh_tokens')
+    .insertInto('auth.refresh_tokens')
     .values({
       id: randomUUID(),
       session_id: input.sessionId,
@@ -145,7 +148,7 @@ async function issueRefreshToken(input: {
 
 async function revokeRefreshFamily(familyId: string) {
   await db
-    .updateTable('auth_refresh_tokens')
+    .updateTable('auth.refresh_tokens')
     .set({ revoked_at: nowIso() })
     .where((eb) => eb.and([eb('family_id', '=', familyId), eb('revoked_at', 'is', null)]))
     .execute();
@@ -161,13 +164,13 @@ export async function revokeSession(sessionId: string) {
   }
 
   await db
-    .updateTable('auth_sessions')
+    .updateTable('auth.sessions')
     .set({ revoked_at: nowIso(), last_seen_at: nowIso() })
     .where((eb) => eb('id', '=', sessionId))
     .execute();
 
   await db
-    .updateTable('auth_refresh_tokens')
+    .updateTable('auth.refresh_tokens')
     .set({ revoked_at: nowIso() })
     .where((eb) => eb.and([eb('session_id', '=', sessionId), eb('revoked_at', 'is', null)]))
     .execute();
@@ -194,7 +197,7 @@ export async function isSessionRevoked(sessionId: string) {
   }
 
   const session = await db
-    .selectFrom('auth_sessions')
+    .selectFrom('auth.sessions')
     .select(['revoked_at'])
     .where((eb) => eb('id', '=', sessionId))
     .limit(1)
@@ -220,7 +223,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   const tokenHash = hashToken(refreshToken);
   const now = nowIso();
   const existing = await db
-    .selectFrom('auth_refresh_tokens')
+    .selectFrom('auth.refresh_tokens')
     .selectAll()
     .where((eb) => eb('token_hash', '=', tokenHash))
     .limit(1)
@@ -245,7 +248,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   }
 
   const markedUsed = await db
-    .updateTable('auth_refresh_tokens')
+    .updateTable('auth.refresh_tokens')
     .set({ used_at: now })
     .where((eb) => eb.and([eb('id', '=', existing.id), eb('used_at', 'is', null)]))
     .returningAll()
@@ -264,7 +267,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   });
 
   const session = await db
-    .selectFrom('auth_sessions')
+    .selectFrom('auth.sessions')
     .selectAll()
     .where((eb) => eb('id', '=', existing.session_id))
     .limit(1)
@@ -275,7 +278,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   }
 
   const user = await db
-    .selectFrom('users')
+    .selectFrom('auth.users')
     .select(['id', 'is_admin'])
     .where((eb) => eb('id', '=', session.user_id))
     .limit(1)
@@ -286,7 +289,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   }
 
   await db
-    .updateTable('auth_sessions')
+    .updateTable('auth.sessions')
     .set({ last_seen_at: nowIso() })
     .where((eb) => eb('id', '=', session.id))
     .execute();
@@ -362,7 +365,7 @@ export async function createE2eTokenPairForUser(input: {
 export async function revokeByRefreshToken(refreshToken: string) {
   const tokenHash = hashToken(refreshToken);
   const existing = await db
-    .selectFrom('auth_refresh_tokens')
+    .selectFrom('auth.refresh_tokens')
     .selectAll()
     .where((eb) => eb('token_hash', '=', tokenHash))
     .limit(1)
