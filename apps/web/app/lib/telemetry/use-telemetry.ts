@@ -35,7 +35,10 @@ export function useTelemetry() {
       return () => {
         void telemetry.shutdown().catch(() => undefined);
       };
-    } catch {
+    } catch (error) {
+      if (import.meta.env.MODE !== 'test') {
+        console.error('Telemetry initialization failed', error);
+      }
       return undefined;
     }
   }, []);
