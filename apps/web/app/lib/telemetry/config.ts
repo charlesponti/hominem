@@ -33,10 +33,13 @@ export function resolveBrowserTelemetryConfig(env: WebTelemetryEnv) {
     return null;
   }
 
+  const parsedSamplingRatio = Number.parseFloat(env.OTEL_TRACES_SAMPLER_ARG || '1.0');
+  const samplingRatio = Number.isFinite(parsedSamplingRatio) ? parsedSamplingRatio : 1.0;
+
   return {
     environment,
     otlpEndpoint,
-    samplingRatio: Number.parseFloat(env.OTEL_TRACES_SAMPLER_ARG || '1.0'),
+    samplingRatio,
     serviceName: env.OTEL_SERVICE_NAME || 'hominem-web',
     serviceVersion: env.OTEL_SERVICE_VERSION || '0.0.0',
   };
