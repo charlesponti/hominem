@@ -4,9 +4,9 @@
   "private": true,
   "description": "hominem",
   "keywords": [],
-  "homepage": "https://github.com/charlesponti/hominem#readme",
+  "homepage": "https://github.com/hackefeller/hominem#readme",
   "bugs": {
-    "url": "https://github.com/charlesponti/hominem/issues"
+    "url": "https://github.com/hackefeller/hominem/issues"
   },
   "license": "ISC",
   "author": {
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/charlesponti/hominem.git"
+    "url": "git+https://github.com/hackefeller/hominem.git"
   },
   "workspaces": [
     "apps/*",
