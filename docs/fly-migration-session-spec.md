@@ -4,7 +4,7 @@
 
 This document captures the implementation work completed during the Fly migration session across two related systems:
 
-1. the self-hosted observability stack now represented in `/Users/charlesponti/Developer/hominem/infra/fly/observability`
+1. the self-hosted observability stack now represented in `/infra/fly/observability`
 2. the `hominem` production deployment migration in `/Users/charlesponti/Developer/hominem`
 
 It is intended to serve as a handoff and execution reference for finishing the remaining rollout work without re-discovering architecture decisions made during the session.
@@ -31,13 +31,13 @@ This session did not complete:
 
 ### Observability deployment assets
 
-- Path: `/Users/charlesponti/Developer/hominem/infra/fly/observability`
-- Primary deployment guide: `/Users/charlesponti/Developer/hominem/infra/fly/observability/README.md`
+- Path: `/infra/fly/observability`
+- Primary deployment guide: `/infra/fly/observability/README.md`
 
 ### Hominem app deployment assets
 
-- Path: `/Users/charlesponti/Developer/hominem/infra/fly/apps`
-- Primary deployment guide: `/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md`
+- Path: `/infra/fly/apps`
+- Primary deployment guide: `/infra/fly/apps/README.md`
 
 ## High-Level Decisions
 
@@ -108,7 +108,7 @@ Dependency model:
 
 ### Deployment assets and infrastructure
 
-Created or updated Fly deployment assets under `/Users/charlesponti/Developer/hominem/infra/fly/observability/` for:
+Created or updated Fly deployment assets under `/infra/fly/observability/` for:
 
 - ClickHouse
 - Mongo
@@ -118,13 +118,13 @@ Created or updated Fly deployment assets under `/Users/charlesponti/Developer/ho
 
 Key files include:
 
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/clickhouse/fly.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/mongo/fly.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/hyperdx/fly.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/otel/fly.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/otel/otelcol.yaml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/cloudflare-tunnel/fly.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/README.md`
+- `/infra/fly/observability/clickhouse/fly.toml`
+- `/infra/fly/observability/mongo/fly.toml`
+- `/infra/fly/observability/hyperdx/fly.toml`
+- `/infra/fly/observability/otel/fly.toml`
+- `/infra/fly/observability/otel/otelcol.yaml`
+- `/infra/fly/observability/cloudflare-tunnel/fly.toml`
+- `/infra/fly/observability/README.md`
 
 ### Collector stabilization
 
@@ -158,7 +158,7 @@ The following Fly apps were deployed:
 
 ### Deployment planning and configuration
 
-Created or updated Fly deployment assets under `/Users/charlesponti/Developer/hominem/infra/fly/apps/` for:
+Created or updated Fly deployment assets under `/infra/fly/apps/` for:
 
 - Postgres
 - API
@@ -167,20 +167,20 @@ Created or updated Fly deployment assets under `/Users/charlesponti/Developer/ho
 
 Key files include:
 
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/postgres.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/api.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/workers.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/web.toml`
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md`
+- `/infra/fly/apps/postgres.toml`
+- `/infra/fly/apps/api.toml`
+- `/infra/fly/apps/workers.toml`
+- `/infra/fly/apps/web.toml`
+- `/infra/fly/apps/README.md`
 
 ### Web deploy preparation
 
 Prepared Fly web deployment assets and runtime environment support, including:
 
-- `/Users/charlesponti/Developer/hominem/apps/web/Dockerfile`
-- runtime OTEL env plumbing in `/Users/charlesponti/Developer/hominem/apps/web/app/lib/env.ts`
-- app wiring in `/Users/charlesponti/Developer/hominem/apps/web/app/root.tsx`
-- Fly-oriented examples in `/Users/charlesponti/Developer/hominem/apps/web/.env.example`
+- `/apps/web/Dockerfile`
+- runtime OTEL env plumbing in `/apps/web/app/lib/env.ts`
+- app wiring in `/apps/web/app/root.tsx`
+- Fly-oriented examples in `/apps/web/.env.example`
 
 The web app no longer hardcodes browser telemetry to `http://localhost:4318` and instead reads runtime configuration.
 
@@ -247,8 +247,8 @@ Validated at the end of the session:
 
 Known typecheck failures observed:
 
-- `/Users/charlesponti/Developer/hominem/apps/web/app/routes/notes/components/note-editor.tsx:38`
-- `/Users/charlesponti/Developer/hominem/packages/ui/src/lib/gsap/sequences.ts`
+- `/apps/web/app/routes/notes/components/note-editor.tsx:38`
+- `/packages/ui/src/lib/gsap/sequences.ts`
 
 Typecheck status observed during the session:
 
@@ -350,7 +350,7 @@ These values should be preserved in Fly secrets and password storage, but should
 - hardened Fly deployment topology for HyperDX/ClickStack
 - static OTEL collector configuration for Fly stability
 - Cloudflare tunnel deployment for private UI routing
-- deployment documentation in `/Users/charlesponti/Developer/hominem/infra/fly/observability/README.md`
+- deployment documentation in `/infra/fly/observability/README.md`
 
 ### Hominem deliverables
 
@@ -360,7 +360,7 @@ These values should be preserved in Fly secrets and password storage, but should
 - deployed and healthy API
 - deployed and starting workers
 - initial Fly-compatible web deployment setup
-- deployment documentation in `/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md`
+- deployment documentation in `/infra/fly/apps/README.md`
 
 ## Recommended Next Execution Order
 
@@ -372,7 +372,7 @@ These values should be preserved in Fly secrets and password storage, but should
 
 ## Source References
 
-- `/Users/charlesponti/Developer/hominem/infra/fly/observability/README.md`
+- `/infra/fly/observability/README.md`
 - `/Users/charlesponti/.local/observability/README.md`
-- `/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md`
-- `/Users/charlesponti/Developer/hominem/docs/observability.md`
+- `/infra/fly/apps/README.md`
+- `/docs/observability.md`

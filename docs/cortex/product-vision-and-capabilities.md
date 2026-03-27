@@ -457,6 +457,7 @@ The database should optimize for:
 - collaborative space boundaries
 - agent-readable and agent-writable structure
 - rich catalog plus relationship modeling where taste, follows, and collections matter
+
 # Vision
 
 ## Product definition
@@ -525,4 +526,4 @@ The documentation should assume:
 - the name may still change
 - the product should be defined by its behavior and point of view rather than by etymology
 
-See [Naming](/Users/charlesponti/Developer/hominem/docs/naming.md) for the current renaming brief.
+See [Naming](/docs/naming.md) for the current renaming brief.

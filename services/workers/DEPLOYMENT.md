@@ -133,7 +133,7 @@ flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
 
 ## GitHub Actions Workflow
 
-The deployment workflow ([`.github/workflows/deploy-workers.yml`](/Users/charlesponti/Developer/hominem/.github/workflows/deploy-workers.yml)) automatically:
+The deployment workflow ([`.github/workflows/deploy-workers.yml`](/.github/workflows/deploy-workers.yml)) automatically:
 
 1. **Triggered on**: Code quality checks pass on main branch or manual dispatch
 2. **Checks out code** from the repository
@@ -482,5 +482,5 @@ flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
 
 - [BullMQ Documentation](https://docs.bullmq.io/)
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
-- [Fly Deployment Guide](/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md)
+- [Fly Deployment Guide](/infra/fly/apps/README.md)
 - [Architecture Guide](./ARCHITECTURE.md)

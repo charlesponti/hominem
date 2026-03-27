@@ -6,12 +6,12 @@ This app is the iOS client for Hakumi, the notes-first personal workspace, built
 
 The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identity, native generation, and local env loading.
 
-| Variant | Purpose | Native Shape | OTA Updates | Primary Command |
-| --- | --- | --- | --- | --- |
-| `dev` | local feature development | Expo dev client + Metro | disabled | `bun run start` |
-| `e2e` | deterministic mobile test runtime | standalone native test app | disabled | `bun run test:e2e:build:ios` |
-| `preview` | internal QA / release candidate | standalone update-enabled build | preview channel | `bun run build:preview` |
-| `production` | App Store / TestFlight | standalone update-enabled build | production channel | `bun run build:production` |
+| Variant      | Purpose                           | Native Shape                    | OTA Updates        | Primary Command              |
+| ------------ | --------------------------------- | ------------------------------- | ------------------ | ---------------------------- |
+| `dev`        | local feature development         | Expo dev client + Metro         | disabled           | `bun run start`              |
+| `e2e`        | deterministic mobile test runtime | standalone native test app      | disabled           | `bun run test:e2e:build:ios` |
+| `preview`    | internal QA / release candidate   | standalone update-enabled build | preview channel    | `bun run build:preview`      |
+| `production` | App Store / TestFlight            | standalone update-enabled build | production channel | `bun run build:production`   |
 
 ## Native Generation Rules
 
@@ -217,7 +217,7 @@ eas submit --platform ios --latest
 
 ## Auth Readiness
 
-- Read the closeout matrix in [tests/AUTH_READINESS.md](/Users/charlesponti/Developer/hominem/apps/mobile/tests/AUTH_READINESS.md) before signing off mobile auth changes.
+- Read the closeout matrix in [tests/AUTH_READINESS.md](/apps/mobile/tests/AUTH_READINESS.md) before signing off mobile auth changes.
 - Detox is the repo-standard native-critical auth harness.
 - The `dev` and `e2e` native projects are intentionally different; always regenerate when switching harnesses.
 - A final personal-device smoke pass is required before sign-off.
@@ -235,12 +235,14 @@ BOOTING → AUTHENTICATED/UNAUTHENTICATED/ERROR
 ```
 
 **Benefits:**
+
 - Eliminates race conditions in auth flow
 - Predictable state transitions
 - Proper async operation cancellation via AbortController
 - Easy to test and debug
 
 **Key Files:**
+
 - `utils/auth/types.ts` - State machine types and reducer
 - `utils/auth-provider.tsx` - Auth provider using state machine
 
@@ -263,12 +265,14 @@ Three-tier error handling system:
 ### State Consolidation
 
 **Chat State:** Single source of truth with React Query
+
 - Removed triple-state architecture (AI SDK + React Query + SQLite)
 - React Query cache is the active state
 - SQLite is persistence layer only
 - Optimistic updates with automatic rollback
 
 **Focus Items:** Server state with local fallback
+
 - React Query for server state
 - SQLite for offline persistence
 - Automatic refetch when online
@@ -276,8 +280,9 @@ Three-tier error handling system:
 ### Runtime Validation
 
 Zod schemas for type-safe API responses (`utils/validation/schemas.ts`):
+
 - `ChatMessageSchema` - Chat message validation
-- `FocusItemSchema` - Focus item validation  
+- `FocusItemSchema` - Focus item validation
 - `UserProfileSchema` - User profile validation
 - `NoteSchema` - Note validation
 

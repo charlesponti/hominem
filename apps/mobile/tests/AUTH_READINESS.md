@@ -6,18 +6,18 @@ This document is the closeout surface for mobile auth verification, deterministi
 
 ## Verification Matrix
 
-| Gate | Command | Result | Notes |
-| --- | --- | --- | --- |
-| Mobile auth unit suite | `bun run --filter @hominem/mobile test:unit:auth` | Passed | 51 assertions passed on March 10, 2026 |
-| Mobile auth integration suite | `bun run --filter @hominem/mobile test:integration:auth` | Passed | 14 assertions passed on March 10, 2026 |
-| Mobile auth screen suite | `bun run --filter @hominem/mobile test:screens:auth` | Passed | 10 assertions passed on March 10, 2026 after removing async `act(...)` warnings |
-| Mobile auth router suite | `bun run --filter @hominem/mobile test:routes:auth` | Passed | 2 Expo Router auth route checks passed on March 10, 2026 after fixing the SafeAreaProvider Jest mock for the router harness |
-| API auth contract and guard suite | `bun run --filter @hominem/api test:auth` | Passed | 17 assertions passed on March 10, 2026 |
-| Passkey step-up security suite | `bun run --filter @hominem/api test -- src/routes/auth.step-up.test.ts` | Passed | 3 assertions passed on March 10, 2026 covering step-up enforcement for passkey register/delete flows |
-| Live auth edge smoke | `bun run test:e2e:auth:live` | Passed | Confirmed `/.well-known/jwks.json`, `/api/status`, `/api/auth/session`, and `/api/auth/email-otp/send` from `https://api.ponti.io` on March 10, 2026 |
-| Detox auth critical suite | `bun run --filter @hominem/mobile test:e2e:auth:critical` | Passed | 5 native-critical auth flows passed on March 10, 2026 after removing the flaky cleanup path |
-| Detox smoke suite | `bun run --filter @hominem/mobile test:e2e:smoke` | Passed | Clean-install signed-out smoke passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown |
-| Personal-device smoke | See checklist in [apps/mobile/README.md](/Users/charlesponti/Developer/hominem/apps/mobile/README.md) | Accepted risk for closeout | Passkey UI is feature-flagged off by default, so remaining real-device passkey validation is explicitly de-scoped from this release closeout |
+| Gate                              | Command                                                                 | Result                     | Notes                                                                                                                                                |
+| --------------------------------- | ----------------------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile auth unit suite            | `bun run --filter @hominem/mobile test:unit:auth`                       | Passed                     | 51 assertions passed on March 10, 2026                                                                                                               |
+| Mobile auth integration suite     | `bun run --filter @hominem/mobile test:integration:auth`                | Passed                     | 14 assertions passed on March 10, 2026                                                                                                               |
+| Mobile auth screen suite          | `bun run --filter @hominem/mobile test:screens:auth`                    | Passed                     | 10 assertions passed on March 10, 2026 after removing async `act(...)` warnings                                                                      |
+| Mobile auth router suite          | `bun run --filter @hominem/mobile test:routes:auth`                     | Passed                     | 2 Expo Router auth route checks passed on March 10, 2026 after fixing the SafeAreaProvider Jest mock for the router harness                          |
+| API auth contract and guard suite | `bun run --filter @hominem/api test:auth`                               | Passed                     | 17 assertions passed on March 10, 2026                                                                                                               |
+| Passkey step-up security suite    | `bun run --filter @hominem/api test -- src/routes/auth.step-up.test.ts` | Passed                     | 3 assertions passed on March 10, 2026 covering step-up enforcement for passkey register/delete flows                                                 |
+| Live auth edge smoke              | `bun run test:e2e:auth:live`                                            | Passed                     | Confirmed `/.well-known/jwks.json`, `/api/status`, `/api/auth/session`, and `/api/auth/email-otp/send` from `https://api.ponti.io` on March 10, 2026 |
+| Detox auth critical suite         | `bun run --filter @hominem/mobile test:e2e:auth:critical`               | Passed                     | 5 native-critical auth flows passed on March 10, 2026 after removing the flaky cleanup path                                                          |
+| Detox smoke suite                 | `bun run --filter @hominem/mobile test:e2e:smoke`                       | Passed                     | Clean-install signed-out smoke passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown                               |
+| Personal-device smoke             | See checklist in [apps/mobile/README.md](/apps/mobile/README.md)        | Accepted risk for closeout | Passkey UI is feature-flagged off by default, so remaining real-device passkey validation is explicitly de-scoped from this release closeout         |
 
 ## Deterministic Workflow Status
 
@@ -41,7 +41,7 @@ This document is the closeout surface for mobile auth verification, deterministi
 
 ## Personal Device Workflow
 
-Use the manual smoke in [apps/mobile/README.md](/Users/charlesponti/Developer/hominem/apps/mobile/README.md):
+Use the manual smoke in [apps/mobile/README.md](/apps/mobile/README.md):
 
 1. Complete email + OTP sign-in.
 2. Verify protected API-backed data loads.
@@ -71,13 +71,13 @@ Use the manual smoke in [apps/mobile/README.md](/Users/charlesponti/Developer/ho
 
 ## Remaining Items
 
-| Item | Status | Resolution |
-| --- | --- | --- |
-| Mobile auth router suite | Closed | Passed on March 10, 2026 after fixing the SafeAreaProvider Jest mock for the router harness |
-| Detox auth critical suite | Closed | Passed on March 10, 2026 after removing the flaky cleanup path |
-| Detox smoke suite | Closed | Passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown |
-| Expo / React Native variant architecture | Closed | Rebuilt on March 10, 2026 so `dev` and `e2e` generate deterministic native projects with the correct dev-client and updates behavior |
-| Personal-device smoke confirmation | De-scoped from closeout | Mobile passkey UI is feature-flagged off, so real-device passkey validation moves to the future flag-enable work instead of blocking auth-mobile closeout |
+| Item                                     | Status                  | Resolution                                                                                                                                                |
+| ---------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile auth router suite                 | Closed                  | Passed on March 10, 2026 after fixing the SafeAreaProvider Jest mock for the router harness                                                               |
+| Detox auth critical suite                | Closed                  | Passed on March 10, 2026 after removing the flaky cleanup path                                                                                            |
+| Detox smoke suite                        | Closed                  | Passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown                                                                   |
+| Expo / React Native variant architecture | Closed                  | Rebuilt on March 10, 2026 so `dev` and `e2e` generate deterministic native projects with the correct dev-client and updates behavior                      |
+| Personal-device smoke confirmation       | De-scoped from closeout | Mobile passkey UI is feature-flagged off, so real-device passkey validation moves to the future flag-enable work instead of blocking auth-mobile closeout |
 
 ## Readiness Decision
 

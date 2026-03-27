@@ -51,7 +51,7 @@ Open questions:
 - how the brand should express calmness, intelligence, and continuity
 - whether the current name supports the product's notes-first point of view
 
-See [Naming](/Users/charlesponti/Developer/hominem/docs/naming.md) for the current recommendation and criteria.
+See [Naming](/docs/naming.md) for the current recommendation and criteria.
 
 ### Product framing
 

@@ -63,15 +63,15 @@ Imported data, sync state, source mappings, and user-edited-versus-imported dist
 
 ## Domain Classes
 
-1. [Auth And Identity PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-auth-and-identity.md)
-2. [Memory And Conversation PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-memory-and-conversation.md)
-3. [Collaboration And Semantics PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-collaboration-and-semantics.md)
-4. [People, Places, Time, And Journeys PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-people-places-time-and-journeys.md)
-5. [Work And Outcomes PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-work-and-outcomes.md)
-6. [Finance PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-finance.md)
-7. [Media And Taste PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-media-and-taste.md)
-8. [Assets And Inventory PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-assets-and-inventory.md)
-9. [Ops And Agency PRD](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-prd-ops-and-agency.md)
+1. [Auth And Identity PRD](/docs/migrations_v1/schema-prd-auth-and-identity.md)
+2. [Memory And Conversation PRD](/docs/migrations_v1/schema-prd-memory-and-conversation.md)
+3. [Collaboration And Semantics PRD](/docs/migrations_v1/schema-prd-collaboration-and-semantics.md)
+4. [People, Places, Time, And Journeys PRD](/docs/migrations_v1/schema-prd-people-places-time-and-journeys.md)
+5. [Work And Outcomes PRD](/docs/migrations_v1/schema-prd-work-and-outcomes.md)
+6. [Finance PRD](/docs/migrations_v1/schema-prd-finance.md)
+7. [Media And Taste PRD](/docs/migrations_v1/schema-prd-media-and-taste.md)
+8. [Assets And Inventory PRD](/docs/migrations_v1/schema-prd-assets-and-inventory.md)
+9. [Ops And Agency PRD](/docs/migrations_v1/schema-prd-ops-and-agency.md)
 
 ## Cross-Cutting Requirements
 
