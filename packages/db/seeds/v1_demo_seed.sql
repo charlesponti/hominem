@@ -173,12 +173,25 @@ VALUES (
   '11111111-1111-1111-1111-111111111111'
 );
 
-INSERT INTO app.tags (id, owner_user_id, name, color)
+INSERT INTO app.tags (
+  id,
+  owner_user_id,
+  name,
+  slug,
+  path,
+  color,
+  icon,
+  created_by_user_id
+)
 VALUES (
   'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
   '11111111-1111-1111-1111-111111111111',
   'wedding',
-  '#f59e0b'
+  'wedding',
+  'wedding'::public.ltree,
+  '#f59e0b',
+  'heart',
+  '11111111-1111-1111-1111-111111111111'
 );
 
 INSERT INTO app.spaces (id, owner_user_id, name, color, icon)
@@ -189,6 +202,20 @@ VALUES (
   'cccccccc-cccc-cccc-cccc-cccccccccccc',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111'
+);
+
+INSERT INTO app.space_tags (space_id, tag_id, created_by_user_id)
+VALUES (
+  'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  '11111111-1111-1111-1111-111111111111'
+);
+
+INSERT INTO app.tag_aliases (tag_id, alias, alias_slug)
+VALUES (
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  'wedding-planning',
+  'wedding-planning'
 );
 
 INSERT INTO app.chats (id, owner_user_id, primary_space_id, note_id, title, source)

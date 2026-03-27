@@ -72,7 +72,7 @@ ALTER TABLE app.tag_assignments
     removed_at IS NULL OR removed_at >= created_at
   );
 
-DROP INDEX IF EXISTS app_tags_owner_name_key;
+DROP INDEX IF EXISTS app.app_tags_owner_name_key;
 CREATE UNIQUE INDEX app_tags_owner_name_key
   ON app.tags (owner_user_id, lower(name))
   WHERE archived_at IS NULL;
@@ -102,11 +102,11 @@ CREATE UNIQUE INDEX app_tag_aliases_tag_id_alias_slug_key
 CREATE INDEX app_tag_aliases_alias_trgm_idx
   ON app.tag_aliases USING gin (lower(alias) gin_trgm_ops);
 
-DROP INDEX IF EXISTS app_tag_assignments_tag_id_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_tag_id_idx;
 CREATE INDEX app_tag_assignments_tag_id_idx
   ON app.tag_assignments (tag_id, created_at DESC);
 
-DROP INDEX IF EXISTS app_tag_assignments_entity_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
 CREATE INDEX app_tag_assignments_entity_idx
   ON app.tag_assignments (entity_table, entity_id, created_at DESC);
 
@@ -282,18 +282,18 @@ ALTER TABLE app.space_tags DISABLE ROW LEVEL SECURITY;
 DROP FUNCTION IF EXISTS auth.can_read_tag(uuid);
 DROP FUNCTION IF EXISTS auth.is_tag_owner(uuid);
 
-DROP INDEX IF EXISTS app_tag_assignments_active_entity_idx;
-DROP INDEX IF EXISTS app_tag_assignments_active_tag_id_idx;
-DROP INDEX IF EXISTS app_tag_assignments_active_key;
-DROP INDEX IF EXISTS app_space_tags_tag_id_idx;
-DROP INDEX IF EXISTS app_space_tags_space_id_tag_id_key;
-DROP INDEX IF EXISTS app_tag_aliases_alias_trgm_idx;
-DROP INDEX IF EXISTS app_tag_aliases_tag_id_alias_slug_key;
-DROP INDEX IF EXISTS app_tags_slug_trgm_idx;
-DROP INDEX IF EXISTS app_tags_name_trgm_idx;
-DROP INDEX IF EXISTS app_tags_path_idx;
-DROP INDEX IF EXISTS app_tags_owner_slug_key;
-DROP INDEX IF EXISTS app_tags_owner_name_key;
+DROP INDEX IF EXISTS app.app_tag_assignments_active_entity_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_active_tag_id_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_active_key;
+DROP INDEX IF EXISTS app.app_space_tags_tag_id_idx;
+DROP INDEX IF EXISTS app.app_space_tags_space_id_tag_id_key;
+DROP INDEX IF EXISTS app.app_tag_aliases_alias_trgm_idx;
+DROP INDEX IF EXISTS app.app_tag_aliases_tag_id_alias_slug_key;
+DROP INDEX IF EXISTS app.app_tags_slug_trgm_idx;
+DROP INDEX IF EXISTS app.app_tags_name_trgm_idx;
+DROP INDEX IF EXISTS app.app_tags_path_idx;
+DROP INDEX IF EXISTS app.app_tags_owner_slug_key;
+DROP INDEX IF EXISTS app.app_tags_owner_name_key;
 
 CREATE UNIQUE INDEX app_tags_owner_name_key
   ON app.tags (owner_user_id, lower(name));

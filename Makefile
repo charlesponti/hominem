@@ -63,7 +63,7 @@ UNUSED_TS_PACKAGES := apps/web services/api packages/auth packages/chat packages
 .PHONY: dev dev-setup dev-up dev-down dev-reset dev-status
 .PHONY: infra-up infra-down infra-reset infra-status
 .PHONY: docker-up docker-up-observability docker-up-full docker-down
-.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-v1-migrate db-v1-status db-v1-seed-demo db-v1-verify-fresh db-v1-verify-rls db-v1-verify-relational db-v1-verify-registry db-reset-dev db-reset-test db-reset-all db-verify-fresh db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db
+.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-v1-migrate db-v1-status db-v1-seed-demo db-v1-verify-fresh db-v1-verify-rls db-v1-verify-relational db-v1-verify-registry db-v1-verify-tags db-v1-verify-rollback db-v1-verify-tag-performance db-v1-verify-all db-reset-dev db-reset-test db-reset-all db-verify-fresh db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db
 .PHONY: goose-up goose-down goose-status
 .PHONY: storybook storybook-test
 .PHONY: auth-test-up auth-test-down auth-test-status
@@ -79,7 +79,7 @@ help:
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-migrate-all | db-rollback-all | db-status-all"
-	@echo "  make db-v1-migrate | db-v1-status | db-v1-seed-demo | db-v1-verify-fresh | db-v1-verify-rls | db-v1-verify-relational | db-v1-verify-registry"
+	@echo "  make db-v1-migrate | db-v1-status | db-v1-seed-demo | db-v1-verify-fresh | db-v1-verify-rls | db-v1-verify-relational | db-v1-verify-registry | db-v1-verify-tags | db-v1-verify-rollback | db-v1-verify-tag-performance | db-v1-verify-all"
 	@echo "  make db-reset-all | db-verify-fresh | db-generate-types"
 	@echo "  make db-verify-types | db-new-migration NAME=foo"
 	@echo ""
@@ -199,6 +199,20 @@ db-v1-verify-relational:
 db-v1-verify-registry:
 	$(call wait_for_db,test,hominem-test-postgres)
 	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-registry.sh
+
+db-v1-verify-tags:
+	$(call wait_for_db,test,hominem-test-postgres)
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-tags.sh
+
+db-v1-verify-rollback:
+	$(call wait_for_db,test,hominem-test-postgres)
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-rollback.sh
+
+db-v1-verify-tag-performance:
+	$(call wait_for_db,test,hominem-test-postgres)
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-tag-performance.sh
+
+db-v1-verify-all: db-v1-verify-fresh db-v1-verify-relational db-v1-verify-registry db-v1-verify-rls db-v1-verify-tags db-v1-verify-rollback db-v1-verify-tag-performance
 
 db-reset-dev:
 	$(call wait_for_db,dev,hominem-postgres)

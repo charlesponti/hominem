@@ -82,7 +82,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
         ports:
-          - 5432:5432
+          - 4433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -98,12 +98,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+      - name: 🏗️ Wait for postgres
+        run: |
+          until pg_isready -h localhost -p 4433; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
       - name: 🛡️ Validate DB migrations (lint)
         run: cd packages/db && npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' migrations/*.sql
-      - name: 🗄️ Validate migrations bootstrap from a fresh database
+      - name: 🗄️ Validate V1 schema verification suite
         env:
-          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/hominem-test?sslmode=disable
-        run: bash ./scripts/verify-goose-fresh-db.sh
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
+        run: make db-v1-verify-all
 
   build-monorepo:
     name: build:monorepo
