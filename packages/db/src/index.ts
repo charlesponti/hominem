@@ -17,23 +17,21 @@ export type { Json, JsonValue, JsonObject, JsonArray } from './types/database'
 
 // Export all database table types for use in services
 export type {
-  Chat,
-  ChatMessage,
-  HealthRecords,
-  Tasks,
-  Tags,
-  TaskLists,
-  Persons,
-  Places,
-  Bookmarks,
-  Possessions,
-  FinanceAccounts,
-  FinanceTransactions,
-  CalendarEvents,
-  Notes,
-  Logs,
-  Users,
-  UserAccounts,
+  AppBookmarks as Bookmarks,
+  AppCalendarEvents as CalendarEvents,
+  AppChatMessages as ChatMessage,
+  AppChats as Chat,
+  AppFinanceAccounts as FinanceAccounts,
+  AppFinanceTransactions as FinanceTransactions,
+  AppNotes as Notes,
+  AppPeople as Persons,
+  AppPlaces as Places,
+  AppPossessions as Possessions,
+  AppTags as Tags,
+  AppTasks as Tasks,
+  AuthIdentities as UserAccounts,
+  AuthUsers as Users,
+  OpsAuditLogs as Logs,
 } from './types/database'
 
 // Shared service utilities (used by RPC handlers)

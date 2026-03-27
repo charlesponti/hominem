@@ -285,6 +285,8 @@ DROP FUNCTION IF EXISTS auth.is_tag_owner(uuid);
 DROP INDEX IF EXISTS app.app_tag_assignments_active_entity_idx;
 DROP INDEX IF EXISTS app.app_tag_assignments_active_tag_id_idx;
 DROP INDEX IF EXISTS app.app_tag_assignments_active_key;
+DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_tag_id_idx;
 DROP INDEX IF EXISTS app.app_space_tags_tag_id_idx;
 DROP INDEX IF EXISTS app.app_space_tags_space_id_tag_id_key;
 DROP INDEX IF EXISTS app.app_tag_aliases_alias_trgm_idx;
@@ -310,6 +312,12 @@ ALTER TABLE app.tag_assignments
   DROP COLUMN IF EXISTS confidence,
   DROP COLUMN IF EXISTS assignment_source,
   ADD CONSTRAINT app_tag_assignments_tag_entity_key UNIQUE (tag_id, entity_table, entity_id);
+
+CREATE INDEX app_tag_assignments_tag_id_idx
+  ON app.tag_assignments (tag_id);
+
+CREATE INDEX app_tag_assignments_entity_idx
+  ON app.tag_assignments (entity_table, entity_id);
 
 ALTER TABLE app.tags
   DROP CONSTRAINT IF EXISTS app_tags_slug_not_blank,

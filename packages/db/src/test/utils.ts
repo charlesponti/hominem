@@ -39,8 +39,10 @@ export const extractRows = <T>(result: unknown): T[] => {
 export const tableExists = async (tableName: string): Promise<boolean> => {
   try {
     const { pool } = await import('../db')
-    // Use raw pool query to avoid SQL builder complexity for dynamic table names
-    const result = await pool.query(`select to_regclass('public.${tableName}') as relation_name`)
+    const result = await pool.query(
+      `select to_regclass($1) as relation_name`,
+      [tableName.includes('.') ? tableName : `public.${tableName}`]
+    )
     const rows = result.rows as Array<{ relation_name: string | null }> | undefined
     return Boolean(rows?.[0]?.relation_name)
   } catch {
@@ -55,10 +57,10 @@ export const ensureIntegrationUsers = async (
   const { db } = await import('../db')
   
   for (const user of users) {
-    await db.insertInto('users').values({
+    await db.insertInto('auth.users').values({
       id: user.id,
       email: user.email ?? `${user.id}@test.com`,
-      name: user.name,
+      display_name: user.name,
     }).execute()
   }
   
@@ -69,10 +71,10 @@ export const createTestUser = async (overrides?: { id?: string; email?: string; 
   const { db } = await import('../db')
   const id = overrides?.id || randomUUID()
   
-  await db.insertInto('users').values({
+  await db.insertInto('auth.users').values({
     id,
     email: overrides?.email || `${id}@test.com`,
-    name: overrides?.name || 'Test User',
+    display_name: overrides?.name || 'Test User',
   }).execute()
   
   return id
@@ -83,13 +85,11 @@ export const cleanupTestData = async (userIds: string[]): Promise<void> => {
   
   const { db } = await import('../db')
   
-  // Delete notes for users
-  await db.deleteFrom('notes')
-    .where('user_id', 'in', userIds)
+  await db.deleteFrom('app.notes')
+    .where('owner_user_id', 'in', userIds)
     .execute()
   
-  // Delete users
-  await db.deleteFrom('users')
+  await db.deleteFrom('auth.users')
     .where('id', 'in', userIds)
     .execute()
 }

@@ -747,11 +747,6 @@ CREATE POLICY ops_search_logs_service_policy ON ops.search_logs
   WITH CHECK (auth.is_service_role());
 
 -- +goose Down
-DROP FUNCTION IF EXISTS auth.is_space_member(uuid);
-DROP FUNCTION IF EXISTS auth.owns_space(uuid);
-DROP FUNCTION IF EXISTS auth.can_write_note(uuid);
-DROP FUNCTION IF EXISTS auth.can_read_note(uuid);
-
 DROP POLICY IF EXISTS ops_search_logs_service_policy ON ops.search_logs;
 DROP POLICY IF EXISTS ops_audit_logs_service_policy ON ops.audit_logs;
 DROP POLICY IF EXISTS app_possession_events_owner_policy ON app.possession_events;
@@ -807,6 +802,11 @@ DROP POLICY IF EXISTS auth_identities_service_policy ON auth.identities;
 DROP POLICY IF EXISTS auth_users_self_update_policy ON auth.users;
 DROP POLICY IF EXISTS auth_users_self_select_policy ON auth.users;
 DROP POLICY IF EXISTS auth_users_service_policy ON auth.users;
+
+DROP FUNCTION IF EXISTS auth.is_space_member(uuid);
+DROP FUNCTION IF EXISTS auth.owns_space(uuid);
+DROP FUNCTION IF EXISTS auth.can_write_note(uuid);
+DROP FUNCTION IF EXISTS auth.can_read_note(uuid);
 
 ALTER TABLE ops.search_logs NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE ops.search_logs DISABLE ROW LEVEL SECURITY;

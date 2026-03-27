@@ -7,10 +7,10 @@ export const createTestUser = async (overrides: { id?: string; email?: string; n
   const user = {
     id,
     email: overrides.email || `test-${id}@example.com`,
-    name: overrides.name || 'Test User',
+    display_name: overrides.name || 'Test User',
   }
   
-  await db.insertInto('users').values(user).execute()
+  await db.insertInto('auth.users').values(user).execute()
   
   return user
 }

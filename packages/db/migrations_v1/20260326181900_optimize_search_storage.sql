@@ -1,10 +1,10 @@
 -- +goose Up
-DROP INDEX IF EXISTS app_note_versions_search_idx;
-DROP INDEX IF EXISTS app_people_search_idx;
-DROP INDEX IF EXISTS app_places_search_idx;
-DROP INDEX IF EXISTS app_bookmarks_search_idx;
-DROP INDEX IF EXISTS app_calendar_events_search_idx;
-DROP INDEX IF EXISTS app_music_tracks_search_idx;
+DROP INDEX IF EXISTS app.app_note_versions_search_idx;
+DROP INDEX IF EXISTS app.app_people_search_idx;
+DROP INDEX IF EXISTS app.app_places_search_idx;
+DROP INDEX IF EXISTS app.app_bookmarks_search_idx;
+DROP INDEX IF EXISTS app.app_calendar_events_search_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_search_idx;
 
 ALTER TABLE app.note_versions
   DROP COLUMN IF EXISTS search_vector;
@@ -77,12 +77,12 @@ CREATE INDEX app_music_tracks_search_idx
   );
 
 -- +goose Down
-DROP INDEX IF EXISTS app_music_tracks_search_idx;
-DROP INDEX IF EXISTS app_calendar_events_search_idx;
-DROP INDEX IF EXISTS app_bookmarks_search_idx;
-DROP INDEX IF EXISTS app_places_search_idx;
-DROP INDEX IF EXISTS app_people_search_idx;
-DROP INDEX IF EXISTS app_note_versions_search_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_search_idx;
+DROP INDEX IF EXISTS app.app_calendar_events_search_idx;
+DROP INDEX IF EXISTS app.app_bookmarks_search_idx;
+DROP INDEX IF EXISTS app.app_places_search_idx;
+DROP INDEX IF EXISTS app.app_people_search_idx;
+DROP INDEX IF EXISTS app.app_note_versions_search_idx;
 
 ALTER TABLE app.note_versions
   ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (

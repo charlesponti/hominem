@@ -210,7 +210,6 @@ ALTER TABLE app.note_shares
   DROP CONSTRAINT IF EXISTS app_note_shares_permission_check;
 
 ALTER TABLE app.note_versions
-  DROP CONSTRAINT IF EXISTS app_note_versions_note_id_id_key,
   DROP CONSTRAINT IF EXISTS app_note_versions_note_id_version_number_key,
   DROP CONSTRAINT IF EXISTS app_note_versions_schedule_order_check,
   DROP CONSTRAINT IF EXISTS app_note_versions_status_check,

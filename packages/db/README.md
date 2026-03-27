@@ -21,6 +21,6 @@ Database workflow
 
 - Goose is the only migration runner.
 - The workflow rebuild is documented in [docs/database-management-rebuild.md](/Users/charlesponti/Developer/hominem/docs/database-management-rebuild.md).
-- The target greenfield schema is documented in [docs/database-v1-blueprint.md](/Users/charlesponti/Developer/hominem/docs/database-v1-blueprint.md).
-- The migration rollout is documented in [docs/database-v1-implementation-plan.md](/Users/charlesponti/Developer/hominem/docs/database-v1-implementation-plan.md).
+- The target greenfield schema and domain PRDs are documented in [docs/migrations_v1/schema-bible.md](/Users/charlesponti/Developer/hominem/docs/migrations_v1/schema-bible.md).
+- The `migrations_v1` rollout is implemented in [packages/db/migrations_v1](/Users/charlesponti/Developer/hominem/packages/db/migrations_v1) and verified through the root `db-v1-*` Make targets in [Makefile](/Users/charlesponti/Developer/hominem/Makefile).
 - Use root commands from [Makefile](/Users/charlesponti/Developer/hominem/Makefile) for migrate, reset, status, type generation, and fresh-database verification.

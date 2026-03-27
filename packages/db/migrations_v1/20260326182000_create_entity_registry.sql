@@ -249,11 +249,12 @@ SELECT 'app.possessions'::regclass, id, owner_user_id, NULL
 FROM app.possessions
 ON CONFLICT DO NOTHING;
 
-DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
-
 DROP POLICY IF EXISTS app_tag_assignments_select_policy ON app.tag_assignments;
 
+DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
+
 ALTER TABLE app.tag_assignments
+  DROP CONSTRAINT IF EXISTS tag_assignments_entity_type_not_null,
   DROP CONSTRAINT IF EXISTS app_tag_assignments_tag_entity_key,
   DROP CONSTRAINT IF EXISTS app_tag_assignments_entity_type_not_blank,
   ADD COLUMN entity_table regclass;
@@ -344,9 +345,13 @@ ALTER TABLE app.entity_links
   DROP CONSTRAINT IF EXISTS app_entity_links_to_entity_fkey,
   DROP CONSTRAINT IF EXISTS app_entity_links_from_entity_fkey;
 
+DROP POLICY IF EXISTS app_tag_assignments_owner_write_policy ON app.tag_assignments;
+DROP POLICY IF EXISTS app_tag_assignments_select_policy ON app.tag_assignments;
+
 DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
 
 ALTER TABLE app.tag_assignments
+  DROP CONSTRAINT IF EXISTS tag_assignments_entity_table_not_null,
   DROP CONSTRAINT IF EXISTS app_tag_assignments_entity_fkey,
   DROP CONSTRAINT IF EXISTS app_tag_assignments_tag_entity_key,
   ADD COLUMN entity_type text;
