@@ -1,7 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(ls -la apps/mobile/tests/*.test.ts)"
-    ]
+    "allow": []
   }
 }
