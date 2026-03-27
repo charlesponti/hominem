@@ -1,0 +1,11 @@
+# Lefthook configuration for hominem
+# See https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md
+
+# Git hooks directory (managed by lefthook)
+# hooks_dir: .git/hooks
+
+# Pre-commit hook - runs lint before commit
+pre-commit:
+  commands:
+    lint:
+      run: make lint

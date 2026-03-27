@@ -37,7 +37,7 @@ create_temp_database() {
 
 migrate_temp_database() {
   local root_dir="$1"
-  DATABASE_URL="$TEMP_DB_URL" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$root_dir/packages/db/migrations_v1}" "$root_dir/scripts/run-goose.sh" up >/dev/null
+  DATABASE_URL="$TEMP_DB_URL" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$root_dir/packages/db/migrations}" "$root_dir/scripts/run-goose.sh" up >/dev/null
 }
 
 seed_temp_database() {

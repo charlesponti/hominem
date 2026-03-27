@@ -31,7 +31,7 @@ SQL
 trap cleanup EXIT
 
 psql "$admin_url" -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"${database_name}\" TEMPLATE template0" >/dev/null
-DATABASE_URL="$database_url" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations_v1}" "$ROOT_DIR/scripts/run-goose.sh" up >/dev/null
+DATABASE_URL="$database_url" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations}" "$ROOT_DIR/scripts/run-goose.sh" up >/dev/null
 psql "$database_url" -v ON_ERROR_STOP=1 -f "$seed_file" >/dev/null
 
 psql "$database_url" -v ON_ERROR_STOP=1 <<'SQL'

@@ -43,7 +43,7 @@ END
 $$;
 SQL
 
-DATABASE_URL="$TEMP_DB_URL" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations_v1}" "$ROOT_DIR/scripts/run-goose.sh" reset >/dev/null
+DATABASE_URL="$TEMP_DB_URL" GOOSE_MIGRATIONS_DIR="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations}" "$ROOT_DIR/scripts/run-goose.sh" reset >/dev/null
 
 version_after_reset="$(
   psql "$TEMP_DB_URL" -v ON_ERROR_STOP=1 -At <<'SQL'

@@ -186,39 +186,39 @@ db-v1-status:
 
 db-v1-seed-demo:
 	$(call wait_for_db,dev,hominem-postgres)
-	DATABASE_URL="$(DEV_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/seed-v1-demo.sh
+	DATABASE_URL="$(DEV_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/seed-v1-demo.sh
 
 db-v1-verify-fresh:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-goose-fresh-db.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-goose-fresh-db.sh
 
 db-v1-verify-rls:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-rls.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-rls.sh
 
 db-v1-verify-relational:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-relational.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-relational.sh
 
 db-v1-verify-registry:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-registry.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-registry.sh
 
 db-v1-verify-tags:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-tags.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-tags.sh
 
 db-v1-verify-rollback:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-rollback.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-rollback.sh
 
 db-v1-verify-reset:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-reset.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-reset.sh
 
 db-v1-verify-tag-performance:
 	$(call wait_for_db,test,hominem-test-postgres)
-	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-v1-tag-performance.sh
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations" bash ./scripts/verify-v1-tag-performance.sh
 
 db-v1-verify-all: db-v1-verify-fresh db-v1-verify-relational db-v1-verify-registry db-v1-verify-rls db-v1-verify-tags db-v1-verify-rollback db-v1-verify-reset db-v1-verify-tag-performance
 

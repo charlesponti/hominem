@@ -8,7 +8,7 @@ load_test_env "$ROOT_DIR"
 
 database_url="${DATABASE_URL:-$DEV_DATABASE_URL}"
 seed_file="${SEED_FILE:-$ROOT_DIR/packages/db/seeds/v1_demo_seed.sql}"
-migrations_dir="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations_v1}"
+migrations_dir="${GOOSE_MIGRATIONS_DIR:-$ROOT_DIR/packages/db/migrations}"
 
 if ! command -v psql >/dev/null 2>&1; then
   printf '%s\n' 'psql is required but not installed' >&2
