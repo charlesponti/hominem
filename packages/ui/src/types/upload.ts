@@ -1,28 +1,25 @@
 // ============================================================================
-// File Processing Types
+// File Processing Types — shared across client and UI
 // ============================================================================
 
+/** File processing status */
+export type FileStatus = 'pending' | 'processing' | 'ready' | 'failed';
+
 /**
- * Processed file from server-side file processing
+ * Successfully uploaded file (API response)
+ * Matches FileAsset from @hominem/rpc/domains/files
  */
-interface ProcessedFile {
+export interface UploadedFile {
   id: string;
   originalName: string;
   type: 'image' | 'document' | 'audio' | 'video' | 'unknown';
   mimetype: string;
   size: number;
+  status: FileStatus;
   content?: string;
   textContent?: string;
-  metadata?: Record<string, unknown>;
   thumbnail?: string;
-  duration?: number;
-  transcription?: string;
-}
-
-/**
- * Successfully uploaded file (API response)
- */
-export interface UploadedFile extends ProcessedFile {
+  metadata?: Record<string, unknown>;
   url: string;
   uploadedAt: Date;
   vectorIds?: string[];

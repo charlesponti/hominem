@@ -17,14 +17,10 @@ import { isServiceError } from './errors';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
-import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
-import { componentsRoutes } from './routes/components';
-import { financeRoutes } from './routes/finance';
 import { plaidRoutes } from './routes/finance/plaid';
 import { healthRoutes } from './routes/health';
 import { imagesRoutes } from './routes/images';
-import { invitesRoutes } from './routes/invites';
 import { oauthRoutes } from './routes/oauth';
 import { statusRoutes } from './routes/status';
 import { rpcApp } from './rpc/app';
@@ -88,12 +84,8 @@ export function createServer() {
   app.route('/api/status', statusRoutes);
   app.route('/api/health', healthRoutes);
   app.route('/api/auth', authRoutes);
-  app.route('/api/ai', aiRoutes);
   app.route('/api/oauth', oauthRoutes);
-  app.route('/api/invites', invitesRoutes);
   app.route('/api/images', imagesRoutes);
-  app.route('/components', componentsRoutes);
-  app.route('/api/finance', financeRoutes);
   app.route('/api/finance/plaid', plaidRoutes);
 
   // Root health check
@@ -173,10 +165,10 @@ export function createServer() {
     if (isServiceError(err)) {
       return c.json(
         {
-          error: err.code.toLowerCase(),
-          message: err.message,
+          error: err.type.toLowerCase(),
+          message: 'message' in err ? err.message : 'An unexpected error occurred',
         },
-        err.statusCode as ContentfulStatusCode,
+        500 as ContentfulStatusCode,
       );
     }
 

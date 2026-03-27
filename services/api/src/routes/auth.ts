@@ -7,8 +7,8 @@ import {
   hasRecentStepUp,
   isFreshPasskeyAuth,
 } from '@hominem/auth/server';
-import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import type { StepUpAction } from '@hominem/auth/step-up-actions';
+import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
 import { redis } from '@hominem/services/redis';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
@@ -253,7 +253,7 @@ function isTestOtpRetrievalEnabled() {
 async function createEmailOtpAuthResponse(dbUser: {
   id: string;
   email: string;
-  name: string | null;
+  display_name: string | null;
   is_admin: boolean;
 }) {
   const access = await issueAccessToken({
@@ -271,7 +271,7 @@ async function createEmailOtpAuthResponse(dbUser: {
       user: {
         id: dbUser.id,
         email: dbUser.email,
-        ...(dbUser.display_name ? { name: dbUser.display_name } : {}),
+        ...(dbUser.display_name ? { display_name: dbUser.display_name } : {}),
       },
       accessToken: access.accessToken,
       expiresIn: access.expiresIn,
@@ -485,7 +485,7 @@ async function buildSessionResponse(input: {
     user: {
       id: userRecord.id,
       email: userRecord.email,
-      ...(userRecord.name ? { name: userRecord.name } : {}),
+      ...(userRecord.display_name ? { name: userRecord.display_name } : {}),
       isAdmin: userRecord.is_admin ?? false,
       ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
       ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
@@ -847,7 +847,7 @@ authRoutes.get('/session', async (c) => {
         user: {
           id: userRecord.id,
           email: userRecord.email,
-          ...(userRecord.name ? { name: userRecord.name } : {}),
+          ...(userRecord.display_name ? { name: userRecord.display_name } : {}),
           isAdmin: userRecord.is_admin ?? false,
           ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
           ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),

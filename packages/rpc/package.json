@@ -2,39 +2,43 @@
   "name": "@hominem/rpc",
   "version": "0.1.0",
   "type": "module",
-  "types": "./build/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./build/index.d.ts",
+      "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
     },
     "./client": {
-      "types": "./build/client.d.ts",
+      "types": "./dist/client.d.ts",
       "default": "./src/client.ts"
     },
     "./react": {
-      "types": "./build/react/index.d.ts",
+      "types": "./dist/react/index.d.ts",
       "default": "./src/react/index.ts"
     },
     "./ssr": {
-      "types": "./build/ssr/index.d.ts",
+      "types": "./dist/ssr/index.d.ts",
       "default": "./src/ssr/index.ts"
     },
     "./types": {
-      "types": "./build/types/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./src/types/index.ts"
     },
     "./types/*": {
-      "types": "./build/types/*.d.ts",
+      "types": "./dist/types/*.d.ts",
       "default": "./src/types/*.ts"
     },
     "./schemas/*": {
-      "types": "./build/schemas/*.d.ts",
+      "types": "./dist/schemas/*.d.ts",
       "default": "./src/schemas/*.ts"
     },
     "./contracts": {
-      "types": "./build/contracts/app.d.ts",
+      "types": "./dist/contracts/app.d.ts",
       "default": "./src/contracts/app.ts"
+    },
+    "./domains/*": {
+      "types": "./dist/domains/*.d.ts",
+      "default": "./src/domains/*.ts"
     }
   },
   "scripts": {

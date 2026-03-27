@@ -7,15 +7,15 @@ import {
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { createAccount } from '../accounts/service';
+import { createTransaction } from '../transactions/service';
+import { replaceTransactionTags } from '../transactions/service';
 import {
-  createAccount,
-  createTransaction,
   getTagBreakdownByContract,
   getMonthlyStatsByContract,
   getSpendingTimeSeriesByContract,
   getTopMerchantsByContract,
-  replaceTransactionTags,
-} from './finance';
+} from './service';
 
 async function _hasTaggingTables(): Promise<boolean> {
   const hasTagsTable = await tableExists('tags');

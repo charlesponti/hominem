@@ -3,12 +3,11 @@ import { db } from '@hominem/db';
 type UserRow = {
   id: string;
   email: string;
+  display_name: string | null;
   avatar_url: string | null;
   created_at: string | null;
-  email_verified: boolean;
-  image: string | null;
+  email_verified_at: string | null;
   is_admin: boolean;
-  name: string | null;
   updated_at: string | null;
 };
 

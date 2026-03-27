@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
+import { Hono } from 'hono';
 
-const stub = () => new Response(null)
+const stub = () => new Response(null);
 
-const adminContract = new Hono().post('/refresh-google-places', stub)
+const adminContract = new Hono().post('/refresh-google-places', stub);
 
 const chatsContract = new Hono()
   .get('/', stub)
@@ -13,16 +13,16 @@ const chatsContract = new Hono()
   .post('/:id/send', stub)
   .post('/:id/classify', stub)
   .post('/:id/archive', stub)
-  .get('/note/:noteId', stub)
+  .get('/note/:noteId', stub);
 
 const filesContract = new Hono()
   .get('/', stub)
   .get('/:fileId', stub)
   .get('/:fileId/url', stub)
   .delete('/:fileId', stub)
-  .post('/index', stub)
-  .post('/prepare-upload', stub)
-  .post('/complete-upload', stub)
+  .post('/upload_url', stub)
+  .post('/register', stub)
+  .post('/:fileId/reprocess', stub);
 
 const financeContract = new Hono()
   .route(
@@ -35,14 +35,8 @@ const financeContract = new Hono()
       .post('/connections', stub)
       .post('/institution-accounts', stub),
   )
-  .route(
-    '/transactions',
-    new Hono().post('/list', stub),
-  )
-  .route(
-    '/institutions',
-    new Hono().post('/list', stub).post('/create', stub),
-  )
+  .route('/transactions', new Hono().post('/list', stub))
+  .route('/institutions', new Hono().post('/list', stub).post('/create', stub))
   .route(
     '/analyze',
     new Hono()
@@ -52,7 +46,7 @@ const financeContract = new Hono()
       .post('/top-merchants', stub),
   )
   .route('/tags', new Hono().post('/list', stub))
-  .route('/runway', new Hono().post('/calculate', stub))
+  .route('/runway', new Hono().post('/calculate', stub));
 
 const invitesContract = new Hono()
   .post('/received', stub)
@@ -62,9 +56,9 @@ const invitesContract = new Hono()
   .post('/create', stub)
   .post('/accept', stub)
   .post('/decline', stub)
-  .post('/delete', stub)
+  .post('/delete', stub);
 
-const itemsContract = new Hono().post('/add', stub).post('/remove', stub).post('/by-list', stub)
+const itemsContract = new Hono().post('/add', stub).post('/remove', stub).post('/by-list', stub);
 
 const listsContract = new Hono()
   .post('/list', stub)
@@ -74,15 +68,21 @@ const listsContract = new Hono()
   .post('/delete', stub)
   .post('/delete-item', stub)
   .post('/containing-place', stub)
-  .post('/remove-collaborator', stub)
+  .post('/remove-collaborator', stub);
 
-const messagesContract = new Hono().patch('/:messageId', stub).delete('/:messageId', stub)
+const messagesContract = new Hono().patch('/:messageId', stub).delete('/:messageId', stub);
 
 const mobileContract = new Hono()
   .route('/intents', new Hono().get('/suggestions', stub))
-  .route('/voice', new Hono().post('/transcribe', stub).post('/speech', stub).post('/respond', stub))
+  .route(
+    '/voice',
+    new Hono().post('/transcribe', stub).post('/speech', stub).post('/respond', stub),
+  );
 
-const voiceContract = new Hono().post('/transcribe', stub).post('/speech', stub).post('/respond', stub)
+const voiceContract = new Hono()
+  .post('/transcribe', stub)
+  .post('/speech', stub)
+  .post('/respond', stub);
 
 const notesContract = new Hono()
   .get('/', stub)
@@ -91,7 +91,7 @@ const notesContract = new Hono()
   .patch('/:id', stub)
   .delete('/:id', stub)
   .post('/:id/archive', stub)
-  .post('/sync', stub)
+  .post('/sync', stub);
 
 const placesContract = new Hono()
   .post('/create', stub)
@@ -108,15 +108,17 @@ const placesContract = new Hono()
   .post('/place-visits', stub)
   .post('/update-visit', stub)
   .post('/delete-visit', stub)
-  .post('/visit-stats', stub)
+  .post('/visit-stats', stub);
 
-const focusContract = new Hono().get('/', stub)
+const focusContract = new Hono().get('/', stub);
 
-const reviewContract = new Hono().post('/:reviewItemId/accept', stub).post('/:reviewItemId/reject', stub)
+const reviewContract = new Hono()
+  .post('/:reviewItemId/accept', stub)
+  .post('/:reviewItemId/reject', stub);
 
-const twitterContract = new Hono().get('/accounts', stub).post('/post', stub)
+const twitterContract = new Hono().get('/accounts', stub).post('/post', stub);
 
-const userContract = new Hono().post('/delete-account', stub)
+const userContract = new Hono().post('/delete-account', stub);
 
 export const app = new Hono()
   .basePath('/api')
@@ -135,4 +137,4 @@ export const app = new Hono()
   .route('/places', placesContract)
   .route('/review', reviewContract)
   .route('/twitter', twitterContract)
-  .route('/user', userContract)
+  .route('/user', userContract);

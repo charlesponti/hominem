@@ -1,9 +1,10 @@
+import { isDbError } from '@hominem/db/services/_shared/errors';
 import { logger } from '@hominem/utils/logger';
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
-import { isServiceError, type ErrorCode } from '../errors';
+import { isServiceError, type ErrorCode, type ServiceError } from '../errors';
 import type { AppContext } from './auth';
 
 /**
@@ -19,9 +20,67 @@ export interface ApiErrorResponse {
   details?: Record<string, unknown> | undefined; // Additional error context
 }
 
+function getStatusCode(error: ServiceError): ContentfulStatusCode {
+  switch (error.type) {
+    case 'VALIDATION':
+      return 400;
+    case 'UNAUTHORIZED':
+      return 401;
+    case 'FORBIDDEN':
+      return 403;
+    case 'NOT_FOUND':
+      return 404;
+    case 'CONFLICT':
+      return 409;
+    case 'RATE_LIMIT':
+      return 429;
+    case 'UNAVAILABLE':
+      return 503;
+    case 'INTERNAL':
+      return 500;
+    default:
+      return 500;
+  }
+}
+
+function toApiErrorResponse(error: ServiceError): ApiErrorResponse {
+  const message = 'message' in error ? error.message : undefined;
+  const details = 'details' in error ? error.details : undefined;
+  return {
+    error: error.type.toLowerCase(),
+    code: error.type as ErrorCode,
+    message: message ?? 'An unexpected error occurred',
+    details,
+  };
+}
+
 function findServiceError(value: unknown, depth = 0) {
   if (isServiceError(value)) {
     return value;
+  }
+
+  if (isDbError(value)) {
+    return {
+      type:
+        value.code === 'VALIDATION_ERROR'
+          ? 'VALIDATION'
+          : value.code === 'NOT_FOUND'
+            ? 'NOT_FOUND'
+            : value.code === 'FORBIDDEN'
+              ? 'FORBIDDEN'
+              : value.code === 'CONFLICT'
+                ? 'CONFLICT'
+                : 'INTERNAL',
+      message: value.message,
+      details: undefined,
+      field: undefined,
+      id: undefined,
+      resource: 'resource',
+      reason: undefined,
+      service: undefined,
+      cause: undefined,
+      retryAfter: undefined,
+    } as ServiceError;
   }
 
   if (!(value instanceof Error) || depth >= 3) {
@@ -45,15 +104,7 @@ export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
   const serviceError = findServiceError(err);
 
   if (serviceError) {
-    return c.json<ApiErrorResponse>(
-      {
-        error: serviceError.code.toLowerCase().replace(/_/g, '_'),
-        code: serviceError.code,
-        message: serviceError.message,
-        details: serviceError.details,
-      },
-      serviceError.statusCode as ContentfulStatusCode,
-    );
+    return c.json<ApiErrorResponse>(toApiErrorResponse(serviceError), getStatusCode(serviceError));
   }
 
   const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';

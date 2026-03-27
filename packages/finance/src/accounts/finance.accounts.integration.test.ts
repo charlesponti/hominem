@@ -14,7 +14,7 @@ import {
   listAccounts,
   updateAccount,
   upsertAccount,
-} from './finance';
+} from './service';
 
 const nextUserId = createDeterministicIdFactory('finance.accounts.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;

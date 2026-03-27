@@ -4,22 +4,31 @@ import { db } from '@hominem/db';
 
 import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './contracts';
 
-type TaskListRow = {
+type SpaceRow = {
   id: string;
-  user_id: string;
+  owner_user_id: string;
   name: string;
-  created_at: string | null;
+  created_at: Date | null;
 };
 
-function toOutputRecord(row: TaskListRow): ListOutput {
+function toOutputRecord(row: {
+  id: string;
+  owner_user_id: string;
+  name: string;
+  created_at: Date | null;
+}): ListOutput {
+  const createdAt =
+    row.created_at instanceof Date
+      ? row.created_at.toISOString()
+      : (row.created_at ?? new Date().toISOString());
   return {
     id: row.id,
     name: row.name,
     description: null,
-    ownerId: row.user_id,
+    ownerId: row.owner_user_id,
     isPublic: false,
-    createdAt: row.created_at ?? new Date().toISOString(),
-    updatedAt: row.created_at ?? new Date().toISOString(),
+    createdAt,
+    updatedAt: createdAt,
     createdBy: null,
     places: [],
   };
@@ -60,9 +69,9 @@ async function hasNameConflict(
   excludeListId?: string,
 ): Promise<boolean> {
   const existing = await db
-    .selectFrom('task_lists')
+    .selectFrom('app.spaces')
     .select('id')
-    .where((eb) => eb.and([eb('user_id', '=', userId), eb('name', '=', name)]))
+    .where((eb) => eb.and([eb('owner_user_id', '=', userId), eb('name', '=', name)]))
     .executeTakeFirst();
 
   if (!existing) {
@@ -89,17 +98,17 @@ export async function createList(name: string, userId: string): Promise<ListOutp
 
   const listId = crypto.randomUUID();
   await db
-    .insertInto('task_lists')
+    .insertInto('app.spaces')
     .values({
       id: listId,
-      user_id: userId,
+      owner_user_id: userId,
       name: normalizedName,
     })
     .execute();
 
   const created = await db
-    .selectFrom('task_lists')
-    .select(['id', 'user_id', 'name', 'created_at'])
+    .selectFrom('app.spaces')
+    .select(['id', 'owner_user_id', 'name', 'created_at'])
     .where('id', '=', listId)
     .executeTakeFirst();
 
@@ -107,7 +116,7 @@ export async function createList(name: string, userId: string): Promise<ListOutp
     return null;
   }
 
-  return toOutputRecord(created as TaskListRow);
+  return toOutputRecord(created);
 }
 
 export async function updateList(
@@ -121,9 +130,9 @@ export async function updateList(
   }
 
   const owned = await db
-    .selectFrom('task_lists')
+    .selectFrom('app.spaces')
     .select('id')
-    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
+    .where((eb) => eb.and([eb('id', '=', id), eb('owner_user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (!owned) {
@@ -136,16 +145,16 @@ export async function updateList(
   }
 
   await db
-    .updateTable('task_lists')
+    .updateTable('app.spaces')
     .set({
       name: normalizedName,
     })
-    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
+    .where((eb) => eb.and([eb('id', '=', id), eb('owner_user_id', '=', userId)]))
     .execute();
 
   const updated = await db
-    .selectFrom('task_lists')
-    .select(['id', 'user_id', 'name', 'created_at'])
+    .selectFrom('app.spaces')
+    .select(['id', 'owner_user_id', 'name', 'created_at'])
     .where('id', '=', id)
     .executeTakeFirst();
 
@@ -153,13 +162,13 @@ export async function updateList(
     return null;
   }
 
-  return toOutputRecord(updated as TaskListRow);
+  return toOutputRecord(updated as SpaceRow);
 }
 
 export async function deleteList(id: string, userId: string): Promise<boolean> {
   const result = await db
-    .deleteFrom('task_lists')
-    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
+    .deleteFrom('app.spaces')
+    .where((eb) => eb.and([eb('id', '=', id), eb('owner_user_id', '=', userId)]))
     .returningAll()
     .execute();
 

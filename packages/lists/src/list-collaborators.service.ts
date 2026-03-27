@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 
 interface LinkRow {
-  list_id: string;
+  space_id: string;
   user_id: string;
 }
 
@@ -12,15 +12,14 @@ export interface ListMembershipLink {
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
   const result = await db
-    .selectFrom('task_lists as tl')
-    .select('tl.id')
-    .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tl.user_id', '=', userId)]))
+    .selectFrom('app.spaces')
+    .select('id')
+    .where((eb) => eb.and([eb('id', '=', listId), eb('owner_user_id', '=', userId)]))
     .union(
       db
-        .selectFrom('task_lists as tl')
-        .innerJoin('task_list_collaborators as tlc', 'tlc.list_id', 'tl.id')
-        .select('tl.id')
-        .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tlc.user_id', '=', userId)])),
+        .selectFrom('app.space_members')
+        .select('space_id as id')
+        .where((eb) => eb.and([eb('space_id', '=', listId), eb('user_id', '=', userId)])),
     )
     .limit(1)
     .executeTakeFirst();
@@ -34,21 +33,21 @@ export async function getUserListLinks(listIds: string[]): Promise<ListMembershi
   }
 
   const result = await db
-    .selectFrom('task_lists as tl')
-    .select(['tl.id as list_id', 'tl.user_id'])
-    .where('tl.id', 'in', listIds)
+    .selectFrom('app.spaces')
+    .select(['id as space_id', 'owner_user_id as user_id'])
+    .where('id', 'in', listIds)
     .union(
       db
-        .selectFrom('task_list_collaborators as tlc')
-        .select(['tlc.list_id', 'tlc.user_id'])
-        .where('tlc.list_id', 'in', listIds),
+        .selectFrom('app.space_members')
+        .select(['space_id', 'user_id'])
+        .where('space_id', 'in', listIds),
     )
-    .orderBy('list_id', 'asc')
+    .orderBy('space_id', 'asc')
     .orderBy('user_id', 'asc')
     .execute();
 
   return (result as LinkRow[]).map((row) => ({
-    listId: row.list_id,
+    listId: row.space_id,
     userId: row.user_id,
   }));
 }
@@ -63,7 +62,7 @@ export async function removeUserFromList({
   ownerId: string;
 }) {
   const listRow = await db
-    .selectFrom('task_lists')
+    .selectFrom('app.spaces')
     .selectAll()
     .where('id', '=', listId)
     .executeTakeFirst();
@@ -72,7 +71,7 @@ export async function removeUserFromList({
     return { error: 'List not found.', status: 404 };
   }
 
-  if (listRow.user_id !== ownerId) {
+  if (listRow.owner_user_id !== ownerId) {
     return { error: 'List not found or you do not own this list.', status: 403 };
   }
 
@@ -81,8 +80,8 @@ export async function removeUserFromList({
   }
 
   const removed = await db
-    .deleteFrom('task_list_collaborators')
-    .where((eb) => eb.and([eb('list_id', '=', listId), eb('user_id', '=', userIdToRemove)]))
+    .deleteFrom('app.space_members')
+    .where((eb) => eb.and([eb('space_id', '=', listId), eb('user_id', '=', userIdToRemove)]))
     .returningAll()
     .executeTakeFirst();
 

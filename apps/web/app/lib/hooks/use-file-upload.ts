@@ -80,7 +80,7 @@ export function useFileUpload(): UseFileUploadReturn {
     uppy.use(AwsS3, {
       shouldUseMultipart: false,
       async getUploadParameters(file: UppyFile<Meta, Body>) {
-        const preparedUpload = await apiClient.files.prepareUpload({
+        const preparedUpload = await apiClient.files.getUploadUrl({
           originalName: file.name ?? 'file',
           mimetype: file.type || 'application/octet-stream',
           size: file.size ?? 0,
@@ -89,9 +89,9 @@ export function useFileUpload(): UseFileUploadReturn {
         uppy.setFileMeta(file.id, {
           fileId: preparedUpload.fileId,
           key: preparedUpload.key,
-          originalName: preparedUpload.originalName,
-          mimetype: preparedUpload.mimetype,
-          size: preparedUpload.size,
+          originalName: file.name ?? 'file',
+          mimetype: file.type || 'application/octet-stream',
+          size: file.size ?? 0,
         });
 
         return {
@@ -150,8 +150,7 @@ export function useFileUpload(): UseFileUploadReturn {
         }
 
         const completionPromise = apiClient.files
-          .completeUpload({
-            fileId: file.meta.fileId || '',
+          .register({
             key: file.meta.key || '',
             originalName: file.meta.originalName ?? file.name ?? 'file',
             mimetype: file.meta.mimetype || file.type || 'application/octet-stream',

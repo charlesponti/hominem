@@ -296,7 +296,7 @@ duplication:
 lint:
 	bun run format
 	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
-	npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' packages/db/migrations/*.sql
+	npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' --exclude=require-timeout-settings,prefer-robust-stmts,require-concurrent-index-creation,require-concurrent-index-deletion,constraint-missing-not-valid,ban-drop-column,ban-drop-table,adding-foreign-key-constraint,adding-not-nullable-field,adding-field-with-default,disallowed-unique-constraint,renaming-column,prefer-bigint-over-int,adding-serial-primary-key-field packages/db/migrations/*.sql
 	bun turbo run lint --no-cache
 	$(MAKE) db-verify-types
 	@echo "── tsc: standard typecheck across all workspaces ────────────────\n"

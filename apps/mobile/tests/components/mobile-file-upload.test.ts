@@ -1,62 +1,64 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   performMobileUploads,
   resolveMobileUploadMimeType,
   type MobileUploadAsset,
-} from '../../utils/services/files/use-file-upload'
+} from '../../utils/services/files/use-file-upload';
 
 describe('mobile file upload helper', () => {
   it('derives a mime type from file extension when the picker does not provide one', () => {
-    expect(resolveMobileUploadMimeType({
-      assetId: 'asset-1',
-      fileName: 'receipt.png',
-      mimeType: null,
-      type: 'image',
-      uri: 'file:///tmp/receipt.png',
-    })).toBe('image/png')
-  })
+    expect(
+      resolveMobileUploadMimeType({
+        assetId: 'asset-1',
+        fileName: 'receipt.png',
+        mimeType: null,
+        type: 'image',
+        uri: 'file:///tmp/receipt.png',
+      }),
+    ).toBe('image/png');
+  });
 
-  it('uploads through prepare-upload, signed PUT, and complete-upload', async () => {
-    const prepareUpload = vi.fn(async () => ({
+  it('uploads through getUploadUrl, signed PUT, and register', async () => {
+    const getUploadUrl = vi.fn(async () => ({
       fileId: 'file-1',
       key: 'user/file-1-receipt.png',
-      originalName: 'receipt.png',
-      mimetype: 'image/png',
-      size: 4,
       uploadUrl: 'https://uploads.example.com/signed-put',
       headers: {
         'Content-Type': 'image/png',
       },
-    }))
-    const completeUpload = vi.fn(async () => ({
+      expiresAt: '2026-01-01T01:00:00.000Z',
+    }));
+    const register = vi.fn(async () => ({
       file: {
         id: 'file-1',
         originalName: 'receipt.png',
         type: 'image' as const,
         mimetype: 'image/png',
         size: 4,
+        status: 'pending' as const,
         url: 'https://cdn.example.com/receipt.png',
         uploadedAt: '2026-01-01T00:00:00.000Z',
       },
-    }))
+      queued: true,
+    }));
     const fetchImpl: typeof fetch = vi.fn(async (input, init) => {
-      const url = typeof input === 'string' ? input : input.toString()
+      const url = typeof input === 'string' ? input : input.toString();
 
       if (url === 'file:///tmp/receipt.png') {
-        return new Response(new Blob(['data'], { type: 'image/png' }))
+        return new Response(new Blob(['data'], { type: 'image/png' }));
       }
 
       if (url === 'https://uploads.example.com/signed-put') {
-        expect(init?.method).toBe('PUT')
+        expect(init?.method).toBe('PUT');
         expect(init?.headers).toEqual({
           'Content-Type': 'image/png',
-        })
-        return new Response(null, { status: 200 })
+        });
+        return new Response(null, { status: 200 });
       }
 
-      throw new Error(`Unexpected fetch url: ${url}`)
-    }) as typeof fetch
+      throw new Error(`Unexpected fetch url: ${url}`);
+    }) as typeof fetch;
 
     const asset: MobileUploadAsset = {
       assetId: 'asset-1',
@@ -64,19 +66,19 @@ describe('mobile file upload helper', () => {
       mimeType: null,
       type: 'image',
       uri: 'file:///tmp/receipt.png',
-    }
+    };
 
     const result = await performMobileUploads(
       {
-        prepareUpload,
-        completeUpload,
+        getUploadUrl,
+        register,
       },
       [asset],
       { fetchImpl },
-    )
+    );
 
-    expect(result.errors).toEqual([])
-    expect(result.uploaded).toHaveLength(1)
+    expect(result.errors).toEqual([]);
+    expect(result.uploaded).toHaveLength(1);
     expect(result.uploaded[0]).toMatchObject({
       assetId: 'asset-1',
       localUri: 'file:///tmp/receipt.png',
@@ -86,27 +88,26 @@ describe('mobile file upload helper', () => {
         mimetype: 'image/png',
         url: 'https://cdn.example.com/receipt.png',
       },
-    })
-    expect(result.uploaded[0]?.uploadedFile.uploadedAt).toBeInstanceOf(Date)
-    expect(prepareUpload).toHaveBeenCalledWith({
+    });
+    expect(result.uploaded[0]?.uploadedFile.uploadedAt).toBeInstanceOf(Date);
+    expect(getUploadUrl).toHaveBeenCalledWith({
       originalName: 'receipt.png',
       mimetype: 'image/png',
       size: 4,
-    })
-    expect(completeUpload).toHaveBeenCalledWith({
-      fileId: 'file-1',
+    });
+    expect(register).toHaveBeenCalledWith({
       key: 'user/file-1-receipt.png',
       originalName: 'receipt.png',
       mimetype: 'image/png',
       size: 4,
-    })
-  })
+    });
+  });
 
   it('collects errors for unsupported file types without aborting the batch', async () => {
     const result = await performMobileUploads(
       {
-        prepareUpload: vi.fn(),
-        completeUpload: vi.fn(),
+        getUploadUrl: vi.fn(),
+        register: vi.fn(),
       },
       [
         {
@@ -120,9 +121,9 @@ describe('mobile file upload helper', () => {
       {
         fetchImpl: vi.fn() as typeof fetch,
       },
-    )
+    );
 
-    expect(result.uploaded).toEqual([])
-    expect(result.errors).toEqual(['script.exe: Unsupported file type'])
-  })
-})
+    expect(result.uploaded).toEqual([]);
+    expect(result.errors).toEqual(['script.exe: Unsupported file type']);
+  });
+});

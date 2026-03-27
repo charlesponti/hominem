@@ -1,18 +1,20 @@
 import { Buffer } from 'node:buffer';
 
+import { detectFileType, type FileType } from '@hominem/utils/mime';
 import mammoth from 'mammoth';
 import PDFParser from 'pdf2json';
 
 import { getSharedAiModelConfig, getSharedOpenAIClient } from './ai-model';
 
+// ProcessedFile — canonical type for processed file content
 export interface ProcessedFile {
   id: string;
   originalName: string;
-  type: 'image' | 'document' | 'audio' | 'video' | 'unknown';
+  type: FileType;
   mimetype: string;
   size: number;
-  textContent?: string;
   content?: string;
+  textContent?: string;
   thumbnail?: string;
   metadata?: Record<string, unknown>;
 }
@@ -45,7 +47,7 @@ export class FileProcessorService {
     const baseFile: ProcessedFile = {
       id: fileId,
       originalName,
-      type: FileProcessorService.getFileType(mimetype),
+      type: detectFileType(mimetype),
       mimetype,
       size: buffer.byteLength,
     };
@@ -219,27 +221,6 @@ export class FileProcessorService {
         type: 'video',
       },
     };
-  }
-
-  private static getFileType(mimetype: string): ProcessedFile['type'] {
-    if (mimetype.startsWith('image/')) {
-      return 'image';
-    }
-    if (mimetype.startsWith('audio/')) {
-      return 'audio';
-    }
-    if (mimetype.startsWith('video/')) {
-      return 'video';
-    }
-    if (
-      mimetype === 'application/pdf' ||
-      mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      mimetype === 'application/msword' ||
-      mimetype === 'text/plain'
-    ) {
-      return 'document';
-    }
-    return 'unknown';
   }
 
   static formatFileSize(bytes: number): string {

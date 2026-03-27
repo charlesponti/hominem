@@ -18,6 +18,7 @@
     "./logger": "./src/logger.ts",
     "./client-logger": "./src/client-logger.ts",
     "./markdown": "./src/markdown/index.ts",
+    "./mime": "./src/mime.ts",
     "./time": "./src/time.ts"
   },
   "scripts": {

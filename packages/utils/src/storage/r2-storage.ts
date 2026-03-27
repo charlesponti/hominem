@@ -1,16 +1,20 @@
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command,
   CreateBucketCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { isSupportedChatUploadMimeType } from '../upload';
+import {
+  getExtensionFromMimeType,
+  isSupportedChatUploadMimeType,
+  sanitizeStorageFilename,
+} from '../mime';
 import * as Types from './types';
 
 export type StoredFile = Types.StoredFile;
@@ -383,26 +387,7 @@ export class R2StorageService {
     if (dotIndex !== -1) {
       return filename.substring(dotIndex);
     }
-
-    const mimeToExt: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/png': '.png',
-      'image/gif': '.gif',
-      'image/webp': '.webp',
-      'application/pdf': '.pdf',
-      'text/plain': '.txt',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-      'application/msword': '.doc',
-      'audio/mpeg': '.mp3',
-      'audio/wav': '.wav',
-      'audio/ogg': '.ogg',
-      'video/mp4': '.mp4',
-      'video/webm': '.webm',
-      'text/csv': '.csv',
-      'application/csv': '.csv',
-    };
-
-    return mimeToExt[mimetype] || '';
+    return getExtensionFromMimeType(mimetype);
   }
 
   private createStoredName(id: string, filename: string, extension: string): string {

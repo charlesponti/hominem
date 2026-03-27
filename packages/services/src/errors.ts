@@ -1,15 +1,262 @@
 /**
- * Centralized error hierarchy for Hominem services
+ * Service Error Types - Discriminated Union
  *
- * All service functions should throw these error types to communicate
- * failures to their callers. HTTP endpoints catch these errors and
- * convert them to appropriate HTTP responses.
+ * Clean, type-safe error handling using discriminated unions.
+ * Each error has a `type` discriminator for exhaustive switch handling.
  *
- * Pattern:
- * - Service throws specific error type
- * - HTTP endpoint catches and returns ApiResult with correct status code
- * - Client receives typed response
+ * Usage:
+ *   import * as Err from '@hominem/services/errors';
+ *
+ *   function doSomething(): Err.Result<User, Err.ServiceError> {
+ *     if (!user) return Err.fail(Err.notFound('User', id));
+ *     return Err.ok(user);
+ *   }
  */
+
+// ============================================================================
+// Error Type Definitions
+// ============================================================================
+
+export type ValidationError = {
+  type: 'VALIDATION';
+  message: string;
+  field: string | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type NotFoundError = {
+  type: 'NOT_FOUND';
+  resource: string;
+  id: string | undefined;
+  details: Record<string, unknown> | undefined;
+  message?: string;
+  statusCode?: number;
+};
+
+export type UnauthorizedError = {
+  type: 'UNAUTHORIZED';
+  message: string | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type ForbiddenError = {
+  type: 'FORBIDDEN';
+  message: string | undefined;
+  reason: 'ownership' | 'role' | 'subscription' | 'other' | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type ConflictError = {
+  type: 'CONFLICT';
+  message: string;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type UnavailableError = {
+  type: 'UNAVAILABLE';
+  message: string | undefined;
+  service: string | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type InternalError = {
+  type: 'INTERNAL';
+  message: string | undefined;
+  cause: unknown | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type RateLimitError = {
+  type: 'RATE_LIMIT';
+  message: string | undefined;
+  retryAfter: number | undefined;
+  details: Record<string, unknown> | undefined;
+  statusCode?: number;
+};
+
+export type ServiceError =
+  | ValidationError
+  | NotFoundError
+  | UnauthorizedError
+  | ForbiddenError
+  | ConflictError
+  | UnavailableError
+  | InternalError
+  | RateLimitError;
+
+// ============================================================================
+// Error Constructors
+// ============================================================================
+
+export function validation(
+  message: string,
+  field?: string,
+  details?: Record<string, unknown>,
+): ValidationError {
+  return { type: 'VALIDATION', message, field: field ?? undefined, details: details ?? undefined };
+}
+
+export function notFound(
+  resource: string,
+  id?: string,
+  details?: Record<string, unknown>,
+): NotFoundError {
+  return { type: 'NOT_FOUND', resource, id: id ?? undefined, details: details ?? undefined };
+}
+
+export function unauthorized(message = 'Authentication required'): UnauthorizedError {
+  return { type: 'UNAUTHORIZED', message: message ?? undefined, details: undefined };
+}
+
+export function forbidden(
+  message = 'Access forbidden',
+  reason: ForbiddenError['reason'] = 'other',
+  details?: Record<string, unknown>,
+): ForbiddenError {
+  return {
+    type: 'FORBIDDEN',
+    message: message ?? undefined,
+    reason: reason ?? undefined,
+    details: details ?? undefined,
+  };
+}
+
+export function conflict(message: string, details?: Record<string, unknown>): ConflictError {
+  return { type: 'CONFLICT', message, details: details ?? undefined };
+}
+
+export function unavailable(
+  message = 'Service unavailable',
+  service?: string,
+  details?: Record<string, unknown>,
+): UnavailableError {
+  return {
+    type: 'UNAVAILABLE',
+    message: message ?? undefined,
+    service: service ?? undefined,
+    details: details ?? undefined,
+  };
+}
+
+export function internal(
+  message = 'Internal server error',
+  cause?: unknown,
+  details?: Record<string, unknown>,
+): InternalError {
+  return {
+    type: 'INTERNAL',
+    message: message ?? undefined,
+    cause: cause ?? undefined,
+    details: details ?? undefined,
+  };
+}
+
+export function rateLimit(
+  message = 'Rate limit exceeded',
+  retryAfter?: number,
+  details?: Record<string, unknown>,
+): RateLimitError {
+  return {
+    type: 'RATE_LIMIT',
+    message: message ?? undefined,
+    retryAfter: retryAfter ?? undefined,
+    details: details ?? undefined,
+  };
+}
+
+// ============================================================================
+// Result Type for Railway-Oriented Programming
+// ============================================================================
+
+export type Result<T, E = ServiceError> = { success: true; data: T } | { success: false; error: E };
+
+export function ok<T>(data: T): Result<T, never> {
+  return { success: true, data };
+}
+
+export function fail<E extends ServiceError>(error: E): Result<never, E> {
+  return { success: false, error };
+}
+
+// ============================================================================
+// HTTP Status Mapping
+// ============================================================================
+
+export function getHttpStatus(error: ServiceError): number {
+  switch (error.type) {
+    case 'VALIDATION':
+      return 400;
+    case 'UNAUTHORIZED':
+      return 401;
+    case 'FORBIDDEN':
+      return 403;
+    case 'NOT_FOUND':
+      return 404;
+    case 'CONFLICT':
+      return 409;
+    case 'RATE_LIMIT':
+      return 429;
+    case 'UNAVAILABLE':
+      return 503;
+    case 'INTERNAL':
+      return 500;
+    default:
+      return 500;
+  }
+}
+
+export function getErrorCode(error: ServiceError): string {
+  return error.type;
+}
+
+export function toHttpResponse(error: ServiceError) {
+  return {
+    status: getHttpStatus(error),
+    body: {
+      error: {
+        code: getErrorCode(error),
+        ...error,
+      },
+    },
+  };
+}
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+export function isServiceError(error: unknown): error is ServiceError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    typeof error.type === 'string' &&
+    [
+      'VALIDATION',
+      'NOT_FOUND',
+      'UNAUTHORIZED',
+      'FORBIDDEN',
+      'CONFLICT',
+      'UNAVAILABLE',
+      'INTERNAL',
+      'RATE_LIMIT',
+    ].includes(error.type)
+  );
+}
+
+// ============================================================================
+// Legacy Compatibility Exports (to be removed after migration)
+// ============================================================================
+
+export interface ErrorDetails {
+  [key: string]: unknown;
+}
 
 export type ErrorCode =
   | 'VALIDATION_ERROR'
@@ -17,186 +264,5 @@ export type ErrorCode =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'CONFLICT'
-  | 'INTERNAL_ERROR'
-  | 'UNAVAILABLE';
-
-/**
- * Base error class for all service errors
- *
- * Includes error code, HTTP status code, and optional details for debugging
- */
-export class ServiceError extends Error {
-  public readonly code: ErrorCode;
-  public readonly statusCode: number;
-  public readonly details?: Record<string, unknown> | undefined;
-
-  constructor(
-    message: string,
-    code: ErrorCode,
-    statusCode: number = 500,
-    details?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.code = code;
-    this.statusCode = statusCode;
-    this.details = details;
-
-    // Set prototype for instanceof checks
-    Object.setPrototypeOf(this, ServiceError.prototype);
-    this.name = this.constructor.name;
-  }
-}
-
-/**
- * Validation failed
- *
- * Use when input validation fails (before business logic)
- * HTTP: 400 Bad Request
- *
- * @example
- * if (!email.includes('@')) {
- *   throw new ValidationError('Invalid email format', { field: 'email' })
- * }
- */
-export class ValidationError extends ServiceError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'VALIDATION_ERROR', 400, details);
-    Object.setPrototypeOf(this, ValidationError.prototype);
-  }
-}
-
-/**
- * Resource not found
- *
- * Use when a required resource doesn't exist
- * HTTP: 404 Not Found
- *
- * @example
- * const user = await db.query.users.findFirst({ where: eq(users.id, userId) })
- * if (!user) {
- *   throw new NotFoundError('User', { userId })
- * }
- */
-export class NotFoundError extends ServiceError {
-  constructor(resource: string, details?: Record<string, unknown>) {
-    super(`${resource} not found`, 'NOT_FOUND', 404, details);
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
-}
-
-/**
- * Authentication failed
- *
- * Use when user is not authenticated or token is invalid
- * HTTP: 401 Unauthorized
- *
- * @example
- * const user = await verifyToken(token)
- * if (!user) {
- *   throw new UnauthorizedError('Invalid token')
- * }
- */
-export class UnauthorizedError extends ServiceError {
-  constructor(message: string = 'Authentication required', details?: Record<string, unknown>) {
-    super(message, 'UNAUTHORIZED', 401, details);
-    Object.setPrototypeOf(this, UnauthorizedError.prototype);
-  }
-}
-
-/**
- * Authorization failed
- *
- * Use when user is authenticated but not authorized for this action
- * HTTP: 403 Forbidden
- *
- * @example
- * if (list.userId !== currentUserId) {
- *   throw new ForbiddenError('You do not have permission to modify this list')
- * }
- */
-export class ForbiddenError extends ServiceError {
-  constructor(message: string = 'Access forbidden', details?: Record<string, unknown>) {
-    super(message, 'FORBIDDEN', 403, details);
-    Object.setPrototypeOf(this, ForbiddenError.prototype);
-  }
-}
-
-/**
- * Resource conflict
- *
- * Use when operation conflicts with existing state
- * (e.g., duplicate unique constraint, race condition)
- * HTTP: 409 Conflict
- *
- * @example
- * const existing = await findByEmail(email)
- * if (existing) {
- *   throw new ConflictError('User with this email already exists', { email })
- * }
- */
-export class ConflictError extends ServiceError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'CONFLICT', 409, details);
-    Object.setPrototypeOf(this, ConflictError.prototype);
-  }
-}
-
-/**
- * Service unavailable
- *
- * Use when a dependency (external service, database) is temporarily unavailable
- * HTTP: 503 Service Unavailable
- *
- * @example
- * try {
- *   return await externalApi.call()
- * } catch (error) {
- *   throw new UnavailableError('Google Places API is currently unavailable')
- * }
- */
-export class UnavailableError extends ServiceError {
-  constructor(message: string = 'Service unavailable', details?: Record<string, unknown>) {
-    super(message, 'UNAVAILABLE', 503, details);
-    Object.setPrototypeOf(this, UnavailableError.prototype);
-  }
-}
-
-/**
- * Internal server error
- *
- * Use when an unexpected error occurs in the service
- * HTTP: 500 Internal Server Error
- *
- * @example
- * try {
- *   await someOperation()
- * } catch (error) {
- *   throw new InternalError(
- *     'Failed to complete operation',
- *     { originalError: error instanceof Error ? error.message : String(error) }
- *   )
- * }
- */
-export class InternalError extends ServiceError {
-  constructor(message: string = 'Internal server error', details?: Record<string, unknown>) {
-    super(message, 'INTERNAL_ERROR', 500, details);
-    Object.setPrototypeOf(this, InternalError.prototype);
-  }
-}
-
-/**
- * Type guard to check if an error is a ServiceError
- *
- * @example
- * try {
- *   await someService()
- * } catch (error) {
- *   if (isServiceError(error)) {
- *     return handleServiceError(error)
- *   }
- *   throw error // Re-throw unexpected errors
- * }
- */
-export function isServiceError(error: unknown): error is ServiceError {
-  return error instanceof ServiceError;
-}
+  | 'UNAVAILABLE'
+  | 'INTERNAL_ERROR';
