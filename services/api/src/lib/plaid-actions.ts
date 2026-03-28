@@ -126,7 +126,7 @@ export async function exchangePlaidPublicToken(input: {
     itemId,
     accessToken,
     institutionId: institution.id || input.institutionId,
-    status: 'active',
+    status: 'healthy',
     lastSyncedAt: null,
   });
 

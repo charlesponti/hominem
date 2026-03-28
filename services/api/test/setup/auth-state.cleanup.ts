@@ -39,7 +39,7 @@ async function selectAuthTestUserIds() {
   const result = await pool.query<UserRow>(
     `
       select id
-      from users
+      from auth.users
       where lower(email) = any($1::text[])
         or lower(email) like any($2::text[])
     `,
@@ -66,7 +66,7 @@ async function cleanupDeviceCodes(userIds: string[]) {
 async function cleanupVerificationRows() {
   await pool.query(
     `
-      delete from user_verification
+      delete from auth.verification_tokens
       where lower(identifier) = any($1::text[])
         or lower(identifier) like any($2::text[])
     `,

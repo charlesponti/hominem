@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
 import { Hono } from 'hono';
@@ -74,7 +76,7 @@ describe('auth step-up enforcement', () => {
     await db
       .insertInto('auth.passkeys')
       .values({
-        id: 'step-up-passkey',
+        id: crypto.randomUUID(),
         user_id: STEP_UP_USER_ID,
         friendly_name: 'Existing Device',
         public_key: Buffer.from('public-key'),
@@ -83,7 +85,7 @@ describe('auth step-up enforcement', () => {
         device_type: 'singleDevice',
         backed_up: false,
         transports: ['internal'],
-        aaguid: 'test-aaguid',
+        aaguid: '11111111-1111-4111-8111-111111111111',
       })
       .execute();
   });

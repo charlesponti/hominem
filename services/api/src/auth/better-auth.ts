@@ -22,37 +22,40 @@ import { sendEmail } from '../lib/email';
 import { recordTestOtp } from './test-otp-store';
 
 const userFieldMappings = {
-  emailVerified: 'email_verified',
+  name: 'display_name',
+  emailVerified: 'email_verified_at',
+  image: 'avatar_url',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 };
 
 const sessionFieldMappings = {
   expiresAt: 'expires_at',
+  token: 'token_hash',
   createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  ipAddress: 'ip_address',
-  userAgent: 'user_agent',
+  updatedAt: 'last_seen_at',
+  ipAddress: 'ip_hash',
+  userAgent: 'user_agent_hash',
   userId: 'user_id',
 };
 
 const accountFieldMappings = {
-  accountId: 'account_id',
-  providerId: 'provider_id',
+  accountId: 'provider_account_id',
+  providerId: 'provider',
   userId: 'user_id',
-  accessToken: 'access_token',
-  refreshToken: 'refresh_token',
-  idToken: 'id_token',
-  accessTokenExpiresAt: 'access_token_expires_at',
-  refreshTokenExpiresAt: 'refresh_token_expires_at',
+  accessToken: 'access_token_encrypted',
+  refreshToken: 'refresh_token_encrypted',
+  idToken: 'id_token_encrypted',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 };
 
 const verificationFieldMappings = {
+  identifier: 'identifier',
+  value: 'token_hash',
   expiresAt: 'expires_at',
   createdAt: 'created_at',
-  updatedAt: 'updated_at',
+  updatedAt: 'created_at',
 };
 
 const passkeyFieldMappings = {
@@ -77,8 +80,10 @@ const deviceCodeFieldMappings = {
   userId: 'user_id',
   expiresAt: 'expires_at',
   lastPolledAt: 'last_polled_at',
-  pollingInterval: 'polling_interval',
+  pollingInterval: 'polling_interval_seconds',
   clientId: 'client_id',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
 };
 
 function getTrustedOrigins() {
@@ -133,7 +138,7 @@ function getAuthPlugins() {
       origin: getTrustedOrigins(),
       schema: {
         passkey: {
-          modelName: 'user_passkey',
+          modelName: 'auth.passkeys',
           fields: passkeyFieldMappings,
         },
       },
@@ -217,7 +222,7 @@ function getAuthPlugins() {
       verificationUri: '/api/auth/device',
       schema: {
         deviceCode: {
-          modelName: 'user_device_code',
+          modelName: 'auth.device_codes',
           fields: deviceCodeFieldMappings,
         },
       },
@@ -237,19 +242,19 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'users',
+    modelName: 'auth.users',
     fields: userFieldMappings,
   },
   session: {
-    modelName: 'user_session',
+    modelName: 'auth.sessions',
     fields: sessionFieldMappings,
   },
   account: {
-    modelName: 'user_account',
+    modelName: 'auth.identities',
     fields: accountFieldMappings,
   },
   verification: {
-    modelName: 'user_verification',
+    modelName: 'auth.verification_tokens',
     fields: verificationFieldMappings,
   },
   emailAndPassword: {
