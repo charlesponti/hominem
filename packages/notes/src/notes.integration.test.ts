@@ -14,7 +14,7 @@ const nextUserId = createDeterministicIdFactory('notes.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
 describeIntegration('notes integration', () => {
-  const service = new NotesService();
+  let service: NotesService;
   let ownerId: string;
   let otherUserId: string;
 
@@ -42,6 +42,7 @@ describeIntegration('notes integration', () => {
   };
 
   beforeEach(async () => {
+    service = new NotesService();
     ownerId = nextUserId();
     otherUserId = nextUserId();
     await cleanupUsersAndNotes([ownerId, otherUserId]);

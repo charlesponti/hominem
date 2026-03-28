@@ -1,16 +1,36 @@
 import { db } from '@hominem/db';
 
-// Universal UUID generation that works in Node.js, Bun, and browsers
 function generateUUID(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  const cryptoApi = globalThis.crypto;
+
+  if (typeof cryptoApi?.randomUUID === 'function') {
+    return cryptoApi.randomUUID();
   }
-  // Fallback for environments without crypto.randomUUID
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+
+  if (typeof cryptoApi?.getRandomValues === 'function') {
+    const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+    const versionByte = bytes[6];
+    const variantByte = bytes[8];
+
+    if (versionByte === undefined || variantByte === undefined) {
+      throw new Error('Secure UUID generation failed');
+    }
+
+    bytes[6] = (versionByte & 0x0f) | 0x40;
+    bytes[8] = (variantByte & 0x3f) | 0x80;
+
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'));
+
+    return [
+      hex.slice(0, 4).join(''),
+      hex.slice(4, 6).join(''),
+      hex.slice(6, 8).join(''),
+      hex.slice(8, 10).join(''),
+      hex.slice(10, 16).join(''),
+    ].join('-');
+  }
+
+  throw new Error('Secure UUID generation is unavailable');
 }
 
 interface AccountRecord {
