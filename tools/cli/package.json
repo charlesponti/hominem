@@ -8,8 +8,8 @@
   "type": "module",
   "scripts": {
     "build": "bun run build:core",
-    "build:core": "rm -rf dist && bunx tsgo -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "typecheck": "bunx tsgo -p tsconfig.build.json --noEmit",
+    "build:core": "rm -rf dist && bunx --package @typescript/native-preview tsgo -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "typecheck": "bunx --package @typescript/native-preview tsgo -p tsconfig.build.json --noEmit",
     "test": "bun test test/**/*.test.ts src/**/*.test.ts",
     "lint": "oxlint --tsconfig tsconfig.json \"src/**/*.{ts,tsx,js,jsx}\" \"test/**/*.{ts,tsx,js,jsx}\"",
     "format": "oxfmt src test"

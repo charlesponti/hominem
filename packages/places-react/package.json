@@ -14,7 +14,7 @@
   "scripts": {
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
-    "typecheck": "bunx tsgo --noEmit",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui"
   },

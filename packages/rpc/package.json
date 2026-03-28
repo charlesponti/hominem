@@ -42,8 +42,8 @@
     }
   },
   "scripts": {
-    "build": "bunx tsgo --incremental",
-    "typecheck": "bunx tsgo --noEmit --incremental"
+    "build": "bunx --package @typescript/native-preview tsgo --incremental",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit --incremental"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",

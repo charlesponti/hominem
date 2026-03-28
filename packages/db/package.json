@@ -53,10 +53,10 @@
     }
   },
   "scripts": {
-    "build": "bunx tsgo",
-    "dev": "bunx tsgo --watch --preserveWatchOutput",
+    "build": "bunx --package @typescript/native-preview tsgo",
+    "dev": "bunx --package @typescript/native-preview tsgo --watch --preserveWatchOutput",
     "prepare": "bun run build",
-    "typecheck": "bunx tsgo --noEmit",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "kysely-codegen": "kysely-codegen",
     "goose:up": "bash ../../scripts/run-goose.sh up",
     "goose:down": "bash ../../scripts/run-goose.sh down",

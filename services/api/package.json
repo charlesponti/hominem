@@ -14,7 +14,7 @@
     "test:integration": "bash ../../scripts/with-test-env.sh vitest run --config vitest.integration.config.mts --passWithNoTests",
     "test:contract": "bash ../../scripts/with-test-env.sh vitest run --config vitest.contract.config.mts --passWithNoTests",
     "test:coverage": "bash ../../scripts/with-test-env.sh vitest run --coverage",
-    "typecheck": "bunx tsgo --noEmit",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "test:watch": "bash ../../scripts/with-test-env.sh vitest --config vitest.config.mts",
     "perf:auth-middleware": "bash ../../scripts/with-test-env.sh bun src/middleware/auth.perf.ts"
   },

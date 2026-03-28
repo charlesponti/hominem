@@ -24,7 +24,7 @@
   "scripts": {
     "lint": "bunx oxlint ./src",
     "test": "vitest run",
-    "typecheck": "bunx tsgo --noEmit"
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "backfill:place-images": "bun src/backfill-place-images.ts",
-    "typecheck": "bunx tsgo --noEmit",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",

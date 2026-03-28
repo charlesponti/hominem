@@ -19,7 +19,7 @@
     "package:all": "electron-vite build && electron-builder --mac --win --linux --publish=never",
     "postinstall": "node ./node_modules/electron/install.js && electron-builder install-app-deps",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "bunx tsgo --noEmit"
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

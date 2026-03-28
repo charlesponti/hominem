@@ -11,7 +11,7 @@
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "test": "bash ../../scripts/with-test-env.sh vitest run",
-    "typecheck": "bunx tsgo --noEmit",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "lint": "bunx oxlint ./src",
     "format": "bunx oxfmt ./src"
   },

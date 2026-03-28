@@ -15,8 +15,8 @@
     "./tools": "./src/tools.ts"
   },
   "scripts": {
-    "build": "bunx tsgo",
-    "typecheck": "bunx tsgo --noEmit",
+    "build": "bunx --package @typescript/native-preview tsgo",
+    "typecheck": "bunx --package @typescript/native-preview tsgo --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
