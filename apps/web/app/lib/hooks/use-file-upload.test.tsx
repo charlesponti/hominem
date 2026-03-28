@@ -161,7 +161,10 @@ vi.mock('@uppy/core', () => ({
 describe('useFileUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true })),
+    );
   });
 
   it('uploads directly through prepared R2 targets and stores completed files', async () => {
