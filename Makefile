@@ -1,214 +1,141 @@
-# Makefile for local development, Docker, and database operations
+SHELL := /bin/bash
 
-# Load root environment variables when present.
 ifneq (,$(wildcard .env))
 include .env
 export
 endif
 
-# Variables
-DOCKER_COMPOSE = docker compose
-NODE_ENV ?= development
+DOCKER_COMPOSE := docker compose
+DOCKER_DEV := $(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml
+DOCKER_OBSERVABILITY := $(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/observability.yml
+DOCKER_FULL := $(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml -f infra/docker/compose/observability.yml
+
 DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
+GOOSE_MIGRATIONS_DIR ?= $(CURDIR)/packages/db/migrations
 
-# Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: help install dev build test lint format duplication typecheck-native
+.PHONY: infra-up infra-down infra-reset infra-status
+.PHONY: docker-up docker-up-observability docker-up-full docker-down
+.PHONY: db-up db-up-test db-down db-down-test db-status db-status-test
+.PHONY: db-reset-dev db-reset-test db-verify-fresh
+.PHONY: db-v1-verify-fresh db-v1-verify-relational db-v1-verify-registry db-v1-verify-rls
+.PHONY: db-v1-verify-tags db-v1-verify-rollback db-v1-verify-reset db-v1-verify-tag-performance db-v1-verify-all
 
-# Start the mobile dev server (Expo dev client, dev variant)
-dev:
-	bun run --filter @hominem/mobile start
+help:
+	@echo ""
+	@echo "Core:"
+	@echo "  make install | dev | build | test | lint | format | duplication"
+	@echo ""
+	@echo "Infra:"
+	@echo "  make infra-up | infra-down | infra-reset | infra-status"
+	@echo "  make docker-up-observability | docker-up-full | docker-down"
+	@echo ""
+	@echo "Database:"
+	@echo "  make db-up | db-up-test | db-down | db-down-test | db-status | db-status-test"
+	@echo "  make db-reset-dev | db-reset-test | db-verify-fresh | db-v1-verify-all"
 
-# Install dependencies
 install:
 	bun install
 
-# Full local development setup (deps + infra + migrations)
-dev-setup: install dev-up db-migrate-all dev-status
-	@echo "Full dev setup complete"
+dev:
+	bun run dev
 
-# Start required local infrastructure (redis + dev db + test db)
-dev-up:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d redis db test-db
+build:
+	bun run build
 
-# Stop local development infrastructure and remove containers
-dev-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down
-
-# Reset local development infrastructure including volumes, then recreate + migrate
-dev-reset:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
-	$(MAKE) dev-up
-	$(MAKE) db-migrate-all
-
-# Show local infrastructure status
-dev-status:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps
-
-# Run migrations against the local development database
-db-migrate:
-	@echo "Waiting for dev database to be ready..."
-	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run goose:up
-
-# Run migrations against the local test database
-db-migrate-test:
-	@echo "Waiting for test database to be ready..."
-	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:up
-
-# Run all local database migrations required for development
-db-migrate-all: db-migrate db-migrate-test
-
-# Roll back the latest migration on the local development database
-db-rollback:
-	@echo "Waiting for dev database to be ready..."
-	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run goose:down
-
-# Roll back the latest migration on the local test database
-db-rollback-test:
-	@echo "Waiting for test database to be ready..."
-	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:down
-
-# Roll back the latest migration on both local databases
-db-rollback-all: db-rollback db-rollback-test
-
-# Refresh generated Kysely database types from the development database schema
-db-generate-types:
-	@echo "Refreshing generated Kysely database types..."
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run kysely-codegen --out-file ./src/types/database.ts
-
-# Verify generated Kysely database types are up to date
-db-verify-types:
-	@echo "Verifying generated Kysely database types..."
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run kysely-codegen --verify --out-file ./src/types/database.ts
-
-# Apply local migrations and refresh generated Kysely database types
-db-migrate-sync: db-migrate-all db-generate-types
-
-# Roll back local migrations and refresh generated Kysely database types
-db-rollback-sync: db-rollback-all db-generate-types
-
-# Create a new Goose migration file with the standard template
-db-new-migration:
-	@if [ -z "$(NAME)" ]; then \
-		echo "ERROR: NAME is required"; \
-		echo "Usage: make db-new-migration NAME=add_users_table"; \
-		exit 1; \
-	fi
-	@name="$$(printf '%s' "$(NAME)" | tr '[:upper:]' '[:lower:]' | tr ' -' '__' | tr -cd 'a-z0-9_')"; \
-	if [ -z "$$name" ]; then \
-		echo "ERROR: NAME must contain letters or numbers"; \
-		exit 1; \
-	fi; \
-	timestamp="$$(date -u +"%Y%m%d%H%M%S")"; \
-	file="packages/db/migrations/$${timestamp}_$${name}.sql"; \
-	if [ -e "$$file" ]; then \
-		echo "ERROR: Migration already exists: $$file"; \
-		exit 1; \
-	fi; \
-	printf '%s\n' '-- +goose Up' '-- +goose StatementBegin' '-- TODO: add migration SQL here' '-- +goose StatementEnd' '' '-- +goose Down' '-- TODO: add rollback SQL here' > "$$file"; \
-	echo "Created $$file"
-
-# Run tests
 test:
 	bun run test
 
-# Build the application
-build:
-	bun turbo run build --force
-
-# Single quality gate: format, lint, DB/type verification, type quality
-lint:
+format:
 	bun run format
-	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
-	cd packages/db && npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' migrations/*.sql
-	bun turbo run lint --no-cache
-	$(MAKE) db-verify-types
-	@echo "── tsc: standard typecheck across all workspaces ────────────────"
-	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
-	@echo "── knip: unused files / exports / dependencies ──────────────────"
-	bun run knip
-	@echo "── tsc --noUnusedLocals across all workspaces ───────────────────"
-	cd apps/web          && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd services/api      && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/auth     && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/chat     && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/db       && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/finance  && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/notes    && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/rpc      && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/ui       && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd packages/utils    && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd services/workers  && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-	cd tools/cli         && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
 
-# Clean build artifacts and dependencies
-clean:
-	bun turbo run clean
-	find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete
+duplication:
+	bun run ./scripts/check-duplication.ts
 
-# Full cleanup and reinstall
-reset: clean install
+typecheck-native:
+	bun run typecheck:native
 
-auth-test-up:
-	$(MAKE) dev-up
-	$(MAKE) db-migrate-test
-	@echo "Auth test infra ready (db + test-db + redis)"
+lint:
+	bunx turbo run lint
+	bun run typecheck:native
+	bun run ./scripts/check-duplication.ts
 
-auth-test-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop redis db test-db
-	@echo "Auth test infra stopped"
+infra-up:
+	$(DOCKER_DEV) up -d redis db test-db
 
-auth-test-status:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
+infra-down:
+	$(DOCKER_DEV) down
 
+infra-reset:
+	$(DOCKER_DEV) down -v
+	$(MAKE) infra-up
 
-# Database Operations Help
-help-db:
-	@echo ""
-	@echo "Database Migration Workflow (Goose):"
-	@echo "======================================"
-	@echo ""
-	@echo "To add a schema change:"
-	@echo "  1. Run: make db-new-migration NAME=add_example_table"
-	@echo "  2. Use UTC timestamp prefix (YYYYMMDDHHMMSS_description.sql)"
-	@echo "  3. Fill in the -- +goose Up and -- +goose Down blocks"
-	@echo "  4. Run: make db-migrate-sync"
-	@echo ""
-	@echo "Individual Steps:"
-	@echo "  make db-migrate-all    # Apply migrations to dev + test databases"
-	@echo "  make db-rollback-all   # Roll back the latest migration on dev + test databases"
-	@echo "  make db-generate-types # Refresh generated Kysely database types"
-	@echo "  make db-verify-types   # Verify generated Kysely database types are current"
-	@echo "  make db-migrate-sync   # Apply migrations and refresh generated Kysely types"
-	@echo "  make db-rollback-sync  # Roll back migrations and refresh generated Kysely types"
-	@echo "  make db-new-migration NAME=add_example_table # Scaffold a migration file"
-	@echo ""
-	@echo "Safety rules:"
-	@echo "  - Expand -> Backfill -> Contract"
-	@echo "  - Avoid DROP COLUMN/TABLE in normal migrations"
-	@echo "  - Contract changes only after backfill cutover"
-	@echo ""
+infra-status:
+	$(DOCKER_DEV) ps
 
-# Docker compose targets
-docker-up:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+docker-up: infra-up
+
+docker-up-observability:
+	$(DOCKER_OBSERVABILITY) up -d
 
 docker-up-full:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+	$(DOCKER_FULL) up -d
 
 docker-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+	$(DOCKER_FULL) down -v
 
-# Run unified Storybook (all components at port 6006)
-storybook:
-	bun run --filter @hominem/ui storybook
+db-up:
+	DATABASE_URL="$(DEV_DATABASE_URL)" bash ./scripts/run-goose.sh up
 
-# Run story-based tests with Vitest + Playwright
-storybook-test:
-	cd packages/ui && bunx vitest --config vitest.stories.ts
+db-up-test:
+	DATABASE_URL="$(TEST_DATABASE_URL)" bash ./scripts/run-goose.sh up
 
-all: install build
+db-down:
+	DATABASE_URL="$(DEV_DATABASE_URL)" bash ./scripts/run-goose.sh down
+
+db-down-test:
+	DATABASE_URL="$(TEST_DATABASE_URL)" bash ./scripts/run-goose.sh down
+
+db-status:
+	DATABASE_URL="$(DEV_DATABASE_URL)" bash ./scripts/run-goose.sh status
+
+db-status-test:
+	DATABASE_URL="$(TEST_DATABASE_URL)" bash ./scripts/run-goose.sh status
+
+db-reset-dev:
+	DATABASE_URL="$(DEV_DATABASE_URL)" bash ./scripts/reset-database.sh
+	DATABASE_URL="$(DEV_DATABASE_URL)" bash ./scripts/run-goose.sh up
+
+db-reset-test:
+	DATABASE_URL="$(TEST_DATABASE_URL)" bash ./scripts/reset-database.sh
+	DATABASE_URL="$(TEST_DATABASE_URL)" bash ./scripts/run-goose.sh up
+
+db-verify-fresh:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-goose-fresh-db.sh
+
+db-v1-verify-fresh:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-goose-fresh-db.sh
+
+db-v1-verify-relational:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-relational.sh
+
+db-v1-verify-registry:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-registry.sh
+
+db-v1-verify-rls:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-rls.sh
+
+db-v1-verify-tags:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-tags.sh
+
+db-v1-verify-rollback:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-rollback.sh
+
+db-v1-verify-reset:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-reset.sh
+
+db-v1-verify-tag-performance:
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(GOOSE_MIGRATIONS_DIR)" bash ./scripts/verify-v1-tag-performance.sh
+
+db-v1-verify-all: db-v1-verify-fresh db-v1-verify-relational db-v1-verify-registry db-v1-verify-rls db-v1-verify-tags db-v1-verify-rollback db-v1-verify-reset db-v1-verify-tag-performance
