@@ -17,10 +17,7 @@ const telemetry = initTelemetry({
 
 import './env.ts';
 // Import all worker entry points
-import './plaid-worker';
-import './transaction-import-worker';
 import './smart-input/smart-input.worker.ts';
-import './place-photo-worker';
 
 // Production-ready process management
 let isShuttingDown = false;
