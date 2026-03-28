@@ -5,7 +5,7 @@ import { Button } from './button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 
 const meta: Meta = {
-  title: 'Data Display/Card',
+  title: 'Patterns/DataDisplay/Card',
   tags: ['autodocs'],
 };
 export default meta;

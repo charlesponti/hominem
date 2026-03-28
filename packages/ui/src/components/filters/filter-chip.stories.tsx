@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FilterChip } from './filter-chip';
 
 const meta: Meta<typeof FilterChip> = {
-  title: 'Filters/FilterChip',
+  title: 'Patterns/Filters/FilterChip',
   component: FilterChip,
   tags: ['autodocs'],
 };

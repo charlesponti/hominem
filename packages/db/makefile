@@ -1,16 +1,37 @@
-include .env
-export
+SHELL := /bin/bash
+
+.PHONY: help build typecheck codegen goose-up goose-down goose-status goose-v1-up goose-v1-down goose-v1-status
+
+help:
+	@echo ""
+	@echo "Database:"
+	@echo "  make build | typecheck | codegen"
+	@echo "  make goose-up | goose-down | goose-status"
+	@echo "  make goose-v1-up | goose-v1-down | goose-v1-status"
+
+build:
+	bun run build
+
+typecheck:
+	bun run typecheck
+
+codegen:
+	bun run kysely-codegen
 
 goose-up:
-	@echo "Migrating application database..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" up
-	@echo "Migrating test database..."
-	goose -dir ./migrations postgres "$(TEST_DATABASE_URL)" up
+	bun run goose:up
 
 goose-down:
-	@echo "Rolling back latest migration on application database..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" down
+	bun run goose:down
 
 goose-status:
-	@echo "Application database migration status..."
-	goose -dir ./migrations postgres "$(DATABASE_URL)" status
+	bun run goose:status
+
+goose-v1-up:
+	bun run goose:v1:up
+
+goose-v1-down:
+	bun run goose:v1:down
+
+goose-v1-status:
+	bun run goose:v1:status

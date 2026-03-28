@@ -4,7 +4,7 @@ import { ChatMessages } from './chat-messages';
 import { mockChatMessages } from './chat-story-data';
 
 const meta = {
-  title: 'Chat/ChatMessages',
+  title: 'Patterns/Chat/ChatMessages',
   component: ChatMessages,
   tags: ['autodocs'],
   parameters: {

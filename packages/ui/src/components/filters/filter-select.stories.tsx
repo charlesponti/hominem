@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FilterSelect } from './filter-select';
 
 const meta: Meta<typeof FilterSelect> = {
-  title: 'Filters/FilterSelect',
+  title: 'Patterns/Filters/FilterSelect',
   component: FilterSelect,
   tags: ['autodocs'],
 };

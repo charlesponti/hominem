@@ -9,7 +9,7 @@ import {
 } from './transcription';
 
 const meta: Meta<typeof Transcription> = {
-  title: 'AI Elements/Transcription',
+  title: 'Patterns/AI/Transcription',
   component: Transcription,
   tags: ['autodocs'],
 };

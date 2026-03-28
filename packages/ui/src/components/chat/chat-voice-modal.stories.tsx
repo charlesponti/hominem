@@ -33,7 +33,7 @@ const createMockTranscribeMutation = (): MockTranscribeMutation =>
   }) as unknown as MockTranscribeMutation;
 
 const meta = {
-  title: 'Chat/ChatVoiceModal',
+  title: 'Patterns/Chat/ChatVoiceModal',
   component: ChatVoiceModal,
   tags: ['autodocs'],
   parameters: {

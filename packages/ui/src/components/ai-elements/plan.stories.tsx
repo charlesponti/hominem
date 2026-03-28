@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Plan, PlanContent, PlanFooter, PlanHeader, PlanStep } from './plan';
 
 const meta: Meta<typeof Plan> = {
-  title: 'AI Elements/Plan',
+  title: 'Patterns/AI/Plan',
   component: Plan,
   tags: ['autodocs'],
 };

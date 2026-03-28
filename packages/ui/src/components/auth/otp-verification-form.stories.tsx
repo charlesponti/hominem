@@ -6,7 +6,7 @@ import { PasskeyButton } from './passkey-button';
 // This story demonstrates the visual composition of its sub-components.
 
 const meta = {
-  title: 'Auth/OtpVerificationForm',
+  title: 'Legacy/Auth/OtpVerificationForm',
   tags: ['autodocs'],
 };
 export default meta;

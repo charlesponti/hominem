@@ -6,7 +6,7 @@ import { Button } from './button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 
 const meta: Meta<typeof HoverCard> = {
-  title: 'Overlays/HoverCard',
+  title: 'Patterns/Overlay/HoverCard',
   component: HoverCard,
   tags: ['autodocs'],
 };

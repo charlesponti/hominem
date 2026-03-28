@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Task, TaskList, TaskStatusBadge } from './task';
 
 const meta: Meta<typeof Task> = {
-  title: 'AI Elements/Task',
+  title: 'Patterns/AI/Task',
   component: Task,
   tags: ['autodocs'],
 };

@@ -2,7 +2,7 @@
 // This story shows the visual composition without the router dependency.
 
 const meta = {
-  title: 'Auth/EmailSignIn',
+  title: 'Legacy/Auth/EmailSignIn',
   tags: ['autodocs'],
 };
 export default meta;

@@ -34,7 +34,7 @@ const invoices = [
 ];
 
 const meta: Meta<typeof Table> = {
-  title: 'Data Display/Table',
+  title: 'Patterns/DataDisplay/Table',
   component: Table,
   tags: ['autodocs'],
 };

@@ -8,11 +8,12 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
 const currentDir = dirname(fileURLToPath(import.meta.url))
+const uiTsconfigPath = join(currentDir, 'tsconfig.json')
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    tsconfigPaths(),
+    tsconfigPaths({ projects: [uiTsconfigPath] }),
     storybookTest({
       configDir: join(currentDir, '.storybook'),
       storybookUrl: 'http://localhost:6006',
@@ -22,9 +23,13 @@ export default defineConfig({
     name: 'storybook',
     browser: {
       enabled: true,
-      name: 'chromium',
-      provider: playwright,
+      provider: playwright(),
       headless: true,
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
     },
   },
 })

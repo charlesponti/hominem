@@ -1,24 +1,35 @@
-**Ticket:** [HUMAN-...](https://linear.app/ponti/issue/HUMAN-...)
+## Summary
 
-## TODOs
+-
 
-### VOID Checklist (required)
-- [ ] Uses `package/styles` tokens/utilities only (no raw hex/rgba, shadows, gradients)
-- [ ] Animation classes come from `package/styles` (no app-level `@keyframes`/`transition`)
-- [ ] Monospace stack + crosshair cursor retained
-- [ ] Spacing honors Ma (negative space) and borders at 10% opacity; no rounded corners
-- [ ] ASCII texture opacity ≤ 0.20 where used
-- [ ] Cold, command-like copy; WCAG AA contrast; keyboard focus visible; respects `prefers-reduced-motion`
+## Linear
 
-### Before Merging
-<!---
-E.g:
-- [x] Set SOME_KEY in beta and production
-- [ ] Create the DB for XYZ service
--->
+- Ticket:
+- Parent / project:
 
-### After Merging
-<!---
-E.g:
-- [ ] Remove migration job
--->
+## Stack Context
+
+- Base branch:
+- Part of stack:
+
+## Validation
+
+- [ ] `bun install`
+- [ ] `bun run lint`
+- [ ] `bun run test`
+- [ ] Targeted checks:
+
+## Risks
+
+- 
+
+## Follow-Ups
+
+- 
+
+## Merge Checklist
+
+- [ ] Scope is focused and reviewable
+- [ ] No temporary debug code or dead code left behind
+- [ ] Docs and scripts reflect the shipped behavior
+- [ ] New config or environment requirements are called out

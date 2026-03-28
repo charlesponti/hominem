@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
 
 const meta = {
-  title: 'Chat/ChatThinkingIndicator',
+  title: 'Patterns/Chat/ChatThinkingIndicator',
   component: ChatThinkingIndicator,
   tags: ['autodocs'],
 } satisfies Meta<typeof ChatThinkingIndicator>;

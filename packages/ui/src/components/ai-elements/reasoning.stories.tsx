@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Reasoning, ReasoningContent } from './reasoning';
 
 const meta: Meta<typeof Reasoning> = {
-  title: 'AI Elements/Reasoning',
+  title: 'Patterns/AI/Reasoning',
   component: Reasoning,
   tags: ['autodocs'],
 };

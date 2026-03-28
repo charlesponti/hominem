@@ -1,15 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BookOpen, Brain, Search, Zap } from 'lucide-react';
+import { MemoryRouter } from 'react-router';
 
 import { LandingPage } from './landing-page';
 
 const meta: Meta<typeof LandingPage> = {
-  title: 'Layout/LandingPage',
+  title: 'Patterns/Marketing/LandingPage',
   component: LandingPage,
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
   },
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    ),
+  ],
 };
 export default meta;
 type Story = StoryObj<typeof LandingPage>;

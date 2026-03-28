@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
 const meta = {
-  title: 'Chat/ChatShimmerMessage',
+  title: 'Patterns/Chat/ChatShimmerMessage',
   component: ChatShimmerMessage,
   tags: ['autodocs'],
 } satisfies Meta<typeof ChatShimmerMessage>;

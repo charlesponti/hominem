@@ -4,7 +4,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { TextArea } from './text-area';
 
 const meta: Meta<typeof TextArea> = {
-  title: 'Fields/TextArea',
+  title: 'Forms/TextAreaField',
   component: TextArea,
   tags: ['autodocs'],
 };

@@ -31,12 +31,12 @@ Run a local environment check:
 
 ### Script standard
 
-Root scripts are intentionally minimal:
+Root scripts are intentionally minimal during the rebuild:
 
 - `bun run dev`
 - `bun run build`
 - `bun run test`
-- `bun run lint` (single quality gate: format, lint, DB/type checks, type quality)
+- `bun run lint` (workspace lint + native typecheck + duplication)
 - `bun run format`
 
 Use filtering for targeted work instead of extra root aliases:
@@ -49,9 +49,20 @@ Use filtering for targeted work instead of extra root aliases:
 
 Workspace scripts should follow `verb[:qualifier]` and keep names aligned with behavior.
 
+### Rebuild command surface
+
+The repo is in a rebuild phase. Use the root `Makefile` only for:
+
+- core orchestration
+- local infra bootstrap
+- current DB verification helpers
+
+Older deploy/mobile/database convenience targets have been removed from the root surface and should be reintroduced only when they match the rebuilt architecture.
+
 ### Canonical Docs
 
 - Product docs: `docs/README.md`
+- Rebuild reset: `docs/rebuild-reset.md`
 - Local setup: `.github/skills/setup-workflow/SKILL.md`
 - Deployment: `.github/skills/deployment-workflow/SKILL.md`
 - Docker: `.github/skills/docker-workflow/SKILL.md`

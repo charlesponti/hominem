@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ConfirmationBanner } from './confirmation';
 
 const meta: Meta<typeof ConfirmationBanner> = {
-  title: 'AI Elements/Confirmation',
+  title: 'Patterns/AI/Confirmation',
   component: ConfirmationBanner,
   tags: ['autodocs'],
 };

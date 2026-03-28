@@ -40,7 +40,7 @@ SyntaxHighlighter.registerLanguage('dockerfile', docker);
 SyntaxHighlighter.registerLanguage('graphql', graphql);
 SyntaxHighlighter.registerLanguage('gql', graphql);
 
-interface CodeBlockProps {
+export interface CodeBlockProps {
   language: string;
   code: string;
   isCopied: boolean;

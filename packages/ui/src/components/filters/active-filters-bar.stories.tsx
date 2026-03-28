@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ActiveFiltersBar } from './active-filters-bar';
 
 const meta: Meta<typeof ActiveFiltersBar> = {
-  title: 'Filters/ActiveFiltersBar',
+  title: 'Patterns/Filters/ActiveFiltersBar',
   component: ActiveFiltersBar,
   tags: ['autodocs'],
 };

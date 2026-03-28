@@ -1,10 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { ComposerShell } from './composer-shell';
 
+const baseArgs = {
+  children: null,
+};
+
 const meta = {
-  title: 'Components/Composer/ComposerShell',
+  title: 'Patterns/Composer/ComposerShell',
   component: ComposerShell,
   tags: ['autodocs'],
+  args: baseArgs,
   parameters: {
     docs: {
       description: {
@@ -19,10 +25,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Default composer shell with sample content
- */
 export const Default: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-32 pt-8">
       <div className="page-width-lg mx-auto px-4">
@@ -59,10 +63,8 @@ export const Default: Story = {
   ),
 };
 
-/**
- * With multiline input
- */
 export const WithMultilineInput: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-40 pt-8">
       <div className="page-width-lg mx-auto px-4">
@@ -85,10 +87,8 @@ export const WithMultilineInput: Story = {
   ),
 };
 
-/**
- * With action buttons and icons
- */
 export const WithToolbar: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-40 pt-8">
       <div className="page-width-lg mx-auto px-4">
@@ -130,10 +130,8 @@ export const WithToolbar: Story = {
   ),
 };
 
-/**
- * Mobile responsive
- */
 export const MobileView: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-40 pt-4">
       <div className="px-2">
@@ -173,10 +171,8 @@ export const MobileView: Story = {
   },
 };
 
-/**
- * With loading state
- */
 export const WithLoadingState: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-32 pt-8">
       <div className="page-width-lg mx-auto px-4">
@@ -202,10 +198,8 @@ export const WithLoadingState: Story = {
   ),
 };
 
-/**
- * Compact variant with minimal content
- */
 export const Compact: Story = {
+  args: baseArgs,
   render: () => (
     <div className="min-h-screen bg-bg-base pb-32 pt-8">
       <div className="page-width-lg mx-auto px-4">

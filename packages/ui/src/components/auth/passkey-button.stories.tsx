@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PasskeyButton } from './passkey-button';
 
 const meta: Meta<typeof PasskeyButton> = {
-  title: 'Auth/PasskeyButton',
+  title: 'Patterns/Auth/PasskeyButton',
   component: PasskeyButton,
   tags: ['autodocs'],
 };

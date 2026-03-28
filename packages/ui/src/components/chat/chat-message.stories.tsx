@@ -9,7 +9,7 @@ import {
 } from './chat-story-data';
 
 const meta: Meta<typeof ChatMessage> = {
-  title: 'Chat/ChatMessage',
+  title: 'Patterns/Chat/ChatMessage',
   component: ChatMessage,
   tags: ['autodocs'],
 };

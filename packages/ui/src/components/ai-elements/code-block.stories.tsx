@@ -1,10 +1,18 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
+
 import CodeBlock from './code-block';
 
+interface CodeBlockStoryProps {
+  language: string;
+  code: string;
+  isCopied: boolean;
+  onCopy: () => void;
+}
+
 const meta = {
-  title: 'Components/AI Elements/CodeBlock',
-  component: CodeBlock,
+  title: 'Patterns/AI/CodeBlock',
+  component: CodeBlockWrapper,
   tags: ['autodocs'],
   parameters: {
     docs: {
@@ -14,6 +22,11 @@ const meta = {
       },
     },
   },
+  args: {
+    isCopied: false,
+    onCopy: () => undefined,
+  },
+  render: (args) => <CodeBlockWrapper {...args} />,
   argTypes: {
     language: {
       control: 'select',
@@ -45,15 +58,12 @@ const meta = {
       description: 'Callback when copy button is clicked',
     },
   },
-} satisfies Meta<typeof CodeBlock>;
+} satisfies Meta<typeof CodeBlockWrapper>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Interactive wrapper for story demos
- */
-function CodeBlockWrapper(props: React.ComponentProps<typeof CodeBlock>) {
+function CodeBlockWrapper(props: CodeBlockStoryProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = () => {
@@ -66,7 +76,6 @@ function CodeBlockWrapper(props: React.ComponentProps<typeof CodeBlock>) {
 }
 
 export const TypeScript: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'typescript',
     code: `interface User {
@@ -83,7 +92,6 @@ async function fetchUser(id: string): Promise<User> {
 };
 
 export const TSX: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'tsx',
     code: `export function Button({ children, onClick }: Props) {
@@ -100,7 +108,6 @@ export const TSX: Story = {
 };
 
 export const Python: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'python',
     code: `def fibonacci(n: int) -> int:
@@ -116,7 +123,6 @@ print(f"Fibonacci(10) = {result}")`,
 };
 
 export const Bash: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'bash',
     code: `# Install dependencies
@@ -134,7 +140,6 @@ npm run test`,
 };
 
 export const JSON: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'json',
     code: `{
@@ -153,7 +158,6 @@ export const JSON: Story = {
 };
 
 export const SQL: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'sql',
     code: `SELECT
@@ -169,7 +173,6 @@ LIMIT 10;`,
 };
 
 export const LongCode: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'typescript',
     code: `// Large component with multiple sections
@@ -250,7 +253,6 @@ export function DataList({
 };
 
 export const Default: Story = {
-  render: (args) => <CodeBlockWrapper {...args} />,
   args: {
     language: 'javascript',
     code: `const greeting = (name) => {

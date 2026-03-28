@@ -10,7 +10,7 @@ import {
 } from './context';
 
 const meta: Meta<typeof Context> = {
-  title: 'AI Elements/Context',
+  title: 'Patterns/AI/Context',
   component: Context,
   tags: ['autodocs'],
 };

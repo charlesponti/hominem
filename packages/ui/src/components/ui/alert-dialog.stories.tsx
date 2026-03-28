@@ -13,7 +13,7 @@ import {
 } from './alert-dialog';
 
 const meta: Meta<typeof AlertDialog> = {
-  title: 'Overlays/AlertDialog',
+  title: 'Patterns/Overlay/AlertDialog',
   component: AlertDialog,
   tags: ['autodocs'],
 };

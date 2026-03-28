@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ProposalCard, ProposalList } from './proposal-card';
 
 const meta: Meta<typeof ProposalCard> = {
-  title: 'AI Elements/ProposalCard',
+  title: 'Patterns/AI/ProposalCard',
   component: ProposalCard,
   tags: ['autodocs'],
 };

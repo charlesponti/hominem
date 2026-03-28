@@ -17,7 +17,7 @@
     "lint": "bunx oxlint ./src ./electron.vite.config.ts ./vite.config.ts",
     "package": "electron-vite build && electron-builder --mac --arm64 --publish=never",
     "package:all": "electron-vite build && electron-builder --mac --win --linux --publish=never",
-    "postinstall": "node ./node_modules/electron/install.js && electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
