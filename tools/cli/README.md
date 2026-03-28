@@ -25,8 +25,3 @@ Automation-first CLI for hominem, replatformed to a typed command graph runtime.
 
 ## Config v2
 - Canonical path: `~/.hominem/config.json`
-
-## Architecture Docs
-- `tools/cli/docs/architecture/command-runtime.md`
-- `tools/cli/docs/architecture/output-contract.md`
-- `tools/cli/docs/architecture/plugin-safety.md`

@@ -52,7 +52,6 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 - `base.yml` defines shared networks, volumes, and build anchors
 - `dev.yml` brings up stateful local dependencies: Redis and PostgreSQL
 - `observability.yml` adds ClickHouse, MongoDB, HyperDX, and the OTEL collector
-- `monitoring.yml` remains available for the legacy Prometheus/Grafana stack
 
 ## App Runtime
 
