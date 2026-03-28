@@ -9,7 +9,7 @@ import {
 } from './carousel';
 
 const meta: Meta<typeof Carousel> = {
-  title: 'Data Display/Carousel',
+  title: 'Patterns/DataDisplay/Carousel',
   component: Carousel,
   tags: ['autodocs'],
 };

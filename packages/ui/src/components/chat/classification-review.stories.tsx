@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ClassificationReview } from './classification-review';
 
 const meta = {
-  title: 'Chat/ClassificationReview',
+  title: 'Patterns/Chat/ClassificationReview',
   component: ClassificationReview,
   tags: ['autodocs'],
 } satisfies Meta<typeof ClassificationReview>;

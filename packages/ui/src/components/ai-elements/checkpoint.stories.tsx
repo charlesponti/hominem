@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Checkpoint, CheckpointList, CheckpointProgress } from './checkpoint';
 
 const meta: Meta<typeof Checkpoint> = {
-  title: 'AI Elements/Checkpoint',
+  title: 'Patterns/AI/Checkpoint',
   component: Checkpoint,
   tags: ['autodocs'],
 };

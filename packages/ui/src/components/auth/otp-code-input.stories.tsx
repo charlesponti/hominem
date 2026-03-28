@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { OtpCodeInput } from './otp-code-input';
 
 const meta: Meta<typeof OtpCodeInput> = {
-  title: 'Auth/OtpCodeInput',
+  title: 'Patterns/Auth/OtpCodeInput',
   component: OtpCodeInput,
   tags: ['autodocs'],
 };

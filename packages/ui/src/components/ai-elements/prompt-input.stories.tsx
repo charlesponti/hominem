@@ -12,7 +12,7 @@ import {
 } from './prompt-input';
 
 const meta: Meta<typeof PromptInput> = {
-  title: 'AI Elements/PromptInput',
+  title: 'Patterns/AI/PromptInput',
   component: PromptInput,
   tags: ['autodocs'],
 };

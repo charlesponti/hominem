@@ -10,7 +10,7 @@ import {
 } from './avatar';
 
 const meta: Meta<typeof Avatar> = {
-  title: 'Data Display/Avatar',
+  title: 'Patterns/DataDisplay/Avatar',
   component: Avatar,
   tags: ['autodocs'],
 };

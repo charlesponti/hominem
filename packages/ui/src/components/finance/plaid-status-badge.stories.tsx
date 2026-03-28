@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PlaidStatusBadge } from './plaid-status-badge';
 
 const meta: Meta<typeof PlaidStatusBadge> = {
-  title: 'Finance/PlaidStatusBadge',
+  title: 'Patterns/Finance/PlaidStatusBadge',
   component: PlaidStatusBadge,
   tags: ['autodocs'],
   args: {

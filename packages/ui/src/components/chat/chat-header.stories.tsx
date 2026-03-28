@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChatHeader } from './chat-header';
 
 const meta = {
-  title: 'Chat/ChatHeader',
+  title: 'Patterns/Chat/ChatHeader',
   component: ChatHeader,
   tags: ['autodocs'],
 } satisfies Meta<typeof ChatHeader>;

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PasskeyEnrollmentBanner } from './passkey-enrollment-banner';
 
 const meta: Meta<typeof PasskeyEnrollmentBanner> = {
-  title: 'Auth/PasskeyEnrollmentBanner',
+  title: 'Patterns/Auth/PasskeyEnrollmentBanner',
   component: PasskeyEnrollmentBanner,
   tags: ['autodocs'],
 };

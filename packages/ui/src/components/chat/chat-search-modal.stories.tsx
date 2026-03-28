@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChatSearchModal } from './chat-search-modal';
 
 const meta = {
-  title: 'Chat/ChatSearchModal',
+  title: 'Patterns/Chat/ChatSearchModal',
   component: ChatSearchModal,
   tags: ['autodocs'],
 } satisfies Meta<typeof ChatSearchModal>;

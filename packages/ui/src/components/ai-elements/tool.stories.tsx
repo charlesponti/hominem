@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Tool, ToolInput, ToolOutput } from './tool';
 
 const meta: Meta<typeof Tool> = {
-  title: 'AI Elements/Tool',
+  title: 'Patterns/AI/Tool',
   component: Tool,
   tags: ['autodocs'],
 };

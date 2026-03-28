@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AuthErrorBanner } from './auth-error-banner';
 
 const meta: Meta<typeof AuthErrorBanner> = {
-  title: 'Auth/AuthErrorBanner',
+  title: 'Patterns/Auth/AuthErrorBanner',
   component: AuthErrorBanner,
   tags: ['autodocs'],
 };

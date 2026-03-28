@@ -4,7 +4,7 @@ import { mockSessionSources } from './chat-story-data';
 import { ContextAnchor } from './context-anchor';
 
 const meta = {
-  title: 'Chat/ContextAnchor',
+  title: 'Patterns/Chat/ContextAnchor',
   component: ContextAnchor,
   tags: ['autodocs'],
 } satisfies Meta<typeof ContextAnchor>;

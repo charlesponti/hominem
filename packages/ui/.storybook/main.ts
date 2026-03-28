@@ -40,10 +40,6 @@ const config: StorybookConfig = {
         return
       }
 
-      if (message.includes('Some chunks are larger than 500 kB after minification')) {
-        return
-      }
-
       loggerWarn(message, options)
     }
 
@@ -55,7 +51,6 @@ const config: StorybookConfig = {
     config.customLogger = logger
     config.build = {
       ...(config.build ?? {}),
-      chunkSizeWarningLimit: 1500,
       rollupOptions: {
         ...(config.build?.rollupOptions ?? {}),
         onwarn(warning, warn) {

@@ -7,7 +7,7 @@ const baseArgs = {
 };
 
 const meta = {
-  title: 'Components/Composer/ComposerShell',
+  title: 'Patterns/Composer/ComposerShell',
   component: ComposerShell,
   tags: ['autodocs'],
   args: baseArgs,

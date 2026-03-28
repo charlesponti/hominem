@@ -89,7 +89,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
-    "test:storybook": "sh -c 'storybook dev -p 6006 --ci >/tmp/hominem-storybook.log 2>&1 & pid=$!; trap \"kill $pid\" EXIT; until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 1; done; vitest run --config vitest.stories.config.mts; status=$?; kill $pid; wait $pid 2>/dev/null; exit $status'",
+    "test:storybook": "sh -c 'storybook dev -p 6006 --ci >/tmp/hominem-storybook.log 2>&1 & pid=$!; cleanup() { if kill -0 \"$pid\" 2>/dev/null; then kill \"$pid\"; wait \"$pid\" 2>/dev/null; fi; }; trap cleanup EXIT; until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 1; done; vitest run --config vitest.stories.config.mts; status=$?; cleanup; exit $status'",
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build"
   },

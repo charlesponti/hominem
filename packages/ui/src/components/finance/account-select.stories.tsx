@@ -10,7 +10,7 @@ const accounts: AccountOption[] = [
 ];
 
 const meta: Meta<typeof AccountSelect> = {
-  title: 'Finance/AccountSelect',
+  title: 'Patterns/Finance/AccountSelect',
   component: AccountSelect,
   tags: ['autodocs'],
   args: {

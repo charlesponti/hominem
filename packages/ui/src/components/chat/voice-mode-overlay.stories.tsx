@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { VoiceModeOverlay } from './voice-mode-overlay';
 
 const meta = {
-  title: 'Chat/VoiceModeOverlay',
+  title: 'Patterns/Chat/VoiceModeOverlay',
   component: VoiceModeOverlay,
   tags: ['autodocs'],
   parameters: {

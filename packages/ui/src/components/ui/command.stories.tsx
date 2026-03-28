@@ -13,7 +13,7 @@ import {
 } from './command';
 
 const meta: Meta<typeof Command> = {
-  title: 'Overlays/Command',
+  title: 'Patterns/Overlay/Command',
   component: Command,
   tags: ['autodocs'],
 };

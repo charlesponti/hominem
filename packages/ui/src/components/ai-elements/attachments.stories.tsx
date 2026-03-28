@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Attachment, AttachmentEmpty, Attachments } from './attachments';
 
 const meta: Meta<typeof Attachments> = {
-  title: 'AI Elements/Attachments',
+  title: 'Patterns/AI/Attachments',
   component: Attachments,
   tags: ['autodocs'],
 };

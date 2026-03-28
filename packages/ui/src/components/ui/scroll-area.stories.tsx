@@ -6,7 +6,7 @@ import { Separator } from './separator';
 const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.${a.length - i}`);
 
 const meta: Meta<typeof ScrollArea> = {
-  title: 'Data Display/ScrollArea',
+  title: 'Patterns/DataDisplay/ScrollArea',
   component: ScrollArea,
   tags: ['autodocs'],
 };
@@ -19,12 +19,12 @@ export const Default: Story = {
       <div className="p-4">
         <h4 className="mb-4 text-sm font-medium leading-none">Tags</h4>
         {tags.map((tag) => (
-          <>
-            <div key={tag} className="text-sm">
+          <div key={tag}>
+            <div className="text-sm">
               {tag}
             </div>
             <Separator className="my-2" />
-          </>
+          </div>
         ))}
       </div>
     </ScrollArea>

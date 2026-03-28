@@ -10,7 +10,7 @@ const tags: TagOption[] = [
 ];
 
 const meta: Meta<typeof TagSelect> = {
-  title: 'Finance/TagSelect',
+  title: 'Patterns/Finance/TagSelect',
   component: TagSelect,
   tags: ['autodocs'],
   args: {

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { InvitesEmptyState } from './invites-empty-state';
 
 const meta: Meta<typeof InvitesEmptyState> = {
-  title: 'Invites/InvitesEmptyState',
+  title: 'Patterns/Invites/InvitesEmptyState',
   component: InvitesEmptyState,
   tags: ['autodocs'],
 };

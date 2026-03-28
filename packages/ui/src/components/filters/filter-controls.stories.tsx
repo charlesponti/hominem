@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FilterControls } from './filter-controls';
 
 const meta: Meta<typeof FilterControls> = {
-  title: 'Filters/FilterControls',
+  title: 'Patterns/Filters/FilterControls',
   component: FilterControls,
   tags: ['autodocs'],
 };

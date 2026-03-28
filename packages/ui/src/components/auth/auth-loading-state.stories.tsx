@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AuthLoadingState } from './auth-loading-state';
 
 const meta: Meta<typeof AuthLoadingState> = {
-  title: 'Auth/AuthLoadingState',
+  title: 'Patterns/Auth/AuthLoadingState',
   component: AuthLoadingState,
   tags: ['autodocs'],
 };

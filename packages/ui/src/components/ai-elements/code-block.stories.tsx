@@ -11,7 +11,7 @@ interface CodeBlockStoryProps {
 }
 
 const meta = {
-  title: 'Components/AI Elements/CodeBlock',
+  title: 'Patterns/AI/CodeBlock',
   component: CodeBlockWrapper,
   tags: ['autodocs'],
   parameters: {

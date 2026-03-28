@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { PaginationControls } from './pagination-controls';
 
 const meta: Meta<typeof PaginationControls> = {
-  title: 'Finance/PaginationControls',
+  title: 'Patterns/Finance/PaginationControls',
   component: PaginationControls,
   tags: ['autodocs'],
   args: {

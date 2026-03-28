@@ -4,7 +4,7 @@ import { Chat } from './chat';
 import { mockChatMessages, mockSessionSources, renderChatIcon } from './chat-story-data';
 
 const meta = {
-  title: 'Chat/Chat',
+  title: 'Patterns/Chat/Chat',
   component: Chat,
   tags: ['autodocs'],
   parameters: {
