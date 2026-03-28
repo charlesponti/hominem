@@ -9,7 +9,7 @@ describe('getTelemetryConfig', () => {
   })
 
   it('merges env resource attributes with explicit attributes', () => {
-    process.env.OTEL_RESOURCE_ATTRIBUTES = 'region=sjc,deployment=fly'
+    process.env.OTEL_RESOURCE_ATTRIBUTES = 'region=sjc,deployment=railway'
 
     expect(
       getTelemetryConfig({
@@ -19,7 +19,7 @@ describe('getTelemetryConfig', () => {
         serviceName: 'hominem-api',
       }).attributes
     ).toEqual({
-      deployment: 'fly',
+      deployment: 'railway',
       region: 'sjc',
       service_tier: 'prod',
     })

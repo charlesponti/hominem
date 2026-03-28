@@ -4,7 +4,7 @@
 services:
   clickhouse:
     build:
-      context: ../../fly/observability/clickhouse
+      context: ../observability/clickhouse
       dockerfile: Dockerfile
     platform: linux/amd64
     container_name: hominem-clickhouse
@@ -25,7 +25,7 @@ services:
 
   mongo:
     build:
-      context: ../../fly/observability/mongo
+      context: ../observability/mongo
       dockerfile: Dockerfile
     platform: linux/amd64
     container_name: hominem-mongo
@@ -38,7 +38,7 @@ services:
 
   hyperdx:
     build:
-      context: ../../fly/observability/hyperdx
+      context: ../observability/hyperdx
       dockerfile: Dockerfile
     platform: linux/amd64
     container_name: hominem-hyperdx
@@ -69,7 +69,7 @@ services:
 
   otel:
     build:
-      context: ../../fly/observability/otel
+      context: ../observability/otel
       dockerfile: Dockerfile
     platform: linux/amd64
     container_name: hominem-otel

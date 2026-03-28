@@ -55,7 +55,7 @@ Workspace scripts should follow `verb[:qualifier]` and keep names aligned with b
 - Local setup: `.github/skills/setup-workflow/SKILL.md`
 - Deployment: `.github/skills/deployment-workflow/SKILL.md`
 - Docker: `.github/skills/docker-workflow/SKILL.md`
-- Fly deployment: `infra/fly/README.md`
+- Docker infrastructure assets: `infra/docker/README.md`
 
 ### MCP server auth (single source of truth)
 

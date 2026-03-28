@@ -37,7 +37,6 @@ ENV NODE_ENV=production \
   TURBO_TELEMETRY_DISABLED=1
 
 COPY --from=pruner /repo/out/full/ ./
-COPY --from=pruner /repo/config ./config
 COPY --from=pruner /repo/tools ./tools
 COPY --from=pruner /repo/tsconfig.json ./tsconfig.json
 COPY --from=pruner /repo/tsconfig.profiles ./tsconfig.profiles

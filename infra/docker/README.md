@@ -33,6 +33,7 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 - **[Canonical Docker Skill](../../.github/skills/docker-workflow/SKILL.md)** - Current Docker source of truth
 - **[Canonical Setup Skill](../../.github/skills/setup-workflow/SKILL.md)** - Repo-level local setup and daily workflow
 - **[Canonical Deployment Skill](../../.github/skills/deployment-workflow/SKILL.md)** - Repo-level production and release guidance
+- **[Container Observability Assets](./observability/README.md)** - Provider-light observability images and configs
 
 ## Services
 
@@ -58,6 +59,11 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 - `web`, `api`, `workers`, and `desktop` are not containerized in local development
 - Run application processes with Turbo from the repo root
 - Use Docker Compose here only for shared infrastructure and observability
+
+## Notes
+
+- Production deployment is being rebuilt from scratch alongside the DB, services, and API layers.
+- Keep Docker assets here limited to reusable infrastructure and image inputs, not final architecture decisions.
 
 ## PostgreSQL 18
 
