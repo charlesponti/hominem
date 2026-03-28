@@ -89,6 +89,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
+    "test:storybook": "sh -c 'storybook dev -p 6006 --ci >/tmp/hominem-storybook.log 2>&1 & pid=$!; trap \"kill $pid\" EXIT; until curl -sf http://127.0.0.1:6006 >/dev/null; do sleep 1; done; vitest run --config vitest.stories.config.mts; status=$?; kill $pid; wait $pid 2>/dev/null; exit $status'",
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build"
   },
@@ -161,8 +162,8 @@
     "@types/react": "19.2.10",
     "@types/react-dom": "19.1.7",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@vitest/browser": "^4.0.0",
-    "@vitest/browser-playwright": "^4.0.0",
+    "@vitest/browser": "4.0.16",
+    "@vitest/browser-playwright": "4.0.16",
     "expo-clipboard": "~55.0.9",
     "expo-file-system": "~55.0.11",
     "expo-haptics": "^55.0.9",
