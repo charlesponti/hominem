@@ -382,7 +382,7 @@ jobs:
           SEND_EMAILS: "false"
 
   analyze:
-    name: Analyze
+    name: analyze
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 60 }}
     permissions:

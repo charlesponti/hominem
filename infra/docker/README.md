@@ -1,4 +1,4 @@
-# Docker Development Environment
+# Docker Local Infrastructure
 
 ## Quick Start
 
@@ -23,16 +23,10 @@ docker compose -f infra/docker/compose/test.yml up -d
 docker compose -f infra/docker/compose/test.yml down -v
 ```
 
-### Production
-```bash
-POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/base.yml -f infra/docker/compose/prod.yml up -d
-```
-
-## Full Documentation
+## Documentation
 
 - **[Canonical Docker Skill](../../.github/skills/docker-workflow/SKILL.md)** - Current Docker source of truth
 - **[Canonical Setup Skill](../../.github/skills/setup-workflow/SKILL.md)** - Repo-level local setup and daily workflow
-- **[Canonical Deployment Skill](../../.github/skills/deployment-workflow/SKILL.md)** - Repo-level production and release guidance
 - **[Container Observability Assets](./observability/README.md)** - Provider-light observability images and configs
 
 ## Services
@@ -61,8 +55,8 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 
 ## Notes
 
-- Production deployment is being rebuilt from scratch alongside the DB, services, and API layers.
-- Keep Docker assets here limited to reusable infrastructure and image inputs, not final architecture decisions.
+- Production deployment is intentionally undefined during the rebuild.
+- Keep Docker assets here limited to reusable local infrastructure and image inputs.
 - Use the root `Makefile` only for local infra orchestration while the new command surface settles.
 
 ## PostgreSQL 18

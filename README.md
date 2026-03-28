@@ -62,6 +62,7 @@ Older deploy/mobile/database convenience targets have been removed from the root
 ### Canonical Docs
 
 - Product docs: `docs/README.md`
+- Rebuild reset: `docs/rebuild-reset.md`
 - Local setup: `.github/skills/setup-workflow/SKILL.md`
 - Deployment: `.github/skills/deployment-workflow/SKILL.md`
 - Docker: `.github/skills/docker-workflow/SKILL.md`

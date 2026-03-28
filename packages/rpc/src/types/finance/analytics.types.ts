@@ -79,7 +79,7 @@ export type SpendingDataPointWithTrend = SpendingDataPointBase & {
 export type SpendingDataPoint = SpendingDataPointBase | SpendingDataPointWithTrend;
 
 // ============================================================================
-// Analytics / Analyze
+// Analytics
 // ============================================================================
 
 export type SpendingTimeSeriesInput = {
