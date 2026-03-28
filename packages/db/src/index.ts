@@ -10,19 +10,20 @@
  * NOT for use in client applications - use @hominem/rpc instead.
  */
 
-export { db, healthCheck, pool, sql } from './db'
-export type { DB as Database } from './types/database'
-export type { Selectable } from 'kysely'
-export type { Json, JsonValue, JsonObject, JsonArray } from './types/database'
+export type { Selectable } from 'kysely';
+export { db, healthCheck, pool, sql } from './db';
+export type { DB as Database, Json, JsonArray, JsonObject, JsonValue } from './types/database';
 
 // Export all database table types for use in services
 export type {
   AppBookmarks as Bookmarks,
-  AppCalendarEvents as Events,
-  AppChatMessages as ChatMessage,
   AppChats as Chat,
+  AppChatMessages as ChatMessage,
+  AppCalendarEvents as Events,
+  AppFiles as Files,
   AppFinanceAccounts as FinanceAccounts,
   AppFinanceTransactions as FinanceTransactions,
+  OpsAuditLogs as Logs,
   AppNotes as Notes,
   AppPeople as Persons,
   AppPlaces as Places,
@@ -31,12 +32,31 @@ export type {
   AppTasks as Tasks,
   AuthIdentities as UserAccounts,
   AuthUsers as Users,
-  OpsAuditLogs as Logs,
-} from './types/database'
+} from './types/database';
 
 // Shared service utilities (used by RPC handlers)
-export { brandId, unbrandId } from './services/_shared/ids'
-export type { TaskId, TagId, CalendarEventId, PersonId, BookmarkId, PossessionId, FinanceCategoryId, FinanceAccountId, FinanceTransactionId, UserId } from './services/_shared/ids'
+export { brandId, unbrandId } from './services/_shared/ids';
+export type {
+  BookmarkId,
+  CalendarEventId,
+  FinanceAccountId,
+  FinanceCategoryId,
+  FinanceTransactionId,
+  PersonId,
+  PossessionId,
+  TagId,
+  TaskId,
+  UserId,
+} from './services/_shared/ids';
 
-export { NotFoundError, ConflictError, ValidationError, ForbiddenError, InternalError, isDbError, isServiceError, getErrorResponse } from './services/_shared/errors'
-export type { DbError } from './services/_shared/errors'
+export {
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  ValidationError,
+  getErrorResponse,
+  isDbError,
+  isServiceError,
+} from './services/_shared/errors';
+export type { DbError } from './services/_shared/errors';

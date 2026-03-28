@@ -12,7 +12,7 @@ import type {
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { NotFoundError } from '../errors';
+import { notFound } from '../errors';
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 import { transformListToApiFormat } from '../utils/lists-transforms';
 
@@ -36,7 +36,7 @@ export const listQueryRoutes = new Hono<AppContext>()
     const list = await getListById(input.id, userId);
 
     if (!list) {
-      throw new NotFoundError('ListOutput not found');
+      throw { ...notFound('List'), message: 'ListOutput not found' };
     }
 
     return c.json<ListGetByIdOutput>(transformListToApiFormat(list), 200);

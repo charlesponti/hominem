@@ -192,7 +192,7 @@ export const MobileComposer = () => {
     const uploadedAssets = await uploadAssets(
       result.assets.map((asset) => ({
         assetId: asset.assetId ?? asset.uri,
-        fileName: asset.fileName ?? null,
+        fileName: asset.fileName ?? undefined,
         mimeType: asset.mimeType ?? null,
         type: asset.type ?? null,
         uri: asset.uri,
@@ -242,7 +242,7 @@ export const MobileComposer = () => {
       const uploadedAssets = await uploadAssets([
         {
           assetId: photo.uri,
-          fileName: photo.fileName ?? null,
+          fileName: photo.fileName ?? undefined,
           mimeType: 'image/jpeg',
           type: 'image',
           uri: photo.uri,

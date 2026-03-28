@@ -1,48 +1,26 @@
-import {
-  createHealthRecord,
-  deleteHealthRecord,
-  getHealthRecord,
-  listHealthRecords,
-  updateHealthRecord,
-  type HealthRecordRow,
-} from '@hominem/health-services';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { NotFoundError, InternalError } from '../errors';
+import { notFound, unavailable } from '../errors';
 import type { AppEnv } from '../server';
-
-function serializeHealthRecord(record: HealthRecordRow) {
-  return {
-    ...record,
-    recorded_at:
-      record.recorded_at instanceof Date
-        ? record.recorded_at.toISOString()
-        : new Date().toISOString(),
-    created_at:
-      record.created_at instanceof Date
-        ? record.created_at.toISOString()
-        : new Date().toISOString(),
-  };
-}
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),
   startDate: z
     .string()
-    .transform((str) => new Date(str))
+    .transform((value) => new Date(value))
     .optional(),
   endDate: z
     .string()
-    .transform((str) => new Date(str))
+    .transform((value) => new Date(value))
     .optional(),
   activityType: z.string().optional(),
   detailed: z
     .string()
     .optional()
-    .transform((val) => val === 'true'),
+    .transform((value) => value === 'true'),
 });
 
 const healthDataSchema = z.object({
@@ -64,110 +42,57 @@ const updateHealthDataSchema = z.object({
 
 export const healthRoutes = new Hono<AppEnv>();
 
-// Get health data with optional filters
 healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
-  try {
-    const query = c.req.valid('query');
-    const results = await listHealthRecords({
-      ...(query.userId !== undefined && { userId: query.userId }),
-      ...(query.startDate !== undefined && { startDate: query.startDate }),
-      ...(query.endDate !== undefined && { endDate: query.endDate }),
-      ...(query.activityType !== undefined && { activityType: query.activityType }),
-    });
+  const query = c.req.valid('query');
 
-    const sorted = results.sort((a, b) => {
-      const aTime = new Date(a.recorded_at).getTime();
-      const bTime = new Date(b.recorded_at).getTime();
-      return bTime - aTime;
-    });
-    return c.json(sorted.map(serializeHealthRecord));
-  } catch (err) {
-    logger.error('Error fetching health data', { error: err });
-    throw new InternalError('Failed to fetch health data');
-  }
+  logger.warn('Health record listing is unavailable during the schema redesign', {
+    activityType: query.activityType,
+    endDate: query.endDate?.toISOString(),
+    startDate: query.startDate?.toISOString(),
+    userId: query.userId,
+  });
+
+  return c.json([]);
 });
 
-// Get health data by ID
 healthRoutes.get('/:id', async (c) => {
-  try {
-    const id = c.req.param('id');
+  const id = c.req.param('id');
 
-    const result = await getHealthRecord(id);
+  logger.warn('Health record lookup is unavailable during the schema redesign', { id });
 
-    if (!result) {
-      throw new NotFoundError('Health record not found');
-    }
-
-    return c.json(serializeHealthRecord(result));
-  } catch (err) {
-    logger.error('Error fetching health record', { error: err });
-    throw new InternalError('Failed to fetch health record');
-  }
+  throw notFound('Health record', id);
 });
 
-// Add health data
 healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
-  try {
-    const validated = c.req.valid('json');
+  const input = c.req.valid('json');
 
-    const result = await createHealthRecord({
-      user_id: validated.userId,
-      record_type: validated.activityType,
-      recorded_at: new Date(validated.date),
-      value: String(validated.duration),
-      unit: 'minutes',
-      source: null,
-      metadata: validated.notes ? { notes: validated.notes } : null,
-    });
-    if (!result) {
-      throw new InternalError('Failed to create health record');
-    }
-    return c.json(serializeHealthRecord(result), 201);
-  } catch (err) {
-    logger.error('Error creating health record', { error: err });
-    throw new InternalError('Failed to create health record');
-  }
+  logger.warn('Health record creation is unavailable during the schema redesign', {
+    activityType: input.activityType,
+    userId: input.userId,
+  });
+
+  throw unavailable('Health records are temporarily unavailable', 'health');
 });
 
-// Update health data
 healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) => {
-  try {
-    const id = c.req.param('id');
+  const id = c.req.param('id');
+  const input = c.req.valid('json');
 
-    const validated = c.req.valid('json');
+  logger.warn('Health record updates are unavailable during the schema redesign', {
+    hasActivityType: input.activityType !== undefined,
+    hasDate: input.date !== undefined,
+    hasDuration: input.duration !== undefined,
+    hasNotes: input.notes !== undefined,
+    id,
+  });
 
-    const updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>> = {};
-    if (validated.date !== undefined) updates.recorded_at = new Date(validated.date);
-    if (validated.activityType !== undefined) updates.record_type = validated.activityType;
-    if (validated.duration !== undefined) updates.value = String(validated.duration);
-    if (validated.notes !== undefined) updates.metadata = { notes: validated.notes };
-
-    const result = await updateHealthRecord(id, updates);
-
-    if (!result) {
-      throw new NotFoundError('Health record not found');
-    }
-
-    return c.json(serializeHealthRecord(result));
-  } catch (err) {
-    logger.error('Error updating health record', { error: err });
-    throw new InternalError('Failed to update health record');
-  }
+  throw unavailable('Health records are temporarily unavailable', 'health');
 });
 
-// Delete health data
 healthRoutes.delete('/:id', async (c) => {
-  try {
-    const id = c.req.param('id');
+  const id = c.req.param('id');
 
-    const result = await deleteHealthRecord(id);
-    if (!result) {
-      throw new NotFoundError('Health record not found');
-    }
+  logger.warn('Health record deletion is unavailable during the schema redesign', { id });
 
-    return c.json({ deleted: true });
-  } catch (err) {
-    logger.error('Error deleting health record', { error: err });
-    throw new InternalError('Failed to delete health record');
-  }
+  throw unavailable('Health records are temporarily unavailable', 'health');
 });

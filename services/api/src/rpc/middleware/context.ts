@@ -28,7 +28,7 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
         c.set('user', {
           id: localUser.id,
           email: localUser.email,
-          name: localUser.name ?? undefined,
+          name: localUser.display_name ?? undefined,
           image: localUser.avatar_url ?? undefined,
           isAdmin: false,
           createdAt: localUser.created_at ?? new Date().toISOString(),

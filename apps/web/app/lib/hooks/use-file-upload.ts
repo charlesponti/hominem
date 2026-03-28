@@ -34,6 +34,47 @@ interface UseFileUploadReturn {
   clearAll: () => void;
 }
 
+function toUploadedFile(file: {
+  id: string;
+  originalName: string;
+  type: UploadedFile['type'];
+  mimetype: string;
+  size: number;
+  status: UploadedFile['status'];
+  url?: string | undefined;
+  uploadedAt: string;
+  content?: string | undefined;
+  textContent?: string | undefined;
+  thumbnail?: string | undefined;
+  vectorIds?: string[] | undefined;
+}): UploadedFile {
+  const uploadedFile: UploadedFile = {
+    id: file.id,
+    originalName: file.originalName,
+    type: file.type,
+    mimetype: file.mimetype,
+    size: file.size,
+    status: file.status,
+    url: file.url ?? '',
+    uploadedAt: new Date(file.uploadedAt),
+  };
+
+  if (file.content !== undefined) {
+    uploadedFile.content = file.content;
+  }
+  if (file.textContent !== undefined) {
+    uploadedFile.textContent = file.textContent;
+  }
+  if (file.thumbnail !== undefined) {
+    uploadedFile.thumbnail = file.thumbnail;
+  }
+  if (file.vectorIds !== undefined) {
+    uploadedFile.vectorIds = file.vectorIds;
+  }
+
+  return uploadedFile;
+}
+
 // Lazy load Uppy modules to avoid bundling on initial page load
 async function loadUppyModules() {
   const [{ default: Uppy }, { default: AwsS3 }] = await Promise.all([
@@ -156,10 +197,7 @@ export function useFileUpload(): UseFileUploadReturn {
             mimetype: file.meta.mimetype || file.type || 'application/octet-stream',
             size: file.meta.size || file.size || 0,
           })
-          .then((result) => ({
-            ...result.file,
-            uploadedAt: new Date(result.file.uploadedAt),
-          }));
+          .then((result) => toUploadedFile(result.file));
 
         completionPromises.set(file.id, completionPromise);
       };

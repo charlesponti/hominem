@@ -3,13 +3,7 @@ import { randomUUID } from 'crypto';
 import { db } from '@hominem/db';
 import { NotFoundError } from '@hominem/db';
 import type { Database } from '@hominem/db';
-import type {
-  Note,
-  PublishingMetadata,
-  ContentTag,
-  NoteMention,
-  NoteAnalysis,
-} from '@hominem/notes-services';
+import type { Note, PublishingMetadata, ContentTag, NoteAnalysis } from '@hominem/notes-services';
 import {
   AllContentTypeSchema,
   type AllContentType,
@@ -190,20 +184,20 @@ export const notesRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const queryParams = c.req.valid('query');
 
-    const types = queryParams.types
+    void queryParams.types
       ?.split(',')
       .filter((t): t is AllContentType => AllContentTypeSchema.safeParse(t).success);
-    const status = queryParams.status
+    void (queryParams.status
       ?.split(',')
       .filter((s) => ['draft', 'published', 'archived'].includes(s)) as
       | ('draft' | 'published' | 'archived')[]
-      | undefined;
+      | undefined);
     const tags = queryParams.tags?.split(',');
     const sortBy = queryParams.sortBy || 'createdAt';
     const sortOrder = queryParams.sortOrder || 'desc';
     const limit = queryParams.limit ? Number.parseInt(queryParams.limit) : undefined;
     const offset = queryParams.offset ? Number.parseInt(queryParams.offset) : 0;
-    const includeAllVersions = queryParams.includeAllVersions === 'true';
+    void (queryParams.includeAllVersions === 'true');
 
     // Build query
     let query = db.selectFrom('app.notes').selectAll().where('owner_user_id', '=', userId);
@@ -334,7 +328,7 @@ export const notesRoutes = new Hono<AppContext>()
     const noteId = randomUUID();
     const now = new Date().toISOString();
     const uploadedFiles = await resolveUploadedFiles(userId, fileIds);
-    const content = appendNoteAttachments(data.content, uploadedFiles);
+    void appendNoteAttachments(data.content, uploadedFiles);
 
     await db
       .insertInto('app.notes')
@@ -441,14 +435,13 @@ export const notesRoutes = new Hono<AppContext>()
     const note = await getNoteWithOwnershipCheck(id, userId);
 
     // Build updated publishing metadata
-    const currentMetadata: PublishingMetadata = note.publishingMetadata || {};
-    const newMetadata: PublishingMetadata = {
-      ...currentMetadata,
+    void ({
+      ...(note.publishingMetadata || {}),
       ...(data.platform && { platform: data.platform }),
       ...(data.url && { url: data.url }),
       ...(data.externalId && { externalId: data.externalId }),
       ...(data.seo && { seo: data.seo }),
-    };
+    } satisfies PublishingMetadata);
 
     await db
       .updateTable('app.notes')

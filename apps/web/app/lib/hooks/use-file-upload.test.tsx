@@ -16,8 +16,8 @@ interface MockUploadFile {
 }
 
 const mocks = vi.hoisted(() => {
-  const prepareUpload = vi.fn();
-  const completeUpload = vi.fn();
+  const getUploadUrl = vi.fn();
+  const register = vi.fn();
 
   class MockUppy {
     private listeners = new Map<
@@ -135,8 +135,8 @@ const mocks = vi.hoisted(() => {
   }
 
   return {
-    prepareUpload,
-    completeUpload,
+    getUploadUrl,
+    register,
     MockUppy,
   };
 });
@@ -144,8 +144,8 @@ const mocks = vi.hoisted(() => {
 vi.mock('@hominem/rpc/react', () => ({
   useApiClient: () => ({
     files: {
-      prepareUpload: mocks.prepareUpload,
-      completeUpload: mocks.completeUpload,
+      getUploadUrl: mocks.getUploadUrl,
+      register: mocks.register,
     },
   }),
 }));
@@ -161,36 +161,32 @@ vi.mock('@uppy/core', () => ({
 describe('useFileUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true })));
   });
 
   it('uploads directly through prepared R2 targets and stores completed files', async () => {
-    mocks.prepareUpload.mockResolvedValue({
+    mocks.getUploadUrl.mockResolvedValue({
       fileId: 'prepared-file-id',
       key: 'users/user-1/chats/prepared-file-id-brief.pdf',
-      originalName: 'brief.pdf',
-      mimetype: 'application/pdf',
-      size: 5,
       uploadUrl: 'https://r2.example/upload',
       headers: { 'content-type': 'application/pdf' },
-      url: 'https://cdn.example/brief.pdf',
-      uploadedAt: '2026-03-23T12:00:00.000Z',
       expiresAt: '2026-03-23T12:15:00.000Z',
     });
 
-    mocks.completeUpload.mockResolvedValue({
-      success: true,
+    mocks.register.mockResolvedValue({
+      queued: true,
       file: {
         id: 'prepared-file-id',
         originalName: 'brief.pdf',
         type: 'document',
         mimetype: 'application/pdf',
         size: 5,
+        status: 'ready',
         content: 'Summary',
         url: 'https://cdn.example/brief.pdf',
         uploadedAt: '2026-03-23T12:00:00.000Z',
         vectorIds: [],
       },
-      message: 'Upload completed successfully',
     });
 
     const { result } = renderHook(() => useFileUpload());
@@ -202,13 +198,12 @@ describe('useFileUpload', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.prepareUpload).toHaveBeenCalledWith({
+      expect(mocks.getUploadUrl).toHaveBeenCalledWith({
         originalName: 'brief.pdf',
         mimetype: 'application/pdf',
         size: 5,
       });
-      expect(mocks.completeUpload).toHaveBeenCalledWith({
-        fileId: 'prepared-file-id',
+      expect(mocks.register).toHaveBeenCalledWith({
         key: 'users/user-1/chats/prepared-file-id-brief.pdf',
         originalName: 'brief.pdf',
         mimetype: 'application/pdf',

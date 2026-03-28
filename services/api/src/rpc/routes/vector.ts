@@ -3,7 +3,7 @@ import { fileStorageService } from '@hominem/utils/storage';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { ValidationError, InternalError } from '../errors';
+import { internal, isServiceError, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 interface VectorResult {
@@ -90,7 +90,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+        throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { results } = await VectorService.query({
@@ -101,9 +101,13 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.searchVectors] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to search vector store: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -120,7 +124,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+        throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { results } = await VectorService.searchDocumentsByUser(
@@ -132,9 +136,13 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.searchUserVectors] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to search user vectors: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -150,7 +158,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+        throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const vectors = await VectorService.getUserDocuments(
@@ -161,9 +169,13 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ vectors, count: vectors.length });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.getUserVectors] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to get user vectors: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -178,9 +190,13 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ success: result.success, message: 'Vector documents deleted successfully' });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.deleteUserVectors] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to delete user vectors: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -197,7 +213,7 @@ export const vectorRoutes = new Hono<AppContext>()
       const parsed = ingestTextSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+        throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const result = await VectorService.ingestMarkdown(
@@ -212,9 +228,13 @@ export const vectorRoutes = new Hono<AppContext>()
         message: `${result.chunksProcessed} text chunks processed and embedded`,
       });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.ingestText] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to ingest text: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -231,9 +251,13 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ files, count: files.length });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.getUserFiles] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to get user files: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   })
@@ -245,7 +269,7 @@ export const vectorRoutes = new Hono<AppContext>()
       const fileId = c.req.param('fileId');
 
       if (!fileId) {
-        throw new ValidationError('File ID is required');
+        throw validation('File ID is required');
       }
 
       const deleted = await fileStorageService.deleteFile(fileId, userId);
@@ -255,9 +279,13 @@ export const vectorRoutes = new Hono<AppContext>()
         message: deleted ? 'File deleted successfully' : 'File not found',
       });
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[vector.deleteUserFile] error:', { error: err });
-      throw new InternalError(
+      throw internal(
         `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,
+        err,
       );
     }
   });

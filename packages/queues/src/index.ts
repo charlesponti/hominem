@@ -1,5 +1,5 @@
-import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { redis } from '@hominem/services/redis';
+import { QUEUE_NAMES } from '@hominem/utils/consts';
 import type { Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
 
@@ -16,5 +16,9 @@ export const importTransactionsQueue: Queue = new BullQueue(QUEUE_NAMES.IMPORT_T
 });
 
 export const placePhotoEnrichQueue: Queue = new BullQueue(QUEUE_NAMES.PLACE_PHOTO_ENRICH, {
+  connection: redis,
+});
+
+export const fileProcessingQueue: Queue = new BullQueue(QUEUE_NAMES.FILE_PROCESSING, {
   connection: redis,
 });

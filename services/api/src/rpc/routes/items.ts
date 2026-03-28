@@ -13,7 +13,7 @@ import type {
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { NotFoundError } from '../errors';
+import { notFound } from '../errors';
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -71,7 +71,7 @@ export const itemsRoutes = new Hono<AppContext>()
     });
 
     if (!removed) {
-      throw new NotFoundError('ItemOutput not found in this list');
+      throw { ...notFound('List item'), message: 'ItemOutput not found in this list' };
     }
 
     return c.json<ItemsRemoveFromListOutput>({ success: true }, 200);

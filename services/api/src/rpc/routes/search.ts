@@ -2,7 +2,7 @@ import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { ValidationError, InternalError } from '../errors';
+import { internal, isServiceError, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 export interface SearchResult {
@@ -125,13 +125,13 @@ export const searchRoutes = new Hono<AppContext>()
       const parsed = searchSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+        throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { query, maxResults } = parsed.data;
 
       if (!query || typeof query !== 'string') {
-        throw new ValidationError('Search query is required');
+        throw validation('Search query is required');
       }
 
       const searchResults = await performWebSearch(query, maxResults);
@@ -143,7 +143,10 @@ export const searchRoutes = new Hono<AppContext>()
         summary: generateSearchSummary(searchResults),
       } as SearchResponse);
     } catch (err) {
+      if (isServiceError(err)) {
+        throw err;
+      }
       logger.error('[search] error', { error: err });
-      throw new InternalError(err instanceof Error ? err.message : 'Search failed');
+      throw internal(err instanceof Error ? err.message : 'Search failed', err);
     }
   });

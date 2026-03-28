@@ -1,7 +1,12 @@
+import type { Files, Selectable } from '@hominem/db';
+import { db } from '@hominem/db';
+import { fileProcessingQueue } from '@hominem/queues';
 import type {
   FileAsset,
   FileDeleteOutput,
   FileListOutput,
+  FileStatus,
+  FileType,
   FileRegisterInput,
   FileRegisterOutput,
   FileReprocessOutput,
@@ -9,30 +14,51 @@ import type {
   FileUploadUrlOutput,
   FileUrlOutput,
 } from '@hominem/rpc/domains/files';
+import { FileStatusSchema, FileTypeSchema } from '@hominem/rpc/domains/files';
 import { detectFileType } from '@hominem/utils/mime';
 import { fileStorageService } from '@hominem/utils/storage';
 
-import type { GetFileResponse } from './schema';
+type FileRow = Selectable<Files>;
+
+function toArrayBuffer(bytes: Buffer): ArrayBuffer {
+  return Uint8Array.from(bytes).buffer;
+}
+
+function toFileType(value: string): FileType {
+  const parsed = FileTypeSchema.safeParse(value);
+  return parsed.success ? parsed.data : 'unknown';
+}
+
+function toFileStatus(value: string): FileStatus {
+  const parsed = FileStatusSchema.safeParse(value);
+  return parsed.success ? parsed.data : 'pending';
+}
+
+function toStringArray(value: FileRow['vector_ids']): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const items = value.filter((item): item is string => typeof item === 'string');
+  return items.length > 0 ? items : undefined;
+}
+
+function toMetadata(value: FileRow['metadata']): Record<string, unknown> | undefined {
+  if (!value || Array.isArray(value) || typeof value !== 'object') {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
+}
 
 // =============================================================================
 // FilesService - Business Logic Layer
 //
 // Separates concerns:
 //   Storage: R2 operations via fileStorageService
-//   Registry: user-scoped file metadata (in-memory for now; DB later)
-//   Processing: async pipeline triggered after upload registers (TODO)
+//   Registry: user-scoped file metadata in app.files DB table
+//   Processing: async pipeline triggered after upload registers
 // =============================================================================
-
-// In-memory registry: userId → fileId → FileAsset
-// TODO: replace with DB-backed registry when schema is ready
-const fileRegistry = new Map<string, Map<string, FileAsset>>();
-
-function getUserRegistry(userId: string): Map<string, FileAsset> {
-  if (!fileRegistry.has(userId)) {
-    fileRegistry.set(userId, new Map());
-  }
-  return fileRegistry.get(userId)!;
-}
 
 export class FilesService {
   // ---------------------------------------------------------------------------
@@ -43,27 +69,33 @@ export class FilesService {
    * GET /api/files — list all user files (metadata only, no content)
    */
   async listFiles(userId: string): Promise<FileListOutput> {
-    const userFiles = getUserRegistry(userId);
-    const files = Array.from(userFiles.values()).map((f) => ({
-      id: f.id,
-      originalName: f.originalName,
-      type: f.type,
-      mimetype: f.mimetype,
-      size: f.size,
-      status: f.status,
-      url: f.url,
-      thumbnail: f.thumbnail,
-      uploadedAt: f.uploadedAt,
-    }));
-    return { files, count: files.length };
+    const files = await db
+      .selectFrom('app.files')
+      .where('user_id', '=', userId)
+      .orderBy('uploaded_at', 'desc')
+      .selectAll()
+      .execute();
+
+    return {
+      files: files.map((f) => this.#toFileAsset(f)),
+      count: files.length,
+    };
   }
 
   /**
    * GET /api/files/:fileId — get file binary data
    */
-  async getFile(fileId: string, userId: string): Promise<GetFileResponse> {
-    const userFiles = getUserRegistry(userId);
-    const file = userFiles.get(fileId);
+  async getFile(
+    fileId: string,
+    userId: string,
+  ): Promise<{ data: ArrayBuffer; contentType: string }> {
+    const file = await db
+      .selectFrom('app.files')
+      .where('id', '=', fileId)
+      .where('user_id', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+
     if (!file) {
       throw new Error('File not found');
     }
@@ -74,9 +106,8 @@ export class FilesService {
     }
 
     return {
-      data: fileData.buffer as ArrayBuffer,
+      data: toArrayBuffer(fileData),
       contentType: file.mimetype,
-      message: 'File fetched successfully',
     };
   }
 
@@ -84,8 +115,13 @@ export class FilesService {
    * GET /api/files/:fileId/url — generate a temporary signed download URL
    */
   async getFileUrl(fileId: string, userId: string): Promise<FileUrlOutput> {
-    const userFiles = getUserRegistry(userId);
-    const file = userFiles.get(fileId);
+    const file = await db
+      .selectFrom('app.files')
+      .where('id', '=', fileId)
+      .where('user_id', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+
     if (!file) {
       throw new Error('File not found');
     }
@@ -135,28 +171,27 @@ export class FilesService {
       throw new Error('Uploaded object not found in storage');
     }
 
-    const now = new Date().toISOString();
     const type = detectFileType(input.mimetype);
 
-    const file: FileAsset = {
-      id: crypto.randomUUID(),
-      originalName: input.originalName,
-      type,
-      mimetype: input.mimetype,
-      size: input.size,
-      status: 'pending',
-      key: input.key,
-      url: fileStorageService.getPublicUrlForPath(input.key),
-      uploadedAt: now,
-    };
+    const file = await db
+      .insertInto('app.files')
+      .values({
+        user_id: userId,
+        original_name: input.originalName,
+        type,
+        mimetype: input.mimetype,
+        size: input.size,
+        status: 'pending',
+        key: input.key,
+        url: fileStorageService.getPublicUrlForPath(input.key),
+        uploaded_at: new Date(),
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
 
-    getUserRegistry(userId).set(file.id, file);
+    await fileProcessingQueue.add('process', { fileId: file.id, userId });
 
-    // TODO: enqueue 'file.received' event to async worker
-    // const queued = await enqueueFileProcessing({ fileId: file.id, userId })
-    const queued = true;
-
-    return { file, queued };
+    return { file: this.#toFileAsset(file), queued: true };
   }
 
   // ---------------------------------------------------------------------------
@@ -168,20 +203,32 @@ export class FilesService {
    * existing file. Useful after AI model updates or if initial processing failed.
    */
   async reprocessFile(fileId: string, userId: string): Promise<FileReprocessOutput> {
-    const userFiles = getUserRegistry(userId);
-    const file = userFiles.get(fileId);
+    const file = await db
+      .selectFrom('app.files')
+      .where('id', '=', fileId)
+      .where('user_id', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+
     if (!file) {
       throw new Error('File not found');
     }
 
-    const updated: FileAsset = { ...file, status: 'processing' };
-    userFiles.set(fileId, updated);
+    await db
+      .updateTable('app.files')
+      .set({ status: 'processing' })
+      .where('id', '=', fileId)
+      .execute();
 
-    // TODO: enqueue reprocessing job
-    // const queued = await enqueueFileProcessing({ fileId, userId, reprocess: true })
-    const queued = true;
+    await fileProcessingQueue.add('process', { fileId, userId, reprocess: true });
 
-    return { file: updated, queued };
+    return {
+      file: this.#toFileAsset({
+        ...file,
+        status: 'processing',
+      }),
+      queued: true,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -192,18 +239,56 @@ export class FilesService {
    * DELETE /api/files/:fileId — delete file from R2 and remove metadata entry
    */
   async deleteFile(fileId: string, userId: string): Promise<FileDeleteOutput> {
-    const userFiles = getUserRegistry(userId);
-    const file = userFiles.get(fileId);
+    const file = await db
+      .selectFrom('app.files')
+      .where('id', '=', fileId)
+      .where('user_id', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+
     if (!file) {
       throw new Error('File not found');
     }
 
-    await fileStorageService.deleteFile(fileId, userId);
-    userFiles.delete(fileId);
+    await db
+      .deleteFrom('app.files')
+      .where('id', '=', fileId)
+      .where('user_id', '=', userId)
+      .execute();
+
+    await fileStorageService.deleteFileByKey(file.key);
 
     return {
       success: true,
       deletedAt: new Date().toISOString(),
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // PRIVATE HELPERS
+  // ---------------------------------------------------------------------------
+
+  /** Map a DB row to the RPC FileAsset shape */
+  #toFileAsset(f: FileRow): FileAsset {
+    return {
+      content: f.content ?? undefined,
+      id: f.id,
+      error: f.error ?? undefined,
+      failedAt: f.failed_at?.toISOString() ?? undefined,
+      originalName: f.original_name,
+      key: f.key,
+      metadata: toMetadata(f.metadata),
+      mimetype: f.mimetype,
+      processedAt: f.processed_at?.toISOString() ?? undefined,
+      size: Number(f.size),
+      status: toFileStatus(f.status),
+      summary: f.summary ?? undefined,
+      textContent: f.text_content ?? undefined,
+      thumbnail: f.thumbnail ?? undefined,
+      type: toFileType(f.type),
+      uploadedAt: f.uploaded_at.toISOString(),
+      url: f.url ?? undefined,
+      vectorIds: toStringArray(f.vector_ids),
     };
   }
 }

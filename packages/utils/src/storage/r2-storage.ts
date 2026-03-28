@@ -10,11 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import {
-  getExtensionFromMimeType,
-  isSupportedChatUploadMimeType,
-  sanitizeStorageFilename,
-} from '../mime';
+import { getExtensionFromMimeType, isSupportedChatUploadMimeType } from '../mime';
 import * as Types from './types';
 
 export type StoredFile = Types.StoredFile;
@@ -277,6 +273,20 @@ export class R2StorageService {
         Key: key,
       });
 
+      await this.client.send(command);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Delete a file directly by its R2 storage key — used by the files service */
+  async deleteFileByKey(key: string): Promise<boolean> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
       await this.client.send(command);
       return true;
     } catch {

@@ -2,7 +2,7 @@ import type { User } from '@hominem/auth/server';
 import type { AuthEnvelope } from '@hominem/auth/types';
 import { createMiddleware } from 'hono/factory';
 
-import { ForbiddenError, UnauthorizedError } from '../errors';
+import { forbidden, unauthorized } from '../errors';
 
 /**
  * Application Context
@@ -38,10 +38,9 @@ export interface AppContext {
 export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const user = c.get('user');
   const userId = c.get('userId');
-  const authError = c.get('authError');
 
   if (!user || !userId) {
-    throw new UnauthorizedError('Authentication required', authError ? { authError } : undefined);
+    throw unauthorized('Authentication required');
   }
 
   return await next();
@@ -58,11 +57,11 @@ export const adminMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const userId = c.get('userId');
 
   if (!user || !userId) {
-    throw new UnauthorizedError('Authentication required');
+    throw unauthorized('Authentication required');
   }
 
   if (!user.isAdmin) {
-    throw new ForbiddenError('Admin access required');
+    throw forbidden('Admin access required');
   }
 
   return await next();

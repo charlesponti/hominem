@@ -106,8 +106,8 @@ function needsPhotoBackfill(row: PlacePhotoBackfillRow): boolean {
 async function getCandidatePlaceIds(limit?: number, placeId?: string): Promise<string[]> {
   if (placeId) {
     const row = await db
-      .selectFrom('places')
-      .select(['id', 'data'])
+      .selectFrom('app.places')
+      .select(['id', sql<Json | null>`provider_payload`.as('data')])
       .where('id', '=', placeId)
       .executeTakeFirst();
 
@@ -119,9 +119,9 @@ async function getCandidatePlaceIds(limit?: number, placeId?: string): Promise<s
   }
 
   let query = db
-    .selectFrom('places')
-    .select(['id', 'data'])
-    .where(sql<boolean>`data->>'googleMapsId' IS NOT NULL`)
+    .selectFrom('app.places')
+    .select(['id', sql<Json | null>`provider_payload`.as('data')])
+    .where(sql<boolean>`provider_payload->>'googleMapsId' IS NOT NULL`)
     .orderBy('created_at', 'asc')
     .orderBy('id', 'asc');
 
@@ -130,7 +130,7 @@ async function getCandidatePlaceIds(limit?: number, placeId?: string): Promise<s
   }
 
   const rows = await query.execute();
-  return rows.filter(needsPhotoBackfill).map((row) => row.id);
+  return rows.filter((row) => needsPhotoBackfill(row)).map((row) => row.id);
 }
 
 async function runWithConcurrency<T>(

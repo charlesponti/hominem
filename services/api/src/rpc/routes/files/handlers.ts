@@ -15,8 +15,12 @@ export class FilesHandlers {
   // GET /api/files
   async list(c: Context<AppContext>) {
     const userId = c.get('userId')!;
-    const result = await this.service.listFiles(userId);
-    return c.json(result);
+    try {
+      const result = await this.service.listFiles(userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to list files');
+    }
   }
 
   // GET /api/files/:fileId
@@ -24,8 +28,17 @@ export class FilesHandlers {
     const userId = c.get('userId')!;
     const fileId = c.req.param('fileId');
     if (!fileId) throw validation('File ID required');
-    const result = await this.service.getFile(fileId, userId);
-    return c.json(result);
+    try {
+      const { data, contentType } = await this.service.getFile(fileId, userId);
+      return new Response(new Blob([data]), {
+        headers: {
+          'Content-Type': contentType,
+        },
+        status: 200,
+      });
+    } catch (err) {
+      handleFilesError(err, 'Failed to get file');
+    }
   }
 
   // GET /api/files/:fileId/url
@@ -33,8 +46,12 @@ export class FilesHandlers {
     const userId = c.get('userId')!;
     const fileId = c.req.param('fileId');
     if (!fileId) throw validation('File ID required');
-    const result = await this.service.getFileUrl(fileId, userId);
-    return c.json(result);
+    try {
+      const result = await this.service.getFileUrl(fileId, userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to get file URL');
+    }
   }
 
   // DELETE /api/files/:fileId
@@ -42,32 +59,44 @@ export class FilesHandlers {
     const userId = c.get('userId')!;
     const fileId = c.req.param('fileId');
     if (!fileId) throw validation('File ID required');
-    const result = await this.service.deleteFile(fileId, userId);
-    return c.json(result);
+    try {
+      const result = await this.service.deleteFile(fileId, userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to delete file');
+    }
   }
 
   // POST /api/files/upload-url
   async getUploadUrl(c: Context<AppContext>) {
     const userId = c.get('userId')!;
-    const body = await c.req.json();
-    const parsed = FileUploadUrlInputSchema.safeParse(body);
-    if (!parsed.success) {
-      throw validation(parsed.error.issues[0]?.message ?? 'Invalid upload request');
+    try {
+      const body = await c.req.json();
+      const parsed = FileUploadUrlInputSchema.safeParse(body);
+      if (!parsed.success) {
+        throw validation(parsed.error.issues[0]?.message ?? 'Invalid upload request');
+      }
+      const result = await this.service.getUploadUrl(parsed.data, userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to prepare upload');
     }
-    const result = await this.service.getUploadUrl(parsed.data, userId);
-    return c.json(result);
   }
 
   // POST /api/files/register
   async register(c: Context<AppContext>) {
     const userId = c.get('userId')!;
-    const body = await c.req.json();
-    const parsed = FileRegisterInputSchema.safeParse(body);
-    if (!parsed.success) {
-      throw validation(parsed.error.issues[0]?.message ?? 'Invalid register request');
+    try {
+      const body = await c.req.json();
+      const parsed = FileRegisterInputSchema.safeParse(body);
+      if (!parsed.success) {
+        throw validation(parsed.error.issues[0]?.message ?? 'Invalid register request');
+      }
+      const result = await this.service.registerFile(parsed.data, userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to register file');
     }
-    const result = await this.service.registerFile(parsed.data, userId);
-    return c.json(result);
   }
 
   // POST /api/files/:fileId/reprocess
@@ -75,8 +104,12 @@ export class FilesHandlers {
     const userId = c.get('userId')!;
     const fileId = c.req.param('fileId');
     if (!fileId) throw validation('File ID required');
-    const result = await this.service.reprocessFile(fileId, userId);
-    return c.json(result);
+    try {
+      const result = await this.service.reprocessFile(fileId, userId);
+      return c.json(result);
+    } catch (err) {
+      handleFilesError(err, 'Failed to reprocess file');
+    }
   }
 }
 
@@ -84,13 +117,22 @@ export class FilesHandlers {
 // Error Mapping
 // =============================================================================
 
-export function handleFilesError(err: unknown, fallbackMessage: string) {
+export function handleFilesError(err: unknown, fallbackMessage: string): never {
   if (err instanceof Error) {
     if (err.message.includes('Authentication required')) {
       throw forbidden('Authentication required', 'other');
     }
     if (err.message.includes('does not belong to the current user')) {
       throw validation(err.message);
+    }
+    if (err.message.includes('Uploaded object not found')) {
+      throw notFound('Uploaded object');
+    }
+    if (err.message.includes('File data not found')) {
+      throw notFound('File');
+    }
+    if (err.message.includes('File not found')) {
+      throw notFound('File');
     }
     if (err.message.includes('not found') || err.message.includes('missing')) {
       throw notFound('Uploaded object');

@@ -7,17 +7,14 @@ export {
 export { createList, deleteList, formatList, updateList } from './list-crud.service';
 export {
   acceptListInvite,
-  acceptListInviteSchema,
   deleteInviteByListAndToken,
   deleteListInvite,
-  deleteListInviteSchema,
   getInviteByListAndToken,
   getInviteByToken,
   getInvitesForUser,
   getListInvites,
   getOutboundInvites,
   sendListInvite,
-  sendListInviteSchema,
   type AcceptListInviteParams,
   type DeleteListInviteParams,
   type SendListInviteParams,

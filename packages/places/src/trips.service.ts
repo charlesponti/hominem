@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db } from '@hominem/db';
-import type { Database, Json } from '@hominem/db';
+import type { Database } from '@hominem/db';
 import type { Selectable } from 'kysely';
 import * as z from 'zod';
 
@@ -59,48 +59,6 @@ function rowToTrip(row: TripRow): TripOutput {
     createdAt,
     updatedAt: createdAt,
   };
-}
-
-function toItems(data: Json | null): TripItemOutput[] {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    return [];
-  }
-  const rawItems = (data as Record<string, unknown>).items;
-  if (!Array.isArray(rawItems)) {
-    return [];
-  }
-  return rawItems
-    .map((item) => {
-      if (!item || typeof item !== 'object' || Array.isArray(item)) {
-        return null;
-      }
-      const obj = item as Record<string, unknown>;
-      return {
-        id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID(),
-        tripId: typeof obj.tripId === 'string' ? obj.tripId : '',
-        itemId: typeof obj.itemId === 'string' ? obj.itemId : '',
-        day: typeof obj.day === 'number' ? obj.day : null,
-        order: typeof obj.order === 'number' ? obj.order : null,
-        createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : new Date().toISOString(),
-      };
-    })
-    .filter(
-      (item): item is TripItemOutput =>
-        item !== null && item.tripId.length > 0 && item.itemId.length > 0,
-    );
-}
-
-function toTripDataJson(items: TripItemOutput[]): Json {
-  // Convert items to a JSON-serializable format that matches what toItems expects
-  const jsonItems = items.map((item) => ({
-    id: item.id,
-    tripId: item.tripId,
-    itemId: item.itemId,
-    day: item.day,
-    order: item.order,
-    createdAt: item.createdAt,
-  }));
-  return { items: jsonItems };
 }
 
 export async function createTrip(input: CreateTripInput): Promise<TripOutput> {

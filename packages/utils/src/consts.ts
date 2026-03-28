@@ -43,6 +43,7 @@ export const QUEUE_NAMES = {
    * - services/workers (processing jobs)
    */
   PLACE_PHOTO_ENRICH: 'place-photo-enrich',
+  FILE_PROCESSING: 'file-processing',
 } as const;
 
 /**

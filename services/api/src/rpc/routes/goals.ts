@@ -14,7 +14,7 @@ import {
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { NotFoundError } from '../errors';
+import { notFound } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -60,7 +60,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const goal = await getGoalById(goalId, userId);
     if (!isUserGoal(goal, userId)) {
-      throw new NotFoundError('Goal not found');
+      throw { ...notFound('Goal'), message: 'Goal not found' };
     }
 
     return c.json(goal);
@@ -73,7 +73,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const goal = await getGoalById(goalId, userId);
     if (!isUserGoal(goal, userId)) {
-      throw new NotFoundError('Goal not found');
+      throw { ...notFound('Goal'), message: 'Goal not found' };
     }
 
     const stats = await getConsolidatedGoalStats(goalId, userId);
@@ -108,7 +108,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const goal = await getGoalById(goalId, userId);
     if (!isUserGoal(goal, userId)) {
-      throw new NotFoundError('Goal not found');
+      throw { ...notFound('Goal'), message: 'Goal not found' };
     }
 
     const updated = await updateConsolidatedGoal(goalId, userId, {
@@ -120,7 +120,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
     });
 
     if (!updated) {
-      throw new NotFoundError('Failed to update goal');
+      throw { ...notFound('Goal'), message: 'Failed to update goal' };
     }
 
     return c.json(updated);
@@ -133,12 +133,12 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const goal = await getGoalById(goalId, userId);
     if (!isUserGoal(goal, userId)) {
-      throw new NotFoundError('Goal not found');
+      throw { ...notFound('Goal'), message: 'Goal not found' };
     }
 
     const deleted = await deleteGoal(goalId, userId);
     if (!deleted) {
-      throw new NotFoundError('Failed to delete goal');
+      throw { ...notFound('Goal'), message: 'Failed to delete goal' };
     }
 
     return c.json({ success: true, id: goalId });

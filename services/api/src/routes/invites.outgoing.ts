@@ -2,7 +2,7 @@ import { getOutboundInvites } from '@hominem/lists-services';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import { UnauthorizedError, InternalError } from '../errors';
+import { internal, unauthorized } from '../errors';
 import type { AppEnv } from '../server';
 
 export const invitesOutgoingRoutes = new Hono<AppEnv>();
@@ -11,7 +11,7 @@ export const invitesOutgoingRoutes = new Hono<AppEnv>();
 invitesOutgoingRoutes.get('/', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    throw new UnauthorizedError('Unauthorized');
+    throw unauthorized('Unauthorized');
   }
 
   try {
@@ -21,7 +21,7 @@ invitesOutgoingRoutes.get('/', async (c) => {
     return c.json(invites);
   } catch (err) {
     logger.error('Error fetching outgoing invites', { error: err });
-    throw new InternalError('Failed to fetch outgoing invites', {
+    throw internal('Failed to fetch outgoing invites', undefined, {
       details: err instanceof Error ? err.message : String(err),
     });
   }

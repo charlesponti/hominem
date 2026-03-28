@@ -5,43 +5,6 @@ import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
-const compact = (s: string) => s.replace(/\s+/g, ' ').trim();
-
-function computeNoteTitle(
-  title: string | null,
-  excerpt: string | null,
-  content: string | null,
-): string {
-  const lines = (s: string | null) => (s ?? '').split('\n').map(compact).filter(Boolean);
-
-  const t = compact(title ?? '');
-  if (t) return t;
-
-  const excerptLines = lines(excerpt);
-  if (excerptLines[0]) return excerptLines[0];
-
-  const contentLines = lines(content);
-  return contentLines[0]?.slice(0, 80) ?? 'Untitled note';
-}
-
-function computeNotePreview(
-  title: string,
-  excerpt: string | null,
-  content: string | null,
-): string | null {
-  const lines = [excerpt, content].flatMap((s) =>
-    (s ?? '').split('\n').map(compact).filter(Boolean),
-  );
-
-  for (const line of lines) {
-    if (line !== title) return line.slice(0, 140);
-  }
-  return null;
-}
-
-const NOTE_LIMIT = 100;
-const CHAT_LIMIT = 20;
-
 export const focusRoutes = new Hono<AppContext>().use('*', authMiddleware).get('/', async (c) => {
   const userId = c.get('userId')!;
 
@@ -51,9 +14,9 @@ export const focusRoutes = new Hono<AppContext>().use('*', authMiddleware).get('
       .selectAll()
       .where('owner_user_id', '=', userId)
       .orderBy('updated_at', 'desc')
-      .limit(NOTE_LIMIT)
+      .limit(100)
       .execute(),
-    getUserChatsQuery(userId, CHAT_LIMIT),
+    getUserChatsQuery(userId, 20),
   ]);
 
   const noteItems: FocusItem[] = noteRows.map((row) => {

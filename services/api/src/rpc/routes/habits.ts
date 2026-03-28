@@ -12,7 +12,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { NotFoundError, ValidationError } from '../errors';
+import { notFound, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -84,7 +84,7 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     return c.json<HabitResponse>(habit);
@@ -97,7 +97,7 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     const stats = await getHabitStats(userId, habitId);
@@ -110,7 +110,7 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     if (!data.title.trim()) {
-      throw new ValidationError('Title is required');
+      throw validation('Title is required');
     }
 
     const habit = await createHabit(userId, {
@@ -132,12 +132,12 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     const updatedHabit = await updateHabit(habitId, userId, data);
     if (!updatedHabit) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     return c.json<HabitResponse>(updatedHabit);
@@ -150,7 +150,7 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await markHabitComplete(habitId, userId);
     if (!habit) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     return c.json<HabitResponse>(habit);
@@ -163,7 +163,7 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await resetHabitStreak(habitId, userId);
     if (!habit) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     return c.json<HabitResponse>(habit);
@@ -176,12 +176,12 @@ export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
-      throw new NotFoundError('Habit not found');
+      throw { ...notFound('Habit'), message: 'Habit not found' };
     }
 
     const deleted = await deleteHabit(habitId, userId);
     if (!deleted) {
-      throw new NotFoundError('Failed to delete habit');
+      throw { ...notFound('Habit'), message: 'Failed to delete habit' };
     }
 
     return c.json({ success: true, id: habitId });

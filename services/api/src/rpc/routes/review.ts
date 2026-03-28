@@ -24,14 +24,13 @@ export const reviewRoutes = new Hono<AppContext>()
   .post('/:reviewItemId/accept', zValidator('json', reviewAcceptSchema), async (c) => {
     const reviewItemId = c.req.param('reviewItemId');
     const userId = c.get('userId')!;
-    const { finalTitle } = c.req.valid('json');
+    c.req.valid('json');
 
     const item = getReviewItem(reviewItemId);
     if (!item) {
       throw new NotFoundError('Review item not found or already processed');
     }
 
-    const title = finalTitle ?? item.proposedTitle;
     const noteId = randomUUID();
     const now = new Date().toISOString();
 

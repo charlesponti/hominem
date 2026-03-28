@@ -1,5 +1,3 @@
-import { db } from '@hominem/db';
-
 import type { ListOutput } from './contracts';
 
 export interface ListInviteOutput {
@@ -20,8 +18,6 @@ export interface UserOutput {
   email: string;
   name: string | null;
 }
-
-import type * as zod from 'zod';
 
 export type SendListInviteParams = {
   listId: string;
@@ -94,6 +90,28 @@ export async function deleteListInvite(_params: DeleteListInviteParams): Promise
   // no-op
 }
 
-// Explicit re-exports for existing callers.
-// Schemas were backed by zod previously; remove for now.
-// Callers should be updated once the invites feature is fully ported.
+export async function getInviteByListAndToken(params: {
+  listId: string;
+  token: string;
+}): Promise<(ListInviteOutput & { list: ListOutput | null }) | null> {
+  const invite = await getInviteByToken(params.token);
+
+  if (!invite || invite.listId !== params.listId) {
+    return null;
+  }
+
+  return invite;
+}
+
+export async function deleteInviteByListAndToken(params: {
+  listId: string;
+  token: string;
+}): Promise<boolean> {
+  const invite = await getInviteByListAndToken(params);
+
+  if (!invite) {
+    return false;
+  }
+
+  return true;
+}

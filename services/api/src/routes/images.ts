@@ -5,7 +5,7 @@ import { logger } from '@hominem/utils/logger';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 
-import { ValidationError, ForbiddenError, UnavailableError, InternalError } from '../errors';
+import { forbidden, internal, isServiceError, unavailable, validation } from '../errors';
 import { cache } from '../lib/redis';
 import type { AppEnv } from '../server';
 
@@ -59,7 +59,7 @@ imagesRoutes.get('/proxy', async (c) => {
   const imageUrl = c.req.query('url');
 
   if (!imageUrl) {
-    throw new ValidationError('URL parameter is required');
+    throw validation('URL parameter is required');
   }
 
   try {
@@ -68,7 +68,7 @@ imagesRoutes.get('/proxy', async (c) => {
 
     // Only allow Google hosts for security
     if (!isValidGoogleHost(decodedUrl)) {
-      throw new ForbiddenError('Domain not allowed');
+      throw forbidden('Domain not allowed');
     }
 
     const cacheKey = getCacheKey(decodedUrl);
@@ -137,7 +137,7 @@ imagesRoutes.get('/proxy', async (c) => {
     });
 
     if (!response.ok) {
-      throw new UnavailableError(`Failed to fetch image: ${response.statusText}`);
+      throw unavailable(`Failed to fetch image: ${response.statusText}`);
     }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
@@ -146,7 +146,7 @@ imagesRoutes.get('/proxy', async (c) => {
     const etag = `"${createHash('sha256').update(imageBuffer).digest('hex')}"`;
 
     if (imageBuffer.length > 5 * 1024 * 1024) {
-      throw new UnavailableError('Image exceeds 5MB limit');
+      throw unavailable('Image exceeds 5MB limit');
     }
 
     try {
@@ -170,12 +170,15 @@ imagesRoutes.get('/proxy', async (c) => {
     setResponseHeaders(c, { contentType, etag, cacheStatus: 'miss' });
     return c.body(new Uint8Array(imageBuffer));
   } catch (err) {
+    if (isServiceError(err)) {
+      throw err;
+    }
     logger.error('Error proxying image', {
       error: err,
       imageUrl,
       decodedUrl: imageUrl ? decodeURIComponent(imageUrl) : 'N/A',
     });
-    throw new InternalError('Failed to proxy image', {
+    throw internal('Failed to proxy image', err, {
       message: err instanceof Error ? err.message : 'Unknown error',
     });
   }

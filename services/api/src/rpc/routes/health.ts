@@ -11,7 +11,7 @@ import { validator as zValidator } from 'hono-openapi';
 import { describeRoute, resolver } from 'hono-openapi';
 import * as z from 'zod';
 
-import { NotFoundError, ValidationError } from '../errors';
+import { notFound, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -109,7 +109,7 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
-      throw new NotFoundError('Health activity not found');
+      throw { ...notFound('Health activity'), message: 'Health activity not found' };
     }
 
     return c.json<HealthActivityResponse>(activity);
@@ -148,11 +148,11 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     if (!data.title.trim()) {
-      throw new ValidationError('Title is required');
+      throw validation('Title is required');
     }
 
     if (!data.activityType.trim()) {
-      throw new ValidationError('Activity type is required');
+      throw validation('Activity type is required');
     }
 
     const activity = await logHealthActivity(userId, {
@@ -176,7 +176,7 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
-      throw new NotFoundError('Health activity not found');
+      throw { ...notFound('Health activity'), message: 'Health activity not found' };
     }
 
     const updated = await updateHealthActivity(activityId, userId, {
@@ -187,7 +187,7 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
     });
 
     if (!updated) {
-      throw new NotFoundError('Failed to update health activity');
+      throw { ...notFound('Health activity'), message: 'Failed to update health activity' };
     }
 
     return c.json<HealthActivityResponse>(updated);
@@ -200,12 +200,12 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
 
     const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
-      throw new NotFoundError('Health activity not found');
+      throw { ...notFound('Health activity'), message: 'Health activity not found' };
     }
 
     const deleted = await deleteHealthActivity(activityId, userId);
     if (!deleted) {
-      throw new NotFoundError('Failed to delete health activity');
+      throw { ...notFound('Health activity'), message: 'Failed to delete health activity' };
     }
 
     return c.json({ success: true, id: activityId });

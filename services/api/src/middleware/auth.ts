@@ -1,5 +1,5 @@
 import type { User } from '@hominem/auth/server';
-import { toUser, UserAuthService } from '@hominem/auth/server';
+import { UserAuthService } from '@hominem/auth/server';
 import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
@@ -31,6 +31,20 @@ interface BetterAuthSessionContext {
   auth: AuthContextEnvelope;
   user: User;
   userId: string;
+}
+
+type UserRow = NonNullable<Awaited<ReturnType<typeof UserAuthService.getUserById>>>;
+
+function toAuthUser(source: UserRow): User {
+  return {
+    id: source.id,
+    email: source.email,
+    name: source.display_name ?? undefined,
+    image: source.avatar_url ?? undefined,
+    isAdmin: Boolean(source.is_admin),
+    createdAt: source.created_at ?? '',
+    updatedAt: source.updated_at ?? '',
+  };
 }
 
 function getBearerToken(headerValue?: string) {
@@ -155,7 +169,7 @@ async function applyBetterAuthSession(c: {
     return false;
   }
 
-  const user = toUser(dbUser);
+  const user = toAuthUser(dbUser);
   setCachedUser(user);
   c.set('user', user);
   c.set('userId', dbUser.id);
@@ -200,7 +214,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
         const testUser = await UserAuthService.findByIdOrEmail({ id: testUserId });
         if (testUser) {
-          const user = toUser(testUser);
+          const user = toAuthUser(testUser);
           setCachedUser(user);
           c.set('user', user);
           c.set('userId', testUser.id);
@@ -228,7 +242,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         const fallbackUser = await UserAuthService.getUserById(testUserId);
 
         if (fallbackUser) {
-          const user = toUser(fallbackUser);
+          const user = toAuthUser(fallbackUser);
           setCachedUser(user);
           c.set('user', user);
         }
@@ -284,7 +298,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           return c.json(authErrorResponse('invalid_token'), 401);
         }
 
-        const user = toUser(dbUser);
+        const user = toAuthUser(dbUser);
         setCachedUser(user);
         c.set('user', user);
         c.set('userId', dbUser.id);

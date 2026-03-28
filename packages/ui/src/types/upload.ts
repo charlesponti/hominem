@@ -16,13 +16,13 @@ export interface UploadedFile {
   mimetype: string;
   size: number;
   status: FileStatus;
-  content?: string;
-  textContent?: string;
-  thumbnail?: string;
-  metadata?: Record<string, unknown>;
   url: string;
   uploadedAt: Date;
-  vectorIds?: string[];
+  content?: string | undefined;
+  textContent?: string | undefined;
+  thumbnail?: string | undefined;
+  metadata?: Record<string, unknown> | undefined;
+  vectorIds?: string[] | undefined;
 }
 
 export interface FailedUpload {

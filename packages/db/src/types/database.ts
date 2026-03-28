@@ -116,6 +116,39 @@ export interface AppEntityLinks {
   valid_during: Generated<string>;
 }
 
+export interface AppFiles {
+  content: string | null;
+  created_at: Generated<Timestamp>;
+  error: string | null;
+  failed_at: Timestamp | null;
+  id: Generated<string>;
+  /**
+   * Cloudflare R2 object key
+   */
+  key: string;
+  /**
+   * Additional file metadata (EXIF, page count, etc.)
+   */
+  metadata: Json | null;
+  mimetype: string;
+  original_name: string;
+  processed_at: Timestamp | null;
+  size: Generated<Int8>;
+  status: Generated<string>;
+  summary: string | null;
+  text_content: string | null;
+  thumbnail: string | null;
+  type: Generated<string>;
+  updated_at: Generated<Timestamp>;
+  uploaded_at: Generated<Timestamp>;
+  url: string | null;
+  user_id: string;
+  /**
+   * Vector store IDs after embedding
+   */
+  vector_ids: Json | null;
+}
+
 export interface AppFinanceAccounts {
   account_subtype: string | null;
   account_type: string;
@@ -732,6 +765,7 @@ export interface DB {
   "app.chats": AppChats;
   "app.entities": AppEntities;
   "app.entity_links": AppEntityLinks;
+  "app.files": AppFiles;
   "app.finance_accounts": AppFinanceAccounts;
   "app.finance_institutions": AppFinanceInstitutions;
   "app.finance_transactions": AppFinanceTransactions;

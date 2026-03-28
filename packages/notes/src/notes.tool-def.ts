@@ -21,7 +21,7 @@ const NoteOutputSchema = z.object({
 });
 
 export const createNoteServerForUser =
-  (userId: string) =>
+  (_userId: string) =>
   async (input: CreateNoteInput): Promise<z.infer<typeof NoteOutputSchema>> => {
     const result = {
       id: crypto.randomUUID(),
@@ -44,9 +44,9 @@ export const createNoteServerForUser =
   };
 
 export const listNotesServerForUser =
-  (userId: string) =>
+  (_userId: string) =>
   async (
-    input: z.infer<typeof ListNotesInputSchema>,
+    _input: z.infer<typeof ListNotesInputSchema>,
   ): Promise<z.infer<typeof ListNotesOutputSchema>> => {
     const result: z.infer<typeof ListNotesOutputSchema> = {
       notes: [],

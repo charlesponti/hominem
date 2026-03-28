@@ -1,7 +1,7 @@
 import { FileProcessorService } from '@hominem/services/files';
 import { fileStorageService } from '@hominem/utils/storage';
 
-import { ValidationError } from '../errors';
+import { validation } from '../errors';
 
 export interface ResolvedUploadedFile {
   id: string;
@@ -79,7 +79,7 @@ export async function resolveUploadedFiles(
       const fileData = await fileStorageService.getFile(fileId, userId);
 
       if (!storedFile || !url || !fileData) {
-        throw new ValidationError(`Uploaded file ${fileId} is not available`);
+        throw validation(`Uploaded file ${fileId} is not available`);
       }
 
       const originalName = getOriginalFilename(storedFile.name, fileId);

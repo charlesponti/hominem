@@ -3,7 +3,7 @@ import { getSharedTextModel } from '@hominem/services/ai-model';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 
-import { ValidationError } from '../errors';
+import { validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 const TWEET_CHARACTER_LIMIT = 280;
@@ -41,7 +41,7 @@ export const tweetRoutes = new Hono<AppContext>()
     const parsed = tweetGenerateSchema.safeParse(body);
 
     if (!parsed.success) {
-      throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+      throw validation(parsed.error?.issues[0]?.message ?? 'Validation failed');
     }
 
     const { content, strategy } = parsed.data;

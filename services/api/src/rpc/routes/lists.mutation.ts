@@ -22,7 +22,7 @@ import type {
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { ForbiddenError, ValidationError, InternalError } from '../errors';
+import { forbidden, internal, notFound, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { transformListToApiFormat } from '../utils/lists-transforms';
 
@@ -35,7 +35,7 @@ export const listMutationRoutes = new Hono<AppContext>()
     const newList = await createList(input.name, userId);
 
     if (!newList) {
-      throw new InternalError('Failed to create list');
+      throw internal('Failed to create list');
     }
 
     return c.json<ListCreateOutput>(transformListToApiFormat(newList), 201);
@@ -47,13 +47,13 @@ export const listMutationRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     if (!input.name) {
-      throw new ValidationError('Name is required for update', { field: 'name' });
+      throw validation('Name is required for update', 'name');
     }
 
     const updatedList = await updateList(input.id, input.name, userId);
 
     if (!updatedList) {
-      throw new ForbiddenError("You don't have permission to update this list");
+      throw forbidden("You don't have permission to update this list");
     }
 
     return c.json<ListUpdateOutput>(transformListToApiFormat(updatedList), 200);
@@ -67,7 +67,7 @@ export const listMutationRoutes = new Hono<AppContext>()
     const deleteSuccess = await deleteList(input.id, userId);
 
     if (!deleteSuccess) {
-      throw new ForbiddenError("You don't have permission to delete this list");
+      throw forbidden("You don't have permission to delete this list");
     }
 
     return c.json<ListDeleteOutput>({ success: true }, 200);
@@ -81,7 +81,7 @@ export const listMutationRoutes = new Hono<AppContext>()
     const deleteSuccess = await deleteListItem(input.listId, input.itemId, userId);
 
     if (!deleteSuccess) {
-      throw new ForbiddenError("You don't have permission to delete this list item");
+      throw forbidden("You don't have permission to delete this list item");
     }
 
     return c.json<ListDeleteItemOutput>({ success: true }, 200);
@@ -105,15 +105,13 @@ export const listMutationRoutes = new Hono<AppContext>()
       if ('error' in result) {
         const statusCode = result.status ?? 500;
         if (statusCode === 400) {
-          throw new ValidationError(String(result.error) || 'Operation failed');
+          throw validation(String(result.error) || 'Operation failed');
         } else if (statusCode === 403) {
-          throw new ForbiddenError(String(result.error) || 'Operation failed');
+          throw forbidden(String(result.error) || 'Operation failed');
         } else if (statusCode === 404) {
-          throw new (await import('../errors')).NotFoundError(
-            String(result.error) || 'Operation failed',
-          );
+          throw { ...notFound('List'), message: String(result.error) || 'Operation failed' };
         } else {
-          throw new InternalError(String(result.error) || 'Operation failed');
+          throw internal(String(result.error) || 'Operation failed');
         }
       }
 

@@ -1,7 +1,7 @@
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import { InternalError } from '../errors';
+import { internal } from '../errors';
 import { adminMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -25,6 +25,6 @@ export const adminRoutes = new Hono<AppContext>()
       return c.json({ updatedCount: 0, duration: 0 }, 200);
     } catch (err) {
       logger.error('[admin.refresh-google-places] unexpected error', { error: err });
-      throw new InternalError('Failed to refresh Google Places');
+      throw internal('Failed to refresh Google Places', err);
     }
   });

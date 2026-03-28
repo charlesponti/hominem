@@ -15,7 +15,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { NotFoundError } from '../errors';
+import { notFound } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { toTransactionData } from '../utils/finance-transforms';
 
@@ -229,7 +229,7 @@ export const transactionsRoutes = new Hono<AppContext>()
       .executeTakeFirst();
 
     if (!existing) {
-      throw new NotFoundError('Transaction not found');
+      throw { ...notFound('Transaction'), message: 'Transaction not found' };
     }
 
     const amount =

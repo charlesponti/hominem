@@ -14,7 +14,7 @@ import { z } from 'zod';
 
 import { API_BRAND } from '../brand';
 import { env } from '../env';
-import { InternalError, NotFoundError, UnauthorizedError, ValidationError } from '../errors';
+import { internal, isServiceError, notFound, unauthorized, validation } from '../errors';
 import {
   plaidClient,
   PLAID_COUNTRY_CODES,
@@ -51,7 +51,7 @@ const plaidSyncJobOptions = {
 
 export function requirePlaidUserId(userId: string | null | undefined): string {
   if (!userId) {
-    throw new UnauthorizedError('Not authorized');
+    throw unauthorized('Not authorized');
   }
 
   return userId;
@@ -79,7 +79,7 @@ export async function createPlaidLinkToken(userId: string): Promise<{
     };
   } catch (error) {
     logger.error('Failed to create Plaid link token', { error });
-    throw new InternalError('Failed to create link token');
+    throw internal('Failed to create link token', error);
   }
 }
 
@@ -109,7 +109,7 @@ export async function exchangePlaidPublicToken(input: {
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
       logger.error('Token exchange error', { error });
-      throw new InternalError('Failed to exchange token');
+      throw internal('Failed to exchange token', error);
     }
 
     const suffix = crypto.randomUUID().slice(0, 8);
@@ -161,11 +161,11 @@ export async function syncPlaidItem(input: {
       : await getPlaidItemByUserAndItemId(input.userId, input.itemId);
 
     if (!plaidItem) {
-      throw new NotFoundError('Plaid item not found');
+      throw { ...notFound('Plaid item'), message: 'Plaid item not found' };
     }
 
     if (plaidItem.status !== 'active') {
-      throw new ValidationError('Plaid item is not active');
+      throw validation('Plaid item is not active');
     }
 
     await plaidSyncQueue.add(
@@ -187,8 +187,11 @@ export async function syncPlaidItem(input: {
       removed: 0,
     };
   } catch (error) {
+    if (isServiceError(error)) {
+      throw error;
+    }
     logger.error('Manual sync error', { error });
-    throw new InternalError('Failed to queue sync job');
+    throw internal('Failed to queue sync job', error);
   }
 }
 
@@ -203,7 +206,7 @@ export async function disconnectPlaidConnection(input: {
       : await getPlaidItemByUserAndItemId(input.userId, input.itemId);
 
     if (!plaidItem) {
-      throw new NotFoundError('Plaid item not found');
+      throw { ...notFound('Plaid item'), message: 'Plaid item not found' };
     }
 
     try {
@@ -220,8 +223,11 @@ export async function disconnectPlaidConnection(input: {
 
     return { success: true, message: 'Successfully disconnected account' };
   } catch (error) {
+    if (isServiceError(error)) {
+      throw error;
+    }
     logger.error('Disconnect error', { error });
-    throw new InternalError('Failed to disconnect account');
+    throw internal('Failed to disconnect account', error);
   }
 }
 
@@ -230,19 +236,19 @@ export async function handlePlaidWebhook(input: {
   rawBody: string;
 }): Promise<{ acknowledged: true }> {
   if (!verifyPlaidWebhookSignature(input.headers, input.rawBody)) {
-    throw new UnauthorizedError('Invalid webhook signature');
+    throw unauthorized('Invalid webhook signature');
   }
 
   let parsedBody: Record<string, unknown>;
   try {
     parsedBody = JSON.parse(input.rawBody) as Record<string, unknown>;
   } catch {
-    throw new ValidationError('Invalid JSON');
+    throw validation('Invalid JSON');
   }
 
   const parseResult = webhookSchema.safeParse(parsedBody);
   if (!parseResult.success) {
-    throw new ValidationError('Invalid webhook payload');
+    throw validation('Invalid webhook payload');
   }
 
   const { webhook_type, webhook_code, item_id } = parseResult.data;
@@ -290,6 +296,6 @@ export async function handlePlaidWebhook(input: {
     return { acknowledged: true };
   } catch (error) {
     logger.error('Webhook processing error', { error });
-    throw new InternalError('Webhook processing failed');
+    throw internal('Webhook processing failed', error);
   }
 }

@@ -3,8 +3,8 @@ export interface UploadAttachmentContextFile {
   type: string;
   mimetype: string;
   url: string;
-  content?: string;
-  textContent?: string;
+  content?: string | undefined;
+  textContent?: string | undefined;
 }
 
 export function formatUploadedFileContext(files: UploadAttachmentContextFile[]): string {

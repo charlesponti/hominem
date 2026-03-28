@@ -59,7 +59,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { NotFoundError, InternalError, isServiceError } from '../errors';
+import { internal, isServiceError, notFound } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 type DistanceShape = number | { km?: number; miles?: number } | null | undefined;
@@ -529,7 +529,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.create] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -554,7 +554,7 @@ export const placesRoutes = new Hono<AppContext>()
       });
 
       if (!updatedPlace) {
-        throw new NotFoundError('');
+        throw notFound('Place');
       }
 
       return c.json<PlaceUpdateOutput>(transformPlaceToApiFormat(updatedPlace, 'update'), 200);
@@ -564,7 +564,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.update] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -576,7 +576,7 @@ export const placesRoutes = new Hono<AppContext>()
       const success_ = await deletePlaceById(input.id);
 
       if (!success_) {
-        throw new NotFoundError('');
+        throw notFound('Place');
       }
 
       return c.json<PlaceDeleteOutput>({ success: true }, 200);
@@ -586,7 +586,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.delete] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -628,7 +628,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.autocomplete] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -640,7 +640,7 @@ export const placesRoutes = new Hono<AppContext>()
       const dbPlace = await getPlaceById(input.id);
 
       if (!dbPlace) {
-        throw new NotFoundError('');
+        throw notFound('Place');
       }
 
       // Enqueue photo enrichment if needed
@@ -666,7 +666,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.get] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -682,7 +682,7 @@ export const placesRoutes = new Hono<AppContext>()
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
         if (!place) {
-          throw new NotFoundError('');
+          throw notFound('Visit');
         }
 
         return c.json<PlaceGetDetailsByGoogleIdOutput>(
@@ -695,7 +695,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
 
         logger.error('[places.get-by-google-id] unexpected error:', { error: err });
-        throw new InternalError('');
+        throw internal('');
       }
     },
   )
@@ -718,7 +718,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.add-to-lists] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -745,7 +745,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
 
         logger.error('[places.remove-from-list] unexpected error:', { error: err });
-        throw new InternalError('');
+        throw internal('');
       }
     },
   )
@@ -774,7 +774,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.nearby] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -820,7 +820,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.log-visit] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -838,7 +838,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.my-visits] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -863,7 +863,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
 
         logger.error('[places.place-visits] unexpected error:', { error: err });
-        throw new InternalError('');
+        throw internal('');
       }
     },
   )
@@ -888,7 +888,7 @@ export const placesRoutes = new Hono<AppContext>()
       const updatedEvent = await updateVisit(id, updateData);
 
       if (!updatedEvent) {
-        throw new NotFoundError('');
+        throw notFound('Visit');
       }
 
       return c.json<PlaceUpdateVisitOutput>(serializeVisitForUpdate(updatedEvent), 200);
@@ -898,7 +898,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.update-visit] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -910,7 +910,7 @@ export const placesRoutes = new Hono<AppContext>()
       const success_ = await deleteVisit(input.id);
 
       if (!success_) {
-        throw new NotFoundError('');
+        throw notFound('Visit');
       }
 
       return c.json<PlaceDeleteVisitOutput>({ success: true }, 200);
@@ -920,7 +920,7 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.delete-visit] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   })
 
@@ -989,6 +989,6 @@ export const placesRoutes = new Hono<AppContext>()
       }
 
       logger.error('[places.visit-stats] unexpected error:', { error: err });
-      throw new InternalError('');
+      throw internal('');
     }
   });

@@ -37,7 +37,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import type { Selectable } from 'kysely';
 
-import { NotFoundError } from '../errors';
+import { notFound } from '../errors';
 import type { AppContext } from '../middleware/auth';
 import { authMiddleware } from '../middleware/auth';
 import { emptyBodySchema } from '../utils/common-schemas';
@@ -93,7 +93,7 @@ async function getAccountWithOwnershipCheck(accountId: string, userId: string) {
     .executeTakeFirst();
 
   if (!account) {
-    throw new NotFoundError('Account not found');
+    throw { ...notFound('Account'), message: 'Account not found' };
   }
   return account;
 }
@@ -161,7 +161,7 @@ export const accountsRoutes = new Hono<AppContext>()
       .where('id', '=', accountId)
       .executeTakeFirst();
 
-    if (!created) throw new NotFoundError('Account not found after creation');
+    if (!created) throw { ...notFound('Account'), message: 'Account not found after creation' };
     return c.json<AccountCreateOutput>(toAccountData(created), 201);
   })
   .post('/update', authMiddleware, zValidator('json', accountUpdateSchema), async (c) => {
@@ -194,7 +194,7 @@ export const accountsRoutes = new Hono<AppContext>()
       .where('id', '=', input.id)
       .executeTakeFirst();
 
-    if (!updated) throw new NotFoundError('Account not found after update');
+    if (!updated) throw { ...notFound('Account'), message: 'Account not found after update' };
     return c.json<AccountUpdateOutput>(toAccountData(updated), 200);
   })
   .post('/delete', authMiddleware, zValidator('json', accountDeleteSchema), async (c) => {

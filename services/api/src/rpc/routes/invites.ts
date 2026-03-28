@@ -39,14 +39,7 @@ import { getHominemPhotoURL } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  UnauthorizedError,
-  InternalError,
-} from '../errors';
+import { conflict, forbidden, internal, notFound, unauthorized, validation } from '../errors';
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -200,7 +193,7 @@ export const invitesRoutes = new Hono<AppContext>()
 
     const listItem = await getListOwnedByUser(input.listId, userId);
     if (!listItem) {
-      throw new ForbiddenError("You don't have permission to access this list's invites");
+      throw forbidden("You don't have permission to access this list's invites");
     }
 
     const invites = await getListInvites(input.listId);
@@ -218,13 +211,13 @@ export const invitesRoutes = new Hono<AppContext>()
 
     // Prevent self-invites
     if (normalizedEmail === user.email?.toLowerCase()) {
-      throw new ValidationError('You cannot invite yourself to a list');
+      throw validation('You cannot invite yourself to a list');
     }
 
     // Check if user owns the list
     const listItem = await getListOwnedByUser(input.listId, userId);
     if (!listItem) {
-      throw new ForbiddenError("You don't have permission to invite users to this list");
+      throw forbidden("You don't have permission to invite users to this list");
     }
 
     // Check if the invited user is already a member
@@ -232,13 +225,13 @@ export const invitesRoutes = new Hono<AppContext>()
     if (invitedUser) {
       const isAlreadyMember = await isUserMemberOfList(input.listId, invitedUser.id);
       if (isAlreadyMember) {
-        throw new ConflictError('This user is already a member of this list');
+        throw conflict('This user is already a member of this list');
       }
     }
 
     const baseUrl = process.env.VITE_APP_BASE_URL;
     if (!baseUrl) {
-      throw new InternalError('Server configuration error');
+      throw internal('Server configuration error');
     }
 
     // Call service function with properly typed params
@@ -261,7 +254,7 @@ export const invitesRoutes = new Hono<AppContext>()
     const user = c.get('user')!;
 
     if (!user.email) {
-      throw new UnauthorizedError('User email not available');
+      throw unauthorized('User email not available');
     }
 
     // Call service function with properly typed params
@@ -293,11 +286,11 @@ export const invitesRoutes = new Hono<AppContext>()
     });
 
     if (!invite) {
-      throw new NotFoundError('Invite not found');
+      throw { ...notFound('Invite'), message: 'Invite not found' };
     }
 
     if (invite.invitedUserId && invite.invitedUserId !== userId) {
-      throw new ForbiddenError('This invite belongs to a different user');
+      throw forbidden('This invite belongs to a different user');
     }
 
     const deleted = await deleteInviteByListAndToken({
@@ -306,7 +299,7 @@ export const invitesRoutes = new Hono<AppContext>()
     });
 
     if (!deleted) {
-      throw new NotFoundError('Invite not found');
+      throw { ...notFound('Invite'), message: 'Invite not found' };
     }
 
     return c.json<InvitesDeclineOutput>({ success: true }, 200);

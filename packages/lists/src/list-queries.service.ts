@@ -1,46 +1,4 @@
-import { db } from '@hominem/db';
-
 import type { ListOutput, ListRecord, ListWithSpreadOwner } from './contracts';
-import { formatList } from './list-crud.service';
-
-type ListProjectionRow = {
-  id: string;
-  name: string;
-  owner_id: string;
-  created_at: Date | string;
-  owner_email: string;
-  owner_name: string | null;
-  task_count?: number | null;
-};
-
-function toIso(value: Date | string): string {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
-}
-
-function toListWithOwner(row: ListProjectionRow): ListWithSpreadOwner {
-  const createdAt = toIso(row.created_at);
-
-  const output: ListWithSpreadOwner = {
-    id: row.id,
-    name: row.name,
-    description: null,
-    ownerId: row.owner_id,
-    isPublic: false,
-    createdAt,
-    updatedAt: createdAt,
-    owner: {
-      id: row.owner_id,
-      email: row.owner_email,
-      name: row.owner_name,
-    },
-  };
-
-  if (row.task_count !== undefined && row.task_count !== null) {
-    output.itemCount = Number(row.task_count);
-  }
-
-  return output;
-}
 
 // NOTE: We intentionally keep this implementation small and type-stable.
 // Space list querying is currently unblocked elsewhere; we return empty

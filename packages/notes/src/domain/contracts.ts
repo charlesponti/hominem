@@ -1,12 +1,3 @@
-import type { Database } from '@hominem/db';
-import type { Insertable, Selectable, Updateable } from 'kysely';
-
-// Database row types
-type NoteRow = Selectable<Database['app.notes']>;
-type NoteVersionRow = Selectable<Database['app.note_versions']>;
-type TagAssignmentRow = Selectable<Database['app.tag_assignments']>;
-type TagRow = Selectable<Database['app.tags']>;
-
 // Core Domain Types
 export type NoteId = string;
 export type UserId = string;

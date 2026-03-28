@@ -35,7 +35,7 @@ import {
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import { InternalError, ForbiddenError, ValidationError, UnavailableError } from '../errors';
+import { forbidden, internal, unavailable, validation } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { setReviewItem } from '../services/review-store';
 import { toCoreMessage } from '../utils/ai-adapters';
@@ -146,7 +146,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const chatData = await getChatByIdQuery(chatId, userId);
     if (!chatData) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     const messagesData = await messageService.getChatMessages(chatId, {
@@ -167,7 +167,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const success = await deleteChatQuery(chatId, userId);
     if (!success) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     return c.json({ success: true });
@@ -181,7 +181,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const updated = await updateChatTitleQuery(chatId, title, userId);
     if (!updated) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     return c.json<ChatsUpdateOutput>({ success: true });
@@ -193,7 +193,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const archived = await archiveChatQuery(chatId, userId);
     if (!archived) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     return c.json<ChatsArchiveOutput>(archived);
@@ -215,7 +215,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     // Get or verify chat exists
     let currentChat = await getChatByIdQuery(chatId, userId);
     if (!currentChat) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     logger.info('[chats.send] Chat found', { chatId });
@@ -346,7 +346,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const [userMessage, assistantMessage] = persistedMessages;
     if (!userMessage || !assistantMessage) {
-      throw new InternalError('Failed to persist chat messages');
+      throw internal('Failed to persist chat messages');
     }
 
     return c.json<ChatsSendOutput>({
@@ -372,7 +372,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const currentChat = await getChatByIdQuery(routeChatId, userId);
     if (!currentChat) {
-      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+      throw forbidden('Chat not found or access denied', 'ownership');
     }
 
     const latestUserMessage = [...messages]
@@ -380,7 +380,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       .find((candidate) => candidate.role === 'user' && candidate.content.trim().length > 0);
 
     if (!latestUserMessage) {
-      throw new ValidationError('messages must include at least one user message with content');
+      throw validation('messages must include at least one user message with content');
     }
 
     const coreMessages = convertToCoreMessages(
@@ -431,7 +431,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       });
     } catch (error) {
       logger.error('[chats.ui.send] Failed to start generation', { error });
-      throw new UnavailableError('Failed to generate assistant response');
+      throw unavailable('Failed to generate assistant response');
     }
 
     return result.toDataStreamResponse();
@@ -463,7 +463,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
       const chat = await getChatByIdQuery(chatId, userId);
       if (!chat) {
-        throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' });
+        throw forbidden('Chat not found or access denied', 'ownership');
       }
 
       const messagesData = await messageService.getChatMessages(chatId, {
@@ -471,7 +471,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         orderBy: 'asc',
       });
       if (messagesData.length === 0) {
-        throw new ValidationError('No messages to classify');
+        throw validation('No messages to classify');
       }
 
       const transcript = messagesData
@@ -571,7 +571,7 @@ export const chatsRoutes = new Hono<AppContext>()
     const limit = c.req.query('limit') ? Number.parseInt(c.req.query('limit')!) : 20;
 
     if (!query) {
-      throw new ValidationError('Query is required');
+      throw validation('Query is required');
     }
 
     // Get all user chats and filter locally (could optimize with DB full-text search later)
