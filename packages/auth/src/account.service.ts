@@ -7,105 +7,72 @@ function generateUUID(): string {
     return cryptoApi.randomUUID()
   }
 
-  if (typeof cryptoApi?.getRandomValues === 'function') {
-    const bytes = cryptoApi.getRandomValues(new Uint8Array(16))
-    const versionByte = bytes[6]
-    const variantByte = bytes[8]
-
-    if (versionByte === undefined || variantByte === undefined) {
-      throw new Error('Secure UUID generation failed')
-    }
-
-    bytes[6] = (versionByte & 0x0f) | 0x40
-    bytes[8] = (variantByte & 0x3f) | 0x80
-
-    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
-
-    return [
-      hex.slice(0, 4).join(''),
-      hex.slice(4, 6).join(''),
-      hex.slice(6, 8).join(''),
-      hex.slice(8, 10).join(''),
-      hex.slice(10, 16).join(''),
-    ].join('-')
-  }
-
   throw new Error('Secure UUID generation is unavailable')
 }
 
 interface AccountRecord {
   id: string
   userId: string
-  type: string
   providerId: string
   providerAccountId: string
   refreshToken: string | null
   accessToken: string | null
   expiresAt: string | null
-  tokenType: string | null
   scope: string | null
   idToken: string | null
-  sessionState: string | null
 }
 
 interface AccountInsert {
   id?: string
   userId: string
-  type?: string
   providerId: string
   providerAccountId: string
+  providerSubject?: string
   refreshToken?: string | null
   accessToken?: string | null
   expiresAt?: Date | null
-  tokenType?: string | null
   scope?: string | null
   idToken?: string | null
-  sessionState?: string | null
 }
 
-interface AccountSelectRow {
+type IdentityRow = {
   id: string
-  userId: string
-  providerId: string
-  accountId: string
-  refreshToken?: string | null
-  accessToken?: string | null
-  accessTokenExpiresAt?: string | null
-  scope?: string | null
-  idToken?: string | null
+  userid: string
+  provider: string
+  provider_account_id: string | null
+  provider_subject: string
+  access_token_encrypted: string | null
+  refresh_token_encrypted: string | null
+  id_token_encrypted: string | null
+  createdat: Date
+  updatedat: Date
 }
 
-function toCompatRecord(row: AccountSelectRow): AccountRecord {
+function toCompatRecord(row: IdentityRow): AccountRecord {
   return {
     id: row.id,
-    userId: row.userId,
-    type: 'oauth',
-    providerId: row.providerId,
-    providerAccountId: row.accountId,
-    refreshToken: row.refreshToken ?? null,
-    accessToken: row.accessToken ?? null,
-    expiresAt: row.accessTokenExpiresAt ?? null,
-    tokenType: null,
-    scope: row.scope ?? null,
-    idToken: row.idToken ?? null,
-    sessionState: null,
+    userId: row.userid,
+    providerId: row.provider,
+    providerAccountId: row.provider_account_id ?? '',
+    refreshToken: row.refresh_token_encrypted,
+    accessToken: row.access_token_encrypted,
+    expiresAt: null,
+    scope: null,
+    idToken: row.id_token_encrypted,
   }
 }
 
-export async function listAccountsByProvider(
-  userId: string,
-  providerId: string,
-): Promise<AccountRecord[]> {
+export async function listAccountsByProvider(userId: string, providerId: string): Promise<AccountRecord[]> {
   const rows = await db
-    .selectFrom('auth.account')
+    .selectFrom('auth.identities')
     .selectAll()
-    .where('userId', '=', userId)
-    .where('providerId', '=', providerId)
-    .orderBy('createdAt', 'desc')
+    .where('userid', '=', userId)
+    .where('provider', '=', providerId)
+    .orderBy('createdat', 'desc')
     .orderBy('id', 'asc')
     .execute()
 
-  return rows.map(toCompatRecord)
+  return rows.map((row) => toCompatRecord(row as IdentityRow))
 }
 
 export async function getAccountByUserAndProvider(
@@ -113,16 +80,16 @@ export async function getAccountByUserAndProvider(
   providerId: string,
 ): Promise<AccountRecord | null> {
   const row = await db
-    .selectFrom('auth.account')
+    .selectFrom('auth.identities')
     .selectAll()
-    .where('userId', '=', userId)
-    .where('providerId', '=', providerId)
-    .orderBy('createdAt', 'desc')
+    .where('userid', '=', userId)
+    .where('provider', '=', providerId)
+    .orderBy('createdat', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
     .executeTakeFirst()
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row as IdentityRow) : null
 }
 
 export async function getAccountByProviderAccountId(
@@ -130,93 +97,75 @@ export async function getAccountByProviderAccountId(
   providerId: string,
 ): Promise<AccountRecord | null> {
   const row = await db
-    .selectFrom('auth.account')
+    .selectFrom('auth.identities')
     .selectAll()
-    .where('accountId', '=', providerAccountId)
-    .where('providerId', '=', providerId)
-    .orderBy('createdAt', 'desc')
+    .where('provider_account_id', '=', providerAccountId)
+    .where('provider', '=', providerId)
+    .orderBy('createdat', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
     .executeTakeFirst()
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row as IdentityRow) : null
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
   const row = await db
-    .insertInto('auth.account')
+    .insertInto('auth.identities')
     .values({
       id: data.id ?? generateUUID(),
-      userId: data.userId,
-      accountId: data.providerAccountId,
-      providerId: data.providerId,
-      accessToken: data.accessToken ?? null,
-      refreshToken: data.refreshToken ?? null,
-      idToken: data.idToken ?? null,
-      accessTokenExpiresAt: data.expiresAt?.toISOString() ?? null,
-      scope: data.scope ?? null,
-      linkedAt: new Date().toISOString(),
+      userid: data.userId,
+      provider: data.providerId,
+      provider_account_id: data.providerAccountId,
+      provider_subject: data.providerSubject ?? data.providerAccountId,
+      access_token_encrypted: data.accessToken ?? null,
+      refresh_token_encrypted: data.refreshToken ?? null,
+      id_token_encrypted: data.idToken ?? null,
     })
-    .onConflict((oc) => oc.columns(['providerId', 'accountId']).doNothing())
     .returningAll()
     .executeTakeFirst()
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row as IdentityRow) : null
 }
 
 export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>,
 ): Promise<AccountRecord | null> {
-  const updateData: Partial<{
-    accountId: string
-    providerId: string
-    accessToken: string | null
-    refreshToken: string | null
-    idToken: string | null
-    accessTokenExpiresAt: string | null
-    scope: string | null
-    lastUsedAt: string
-  }> = {}
+  const updateData: Partial<IdentityRow> = {}
 
   if (updates.providerAccountId !== undefined) {
-    updateData.accountId = updates.providerAccountId
+    updateData.provider_account_id = updates.providerAccountId
   }
 
   if (updates.providerId !== undefined) {
-    updateData.providerId = updates.providerId
+    updateData.provider = updates.providerId
+  }
+
+  if (updates.providerSubject !== undefined) {
+    updateData.provider_subject = updates.providerSubject
   }
 
   if (updates.accessToken !== undefined) {
-    updateData.accessToken = updates.accessToken
+    updateData.access_token_encrypted = updates.accessToken
   }
 
   if (updates.refreshToken !== undefined) {
-    updateData.refreshToken = updates.refreshToken
+    updateData.refresh_token_encrypted = updates.refreshToken
   }
 
   if (updates.idToken !== undefined) {
-    updateData.idToken = updates.idToken
+    updateData.id_token_encrypted = updates.idToken
   }
-
-  if (updates.expiresAt !== undefined) {
-    updateData.accessTokenExpiresAt = updates.expiresAt?.toISOString() ?? null
-  }
-
-  if (updates.scope !== undefined) {
-    updateData.scope = updates.scope
-  }
-
-  updateData.lastUsedAt = new Date().toISOString()
 
   const row = await db
-    .updateTable('auth.account')
+    .updateTable('auth.identities')
     .set(updateData)
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirst()
 
-  return row ? toCompatRecord(row) : null
+  return row ? toCompatRecord(row as IdentityRow) : null
 }
 
 export async function deleteAccountForUser(
@@ -225,10 +174,10 @@ export async function deleteAccountForUser(
   providerId: string,
 ): Promise<boolean> {
   const result = await db
-    .deleteFrom('auth.account')
+    .deleteFrom('auth.identities')
     .where('id', '=', id)
-    .where('userId', '=', userId)
-    .where('providerId', '=', providerId)
+    .where('userid', '=', userId)
+    .where('provider', '=', providerId)
     .executeTakeFirst()
 
   return (result.numDeletedRows ?? 0n) > 0n

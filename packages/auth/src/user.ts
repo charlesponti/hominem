@@ -1,14 +1,13 @@
 import type { User } from './types'
-import type { UserSelect } from './contracts'
+import type { UserRow } from './contracts'
 
-export function toUser(source: UserSelect): User {
+export function toUser(source: UserRow): User {
   return {
     id: source.id,
     email: source.email,
-    name: source.name || undefined,
-    image: source.image || undefined,
-    isAdmin: Boolean(source.isAdmin),
-    createdAt: source.createdAt ?? '',
-    updatedAt: source.updatedAt ?? '',
+    name: source.name ?? undefined,
+    image: source.avatar_url ?? undefined,
+    createdAt: source.createdat.toISOString(),
+    updatedAt: source.updatedat.toISOString(),
   }
 }

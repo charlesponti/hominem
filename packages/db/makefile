@@ -16,7 +16,7 @@ typecheck:
 	bun run typecheck
 
 codegen:
-	bun run kysely-codegen
+	bun run codegen
 
 goose-up:
 	bun run goose:up

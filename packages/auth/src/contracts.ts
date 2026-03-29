@@ -1,9 +1,3 @@
-export interface UserSelect {
-  id: string
-  email: string
-  name: string | null
-  image: string | null
-  isAdmin: boolean | null
-  createdAt: string | null
-  updatedAt: string | null
-}
+import type { Database, Selectable } from '@hominem/db'
+
+export type UserRow = Selectable<Database['auth.users']>

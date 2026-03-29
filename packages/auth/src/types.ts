@@ -3,7 +3,6 @@ export interface User {
   email: string
   name?: string | undefined
   image?: string | undefined
-  isAdmin: boolean
   createdAt: string
   updatedAt: string
 }

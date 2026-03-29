@@ -38,7 +38,7 @@
     "test:report": "bunx vitest run --config vitest.config.ts --reporter=json --outputFile test-results/vitest-report.json; status=$?; bun run ./scripts/summarize-vitest-report.ts test-results/vitest-report.json; exit $status",
     "test": "turbo run test",
     "test:integration": "bash ./scripts/run-integration-tests.sh",
-    "typecheck:native": "bun run ./scripts/typecheck-native.ts",
+    "typecheck:native": "bun run ./scripts/typecheck-native.mjs",
     "update:turbo": "bunx @turbo/codemod@latest update"
   },
   "dependencies": {

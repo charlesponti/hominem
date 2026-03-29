@@ -17,7 +17,8 @@ types.setTypeParser(types.builtins.DATE, (val) => val)
 
 // Create a connection pool
 export const pool = new Pool({
-  connectionString: env.DATABASE_URL || 'postgres://localhost/hominem',
+  connectionString: env.DATABASE_URL,
+  options: '-c search_path=auth,app,ops,public',
 })
 
 // Create Kysely instance with proper typing

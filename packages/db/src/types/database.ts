@@ -1,13 +1,10 @@
 import type { ColumnType } from "kysely";
-import type { IPostgresInterval } from "postgres-interval";
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
-
-export type Interval = ColumnType<IPostgresInterval, IPostgresInterval | number, IPostgresInterval | number>;
 
 export type Json = JsonValue;
 
@@ -25,8 +22,630 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AppBookmarks {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  place_id: string | null;
+  title: string;
+  updatedat: Generated<Timestamp>;
+  url: string;
+}
+
+export interface AppChatMessages {
+  author_userid: string | null;
+  chat_id: string;
+  content: string;
+  createdat: Generated<Timestamp>;
+  files: Json | null;
+  id: Generated<string>;
+  parent_message_id: string | null;
+  reasoning: string | null;
+  role: string;
+  tool_calls: Json | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppChats {
+  archived_at: Timestamp | null;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  last_message_at: Generated<Timestamp>;
+  note_id: string | null;
+  owner_userid: string;
+  primary_space_id: string | null;
+  source: string | null;
+  title: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppEntities {
+  createdat: Generated<Timestamp>;
+  entity_id: string;
+  entity_table: string;
+  owner_userid: string | null;
+  primary_space_id: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppEntityLinks {
+  createdat: Generated<Timestamp>;
+  from_entity_id: string;
+  from_entity_table: string;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  relation_type: string;
+  space_id: string | null;
+  to_entity_id: string;
+  to_entity_table: string;
+  updatedat: Generated<Timestamp>;
+  valid_during: Generated<string>;
+}
+
+export interface AppEventAttendees {
+  createdat: Generated<Timestamp>;
+  email: string | null;
+  event_id: string;
+  id: Generated<string>;
+  person_id: string | null;
+  responded_at: Timestamp | null;
+  role: Generated<string>;
+  status: Generated<string>;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppEvents {
+  color: string | null;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  ends_at: Timestamp | null;
+  event_type: string;
+  external_id: string | null;
+  id: Generated<string>;
+  is_all_day: Generated<boolean>;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  place_id: string | null;
+  recurrence: Generated<Json>;
+  source: string | null;
+  starts_at: Timestamp;
+  title: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppFinanceAccounts {
+  account_subtype: string | null;
+  account_type: string;
+  accountid: string | null;
+  available_balance: Numeric | null;
+  createdat: Generated<Timestamp>;
+  currency_code: Generated<string>;
+  current_balance: Numeric | null;
+  id: Generated<string>;
+  institution_id: string | null;
+  is_active: Generated<boolean>;
+  mask: string | null;
+  metadata: Generated<Json>;
+  name: string;
+  owner_userid: string;
+  plaid_item_id: string | null;
+  provider: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppFinanceInstitutions {
+  country_code: string | null;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  logo_url: string | null;
+  name: string;
+  provider: string | null;
+  provider_institution_id: string | null;
+  updatedat: Generated<Timestamp>;
+  website_url: string | null;
+}
+
+export interface AppFinanceTransactions {
+  account_id: string;
+  amount: Numeric;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  external_id: string | null;
+  id: Generated<string>;
+  merchant_name: string | null;
+  notes: string | null;
+  occurred_at: Timestamp | null;
+  owner_userid: string;
+  pending: Generated<boolean>;
+  posted_on: Timestamp;
+  provider_payload: Generated<Json>;
+  source: string | null;
+  transaction_type: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppGoals {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  id: Generated<string>;
+  owner_userid: string;
+  status: Generated<string>;
+  target_at: Timestamp | null;
+  title: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppKeyResults {
+  createdat: Generated<Timestamp>;
+  current_value: Numeric | null;
+  due_at: Timestamp | null;
+  goal_id: string;
+  id: Generated<string>;
+  target_value: Numeric | null;
+  title: string;
+  unit: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppMusicAlbums {
+  album_art_url: string | null;
+  artist_id: string | null;
+  artist_name: string | null;
+  createdat: Generated<Timestamp>;
+  external_id: string | null;
+  genre: string | null;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  release_date: Timestamp | null;
+  source: string;
+  title: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppMusicArtists {
+  createdat: Generated<Timestamp>;
+  external_id: string | null;
+  genre: string | null;
+  id: Generated<string>;
+  image_url: string | null;
+  metadata: Generated<Json>;
+  name: string;
+  owner_userid: string;
+  source: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppMusicListens {
+  completed: Generated<boolean>;
+  context_id: string | null;
+  context_type: string | null;
+  createdat: Generated<Timestamp>;
+  duration_seconds: number | null;
+  ended_at: Timestamp | null;
+  id: Generated<string>;
+  owner_userid: string;
+  source: string;
+  started_at: Timestamp;
+  track_id: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppMusicPlaylists {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  external_id: string | null;
+  id: Generated<string>;
+  image_url: string | null;
+  is_public: Generated<boolean>;
+  metadata: Generated<Json>;
+  name: string;
+  owner_userid: string;
+  source: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppMusicPlaylistTracks {
+  added_at: Generated<Timestamp>;
+  playlist_id: string;
+  position: number;
+  track_id: string;
+}
+
+export interface AppMusicTracks {
+  album_art_url: string | null;
+  album_id: string | null;
+  album_name: string | null;
+  artist_id: string | null;
+  artist_name: string | null;
+  createdat: Generated<Timestamp>;
+  disc_number: number | null;
+  duration_seconds: number | null;
+  external_id: string | null;
+  genre: string | null;
+  id: Generated<string>;
+  isrc: string | null;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  source: string;
+  title: string;
+  track_number: number | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppNotes {
+  createdat: Generated<Timestamp>;
+  current_version_id: string | null;
+  id: Generated<string>;
+  is_locked: Generated<boolean>;
+  owner_userid: string;
+  parent_note_id: string | null;
+  source: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppNoteShares {
+  access_period: Generated<string | null>;
+  createdat: Generated<Timestamp>;
+  expiresat: Timestamp | null;
+  granted_by_userid: string | null;
+  id: Generated<string>;
+  note_id: string;
+  permission: Generated<string>;
+  revokedat: Timestamp | null;
+  shared_with_userid: string;
+}
+
+export interface AppNoteVersions {
+  analysis: Json | null;
+  content: string | null;
+  created_by_userid: string | null;
+  createdat: Generated<Timestamp>;
+  excerpt: string | null;
+  id: Generated<string>;
+  mentions: Generated<Json>;
+  note_id: string;
+  note_type: Generated<string>;
+  published_at: Timestamp | null;
+  publishing_metadata: Json | null;
+  scheduled_for: Timestamp | null;
+  status: Generated<string>;
+  title: string | null;
+  updatedat: Generated<Timestamp>;
+  version_number: number;
+}
+
+export interface AppPeople {
+  createdat: Generated<Timestamp>;
+  email: string | null;
+  ended_at: Timestamp | null;
+  first_name: string | null;
+  id: Generated<string>;
+  image: string | null;
+  last_name: string | null;
+  metadata: Generated<Json>;
+  notes: string | null;
+  owner_userid: string;
+  person_type: Generated<string>;
+  phone: string | null;
+  started_at: Timestamp | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppPlaces {
+  address: string | null;
+  createdat: Generated<Timestamp>;
+  external_id: string | null;
+  id: Generated<string>;
+  latitude: Numeric | null;
+  longitude: Numeric | null;
+  name: string;
+  notes: string | null;
+  owner_userid: string;
+  place_type: string | null;
+  provider_payload: Generated<Json>;
+  rating: Numeric | null;
+  source: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppPlaidItems {
+  accesstoken: string | null;
+  createdat: Generated<Timestamp>;
+  cursor: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  id: Generated<string>;
+  institution_id: string | null;
+  last_synced_at: Timestamp | null;
+  owner_userid: string;
+  provider: Generated<string>;
+  provider_item_id: string;
+  status: Generated<string>;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppPossessionContainers {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  id: Generated<string>;
+  location: string | null;
+  name: string;
+  owner_userid: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppPossessionEvents {
+  amount: Numeric | null;
+  amount_unit: string | null;
+  container_id: string | null;
+  createdat: Generated<Timestamp>;
+  end_date: Timestamp | null;
+  event_type: string;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  method: string | null;
+  occurred_at: Timestamp | null;
+  owner_userid: string;
+  possessionid: string;
+  start_date: Timestamp | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppPossessions {
+  container_id: string | null;
+  createdat: Generated<Timestamp>;
+  current_value: Numeric | null;
+  description: string | null;
+  id: Generated<string>;
+  item_condition: string | null;
+  location: string | null;
+  metadata: Generated<Json>;
+  name: string;
+  owner_userid: string;
+  purchase_date: Timestamp | null;
+  purchase_price: Numeric | null;
+  serial_number: string | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppSpaceInvites {
+  accepted_at: Timestamp | null;
+  createdat: Generated<Timestamp>;
+  expiresat: Generated<Timestamp>;
+  id: Generated<string>;
+  invite_token: string;
+  invite_window: Generated<string | null>;
+  invited_user_email: string;
+  invited_user_email_normalized: Generated<string | null>;
+  invited_userid: string | null;
+  inviter_userid: string;
+  revokedat: Timestamp | null;
+  space_id: string;
+  status: Generated<string>;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppSpaceItems {
+  added_at: Generated<Timestamp>;
+  added_by_userid: string | null;
+  entity_id: string;
+  entity_table: string;
+  id: Generated<string>;
+  is_pinned: Generated<boolean>;
+  membership_period: Generated<string | null>;
+  metadata: Generated<Json>;
+  position: Numeric | null;
+  removed_at: Timestamp | null;
+  space_id: string;
+}
+
+export interface AppSpaceMembers {
+  added_by_userid: string | null;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  membership_period: Generated<string>;
+  space_id: string;
+  userid: string;
+}
+
+export interface AppSpaces {
+  color: string | null;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  icon: string | null;
+  id: Generated<string>;
+  is_ordered: Generated<boolean>;
+  name: string;
+  owner_userid: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppSpaceTags {
+  created_by_userid: string | null;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  space_id: string;
+  tag_id: string;
+}
+
+export interface AppTagAliases {
+  alias: string;
+  alias_slug: string;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  tag_id: string;
+}
+
+export interface AppTagAssignments {
+  assigned_by_userid: string | null;
+  assignment_period: Generated<string | null>;
+  assignment_source: Generated<string>;
+  confidence: Numeric | null;
+  createdat: Generated<Timestamp>;
+  entity_id: string;
+  entity_table: string;
+  id: Generated<string>;
+  removed_at: Timestamp | null;
+  tag_id: string;
+}
+
+export interface AppTags {
+  archived_at: Timestamp | null;
+  color: string | null;
+  created_by_userid: string | null;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  icon: string | null;
+  id: Generated<string>;
+  name: string;
+  owner_userid: string;
+  path: string;
+  slug: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppTaskAssignments {
+  assigned_by_userid: string | null;
+  assignee_userid: string;
+  assignment_period: Generated<string>;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  primary_space_id: string;
+  task_id: string;
+}
+
+export interface AppTasks {
+  completed_at: Timestamp | null;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  due_at: Timestamp | null;
+  id: Generated<string>;
+  owner_userid: string;
+  parent_task_id: string | null;
+  primary_space_id: string | null;
+  priority: Generated<string>;
+  status: Generated<string>;
+  title: string;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppTravelTrips {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  end_date: Timestamp | null;
+  id: Generated<string>;
+  name: string;
+  notes: string | null;
+  owner_userid: string;
+  start_date: Timestamp;
+  status: Generated<string>;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppVideoChannels {
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  external_id: string | null;
+  handle: string | null;
+  id: Generated<string>;
+  image: string | null;
+  metadata: Generated<Json>;
+  name: string;
+  owner_userid: string;
+  source: string;
+  subscriber_count: number | null;
+  updatedat: Generated<Timestamp>;
+}
+
+export interface AppVideoViews {
+  channel_id: string | null;
+  channel_name: string | null;
+  completed: Generated<boolean>;
+  content_type: string;
+  createdat: Generated<Timestamp>;
+  description: string | null;
+  duration_seconds: number | null;
+  episode_number: number | null;
+  external_id: string | null;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  owner_userid: string;
+  season_number: number | null;
+  source: string;
+  thumbnail_url: string | null;
+  title: string;
+  updatedat: Generated<Timestamp>;
+  watch_time_seconds: Generated<number>;
+  watched_at: Timestamp;
+}
+
+export interface AuthApiKeys {
+  createdat: Generated<Timestamp>;
+  expires_at: Timestamp | null;
+  id: Generated<string>;
+  key_hash: string;
+  last_used_at: Timestamp | null;
+  name: string;
+  prefix: string;
+  revoked_at: Timestamp | null;
+  updatedat: Generated<Timestamp>;
+  userid: string;
+}
+
+export interface AuthDeviceCodes {
+  client_id: string | null;
+  createdat: Generated<Timestamp>;
+  device_code: string;
+  expires_at: Timestamp;
+  id: Generated<string>;
+  last_polled_at: Timestamp | null;
+  polling_interval_seconds: Generated<number>;
+  scope: string | null;
+  status: string;
+  updatedat: Generated<Timestamp>;
+  user_code: string;
+  userid: string | null;
+}
+
+export interface AuthIdentities {
+  access_token_encrypted: string | null;
+  createdat: Generated<Timestamp>;
+  id: Generated<string>;
+  id_token_encrypted: string | null;
+  last_used_at: Timestamp | null;
+  linked_at: Generated<Timestamp>;
+  provider: string;
+  provider_account_id: string | null;
+  provider_subject: string;
+  refresh_token_encrypted: string | null;
+  revoked_at: Timestamp | null;
+  scope: string | null;
+  updatedat: Generated<Timestamp>;
+  userid: string;
+}
+
+export interface AuthPasskeys {
+  aaguid: string | null;
+  backed_up: Generated<boolean>;
+  createdat: Generated<Timestamp>;
+  credential_id: string;
+  device_type: string | null;
+  friendly_name: string | null;
+  id: Generated<string>;
+  last_used_at: Timestamp | null;
+  public_key: Buffer;
+  sign_count: Generated<Int8>;
+  transports: string[] | null;
+  userid: string;
+}
+
 export interface AuthRefreshTokens {
-  created_at: Generated<Timestamp | null>;
+  createdat: Generated<Timestamp>;
   expires_at: Timestamp;
   family_id: string;
   id: Generated<string>;
@@ -38,333 +657,42 @@ export interface AuthRefreshTokens {
 }
 
 export interface AuthSessions {
-  acr: string | null;
-  amr: Generated<Json | null>;
-  created_at: Generated<Timestamp | null>;
+  amr: Generated<Json>;
+  auth_level: Generated<string>;
+  createdat: Generated<Timestamp>;
+  expires_at: Timestamp;
   id: Generated<string>;
   ip_hash: string | null;
-  last_seen_at: Generated<Timestamp | null>;
+  last_seen_at: Generated<Timestamp>;
   revoked_at: Timestamp | null;
-  session_state: string;
+  state: Generated<string>;
+  token_hash: string;
+  updatedat: Generated<Timestamp>;
   user_agent_hash: string | null;
-  user_id: string;
+  userid: string;
 }
 
-export interface AuthSubjects {
+export interface AuthUsers {
+  avatar_url: string | null;
+  createdat: Generated<Timestamp>;
+  email: string;
+  email_verified_at: Timestamp | null;
   id: Generated<string>;
-  is_primary: Generated<boolean | null>;
-  linked_at: Generated<Timestamp | null>;
-  provider: string;
-  provider_subject: string;
-  unlinked_at: Timestamp | null;
-  user_id: string;
+  name: string | null;
+  updatedat: Generated<Timestamp>;
 }
 
-export interface Bookmarks {
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  favicon: string | null;
-  folder: string | null;
+export interface AuthVerificationTokens {
+  channel: string;
+  consumed_at: Timestamp | null;
+  createdat: Generated<Timestamp>;
+  expires_at: Timestamp;
   id: Generated<string>;
-  search_vector: Generated<string | null>;
-  source: string | null;
-  thumbnail: string | null;
-  title: string | null;
-  url: string;
-  user_id: string;
-}
-
-export interface BudgetGoals {
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  target_amount: Numeric;
-  target_period: string;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface CalendarAttendees {
-  created_at: Generated<Timestamp | null>;
-  email: string | null;
-  event_id: string;
-  id: Generated<string>;
-  person_id: string | null;
-  role: Generated<string | null>;
-  status: Generated<string | null>;
-}
-
-export interface CalendarEvents {
-  all_day: Generated<boolean | null>;
-  color: string | null;
-  created_at: Generated<Timestamp | null>;
-  description: string | null;
-  end_time: Timestamp | null;
-  event_type: string;
-  external_id: string | null;
-  id: Generated<string>;
-  location: string | null;
-  location_coords: Json | null;
-  metadata: Generated<Json | null>;
-  recurring: Json | null;
-  search_vector: Generated<string | null>;
-  source: string | null;
-  start_time: Timestamp;
-  title: string;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface CareerApplications {
-  applied_at: Timestamp | null;
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  job_id: string;
-  notes: string | null;
-  outcome: string | null;
-  stage: string | null;
-  status: Generated<string | null>;
-  user_id: string;
-}
-
-export interface CareerCompanies {
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  id: Generated<string>;
-  industry: string | null;
-  logo_url: string | null;
-  name: string;
-  notes: string | null;
-  size: string | null;
-  user_id: string;
-  website: string | null;
-}
-
-export interface CareerInterviews {
-  application_id: string;
-  created_at: Generated<Timestamp | null>;
-  feedback: string | null;
-  format: string | null;
-  id: Generated<string>;
-  interviewers: Generated<Json | null>;
-  outcome: string | null;
-  scheduled_at: Timestamp | null;
-  type: string | null;
-}
-
-export interface CareerJobs {
-  company_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  id: Generated<string>;
-  location: string | null;
-  notes: string | null;
-  remote_type: string | null;
-  salary_currency: Generated<string | null>;
-  salary_max: Int8 | null;
-  salary_min: Int8 | null;
-  status: Generated<string | null>;
-  title: string;
-  url: string | null;
-  user_id: string;
-}
-
-export interface Chat {
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  note_id: string | null;
-  title: string;
-  updated_at: Generated<Timestamp>;
-  user_id: string;
-}
-
-export interface ChatMessage {
-  chat_id: string;
-  content: string;
-  created_at: Generated<Timestamp>;
-  files: Json | null;
-  id: Generated<string>;
-  parent_message_id: string | null;
-  reasoning: string | null;
-  role: string;
-  tool_calls: Json | null;
-  updated_at: Generated<Timestamp>;
-  user_id: string;
-}
-
-export interface Contacts {
-  created_at: Generated<Timestamp | null>;
-  email: string | null;
-  first_name: string;
-  id: Generated<string>;
-  last_name: string | null;
-  linkedin_url: string | null;
-  notes: string | null;
-  phone: string | null;
-  title: string | null;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface DrizzleDrizzleMigrations {
-  created_at: Int8 | null;
-  hash: string;
-  id: Generated<number>;
-}
-
-export interface FinanceAccounts {
-  account_type: string;
-  balance: Generated<Numeric | null>;
-  created_at: Generated<Timestamp | null>;
-  currency: Generated<string | null>;
-  data: Generated<Json | null>;
-  id: Generated<string>;
-  institution_id: string | null;
-  institution_name: string | null;
-  is_active: Generated<boolean | null>;
-  name: string;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface FinanceTransactions {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactions2022 {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactions2023 {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactions2024 {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactions2025 {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactions2026 {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinanceTransactionsDefault {
-  account_id: string;
-  amount: Numeric;
-  category: string | null;
-  category_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  date: Timestamp;
-  date_raw: string | null;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  merchant_name: string | null;
-  pending: Generated<boolean | null>;
-  source: string | null;
-  transaction_type: string;
-  user_id: string;
-}
-
-export interface FinancialInstitutions {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  name: string;
+  identifier: string;
+  purpose: string;
+  token_hash: string;
+  updatedat: Generated<Timestamp>;
+  userid: string | null;
 }
 
 export interface GeographyColumns {
@@ -387,644 +715,34 @@ export interface GeometryColumns {
   type: string | null;
 }
 
-export interface Goals {
-  created_at: Generated<Timestamp | null>;
-  description: string | null;
-  id: Generated<string>;
-  status: Generated<string | null>;
-  target_date: Timestamp | null;
-  title: string;
-  user_id: string;
+export interface GooseDbVersion {
+  id: Generated<number>;
+  is_applied: boolean;
+  tstamp: Generated<Timestamp>;
+  version_id: Int8;
 }
 
-export interface HealthRecords {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface HealthRecords2023 {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface HealthRecords2024 {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface HealthRecords2025 {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface HealthRecords2026 {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface HealthRecordsDefault {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  record_type: string;
-  recorded_at: Timestamp;
-  source: string | null;
-  unit: string | null;
-  user_id: string;
-  value: Numeric | null;
-}
-
-export interface KeyResults {
-  created_at: Generated<Timestamp | null>;
-  current_value: Numeric | null;
-  due_date: Timestamp | null;
-  goal_id: string;
-  id: Generated<string>;
-  target_value: Numeric | null;
-  title: string;
-  unit: string | null;
-}
-
-export interface Logs {
+export interface OpsAuditLogs {
   action: string;
-  created_at: Generated<Timestamp>;
+  actor_userid: string | null;
+  createdat: Generated<Timestamp>;
   entity_id: string | null;
-  entity_type: string | null;
+  entity_schema: string | null;
+  entity_table: string | null;
   id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
+  metadata: Generated<Json>;
 }
 
-export interface Logs202501 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
+export interface OpsSearchLogs {
+  actor_userid: string | null;
+  clicked_entity_id: string | null;
+  clicked_entity_type: string | null;
+  createdat: Generated<Timestamp>;
   id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202502 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202503 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202504 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202505 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202506 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202507 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202508 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202509 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202510 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202511 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202512 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202601 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202602 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface Logs202603 {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface LogsDefault {
-  action: string;
-  created_at: Generated<Timestamp>;
-  entity_id: string | null;
-  entity_type: string | null;
-  id: Generated<string>;
-  metadata: Generated<Json | null>;
-  user_id: string;
-}
-
-export interface MusicAlbums {
-  album_art_url: string | null;
-  artist_name: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  external_id: string | null;
-  genre: string | null;
-  id: Generated<string>;
-  release_date: string | null;
-  source: string;
-  title: string;
-  user_id: string;
-}
-
-export interface MusicArtists {
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  external_id: string | null;
-  genre: string | null;
-  id: Generated<string>;
-  image_url: string | null;
-  name: string;
-  source: string;
-  user_id: string;
-}
-
-export interface MusicLiked {
-  id: Generated<string>;
-  liked_at: Generated<Timestamp | null>;
-  source: string;
-  track_id: string;
-  user_id: string;
-}
-
-export interface MusicListening {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicListening2023 {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicListening2024 {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicListening2025 {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicListening2026 {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicListeningDefault {
-  completed: Generated<boolean | null>;
-  context_id: string | null;
-  context_type: string | null;
-  created_at: Generated<Timestamp | null>;
-  duration_seconds: number | null;
-  ended_at: Timestamp | null;
-  id: Generated<string>;
-  source: string;
-  started_at: Timestamp;
-  track_id: string | null;
-  user_id: string;
-}
-
-export interface MusicPlaylists {
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  external_id: string | null;
-  id: Generated<string>;
-  image_url: string | null;
-  is_public: Generated<boolean | null>;
-  name: string;
-  source: string;
-  track_count: Generated<number | null>;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface MusicPlaylistTracks {
-  added_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  playlist_id: string;
-  position: number;
-  track_id: string;
-}
-
-export interface MusicTracks {
-  album_art_url: string | null;
-  album_name: string | null;
-  artist_name: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  disc_number: number | null;
-  duration_seconds: number | null;
-  external_id: string | null;
-  genre: string | null;
-  id: Generated<string>;
-  isrc: string | null;
-  search_vector: Generated<string | null>;
-  source: string;
-  title: string;
-  track_number: number | null;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface Notes {
-  analysis: Json | null;
-  content: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  excerpt: string | null;
-  folder: string | null;
-  id: Generated<string>;
-  is_latest_version: Generated<boolean>;
-  is_locked: Generated<boolean | null>;
-  mentions: Generated<Json | null>;
-  parent_note_id: string | null;
-  published_at: Timestamp | null;
-  publishing_metadata: Json | null;
-  scheduled_for: Timestamp | null;
-  search_vector: Generated<string | null>;
-  source: string | null;
-  status: Generated<string>;
-  title: string | null;
-  type: Generated<string>;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-  version_number: Generated<number>;
-}
-
-export interface NoteShares {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  note_id: string;
-  permission: Generated<string | null>;
-  shared_with_user_id: string;
-}
-
-export interface NoteTags {
-  created_at: Generated<Timestamp | null>;
-  note_id: string;
-  tag_id: string;
-}
-
-export interface PartitionAudit {
-  default_partition_spill_row_count: Int8 | null;
-  gap_interval: Interval | null;
-  has_coverage: boolean | null;
-  max_partition_to: Timestamp | null;
-  oldest_partition_from: Timestamp | null;
-  parent_table: string | null;
-  required_until: Timestamp | null;
-  retention_cutoff: Timestamp | null;
-  retention_violation: boolean | null;
-}
-
-export interface Persons {
-  avatar_url: string | null;
-  created_at: Generated<Timestamp | null>;
-  date_ended: Timestamp | null;
-  date_started: Timestamp | null;
-  email: string | null;
-  first_name: string | null;
-  id: Generated<string>;
-  last_name: string | null;
-  metadata: Generated<Json | null>;
-  notes: string | null;
-  owner_user_id: string;
-  person_type: string;
-  phone: string | null;
-  search_vector: Generated<string | null>;
-  updated_at: Generated<Timestamp | null>;
-}
-
-export interface Places {
-  address: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  id: Generated<string>;
-  latitude: Numeric | null;
-  location: string | null;
-  longitude: Numeric | null;
-  name: string;
-  notes: string | null;
-  place_type: string | null;
-  rating: Numeric | null;
-  user_id: string;
-}
-
-export interface PlaidItems {
-  access_token: string | null;
-  created_at: Generated<Timestamp | null>;
-  cursor: string | null;
-  error: string | null;
-  id: Generated<string>;
-  institution_id: string | null;
-  item_id: string;
-  last_synced_at: Timestamp | null;
-  status: Generated<string | null>;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface PossessionContainers {
-  created_at: Generated<Timestamp | null>;
-  description: string | null;
-  id: Generated<string>;
-  location: string | null;
-  name: string;
-  user_id: string;
-}
-
-export interface Possessions {
-  category: string | null;
-  condition: string | null;
-  container_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  current_value: Numeric | null;
-  data: Generated<Json | null>;
-  description: string | null;
-  id: Generated<string>;
-  location: string | null;
-  name: string;
-  purchase_date: Timestamp | null;
-  purchase_price: Numeric | null;
-  serial_number: string | null;
-  user_id: string;
-}
-
-export interface PossessionsUsage {
-  amount: Numeric | null;
-  amount_unit: string | null;
-  container_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  end_date: Timestamp | null;
-  id: Generated<string>;
-  method: string | null;
-  possession_id: string;
-  start_date: Timestamp | null;
-  timestamp: Timestamp | null;
-  type: string | null;
-  user_id: string;
-}
-
-export interface Schools {
-  created_at: Generated<Timestamp | null>;
-  degree: string | null;
-  end_year: number | null;
-  field_of_study: string | null;
-  gpa: Numeric | null;
-  id: Generated<string>;
-  name: string;
-  notes: string | null;
-  start_year: number | null;
-  user_id: string;
-}
-
-export interface Searches {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
+  metadata: Generated<Json>;
   query: string;
   results_count: number | null;
-  user_id: string;
-}
-
-export interface Searches2025Q1 {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
-}
-
-export interface Searches2025Q2 {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
-}
-
-export interface Searches2025Q3 {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
-}
-
-export interface Searches2025Q4 {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
-}
-
-export interface Searches2026Q1 {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
-}
-
-export interface SearchesDefault {
-  clicked_result_id: string | null;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  query: string;
-  results_count: number | null;
-  user_id: string;
+  scope: string | null;
 }
 
 export interface SpatialRefSys {
@@ -1035,485 +753,81 @@ export interface SpatialRefSys {
   srtext: string | null;
 }
 
-export interface TaggedItems {
-  created_at: Generated<Timestamp | null>;
-  entity_id: string;
-  entity_type: string;
-  id: Generated<string>;
-  tag_id: string;
+export interface TopologyLayer {
+  child_id: number | null;
+  feature_column: string;
+  feature_type: number;
+  layer_id: number;
+  level: Generated<number>;
+  schema_name: string;
+  table_name: string;
+  topology_id: number;
 }
 
-export interface Tags {
-  color: string | null;
-  created_at: Generated<Timestamp | null>;
-  description: string | null;
-  emoji_image_url: string | null;
-  group_id: string | null;
-  id: Generated<string>;
+export interface TopologyTopology {
+  hasz: Generated<boolean>;
+  id: Generated<number>;
   name: string;
-  owner_id: string;
-}
-
-export interface TagShares {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  permission: Generated<string | null>;
-  shared_with_user_id: string;
-  tag_id: string;
-}
-
-export interface TaskListCollaborators {
-  added_by_user_id: string | null;
-  created_at: Generated<Timestamp | null>;
-  list_id: string;
-  user_id: string;
-}
-
-export interface TaskListInvites {
-  accepted: Generated<boolean>;
-  accepted_at: Timestamp | null;
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  invited_user_email: string;
-  invited_user_id: string | null;
-  list_id: string;
-  token: string;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface TaskLists {
-  color: string | null;
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  name: string;
-  user_id: string;
-}
-
-export interface Tasks {
-  completed_at: Timestamp | null;
-  created_at: Generated<Timestamp | null>;
-  description: string | null;
-  due_date: Timestamp | null;
-  id: Generated<string>;
-  list_id: string | null;
-  parent_id: string | null;
-  priority: Generated<string | null>;
-  status: Generated<string | null>;
-  title: string;
-  updated_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface TravelFlights {
-  airline: string | null;
-  arrival_airport: string | null;
-  arrival_time: Timestamp | null;
-  confirmation_code: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  departure_airport: string | null;
-  departure_time: Timestamp | null;
-  flight_number: string | null;
-  id: Generated<string>;
-  seat: string | null;
-  trip_id: string | null;
-  user_id: string;
-}
-
-export interface TravelHotels {
-  address: string | null;
-  check_in: Timestamp | null;
-  check_out: Timestamp | null;
-  confirmation_code: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  id: Generated<string>;
-  name: string;
-  room_type: string | null;
-  trip_id: string | null;
-  user_id: string;
-}
-
-export interface TravelTrips {
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  end_date: Timestamp | null;
-  id: Generated<string>;
-  name: string;
-  start_date: Timestamp;
-  status: Generated<string | null>;
-  user_id: string;
-}
-
-export interface UserAccount {
-  access_token: string | null;
-  access_token_expires_at: Timestamp | null;
-  account_id: string;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  id_token: string | null;
-  password: string | null;
-  provider_id: string;
-  refresh_token: string | null;
-  refresh_token_expires_at: Timestamp | null;
-  scope: string | null;
-  updated_at: Generated<Timestamp>;
-  user_id: string;
-}
-
-export interface UserAccounts {
-  account_id: string;
-  created_at: Generated<Timestamp | null>;
-  id: string;
-  provider: string;
-  user_id: string;
-}
-
-export interface UserApiKeys {
-  created_at: Generated<Timestamp | null>;
-  expires_at: Timestamp | null;
-  id: string;
-  key_hash: string;
-  name: string;
-  user_id: string | null;
-}
-
-export interface UserDeviceCode {
-  client_id: string | null;
-  device_code: string;
-  expires_at: Timestamp;
-  id: Generated<string>;
-  last_polled_at: Timestamp | null;
-  polling_interval: number | null;
-  scope: string | null;
-  status: string;
-  user_code: string;
-  user_id: string | null;
-}
-
-export interface UserJwks {
-  created_at: Generated<Timestamp>;
-  expires_at: Timestamp | null;
-  id: Generated<string>;
-  private_key: string;
-  public_key: string;
-}
-
-export interface UserPasskey {
-  aaguid: string | null;
-  backed_up: boolean;
-  counter: number;
-  created_at: Timestamp | null;
-  credential_id: string;
-  device_type: string;
-  id: Generated<string>;
-  name: string | null;
-  public_key: string;
-  transports: string | null;
-  user_id: string;
-}
-
-export interface UserPersonRelations {
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
-  person_id: string;
-  relationship_type: string | null;
-  user_id: string;
-}
-
-export interface Users {
-  avatar_url: string | null;
-  created_at: Generated<Timestamp | null>;
-  email: string;
-  email_verified: Generated<boolean>;
-  id: Generated<string>;
-  image: string | null;
-  is_admin: Generated<boolean>;
-  name: string | null;
-  updated_at: Generated<Timestamp | null>;
-}
-
-export interface UserSession {
-  created_at: Generated<Timestamp>;
-  expires_at: Timestamp;
-  id: Generated<string>;
-  ip_address: string | null;
-  token: string;
-  updated_at: Generated<Timestamp>;
-  user_agent: string | null;
-  user_id: string;
-}
-
-export interface UserSessions {
-  created_at: Generated<Timestamp | null>;
-  expires_at: Timestamp;
-  id: string;
-  token: string;
-  user_id: string | null;
-}
-
-export interface UserVerification {
-  created_at: Generated<Timestamp>;
-  expires_at: Timestamp;
-  id: Generated<string>;
-  identifier: string;
-  updated_at: Generated<Timestamp>;
-  value: string;
-}
-
-export interface VideoChannels {
-  avatar_url: string | null;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  external_id: string | null;
-  handle: string | null;
-  id: Generated<string>;
-  name: string;
-  source: string;
-  subscriber_count: number | null;
-  user_id: string;
-}
-
-export interface VideoSubscriptions {
-  channel_id: string;
-  id: Generated<string>;
-  subscribed_at: Generated<Timestamp | null>;
-  user_id: string;
-}
-
-export interface VideoViewings {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
-}
-
-export interface VideoViewings2023 {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
-}
-
-export interface VideoViewings2024 {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
-}
-
-export interface VideoViewings2025 {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
-}
-
-export interface VideoViewings2026 {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
-}
-
-export interface VideoViewingsDefault {
-  channel_name: string | null;
-  completed: Generated<boolean | null>;
-  content_type: string;
-  created_at: Generated<Timestamp | null>;
-  data: Generated<Json | null>;
-  description: string | null;
-  duration_seconds: number | null;
-  episode: number | null;
-  external_id: string | null;
-  id: Generated<string>;
-  season: number | null;
-  source: string;
-  thumbnail_url: string | null;
-  title: string;
-  user_id: string;
-  watch_time_seconds: Generated<number | null>;
-  watched_at: Timestamp;
+  precision: number;
+  srid: number;
+  useslargeids: Generated<boolean>;
 }
 
 export interface DB {
-  auth_refresh_tokens: AuthRefreshTokens;
-  auth_sessions: AuthSessions;
-  auth_subjects: AuthSubjects;
-  bookmarks: Bookmarks;
-  budget_goals: BudgetGoals;
-  calendar_attendees: CalendarAttendees;
-  calendar_events: CalendarEvents;
-  career_applications: CareerApplications;
-  career_companies: CareerCompanies;
-  career_interviews: CareerInterviews;
-  career_jobs: CareerJobs;
-  chat: Chat;
-  chat_message: ChatMessage;
-  contacts: Contacts;
-  "drizzle.__drizzle_migrations": DrizzleDrizzleMigrations;
-  finance_accounts: FinanceAccounts;
-  finance_transactions: FinanceTransactions;
-  finance_transactions_2022: FinanceTransactions2022;
-  finance_transactions_2023: FinanceTransactions2023;
-  finance_transactions_2024: FinanceTransactions2024;
-  finance_transactions_2025: FinanceTransactions2025;
-  finance_transactions_2026: FinanceTransactions2026;
-  finance_transactions_default: FinanceTransactionsDefault;
-  financial_institutions: FinancialInstitutions;
+  "app.bookmarks": AppBookmarks;
+  "app.chat_messages": AppChatMessages;
+  "app.chats": AppChats;
+  "app.entities": AppEntities;
+  "app.entity_links": AppEntityLinks;
+  "app.event_attendees": AppEventAttendees;
+  "app.events": AppEvents;
+  "app.finance_accounts": AppFinanceAccounts;
+  "app.finance_institutions": AppFinanceInstitutions;
+  "app.finance_transactions": AppFinanceTransactions;
+  "app.goals": AppGoals;
+  "app.key_results": AppKeyResults;
+  "app.music_albums": AppMusicAlbums;
+  "app.music_artists": AppMusicArtists;
+  "app.music_listens": AppMusicListens;
+  "app.music_playlist_tracks": AppMusicPlaylistTracks;
+  "app.music_playlists": AppMusicPlaylists;
+  "app.music_tracks": AppMusicTracks;
+  "app.note_shares": AppNoteShares;
+  "app.note_versions": AppNoteVersions;
+  "app.notes": AppNotes;
+  "app.people": AppPeople;
+  "app.places": AppPlaces;
+  "app.plaid_items": AppPlaidItems;
+  "app.possession_containers": AppPossessionContainers;
+  "app.possession_events": AppPossessionEvents;
+  "app.possessions": AppPossessions;
+  "app.space_invites": AppSpaceInvites;
+  "app.space_items": AppSpaceItems;
+  "app.space_members": AppSpaceMembers;
+  "app.space_tags": AppSpaceTags;
+  "app.spaces": AppSpaces;
+  "app.tag_aliases": AppTagAliases;
+  "app.tag_assignments": AppTagAssignments;
+  "app.tags": AppTags;
+  "app.task_assignments": AppTaskAssignments;
+  "app.tasks": AppTasks;
+  "app.travel_trips": AppTravelTrips;
+  "app.video_channels": AppVideoChannels;
+  "app.video_views": AppVideoViews;
+  "auth.api_keys": AuthApiKeys;
+  "auth.device_codes": AuthDeviceCodes;
+  "auth.identities": AuthIdentities;
+  "auth.passkeys": AuthPasskeys;
+  "auth.refresh_tokens": AuthRefreshTokens;
+  "auth.sessions": AuthSessions;
+  "auth.users": AuthUsers;
+  "auth.verification_tokens": AuthVerificationTokens;
   geography_columns: GeographyColumns;
   geometry_columns: GeometryColumns;
-  goals: Goals;
-  health_records: HealthRecords;
-  health_records_2023: HealthRecords2023;
-  health_records_2024: HealthRecords2024;
-  health_records_2025: HealthRecords2025;
-  health_records_2026: HealthRecords2026;
-  health_records_default: HealthRecordsDefault;
-  key_results: KeyResults;
-  logs: Logs;
-  logs_2025_01: Logs202501;
-  logs_2025_02: Logs202502;
-  logs_2025_03: Logs202503;
-  logs_2025_04: Logs202504;
-  logs_2025_05: Logs202505;
-  logs_2025_06: Logs202506;
-  logs_2025_07: Logs202507;
-  logs_2025_08: Logs202508;
-  logs_2025_09: Logs202509;
-  logs_2025_10: Logs202510;
-  logs_2025_11: Logs202511;
-  logs_2025_12: Logs202512;
-  logs_2026_01: Logs202601;
-  logs_2026_02: Logs202602;
-  logs_2026_03: Logs202603;
-  logs_default: LogsDefault;
-  music_albums: MusicAlbums;
-  music_artists: MusicArtists;
-  music_liked: MusicLiked;
-  music_listening: MusicListening;
-  music_listening_2023: MusicListening2023;
-  music_listening_2024: MusicListening2024;
-  music_listening_2025: MusicListening2025;
-  music_listening_2026: MusicListening2026;
-  music_listening_default: MusicListeningDefault;
-  music_playlist_tracks: MusicPlaylistTracks;
-  music_playlists: MusicPlaylists;
-  music_tracks: MusicTracks;
-  note_shares: NoteShares;
-  note_tags: NoteTags;
-  notes: Notes;
-  partition_audit: PartitionAudit;
-  persons: Persons;
-  places: Places;
-  plaid_items: PlaidItems;
-  possession_containers: PossessionContainers;
-  possessions: Possessions;
-  possessions_usage: PossessionsUsage;
-  schools: Schools;
-  searches: Searches;
-  searches_2025_q1: Searches2025Q1;
-  searches_2025_q2: Searches2025Q2;
-  searches_2025_q3: Searches2025Q3;
-  searches_2025_q4: Searches2025Q4;
-  searches_2026_q1: Searches2026Q1;
-  searches_default: SearchesDefault;
+  goose_db_version: GooseDbVersion;
+  "ops.audit_logs": OpsAuditLogs;
+  "ops.search_logs": OpsSearchLogs;
   spatial_ref_sys: SpatialRefSys;
-  tag_shares: TagShares;
-  tagged_items: TaggedItems;
-  tags: Tags;
-  task_list_collaborators: TaskListCollaborators;
-  task_list_invites: TaskListInvites;
-  task_lists: TaskLists;
-  tasks: Tasks;
-  travel_flights: TravelFlights;
-  travel_hotels: TravelHotels;
-  travel_trips: TravelTrips;
-  user_account: UserAccount;
-  user_accounts: UserAccounts;
-  user_api_keys: UserApiKeys;
-  user_device_code: UserDeviceCode;
-  user_jwks: UserJwks;
-  user_passkey: UserPasskey;
-  user_person_relations: UserPersonRelations;
-  user_session: UserSession;
-  user_sessions: UserSessions;
-  user_verification: UserVerification;
-  users: Users;
-  video_channels: VideoChannels;
-  video_subscriptions: VideoSubscriptions;
-  video_viewings: VideoViewings;
-  video_viewings_2023: VideoViewings2023;
-  video_viewings_2024: VideoViewings2024;
-  video_viewings_2025: VideoViewings2025;
-  video_viewings_2026: VideoViewings2026;
-  video_viewings_default: VideoViewingsDefault;
+  "topology.layer": TopologyLayer;
+  "topology.topology": TopologyTopology;
 }

@@ -1,6 +1,6 @@
-import { db, type Selectable, type Users } from '@hominem/db'
+import { db, type Database, type Selectable } from '@hominem/db'
 
-type UserRow = Selectable<Users>
+type UserRow = Selectable<Database['auth.users']>
 
 export class UserAuthService {
   static async findByIdOrEmail(opts: { id?: string; email?: string }): Promise<UserRow | null> {
@@ -9,7 +9,7 @@ export class UserAuthService {
       return null
     }
 
-    let query = db.selectFrom('auth.user').selectAll()
+    let query = db.selectFrom('auth.users').selectAll()
 
     if (id && email) {
       query = query.where((eb) => eb.or([eb('id', '=', id), eb('email', '=', email)]))
@@ -25,7 +25,7 @@ export class UserAuthService {
 
   static async getUserByEmail(email: string): Promise<UserRow | null> {
     const result = await db
-      .selectFrom('auth.user')
+      .selectFrom('auth.users')
       .selectAll()
       .where('email', '=', email)
       .limit(1)
@@ -36,7 +36,7 @@ export class UserAuthService {
 
   static async getUserById(id: string): Promise<UserRow | null> {
     const result = await db
-      .selectFrom('auth.user')
+      .selectFrom('auth.users')
       .selectAll()
       .where('id', '=', id)
       .limit(1)
@@ -47,7 +47,7 @@ export class UserAuthService {
 
   static async deleteUser(id: string): Promise<boolean> {
     const result = await db
-      .deleteFrom('auth.user')
+      .deleteFrom('auth.users')
       .where('id', '=', id)
       .executeTakeFirst()
 
