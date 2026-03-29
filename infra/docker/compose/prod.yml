@@ -1,5 +1,5 @@
 # Production environment
-# Usage: docker-compose -f compose/base.yml -f compose/prod.yml up
+# Usage: docker compose -f infra/docker/compose/base.yml -f infra/docker/compose/prod.yml up
 # Note: In production, use external database services (Cloud SQL, RDS, etc.)
 
 services:
@@ -56,6 +56,6 @@ services:
 
 x-postgres-build: &postgres-build
   build:
-    context: ../..
-    dockerfile: docker/postgres/Dockerfile
+    context: ../../..
+    dockerfile: infra/docker/images/postgres/Dockerfile
   platform: linux/amd64

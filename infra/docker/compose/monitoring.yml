@@ -1,10 +1,10 @@
 # Monitoring stack for local development
-# Usage: docker-compose -f compose/base.yml -f compose/dev.yml -f compose/monitoring.yml up
+# Usage: docker compose -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml -f infra/docker/compose/monitoring.yml up
 
 x-postgres-build: &postgres-build
   build:
-    context: ../..
-    dockerfile: docker/postgres/Dockerfile
+    context: ../../..
+    dockerfile: infra/docker/images/postgres/Dockerfile
   platform: linux/amd64
 
 services:
@@ -12,8 +12,8 @@ services:
     image: prom/prometheus:v3.9.1
     container_name: hominem-prometheus
     volumes:
-      - ../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../../monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - ../../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../../monitoring/prometheus/rules:/etc/prometheus/rules:ro
     ports:
       - "9090:9090"
     healthcheck:
@@ -30,7 +30,7 @@ services:
     image: prom/alertmanager:v0.31.1
     container_name: hominem-alertmanager
     volumes:
-      - ../../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ../../../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     ports:
       - "9093:9093"
     healthcheck:
@@ -85,8 +85,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ../../../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       grafana-db:
         condition: service_healthy

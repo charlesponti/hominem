@@ -64,7 +64,6 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 
 - Production deployment is being rebuilt from scratch alongside the DB, services, and API layers.
 - Keep Docker assets here limited to reusable infrastructure and image inputs, not final architecture decisions.
-- Use the root `Makefile` only for local infra orchestration while the new command surface settles.
 
 ## PostgreSQL 18
 
