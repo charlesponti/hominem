@@ -1,13 +1,8 @@
 import type { AuthState } from './types';
+import type { User } from '@hominem/auth';
 
 export interface AuthBootStoredTokens {
   sessionCookieHeader: string | null;
-}
-
-export interface AuthBootUser {
-  id: string;
-  email: string;
-  name?: string | null;
 }
 
 export type AuthBootResult =
@@ -30,11 +25,11 @@ export interface AuthBootDeps {
   probeSession: (input: {
     sessionCookieHeader: string | null;
     signal: AbortSignal;
-  }) => Promise<{ user: AuthBootUser } | null>;
+  }) => Promise<{ user: User } | null>;
   /** Clear all stored tokens. Called only when probeSession returns null (invalid token). */
   clearTokens: () => Promise<void>;
   /** Upsert the user profile in local store and return the normalized profile. */
-  upsertProfile: (user: AuthBootUser) => Promise<NonNullable<AuthState['user']> | null>;
+  upsertProfile: (user: User) => Promise<NonNullable<AuthState['user']> | null>;
   /** One-time legacy data migration — must be idempotent. */
   clearLegacyData: () => Promise<void>;
   /** AbortSignal tied to the boot lifecycle. Throws AbortError on timeout or unmount. */

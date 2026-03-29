@@ -31,50 +31,6 @@ const OTP_REQUEST_TIMEOUT_MS = 12000;
 const OTP_VERIFY_TIMEOUT_MS = 20000;
 const AUTH_BOOT_TIMEOUT_MS = 8000;
 
-interface SignInResponse {
-  user: {
-    id: string;
-    email: string;
-    name?: string | null;
-  };
-}
-
-interface SessionResponse {
-  isAuthenticated: boolean;
-  user: {
-    id: string;
-    email: string;
-    name?: string | null;
-  } | null;
-}
-
-function hasValidSignInResponse(input: SignInResponse) {
-  return input.user.id.length > 0 && input.user.email.length > 0;
-}
-
-function toAuthUserProfile(localProfile: User | null): User | null {
-  if (!localProfile) return null;
-  return {
-    id: localProfile.id,
-    email: localProfile.email,
-    name: localProfile.name,
-    image: localProfile.image,
-    createdAt: localProfile.createdAt,
-    updatedAt: localProfile.updatedAt,
-  };
-}
-
-function fromSignInUser(user: { id: string; email: string; name?: string | null }): User {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name ?? undefined,
-    image: undefined,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
 async function clearLegacyLocalDataOnce() {
   const migrationFlag = await SecureStore.getItemAsync(LOCAL_MIGRATION_KEY);
   if (migrationFlag === '1') return;
@@ -153,7 +109,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             signal: sig,
           });
           if (response.ok) {
-            const data = (await response.json()) as SessionResponse;
+            const data = (await response.json()) as { isAuthenticated: boolean; user: User | null };
             if (data.isAuthenticated && data.user) {
               return { user: data.user };
             }
@@ -167,7 +123,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           sessionCookieHeaderRef.current = null;
         },
         upsertProfile: async (user) => {
-          return LocalStore.upsertUserProfile(fromSignInUser(user));
+          return LocalStore.upsertUserProfile(user);
         },
         clearLegacyData: clearLegacyLocalDataOnce,
         signal,
@@ -327,21 +283,28 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           throw new Error(message);
         }
 
-        const signInData = (await response.json()) as SignInResponse;
-
-        if (!hasValidSignInResponse(signInData)) {
-          throw new Error('Invalid sign-in response from API');
-        }
-
         const sessionCookieHeader = await persistSessionCookieFromHeaders(response.headers);
         if (!sessionCookieHeader) {
           throw new Error('Verification succeeded but no session cookie was returned');
         }
         sessionCookieHeaderRef.current = sessionCookieHeader;
 
+        const sessionResponse = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
+          method: 'GET',
+          headers: { cookie: sessionCookieHeader },
+        });
+
+        if (!sessionResponse.ok) {
+          throw new Error('Verification succeeded but failed to load user session');
+        }
+
+        const sessionData = (await sessionResponse.json()) as { user: User | null };
+        if (!sessionData.user) {
+          throw new Error('Verification succeeded but no user in session');
+        }
+
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
-        const localUser = fromSignInUser(signInData.user);
-        const userProfile = await LocalStore.upsertUserProfile(localUser);
+        const userProfile = await LocalStore.upsertUserProfile(sessionData.user);
         if (!userProfile) throw new Error('Failed to create user profile');
 
         dispatch({ type: 'SESSION_LOADED', user: userProfile });
