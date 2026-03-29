@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE app.music_artists (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   source text NOT NULL,
   external_id text,
   name text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE app.music_artists (
 
 CREATE TABLE app.music_albums (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   artist_id uuid REFERENCES app.music_artists(id) ON DELETE SET NULL,
   source text NOT NULL,
   external_id text,
@@ -30,7 +30,7 @@ CREATE TABLE app.music_albums (
 
 CREATE TABLE app.music_tracks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   artist_id uuid REFERENCES app.music_artists(id) ON DELETE SET NULL,
   album_id uuid REFERENCES app.music_albums(id) ON DELETE SET NULL,
   source text NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE app.music_tracks (
 
 CREATE TABLE app.music_playlists (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   source text NOT NULL,
   external_id text,
   name text NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE app.music_playlist_tracks (
 
 CREATE TABLE app.music_listens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   track_id uuid REFERENCES app.music_tracks(id) ON DELETE SET NULL,
   source text NOT NULL,
   started_at timestamptz NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE app.music_listens (
 
 CREATE TABLE app.video_channels (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   source text NOT NULL,
   external_id text,
   name text NOT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE app.video_channels (
 
 CREATE TABLE app.video_views (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   channel_id uuid REFERENCES app.video_channels(id) ON DELETE SET NULL,
   content_type text NOT NULL,
   source text NOT NULL,

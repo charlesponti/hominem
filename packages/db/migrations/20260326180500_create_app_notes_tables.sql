@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE app.notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   parent_note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
   current_version_id uuid,
   source text,
@@ -13,7 +13,7 @@ CREATE TABLE app.notes (
 CREATE TABLE app.note_versions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
-  created_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   version_number integer NOT NULL,
   title text,
   content text,
@@ -43,14 +43,14 @@ ALTER TABLE app.notes
 CREATE TABLE app.note_shares (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
-  shared_with_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  shared_with_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   permission text NOT NULL DEFAULT 'read',
   createdAt timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE app.tags (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   name text NOT NULL,
   color text,
   description text,
@@ -63,13 +63,13 @@ CREATE TABLE app.tag_assignments (
   tag_id uuid NOT NULL REFERENCES app.tags(id) ON DELETE CASCADE,
   entity_type text NOT NULL,
   entity_id uuid NOT NULL,
-  assigned_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  assigned_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   createdAt timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE app.chats (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
   title text NOT NULL,
   source text,
@@ -82,7 +82,7 @@ CREATE TABLE app.chats (
 CREATE TABLE app.chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   chat_id uuid NOT NULL REFERENCES app.chats(id) ON DELETE CASCADE,
-  author_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  author_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   parent_message_id uuid,
   role text NOT NULL,
   content text NOT NULL,

@@ -1,11 +1,10 @@
 import {
-  useRef,
-  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from 'react';
 
 import type {
@@ -17,7 +16,7 @@ import type {
   User,
 } from './types';
 import { AuthContext } from './AuthContext'
-type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED';
+type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT';
 
 interface SessionResponse {
   isAuthenticated: boolean;
@@ -25,13 +24,9 @@ interface SessionResponse {
   auth?: {
     sub: string;
     sid: string;
-    scope: string[];
-    role: 'user' | 'admin';
     amr: string[];
     authTime: number;
   } | null;
-  accessToken?: string | null;
-  expiresIn?: number | null;
 }
 
 interface PublicKeyCredentialDescriptorJSON {
@@ -103,20 +98,6 @@ function getAbsoluteApiUrl(apiBaseUrl: string, path: string) {
   return new URL(path, apiBaseUrl).toString();
 }
 
-function toSession(accessToken?: string | null, expiresIn?: number | null): Session | null {
-  if (!accessToken) {
-    return null;
-  }
-
-  const ttl = typeof expiresIn === 'number' && expiresIn > 0 ? expiresIn : 600;
-  return {
-    access_token: accessToken,
-    token_type: 'Bearer',
-    expires_in: ttl,
-    expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
-  };
-}
-
 interface ClientAuthState {
   error: Error | null;
   isLoading: boolean;
@@ -135,7 +116,7 @@ async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
     return (await res.json()) as SessionResponse;
   }
 
-  return { isAuthenticated: false, user: null, accessToken: null };
+  return { isAuthenticated: false, user: null };
 }
 
 function toBase64Url(buffer: ArrayBuffer) {
@@ -247,7 +228,6 @@ export function AuthProvider({
   initialSession = null,
 }: AuthProviderProps) {
   const hasInitialAuth = Boolean(initialUser);
-  const previousSessionTokenRef = useRef<string | null>(initialSession?.access_token ?? null);
   const [authState, setAuthState] = useState<ClientAuthState>(() => ({
     error: null,
     isLoading: !hasInitialAuth,
@@ -259,8 +239,7 @@ export function AuthProvider({
   const refreshAuth = useCallback(async () => {
     const payload = await fetchSession(config.apiBaseUrl);
     setAuthState((currentState) => {
-      const nextSession = toSession(payload.accessToken, payload.expiresIn);
-      const session = payload.isAuthenticated && payload.user ? nextSession ?? currentState.session : null;
+      const session = payload.isAuthenticated && payload.user ? currentState.session : null;
       const user = payload.user ?? null;
 
       return {
@@ -280,24 +259,6 @@ export function AuthProvider({
     }
     void refreshAuth();
   }, [hasInitialAuth, refreshAuth]);
-
-  useEffect(() => {
-    if (authState.status !== 'signed_in') {
-      return;
-    }
-
-    const expiresIn = authState.session?.expires_in ?? 600;
-    const refreshInterval = Math.max((expiresIn - 60) * 1000, 5 * 60 * 1000);
-
-    const jitter = Math.random() * 0.3 * refreshInterval;
-    const randomizedInterval = refreshInterval + jitter;
-
-    const intervalId = setInterval(() => {
-      void refreshAuth();
-    }, randomizedInterval);
-
-    return () => clearInterval(intervalId);
-  }, [authState.session, authState.status, refreshAuth]);
 
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
@@ -529,11 +490,8 @@ export function AuthProvider({
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {
-    if (authState.session) {
-      return authState.session;
-    }
     const payload = await refreshAuth();
-    return toSession(payload.accessToken, payload.expiresIn);
+    return payload.isAuthenticated ? authState.session : null;
   }, [authState.session, refreshAuth]);
 
   const authClient = useMemo<AuthClient>(
@@ -571,23 +529,6 @@ export function AuthProvider({
     }),
     [getSession, signOut],
   );
-
-  useEffect(() => {
-    const currentToken = authState.session?.access_token ?? null;
-    if (!currentToken) {
-      previousSessionTokenRef.current = null;
-      return;
-    }
-    if (previousSessionTokenRef.current === null) {
-      previousSessionTokenRef.current = currentToken;
-      return;
-    }
-    if (previousSessionTokenRef.current === currentToken) {
-      return;
-    }
-    previousSessionTokenRef.current = currentToken;
-    onAuthEvent?.('TOKEN_REFRESHED');
-  }, [authState.session, onAuthEvent]);
 
   const value = useMemo<AuthContextType>(
     () => ({

@@ -7,7 +7,7 @@ import type { Selectable } from 'kysely';
 import type { ChatOutput } from '../contracts';
 import type { CreateChatParams } from './chat.types';
 
-type ChatRow = Selectable<Database['chat']>;
+type ChatRow = Selectable<Database['app.chats']>;
 
 function toIsoString(value: Date | string | null | undefined): string {
   if (value === null || value === undefined) {
@@ -22,10 +22,10 @@ function toChatOutput(row: ChatRow): ChatOutput {
     archivedAt: null,
     id: row.id,
     title: row.title,
-    userId: row.user_id,
+    userId: row.owner_userid,
     noteId: row.note_id ?? null,
-    createdAt: toIsoString(row.created_at),
-    updatedAt: toIsoString(row.updated_at),
+    createdAt: toIsoString(row.createdat),
+    updatedAt: toIsoString(row.updatedat),
   };
 }
 
@@ -34,14 +34,14 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
   const now = new Date();
 
   const newChat = await db
-    .insertInto('chat')
+    .insertInto('app.chats')
     .values({
       id: chatId,
       title: params.title,
-      user_id: params.userId,
+      owner_userid: params.userId,
       note_id: params.noteId ?? null,
-      created_at: now,
-      updated_at: now,
+      createdat: now,
+      updatedat: now,
     })
     .returningAll()
     .executeTakeFirst();
@@ -55,10 +55,10 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
 
 export async function getChatByIdQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
   const chatData = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .selectAll()
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -71,10 +71,10 @@ export async function getOrCreateActiveChatQuery(
 ): Promise<ChatOutput> {
   if (chatId) {
     const existingChat = await db
-      .selectFrom('chat')
+      .selectFrom('app.chats')
       .selectAll()
       .where('id', '=', chatId)
-      .where('user_id', '=', userId)
+      .where('owner_userid', '=', userId)
       .limit(1)
       .executeTakeFirst();
 
@@ -84,11 +84,11 @@ export async function getOrCreateActiveChatQuery(
   }
 
   const newChat = await db
-    .insertInto('chat')
+    .insertInto('app.chats')
     .values({
       id: crypto.randomUUID(),
       title: 'New Chat',
-      user_id: userId,
+      owner_userid: userId,
       note_id: null,
     })
     .returningAll()
@@ -103,10 +103,10 @@ export async function getOrCreateActiveChatQuery(
 
 export async function getUserChatsQuery(userId: string, limit = 50): Promise<ChatOutput[]> {
   const chats = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .selectAll()
-    .where('user_id', '=', userId)
-    .orderBy('updated_at', 'desc')
+    .where('owner_userid', '=', userId)
+    .orderBy('updatedat', 'desc')
     .limit(limit)
     .execute();
 
@@ -118,10 +118,10 @@ export async function getChatByNoteIdQuery(
   userId: string,
 ): Promise<ChatOutput | null> {
   const chatData = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .selectAll()
     .where('note_id', '=', noteId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -134,13 +134,13 @@ export async function updateChatTitleQuery(
   userId: string,
 ): Promise<ChatOutput | null> {
   const updatedChat = await db
-    .updateTable('chat')
+    .updateTable('app.chats')
     .set({
       title: title,
-      updated_at: new Date(),
+      updatedat: new Date(),
     })
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .returningAll()
     .executeTakeFirst();
 
@@ -150,12 +150,12 @@ export async function updateChatTitleQuery(
 export async function archiveChatQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
   const timestamp = new Date();
   const archivedChat = await db
-    .updateTable('chat')
+    .updateTable('app.chats')
     .set({
-      updated_at: timestamp,
+      updatedat: timestamp,
     })
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .returningAll()
     .executeTakeFirst();
 
@@ -171,10 +171,10 @@ export async function archiveChatQuery(chatId: string, userId: string): Promise<
 
 export async function deleteChatQuery(chatId: string, userId: string): Promise<boolean> {
   const existingChat = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .select('id')
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -182,17 +182,17 @@ export async function deleteChatQuery(chatId: string, userId: string): Promise<b
     return false;
   }
 
-  await db.deleteFrom('chat_message').where('chat_id', '=', chatId).execute();
-  await db.deleteFrom('chat').where('id', '=', chatId).where('user_id', '=', userId).execute();
+  await db.deleteFrom('app.chat_messages').where('chat_id', '=', chatId).execute();
+  await db.deleteFrom('app.chats').where('id', '=', chatId).where('owner_userid', '=', userId).execute();
   return true;
 }
 
 export async function clearChatMessagesQuery(chatId: string, userId: string): Promise<boolean> {
   const existingChat = await db
-    .selectFrom('chat')
+    .selectFrom('app.chats')
     .select('id')
     .where('id', '=', chatId)
-    .where('user_id', '=', userId)
+    .where('owner_userid', '=', userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -200,6 +200,6 @@ export async function clearChatMessagesQuery(chatId: string, userId: string): Pr
     return false;
   }
 
-  await db.deleteFrom('chat_message').where('chat_id', '=', chatId).execute();
+  await db.deleteFrom('app.chat_messages').where('chat_id', '=', chatId).execute();
   return true;
 }

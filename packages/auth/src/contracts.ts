@@ -1,3 +1,3 @@
 import type { Database, Selectable } from '@hominem/db'
 
-export type UserRow = Selectable<Database['auth.users']>
+export type UserRow = Selectable<Database['user']>

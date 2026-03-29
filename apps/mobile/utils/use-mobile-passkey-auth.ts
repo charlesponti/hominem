@@ -1,25 +1,15 @@
 import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
+import type { User } from '@hominem/auth';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { authClient } from '~/lib/auth-client';
 import { useAuth } from '~/utils/auth-provider';
-import {
-  getPersistedSessionCookieHeader,
-  persistSessionCookieHeader,
-} from '~/utils/auth/session-cookie';
-import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants';
-
-interface PasskeySignInResult {
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-  };
-}
+import { getPersistedSessionCookieHeader, persistSessionCookieHeader } from '~/utils/auth/session-cookie';
+import { API_BASE_URL, E2E_TESTING } from '~/utils/constants';
 
 interface UseMobilePasskeyAuthReturn {
-  signIn: (mode?: 'real' | 'e2e-success' | 'e2e-cancel') => Promise<PasskeySignInResult | null>;
+  signIn: (mode?: 'real' | 'e2e-success' | 'e2e-cancel') => Promise<User | null>;
   addPasskey: (name?: string) => Promise<{ success: boolean; error?: string }>;
   listPasskeys: () => Promise<{ id: string; name: string }[]>;
   deletePasskey: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -40,7 +30,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
   const signIn = useCallback(
     async (
       mode: 'real' | 'e2e-success' | 'e2e-cancel' = 'real',
-    ): Promise<PasskeySignInResult | null> => {
+    ): Promise<User | null> => {
       setIsLoading(true);
       setError(null);
 
@@ -52,48 +42,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
             return null;
           }
 
-          const email = `mobile-passkey-${Date.now()}@hominem.test`;
-          const response = await fetch(
-            new URL('/api/auth/mobile/e2e/login', API_BASE_URL).toString(),
-            {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
-                'x-e2e-auth-secret': E2E_AUTH_SECRET,
-              },
-              body: JSON.stringify({
-                email,
-                name: 'Mobile Passkey E2E User',
-                amr: ['passkey', 'e2e', 'mobile'],
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            const body = (await response.json()) as { error?: string };
-            setError(body.error || 'Failed to complete E2E passkey sign-in');
-            return null;
-          }
-
-          const payload = (await response.json()) as {
-            access_token: string;
-            refresh_token: string;
-            expires_in: number;
-            token_type: 'Bearer';
-            user?: {
-              id: string;
-              email: string;
-              name?: string;
-            };
-          };
-
-          return {
-            user: payload.user ?? {
-              id: `mobile-passkey-${Date.now()}`,
-              email,
-              name: 'Mobile Passkey E2E User',
-            },
-          };
+          return signIn('real');
         }
 
         // Step 1: Sign in with passkey via Better Auth (handles native platform credential APIs).
@@ -129,13 +78,18 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
           return null;
         }
 
-        const result = (await tokenResponse.json()) as PasskeySignInResult;
+        const sessionData = (await tokenResponse.json()) as { isAuthenticated: boolean; user: User | null };
+
+        if (!sessionData.isAuthenticated || !sessionData.user) {
+          setError('Failed to restore app session after passkey sign-in');
+          return null;
+        }
 
         if (cookieHeader) {
           await persistSessionCookieHeader(cookieHeader);
         }
 
-        return result;
+        return sessionData.user;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Passkey sign-in failed';
         setError(message);

@@ -13,11 +13,11 @@ $$;
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION auth.current_user_id()
-RETURNS uuid
+RETURNS text
 LANGUAGE sql
 STABLE
 AS $$
-  SELECT NULLIF(current_setting('app.current_userId', true), '')::uuid
+  SELECT NULLIF(current_setting('app.current_userId', true), '')
 $$;
 -- +goose StatementEnd
 

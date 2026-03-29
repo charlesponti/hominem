@@ -2,7 +2,7 @@ import { logger } from '@hominem/utils/logger'
 import { getSetCookieHeaders } from '@hominem/utils/headers'
 
 import { resolveAuthRedirect } from './redirect-policy'
-import type { AuthConfig, Session, User, ServerAuthResult } from './types'
+import type { AuthConfig, ServerAuthResult } from './types'
 
 export function resolveSafeAuthRedirect(
   next: string | null | undefined,
@@ -27,14 +27,6 @@ export function resolveSafeAuthRedirect(
   return resolution.safeRedirect
 }
 
-interface ServerSessionPayload {
-  isAuthenticated: boolean
-  user: User | null
-  auth: ServerAuthResult['auth']
-  accessToken?: string | null
-  expiresIn?: number | null
-}
-
 function getAbsoluteApiUrl(baseUrl: string, path: string) {
   return new URL(path, baseUrl).toString()
 }
@@ -55,20 +47,6 @@ function appendSetCookieHeaders(target: Headers, source: Headers) {
   const setCookie = source.get('set-cookie')
   if (setCookie) {
     target.append('set-cookie', setCookie)
-  }
-}
-
-function toSession(accessToken?: string | null, expiresIn?: number | null): Session | null {
-  if (!accessToken) {
-    return null
-  }
-
-  const ttl = typeof expiresIn === 'number' && expiresIn > 0 ? expiresIn : 600
-  return {
-    access_token: accessToken,
-    token_type: 'Bearer',
-    expires_in: ttl,
-    expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
   }
 }
 
@@ -107,12 +85,11 @@ export async function getServerAuth(
       }
     }
 
-    const payload = (await res.json()) as ServerSessionPayload
-    const session = toSession(payload.accessToken, payload.expiresIn)
+    const payload = (await res.json()) as ServerAuthResult
 
     return {
       user: payload.user ?? null,
-      session,
+      session: null,
       auth: payload.auth ?? null,
       isAuthenticated: Boolean(payload.isAuthenticated && payload.user),
       headers,
@@ -150,7 +127,7 @@ export function createServerAuthClient(request: Request, config: AuthConfig) {
             return { data: { user: null }, error: new Error('Unauthorized') }
           }
 
-          const payload = (await res.json()) as ServerSessionPayload
+          const payload = (await res.json()) as ServerAuthResult
           return { data: { user: payload.user }, error: null }
         },
       },

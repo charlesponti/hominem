@@ -10,7 +10,7 @@ export const statusRoutes = new Hono<AppEnv>();
 // System health check endpoint
 statusRoutes.get('/', async (c) => {
   try {
-    await db.selectFrom('auth.user').select('id').limit(1).executeTakeFirst();
+    await db.selectFrom('user').select('id').limit(1).executeTakeFirst();
 
     return c.json({
       status: 'ok',

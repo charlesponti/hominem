@@ -22,6 +22,22 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface Account {
+  accessToken: string | null;
+  accessTokenExpiresAt: Timestamp | null;
+  accountId: string;
+  createdAt: Generated<Timestamp>;
+  id: string;
+  idToken: string | null;
+  password: string | null;
+  providerId: string;
+  refreshToken: string | null;
+  refreshTokenExpiresAt: Timestamp | null;
+  scope: string | null;
+  updatedAt: Generated<Timestamp>;
+  userId: string;
+}
+
 export interface AppBookmarks {
   createdat: Generated<Timestamp>;
   description: string | null;
@@ -695,6 +711,19 @@ export interface AuthVerificationTokens {
   userid: string | null;
 }
 
+export interface DeviceCode {
+  clientId: string | null;
+  deviceCode: string;
+  expiresAt: Timestamp;
+  id: string;
+  lastPolledAt: Timestamp | null;
+  pollingInterval: number | null;
+  scope: string | null;
+  status: string;
+  userCode: string;
+  userId: string | null;
+}
+
 export interface GeographyColumns {
   coord_dimension: number | null;
   f_geography_column: string | null;
@@ -722,6 +751,14 @@ export interface GooseDbVersion {
   version_id: Int8;
 }
 
+export interface Jwks {
+  createdAt: Timestamp;
+  expiresAt: Timestamp | null;
+  id: string;
+  privateKey: string;
+  publicKey: string;
+}
+
 export interface OpsAuditLogs {
   action: string;
   actor_userid: string | null;
@@ -743,6 +780,31 @@ export interface OpsSearchLogs {
   query: string;
   results_count: number | null;
   scope: string | null;
+}
+
+export interface Passkey {
+  aaguid: string | null;
+  backedUp: Generated<boolean>;
+  counter: Generated<number>;
+  createdAt: Timestamp | null;
+  credentialID: string;
+  deviceType: string;
+  id: string;
+  name: string | null;
+  publicKey: string;
+  transports: string | null;
+  userId: string;
+}
+
+export interface Session {
+  createdAt: Generated<Timestamp>;
+  expiresAt: Timestamp;
+  id: string;
+  ipAddress: string | null;
+  token: string;
+  updatedAt: Generated<Timestamp>;
+  userAgent: string | null;
+  userId: string;
 }
 
 export interface SpatialRefSys {
@@ -773,7 +835,27 @@ export interface TopologyTopology {
   useslargeids: Generated<boolean>;
 }
 
+export interface User {
+  createdAt: Generated<Timestamp>;
+  email: string;
+  emailVerified: Generated<boolean>;
+  id: string;
+  image: string | null;
+  name: string;
+  updatedAt: Generated<Timestamp>;
+}
+
+export interface Verification {
+  createdAt: Timestamp | null;
+  expiresAt: Timestamp;
+  id: string;
+  identifier: string;
+  updatedAt: Timestamp | null;
+  value: string;
+}
+
 export interface DB {
+  account: Account;
   "app.bookmarks": AppBookmarks;
   "app.chat_messages": AppChatMessages;
   "app.chats": AppChats;
@@ -822,12 +904,18 @@ export interface DB {
   "auth.sessions": AuthSessions;
   "auth.users": AuthUsers;
   "auth.verification_tokens": AuthVerificationTokens;
+  deviceCode: DeviceCode;
   geography_columns: GeographyColumns;
   geometry_columns: GeometryColumns;
   goose_db_version: GooseDbVersion;
+  jwks: Jwks;
   "ops.audit_logs": OpsAuditLogs;
   "ops.search_logs": OpsSearchLogs;
+  passkey: Passkey;
+  session: Session;
   spatial_ref_sys: SpatialRefSys;
   "topology.layer": TopologyLayer;
   "topology.topology": TopologyTopology;
+  user: User;
+  verification: Verification;
 }

@@ -23,7 +23,7 @@ $$;
 -- +goose StatementEnd
 
 ALTER TABLE app.note_shares
-  ADD COLUMN granted_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN granted_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   ADD COLUMN expiresAt timestamptz,
   ADD COLUMN revokedAt timestamptz,
   ADD COLUMN access_period tstzrange GENERATED ALWAYS AS (
@@ -130,8 +130,8 @@ CREATE TABLE app.task_assignments (
   id uuid PRIMARY KEY DEFAULT uuidv7(),
   task_id uuid NOT NULL,
   space_id uuid NOT NULL,
-  assignee_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  assigned_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  assignee_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  assigned_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   assignment_period tstzrange NOT NULL DEFAULT tstzrange(now(), 'infinity'::timestamptz, '[)'),
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   createdAt timestamptz NOT NULL DEFAULT now(),
@@ -156,7 +156,7 @@ CREATE INDEX app_task_assignments_assignee_userId_idx
 
 CREATE TABLE app.entity_links (
   id uuid PRIMARY KEY DEFAULT uuidv7(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   space_id uuid REFERENCES app.spaces(id) ON DELETE SET NULL,
   from_entity_table regclass NOT NULL,
   from_entity_id uuid NOT NULL,

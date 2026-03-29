@@ -11,14 +11,16 @@ interface HonoProviderProps {
 }
 
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
-  const { session } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const config: ClientConfig = {
     baseUrl,
-    getAuthToken: async () => session?.access_token ?? null,
+    getAuthToken: async () => null,
     onError: () => {
       // Errors are handled via React Query's error state
     },
   };
+
+  void isAuthenticated;
 
   return (
     <BaseHonoProvider queryClient={getQueryClient()} config={config}>

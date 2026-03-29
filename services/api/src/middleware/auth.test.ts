@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
-  verifyAccessToken: vi.fn(),
-  isSessionRevoked: vi.fn(),
   getUserById: vi.fn(),
 }));
 
@@ -16,28 +14,7 @@ vi.mock('../auth/better-auth', () => ({
   },
 }));
 
-vi.mock('../auth/tokens', () => ({
-  verifyAccessToken: mocks.verifyAccessToken,
-}));
-
-vi.mock('../auth/session-store', () => ({
-  isSessionRevoked: mocks.isSessionRevoked,
-}));
-
 vi.mock('@hominem/auth/server', () => ({
-  toUser: (input: {
-    id: string;
-    email: string;
-    is_admin?: boolean;
-    created_at?: string;
-    updated_at?: string;
-  }) => ({
-    id: input.id,
-    email: input.email,
-    isAdmin: input.is_admin ?? false,
-    ...(input.created_at ? { createdAt: input.created_at } : {}),
-    ...(input.updated_at ? { updatedAt: input.updated_at } : {}),
-  }),
   UserAuthService: {
     getUserById: mocks.getUserById,
   },
@@ -57,12 +34,10 @@ function createApp() {
 describe('authJwtMiddleware', () => {
   beforeEach(() => {
     mocks.getSession.mockReset();
-    mocks.verifyAccessToken.mockReset();
-    mocks.isSessionRevoked.mockReset();
     mocks.getUserById.mockReset();
   });
 
-  test('authenticates Better Auth bearer tokens before legacy JWT validation', async () => {
+  test('authenticates Better Auth sessions', async () => {
     mocks.getSession.mockResolvedValueOnce({
       user: {
         id: 'better-user',
@@ -71,11 +46,11 @@ describe('authJwtMiddleware', () => {
         id: 'better-session',
       },
     });
-    mocks.verifyAccessToken.mockRejectedValueOnce(new Error('invalid_token'));
     mocks.getUserById.mockResolvedValueOnce({
       id: 'better-user',
-      email: 'better@hominem.test',
-      is_admin: false,
+      email: 'better@example.com',
+      createdAt: '2026-03-10T12:00:00.000Z',
+      updatedAt: '2026-03-10T12:00:00.000Z',
     });
 
     const app = createApp();
@@ -95,22 +70,8 @@ describe('authJwtMiddleware', () => {
     });
   });
 
-  test('falls back to legacy JWT auth when Better Auth bearer resolution does not authenticate', async () => {
+  test('returns 401 when Better Auth session is missing', async () => {
     mocks.getSession.mockResolvedValueOnce(null);
-    mocks.verifyAccessToken.mockResolvedValueOnce({
-      sub: 'legacy-user',
-      sid: 'legacy-session',
-      scope: ['api:read'],
-      role: 'user',
-      amr: ['dev'],
-      auth_time: 1,
-    });
-    mocks.isSessionRevoked.mockResolvedValueOnce(false);
-    mocks.getUserById.mockResolvedValueOnce({
-      id: 'legacy-user',
-      email: 'legacy@hominem.test',
-      is_admin: false,
-    });
 
     const app = createApp();
     const response = await app.request('http://localhost/protected', {
@@ -121,17 +82,13 @@ describe('authJwtMiddleware', () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
-      userId: 'legacy-user',
-      auth: {
-        sid: 'legacy-session',
-        amr: ['dev'],
-      },
+      userId: null,
+      auth: null,
     });
   });
 
-  test('returns 401 only when both Better Auth and legacy JWT auth fail', async () => {
+  test('leaves the request unauthenticated for invalid bearer tokens', async () => {
     mocks.getSession.mockResolvedValueOnce(null);
-    mocks.verifyAccessToken.mockRejectedValueOnce(new Error('invalid_token'));
 
     const app = createApp();
     const response = await app.request('http://localhost/protected', {
@@ -140,9 +97,10 @@ describe('authJwtMiddleware', () => {
       },
     });
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
-      error: 'invalid_token',
+      userId: null,
+      auth: null,
     });
   });
 });

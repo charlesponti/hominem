@@ -1,29 +1,17 @@
 import type { User } from '@hominem/auth/server';
 import { UserAuthService } from '@hominem/auth/server';
-import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
 
 import { betterAuthServer } from '../auth/better-auth';
-import { isSessionRevoked } from '../auth/session-store';
-import { verifyAccessToken } from '../auth/tokens';
 import type { AuthContextEnvelope } from '../auth/types';
-
-type AuthErrorCode =
-  | 'invalidToken'
-  | 'expired_token'
-  | 'invalid_audience'
-  | 'invalid_issuer'
-  | 'disallowed_kid'
-  | 'revoked_session'
-  | 'insufficient_scope';
 
 declare module 'hono' {
   interface ContextVariableMap {
     auth?: AuthContextEnvelope;
     user?: User;
     userId?: string;
-    authError?: AuthErrorCode;
+    authError?: 'invalidToken' | 'revoked_session';
   }
 }
 
@@ -31,28 +19,6 @@ interface BetterAuthSessionContext {
   auth: AuthContextEnvelope;
   user: User;
   userId: string;
-}
-
-type UserRow = NonNullable<Awaited<ReturnType<typeof UserAuthService.getUserById>>>;
-
-function toAuthUser(source: UserRow): User {
-  return {
-    id: source.id,
-    email: source.email,
-    name: source.name ?? undefined,
-    image: source.image ?? undefined,
-    isAdmin: Boolean(source.isAdmin),
-    createdAt: source.createdAt ?? '',
-    updatedAt: source.updatedAt ?? '',
-  };
-}
-
-function getBearerToken(headerValue?: string) {
-  if (!headerValue || !headerValue.startsWith('Bearer ')) {
-    return null;
-  }
-
-  return headerValue.slice(7);
 }
 
 const USER_CACHE_TTL_MS = 300_000; // 5 minutes
@@ -91,46 +57,6 @@ export function invalidateUserCache(userId: string) {
   userCache.delete(userId);
 }
 
-function mapBearerError(error: unknown): AuthErrorCode {
-  if (error && typeof error === 'object') {
-    const maybeJose = error as { code?: string; claim?: string; message?: string };
-    if (maybeJose.code === 'ERR_JWT_EXPIRED') {
-      return 'expired_token';
-    }
-    if (maybeJose.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED') {
-      if (maybeJose.claim === 'aud') {
-        return 'invalid_audience';
-      }
-      if (maybeJose.claim === 'iss') {
-        return 'invalid_issuer';
-      }
-      return 'invalidToken';
-    }
-    if (maybeJose.message === 'disallowed_kid') {
-      return 'disallowed_kid';
-    }
-    if (maybeJose.message === 'revoked_session') {
-      return 'revoked_session';
-    }
-  }
-  if (error instanceof Error) {
-    if (error.message.includes('audience')) {
-      return 'invalid_audience';
-    }
-    if (error.message.includes('issuer')) {
-      return 'invalid_issuer';
-    }
-  }
-  return 'invalidToken';
-}
-
-function authErrorResponse(code: AuthErrorCode) {
-  return {
-    error: code,
-    message: 'Authentication failed',
-  } as const;
-}
-
 async function applyBetterAuthSession(c: {
   req: { raw: Request };
   set: <K extends keyof BetterAuthSessionContext>(
@@ -156,28 +82,23 @@ async function applyBetterAuthSession(c: {
     c.set('auth', {
       sub: cached.id,
       sid: betterAuthSessionId,
-      scope: ['api:read', 'api:write'],
-      role: cached.isAdmin ? 'admin' : 'user',
       amr: ['better-auth-session'],
       authTime: Math.floor(Date.now() / 1000),
     });
     return true;
   }
 
-  const dbUser = await UserAuthService.getUserById(betterAuthUserId);
-  if (!dbUser) {
+  const user = await UserAuthService.getUserById(betterAuthUserId);
+  if (!user) {
     return false;
   }
 
-  const user = toAuthUser(dbUser);
   setCachedUser(user);
   c.set('user', user);
-  c.set('userId', dbUser.id);
+  c.set('userId', user.id);
   c.set('auth', {
-    sub: dbUser.id,
+    sub: user.id,
     sid: betterAuthSessionId,
-    scope: ['api:read', 'api:write'],
-    role: user.isAdmin ? 'admin' : 'user',
     amr: ['better-auth-session'],
     authTime: Math.floor(Date.now() / 1000),
   });
@@ -188,11 +109,9 @@ async function applyBetterAuthSession(c: {
 export const authJwtMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
     const path = c.req.path;
-    if (path.startsWith('/api/auth') || path.startsWith('/api/better-auth')) {
+    if (path.startsWith('/api/auth')) {
       return await next();
     }
-
-    let bearerAuthError: AuthErrorCode | null = null;
 
     if (process.env.NODE_ENV === 'test') {
       const testUserId = c.req.header('x-user-id');
@@ -204,8 +123,6 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           c.set('auth', {
             sub: cached.id,
             sid: crypto.randomUUID(),
-            scope: ['api:read', 'api:write'],
-            role: cached.isAdmin ? 'admin' : 'user',
             amr: ['test-header'],
             authTime: Math.floor(Date.now() / 1000),
           });
@@ -214,113 +131,28 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
         const testUser = await UserAuthService.findByIdOrEmail({ id: testUserId });
         if (testUser) {
-          const user = toAuthUser(testUser);
-          setCachedUser(user);
-          c.set('user', user);
+          setCachedUser(testUser);
+          c.set('user', testUser);
           c.set('userId', testUser.id);
           c.set('auth', {
             sub: testUser.id,
             sid: crypto.randomUUID(),
-            scope: ['api:read', 'api:write'],
-            role: user.isAdmin ? 'admin' : 'user',
             amr: ['test-header'],
             authTime: Math.floor(Date.now() / 1000),
           });
           return await next();
         }
 
-        await db
-          .insertInto('auth.user')
-          .values({
-            id: testUserId,
-            email: `${testUserId}@hominem.test`,
-            name: testUserId,
-            isAdmin: false,
-          })
-          .onConflict((oc) => oc.column('id').doNothing())
-          .execute();
-
-        const fallbackUser = await UserAuthService.getUserById(testUserId);
-
-        if (fallbackUser) {
-          const user = toAuthUser(fallbackUser);
-          setCachedUser(user);
-          c.set('user', user);
-        }
-
         c.set('auth', {
           sub: testUserId,
           sid: crypto.randomUUID(),
-          scope: ['api:read', 'api:write'],
-          role: 'user',
           amr: ['test-header'],
           authTime: Math.floor(Date.now() / 1000),
         });
         c.set('userId', testUserId);
+        
         return await next();
       }
-    }
-
-    const bearer = getBearerToken(c.req.header('authorization'));
-
-    if (bearer) {
-      try {
-        if (await applyBetterAuthSession(c)) {
-          return await next();
-        }
-      } catch (error) {
-        logger.warn('[authJwtMiddleware] better auth bearer lookup failed', { error });
-      }
-
-      try {
-        const claims = await verifyAccessToken(bearer);
-        const revoked = await isSessionRevoked(claims.sid);
-        if (revoked) {
-          throw new Error('revoked_session');
-        }
-        const cached = getCachedUser(claims.sub);
-        if (cached) {
-          c.set('user', cached);
-          c.set('userId', cached.id);
-          c.set('auth', {
-            sub: claims.sub,
-            sid: claims.sid,
-            scope: claims.scope,
-            role: claims.role,
-            amr: claims.amr,
-            authTime: claims.auth_time,
-          });
-          return await next();
-        }
-
-        const dbUser = await UserAuthService.getUserById(claims.sub);
-        if (!dbUser) {
-          c.set('authError', 'invalidToken');
-          return c.json(authErrorResponse('invalidToken'), 401);
-        }
-
-        const user = toUser(dbUser);
-        setCachedUser(user);
-        c.set('user', user);
-        c.set('userId', dbUser.id);
-        c.set('auth', {
-          sub: claims.sub,
-          sid: claims.sid,
-          scope: claims.scope,
-          role: claims.role,
-          amr: claims.amr,
-          authTime: claims.auth_time,
-        });
-      } catch (error) {
-        const authError = mapBearerError(error);
-        bearerAuthError = authError;
-        logger.warn('[authJwtMiddleware] invalid bearer token', { authError, error });
-      }
-    }
-
-    if (bearerAuthError) {
-      c.set('authError', bearerAuthError);
-      return c.json(authErrorResponse(bearerAuthError), 401);
     }
 
     try {

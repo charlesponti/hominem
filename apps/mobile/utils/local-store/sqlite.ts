@@ -18,7 +18,6 @@ const normalizeProfile = (row: Record<string, unknown>): UserProfile => ({
   name: typeof row.name === 'string' ? row.name : undefined,
   email: typeof row.email === 'string' ? row.email : '',
   image: undefined,
-  isAdmin: false,
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });

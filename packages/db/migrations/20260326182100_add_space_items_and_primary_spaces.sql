@@ -34,7 +34,7 @@ CREATE TABLE app.space_items (
   space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
   entity_table regclass NOT NULL,
   entity_id uuid NOT NULL,
-  added_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  added_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   added_at timestamptz NOT NULL DEFAULT now(),
   removed_at timestamptz,
   membership_period tstzrange GENERATED ALWAYS AS (

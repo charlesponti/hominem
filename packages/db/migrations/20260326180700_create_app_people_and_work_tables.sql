@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE app.people (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   person_type text NOT NULL DEFAULT 'person',
   first_name text,
   last_name text,
@@ -25,7 +25,7 @@ CREATE TABLE app.people (
 
 CREATE TABLE app.spaces (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   name text NOT NULL,
   description text,
   color text,
@@ -37,8 +37,8 @@ CREATE TABLE app.spaces (
 
 CREATE TABLE app.space_members (
   space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
-  userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  added_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  added_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   createdAt timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (space_id, userId)
 );
@@ -46,9 +46,9 @@ CREATE TABLE app.space_members (
 CREATE TABLE app.space_invites (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
-  inviter_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  inviter_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   invited_user_email text NOT NULL,
-  invited_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  invited_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   invite_token text NOT NULL,
   status text NOT NULL DEFAULT 'pending',
   accepted_at timestamptz,
@@ -58,7 +58,7 @@ CREATE TABLE app.space_invites (
 
 CREATE TABLE app.tasks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   space_id uuid REFERENCES app.spaces(id) ON DELETE SET NULL,
   parent_task_id uuid REFERENCES app.tasks(id) ON DELETE SET NULL,
   title text NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE app.tasks (
 
 CREATE TABLE app.goals (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   title text NOT NULL,
   description text,
   target_at timestamptz,

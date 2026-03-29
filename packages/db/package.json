@@ -58,6 +58,7 @@
     "prepare": "bun run build",
     "typecheck": "tsc --noEmit",
     "codegen": "kysely-codegen --out-file ./src/types/database.ts --verify",
+    "codegen:write": "kysely-codegen --out-file ./src/types/database.ts",
     "goose:up": "goose -dir ./migrations postgres \"$DATABASE_URL\" up",
     "goose:down": "goose -dir ./migrations postgres \"$DATABASE_URL\" down",
     "goose:status": "goose -dir ./migrations postgres \"$DATABASE_URL\" status"

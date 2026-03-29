@@ -87,14 +87,9 @@ export const twitterRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const accounts = await listAccountsByProvider(userId, 'twitter');
     const twitterAccounts: TwitterAccountsListOutput = accounts.map(
-      (account: {
-        id: string;
-        provider: string;
-        providerAccountId: string;
-        expiresAt: string | null;
-      }): TwitterAccount => ({
+      (account): TwitterAccount => ({
         id: account.id,
-        provider: account.provider,
+        provider: account.providerId,
         providerAccountId: account.providerAccountId,
         expiresAt: account.expiresAt ? new Date(account.expiresAt) : null,
       }),

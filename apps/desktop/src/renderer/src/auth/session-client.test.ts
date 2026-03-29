@@ -16,7 +16,6 @@ describe('bootstrapSession', () => {
             id: 'user-1',
             email: 'user@example.com',
             name: 'User Example',
-            isAdmin: false,
             createdAt: '2026-03-10T12:00:00.000Z',
             updatedAt: '2026-03-10T12:00:00.000Z',
           },
@@ -33,7 +32,6 @@ describe('bootstrapSession', () => {
     const result = await bootstrapSession('http://localhost:4040');
 
     expect(result.user?.email).toBe('user@example.com');
-    expect(result.session).toBeNull();
   });
 
   it('throws when desktop logout invalidation fails', async () => {
@@ -46,6 +44,6 @@ describe('bootstrapSession', () => {
       }),
     );
 
-    await expect(signOut('http://localhost:4040', null)).rejects.toThrow('Failed to sign out');
+    await expect(signOut('http://localhost:4040')).rejects.toThrow('Failed to sign out');
   });
 });

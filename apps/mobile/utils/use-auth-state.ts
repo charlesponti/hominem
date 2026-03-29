@@ -15,7 +15,6 @@ export function useAuthState(): AppAuthState {
             id: currentUser.id,
             email: currentUser.email ?? '',
             name: currentUser.name ?? undefined,
-            isAdmin: false,
             createdAt: currentUser.createdAt,
             updatedAt: currentUser.updatedAt,
           }

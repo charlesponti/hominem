@@ -2,53 +2,45 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect, useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { Session, User } from './types'
+import type { User } from './types'
 import { AuthProvider, useAuthContext } from './client'
 
 const initialUser: User = {
   id: 'user-1',
   email: 'user@example.com',
-  isAdmin: false,
   createdAt: '2026-03-10T12:00:00.000Z',
   updatedAt: '2026-03-10T12:00:00.000Z',
 }
 
-const initialSession: Session = {
-  access_token: 'token-123',
-  token_type: 'Bearer',
-  expires_in: 600,
-  expires_at: '2026-03-10T12:10:00.000Z',
-}
-
 function TestConsumer() {
   const { authClient, isAuthenticated, user } = useAuthContext()
-  const [token, setToken] = useState<string>('pending')
+  const [sessionState, setSessionState] = useState<string>('pending')
 
   useEffect(() => {
     void authClient.auth.getSession().then(({ data }) => {
-      setToken(data.session?.access_token ?? 'missing')
+      setSessionState(data.session ? 'present' : 'missing')
     })
   }, [authClient])
 
   return (
-    <div>
-      <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
-      <div data-testid="email">{user?.email ?? 'missing'}</div>
-      <div data-testid="token">{token}</div>
-    </div>
-  )
+      <div>
+        <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
+        <div data-testid="email">{user?.email ?? 'missing'}</div>
+        <div data-testid="session">{sessionState}</div>
+      </div>
+    )
 }
 
 function StateConsumer() {
   const { isAuthenticated, user, session } = useAuthContext()
 
   return (
-    <div>
-      <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
-      <div data-testid="email">{user?.email ?? 'missing'}</div>
-      <div data-testid="token">{session?.access_token ?? 'missing'}</div>
-    </div>
-  )
+      <div>
+        <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
+        <div data-testid="email">{user?.email ?? 'missing'}</div>
+        <div data-testid="session">{session ? 'present' : 'missing'}</div>
+      </div>
+    )
 }
 
 function IdentityOnlyConsumer() {
@@ -57,18 +49,18 @@ function IdentityOnlyConsumer() {
 
   useEffect(() => {
     void authClient.auth.getSession().then(({ data }) => {
-      setSessionValue(data.session?.access_token ?? 'missing')
+      setSessionValue(data.session ? 'present' : 'missing')
     })
   }, [authClient])
 
   return (
-    <div>
-      <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
-      <div data-testid="email">{user?.email ?? 'missing'}</div>
-      <div data-testid="session">{session?.access_token ?? 'missing'}</div>
-      <div data-testid="session-client">{sessionValue}</div>
-    </div>
-  )
+      <div>
+        <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
+        <div data-testid="email">{user?.email ?? 'missing'}</div>
+        <div data-testid="session">{session ? 'present' : 'missing'}</div>
+        <div data-testid="session-client">{sessionValue}</div>
+      </div>
+    )
 }
 
 function SignOutConsumer() {
@@ -98,7 +90,7 @@ describe('AuthProvider', () => {
     vi.restoreAllMocks()
   })
 
-  it('hydrates authenticated state from the server session without a client session probe', async () => {
+  it('hydrates authenticated state from the server session before the client session probe settles', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     const onAuthEvent = vi.fn()
 
@@ -106,7 +98,6 @@ describe('AuthProvider', () => {
       <AuthProvider
         config={{ apiBaseUrl: 'http://localhost:4040' }}
         initialUser={initialUser}
-        initialSession={initialSession}
         onAuthEvent={onAuthEvent}
       >
         <TestConsumer />
@@ -116,10 +107,14 @@ describe('AuthProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('authenticated').textContent).toBe('authenticated')
       expect(screen.getByTestId('email').textContent).toBe('user@example.com')
-      expect(screen.getByTestId('token').textContent).toBe('token-123')
+      expect(screen.getByTestId('session').textContent).toBe('missing')
     })
 
-    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'http://localhost:4040/api/auth/session',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    )
     expect(onAuthEvent).not.toHaveBeenCalled()
   })
 
@@ -142,7 +137,7 @@ describe('AuthProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('authenticated').textContent).toBe('signed-out')
       expect(screen.getByTestId('email').textContent).toBe('missing')
-      expect(screen.getByTestId('token').textContent).toBe('missing')
+      expect(screen.getByTestId('session').textContent).toBe('missing')
     })
 
     expect(fetchSpy).toHaveBeenCalledTimes(1)
@@ -162,8 +157,6 @@ describe('AuthProvider', () => {
           auth: {
             sub: initialUser.id,
             sid: 'session-1',
-            scope: ['api:read'],
-            role: 'user',
             amr: ['better-auth-session'],
             authTime: 1,
           },
@@ -207,7 +200,6 @@ describe('AuthProvider', () => {
       <AuthProvider
         config={{ apiBaseUrl: 'http://localhost:4040' }}
         initialUser={initialUser}
-        initialSession={initialSession}
       >
         <SignOutConsumer />
       </AuthProvider>,

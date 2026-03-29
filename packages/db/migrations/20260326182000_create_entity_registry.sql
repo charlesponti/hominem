@@ -2,7 +2,7 @@
 CREATE TABLE app.entities (
   entity_table regclass NOT NULL,
   entity_id uuid NOT NULL,
-  owner_userId uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text REFERENCES "user"(id) ON DELETE CASCADE,
   space_id uuid REFERENCES app.spaces(id) ON DELETE SET NULL,
   createdAt timestamptz NOT NULL DEFAULT now(),
   updatedAt timestamptz NOT NULL DEFAULT now(),

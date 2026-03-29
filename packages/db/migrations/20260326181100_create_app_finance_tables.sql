@@ -13,7 +13,7 @@ CREATE TABLE app.finance_institutions (
 
 CREATE TABLE app.plaid_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   institution_id uuid REFERENCES app.finance_institutions(id) ON DELETE SET NULL,
   provider text NOT NULL DEFAULT 'plaid',
   provider_item_id text NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE app.plaid_items (
 
 CREATE TABLE app.finance_accounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   institution_id uuid REFERENCES app.finance_institutions(id) ON DELETE SET NULL,
   plaid_item_id uuid REFERENCES app.plaid_items(id) ON DELETE SET NULL,
   name text NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE app.finance_accounts (
 
 CREATE TABLE app.finance_transactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   account_id uuid NOT NULL REFERENCES app.finance_accounts(id) ON DELETE CASCADE,
   amount numeric(14,2) NOT NULL,
   transaction_type text NOT NULL,

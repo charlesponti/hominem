@@ -1,4 +1,4 @@
-import type { Session, User } from '@hominem/auth/types';
+import type { User } from '@hominem/auth/types';
 import { z } from 'zod';
 
 const userSchema = z.object({
@@ -6,7 +6,6 @@ const userSchema = z.object({
   email: z.string().email(),
   name: z.string().nullable().optional(),
   image: z.string().optional(),
-  isAdmin: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -14,8 +13,6 @@ const userSchema = z.object({
 const sessionResponseSchema = z.object({
   isAuthenticated: z.boolean(),
   user: userSchema.nullable(),
-  accessToken: z.string().nullable().optional(),
-  expiresIn: z.number().nullable().optional(),
 });
 
 const passkeyOptionsSchema = z.object({
@@ -40,7 +37,6 @@ const passkeyAuthOptionsResponseSchema = z.object({
 });
 
 interface SessionResult {
-  session: Session | null;
   user: User | null;
 }
 
@@ -72,15 +68,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function createSession(accessToken: string, expiresIn: number): Session {
-  return {
-    access_token: accessToken,
-    token_type: 'Bearer',
-    expires_in: expiresIn,
-    expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
-  };
-}
-
 function normalizeAuthEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -95,7 +82,6 @@ function normalizeUser(user: z.infer<typeof userSchema>): User {
     email: user.email,
     ...(user.name ? { name: user.name } : {}),
     ...(user.image ? { image: user.image } : {}),
-    isAdmin: user.isAdmin,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -183,7 +169,7 @@ async function readAuthenticatedSession(apiBaseUrl: string): Promise<SessionResu
   });
 
   if (response.status === 401) {
-    return { session: null, user: null };
+    return { user: null };
   }
 
   if (!response.ok) {
@@ -192,14 +178,10 @@ async function readAuthenticatedSession(apiBaseUrl: string): Promise<SessionResu
 
   const payload = await readJson(response, sessionResponseSchema);
   if (!payload.isAuthenticated || !payload.user) {
-    return { session: null, user: null };
+    return { user: null };
   }
 
   return {
-    session:
-      payload.accessToken && payload.expiresIn
-        ? createSession(payload.accessToken, payload.expiresIn)
-        : null,
     user: normalizeUser(payload.user),
   };
 }
@@ -293,9 +275,7 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
   return readAuthenticatedSession(apiBaseUrl);
 }
 
-export async function signOut(apiBaseUrl: string, session: Session | null) {
-  void session;
-
+export async function signOut(apiBaseUrl: string) {
   const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     credentials: 'include',
     method: 'POST',

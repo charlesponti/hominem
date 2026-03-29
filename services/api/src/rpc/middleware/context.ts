@@ -25,15 +25,7 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
       });
 
       if (localUser) {
-        c.set('user', {
-          id: localUser.id,
-          email: localUser.email,
-          name: localUser.name ?? undefined,
-          image: localUser.avatar_url ?? undefined,
-          isAdmin: false,
-          createdAt: localUser.created_at ?? new Date().toISOString(),
-          updatedAt: localUser.updated_at ?? new Date().toISOString(),
-        });
+        c.set('user', localUser);
         c.set('userId', localUser.id);
       }
 

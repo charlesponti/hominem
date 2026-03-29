@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE app.places (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   name text NOT NULL,
   address text,
   latitude numeric(9,6),
@@ -24,7 +24,7 @@ CREATE TABLE app.places (
 
 CREATE TABLE app.bookmarks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   place_id uuid REFERENCES app.places(id) ON DELETE SET NULL,
   title text NOT NULL,
   description text,
@@ -42,7 +42,7 @@ CREATE TABLE app.bookmarks (
 
 CREATE TABLE app.events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   place_id uuid REFERENCES app.places(id) ON DELETE SET NULL,
   event_type text NOT NULL,
   title text NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE app.event_attendees (
 
 CREATE TABLE app.travel_trips (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   name text NOT NULL,
   description text,
   start_date date NOT NULL,

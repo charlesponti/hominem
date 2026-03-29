@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE app.possession_containers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   name text NOT NULL,
   location text,
   description text,
@@ -11,7 +11,7 @@ CREATE TABLE app.possession_containers (
 
 CREATE TABLE app.possessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   container_id uuid REFERENCES app.possession_containers(id) ON DELETE SET NULL,
   name text NOT NULL,
   description text,
@@ -28,7 +28,7 @@ CREATE TABLE app.possessions (
 
 CREATE TABLE app.possession_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_userId uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_userId text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   possessionId uuid NOT NULL REFERENCES app.possessions(id) ON DELETE CASCADE,
   container_id uuid REFERENCES app.possession_containers(id) ON DELETE SET NULL,
   event_type text NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE app.possession_events (
 
 CREATE TABLE ops.audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  actor_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   action text NOT NULL,
   entity_schema text,
   entity_table text,
@@ -56,7 +56,7 @@ CREATE TABLE ops.audit_logs (
 
 CREATE TABLE ops.search_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  actor_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   query text NOT NULL,
   scope text,
   results_count integer,

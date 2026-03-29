@@ -2,7 +2,6 @@ import {
   appAuthStateMachine,
   initialAppAuthState,
   type AppAuthState,
-  type Session,
 } from '@hominem/auth/types';
 import {
   createContext,
@@ -33,7 +32,6 @@ interface DesktopAuthContextValue {
   isPasskeyAvailable: boolean;
   restartAuth: () => void;
   requestOtp: (email: string) => Promise<void>;
-  session: Session | null;
   signInWithPasskey: () => Promise<void>;
   signOut: () => Promise<void>;
   state: AppAuthState;
@@ -45,7 +43,6 @@ const DesktopAuthContext = createContext<DesktopAuthContextValue | null>(null);
 
 export function DesktopAuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appAuthStateMachine, initialAppAuthState);
-  const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState('');
 
   const apiBaseUrl = desktopEnv.VITE_PUBLIC_API_URL;
@@ -54,7 +51,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'REFRESH_STARTED' });
     try {
       const result = await bootstrapSession(apiBaseUrl);
-      setSession(result.session);
 
       if (result.user) {
         dispatch({ type: 'SESSION_LOADED', user: result.user });
@@ -66,7 +62,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'SESSION_EXPIRED' });
     } catch (error) {
-      setSession(null);
       dispatch({
         type: 'REFRESH_FAILED',
         error: toUserFacingError(error, 'Failed to load desktop auth session.'),
@@ -100,7 +95,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'OTP_VERIFICATION_STARTED' });
       try {
         const result = await verifyEmailOtp(apiBaseUrl, email, otp);
-        setSession(result.session);
 
         if (!result.user) {
           throw new Error('Missing authenticated user after verification.');
@@ -121,7 +115,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'PASSKEY_AUTH_STARTED' });
     try {
       const result = await signInWithPasskey(apiBaseUrl);
-      setSession(result.session);
       if (!result.user) {
         throw new Error('Passkey sign-in completed without a user.');
       }
@@ -137,8 +130,7 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = useCallback(async () => {
     dispatch({ type: 'SIGN_OUT_REQUESTED' });
     try {
-      await performSignOut(apiBaseUrl, session);
-      setSession(null);
+      await performSignOut(apiBaseUrl);
       dispatch({ type: 'SIGN_OUT_SUCCESS' });
     } catch (error) {
       dispatch({
@@ -146,7 +138,7 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
         error: toUserFacingError(error, 'Failed to sign out cleanly.'),
       });
     }
-  }, [apiBaseUrl, session]);
+  }, [apiBaseUrl]);
 
   const value = useMemo<DesktopAuthContextValue>(
     () => ({
@@ -156,11 +148,9 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
       isPasskeyAvailable: isPasskeySupported(),
       restartAuth: () => {
         setEmail('');
-        setSession(null);
         dispatch({ type: 'RESET_TO_SIGNED_OUT' });
       },
       requestOtp: handleRequestOtp,
-      session,
       signInWithPasskey: handlePasskeySignIn,
       signOut: handleSignOut,
       state,
@@ -174,7 +164,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
       handleRequestOtp,
       handleSignOut,
       handleVerifyOtp,
-      session,
       state,
     ],
   );

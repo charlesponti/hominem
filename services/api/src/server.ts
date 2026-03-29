@@ -9,7 +9,6 @@ import { prettyJSON } from 'hono/pretty-json';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { betterAuthServer } from './auth/better-auth';
-import { getJwks } from './auth/key-store';
 import type { AuthContextEnvelope } from './auth/types';
 import { API_BRAND } from './brand';
 import { env } from './env';
@@ -75,19 +74,13 @@ export function createServer() {
   // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)
   app.route('/', rpcApp);
 
-  // Better Auth bootstrap surface during migration.
-  app.on(['GET', 'POST'], '/api/better-auth/*', (c) => {
-    return betterAuthServer.handler(c.req.raw);
-  });
-
-  app.get('/.well-known/jwks.json', async (c) => {
-    return c.json(await getJwks());
-  });
-
   // Register other route handlers
   app.route('/api/status', statusRoutes);
   app.route('/api/health', healthRoutes);
   app.route('/api/auth', authRoutes);
+  app.on(['GET', 'POST'], '/api/auth/*', (c) => {
+    return betterAuthServer.handler(c.req.raw);
+  });
   app.route('/api/ai', aiRoutes);
   app.route('/api/oauth', oauthRoutes);
   app.route('/api/invites', invitesRoutes);

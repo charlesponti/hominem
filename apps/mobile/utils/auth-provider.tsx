@@ -52,17 +52,16 @@ function hasValidSignInResponse(input: SignInResponse) {
   return input.user.id.length > 0 && input.user.email.length > 0;
 }
 
-function toAuthUserProfile(localProfile: User | null): AuthState['user'] {
+function toAuthUserProfile(localProfile: User | null): User | null {
   if (!localProfile) return null;
   return {
     id: localProfile.id,
     email: localProfile.email,
     name: localProfile.name,
     image: localProfile.image,
-    isAdmin: localProfile.isAdmin,
     createdAt: localProfile.createdAt,
     updatedAt: localProfile.updatedAt,
-  } as AuthState['user'];
+  };
 }
 
 function fromSignInUser(user: { id: string; email: string; name?: string | null }): User {
@@ -71,7 +70,6 @@ function fromSignInUser(user: { id: string; email: string; name?: string | null 
     email: user.email,
     name: user.name ?? undefined,
     image: undefined,
-    isAdmin: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -92,7 +90,7 @@ type AuthContextType = {
   currentUser: User | null;
   requestEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (input: { email: string; otp: string; name?: string }) => Promise<void>;
-  completePasskeySignIn: (input: SignInResponse) => Promise<void>;
+  completePasskeySignIn: (user: User | null) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<User>;
   getAuthHeaders: () => Promise<Record<string, string>>;
@@ -169,8 +167,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           sessionCookieHeaderRef.current = null;
         },
         upsertProfile: async (user) => {
-          const saved = await LocalStore.upsertUserProfile(fromSignInUser(user));
-          return toAuthUserProfile(saved);
+          return LocalStore.upsertUserProfile(fromSignInUser(user));
         },
         clearLegacyData: clearLegacyLocalDataOnce,
         signal,
@@ -344,8 +341,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
         const localUser = fromSignInUser(signInData.user);
-        const saved = await LocalStore.upsertUserProfile(localUser);
-        const userProfile = toAuthUserProfile(saved);
+        const userProfile = await LocalStore.upsertUserProfile(localUser);
         if (!userProfile) throw new Error('Failed to create user profile');
 
         dispatch({ type: 'SESSION_LOADED', user: userProfile });
@@ -373,17 +369,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     [],
   );
 
-  const completePasskeySignIn = useCallback(async (input: SignInResponse) => {
+  const completePasskeySignIn = useCallback(async (user: User | null) => {
     const startedAt = Date.now();
 
     dispatch({ type: 'PASSKEY_AUTH_STARTED' });
     captureAuthAnalyticsEvent('auth_passkey_sign_in_started', {
       phase: 'passkey_sign_in',
-      email: input.user.email,
+      email: user?.email,
     });
 
     try {
-      if (!hasValidSignInResponse(input)) {
+      if (!user) {
         throw new Error('Invalid passkey sign-in response from API');
       }
 
@@ -396,16 +392,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       await persistSessionCookieHeader(sessionCookieHeader);
 
       dispatch({ type: 'PROFILE_SYNC_STARTED' });
-      const localUser = fromSignInUser(input.user);
-      const saved = await LocalStore.upsertUserProfile(localUser);
-      const userProfile = toAuthUserProfile(saved);
+      const userProfile = await LocalStore.upsertUserProfile(user);
       if (!userProfile) throw new Error('Failed to create passkey user profile');
 
       dispatch({ type: 'SESSION_LOADED', user: userProfile });
       captureAuthAnalyticsEvent('auth_passkey_sign_in_succeeded', {
         phase: 'passkey_sign_in',
         durationMs: Date.now() - startedAt,
-        email: input.user.email,
+        email: user.email,
       });
     } catch (error) {
       const resolvedError = error instanceof Error ? error : new Error('Passkey sign-in failed');
@@ -413,7 +407,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       captureAuthAnalyticsFailure('auth_passkey_sign_in_failed', {
         phase: 'passkey_sign_in',
         durationMs: Date.now() - startedAt,
-        email: input.user.email,
+        email: user?.email,
         error: resolvedError,
         failureStage: 'storage',
       });
@@ -522,7 +516,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       email: state.user.email,
       name: state.user.name,
       image: state.user.image,
-      isAdmin: state.user.isAdmin,
       createdAt: state.user.createdAt,
       updatedAt: state.user.updatedAt,
     };

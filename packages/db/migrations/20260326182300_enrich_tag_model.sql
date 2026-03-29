@@ -5,7 +5,7 @@ ALTER TABLE app.tags
   ADD COLUMN slug text,
   ADD COLUMN path public.ltree,
   ADD COLUMN icon text,
-  ADD COLUMN created_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN created_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   ADD COLUMN archived_at timestamptz;
 
 UPDATE app.tags
@@ -40,7 +40,7 @@ CREATE TABLE app.space_tags (
   id uuid PRIMARY KEY DEFAULT uuidv7(),
   space_id uuid NOT NULL REFERENCES app.spaces(id) ON DELETE CASCADE,
   tag_id uuid NOT NULL REFERENCES app.tags(id) ON DELETE CASCADE,
-  created_by_userId uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by_userId text REFERENCES "user"(id) ON DELETE SET NULL,
   createdAt timestamptz NOT NULL DEFAULT now()
 );
 

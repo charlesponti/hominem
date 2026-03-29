@@ -85,18 +85,8 @@ AS $$
 $$;
 -- +goose StatementEnd
 
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.users FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.identities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.identities FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.sessions FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.passkeys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.passkeys FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.verification_tokens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.verification_tokens FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.device_codes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.device_codes FORCE ROW LEVEL SECURITY;
+-- Better Auth tables (user, session, account, verification, passkey, jwks, deviceCode)
+-- are owned by Better Auth and not managed by our RLS policies.
 
 ALTER TABLE app.notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.notes FORCE ROW LEVEL SECURITY;
@@ -778,14 +768,6 @@ DROP POLICY IF EXISTS app_note_versions_owner_write_policy ON app.note_versions;
 DROP POLICY IF EXISTS app_note_versions_select_policy ON app.note_versions;
 DROP POLICY IF EXISTS app_notes_owner_write_policy ON app.notes;
 DROP POLICY IF EXISTS app_notes_select_policy ON app.notes;
-DROP POLICY IF EXISTS auth_device_codes_service_policy ON auth.device_codes;
-DROP POLICY IF EXISTS auth_verification_tokens_service_policy ON auth.verification_tokens;
-DROP POLICY IF EXISTS auth_passkeys_service_policy ON auth.passkeys;
-DROP POLICY IF EXISTS auth_sessions_service_policy ON auth.sessions;
-DROP POLICY IF EXISTS auth_identities_service_policy ON auth.identities;
-DROP POLICY IF EXISTS auth_users_self_update_policy ON auth.users;
-DROP POLICY IF EXISTS auth_users_self_select_policy ON auth.users;
-DROP POLICY IF EXISTS auth_users_service_policy ON auth.users;
 
 DROP FUNCTION IF EXISTS auth.is_space_member(uuid);
 DROP FUNCTION IF EXISTS auth.owns_space(uuid);
@@ -793,9 +775,6 @@ DROP FUNCTION IF EXISTS auth.can_write_note(uuid);
 DROP FUNCTION IF EXISTS auth.can_read_note(uuid);
 
 ALTER TABLE ops.search_logs NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE ops.search_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE ops.audit_logs NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE ops.audit_logs DISABLE ROW LEVEL SECURITY;
 
 ALTER TABLE app.possession_events NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.possession_events DISABLE ROW LEVEL SECURITY;
@@ -865,16 +844,4 @@ ALTER TABLE app.note_versions NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.note_versions DISABLE ROW LEVEL SECURITY;
 ALTER TABLE app.notes NO FORCE ROW LEVEL SECURITY;
 ALTER TABLE app.notes DISABLE ROW LEVEL SECURITY;
-
-ALTER TABLE auth.device_codes NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.device_codes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.verification_tokens NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.verification_tokens DISABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.passkeys NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.passkeys DISABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.sessions NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.sessions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.identities NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.identities DISABLE ROW LEVEL SECURITY;
-ALTER TABLE auth.users NO FORCE ROW LEVEL SECURITY;
-ALTER TABLE auth.users DISABLE ROW LEVEL SECURITY;
+-- +goose StatementEnd

@@ -106,13 +106,12 @@ oauthTwitterCallbackRoutes.get(
         await createAccount({
           id: randomUUID(),
           userId,
-          type: 'oauth',
-          provider: 'twitter',
+          providerId: 'twitter',
           providerAccountId: twitterUserId,
+          providerSubject: twitterUserId,
           accessToken: access_token,
           refreshToken: refresh_token ?? null,
           expiresAt,
-          tokenType: 'bearer',
           scope: TWITTER_SCOPES,
         });
       }
