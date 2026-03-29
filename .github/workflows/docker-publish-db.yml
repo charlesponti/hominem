@@ -5,7 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docker/postgres/Dockerfile'
+      - 'infra/docker/images/postgres/Dockerfile'
+      - 'infra/docker/images/postgres/init-extensions.sh'
       - '.github/workflows/docker-publish-db.yml'
 
 permissions:
@@ -30,6 +31,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/postgres/Dockerfile
+          file: ./infra/docker/images/postgres/Dockerfile
           push: true
-          tags: ghcr.io/hackefeller/postgres:latest
+          tags: |
+            ghcr.io/hackefeller/postgres:pg18
+            ghcr.io/hackefeller/postgres:latest

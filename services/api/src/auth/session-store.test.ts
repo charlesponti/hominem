@@ -12,12 +12,12 @@ describe('session store', () => {
     const userId = crypto.randomUUID();
 
     await db
-      .insertInto('users')
+      .insertInto('auth.user')
       .values({
         id: userId,
         email: `session-store-${userId}@hominem.test`,
         name: 'Session Store Test',
-        is_admin: false,
+        isAdmin: false,
       })
       .execute();
 
@@ -30,7 +30,7 @@ describe('session store', () => {
     expect(tokenPair.refreshFamilyId.length).toBeGreaterThan(0);
 
     const session = await db
-      .selectFrom('auth_sessions')
+      .selectFrom('auth.session')
       .select(['id', 'amr'])
       .where('id', '=', tokenPair.sessionId)
       .executeTakeFirstOrThrow();

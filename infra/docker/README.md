@@ -67,7 +67,7 @@ POSTGRES_PASSWORD=your-secure-password docker compose -f infra/docker/compose/ba
 
 ## PostgreSQL 18
 
-This setup uses PostgreSQL 18.3 with:
+This setup uses PostgreSQL 18.5 with:
 - pgvector 0.8.2
 - PostGIS 3.6.2
 - pgrouting 4.0.1

@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
 import { Hono } from 'hono';
@@ -54,36 +56,36 @@ describe('auth step-up enforcement', () => {
     await cleanupApiAuthTestState();
 
     await db
-      .insertInto('users')
+      .insertInto('auth.user')
       .values([
         {
           id: STEP_UP_USER_ID,
           email: 'step-up-existing@hominem.test',
           name: 'Existing Passkey User',
-          is_admin: false,
+          isAdmin: false,
         },
         {
           id: FIRST_TIME_USER_ID,
           email: 'step-up-first-time@hominem.test',
           name: 'First Time Passkey User',
-          is_admin: false,
+          isAdmin: false,
         },
       ])
       .execute();
 
     await db
-      .insertInto('user_passkey')
+      .insertInto('auth.passkey')
       .values({
-        id: 'step-up-passkey',
-        user_id: STEP_UP_USER_ID,
+        id: crypto.randomUUID(),
+        userId: STEP_UP_USER_ID,
         name: 'Existing Device',
-        public_key: 'public-key',
-        credential_id: 'credential-id',
+        public_key: Buffer.from('public-key'),
+        credentialID: 'credential-id',
         counter: 0,
-        device_type: 'singleDevice',
-        backed_up: false,
-        transports: 'internal',
-        aaguid: 'test-aaguid',
+        deviceType: 'singleDevice',
+        backedUp: false,
+        transports: ['internal'],
+        aaguid: '11111111-1111-4111-8111-111111111111',
       })
       .execute();
   });

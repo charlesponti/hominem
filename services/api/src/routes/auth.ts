@@ -7,8 +7,8 @@ import {
   hasRecentStepUp,
   isFreshPasskeyAuth,
 } from '@hominem/auth/server';
-import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import type { StepUpAction } from '@hominem/auth/step-up-actions';
+import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
 import { redis } from '@hominem/services/redis';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
@@ -40,14 +40,14 @@ const devIssueTokenSchema = z.object({
 const refreshTokenSchema = z
   .union([
     z.object({
-      refresh_token: z.string().min(16),
+      refreshToken: z.string().min(16),
     }),
     z.object({
       refreshToken: z.string().min(16),
     }),
   ])
   .transform((value) => ({
-    refreshToken: 'refresh_token' in value ? value.refresh_token : value.refreshToken,
+    refreshToken: 'refreshToken' in value ? value.refreshToken : value.refreshToken,
   }));
 
 const passkeyRegisterVerifySchema = z.object({
@@ -73,17 +73,17 @@ const emailOtpVerifySchema = z.object({
 });
 
 const deviceCodeSchema = z.object({
-  client_id: z.string().min(1),
+  clientId: z.string().min(1),
   scope: z.string().optional(),
 });
 
 const deviceTokenSchema = z.object({
-  grant_type: z.literal('urn:ietf:params:oauth:grant-type:device_code'),
-  device_code: z.string().min(1),
-  client_id: z.string().min(1),
+  grant_type: z.literal('urn:ietf:params:oauth:grant-type:deviceCode'),
+  deviceCode: z.string().min(1),
+  clientId: z.string().min(1),
 });
 const deviceVerifySchema = z.object({
-  user_code: z.string().min(1),
+  userCode: z.string().min(1),
 });
 const deviceApproveSchema = z.object({
   userCode: z.string().min(1),
@@ -116,13 +116,13 @@ interface AuthRateLimitInput {
 }
 
 interface MobileE2eLoginResponse {
-  access_token: string;
-  refresh_token: string;
+  accessToken: string;
+  refreshToken: string;
   token_type: string;
   expires_in: number;
-  session_id: string;
-  refresh_family_id: string;
-  provider: 'better-auth';
+  sessionId: string;
+  refresh_familyId: string;
+  providerId: 'better-auth';
   user: {
     id: string;
     email: string;
@@ -254,12 +254,12 @@ async function createEmailOtpAuthResponse(dbUser: {
   id: string;
   email: string;
   name: string | null;
-  is_admin: boolean;
+  isAdmin: boolean;
 }) {
   const access = await issueAccessToken({
     sub: dbUser.id,
     sid: randomUUID(),
-    role: dbUser.is_admin ? 'admin' : 'user',
+    role: dbUser.isAdmin ? 'admin' : 'user',
     scope: ['api:read', 'api:write'],
     amr: ['email_otp', 'better-auth-session'],
   });
@@ -311,11 +311,11 @@ async function signInWithBetterAuthEmailOtp(
     const userId = parsed.user?.id;
 
     if (!userId) {
-      return c.json({ error: 'user_id_missing' }, 400);
+      return c.json({ error: 'userId_missing' }, 400);
     }
 
     const dbUser = await db
-      .selectFrom('users')
+      .selectFrom('auth.user')
       .selectAll()
       .where('id', '=', userId)
       .executeTakeFirst();
@@ -416,9 +416,9 @@ async function hasSatisfiedStepUp(c: Context<AppEnv>, userId: string, action: St
 
 async function userHasRegisteredPasskeys(userId: string) {
   const existingPasskey = await db
-    .selectFrom('user_passkey')
+    .selectFrom('auth.passkey')
     .select('id')
-    .where('user_id', '=', userId)
+    .where('userId', '=', userId)
     .limit(1)
     .executeTakeFirst();
 
@@ -486,15 +486,15 @@ async function buildSessionResponse(input: {
       id: userRecord.id,
       email: userRecord.email,
       ...(userRecord.name ? { name: userRecord.name } : {}),
-      isAdmin: userRecord.is_admin ?? false,
-      ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
-      ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+      isAdmin: userRecord.isAdmin ?? false,
+      ...(userRecord.createdAt ? { createdAt: userRecord.createdAt } : {}),
+      ...(userRecord.updatedAt ? { updatedAt: userRecord.updatedAt } : {}),
     },
     auth: {
       sub: userRecord.id,
       sid: input.sessionId,
       scope: ['api:read', 'api:write'],
-      role: userRecord.is_admin ? 'admin' : 'user',
+      role: userRecord.isAdmin ? 'admin' : 'user',
       amr: input.amr,
       authTime: Math.floor(Date.now() / 1000),
     },
@@ -504,7 +504,7 @@ async function buildSessionResponse(input: {
     const access = await issueAccessToken({
       sub: userRecord.id,
       sid: input.sessionId,
-      role: userRecord.is_admin ? 'admin' : 'user',
+      role: userRecord.isAdmin ? 'admin' : 'user',
       scope: ['api:read', 'api:write'],
       amr: input.amr,
     });
@@ -585,9 +585,9 @@ async function forwardBetterAuthPluginResponse(input: {
   const headers = copyHeadersWithSetCookie(response.headers);
 
   if (input.path === '/device/token' && !headers.get('set-auth-token')) {
-    const payload = JSON.parse(responseText) as { access_token?: string };
-    if (typeof payload.access_token === 'string' && payload.access_token.length > 0) {
-      headers.set('set-auth-token', payload.access_token);
+    const payload = JSON.parse(responseText) as { accessToken?: string };
+    if (typeof payload.accessToken === 'string' && payload.accessToken.length > 0) {
+      headers.set('set-auth-token', payload.accessToken);
       const exposedHeaders = headers.get('access-control-expose-headers');
       const exposed = new Set(
         (exposedHeaders ?? '')
@@ -656,7 +656,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
   const existingUser = await db
-    .selectFrom('users')
+    .selectFrom('auth.user')
     .selectAll()
     .where('email', '=', email)
     .limit(1)
@@ -665,14 +665,14 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const user =
     existingUser ??
     (await db
-      .insertInto('users')
+      .insertInto('auth.user')
       .values({
         id: randomBytes(16).toString('hex'),
         email,
-        name,
-        is_admin: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        name: name,
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirst());
@@ -689,7 +689,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     sub: user.id,
     sid: crypto.randomUUID(),
     scope: ['api:read', 'api:write'],
-    role: user.is_admin ? 'admin' : 'user',
+    role: user.isAdmin ? 'admin' : 'user',
     amr,
   });
   const refreshToken = randomBytes(32).toString('base64url');
@@ -705,13 +705,13 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   });
 
   const response: MobileE2eLoginResponse = {
-    access_token: accessToken.accessToken,
-    refresh_token: refreshToken,
+    accessToken: accessToken.accessToken,
+    refreshToken: refreshToken,
     token_type: accessToken.tokenType,
     expires_in: accessToken.expiresIn,
-    session_id: sessionId,
-    refresh_family_id: refreshFamilyId,
-    provider: 'better-auth',
+    sessionId: sessionId,
+    refresh_familyId: refreshFamilyId,
+    providerId: 'better-auth',
     user: {
       id: user.id,
       email: user.email,
@@ -848,9 +848,9 @@ authRoutes.get('/session', async (c) => {
           id: userRecord.id,
           email: userRecord.email,
           ...(userRecord.name ? { name: userRecord.name } : {}),
-          isAdmin: userRecord.is_admin ?? false,
-          ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
-          ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+          isAdmin: userRecord.isAdmin ?? false,
+          ...(userRecord.createdAt ? { createdAt: userRecord.createdAt } : {}),
+          ...(userRecord.updatedAt ? { updatedAt: userRecord.updatedAt } : {}),
         },
         auth: {
           sub: claims.sub,
@@ -916,7 +916,7 @@ authRoutes.post('/verify', async (c) => {
     const claims = await verifyAccessToken(authHeader.slice(7));
     return c.json({ valid: true, claims });
   } catch {
-    return c.json({ valid: false, error: 'invalid_token' }, 401);
+    return c.json({ valid: false, error: 'invalidToken' }, 401);
   }
 });
 
@@ -935,10 +935,10 @@ authRoutes.post('/dev/issue-token', zValidator('json', devIssueTokenSchema), asy
   });
 
   return c.json({
-    access_token: token.accessToken,
+    accessToken: token.accessToken,
     token_type: token.tokenType,
     expires_in: token.expiresIn,
-    provider: 'better-auth' as const,
+    providerId: 'better-auth' as const,
   });
 });
 
@@ -949,11 +949,11 @@ authRoutes.post('/token', async (c) => {
     : ((await c.req.json().catch(() => ({}))) as Record<string, unknown>);
 
   const grantType = typeof payload.grant_type === 'string' ? payload.grant_type : null;
-  if (grantType !== 'refresh_token') {
+  if (grantType !== 'refreshToken') {
     return c.json(
       {
         error: 'unsupported_grant_type',
-        message: 'Only refresh_token grant is available on this endpoint in phase 1.',
+        message: 'Only refreshToken grant is available on this endpoint in phase 1.',
       },
       400,
     );
@@ -988,13 +988,13 @@ authRoutes.post('/token', async (c) => {
   }
 
   return c.json({
-    access_token: rotated.accessToken,
-    refresh_token: rotated.refreshToken,
+    accessToken: rotated.accessToken,
+    refreshToken: rotated.refreshToken,
     token_type: rotated.tokenType,
     expires_in: rotated.expiresIn,
-    session_id: rotated.sessionId,
-    refresh_family_id: rotated.refreshFamilyId,
-    provider: 'better-auth' as const,
+    sessionId: rotated.sessionId,
+    refresh_familyId: rotated.refreshFamilyId,
+    providerId: 'better-auth' as const,
   });
 });
 
@@ -1177,7 +1177,7 @@ authRoutes.post('/device/code', zValidator('json', deviceCodeSchema), async (c) 
   const payload = c.req.valid('json');
   const deviceCodeRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'device-code',
-    identifier: `${getClientIp(c)}:${payload.client_id}`,
+    identifier: `${getClientIp(c)}:${payload.clientId}`,
     windowSec: AUTH_DEVICE_CODE_LIMIT_WINDOW_SECONDS,
     max: AUTH_DEVICE_CODE_LIMIT_MAX,
   });
@@ -1195,7 +1195,7 @@ authRoutes.post('/device/code', zValidator('json', deviceCodeSchema), async (c) 
     const body = await response.json();
     return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
   } catch {
-    return c.json({ error: 'device_code_failed' }, 400);
+    return c.json({ error: 'deviceCode_failed' }, 400);
   }
 });
 
@@ -1230,7 +1230,7 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
   const payload = c.req.valid('json');
   const deviceTokenRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'device-token',
-    identifier: `${getClientIp(c)}:${payload.client_id}:${payload.device_code.slice(0, 16)}`,
+    identifier: `${getClientIp(c)}:${payload.clientId}:${payload.deviceCode.slice(0, 16)}`,
     windowSec: AUTH_DEVICE_TOKEN_LIMIT_WINDOW_SECONDS,
     max: AUTH_DEVICE_TOKEN_LIMIT_MAX,
   });
@@ -1275,7 +1275,7 @@ authRoutes.post('/mock/signin', async (c) => {
   }
 
   try {
-    const provider = createMockAuthProvider();
+    const providerId = createMockAuthProvider();
     const response = await provider.signIn();
 
     return c.json(
@@ -1327,7 +1327,7 @@ authRoutes.post('/mock/signout', async (c) => {
   }
 
   try {
-    const provider = createMockAuthProvider();
+    const providerId = createMockAuthProvider();
     await provider.signOut();
 
     return c.json({ success: true }, 200);

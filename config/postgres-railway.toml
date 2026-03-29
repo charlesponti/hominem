@@ -1,7 +1,7 @@
-# Railway PostgreSQL 17 Service Configuration
+# Railway PostgreSQL service configuration
 
-service_name = "postgres-17"
-dockerfile_path = "docker/postgres.dockerfile"
+service_name = "postgres"
+dockerfile_path = "infra/docker/images/postgres/Dockerfile"
 
 [build]
 builder = "dockerfile"
@@ -15,7 +15,7 @@ restart_policy = "always"
 POSTGRES_DB = "hominem"
 POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = { from = "POSTGRES_PASSWORD" }
-PGDATA = "/var/lib/postgresql/data"
+PGDATA = "/var/lib/postgresql"
 
 [networking]
 ports = [5432]

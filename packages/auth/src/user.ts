@@ -7,8 +7,8 @@ export function toUser(source: UserSelect): User {
     email: source.email,
     name: source.name || undefined,
     image: source.image || undefined,
-    isAdmin: Boolean(source.is_admin),
-    createdAt: source.created_at ?? '',
-    updatedAt: source.updated_at ?? '',
+    isAdmin: Boolean(source.isAdmin),
+    createdAt: source.createdAt ?? '',
+    updatedAt: source.updatedAt ?? '',
   }
 }

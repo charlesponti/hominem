@@ -1,5 +1,5 @@
 import type { User } from '@hominem/auth/server';
-import { toUser, UserAuthService } from '@hominem/auth/server';
+import { UserAuthService } from '@hominem/auth/server';
 import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
@@ -10,7 +10,7 @@ import { verifyAccessToken } from '../auth/tokens';
 import type { AuthContextEnvelope } from '../auth/types';
 
 type AuthErrorCode =
-  | 'invalid_token'
+  | 'invalidToken'
   | 'expired_token'
   | 'invalid_audience'
   | 'invalid_issuer'
@@ -31,6 +31,20 @@ interface BetterAuthSessionContext {
   auth: AuthContextEnvelope;
   user: User;
   userId: string;
+}
+
+type UserRow = NonNullable<Awaited<ReturnType<typeof UserAuthService.getUserById>>>;
+
+function toAuthUser(source: UserRow): User {
+  return {
+    id: source.id,
+    email: source.email,
+    name: source.name ?? undefined,
+    image: source.image ?? undefined,
+    isAdmin: Boolean(source.isAdmin),
+    createdAt: source.createdAt ?? '',
+    updatedAt: source.updatedAt ?? '',
+  };
 }
 
 function getBearerToken(headerValue?: string) {
@@ -90,7 +104,7 @@ function mapBearerError(error: unknown): AuthErrorCode {
       if (maybeJose.claim === 'iss') {
         return 'invalid_issuer';
       }
-      return 'invalid_token';
+      return 'invalidToken';
     }
     if (maybeJose.message === 'disallowed_kid') {
       return 'disallowed_kid';
@@ -107,7 +121,7 @@ function mapBearerError(error: unknown): AuthErrorCode {
       return 'invalid_issuer';
     }
   }
-  return 'invalid_token';
+  return 'invalidToken';
 }
 
 function authErrorResponse(code: AuthErrorCode) {
@@ -155,7 +169,7 @@ async function applyBetterAuthSession(c: {
     return false;
   }
 
-  const user = toUser(dbUser);
+  const user = toAuthUser(dbUser);
   setCachedUser(user);
   c.set('user', user);
   c.set('userId', dbUser.id);
@@ -200,7 +214,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
         const testUser = await UserAuthService.findByIdOrEmail({ id: testUserId });
         if (testUser) {
-          const user = toUser(testUser);
+          const user = toAuthUser(testUser);
           setCachedUser(user);
           c.set('user', user);
           c.set('userId', testUser.id);
@@ -216,11 +230,12 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         }
 
         await db
-          .insertInto('users')
+          .insertInto('auth.user')
           .values({
             id: testUserId,
             email: `${testUserId}@hominem.test`,
-            is_admin: false,
+            name: testUserId,
+            isAdmin: false,
           })
           .onConflict((oc) => oc.column('id').doNothing())
           .execute();
@@ -228,7 +243,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         const fallbackUser = await UserAuthService.getUserById(testUserId);
 
         if (fallbackUser) {
-          const user = toUser(fallbackUser);
+          const user = toAuthUser(fallbackUser);
           setCachedUser(user);
           c.set('user', user);
         }
@@ -280,8 +295,8 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
         const dbUser = await UserAuthService.getUserById(claims.sub);
         if (!dbUser) {
-          c.set('authError', 'invalid_token');
-          return c.json(authErrorResponse('invalid_token'), 401);
+          c.set('authError', 'invalidToken');
+          return c.json(authErrorResponse('invalidToken'), 401);
         }
 
         const user = toUser(dbUser);

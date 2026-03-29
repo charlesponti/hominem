@@ -1,16 +1,6 @@
-import { db } from '@hominem/db'
+import { db, type Selectable, type Users } from '@hominem/db'
 
-type UserRow = {
-  id: string
-  email: string
-  avatar_url: string | null
-  created_at: string | null
-  email_verified: boolean
-  image: string | null
-  is_admin: boolean
-  name: string | null
-  updated_at: string | null
-}
+type UserRow = Selectable<Users>
 
 export class UserAuthService {
   static async findByIdOrEmail(opts: { id?: string; email?: string }): Promise<UserRow | null> {
@@ -19,45 +9,45 @@ export class UserAuthService {
       return null
     }
 
-    let query = db.selectFrom('users').selectAll()
+    let query = db.selectFrom('auth.user').selectAll()
 
     if (id && email) {
       query = query.where((eb) => eb.or([eb('id', '=', id), eb('email', '=', email)]))
     } else if (id) {
       query = query.where('id', '=', id)
-    } else {
-      query = query.where('email', '=', email!)
+    } else if (email) {
+      query = query.where('email', '=', email)
     }
 
     const result = await query.limit(1).executeTakeFirst()
-    return (result as unknown as UserRow) ?? null
+    return result ?? null
   }
 
   static async getUserByEmail(email: string): Promise<UserRow | null> {
     const result = await db
-      .selectFrom('users')
+      .selectFrom('auth.user')
       .selectAll()
       .where('email', '=', email)
       .limit(1)
       .executeTakeFirst()
 
-    return (result as unknown as UserRow) ?? null
+    return result ?? null
   }
 
   static async getUserById(id: string): Promise<UserRow | null> {
     const result = await db
-      .selectFrom('users')
+      .selectFrom('auth.user')
       .selectAll()
       .where('id', '=', id)
       .limit(1)
       .executeTakeFirst()
 
-    return (result as unknown as UserRow) ?? null
+    return result ?? null
   }
 
   static async deleteUser(id: string): Promise<boolean> {
     const result = await db
-      .deleteFrom('users')
+      .deleteFrom('auth.user')
       .where('id', '=', id)
       .executeTakeFirst()
 
