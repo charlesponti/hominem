@@ -531,7 +531,10 @@ authRoutes.get('/passkeys', async (c) => {
       path: '/passkey/list-user-passkeys',
       method: 'GET',
     });
-    return c.json((await response.json()) as Record<string, unknown>, response.status as 200 | 400 | 401);
+    return c.json(
+      (await response.json()) as Record<string, unknown>,
+      response.status as 200 | 400 | 401,
+    );
   } catch {
     return c.json({ error: 'passkey_list_failed' }, 400);
   }
@@ -558,7 +561,10 @@ authRoutes.delete(
         method: 'POST',
         body: { id },
       });
-      return c.json((await response.json()) as Record<string, unknown>, response.status as 200 | 400 | 401);
+      return c.json(
+        (await response.json()) as Record<string, unknown>,
+        response.status as 200 | 400 | 401,
+      );
     } catch {
       return c.json({ error: 'passkey_delete_failed' }, 400);
     }
@@ -629,7 +635,10 @@ authRoutes.post('/device/code', zValidator('json', deviceCodeSchema), async (c) 
       method: 'POST',
       body: payload as Record<string, unknown>,
     });
-    return c.json((await response.json()) as Record<string, unknown>, response.status as 200 | 400 | 401);
+    return c.json(
+      (await response.json()) as Record<string, unknown>,
+      response.status as 200 | 400 | 401,
+    );
   } catch {
     return c.json({ error: 'deviceCode_failed' }, 400);
   }

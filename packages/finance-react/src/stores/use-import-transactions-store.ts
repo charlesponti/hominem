@@ -1,4 +1,3 @@
-import { useAuthContext } from '@hominem/auth';
 import type {
   FileStatus,
   ImportRequestResponse,
@@ -21,7 +20,6 @@ const PROGRESS_UPDATE_THROTTLE = 100;
 export function useImportTransactionsStore() {
   const apiClient = useApiClient();
   const queryClient = useQueryClient();
-  const { session } = useAuthContext();
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -56,8 +54,8 @@ export function useImportTransactionsStore() {
   );
 
   useEffect(() => {
-    connect(() => Promise.resolve(session?.access_token || null));
-  }, [connect, session]);
+    connect(() => Promise.resolve(null));
+  }, [connect]);
 
   const throttledUpdateProgress = useCallback(
     (jobData: ImportTransactionsJob[]) => {

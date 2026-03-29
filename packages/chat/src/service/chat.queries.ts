@@ -183,7 +183,11 @@ export async function deleteChatQuery(chatId: string, userId: string): Promise<b
   }
 
   await db.deleteFrom('app.chat_messages').where('chat_id', '=', chatId).execute();
-  await db.deleteFrom('app.chats').where('id', '=', chatId).where('owner_userid', '=', userId).execute();
+  await db
+    .deleteFrom('app.chats')
+    .where('id', '=', chatId)
+    .where('owner_userid', '=', userId)
+    .execute();
   return true;
 }
 

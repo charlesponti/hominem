@@ -27,10 +27,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import { contentWidths } from '../../tokens';
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
 import { useMessageEdit } from '../../lib/hooks/use-message-edit';
 import { cn, copyToClipboard } from '../../lib/utils';
+import { contentWidths } from '../../tokens';
 import type { ExtendedMessage } from '../../types/chat';
 import { MarkdownContent, Reasoning, Tool, ToolInput } from '../ai-elements';
 import { Inline, Stack } from '../layout';
@@ -87,7 +87,12 @@ function MessageContent({
   width?: 'transcript' | 'bubble' | 'full';
   style?: CSSProperties;
 } & HTMLAttributes<HTMLDivElement>) {
-  const maxWidth = width === 'bubble' ? contentWidths.bubble : width === 'transcript' ? contentWidths.transcript : undefined;
+  const maxWidth =
+    width === 'bubble'
+      ? contentWidths.bubble
+      : width === 'transcript'
+        ? contentWidths.transcript
+        : undefined;
 
   return (
     <div

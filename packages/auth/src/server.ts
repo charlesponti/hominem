@@ -1,108 +1,105 @@
-import { logger } from '@hominem/utils/logger'
-import { getSetCookieHeaders } from '@hominem/utils/headers'
+import { getSetCookieHeaders } from '@hominem/utils/headers';
+import { logger } from '@hominem/utils/logger';
 
-import { resolveAuthRedirect } from './redirect-policy'
-import type { AuthConfig, ServerAuthResult } from './types'
+import { resolveAuthRedirect } from './redirect-policy';
+import type { AuthConfig, ServerAuthResult } from './types';
 
 export function resolveSafeAuthRedirect(
   next: string | null | undefined,
   fallback: string,
-  allowedPrefixes: string[] = [fallback]
+  allowedPrefixes: string[] = [fallback],
 ): string {
-  const resolution = resolveAuthRedirect(next, fallback, allowedPrefixes)
+  const resolution = resolveAuthRedirect(next, fallback, allowedPrefixes);
 
   if (resolution.rejectedReason === 'non_local') {
-    logger.warn('[auth.redirect] rejected non-local redirect target', { next, fallback })
+    logger.warn('[auth.redirect] rejected non-local redirect target', { next, fallback });
   } else if (resolution.rejectedReason === 'protocol_relative') {
-    logger.warn('[auth.redirect] rejected protocol-relative redirect target', { next, fallback })
+    logger.warn('[auth.redirect] rejected protocol-relative redirect target', { next, fallback });
   } else if (resolution.rejectedReason === 'disallowed') {
     logger.warn('[auth.redirect] rejected disallowed redirect target', {
       next,
       fallback,
       pathname: resolution.rejectedPathname,
       allowedPrefixes,
-    })
+    });
   }
 
-  return resolution.safeRedirect
+  return resolution.safeRedirect;
 }
 
 function getAbsoluteApiUrl(baseUrl: string, path: string) {
-  return new URL(path, baseUrl).toString()
+  return new URL(path, baseUrl).toString();
 }
 
 export function getAuthCookieDomain() {
-  return process.env.AUTH_COOKIE_DOMAIN?.trim()
+  return process.env.AUTH_COOKIE_DOMAIN?.trim();
 }
 
 function appendSetCookieHeaders(target: Headers, source: Headers) {
-  const setCookieValues = getSetCookieHeaders(source)
+  const setCookieValues = getSetCookieHeaders(source);
   if (setCookieValues.length > 0) {
     for (const value of setCookieValues) {
-      target.append('set-cookie', value)
+      target.append('set-cookie', value);
     }
-    return
+    return;
   }
 
-  const setCookie = source.get('set-cookie')
+  const setCookie = source.get('set-cookie');
   if (setCookie) {
-    target.append('set-cookie', setCookie)
+    target.append('set-cookie', setCookie);
   }
 }
 
 export async function getServerAuth(
   request: Request,
-  config: AuthConfig
+  config: AuthConfig,
 ): Promise<ServerAuthResult & { headers: Headers }> {
-  const headers = new Headers()
+  const headers = new Headers();
 
   try {
-    const cookieHeader = request.headers.get('cookie')
-    const authHeader = request.headers.get('authorization')
+    const cookieHeader = request.headers.get('cookie');
+    const authHeader = request.headers.get('authorization');
 
-    const upstreamHeaders = new Headers()
+    const upstreamHeaders = new Headers();
     if (cookieHeader) {
-      upstreamHeaders.set('cookie', cookieHeader)
+      upstreamHeaders.set('cookie', cookieHeader);
     }
     if (authHeader) {
-      upstreamHeaders.set('authorization', authHeader)
+      upstreamHeaders.set('authorization', authHeader);
     }
 
     const res = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
       method: 'GET',
       headers: upstreamHeaders,
-    })
+    });
 
-    appendSetCookieHeaders(headers, res.headers)
+    appendSetCookieHeaders(headers, res.headers);
 
     if (!res.ok) {
       return {
         user: null,
-        session: null,
         auth: null,
         isAuthenticated: false,
         headers,
-      }
+      };
     }
 
-    const payload = (await res.json()) as ServerAuthResult
+    const payload = (await res.json()) as ServerAuthResult;
 
     return {
       user: payload.user ?? null,
-      session: null,
       auth: payload.auth ?? null,
       isAuthenticated: Boolean(payload.isAuthenticated && payload.user),
       headers,
-    }
+    };
   } catch (error) {
-    logger.error('[getServerAuth]', { error })
+    logger.error('[getServerAuth]', { error });
     return {
       user: null,
-      session: null,
       auth: null,
       isAuthenticated: false,
       headers,
-    }
+    };
   }
 }
 
@@ -112,25 +109,25 @@ export function createServerAuthClient(request: Request, config: AuthConfig) {
     authClient: {
       auth: {
         async getUser() {
-          const headers = new Headers()
-          const cookieHeader = request.headers.get('cookie')
+          const headers = new Headers();
+          const cookieHeader = request.headers.get('cookie');
           if (cookieHeader) {
-            headers.set('cookie', cookieHeader)
+            headers.set('cookie', cookieHeader);
           }
 
           const res = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
             method: 'GET',
             headers,
-          })
+          });
 
           if (!res.ok) {
-            return { data: { user: null }, error: new Error('Unauthorized') }
+            return { data: { user: null }, error: new Error('Unauthorized') };
           }
 
-          const payload = (await res.json()) as ServerAuthResult
-          return { data: { user: payload.user }, error: null }
+          const payload = (await res.json()) as ServerAuthResult;
+          return { data: { user: payload.user }, error: null };
         },
       },
     },
-  }
+  };
 }

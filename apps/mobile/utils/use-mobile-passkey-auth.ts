@@ -1,11 +1,14 @@
-import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 import type { User } from '@hominem/auth';
+import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { authClient } from '~/lib/auth-client';
 import { useAuth } from '~/utils/auth-provider';
-import { getPersistedSessionCookieHeader, persistSessionCookieHeader } from '~/utils/auth/session-cookie';
+import {
+  getPersistedSessionCookieHeader,
+  persistSessionCookieHeader,
+} from '~/utils/auth/session-cookie';
 import { API_BASE_URL, E2E_TESTING } from '~/utils/constants';
 
 interface UseMobilePasskeyAuthReturn {
@@ -28,9 +31,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
     Platform.OS === 'ios' && Number.parseInt(Platform.Version as string, 10) >= 16;
 
   const signIn = useCallback(
-    async (
-      mode: 'real' | 'e2e-success' | 'e2e-cancel' = 'real',
-    ): Promise<User | null> => {
+    async (mode: 'real' | 'e2e-success' | 'e2e-cancel' = 'real'): Promise<User | null> => {
       setIsLoading(true);
       setError(null);
 
@@ -78,7 +79,10 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
           return null;
         }
 
-        const sessionData = (await tokenResponse.json()) as { isAuthenticated: boolean; user: User | null };
+        const sessionData = (await tokenResponse.json()) as {
+          isAuthenticated: boolean;
+          user: User | null;
+        };
 
         if (!sessionData.isAuthenticated || !sessionData.user) {
           setError('Failed to restore app session after passkey sign-in');

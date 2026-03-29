@@ -240,7 +240,7 @@ export class MessageService {
   ): Promise<number> {
     try {
       // Verify chat ownership first
-        const chatData = await db
+      const chatData = await db
         .selectFrom('app.chats')
         .select('id')
         .where('id', '=', chatId)

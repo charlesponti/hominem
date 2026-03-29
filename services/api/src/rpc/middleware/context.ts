@@ -2,6 +2,8 @@ import { getServerAuth } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import { createMiddleware } from 'hono/factory';
 
+import { env } from '@/src/env';
+
 import type { AppContext } from './auth';
 
 /**
@@ -43,10 +45,10 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
   try {
     const request = c.req.raw;
     const authConfig = {
-      apiBaseUrl: process.env.API_URL || 'http://localhost:3000',
+      apiBaseUrl: env.API_URL,
     };
 
-    const { user, headers, session, auth } = await getServerAuth(request, authConfig);
+    const { user, headers, auth } = await getServerAuth(request, authConfig);
 
     // Copy auth headers (cookies) to response headers
     headers.forEach((value, key) => {
@@ -59,11 +61,6 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
     }
     if (auth) {
       c.set('auth', auth);
-    }
-
-    // Session is available for bearer propagation where needed.
-    if (session) {
-      void session;
     }
   } catch (error) {
     logger.error('Error in context middleware', { error });

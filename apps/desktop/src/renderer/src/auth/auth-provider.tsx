@@ -1,8 +1,4 @@
-import {
-  appAuthStateMachine,
-  initialAppAuthState,
-  type AppAuthState,
-} from '@hominem/auth/types';
+import { appAuthStateMachine, initialAppAuthState, type AppAuthState } from '@hominem/auth/types';
 import {
   createContext,
   useCallback,

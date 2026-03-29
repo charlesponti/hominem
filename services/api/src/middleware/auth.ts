@@ -150,7 +150,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           authTime: Math.floor(Date.now() / 1000),
         });
         c.set('userId', testUserId);
-        
+
         return await next();
       }
     }

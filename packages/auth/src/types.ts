@@ -1,10 +1,10 @@
 export interface User {
-  id: string
-  email: string
-  name?: string | undefined
-  image?: string | undefined
-  createdAt: string
-  updatedAt: string
+  id: string;
+  email: string;
+  name?: string | undefined;
+  image?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Canonical app auth state machine types
@@ -19,13 +19,13 @@ export type AppAuthStatus =
   | 'refreshing_session'
   | 'signed_in'
   | 'signing_out'
-  | 'degraded'
+  | 'degraded';
 
 export interface AppAuthState {
-  status: AppAuthStatus
-  user: User | null
-  error: Error | null
-  isLoading: boolean
+  status: AppAuthStatus;
+  user: User | null;
+  error: Error | null;
+  isLoading: boolean;
 }
 
 export type AppAuthEvent =
@@ -44,7 +44,7 @@ export type AppAuthEvent =
   | { type: 'SIGN_OUT_SUCCESS' }
   | { type: 'RESET_TO_SIGNED_OUT' }
   | { type: 'FATAL_ERROR'; error: Error }
-  | { type: 'CLEAR_ERROR' }
+  | { type: 'CLEAR_ERROR' };
 
 export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): AppAuthState {
   switch (event.type) {
@@ -55,7 +55,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         user: event.user,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'SESSION_EXPIRED':
       return {
@@ -64,7 +64,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'OTP_REQUEST_STARTED':
       return {
@@ -72,7 +72,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'requesting_otp',
         isLoading: true,
         error: null,
-      }
+      };
 
     case 'OTP_REQUESTED':
       return {
@@ -80,7 +80,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'otp_requested',
         isLoading: false,
         error: null,
-      }
+      };
 
     case 'OTP_REQUEST_FAILED':
       return {
@@ -88,7 +88,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'OTP_VERIFICATION_STARTED':
       return {
@@ -96,7 +96,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'verifying_otp',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'OTP_VERIFICATION_FAILED':
       return {
@@ -104,7 +104,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'otp_requested',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'PASSKEY_AUTH_STARTED':
       return {
@@ -112,7 +112,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'authenticating_passkey',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'PASSKEY_AUTH_FAILED':
       return {
@@ -120,7 +120,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'REFRESH_STARTED':
       return {
@@ -128,7 +128,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'refreshing_session',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'REFRESH_FAILED':
       return {
@@ -136,7 +136,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'signed_out',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'SIGN_OUT_REQUESTED':
       return {
@@ -144,7 +144,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'signing_out',
         isLoading: true,
         error: null,
-      }
+      };
 
     case 'SIGN_OUT_SUCCESS':
       return {
@@ -153,7 +153,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'RESET_TO_SIGNED_OUT':
       return {
@@ -162,7 +162,7 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'FATAL_ERROR':
       return {
@@ -170,17 +170,17 @@ export function appAuthStateMachine(state: AppAuthState, event: AppAuthEvent): A
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'CLEAR_ERROR':
       return {
         ...state,
         error: null,
         status: state.status === 'degraded' ? 'signed_out' : state.status,
-      }
+      };
 
     default:
-      return state
+      return state;
   }
 }
 
@@ -189,66 +189,64 @@ export const initialAppAuthState: AppAuthState = {
   user: null,
   error: null,
   isLoading: false,
-}
+};
 
 export interface AuthEnvelope {
-  sub: string
-  sid: string
-  amr: string[]
-  authTime: number
+  sub: string;
+  sid: string;
+  amr: string[];
+  authTime: number;
 }
 
 export interface Session {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number
-  expires_at: string
-  refresh_token?: string | undefined
+  access_token: string;
+  token_type: 'Bearer';
+  expires_in: number;
+  expires_at: string;
+  refresh_token?: string | undefined;
 }
 
 export interface AuthClient {
   auth: {
     signInWithOAuth: (input: {
-      provider: 'google'
-      options?: { redirectTo?: string | undefined } | undefined
-    }) => Promise<{ error: Error | null }>
-    signOut: () => Promise<{ error: Error | null }>
+      provider: 'google';
+      options?: { redirectTo?: string | undefined } | undefined;
+    }) => Promise<{ error: Error | null }>;
+    signOut: () => Promise<{ error: Error | null }>;
     getSession: () => Promise<{
       data: {
-        session: Session | null
-      }
-      error: Error | null
-    }>
-  }
+        session: Session | null;
+      };
+      error: Error | null;
+    }>;
+  };
 }
 
 export interface AuthContextType {
-  user: User | null
-  session: Session | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  signIn: () => Promise<void>
-  signInWithEmail: () => Promise<void>
-  signInWithPasskey: () => Promise<void>
-  addPasskey: (name?: string) => Promise<void>
-  linkGoogle: () => Promise<void>
-  unlinkGoogle: () => Promise<void>
-  signOut: () => Promise<void>
-  getSession: () => Promise<Session | null>
-  requireStepUp: (action: string) => Promise<void>
-  logout: () => Promise<void>
-  authClient: AuthClient
-  userId?: string | undefined
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  signIn: () => Promise<void>;
+  signInWithEmail: () => Promise<void>;
+  signInWithPasskey: () => Promise<void>;
+  addPasskey: (name?: string) => Promise<void>;
+  linkGoogle: () => Promise<void>;
+  unlinkGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  getSession: () => Promise<Session | null>;
+  requireStepUp: (action: string) => Promise<void>;
+  logout: () => Promise<void>;
+  authClient: AuthClient;
+  userId?: string | undefined;
 }
 
 export interface AuthConfig {
-  apiBaseUrl: string
-  redirectTo?: string
+  apiBaseUrl: string;
+  redirectTo?: string;
 }
 
 export interface ServerAuthResult {
-  user: User | null
-  session: Session | null
-  auth: AuthEnvelope | null
-  isAuthenticated: boolean
+  user: User | null;
+  auth: AuthEnvelope | null;
+  isAuthenticated: boolean;
 }

@@ -1,5 +1,6 @@
-import type { AuthState } from './types';
 import type { User } from '@hominem/auth';
+
+import type { AuthState } from './types';
 
 export interface AuthBootStoredTokens {
   sessionCookieHeader: string | null;

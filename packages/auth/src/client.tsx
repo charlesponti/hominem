@@ -1,21 +1,7 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import type {
-  AppAuthStatus,
-  AuthClient,
-  AuthConfig,
-  AuthContextType,
-  Session,
-  User,
-} from './types';
-import { AuthContext } from './AuthContext'
+import { AuthContext } from './AuthContext';
+import type { AppAuthStatus, AuthClient, AuthConfig, AuthContextType, User } from './types';
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT';
 
 interface SessionResponse {
@@ -70,11 +56,13 @@ interface PublicKeyCredentialCreationOptionsJSON {
     alg: number;
   }>;
   timeout?: number | undefined;
-  excludeCredentials?: Array<{
-    id: string;
-    type: string;
-    transports?: string[] | undefined;
-  }> | undefined;
+  excludeCredentials?:
+    | Array<{
+        id: string;
+        type: string;
+        transports?: string[] | undefined;
+      }>
+    | undefined;
   attestation?: string | undefined;
   extensions?: Record<string, unknown> | undefined;
 }
@@ -101,7 +89,6 @@ function getAbsoluteApiUrl(apiBaseUrl: string, path: string) {
 interface ClientAuthState {
   error: Error | null;
   isLoading: boolean;
-  session: Session | null;
   status: AppAuthStatus;
   user: User | null;
 }
@@ -211,27 +198,23 @@ function serializeAssertion(credential: PublicKeyCredential): SerializedPublicKe
   };
 }
 
-
 export type AuthProviderProps = {
   children: ReactNode;
   config: AuthConfig;
   onAuthEvent?: (event: AuthEvent) => void;
   initialUser?: User | null;
-  initialSession?: Session | null;
-}
+};
 
 export function AuthProvider({
   children,
   config,
   onAuthEvent,
   initialUser = null,
-  initialSession = null,
 }: AuthProviderProps) {
   const hasInitialAuth = Boolean(initialUser);
   const [authState, setAuthState] = useState<ClientAuthState>(() => ({
     error: null,
     isLoading: !hasInitialAuth,
-    session: initialSession,
     status: hasInitialAuth ? 'signed_in' : 'booting',
     user: initialUser,
   }));
@@ -239,13 +222,11 @@ export function AuthProvider({
   const refreshAuth = useCallback(async () => {
     const payload = await fetchSession(config.apiBaseUrl);
     setAuthState((currentState) => {
-      const session = payload.isAuthenticated && payload.user ? currentState.session : null;
       const user = payload.user ?? null;
 
       return {
         error: null,
         isLoading: false,
-        session,
         status: user ? 'signed_in' : 'signed_out',
         user,
       };
@@ -471,7 +452,6 @@ export function AuthProvider({
       setAuthState({
         error: null,
         isLoading: false,
-        session: null,
         status: 'signed_out',
         user: null,
       });
@@ -490,9 +470,9 @@ export function AuthProvider({
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {
-    const payload = await refreshAuth();
-    return payload.isAuthenticated ? authState.session : null;
-  }, [authState.session, refreshAuth]);
+    await refreshAuth();
+    return null;
+  }, [refreshAuth]);
 
   const authClient = useMemo<AuthClient>(
     () => ({
@@ -516,8 +496,8 @@ export function AuthProvider({
         },
         getSession: async () => {
           try {
-            const current = await getSession();
-            return { data: { session: current }, error: null };
+            await getSession();
+            return { data: { session: null }, error: null };
           } catch (error) {
             return {
               data: { session: null },
@@ -533,7 +513,6 @@ export function AuthProvider({
   const value = useMemo<AuthContextType>(
     () => ({
       user: authState.user,
-      session: authState.session,
       isLoading: authState.isLoading,
       isAuthenticated: authState.status === 'signed_in',
       signIn,

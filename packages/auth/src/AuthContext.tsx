@@ -6,7 +6,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import type { Session } from './auth.types';
 import { isMockAuthEnabled } from './config';
 import type { User } from './mock-users';
 import { MockAuthProvider } from './providers/mock';
@@ -45,20 +44,20 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
   // `isMockAuthEnabled()` returns true.  It does **not** accept any
   // of the configuration props that the real client provider does.
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Restore session from localStorage on mount
+  // Restore the mock user from localStorage on mount
   useEffect(() => {
     const storedSession = localStorage.getItem(STORAGE_KEY);
     if (storedSession) {
       try {
-        const parsed = JSON.parse(storedSession) as { user: User; session: Session };
-        setUser(parsed.user);
-        setSession(parsed.session);
-        setIsAuthenticated(true);
-      } catch  {
+        const parsed = JSON.parse(storedSession) as { user?: User };
+        if (parsed.user) {
+          setUser(parsed.user);
+          setIsAuthenticated(true);
+        }
+      } catch {
         // Remove invalid JSON from localStorage
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -77,17 +76,10 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
       const response = await provider.signIn();
 
       setUser(response.user);
-      setSession(response.session);
       setIsAuthenticated(true);
 
       // Persist to localStorage
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          user: response.user,
-          session: response.session,
-        }),
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: response.user }));
     } catch (err) {
       console.error('Sign-in error:', err);
       throw err;
@@ -107,7 +99,6 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
       await provider.signOut();
 
       setUser(null);
-      setSession(null);
       setIsAuthenticated(false);
 
       // Clear localStorage
@@ -125,14 +116,13 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
       auth: {
         signInWithOAuth: async () => ({ error: null }),
         signOut: async () => ({ error: null }),
-        getSession: async () => ({ data: { session }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
       },
     };
-  }, [session]);
+  }, []);
 
   const value: AuthContextState = {
     user,
-    session,
     isLoading,
     isAuthenticated,
     signIn,
@@ -142,7 +132,7 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
     linkGoogle: async () => {},
     unlinkGoogle: async () => {},
     signOut,
-    getSession: async () => session,
+    getSession: async () => null,
     requireStepUp: async () => {},
     logout: signOut,
     authClient,
