@@ -3,7 +3,7 @@ import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Badge, Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon, StarIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import {
   EntityListCards,
@@ -12,7 +12,6 @@ import {
   SearchFilterBar,
   type EntityListColumn,
 } from '~/components/patterns';
-import { RouterListLink } from '~/components/RouterListLink';
 import { getTestimonialsByPortfolio } from '~/lib/career/queries/testimonials';
 import { portfolioContext } from '~/lib/middleware';
 
@@ -168,13 +167,13 @@ export default function Testimonials({ loaderData }: Route.ComponentProps) {
               columns={TESTIMONIAL_COLUMNS}
               keyFor={(testimonial) => testimonial.id}
               hrefFor={(testimonial) => `/testimonials/${testimonial.id}`}
-              linkComponent={RouterListLink}
+              linkComponent={Link}
             />
             <EntityListCards
               items={filteredTestimonials}
               keyFor={(testimonial) => testimonial.id}
               hrefFor={(testimonial) => `/testimonials/${testimonial.id}`}
-              linkComponent={RouterListLink}
+              linkComponent={Link}
               renderCard={renderTestimonialCard}
             />
           </>

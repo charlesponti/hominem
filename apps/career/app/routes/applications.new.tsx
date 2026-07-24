@@ -1,3 +1,4 @@
+import { replaceUnderscores } from '@hominem/utils/text';
 import {
   DatePicker,
   Input,
@@ -17,7 +18,6 @@ import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
 import type { JobPosting } from '~/lib/services/job-scraping.service';
 import { JobApplicationStatus } from '~/types/career';
-import { replaceUnderscores } from '@hominem/utils/text';
 
 import { Route } from './+types/applications.new';
 

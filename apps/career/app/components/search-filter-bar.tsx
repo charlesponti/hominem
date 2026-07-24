@@ -80,7 +80,7 @@ export function SearchFilterBar({ children, activeFilters, onClear }: SearchFilt
         {slots.filters}
 
         {hasActiveFilters && onClear ? (
-          <Button type="button" variant="outline" onClick={onClear} className="min-h-0">
+          <Button type="button" variant="outline" onClick={onClear}>
             <XIcon className="size-4" />
           </Button>
         ) : null}

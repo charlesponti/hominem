@@ -24,6 +24,7 @@ export function ActiveFiltersBar({ filters, label }: ActiveFiltersBarProps) {
         <FilterChip
           key={filter.id}
           label={filter.label}
+          className="rounded"
           onRemove={filter.onRemove}
           onClick={filter.onClick}
         />

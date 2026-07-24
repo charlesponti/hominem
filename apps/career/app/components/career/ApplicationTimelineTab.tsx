@@ -1,4 +1,5 @@
 import type { JobApplicationRecord as ApplicationWithCompany } from '@hominem/db';
+import { replaceUnderscores } from '@hominem/utils/text';
 import {
   Input,
   Select,
@@ -21,7 +22,6 @@ import { useState } from 'react';
 import { Form } from 'react-router';
 
 import { jsonArray } from '~/lib/db-json';
-import { replaceUnderscores } from '@hominem/utils/text';
 
 type InterviewEntry = {
   date: string;

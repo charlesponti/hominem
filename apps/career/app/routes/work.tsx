@@ -3,7 +3,7 @@ import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon, UploadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useFetcher, useNavigate, useRevalidator } from 'react-router';
+import { Link, useFetcher, useNavigate, useRevalidator } from 'react-router';
 
 import {
   EntityListCards,
@@ -12,7 +12,6 @@ import {
   SearchFilterBar,
   type EntityListColumn,
 } from '~/components/patterns';
-import { RouterListLink } from '~/components/RouterListLink';
 import { UploadResumeForm } from '~/components/UploadResumeForm';
 import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
 import {
@@ -208,13 +207,13 @@ export default function Work({ loaderData }: Route.ComponentProps) {
                   columns={WORK_COLUMNS}
                   keyFor={(experience) => experience.id}
                   hrefFor={(experience) => `/work/${experience.id}`}
-                  linkComponent={RouterListLink}
+                  linkComponent={Link}
                 />
                 <EntityListCards
                   items={filteredExperiences}
                   keyFor={(experience) => experience.id}
                   hrefFor={(experience) => `/work/${experience.id}`}
-                  linkComponent={RouterListLink}
+                  linkComponent={Link}
                   renderCard={renderWorkCard}
                 />
               </>

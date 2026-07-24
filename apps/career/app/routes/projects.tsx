@@ -1,9 +1,10 @@
 import type { ProjectRecord as Project, WorkExperienceRecord as WorkExperience } from '@hominem/db';
+import { humanizeIdentifier } from '@hominem/utils/text';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import {
   EntityListCards,
@@ -15,11 +16,9 @@ import {
   type EntityListColumn,
   type StatusTone,
 } from '~/components/patterns';
-import { RouterListLink } from '~/components/RouterListLink';
 import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
 import { getProjectsByPortfolio } from '~/lib/career/queries/projects';
 import { portfolioContext, userContext } from '~/lib/middleware';
-import { humanizeIdentifier } from '@hominem/utils/text';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
 import { Route } from './+types/projects';
@@ -276,13 +275,13 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
               columns={columns}
               keyFor={(project) => project.id}
               hrefFor={hrefFor}
-              linkComponent={RouterListLink}
+              linkComponent={Link}
             />
             <EntityListCards
               items={filteredProjects}
               keyFor={(project) => project.id}
               hrefFor={hrefFor}
-              linkComponent={RouterListLink}
+              linkComponent={Link}
               renderCard={(project) => (
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">

@@ -9,10 +9,6 @@ export function ApplicationsResultsSummary({
   onPrevPage,
   onNextPage,
 }: ApplicationsResultsSummaryProps) {
-  if (totalPages <= 1) {
-    return null;
-  }
-
   return (
     <div className="flex shrink-0 items-center gap-1">
       <Button

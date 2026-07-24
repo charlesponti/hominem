@@ -168,5 +168,4 @@ describe('Application Utils', () => {
       ).toBe(true);
     });
   });
-
-  });
+});

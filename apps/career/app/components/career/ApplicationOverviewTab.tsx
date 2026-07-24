@@ -1,4 +1,5 @@
 import type { JobApplicationRecord as ApplicationWithCompany } from '@hominem/db';
+import { replaceUnderscores } from '@hominem/utils/text';
 import {
   DatePicker,
   Input,
@@ -22,7 +23,6 @@ import { Form, useNavigation } from 'react-router';
 
 import { formatCentsInput, formatDateInput } from '~/lib/utils/applicationForm';
 import { formatApplicationDate, formatApplicationSalary } from '~/lib/utils/applicationUtils';
-import { replaceUnderscores } from '@hominem/utils/text';
 import { JobApplicationStatus } from '~/types/career';
 
 type EditingSection = 'details' | 'company' | 'compensation' | 'outcomes' | 'recruiter' | null;

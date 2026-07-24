@@ -1,6 +1,5 @@
-import { Badge, Card, CardContent } from '@ponti-studios/ui/primitives';
-
 import { replaceUnderscores } from '@hominem/utils/text';
+import { Badge, Card, CardContent } from '@ponti-studios/ui/primitives';
 
 import type { TimelineEntry } from '~/lib/career/queries/career-timeline';
 

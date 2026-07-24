@@ -2,30 +2,30 @@ import { cn } from '@ponti-studios/ui/utilities';
 import type { ComponentType, CSSProperties, ReactNode } from 'react';
 
 export interface EntityListLinkProps {
-  href: string;
+  to: string;
   className?: string;
   children: ReactNode;
 }
 
-function DefaultEntityListLink({ href, className, children }: EntityListLinkProps) {
+function DefaultEntityListLink({ to, className, children }: EntityListLinkProps) {
   return (
-    <a href={href} className={className}>
+    <a href={to} className={className}>
       {children}
     </a>
   );
 }
 
 interface ListRowProps {
-  href: string;
+  to: string;
   className?: string;
   linkComponent: ComponentType<EntityListLinkProps>;
   children: ReactNode;
 }
 
-function ListRow({ href, className, linkComponent: LinkComponent, children }: ListRowProps) {
+function ListRow({ to, className, linkComponent: LinkComponent, children }: ListRowProps) {
   return (
     <li className="transition-colors duration-150">
-      <LinkComponent href={href} className={cn('block', className)}>
+      <LinkComponent to={to} className={cn('block', className)}>
         {children}
       </LinkComponent>
     </li>
@@ -69,7 +69,7 @@ export function EntityListTable<T>({
       </div>
       <ul className="divide-y divide-border">
         {items.map((item) => (
-          <ListRow key={keyFor(item)} href={hrefFor(item)} linkComponent={linkComponent}>
+          <ListRow key={keyFor(item)} to={hrefFor(item)} linkComponent={linkComponent}>
             <div className="grid min-h-16 items-center gap-3 px-4 py-3" style={gridStyle}>
               {columns.map((column) => (
                 <div key={column.key} className={column.className}>
@@ -105,7 +105,7 @@ export function EntityListCards<T>({
         {items.map((item) => (
           <ListRow
             key={keyFor(item)}
-            href={hrefFor(item)}
+            to={hrefFor(item)}
             className="p-4"
             linkComponent={linkComponent}
           >

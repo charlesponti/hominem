@@ -1,4 +1,5 @@
 import type { AppApplicationNotes, Selectable } from '@hominem/db';
+import { replaceUnderscores } from '@hominem/utils/text';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import {
   Input,
@@ -31,8 +32,6 @@ import {
 } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useSubmit } from 'react-router';
-
-import { replaceUnderscores } from '@hominem/utils/text';
 
 import { getApplicationNoteTone } from '~/lib/utils/applicationNoteUtils';
 

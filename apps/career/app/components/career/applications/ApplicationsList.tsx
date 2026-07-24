@@ -1,18 +1,14 @@
 import { replaceUnderscores } from '@hominem/utils/text';
 import { ChevronRightIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { StatusBadge } from '~/components/patterns';
-import { RouterListLink } from '~/components/RouterListLink';
 import type { JobApplicationCard } from '~/lib/career/queries/job-applications';
 import {
   formatApplicationDate,
   getApplicationStatusTone,
   getCompanyName,
 } from '~/lib/utils/applicationUtils';
-
-function getInitial(name: string): string {
-  return (name || '?').charAt(0).toUpperCase();
-}
 
 interface ApplicationsListProps {
   applications: JobApplicationCard[];
@@ -26,11 +22,7 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
         const statusTone = getApplicationStatusTone(application.status);
 
         return (
-          <RouterListLink
-            key={application.id}
-            href={`/applications/${application.id}`}
-            className="group block"
-          >
+          <Link key={application.id} to={`/applications/${application.id}`} className="group block">
             <article className="relative flex items-start gap-4 rounded-xl border border-border/50 bg-surface-raised p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-lg hover:shadow-black/5">
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
@@ -58,7 +50,7 @@ export function ApplicationsList({ applications }: ApplicationsListProps) {
 
               <ChevronRightIcon className="mt-2.5 size-4 shrink-0 text-border transition-colors group-hover:text-text-tertiary" />
             </article>
-          </RouterListLink>
+          </Link>
         );
       })}
     </div>

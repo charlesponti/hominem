@@ -1,3 +1,4 @@
+import { replaceUnderscores } from '@hominem/utils/text';
 import {
   ArrowLeftIcon,
   Briefcase,
@@ -15,7 +16,6 @@ import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
 import { cn } from '~/lib/utils';
-import { replaceUnderscores } from '@hominem/utils/text';
 import { getApplicationStatusTone } from '~/lib/utils/applicationUtils';
 
 import { Route } from './+types/applications.$id';

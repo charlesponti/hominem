@@ -81,5 +81,3 @@ export function hasActiveFilters(filters: {
 }): boolean {
   return !!(filters.search || filters.status || filters.source);
 }
-
-
