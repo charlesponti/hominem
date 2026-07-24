@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { Form } from 'react-router';
 
 import { jsonArray } from '~/lib/db-json';
+import { replaceUnderscores } from '@hominem/utils/text';
 
 type InterviewEntry = {
   date: string;
@@ -148,7 +149,7 @@ export function ApplicationTimelineTab({ application }: TimelineTabProps) {
                       variant="outline"
                       className="border-accent/30 bg-accent/10 text-foreground"
                     >
-                      {interview.type.replace(/_/g, ' ')}
+                      {replaceUnderscores(interview.type)}
                     </Badge>
                   </div>
                   <span className="body-3 text-muted-foreground">

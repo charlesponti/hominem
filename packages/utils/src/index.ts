@@ -24,5 +24,11 @@ export {
   type FileType,
 } from './files';
 export { centsToDollars, formatCurrency, formatNumber, formatPercentage } from './numbers';
-export { buildContentPreview, slugifyText } from './text';
+export {
+  buildContentPreview,
+  collapseWhitespace,
+  humanizeIdentifier,
+  replaceUnderscores,
+  slugifyText,
+} from './text';
 export { formatTime, getDatesFromText, getDaysBetweenDates, getTimeAgo, TIME_UNITS } from './time';

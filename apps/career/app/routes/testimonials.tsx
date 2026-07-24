@@ -128,11 +128,6 @@ export default function Testimonials({ loaderData }: Route.ComponentProps) {
 
       <div className="flex flex-col gap-6">
         <SearchFilterBar
-          searchId="testimonial-search"
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          searchPlaceholder="Search by name or company..."
-          searchAriaLabel="Search testimonials"
           activeFilters={
             searchValue.trim()
               ? [
@@ -144,8 +139,16 @@ export default function Testimonials({ loaderData }: Route.ComponentProps) {
                 ]
               : []
           }
-          onClearFilters={clearFilters}
-        />
+          onClear={clearFilters}
+        >
+          <SearchFilterBar.Search
+            id="testimonial-search"
+            value={searchValue}
+            onChange={setSearchValue}
+            placeholder="Search by name or company..."
+            ariaLabel="Search testimonials"
+          />
+        </SearchFilterBar>
 
         {filteredTestimonials.length === 0 ? (
           <EmptyState

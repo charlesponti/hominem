@@ -76,15 +76,10 @@ export function getUniqueSources(
  */
 export function hasActiveFilters(filters: {
   search?: string;
-  statuses?: string[];
+  status?: string;
   source?: string;
 }): boolean {
-  return !!(filters.search || (filters.statuses && filters.statuses.length > 0) || filters.source);
+  return !!(filters.search || filters.status || filters.source);
 }
 
-/**
- * Format status text for display (replace underscores with spaces)
- */
-export function formatStatusText(status: string): string {
-  return status.replace(/_/g, ' ');
-}
+

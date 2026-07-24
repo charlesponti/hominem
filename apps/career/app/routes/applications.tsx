@@ -48,12 +48,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     const offset = (page - 1) * limit;
 
     const searchQuery = searchParams.get('search') || undefined;
-    const selectedStatuses = searchParams.getAll('status').filter(Boolean);
+    const selectedStatus = searchParams.get('status') || undefined;
     const source = searchParams.get('source') || undefined;
 
     // Build filter object
     const filter = {
-      ...(selectedStatuses.length > 0 && { statuses: selectedStatuses }),
+      ...(selectedStatus && { status: selectedStatus }),
       ...(source && source !== 'ALL' && { source }),
       ...(searchQuery && { search: searchQuery }),
     };
@@ -87,7 +87,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       },
       filters: {
         search: searchQuery,
-        statuses: selectedStatuses,
+        status: selectedStatus,
         source: source && source !== 'ALL' ? source : undefined,
       },
     };
@@ -159,7 +159,7 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
   const { allApplications, applications, pagination, filters: initialFilters } = loaderData;
   const filters = {
     ...initialFilters,
-    statuses: initialFilters.statuses ?? [],
+    status: initialFilters.status ?? '',
     source: initialFilters.source ?? '',
   };
   const statuses = getUniqueStatuses(allApplications);
@@ -182,11 +182,8 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const handleStatusToggle = (status: string) => {
-    const nextStatuses = filters.statuses.includes(status)
-      ? filters.statuses.filter((item: string) => item !== status)
-      : [...filters.statuses, status];
-    updateSearchParams({ status: nextStatuses, page: '1' });
+  const handleStatusChange = (status: string) => {
+    updateSearchParams({ status: status || null, page: '1' });
   };
 
   const handleSourceChange = (source: string) => {
@@ -195,7 +192,7 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
 
   const clearFilters = () => {
     setSearchValue('');
-    updateSearchParams({ search: null, status: [], source: null, page: '1' });
+    updateSearchParams({ search: null, status: null, source: null, page: '1' });
   };
 
   useEffect(() => {
@@ -228,8 +225,8 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
           searchValue={searchValue}
           onSearchChange={handleSearchChange}
           statuses={statuses}
-          selectedStatuses={filters.statuses}
-          onStatusToggle={handleStatusToggle}
+          selectedStatus={filters.status}
+          onStatusChange={handleStatusChange}
           sourceOptions={sourceOptions}
           selectedSource={filters.source}
           onSourceChange={handleSourceChange}

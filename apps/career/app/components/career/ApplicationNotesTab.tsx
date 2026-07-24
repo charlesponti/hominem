@@ -32,6 +32,8 @@ import {
 import { useState } from 'react';
 import { Form, useSubmit } from 'react-router';
 
+import { replaceUnderscores } from '@hominem/utils/text';
+
 import { getApplicationNoteTone } from '~/lib/utils/applicationNoteUtils';
 
 interface NotesTabProps {
@@ -129,7 +131,7 @@ export function ApplicationNotesTab({ notes }: NotesTabProps) {
                       <h4 className="subheading-4 text-foreground">{note.title}</h4>
                     ) : null}
                     <Badge variant="outline" className={getApplicationNoteTone(note.type)}>
-                      {note.type.replace('_', ' ')}
+                      {replaceUnderscores(note.type)}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   formatApplicationDate,
   formatApplicationSalary,
-  formatStatusText,
   getApplicationStatusTone,
   getCompanyName,
   getUniqueSources,
@@ -170,23 +169,4 @@ describe('Application Utils', () => {
     });
   });
 
-  describe('formatStatusText', () => {
-    it('should replace underscores with spaces', () => {
-      expect(formatStatusText('PHONE_SCREEN')).toBe('PHONE SCREEN');
-      expect(formatStatusText('FINAL_INTERVIEW')).toBe('FINAL INTERVIEW');
-    });
-
-    it('should handle statuses without underscores', () => {
-      expect(formatStatusText('APPLIED')).toBe('APPLIED');
-      expect(formatStatusText('OFFER')).toBe('OFFER');
-    });
-
-    it('should handle empty strings', () => {
-      expect(formatStatusText('')).toBe('');
-    });
-
-    it('should replace all underscores', () => {
-      expect(formatStatusText('TEST_STATUS_WITH_MULTIPLE')).toBe('TEST STATUS WITH MULTIPLE');
-    });
   });
-});

@@ -1,3 +1,5 @@
+import { humanizeIdentifier } from '@hominem/utils/text';
+
 export function getProjectStatusClasses(status: string): string {
   switch (status) {
     case 'planned':
@@ -16,6 +18,4 @@ export function getProjectStatusClasses(status: string): string {
   }
 }
 
-export function formatProjectStatus(status: string): string {
-  return status.replace(/[_-]/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
-}
+export const formatProjectStatus = humanizeIdentifier;

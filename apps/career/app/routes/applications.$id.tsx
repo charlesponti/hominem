@@ -15,7 +15,8 @@ import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
 import { cn } from '~/lib/utils';
-import { formatStatusText, getApplicationStatusTone } from '~/lib/utils/applicationUtils';
+import { replaceUnderscores } from '@hominem/utils/text';
+import { getApplicationStatusTone } from '~/lib/utils/applicationUtils';
 
 import { Route } from './+types/applications.$id';
 
@@ -111,7 +112,7 @@ export default function ApplicationDetailLayout({ loaderData }: Route.ComponentP
         <div className="flex items-center gap-3">
           <StatusBadge
             tone={getApplicationStatusTone(application.status)}
-            label={formatStatusText(application.status)}
+            label={replaceUnderscores(application.status)}
             className="text-sm"
           />
           <QuickActionsDropdown actions={quickActions} />

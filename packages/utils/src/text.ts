@@ -3,7 +3,7 @@
  * @param value The string to collapse whitespace in.
  * @returns The string with collapsed whitespace.
  */
-function collapseWhitespace(value: string): string {
+export function collapseWhitespace(value: string): string {
   const trimmed = value.trim();
   let normalized = '';
   let previousWasWhitespace = false;
@@ -45,6 +45,14 @@ export function slugifyText(value: string | null): string | null {
   }
 
   return normalized.length > 0 ? normalized : null;
+}
+
+export function replaceUnderscores(value: string): string {
+  return value.replace(/_/g, ' ');
+}
+
+export function humanizeIdentifier(value: string): string {
+  return value.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function buildContentPreview(

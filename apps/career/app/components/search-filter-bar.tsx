@@ -1,70 +1,99 @@
 import { Input } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { XIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Children, isValidElement, type ReactNode } from 'react';
 
 import { ActiveFiltersBar, type ActiveFilter } from './active-filters-bar';
 
-export interface SearchFilterBarProps {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  searchPlaceholder?: string;
-  searchAriaLabel: string;
-  searchId?: string;
-  /** Extra filter controls (e.g. FilterSelect, status dropdown) rendered next to the search input. */
-  filters?: ReactNode;
-  activeFilters: ActiveFilter[];
-  onClearFilters: () => void;
-  /** Non-filter content (e.g. a results summary) placed at the end of the control row. */
-  resultsSlot?: ReactNode;
+interface SearchFilterBarSearchProps {
+  id?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  ariaLabel: string;
 }
 
-export function SearchFilterBar({
-  searchValue,
-  onSearchChange,
-  searchPlaceholder,
-  searchAriaLabel,
-  searchId,
-  filters,
-  activeFilters,
-  onClearFilters,
-  resultsSlot,
-}: SearchFilterBarProps) {
+function SearchFilterBarSearch({
+  id,
+  value,
+  onChange,
+  placeholder,
+  ariaLabel,
+}: SearchFilterBarSearchProps) {
+  return (
+    <div className="flex-1">
+      <Input
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+      />
+    </div>
+  );
+}
+
+interface SearchFilterBarFiltersProps {
+  children: ReactNode;
+}
+
+function SearchFilterBarFilters({ children }: SearchFilterBarFiltersProps) {
+  return Children.map(children, (child) => (child ? <div className="sm:w-48">{child}</div> : null));
+}
+
+interface SearchFilterBarResultsProps {
+  children: ReactNode;
+}
+
+function SearchFilterBarResults({ children }: SearchFilterBarResultsProps) {
+  return <div className="self-start lg:ml-auto lg:self-auto">{children}</div>;
+}
+
+export interface SearchFilterBarProps {
+  children: ReactNode;
+  activeFilters: ActiveFilter[];
+  onClear?: () => void;
+}
+
+export function SearchFilterBar({ children, activeFilters, onClear }: SearchFilterBarProps) {
+  const slots = {
+    search: null as ReactNode,
+    filters: null as ReactNode,
+    results: null as ReactNode,
+  };
+  const others: ReactNode[] = [];
+
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    if (child.type === SearchFilterBarSearch) slots.search = child;
+    else if (child.type === SearchFilterBarFilters) slots.filters = child;
+    else if (child.type === SearchFilterBarResults) slots.results = child;
+    else others.push(child);
+  });
+
   const hasActiveFilters = activeFilters.length > 0;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="flex-1">
-          <Input
-            id={searchId}
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchAriaLabel}
-          />
-        </div>
+        {slots.search}
+        {slots.filters}
 
-        {filters}
-
-        {hasActiveFilters ? (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClearFilters}
-            className="gap-2 self-start lg:self-auto"
-          >
+        {hasActiveFilters && onClear ? (
+          <Button type="button" variant="outline" onClick={onClear} className="min-h-0">
             <XIcon className="size-4" />
-            Clear filters
           </Button>
         ) : null}
 
-        {resultsSlot ? (
-          <div className="self-start lg:ml-auto lg:self-auto">{resultsSlot}</div>
-        ) : null}
+        {slots.results}
+        {others}
       </div>
 
       <ActiveFiltersBar filters={activeFilters} />
     </div>
   );
 }
+
+SearchFilterBar.Search = SearchFilterBarSearch;
+SearchFilterBar.Filters = SearchFilterBarFilters;
+SearchFilterBar.Results = SearchFilterBarResults;

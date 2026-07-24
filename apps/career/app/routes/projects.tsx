@@ -19,6 +19,7 @@ import { RouterListLink } from '~/components/RouterListLink';
 import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
 import { getProjectsByPortfolio } from '~/lib/career/queries/projects';
 import { portfolioContext, userContext } from '~/lib/middleware';
+import { humanizeIdentifier } from '@hominem/utils/text';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
 import { Route } from './+types/projects';
@@ -33,7 +34,7 @@ export interface ProjectClientOption {
 
 function formatStatusLabel(status: string | null | undefined) {
   if (!status) return '—';
-  return status.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return humanizeIdentifier(status);
 }
 
 const PROJECT_STATUS_TONE: Record<string, StatusTone> = {
@@ -235,29 +236,27 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
       </PageHeader>
 
       <div className="flex flex-col gap-6">
-        <SearchFilterBar
-          searchId="project-search"
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          searchPlaceholder="Search by project or client..."
-          searchAriaLabel="Search projects"
-          activeFilters={activeFilters}
-          onClearFilters={clearFilters}
-          filters={
-            <div className="sm:w-48">
-              <FilterSelect
-                value={selectedClientId}
-                options={clientOptions.map((option) => ({
-                  value: option.id,
-                  label: option.company,
-                }))}
-                onChange={handleClientChange}
-                placeholder="All clients"
-                id="project-client-filter"
-              />
-            </div>
-          }
-        />
+        <SearchFilterBar activeFilters={activeFilters} onClear={clearFilters}>
+          <SearchFilterBar.Search
+            id="project-search"
+            value={searchValue}
+            onChange={setSearchValue}
+            placeholder="Search by project or client..."
+            ariaLabel="Search projects"
+          />
+          <SearchFilterBar.Filters>
+            <FilterSelect
+              value={selectedClientId}
+              options={clientOptions.map((option) => ({
+                value: option.id,
+                label: option.company,
+              }))}
+              onChange={handleClientChange}
+              placeholder="All clients"
+              id="project-client-filter"
+            />
+          </SearchFilterBar.Filters>
+        </SearchFilterBar>
 
         {filteredProjects.length === 0 ? (
           <EmptyState

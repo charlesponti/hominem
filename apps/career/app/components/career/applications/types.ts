@@ -9,8 +9,8 @@ export interface ApplicationsFiltersProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   statuses: string[];
-  selectedStatuses: string[];
-  onStatusToggle: (status: string) => void;
+  selectedStatus: string;
+  onStatusChange: (status: string) => void;
   sourceOptions: Array<{ value: string; label: string }>;
   selectedSource: string;
   onSourceChange: (source: string) => void;

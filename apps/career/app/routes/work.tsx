@@ -172,11 +172,6 @@ export default function Work({ loaderData }: Route.ComponentProps) {
         {experiences.length > 0 ? (
           <>
             <SearchFilterBar
-              searchId="work-search"
-              searchValue={searchValue}
-              onSearchChange={setSearchValue}
-              searchPlaceholder="Search by company or role..."
-              searchAriaLabel="Search work experience"
               activeFilters={
                 searchValue.trim()
                   ? [
@@ -188,8 +183,16 @@ export default function Work({ loaderData }: Route.ComponentProps) {
                     ]
                   : []
               }
-              onClearFilters={() => setSearchValue('')}
-            />
+              onClear={() => setSearchValue('')}
+            >
+              <SearchFilterBar.Search
+                id="work-search"
+                value={searchValue}
+                onChange={setSearchValue}
+                placeholder="Search by company or role..."
+                ariaLabel="Search work experience"
+              />
+            </SearchFilterBar>
 
             {filteredExperiences.length === 0 ? (
               <EmptyState

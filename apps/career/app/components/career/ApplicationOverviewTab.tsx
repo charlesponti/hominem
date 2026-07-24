@@ -21,11 +21,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
 import { formatCentsInput, formatDateInput } from '~/lib/utils/applicationForm';
-import {
-  formatApplicationDate,
-  formatApplicationSalary,
-  formatStatusText,
-} from '~/lib/utils/applicationUtils';
+import { formatApplicationDate, formatApplicationSalary } from '~/lib/utils/applicationUtils';
+import { replaceUnderscores } from '@hominem/utils/text';
 import { JobApplicationStatus } from '~/types/career';
 
 type EditingSection = 'details' | 'company' | 'compensation' | 'outcomes' | 'recruiter' | null;
@@ -213,7 +210,7 @@ export function ApplicationOverviewTab({ application, company }: OverviewTabProp
                     <SelectContent>
                       {Object.values(JobApplicationStatus).map((status) => (
                         <SelectItem key={status} value={status}>
-                          {formatStatusText(status)}
+                          {replaceUnderscores(status)}
                         </SelectItem>
                       ))}
                     </SelectContent>

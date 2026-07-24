@@ -1,4 +1,5 @@
 import type { UpdateWorkExperienceInput, WorkExperienceRecord } from '@hominem/db';
+import { humanizeIdentifier } from '@hominem/utils/text';
 
 export const EMPLOYMENT_TYPE_OPTIONS = [
   'full-time',
@@ -262,11 +263,8 @@ export function formatDateRange(
 }
 
 export function formatOptionalLabel(value: string | null | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  return value.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  if (!value) return null;
+  return humanizeIdentifier(value);
 }
 
 export function formatCurrency(cents: number | null | undefined) {

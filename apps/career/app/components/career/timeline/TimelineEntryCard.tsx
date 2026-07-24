@@ -1,5 +1,7 @@
 import { Badge, Card, CardContent } from '@ponti-studios/ui/primitives';
 
+import { replaceUnderscores } from '@hominem/utils/text';
+
 import type { TimelineEntry } from '~/lib/career/queries/career-timeline';
 
 const STATUS_PILL_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -37,7 +39,7 @@ export function TimelineEntryCard({ entry }: { entry: TimelineEntry }) {
               variant={STATUS_PILL_VARIANT[entry.statusPill] ?? 'secondary'}
               className="mt-1 w-fit"
             >
-              {entry.statusPill.replace(/_/g, ' ')}
+              {replaceUnderscores(entry.statusPill)}
             </Badge>
           )}
         </CardContent>
