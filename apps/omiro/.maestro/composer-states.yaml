@@ -1,0 +1,95 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Walks through every composer state reachable without live network services
+# (voice recording and AI enhance both required a connected backend and could
+# not be triggered in local dev — see docs/composer-states.md for why) and
+# screenshots each one. Re-run this whenever the composer changes to refresh
+# the reference screenshots instead of re-deriving states by hand.
+#
+# Assumes seed data: a chat titled "Testing chat message list" exists in the
+# Chats tab (the actual seed title on this simulator — chat-send-message.yaml's
+# comment says "Test Chat" but that doesn't match what's actually seeded here).
+- runFlow: startup.yaml
+
+# --- Inbox composer: Notes entry mode (idle, row mode) ---
+- tapOn:
+    id: workspace-context-notes
+- assertVisible:
+    id: inbox-composer-input
+- takeScreenshot: composer-inbox-notes-idle
+
+# --- Inbox composer: Notes entry mode (typing, column mode) ---
+- tapOn:
+    id: inbox-composer-input
+- inputText: Remember to call the vet about Milo's checkup
+- takeScreenshot: composer-inbox-notes-typing
+- eraseText: 60
+- tapOn:
+    id: workspace-context-notes
+
+# --- Inbox composer: Chats entry mode (idle, row mode) ---
+# hideKeyboard first: focus (and the keyboard) survives the Notes->Chats tab
+# switch since switching workspace context doesn't blur the input. Without
+# this the "idle" shot actually shows the focused/keyboard-open state left
+# over from the Notes typing step above.
+- hideKeyboard
+- tapOn:
+    id: workspace-context-chats
+- assertVisible:
+    id: inbox-composer-input
+- takeScreenshot: composer-inbox-chats-idle
+
+# --- Inbox composer: Chats entry mode (typing, column mode) ---
+# Four trailing buttons here (mic, enhance, start-chat, submit) vs the chat
+# composer's three — this is the crowding call-out in docs/composer-states.md.
+- tapOn:
+    id: inbox-composer-input
+- inputText: Plan the Japan trip
+- takeScreenshot: composer-inbox-chats-typing
+- eraseText: 60
+
+# --- Chat detail composer (idle, row mode) ---
+# Tapped by point, not by title text or id+index: list rows (resource-id
+# inbox-item-chat) don't reliably expose their title as matchable
+# accessibility text, the row id itself is shared across all rows (not
+# per-item), and matching by index proved unreliable too. Point (201,197)
+# is the second seeded row ("Testing chat message list") — top list rows
+# don't shift position when the keyboard opens/closes, only get clipped
+# from below, so this holds regardless of prior keyboard state.
+- hideKeyboard
+- tapOn:
+    point: "201,197"
+- extendedWaitUntil:
+    visible:
+      id: chat-composer-input
+    timeout: 15000
+# This chat may carry a leftover writeChatDraft() from a prior run of this
+# flow (or manual exploration). Focus, clear it, then blur again before the
+# "idle" shot — otherwise composer-chat-idle shows stale draft text instead
+# of the actual idle/empty state.
+- tapOn:
+    id: chat-composer-input
+- eraseText: 200
+- hideKeyboard
+- takeScreenshot: composer-chat-idle
+
+# --- Chat detail composer (focused, empty) ---
+- tapOn:
+    id: chat-composer-input
+- takeScreenshot: composer-chat-focused-empty
+
+# --- Chat detail composer (typing, column mode) ---
+# Call-out: mic/enhance are 38px (TOOL_BTN_SIZE) vs the 42px (PRIMARY_BTN_SIZE)
+# submit button — confirm visually whether this reads as intentional.
+- inputText: Hey, can you help me plan my trip to Japan next month?
+- takeScreenshot: composer-chat-typing
+- eraseText: 80
+# Same canGoBack caveat as startup.yaml: this chat may have no back stack,
+# in which case the native BackButton doesn't exist and the custom "Inbox"
+# toolbar button is what's actually on screen.
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

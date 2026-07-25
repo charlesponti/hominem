@@ -1,9 +1,9 @@
 import React from 'react';
-import { TextInput } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ROW_MODE_INPUT_MARGIN } from '~/components/composer/constants';
-import { makeStyles, useThemeColors } from '~/components/theme';
+import { makeStyles, radii, useThemeColors } from '~/components/theme';
 import { createComposerReflowTransition } from '~/components/theme/animations';
 import { spacing } from '~/components/theme/tokens';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -52,7 +52,7 @@ export function ComposerTextInput({
         placeholderTextColor={themeColors['text-tertiary']}
         cursorColor={themeColors.accent}
         selectionColor={themeColors.accent}
-        style={styles.input}
+        style={[styles.input]}
         testID={testID}
       />
     </Animated.View>
@@ -70,12 +70,13 @@ const useStyles = makeStyles((theme) => ({
     marginRight: ROW_MODE_INPUT_MARGIN,
   },
   input: {
+    borderRadius: radii.md,
+    borderWidth: 0,
     color: theme.colors['text-primary'],
     fontSize: 16,
     lineHeight: 22,
     letterSpacing: 0,
     minHeight: INPUT_MIN_H,
-    paddingVertical: 8,
     width: '100%',
   },
 }));

@@ -90,7 +90,7 @@ export function ComposerToolbar({
             isAnimating={isVoiceBusy}
             size={TOOL_BTN_SIZE}
             testID="composer-mic-button"
-            variant="surface"
+            variant="ghost"
             onPress={onVoicePress}
           />
         )}
@@ -110,7 +110,11 @@ export function ComposerToolbar({
           </Reanimated.View>
         ) : null}
         {mode === 'inbox' && secondaryAction && canSubmit ? (
-          <Reanimated.View entering={buttonEnter} exiting={buttonExit}>
+          <Reanimated.View
+            entering={buttonEnter}
+            exiting={buttonExit}
+            style={styles.secondaryAction}
+          >
             <IconButton
               accessibilityLabel={secondaryAction.accessibilityLabel}
               circular
@@ -141,6 +145,8 @@ export function ComposerToolbar({
               icon="arrow.up"
               iconSize={TOOLBAR_ICON_SIZE}
               size={PRIMARY_BTN_SIZE}
+              style={styles.primarySubmit}
+              tintColor={themeColors['text-on-accent']}
               testID={
                 submitTestID ??
                 (mode === 'inbox' ? 'composer-submit-note' : 'composer-submit-message')
@@ -155,7 +161,7 @@ export function ComposerToolbar({
   );
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -172,5 +178,11 @@ const useStyles = makeStyles(() => ({
     gap: spacing[2],
     borderRadius: 32,
     paddingHorizontal: spacing[1],
+  },
+  primarySubmit: {
+    backgroundColor: theme.colors.accent,
+  },
+  secondaryAction: {
+    marginLeft: spacing[2],
   },
 }));

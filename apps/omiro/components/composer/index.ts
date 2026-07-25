@@ -3,8 +3,7 @@ import { ComposerShell } from '~/components/composer/ComposerShell';
 import { ComposerTextInput } from '~/components/composer/ComposerTextInput';
 import { ComposerToolbar } from '~/components/composer/ComposerToolbar';
 
-// Named ComposerKit, not Composer, to avoid colliding with the existing
-// mode-switching `Composer` screen component in Composer.tsx.
+// Internal visual foundation for the public mode-based Composer component.
 export const ComposerKit = Object.assign(ComposerShell, {
   Input: ComposerTextInput,
   Toolbar: ComposerToolbar,

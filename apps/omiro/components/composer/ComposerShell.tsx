@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { isValidElement, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -41,6 +41,12 @@ export function ComposerShell({
   const styles = useStyles();
   const themeColors = useThemeColors();
   const prefersReducedMotion = useReducedMotion();
+  const previousIsColumnLayout = useRef(isColumnLayout);
+  const isColumnLayoutTransition = previousIsColumnLayout.current !== isColumnLayout;
+
+  useEffect(() => {
+    previousIsColumnLayout.current = isColumnLayout;
+  }, [isColumnLayout]);
 
   // Resolved by identity, not position — consumers must pass ComposerKit.Input and
   // ComposerKit.Toolbar as direct children (not wrapped in a fragment/conditional),
@@ -85,7 +91,13 @@ export function ComposerShell({
           {errorBanner}
         </Animated.View>
       ) : null}
-      <Animated.View style={[styles.surface, recordingBorderStyle]}>
+      <Animated.View
+        style={[
+          styles.surface,
+          isColumnLayout ? styles.surfaceActive : styles.surfaceIdle,
+          recordingBorderStyle,
+        ]}
+      >
         {accessory ? <View style={styles.accessory}>{accessory}</View> : null}
         <Animated.View
           style={styles.contentArea}
@@ -100,13 +112,16 @@ export function ComposerShell({
               and still claim a full row of vertical space. */}
           {isRecording ? null : (
             // Renders after inputRow so it paints on top when overlaid in row mode.
-            // Animated + `layout` here (not just on the parent contentArea) is what
-            // makes the position:absolute (row overlay) <-> position:relative (column)
-            // flip interpolate as one continuous move instead of snapping — Reanimated
-            // measures this view's own before/after bounds regardless of position type.
+            // Animate only the position:absolute <-> position:relative mode change.
+            // Let normal multiline growth reposition the toolbar immediately; otherwise
+            // every new input line replays the spring and makes the buttons bounce.
             <Animated.View
               style={isColumnLayout ? styles.controlsAnchorColumn : styles.controlsAnchorOverlay}
-              layout={createComposerReflowTransition(prefersReducedMotion)}
+              layout={
+                isColumnLayoutTransition
+                  ? createComposerReflowTransition(prefersReducedMotion)
+                  : undefined
+              }
               pointerEvents={isColumnLayout ? 'auto' : 'box-none'}
             >
               {toolbarChild}
@@ -128,17 +143,25 @@ const useStyles = makeStyles((theme) => ({
   },
   surface: {
     boxShadow: nativeShadows.sm,
-    backgroundColor: theme.colors['surface-canvas'],
     borderColor: theme.colors['border-subtle'],
     borderWidth: 1,
-    borderRadius: radii.xl,
     elevation: 6,
     overflow: 'hidden',
+    width: '100%',
+  },
+  surfaceActive: {
+    backgroundColor: theme.colors['surface-canvas'],
+    borderRadius: radii.xl,
     paddingHorizontal: spacing[3],
     paddingTop: spacing[3],
     paddingBottom: spacing[2],
     gap: spacing[1],
-    width: '100%',
+  },
+  surfaceIdle: {
+    backgroundColor: theme.colors['surface-panel'],
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
   },
   accessory: {
     width: '100%',

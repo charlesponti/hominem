@@ -12,6 +12,65 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible:
     id: auth-screen
     optional: true
+# resolveAuthRedirect (services/navigation/auth-route-guard.ts) renders this
+# fallback while it decides where (protected) should send you. On a slow
+# cold boot it can outlast a short optional assertVisible check entirely, so
+# wait for it to actually clear rather than just glancing at it once.
+- extendedWaitUntil:
+    notVisible:
+      id: protected-route-fallback
+    timeout: 45000
+    optional: true
+# The app persists a "resume target" (writeResumeTarget in
+# ChatDetailScreen.tsx, and the equivalent for notes) and relaunches straight
+# into the last-viewed chat or note instead of the inbox. This isn't
+# hypothetical: chat-send-message.yaml, notes-create.yaml (and manual
+# exploration) can each leave their detail screen as the last route, so a
+# later flow's launchApp lands there, not on the inbox. Wait (boot can take
+# a few seconds) to see if that's where we landed, then back out explicitly
+# rather than assuming launch always reaches inbox-composer-input.
+- extendedWaitUntil:
+    visible:
+      id: chat-composer-input
+    timeout: 20000
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: note-title-input
+    timeout: 5000
+    optional: true
+# Both ChatDetailScreen and the note detail screen show the native back
+# chevron (resource-id BackButton) only when canGoBack is true; when opened
+# via replace (no back stack), each renders its own "Inbox" toolbar button
+# instead with no testID. Try both so this works regardless of how the
+# screen was reached.
+#
+# Wrapped in `when` (not a bare optional tapOn): a one-shot optional tap can
+# fire before the screen has settled from the extendedWaitUntil above and
+# silently no-op, leaving us stuck on the detail screen for the rest of the
+# flow. `when` gives Maestro's own polling/retry a chance to find the button.
+- runFlow:
+    when:
+      visible:
+        id: chat-composer-input
+    commands:
+      - tapOn:
+          id: BackButton
+          optional: true
+      - tapOn:
+          text: Inbox
+          optional: true
+- runFlow:
+    when:
+      visible:
+        id: note-title-input
+    commands:
+      - tapOn:
+          id: BackButton
+          optional: true
+      - tapOn:
+          text: Inbox
+          optional: true
 - extendedWaitUntil:
     visible:
       id: inbox-composer-input
