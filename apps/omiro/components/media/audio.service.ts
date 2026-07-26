@@ -15,6 +15,16 @@ export type RecorderState =
 
 export type DiscardReason = VoiceDiscardReason;
 
+export function isRecorderActive(state: RecorderState) {
+  return (
+    state === 'REQUESTING_PERMISSION' ||
+    state === 'PREPARING' ||
+    state === 'RECORDING' ||
+    state === 'PAUSED' ||
+    state === 'STOPPING'
+  );
+}
+
 type RecordingSnapshot = {
   lastRecordingUri: string | null;
   meterings: number[];

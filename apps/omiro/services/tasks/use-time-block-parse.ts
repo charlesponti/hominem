@@ -9,7 +9,7 @@ export function useTimeBlockParse() {
     TasksParseOutput,
     Error,
     Pick<TasksParseInput, 'transcript' | 'conversationContext' | 'calendarContext'>
->({
+  >({
     mutationFn: async ({ transcript, conversationContext, calendarContext }) => {
       const res = await client.api.tasks.parse.$post({
         json: {

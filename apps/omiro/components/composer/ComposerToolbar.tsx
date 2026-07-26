@@ -15,7 +15,7 @@ import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
 interface ComposerToolbarProps {
-  mode: 'inbox' | 'chat';
+  isInbox: boolean;
   isRecording: boolean;
   isRecordingElsewhere: boolean;
   isVoiceBusy: boolean;
@@ -29,8 +29,8 @@ interface ComposerToolbarProps {
   onVoicePress: () => void;
   onEnhancePress: () => void;
   onSubmit: () => void;
-  submitTestID?: string;
-  submitAccessibilityLabel?: string;
+  submitTestID: string;
+  submitAccessibilityLabel: string | undefined;
   secondaryAction?: {
     accessibilityLabel: string;
     icon: SFSymbol;
@@ -44,7 +44,7 @@ const buttonExit = SlideOutRight.duration(150);
 const pillLayout = LinearTransition.duration(180);
 
 export function ComposerToolbar({
-  mode,
+  isInbox,
   isRecording,
   isRecordingElsewhere,
   isVoiceBusy,
@@ -109,7 +109,7 @@ export function ComposerToolbar({
             />
           </Reanimated.View>
         ) : null}
-        {mode === 'inbox' && secondaryAction && canSubmit ? (
+        {isInbox && secondaryAction && canSubmit ? (
           <Reanimated.View
             entering={buttonEnter}
             exiting={buttonExit}
@@ -134,11 +134,7 @@ export function ComposerToolbar({
             <IconButton
               accessibilityLabel={
                 submitAccessibilityLabel ??
-                (mode === 'inbox'
-                  ? t.inboxComposer.composer.saveNoteA11y
-                  : isSubmitting
-                    ? t.chat.input.sendingA11y
-                    : t.chat.input.sendMessageA11y)
+                (isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
               }
               circular
               disabled={!canSubmit}
@@ -147,10 +143,7 @@ export function ComposerToolbar({
               size={PRIMARY_BTN_SIZE}
               style={styles.primarySubmit}
               tintColor={themeColors['text-on-accent']}
-              testID={
-                submitTestID ??
-                (mode === 'inbox' ? 'composer-submit-note' : 'composer-submit-message')
-              }
+              testID={submitTestID}
               variant="primary"
               onPress={onSubmit}
             />
@@ -166,7 +159,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: spacing[6],
+    minHeight: PRIMARY_BTN_SIZE,
   },
   leading: {
     alignItems: 'center',

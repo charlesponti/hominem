@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
+import { deriveComposerCapabilities } from '~/components/composer/composerCapabilities.helpers';
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
 import { useComposerDraft } from '~/components/composer/useComposerDraft';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
@@ -19,9 +20,14 @@ export function useComposerController({
   onClearDraft,
 }: UseComposerControllerOptions) {
   const draft = useComposerDraft({ initialMessage, onDraftChange });
-  const { attachments, errors, isUploading, clearAttachments } = useComposerAttachments();
-  const uploadedAttachmentIds = attachments.flatMap((attachment) =>
-    attachment.uploadedFile?.id ? [attachment.uploadedFile.id] : [],
+  const { attachments, errors, isUploading, clearAttachments, markAttachmentsSubmitted } =
+    useComposerAttachments();
+  const uploadedAttachmentIds = useMemo(
+    () =>
+      attachments.flatMap((attachment) =>
+        attachment.uploadedFile?.id ? [attachment.uploadedFile.id] : [],
+      ),
+    [attachments],
   );
   const hasContent = draft.message.trim().length > 0 || uploadedAttachmentIds.length > 0;
 
@@ -31,24 +37,30 @@ export function useComposerController({
   });
   const enhance = useInlineEnhance();
 
-  const isInteractionBusy = isSubmitting || isUploading || voice.isBusy || enhance.isEnhancing;
-  const canSubmit = hasContent && !isInteractionBusy;
-  const canOpenEnhance = hasContent && !isInteractionBusy && !voice.isCleaningVoice;
-  const canPickMedia = !isInteractionBusy;
-  const canToggleVoice =
-    voice.isRecording ||
-    (!isInteractionBusy && !voice.isCleaningVoice && !voice.isRecordingElsewhere);
   const showAttachments = attachments.length > 0 || errors.length > 0 || isUploading;
 
   const [isFocused, setIsFocused] = useState(false);
   const handleInputFocus = useCallback(() => setIsFocused(true), []);
   const handleInputBlur = useCallback(() => setIsFocused(false), []);
 
-  // The transcription-failed error no longer counts here — it renders as a popover
-  // above the composer (ComposerShell's errorBanner slot), not as inline body content,
-  // so it shouldn't force the composer itself into column layout.
-  const isInlinePanelOpen = voice.isRecording || enhance.isEnhanceOpen;
-  const isColumnLayout = isFocused || hasContent || showAttachments || isInlinePanelOpen;
+  const { canSubmit, canOpenEnhance, canPickMedia, canToggleVoice, isColumnLayout } =
+    deriveComposerCapabilities({
+      hasContent,
+      isSubmitting,
+      isUploading,
+      isFocused,
+      showAttachments,
+      voice: {
+        isBusy: voice.isBusy,
+        isRecording: voice.isRecording,
+        isCleaningVoice: voice.isCleaningVoice,
+        isRecordingElsewhere: voice.isRecordingElsewhere,
+      },
+      enhance: {
+        isEnhancing: enhance.isEnhancing,
+        isEnhanceOpen: enhance.isEnhanceOpen,
+      },
+    });
 
   const clearComposer = useCallback(() => {
     draft.clearDraft();
@@ -57,25 +69,40 @@ export function useComposerController({
     onClearDraft?.();
   }, [clearAttachments, draft.clearDraft, enhance.closeEnhance, onClearDraft]);
 
-  return {
-    message: draft.message,
-    setMessage: draft.setMessage,
-    attachments,
-    errors,
-    isUploading,
-    showAttachments,
-    uploadedAttachmentIds,
-    canSubmit,
-    canOpenEnhance,
-    canPickMedia,
-    canToggleVoice,
-    isInteractionBusy,
-    isFocused,
-    handleInputFocus,
-    handleInputBlur,
-    isColumnLayout,
-    voice,
-    enhance,
-    clearComposer,
-  };
+  return useMemo(
+    () => ({
+      message: draft.message,
+      setMessage: draft.setMessage,
+      showAttachments,
+      uploadedAttachmentIds,
+      canSubmit,
+      canOpenEnhance,
+      canPickMedia,
+      canToggleVoice,
+      handleInputFocus,
+      handleInputBlur,
+      isColumnLayout,
+      voice,
+      enhance,
+      clearComposer,
+      markAttachmentsSubmitted,
+    }),
+    [
+      draft.message,
+      draft.setMessage,
+      showAttachments,
+      uploadedAttachmentIds,
+      canSubmit,
+      canOpenEnhance,
+      canPickMedia,
+      canToggleVoice,
+      handleInputFocus,
+      handleInputBlur,
+      isColumnLayout,
+      voice,
+      enhance,
+      clearComposer,
+      markAttachmentsSubmitted,
+    ],
+  );
 }

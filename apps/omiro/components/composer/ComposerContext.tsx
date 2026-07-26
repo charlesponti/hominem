@@ -40,6 +40,7 @@ interface ComposerContextValue {
   clearAttachments: () => void;
   pickAttachment: () => Promise<ComposerAttachment[]>;
   handleCameraCapture: (photo: { uri: string; fileName?: string }) => Promise<ComposerAttachment[]>;
+  markAttachmentsSubmitted: (fileIds: string[]) => void;
 }
 
 const ComposerContext = createContext<ComposerContextValue | undefined>(undefined);
@@ -61,6 +62,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     () => initialAttachments,
   );
   const attachmentsRef = useRef(initialAttachments);
+  // File ids handed off to a submission (note/chat/message) that must survive
+  // this provider unmounting mid-flight — see the unmount cleanup effect below.
+  const committedFileIdsRef = useRef<Set<string>>(new Set());
 
   const { uploadAssets, uploadState, clearErrors } = useFileUpload();
 
@@ -77,23 +81,34 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     });
   }, []);
 
+  const deleteUploadedFile = useCallback(
+    (fileId: string) => {
+      void client.api.files[':fileId'].$delete({ param: { fileId } }).catch(() => undefined);
+    },
+    [client],
+  );
+
   // Attachment operations
   const onRemove = useCallback(
     (id: string) => {
       setAttachments((prev) => {
         const target = prev.find((a) => a.id === id);
         if (target?.uploadedFile?.id) {
-          void client.api.files[':fileId']
-            .$delete({ param: { fileId: target.uploadedFile.id } })
-            .catch(() => undefined);
+          deleteUploadedFile(target.uploadedFile.id);
         }
         return prev.filter((a) => a.id !== id);
       });
     },
-    [client, setAttachments],
+    [deleteUploadedFile, setAttachments],
   );
 
   const clearAttachments = useCallback(() => setAttachments([]), [setAttachments]);
+
+  const markAttachmentsSubmitted = useCallback((fileIds: string[]) => {
+    for (const fileId of fileIds) {
+      committedFileIdsRef.current.add(fileId);
+    }
+  }, []);
 
   const appendUploadedAssets = useCallback(
     async (
@@ -174,6 +189,7 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
       clearAttachments,
       pickAttachment,
       handleCameraCapture,
+      markAttachmentsSubmitted,
     }),
     [
       attachments,
@@ -184,22 +200,22 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
       clearAttachments,
       pickAttachment,
       handleCameraCapture,
+      markAttachmentsSubmitted,
     ],
   );
 
   useEffect(
     () => () => {
       attachmentsRef.current.forEach((attachment) => {
-        if (!attachment.uploadedFile?.id) {
+        const fileId = attachment.uploadedFile?.id;
+        if (!fileId || committedFileIdsRef.current.has(fileId)) {
           return;
         }
 
-        void client.api.files[':fileId']
-          .$delete({ param: { fileId: attachment.uploadedFile.id } })
-          .catch(() => undefined);
+        deleteUploadedFile(fileId);
       });
     },
-    [client],
+    [deleteUploadedFile],
   );
 
   return <ComposerContext.Provider value={value}>{children}</ComposerContext.Provider>;
@@ -212,7 +228,22 @@ export function useComposerContext() {
 }
 
 export function useComposerAttachments() {
-  const { attachments, errors, isUploading, progressByAssetId, onRemove, clearAttachments } =
-    useComposerContext();
-  return { attachments, errors, isUploading, progressByAssetId, onRemove, clearAttachments };
+  const {
+    attachments,
+    errors,
+    isUploading,
+    progressByAssetId,
+    onRemove,
+    clearAttachments,
+    markAttachmentsSubmitted,
+  } = useComposerContext();
+  return {
+    attachments,
+    errors,
+    isUploading,
+    progressByAssetId,
+    onRemove,
+    clearAttachments,
+    markAttachmentsSubmitted,
+  };
 }

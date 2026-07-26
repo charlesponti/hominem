@@ -8,11 +8,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { TOOLBAR_ICON_SIZE, TOOL_BTN_SIZE } from '~/components/composer/constants';
-import { RecordingLevelMeter } from '~/components/composer/RecordingLevelMeter';
-import { useElapsedTimer } from '~/components/composer/useElapsedTimer';
 import { Text, makeStyles, useThemeColors } from '~/components/theme';
 import { spacing } from '~/components/theme/tokens';
 import { IconButton } from '~/components/ui/icon-button';
+import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
+import { useElapsedTimer } from '~/components/voice/useElapsedTimer';
 import t from '~/translations';
 
 interface VoiceRecordingPanelProps {

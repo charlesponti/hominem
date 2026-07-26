@@ -1,4 +1,4 @@
-import type { RecorderState } from '~/components/media/audio.service';
+import t from '~/translations';
 
 export type VoiceComposerState = 'idle' | 'recording' | 'transcribing' | 'cleaning' | 'failed';
 
@@ -12,7 +12,6 @@ export interface VoiceComposerError {
 }
 
 export interface VoiceComposerErrorPresentation {
-  title: string;
   message: string;
 }
 
@@ -42,16 +41,6 @@ export function maybeApplyCleanedTranscript(input: {
   return replaceTranscriptInDraft(input.insertedDraft, input.rawText, input.cleanedText);
 }
 
-export function isRecorderActive(state: RecorderState) {
-  return (
-    state === 'REQUESTING_PERMISSION' ||
-    state === 'PREPARING' ||
-    state === 'RECORDING' ||
-    state === 'PAUSED' ||
-    state === 'STOPPING'
-  );
-}
-
 export function deriveVoiceComposerState(input: {
   isRecording: boolean;
   isTranscribing: boolean;
@@ -72,21 +61,13 @@ export function createVoiceComposerError(code: VoiceComposerErrorCode): VoiceCom
 export function getVoiceComposerErrorPresentation(
   code: VoiceComposerErrorCode,
 ): VoiceComposerErrorPresentation {
+  const { voiceErrors } = t.inboxComposer.composer;
   switch (code) {
     case 'permission-denied':
-      return {
-        title: 'Microphone access required',
-        message: 'Allow microphone and speech recognition access to record a voice note.',
-      };
+      return { message: voiceErrors.permissionDenied };
     case 'recording-failed':
-      return {
-        title: 'Voice recording failed',
-        message: 'Omiro could not start recording right now.',
-      };
+      return { message: voiceErrors.recordingFailed };
     case 'transcription-failed':
-      return {
-        title: 'Voice transcription failed',
-        message: 'The transcript could not be generated. The temporary recording was cleaned up.',
-      };
+      return { message: voiceErrors.transcriptionFailed };
   }
 }

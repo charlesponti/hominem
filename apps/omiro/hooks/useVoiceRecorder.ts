@@ -2,11 +2,11 @@ import type { VoiceDiscardReason } from '@hominem/rpc/voice-events';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 
-import { isRecorderActive } from '~/components/composer/voiceComposerInput.helpers';
 import {
   discardRecording,
   getRecordingCoreSnapshot,
   getRecordingSnapshot,
+  isRecorderActive,
   startRecording,
   stopRecording,
   subscribeRecording,

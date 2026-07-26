@@ -2,36 +2,21 @@ import React, { useCallback, useRef } from 'react';
 import { TextInput } from 'react-native';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
-import { ComposerKit, useComposerController } from '~/components/composer';
-import { ComposerAttachmentRow } from '~/components/composer/ComposerAttachmentRow';
-import { ComposerProvider } from '~/components/composer/ComposerContext';
-import { getComposerSubmissionConfig } from '~/components/composer/composerSubmission.helpers';
-import { InlineErrorBanner } from '~/components/composer/InlineErrorBanner';
-import {
-  useComposerSubmission,
-  type ComposerSubmitKind,
-} from '~/components/composer/useComposerSubmission';
-import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
-import { VoiceRecordingPanel } from '~/components/composer/VoiceRecordingPanel';
-import t from '~/translations';
+import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
+import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 
-interface ComposerInboxProps {
-  mode: 'inbox';
-  initialMessage?: string;
-  onDraftChange?: (msg: string) => void;
-  onClearDraft?: () => void;
-  entryMode?: 'mixed' | 'note' | 'chat';
-  onComplete?: () => void;
-  testID?: string;
-}
+import type { ComposerProps, ComposerSubmitKind } from './composer.types';
+import { ComposerAttachmentRow } from './ComposerAttachmentRow';
+import { ComposerProvider } from './ComposerContext';
+import { ComposerShell } from './ComposerShell';
+import { getComposerSubmissionConfig } from './composerSubmission.helpers';
+import { ComposerTextInput } from './ComposerTextInput';
+import { ComposerToolbar } from './ComposerToolbar';
+import { useComposerController } from './useComposerController';
+import { useComposerSubmission } from './useComposerSubmission';
+import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
 
-interface ComposerChatProps {
-  mode: 'chat';
-  chatId: string;
-  testID?: string;
-}
-
-export type ComposerProps = ComposerInboxProps | ComposerChatProps;
+export type { ComposerProps } from './composer.types';
 
 export function Composer(props: ComposerProps) {
   return (
@@ -53,7 +38,13 @@ function ComposerContent(props: ComposerProps) {
   const presentation = getComposerSubmissionConfig(props);
 
   const submit = useCallback(
-    (kind: ComposerSubmitKind) =>
+    (kind: ComposerSubmitKind) => {
+      // Marked before the async submission starts so this provider unmounting
+      // mid-flight (e.g. navigating to the newly created chat) can't race the
+      // cleanup effect into deleting files that were just handed off.
+      if (controller.canSubmit) {
+        controller.markAttachmentsSubmitted(controller.uploadedAttachmentIds);
+      }
       void submission.submit(
         {
           canSubmit: controller.canSubmit,
@@ -62,39 +53,25 @@ function ComposerContent(props: ComposerProps) {
           message: controller.message,
         },
         kind,
-      ),
+      );
+    },
     [controller, submission],
   );
 
   const isInbox = props.mode === 'inbox';
-  const isChatMode = presentation.isChatMode;
-  const isChatEntryMode = presentation.isChatEntryMode;
-  const secondaryAction =
-    presentation.secondarySubmitKind === 'note'
-      ? {
-          accessibilityLabel: t.inboxComposer.composer.saveNoteA11y,
-          icon: 'doc.text' as const,
-          onPress: () => submit('note'),
-          testID: 'composer-save-note',
-        }
-      : presentation.secondarySubmitKind === 'start-chat'
-        ? {
-            accessibilityLabel: t.inboxComposer.composer.openChatA11y,
-            icon: 'bubble.left' as const,
-            onPress: () => submit('start-chat'),
-            testID: 'composer-start-chat',
-          }
-        : undefined;
-  const inputPlaceholder =
-    isChatMode || isChatEntryMode
-      ? t.chat.input.messagePlaceholder
-      : t.inboxComposer.composer.placeholder;
-  const shellTestID = presentation.shellTestID;
-  const inputTestID = presentation.inputTestID;
+  const secondaryActionConfig = presentation.secondaryAction;
+  const secondaryAction = secondaryActionConfig
+    ? {
+        accessibilityLabel: secondaryActionConfig.accessibilityLabel,
+        icon: secondaryActionConfig.icon,
+        onPress: () => submit(secondaryActionConfig.kind),
+        testID: secondaryActionConfig.testID,
+      }
+    : undefined;
 
   return (
-    <ComposerKit
-      testID={shellTestID}
+    <ComposerShell
+      testID={presentation.shellTestID}
       isRecording={controller.voice.isRecording}
       isColumnLayout={controller.isColumnLayout}
       accessory={controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
@@ -121,48 +98,39 @@ function ComposerContent(props: ComposerProps) {
           />
         ) : undefined
       }
-    >
-      <ComposerKit.Input
-        inputRef={inputRef}
-        value={controller.message}
-        onChangeText={controller.setMessage}
-        placeholder={inputPlaceholder}
-        testID={inputTestID}
-        isColumnLayout={controller.isColumnLayout}
-        onFocus={controller.handleInputFocus}
-        onBlur={controller.handleInputBlur}
-      />
-      <ComposerKit.Toolbar
-        mode={isInbox ? 'inbox' : 'chat'}
-        isRecording={controller.voice.isRecording}
-        isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-        isVoiceBusy={controller.voice.isBusy}
-        isEnhancing={controller.enhance.isEnhancing}
-        isCleaningVoice={controller.voice.isCleaningVoice}
-        canPickMedia={controller.canPickMedia}
-        canToggleVoice={controller.canToggleVoice}
-        canEnhance={controller.canOpenEnhance}
-        canSubmit={controller.canSubmit}
-        isSubmitting={submission.isSubmitting}
-        onVoicePress={() => void controller.voice.handleVoicePress()}
-        onEnhancePress={controller.enhance.toggleEnhance}
-        onSubmit={() => submit(presentation.primarySubmitKind)}
-        submitTestID={
-          isInbox
-            ? isChatEntryMode
-              ? 'composer-submit-chat'
-              : 'composer-submit-note'
-            : 'composer-submit-message'
-        }
-        submitAccessibilityLabel={
-          isInbox
-            ? isChatEntryMode
-              ? t.inbox.screen.startChatSubmitA11y
-              : t.inboxComposer.composer.saveNoteA11y
-            : undefined
-        }
-        secondaryAction={secondaryAction}
-      />
-    </ComposerKit>
+      input={
+        <ComposerTextInput
+          inputRef={inputRef}
+          value={controller.message}
+          onChangeText={controller.setMessage}
+          placeholder={presentation.placeholder}
+          testID={presentation.inputTestID}
+          isColumnLayout={controller.isColumnLayout}
+          onFocus={controller.handleInputFocus}
+          onBlur={controller.handleInputBlur}
+        />
+      }
+      toolbar={
+        <ComposerToolbar
+          isInbox={isInbox}
+          isRecording={controller.voice.isRecording}
+          isRecordingElsewhere={controller.voice.isRecordingElsewhere}
+          isVoiceBusy={controller.voice.isBusy}
+          isEnhancing={controller.enhance.isEnhancing}
+          isCleaningVoice={controller.voice.isCleaningVoice}
+          canPickMedia={controller.canPickMedia}
+          canToggleVoice={controller.canToggleVoice}
+          canEnhance={controller.canOpenEnhance}
+          canSubmit={controller.canSubmit}
+          isSubmitting={submission.isSubmitting}
+          onVoicePress={() => void controller.voice.handleVoicePress()}
+          onEnhancePress={controller.enhance.toggleEnhance}
+          onSubmit={() => submit(presentation.primarySubmitKind)}
+          submitTestID={presentation.submitTestID}
+          submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+          secondaryAction={secondaryAction}
+        />
+      }
+    />
   );
 }

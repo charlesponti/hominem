@@ -39,12 +39,12 @@ export {
   enhanceText,
   getChatCompletionText,
   getChatCompletionUsage,
-  getStructuredOutputUsage,
   getSharedAiModelConfig,
   getSharedTextModel,
+  getStructuredOutputUsage,
   postChatCompletion,
-  StructuredOutputError,
   streamChatCompletion,
+  StructuredOutputError,
 } from './text';
 
 export type { OpenRouterTextAdapterOptions } from './text';
@@ -56,7 +56,11 @@ export { cleanupVoiceTranscript } from './voice-cleanup';
 export type { VoiceTranscriptCleanupInput, VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
-export { extractTimeBlock, parseTimeBlockExtractionOutput, TimeBlockIntent } from './time-block-extraction';
+export {
+  extractTimeBlock,
+  parseTimeBlockExtractionOutput,
+  TimeBlockIntent,
+} from './time-block-extraction';
 
 export type {
   ExtractedTask,

@@ -1,5 +1,5 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
@@ -7,7 +7,7 @@
     "incremental": true,
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     // tsserver-only (ignored by `tsc --noEmit`): doesn't inherit from
-    // tsconfig.base.json since this extends expo/tsconfig.base instead — see
+    // tsconfig.base.json since this extends Expo's base config instead — see
     // tsconfig.base.json for why this is set repo-wide.
     "assumeChangesOnlyAffectDirectDependencies": true,
     "allowJs": true,

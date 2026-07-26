@@ -104,25 +104,17 @@ export default function InboxScreen() {
 
       {isCalendarTab ? null : (
         <KeyboardStickyView
-          offset={{ closed: 0, opened: 40 }}
+          offset={{ closed: -(insets.bottom + 10), opened: -10 }}
           pointerEvents="box-none"
-          style={styles.composerDock}
+          style={[styles.composerWrap]}
         >
-          {/* oxfmt-ignore */}
-          <View
-            style={[
-              styles.composerWrap,
-              { paddingBottom: Math.max(insets.bottom, 12) },
-            ]}
-          >
-            <Composer
-              mode="inbox"
-              entryMode={activeTab === 'chats' ? 'chat' : 'note'}
-              initialMessage={inboxDraft}
-              onDraftChange={writeInboxDraft}
-              onClearDraft={clearInboxDraft}
-            />
-          </View>
+          <Composer
+            mode="inbox"
+            entryMode={activeTab === 'chats' ? 'chat' : 'note'}
+            initialMessage={inboxDraft}
+            onDraftChange={writeInboxDraft}
+            onClearDraft={clearInboxDraft}
+          />
         </KeyboardStickyView>
       )}
     </View>
@@ -130,15 +122,8 @@ export default function InboxScreen() {
 }
 
 const useStyles = makeStyles((theme) => ({
-  composerDock: {
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-  },
   composerWrap: {
     paddingHorizontal: 8,
-    paddingTop: 8,
   },
   container: {
     backgroundColor: theme.colors['surface-canvas'],

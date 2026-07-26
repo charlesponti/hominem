@@ -1,4 +1,4 @@
-import React, { isValidElement, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -9,8 +9,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { ComposerTextInput } from '~/components/composer/ComposerTextInput';
-import { ComposerToolbar } from '~/components/composer/ComposerToolbar';
 import { makeStyles, useThemeColors } from '~/components/theme';
 import {
   createComposerReflowTransition,
@@ -20,23 +18,25 @@ import { nativeShadows, radii, spacing } from '~/components/theme/tokens';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 interface ComposerShellProps {
+  input: React.ReactNode;
+  toolbar: React.ReactNode;
   accessory?: React.ReactNode;
   inlinePanel?: React.ReactNode;
   errorBanner?: React.ReactNode;
   testID?: string;
   isRecording?: boolean;
   isColumnLayout: boolean;
-  children: React.ReactNode;
 }
 
 export function ComposerShell({
+  input,
+  toolbar,
   accessory,
   inlinePanel,
   errorBanner,
   testID,
   isRecording = false,
   isColumnLayout,
-  children,
 }: ComposerShellProps) {
   const styles = useStyles();
   const themeColors = useThemeColors();
@@ -47,17 +47,6 @@ export function ComposerShell({
   useEffect(() => {
     previousIsColumnLayout.current = isColumnLayout;
   }, [isColumnLayout]);
-
-  // Resolved by identity, not position — consumers must pass ComposerKit.Input and
-  // ComposerKit.Toolbar as direct children (not wrapped in a fragment/conditional),
-  // or matching silently finds nothing instead of erroring.
-  const childArray = React.Children.toArray(children);
-  const inputChild = childArray.find(
-    (child) => isValidElement(child) && child.type === ComposerTextInput,
-  );
-  const toolbarChild = childArray.find(
-    (child) => isValidElement(child) && child.type === ComposerToolbar,
-  );
 
   // A subtle ambient cue on the card's own edge — distinct from the recording
   // panel's own indicator dot — so the "you're recording" state stays visible
@@ -103,7 +92,7 @@ export function ComposerShell({
           style={styles.contentArea}
           layout={createComposerReflowTransition(prefersReducedMotion)}
         >
-          {isRecording ? null : <View style={styles.inputRow}>{inputChild}</View>}
+          {isRecording ? null : <View style={styles.inputRow}>{input}</View>}
           {isColumnLayout && inlinePanel ? (
             <View style={styles.inlinePanel}>{inlinePanel}</View>
           ) : null}
@@ -124,7 +113,7 @@ export function ComposerShell({
               }
               pointerEvents={isColumnLayout ? 'auto' : 'box-none'}
             >
-              {toolbarChild}
+              {toolbar}
             </Animated.View>
           )}
         </Animated.View>
@@ -134,9 +123,7 @@ export function ComposerShell({
 }
 
 const useStyles = makeStyles((theme) => ({
-  wrapper: {
-    width: '100%',
-  },
+  wrapper: {},
   errorBanner: {
     width: '100%',
     marginBottom: spacing[2],

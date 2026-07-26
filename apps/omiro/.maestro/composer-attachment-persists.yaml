@@ -1,0 +1,52 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Regression flow for the attachment-cleanup unmount race fixed in
+# ComposerContext.tsx (markAttachmentsSubmitted / committedFileIdsRef): an
+# attachment picked in the composer must survive a submitted note, not get
+# deleted by the provider's unmount cleanup effect.
+#
+# This only proves the attachment isn't lost on the happy path (pick, submit,
+# reopen); it can't reproduce the actual unmount-mid-flight race, which
+# depends on timing between the mutation resolving and the provider
+# unmounting that Maestro can't control deterministically.
+#
+# Prerequisite: the simulator's photo library must contain at least one
+# non-HEIC image (the default seed photos are HEIC, which the app's upload
+# validation rejects as "Unsupported file type"). Seed one with:
+#   xcrun simctl addmedia <device> path/to/some.png
+- runFlow: startup.yaml
+- tapOn:
+    id: composer-attach-button
+- tapOn: Choose from Library
+- tapOn:
+    id: PXGGridLayout-Info
+    index: 0
+- tapOn: Done
+- assertVisible:
+    text: "^Remove .*"
+- tapOn:
+    id: inbox-composer-input
+- inputText: Attachment persistence check
+- tapOn:
+    id: composer-submit-note
+# The note write + inbox query invalidation is a real network round-trip;
+# give it real time instead of a bare assertVisible's short default timeout.
+- extendedWaitUntil:
+    visible:
+      text: "Attachment persistence check"
+    timeout: 30000
+# Tapped by its own text, not index — inbox-item-note-open's resource-id is
+# shared across every row, so an index-based tap right after an insert can
+# race the list's re-sort and hit the wrong note.
+- tapOn:
+    id: inbox-item-note-open
+    text: "Attachment persistence check"
+# Confirms the file survived the note-creation mutation and clearComposer()
+# instead of being deleted by ComposerContext's unmount cleanup effect.
+# Filename varies by picker source (IMG_XXXX.jpg from the simulated camera
+# roll vs. the original name when seeded via `simctl addmedia`), so match
+# loosely on extension rather than a fixed prefix.
+- extendedWaitUntil:
+    visible:
+      text: "\\.(jpg|jpeg|png)$"
+    timeout: 10000

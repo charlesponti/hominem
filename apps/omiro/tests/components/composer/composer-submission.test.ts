@@ -6,9 +6,12 @@ describe('composer submission config', () => {
   it('configures inbox note capture as the primary action with chat as secondary', () => {
     expect(getComposerSubmissionConfig({ mode: 'inbox', entryMode: 'note' })).toMatchObject({
       inputTestID: 'inbox-composer-input',
-      isChatEntryMode: false,
       primarySubmitKind: 'note',
-      secondarySubmitKind: 'start-chat',
+      submitTestID: 'composer-submit-note',
+      secondaryAction: {
+        kind: 'start-chat',
+        testID: 'composer-start-chat',
+      },
       shellTestID: 'inbox-composer',
     });
   });
@@ -16,9 +19,12 @@ describe('composer submission config', () => {
   it('configures inbox chat entry with note as the secondary action', () => {
     expect(getComposerSubmissionConfig({ mode: 'inbox', entryMode: 'chat' })).toMatchObject({
       inputTestID: 'inbox-composer-input',
-      isChatEntryMode: true,
       primarySubmitKind: 'start-chat',
-      secondarySubmitKind: 'note',
+      submitTestID: 'composer-submit-chat',
+      secondaryAction: {
+        kind: 'note',
+        testID: 'composer-save-note',
+      },
       shellTestID: 'inbox-composer',
     });
   });
@@ -30,7 +36,8 @@ describe('composer submission config', () => {
       inputTestID: 'chat-composer-input',
       isChatMode: true,
       primarySubmitKind: 'message',
-      secondarySubmitKind: undefined,
+      submitTestID: 'composer-submit-message',
+      secondaryAction: undefined,
       shellTestID: 'custom-chat',
     });
   });

@@ -13,18 +13,10 @@ export function useComposerDraft({
   const messageRef = useRef(initialMessage);
 
   const applyMessage = useCallback(
-    (
-      nextMessage: string,
-      options?: {
-        persist?: boolean;
-      },
-    ) => {
+    (nextMessage: string) => {
       messageRef.current = nextMessage;
       setMessageState(nextMessage);
-
-      if (options?.persist ?? true) {
-        onDraftChange?.(nextMessage);
-      }
+      onDraftChange?.(nextMessage);
     },
     [onDraftChange],
   );
@@ -34,7 +26,7 @@ export function useComposerDraft({
     [applyMessage],
   );
 
-  const clearDraft = useCallback(() => applyMessage('', {}), [applyMessage]);
+  const clearDraft = useCallback(() => applyMessage(''), [applyMessage]);
 
   return {
     getMessage: () => messageRef.current,

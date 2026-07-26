@@ -1,7 +1,9 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
+import { GlassView } from 'expo-glass-effect';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { makeStyles, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
@@ -51,7 +53,11 @@ function DetailRow({
         {label}
       </Text>
       <View style={styles.detailValue}>
-        <Text variant="body" color="text-primary">
+        <Text
+          numberOfLines={label === 'Location' ? 1 : undefined}
+          variant="body"
+          color="text-primary"
+        >
           {value}
         </Text>
         {onPress ? <AppIcon name="chevron.right" size={14} /> : null}
@@ -71,6 +77,7 @@ function DetailRow({
 export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockDetailSource }) {
   const styles = useStyles();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const taskQuery = useTaskQuery({ taskId: id, enabled: source === 'task' });
   const { mutateAsync: updateTask, isPending: isSavingTask } = useTaskUpdate();
   const { mutateAsync: deleteTask, isPending: isDeletingTask } = useTaskDelete();
@@ -317,130 +324,154 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
   const saving = isSavingTask || isSavingEvent;
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.topBar}>
-        <Button label="Back" onPress={() => router.back()} size="sm" variant="ghost" />
-        {isTask ? (
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 64 }]}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <View style={styles.titleActions}>
+          {isTask ? (
+            <Button
+              label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
+              onPress={() =>
+                task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
+              }
+              size="sm"
+              variant="secondary"
+            />
+          ) : null}
+        </View>
+
+        <Pressable
+          accessibilityLabel="Edit title"
+          disabled={readOnlyEvent}
+          onPress={() => beginEdit('title')}
+        >
+          <Text variant="title1" color="text-primary">
+            {title}
+          </Text>
+        </Pressable>
+        {isTask && task?.status === 'completed' ? (
+          <Text color="text-secondary">Completed</Text>
+        ) : null}
+        {readOnlyEvent ? (
+          <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
+        ) : null}
+
+        {editingField ? (
+          <View style={styles.editForm}>
+            {editingField === 'time' && draftStart && draftEnd ? (
+              <>
+                <Text color="text-secondary">Starts</Text>
+                <DateTimePicker
+                  display="compact"
+                  mode="datetime"
+                  onValueChange={(_, date) => setDraftStart(date)}
+                  testID="time-block-start-picker"
+                  value={draftStart}
+                />
+                <Text color="text-secondary">Ends</Text>
+                <DateTimePicker
+                  display="compact"
+                  minimumDate={draftStart}
+                  mode="datetime"
+                  onValueChange={(_, date) => setDraftEnd(date)}
+                  testID="time-block-end-picker"
+                  value={draftEnd}
+                />
+              </>
+            ) : (
+              <Input
+                autoFocus
+                multiline={editingField === 'notes'}
+                onChangeText={setEditValue}
+                placeholder={
+                  editingField === 'people' ? 'One person per line' : `Edit ${editingField}`
+                }
+                value={editValue}
+              />
+            )}
+            <Button label="Save" loading={saving} onPress={() => void saveField()} />
+            <Button
+              label="Cancel"
+              onPress={() => setEditingField(null)}
+              size="sm"
+              variant="ghost"
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <DetailRow
+            label="Time"
+            value={interval}
+            onPress={readOnlyEvent ? undefined : () => beginEdit('time')}
+          />
+          {isTask && task?.durationMinutes ? (
+            <DetailRow label="Duration" value={`${task.durationMinutes} min`} />
+          ) : null}
+          <DetailRow
+            label="Location"
+            value={location ?? 'Add location'}
+            onPress={readOnlyEvent ? undefined : () => beginEdit('location')}
+          />
+          <DetailRow
+            label="Notes"
+            value={notes ?? 'Add notes'}
+            onPress={readOnlyEvent ? undefined : () => beginEdit('notes')}
+          />
+          <DetailRow
+            label="Source"
+            value={isTask ? 'Omiro' : (event?.calendarTitle ?? 'iOS Calendar')}
+          />
+          {!isTask && event?.participants.length ? (
+            <DetailRow label="People" value={event.participants.join(', ')} />
+          ) : null}
+          {isTask ? (
+            <DetailRow
+              label="People"
+              value={
+                taskQuery.data?.participants.map((person) => person.displayName).join(', ') ||
+                'Add people'
+              }
+              onPress={() => beginEdit('people')}
+            />
+          ) : null}
+          {!isTask && event?.recurrenceDescription ? (
+            <DetailRow label="Repeats" value="Recurring event" />
+          ) : null}
+        </View>
+
+        {isTask && task?.scheduledStartAt ? (
           <Button
-            label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
+            label="Unschedule"
+            loading={saving}
             onPress={() =>
-              task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
+              void updateTask({ taskId: id, scheduledStartAt: null, scheduledEndAt: null })
             }
-            size="sm"
             variant="secondary"
           />
         ) : null}
-      </View>
-
-      <Pressable
-        accessibilityLabel="Edit title"
-        disabled={readOnlyEvent}
-        onPress={() => beginEdit('title')}
+        {!readOnlyEvent ? (
+          <Button label="Delete" loading={isDeletingTask} onPress={remove} variant="destructive" />
+        ) : null}
+      </ScrollView>
+      <GlassView
+        glassEffectStyle="regular"
+        isInteractive
+        style={[styles.backButton, { top: insets.top + 8 }]}
       >
-        <Text variant="title1" color="text-primary">
-          {title}
-        </Text>
-      </Pressable>
-      {isTask && task?.status === 'completed' ? (
-        <Text color="text-secondary">Completed</Text>
-      ) : null}
-      {readOnlyEvent ? (
-        <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
-      ) : null}
-
-      {editingField ? (
-        <View style={styles.editForm}>
-          {editingField === 'time' && draftStart && draftEnd ? (
-            <>
-              <Text color="text-secondary">Starts</Text>
-              <DateTimePicker
-                display="compact"
-                mode="datetime"
-                onValueChange={(_, date) => setDraftStart(date)}
-                testID="time-block-start-picker"
-                value={draftStart}
-              />
-              <Text color="text-secondary">Ends</Text>
-              <DateTimePicker
-                display="compact"
-                minimumDate={draftStart}
-                mode="datetime"
-                onValueChange={(_, date) => setDraftEnd(date)}
-                testID="time-block-end-picker"
-                value={draftEnd}
-              />
-            </>
-          ) : (
-            <Input
-              autoFocus
-              multiline={editingField === 'notes'}
-              onChangeText={setEditValue}
-              placeholder={
-                editingField === 'people' ? 'One person per line' : `Edit ${editingField}`
-              }
-              value={editValue}
-            />
-          )}
-          <Button label="Save" loading={saving} onPress={() => void saveField()} />
-          <Button label="Cancel" onPress={() => setEditingField(null)} size="sm" variant="ghost" />
-        </View>
-      ) : null}
-
-      <View style={styles.section}>
-        <DetailRow
-          label="Time"
-          value={interval}
-          onPress={readOnlyEvent ? undefined : () => beginEdit('time')}
-        />
-        {isTask && task?.durationMinutes ? (
-          <DetailRow label="Duration" value={`${task.durationMinutes} min`} />
-        ) : null}
-        <DetailRow
-          label="Location"
-          value={location ?? 'Add location'}
-          onPress={readOnlyEvent ? undefined : () => beginEdit('location')}
-        />
-        <DetailRow
-          label="Notes"
-          value={notes ?? 'Add notes'}
-          onPress={readOnlyEvent ? undefined : () => beginEdit('notes')}
-        />
-        <DetailRow
-          label="Source"
-          value={isTask ? 'Omiro' : (event?.calendarTitle ?? 'iOS Calendar')}
-        />
-        {!isTask && event?.participants.length ? (
-          <DetailRow label="People" value={event.participants.join(', ')} />
-        ) : null}
-        {isTask ? (
-          <DetailRow
-            label="People"
-            value={
-              taskQuery.data?.participants.map((person) => person.displayName).join(', ') ||
-              'Add people'
-            }
-            onPress={() => beginEdit('people')}
-          />
-        ) : null}
-        {!isTask && event?.recurrenceDescription ? (
-          <DetailRow label="Repeats" value="Recurring event" />
-        ) : null}
-      </View>
-
-      {isTask && task?.scheduledStartAt ? (
-        <Button
-          label="Unschedule"
-          loading={saving}
-          onPress={() =>
-            void updateTask({ taskId: id, scheduledStartAt: null, scheduledEndAt: null })
-          }
-          variant="secondary"
-        />
-      ) : null}
-      {!readOnlyEvent ? (
-        <Button label="Delete" loading={isDeletingTask} onPress={remove} variant="destructive" />
-      ) : null}
-    </ScrollView>
+        <Pressable
+          accessibilityLabel="Back"
+          hitSlop={8}
+          onPress={() => router.back()}
+          style={styles.backPressable}
+          testID="time-block-back"
+        >
+          <AppIcon name="chevron.left" size={18} />
+        </Pressable>
+      </GlassView>
+    </View>
   );
 }
 
@@ -451,6 +482,18 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing.lg,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+  },
+  backButton: {
+    borderRadius: 22,
+    left: theme.spacing.lg,
+    overflow: 'hidden',
+    position: 'absolute',
+  },
+  backPressable: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
   },
   content: {
     gap: theme.spacing.lg,
@@ -472,8 +515,11 @@ const useStyles = makeStyles((theme) => ({
   section: {
     gap: theme.spacing.sm,
   },
-  topBar: {
+  screen: {
+    flex: 1,
+  },
+  titleActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
 }));

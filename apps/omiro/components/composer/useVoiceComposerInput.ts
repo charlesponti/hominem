@@ -2,17 +2,16 @@ import { logger } from '@hominem/telemetry';
 import { File } from 'expo-file-system';
 import { useCallback, useState } from 'react';
 
-import { getNativeErrorCode, useVoiceRecorder } from '~/hooks/useVoiceRecorder';
-import VoiceTranscriberModule, { VoiceTranscriberErrorCode } from '~/modules/voice-transcriber';
-import { useVoiceCleanup } from '~/services/ai';
-
 import {
   createVoiceComposerError,
   deriveVoiceComposerState,
   maybeApplyCleanedTranscript,
   mergeTranscriptIntoDraft,
   type VoiceComposerError,
-} from './voiceComposerInput.helpers';
+} from '~/components/composer/voiceComposerInput.helpers';
+import { getNativeErrorCode, useVoiceRecorder } from '~/hooks/useVoiceRecorder';
+import VoiceTranscriberModule, { VoiceTranscriberErrorCode } from '~/modules/voice-transcriber';
+import { useVoiceCleanup } from '~/services/ai';
 
 interface UseVoiceComposerInputOptions {
   getMessage: () => string;

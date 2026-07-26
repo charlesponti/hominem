@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
-import type { ComposerProps } from '~/components/composer/Composer';
+import type { ComposerProps, ComposerSubmitKind } from '~/components/composer/composer.types';
 import {
   normalizeChatTitle,
   useAutoUpdateChatTitle,
@@ -14,7 +14,7 @@ import { donateAddNoteIntent } from '~/services/intent-donation';
 import { clearChatDraft, readChatDraft, writeChatDraft } from '~/services/navigation/launch-state';
 import { useCreateNote } from '~/services/notes/use-create-note';
 
-export type ComposerSubmitKind = 'note' | 'start-chat' | 'message';
+export type { ComposerSubmitKind } from '~/components/composer/composer.types';
 
 interface ComposerSubmitInput {
   canSubmit: boolean;
