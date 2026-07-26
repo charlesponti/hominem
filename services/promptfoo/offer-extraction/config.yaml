@@ -10,7 +10,7 @@ providers:
         format: json
 
 prompts:
-  - id: file://prompts/offer-extraction.md
+  - id: file://prompt.md
     label: v1-extraction
 
 tests:
@@ -19,77 +19,77 @@ tests:
       notes: '215k base salary, Los Angeles, single filer, 40k savings, 80k 401k'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: london-offer
       notes: '140k gbp, London, Tate Modern office, Skilled Worker visa, employer covers NHS surcharge, 4k relocation, single person'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: users-offer-notes
       notes: '135k, 30% of base equity over 4 years, (50k) 1 year 15%, bi annual bonus, quarterly performance reviews, visa, 4k relocation, Tate Modern'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: ambiguous-currency
       notes: '135k salary, London office, 10% bonus'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: contradictory-currency
       notes: '$135k salary, London office, 10% bonus'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: partial-info
       notes: '200k base, senior engineer, NYC'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: landmark-fidi
       notes: '250k base, FiDi office, 15% annual bonus, married'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: equity-rsu-cliff
       notes: '300k base, 100k RSU grant over 4 years, 1 year cliff, quarterly vest, San Francisco'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: contractor
       notes: '175k contractor rate, no benefits, Austin Texas, single, 50k savings'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: person-profile
       notes: 'Currently in LA, single, 40k savings, 80k in 401k, spend about 7k a month total, have a dog'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: multi-offer
       notes: 'Offer A: 220k, NYC, 15% bonus, no equity. Offer B: 240k, SF, 10% bonus, 50k RSU grant over 4 years. Single, no pets.'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   # ============ Global locations — 20 stress tests ============
 
@@ -102,7 +102,7 @@ tests:
       expectedReason: 'Correct GBP inference from Tokyo location'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: singapore-sgd
@@ -115,7 +115,7 @@ tests:
       expectedReason: 'Correct SGD extraction with bonus and RSU'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: sydney-aud
@@ -127,7 +127,7 @@ tests:
       expectedReason: 'Correct AUD inference from Sydney'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: berlin-eur
@@ -139,7 +139,7 @@ tests:
       expectedReason: 'Correct EUR from € symbol + Berlin'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: paris-eur
@@ -152,7 +152,7 @@ tests:
       expectedReason: 'Correct EUR from € + Paris, with bonus and options'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: dubai-aed
@@ -165,7 +165,7 @@ tests:
       expectedReason: 'Correct AED with bonus and married filing'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: zurich-chf
@@ -177,7 +177,7 @@ tests:
       expectedReason: 'Correct CHF from explicit CHF symbol'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: toronto-cad
@@ -188,7 +188,7 @@ tests:
       expectedReason: 'Correct CAD from explicit CAD + Toronto landmark'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: bangalore-inr
@@ -201,7 +201,7 @@ tests:
       expectedReason: 'Correct INR with bonus and stock options'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: sao-paulo-brl
@@ -213,7 +213,7 @@ tests:
       expectedReason: 'Correct BRL from explicit BRL + São Paulo landmark'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: seattle-usd
@@ -227,7 +227,7 @@ tests:
       expectedReason: 'Correct USD + RSU details + married filing jointly'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: london-ontario
@@ -239,7 +239,7 @@ tests:
       expectedReason: 'Correct CAD (London Ontario = Canada, not UK)'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: hourly-contractor
@@ -251,7 +251,7 @@ tests:
       expectedReason: 'Correct hourly rate → contractor + NYC'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: signon-heavy
@@ -264,7 +264,7 @@ tests:
       expectedReason: 'Correct SF + sign-on bonus + RSU with cliff/vesting'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: dublin-eur
@@ -276,7 +276,7 @@ tests:
       expectedReason: 'Correct EUR from € + Dublin (Ireland uses EUR)'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: amsterdam-eur
@@ -288,7 +288,7 @@ tests:
       expectedReason: 'Correct EUR from € + Amsterdam'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: stockholm-sek
@@ -300,7 +300,7 @@ tests:
       expectedReason: 'Correct SEK from explicit SEK + Stockholm'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: cape-town-zar
@@ -312,7 +312,7 @@ tests:
       expectedReason: 'Correct ZAR from explicit ZAR + Cape Town'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: no-location
@@ -323,7 +323,7 @@ tests:
       expectedReason: 'Correctly returns null currency for no location'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: fractional-cto
@@ -334,7 +334,7 @@ tests:
       expectedReason: 'Correct day-rate contractor extraction with IR35 context'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: equity-iso-vs-nso
@@ -343,4 +343,4 @@ tests:
       expectedReason: 'Correctly extracts NSO details with FMV, strike, vesting schedule'
     assert:
       - type: javascript
-        value: file://assertions/offer-extraction.js
+        value: file://assertions.ts

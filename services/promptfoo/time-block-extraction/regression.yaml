@@ -18,7 +18,7 @@ providers:
       max_tokens: 768
 
 prompts:
-  - id: file://prompts/time-block-extraction.json
+  - id: file://prompt.json
     label: v1-production-contract
 
 tests:
@@ -38,7 +38,7 @@ tests:
       nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: flexible-task
@@ -55,7 +55,7 @@ tests:
       nullFields: 'participants,location,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: tonight
@@ -70,7 +70,7 @@ tests:
       nullFields: 'participants,location,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: gap-fill
@@ -86,7 +86,7 @@ tests:
       nullFields: 'location,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: schedule-search
@@ -99,7 +99,7 @@ tests:
       nullFields: 'title,participants,location,duration,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: explicit-deadline
@@ -114,7 +114,7 @@ tests:
       nullFields: 'participants,location,duration,start_time,end_time,scheduling_window_start,scheduling_window_end'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: correction-wins
@@ -132,7 +132,7 @@ tests:
       nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: no-invention
@@ -146,7 +146,7 @@ tests:
       nullFields: 'participants,location,duration,start_time,end_time,scheduling_window_start,scheduling_window_end,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: call-mom-sunday-afternoon
@@ -160,7 +160,7 @@ tests:
       expectedDuration: 30
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: deep-work-tomorrow-morning
@@ -174,7 +174,7 @@ tests:
       expectedDuration: 120
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: dentist-monday-afternoon
@@ -189,7 +189,7 @@ tests:
       expectedEndTime: '2026-07-27T16:00:00-07:00'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: lunch-alex-next-thursday
@@ -205,7 +205,7 @@ tests:
       expectedEndTime: '2026-07-30T13:00:00-07:00'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: submit-invoice-friday
@@ -219,7 +219,7 @@ tests:
       expectedDeadline: '2026-07-31'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: board-meeting-next-week
@@ -232,7 +232,7 @@ tests:
       expectedTitlePattern: 'prepare.*board|board.*meeting'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: find-slot-sarah
@@ -246,7 +246,7 @@ tests:
       expectedDuration: 45
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: workout-tomorrow
@@ -259,7 +259,7 @@ tests:
       expectedTitlePattern: work out|workout
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: move-meeting-time
@@ -274,7 +274,7 @@ tests:
       expectedEndTime: '2026-07-26T17:00:00-07:00'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: correction-friday
@@ -288,7 +288,7 @@ tests:
       expectedEndTime: '2026-07-31T15:00:00-07:00'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: recurring-team-sync
@@ -304,7 +304,7 @@ tests:
       expectedEndTime: '2026-07-27T10:00:00-07:00'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: haircut-saturday-morning
@@ -317,7 +317,7 @@ tests:
       expectedTitlePattern: haircut
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: groceries-after-work
@@ -330,7 +330,7 @@ tests:
       expectedTitlePattern: groceries
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: presentation-afternoon-window
@@ -343,7 +343,7 @@ tests:
       expectedTitlePattern: presentation
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: jordan-office-planning
@@ -357,7 +357,7 @@ tests:
       expectedDuration: 90
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: search-after-lunch
@@ -369,7 +369,7 @@ tests:
       expectedIntent: search
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: free-time-tomorrow-morning
@@ -381,7 +381,7 @@ tests:
       expectedIntent: schedule_gap_fill
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: cancel-dentist
@@ -394,7 +394,7 @@ tests:
       expectedTargetTitlePattern: dentist
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: reschedule-meeting
@@ -407,7 +407,7 @@ tests:
       expectedTargetTitlePattern: meeting
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: reading-before-bed
@@ -420,4 +420,4 @@ tests:
       expectedTitlePattern: reading
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts

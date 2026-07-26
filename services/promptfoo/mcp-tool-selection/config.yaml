@@ -1,0 +1,40 @@
+description: 'MCP tool selection — does the model correctly decide when to call get_career_portfolio?'
+
+providers:
+  - id: ollama:chat:gemma4:12b
+    label: gemma4-12b (local)
+    config:
+      temperature: 0
+      tools:
+        - type: function
+          function:
+            name: get_career_portfolio
+            description: Retrieves my career portfolio including work history, skills, and roles
+            parameters:
+              type: object
+              properties: {}
+
+tests:
+  - vars:
+      prompt: Look up my career portfolio and tell me what you find.
+    assert:
+      - type: javascript
+        value: JSON.stringify(output).includes('get_career_portfolio')
+
+  - vars:
+      prompt: What's the weather like in London?
+    assert:
+      - type: javascript
+        value: '!JSON.stringify(output).includes("get_career_portfolio")'
+
+  - vars:
+      prompt: Can you pull up my work experience?
+    assert:
+      - type: javascript
+        value: JSON.stringify(output).includes('get_career_portfolio')
+
+  - vars:
+      prompt: Tell me about your favorite movie.
+    assert:
+      - type: javascript
+        value: '!JSON.stringify(output).includes("get_career_portfolio")'

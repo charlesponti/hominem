@@ -15,11 +15,11 @@ providers:
       temperature: 0
 
 prompts:
-  - id: file://prompts/task-extraction.json
+  - id: file://prompt-v1.json
     label: v1-production
-  - id: file://prompts/task-extraction-v2.json
+  - id: file://prompt-v2.json
     label: v2-candidate
-  - id: file://prompts/task-extraction-v3.json
+  - id: file://prompt-v3.json
     label: v3-candidate
 
 tests:
@@ -31,7 +31,7 @@ tests:
         User: No that's it for now.
     assert:
       - type: javascript
-        value: file://assertions/task-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: no-tasks
@@ -41,7 +41,7 @@ tests:
         User: Just reflecting on the last year I guess.
     assert:
       - type: javascript
-        value: file://assertions/task-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: single-task
@@ -50,7 +50,7 @@ tests:
         Assistant: Got it.
     assert:
       - type: javascript
-        value: file://assertions/task-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: many-tasks
@@ -60,7 +60,7 @@ tests:
         User: Nope that covers it.
     assert:
       - type: javascript
-        value: file://assertions/task-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: implicit-actionable
@@ -70,4 +70,4 @@ tests:
         User: Yeah tell me about it.
     assert:
       - type: javascript
-        value: file://assertions/task-extraction.js
+        value: file://assertions.ts

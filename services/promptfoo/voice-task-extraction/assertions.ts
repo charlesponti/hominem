@@ -1,19 +1,29 @@
-const { parseModelJson } = require('./json-utils');
+import { parseModelJson } from '../shared/json-utils';
 
-// These checks encode real bugs found in a manual + promptfoo eval of gemma4:e2b-mlx:
-//   1. Fabricating priority: "none" instead of omitting the field.
-//   2. Using end-of-day (23:59:59) for a date with no explicit clock time,
-//      instead of the noon default the prompt specifies.
-// Keeping these as concrete assertions (not vibes) is the whole point of a
-// reliable eval — this is exactly the kind of thing a manual read misses on
-// a re-run with a different model or prompt tweak.
+interface AssertionResult {
+  pass: boolean;
+  score: number;
+  reason: string;
+}
 
-function hasNoonTime(isoString) {
+interface Task {
+  title?: string;
+  dueAt?: string;
+  priority?: string;
+}
+
+interface PriorityCheck {
+  expected?: string;
+  mustNotBeOmitted?: boolean;
+  mustBeOmitted?: boolean;
+}
+
+function hasNoonTime(isoString: unknown): boolean {
   return typeof isoString === 'string' && isoString.includes('T12:00:00');
 }
 
-function checkPriority(task, { expected, mustNotBeOmitted, mustBeOmitted } = {}) {
-  const problems = [];
+function checkPriority(task: Task, { expected, mustNotBeOmitted, mustBeOmitted }: PriorityCheck = {}): string[] {
+  const problems: string[] = [];
   if (mustBeOmitted && task.priority !== undefined) {
     problems.push(`priority should be omitted, got ${JSON.stringify(task.priority)}`);
   }
@@ -21,9 +31,7 @@ function checkPriority(task, { expected, mustNotBeOmitted, mustBeOmitted } = {})
     if (task.priority === undefined) {
       problems.push('priority omitted, but explicit urgency language was stated');
     } else if (task.priority === 'none' || task.priority === '') {
-      problems.push(
-        `priority fabricated as ${JSON.stringify(task.priority)} instead of a real value or omission`,
-      );
+      problems.push(`priority fabricated as ${JSON.stringify(task.priority)} instead of a real value or omission`);
     } else if (expected && task.priority !== expected) {
       problems.push(`priority should be "${expected}", got ${JSON.stringify(task.priority)}`);
     }
@@ -31,12 +39,12 @@ function checkPriority(task, { expected, mustNotBeOmitted, mustBeOmitted } = {})
   return problems;
 }
 
-module.exports = function (output, context) {
-  let parsed;
+export = function (output: string, context: { vars: Record<string, unknown> }): AssertionResult {
+  let parsed: { tasks: Task[] };
   try {
-    parsed = parseModelJson(output);
+    parsed = parseModelJson(output) as unknown as { tasks: Task[] };
   } catch (e) {
-    return { pass: false, score: 0, reason: `Invalid JSON: ${e.message}` };
+    return { pass: false, score: 0, reason: `Invalid JSON: ${(e as Error).message}` };
   }
 
   const tasks = parsed.tasks;
@@ -44,8 +52,8 @@ module.exports = function (output, context) {
     return { pass: false, score: 0, reason: 'Missing or non-array "tasks" field' };
   }
 
-  const caseId = context.vars.caseId;
-  const problems = [];
+  const caseId = context.vars.caseId as string;
+  const problems: string[] = [];
 
   if (caseId === 'urgency-and-date') {
     if (tasks.length !== 2) {
@@ -63,15 +71,12 @@ module.exports = function (output, context) {
       }
     }
     if (dentist) {
-      // "no rush" is explicit urgency language per the prompt's own examples.
       problems.push(...checkPriority(dentist, { mustNotBeOmitted: true }));
       if (/urgent|high|asap|critical/i.test(dentist.priority || '')) {
         problems.push(`Dentist task priority "${dentist.priority}" contradicts stated "no rush"`);
       }
       if (dentist.dueAt && !hasNoonTime(dentist.dueAt)) {
-        problems.push(
-          `Dentist task due "next Friday" (no time given) should default to noon, got ${dentist.dueAt}`,
-        );
+        problems.push(`Dentist task due "next Friday" (no time given) should default to noon, got ${dentist.dueAt}`);
       }
     }
   } else if (caseId === 'noon-default') {
@@ -89,7 +94,6 @@ module.exports = function (output, context) {
     }
     const task = tasks[0];
     problems.push(...checkPriority(task, { mustBeOmitted: true }));
-    // Reference is 2026-07-06; "in two weeks" should land in the 2026-07-20 window.
     if (!task.dueAt || !task.dueAt.startsWith('2026-07-2')) {
       problems.push(`Due date should resolve to ~2026-07-20, got ${task.dueAt}`);
     }
@@ -101,7 +105,6 @@ module.exports = function (output, context) {
       return { pass: false, score: 0, reason: `Expected 1 task, got ${tasks.length}` };
     }
     const task = tasks[0];
-    // User said "3pm" explicitly — noon default must NOT override a stated time.
     if (!task.dueAt || !task.dueAt.includes('T15:00:00')) {
       problems.push(`Due date should use the stated 3pm (T15:00:00), got ${task.dueAt}`);
     }
@@ -113,18 +116,12 @@ module.exports = function (output, context) {
     const low = tasks.find((t) => /book|read/i.test(t.title || ''));
     const neutral = tasks.find((t) => /grocer/i.test(t.title || ''));
     if (!highPriorityTask || !low || !neutral) {
-      problems.push(
-        'Could not find all three expected tasks (server/high, book/low, groceries/neutral)',
-      );
+      problems.push('Could not find all three expected tasks (server/high, book/low, groceries/neutral)');
     } else {
-      problems.push(
-        ...checkPriority(highPriorityTask, { expected: 'high', mustNotBeOmitted: true }),
-      );
+      problems.push(...checkPriority(highPriorityTask, { expected: 'high', mustNotBeOmitted: true }));
       problems.push(...checkPriority(low, { mustNotBeOmitted: true }));
       if (low.priority && /high/i.test(low.priority)) {
-        problems.push(
-          `Book task priority "${low.priority}" contradicts stated "whenever I get a chance"`,
-        );
+        problems.push(`Book task priority "${low.priority}" contradicts stated "whenever I get a chance"`);
       }
       problems.push(...checkPriority(neutral, { mustBeOmitted: true }));
     }
@@ -139,4 +136,4 @@ module.exports = function (output, context) {
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'All checks passed' };
-};
+}

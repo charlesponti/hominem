@@ -18,7 +18,7 @@ providers:
       max_tokens: 768
 
 prompts:
-  - id: file://prompts/time-block-extraction.json
+  - id: file://prompt.json
     label: v1-production-contract
 
 tests:
@@ -38,7 +38,7 @@ tests:
       nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: future-window
@@ -55,7 +55,7 @@ tests:
       nullFields: 'participants,location,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: availability-with-window
@@ -70,7 +70,7 @@ tests:
       nullFields: 'participants,location,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: appointment-without-clock
@@ -86,7 +86,7 @@ tests:
       nullFields: 'participants,location,duration,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts
 
   - vars:
       caseId: search-never-creates
@@ -99,4 +99,4 @@ tests:
       nullFields: 'title,participants,location,duration,start_time,end_time,deadline_fixed'
     assert:
       - type: javascript
-        value: file://assertions/time-block-extraction.js
+        value: file://assertions.ts

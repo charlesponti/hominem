@@ -1,11 +1,75 @@
-const { parseModelJson } = require('./json-utils');
+import { parseModelJson } from '../shared/json-utils';
 
-module.exports = function (output, context) {
-  let parsed;
+interface AssertionResult {
+  pass: boolean;
+  score: number;
+  reason: string;
+}
+
+interface Offer {
+  baseSalary?: number;
+  currency?: string;
+  currencyAmbiguous?: boolean;
+  location?: string;
+  hasEquity?: boolean;
+  equityType?: string;
+  equityValue?: number;
+  equityGrantTotal?: number;
+  equityCliff?: number;
+  equityVestingFrequency?: string;
+  hasBonus?: boolean;
+  requiresVisa?: boolean;
+  visaType?: string;
+  relocationAllowance?: number;
+  employmentType?: string;
+}
+
+interface Person {
+  filingStatus?: string;
+  homeCity?: string;
+  currentSavings?: number;
+  currentRetirement?: number;
+  petCount?: number;
+}
+
+interface Parsed {
+  offers: Offer[];
+  person: Person;
+}
+
+function locMatch(val: string | undefined | null, expected: string): boolean {
+  if (!val) return false;
+  const norm = val.toLowerCase().replace(/[-\s]+/g, ' ');
+  return norm.includes(expected.toLowerCase());
+}
+
+function check<T>(val: T, expected: T, label: string): AssertionResult | null {
+  if (val !== expected) {
+    return { pass: false, score: 0, reason: `Expected ${label} = ${JSON.stringify(expected)}, got ${JSON.stringify(val)}` };
+  }
+  return null;
+}
+
+function checkLoc(val: string | undefined | null, expected: string, label: string): AssertionResult | null {
+  if (!locMatch(val, expected)) {
+    return { pass: false, score: 0, reason: `Expected ${label} matching "${expected}", got ${JSON.stringify(val)}` };
+  }
+  return null;
+}
+
+function all(...checks: Array<AssertionResult | null>): AssertionResult {
+  for (const c of checks) {
+    if (c) return c;
+  }
+  return { pass: true, score: 1, reason: 'Passed' };
+}
+
+export = function (output: string, context: { vars: Record<string, unknown> }): AssertionResult {
+  let parsed: Parsed;
   try {
-    parsed = parseModelJson(output);
+    parsed = parseModelJson(output) as unknown as Parsed;
   } catch (e) {
-    return { pass: false, score: 0, reason: `Invalid JSON: ${e.message}` };
+    return { pass: false, score: 0, reason: `Invalid JSON: ${(e as Error).message}` };
   }
 
   const offers = parsed.offers;
@@ -17,36 +81,9 @@ module.exports = function (output, context) {
     return { pass: false, score: 0, reason: 'Missing "person" object' };
   }
 
-  function locMatch(val, expected) {
-    if (!val) return false;
-    const norm = val.toLowerCase().replace(/[-\s]+/g, ' ');
-    return norm.includes(expected.toLowerCase());
-  }
-
-  function check(val, expected, label) {
-    if (val !== expected) {
-      return { pass: false, score: 0, reason: `Expected ${label} = ${JSON.stringify(expected)}, got ${JSON.stringify(val)}` };
-    }
-    return null;
-  }
-
-  function checkLoc(val, expected, label) {
-    if (!locMatch(val, expected)) {
-      return { pass: false, score: 0, reason: `Expected ${label} matching "${expected}", got ${JSON.stringify(val)}` };
-    }
-    return null;
-  }
-
-  function all(...checks) {
-    for (const c of checks) {
-      if (c) return c;
-    }
-    return { pass: true, score: 1, reason: 'Passed' };
-  }
-
-  const caseId = context.vars.caseId;
-  const o = offers[0] || {};
-  const p = parsed.person || {};
+  const caseId = context.vars.caseId as string;
+  const o = offers[0] || ({} as Offer);
+  const p = parsed.person || ({} as Person);
 
   switch (caseId) {
     case 'la-baseline':
@@ -129,13 +166,12 @@ module.exports = function (output, context) {
       );
   }
 
-  // ============ Global location tests — generic checker ============
-
+  // Global location tests — generic checker
   {
-    const expectedCurrency = context.vars.expectedCurrency;
-    const expectedLocation = context.vars.expectedLocation;
-    const expectedBase = context.vars.expectedBase;
-    const checks = [];
+    const expectedCurrency = context.vars.expectedCurrency as string | undefined;
+    const expectedLocation = context.vars.expectedLocation as string | undefined;
+    const expectedBase = context.vars.expectedBase as number | undefined;
+    const checks: Array<AssertionResult | null> = [];
 
     if (expectedCurrency !== undefined) checks.push(check(o.currency, expectedCurrency, 'currency'));
     if (expectedLocation !== undefined) checks.push(checkLoc(o.location, expectedLocation, 'location'));
@@ -144,9 +180,9 @@ module.exports = function (output, context) {
     if (context.vars.expectAmbiguousCurrency) checks.push(check(o.currencyAmbiguous, true, 'currencyAmbiguous'));
     if (context.vars.expectEquity) checks.push(check(o.hasEquity, true, 'hasEquity'));
     if (context.vars.expectBonus) checks.push(check(o.hasBonus, true, 'hasBonus'));
-    if (context.vars.expectFilingStatus) checks.push(check(p.filingStatus, context.vars.expectFilingStatus, 'filingStatus'));
-    if (context.vars.expectEmploymentType) checks.push(check(o.employmentType, context.vars.expectEmploymentType, 'employmentType'));
-    if (context.vars.expectOffersCount) checks.push(check(offers.length, context.vars.expectOffersCount, 'offers.length'));
+    if (context.vars.expectFilingStatus) checks.push(check(p.filingStatus, context.vars.expectFilingStatus as string, 'filingStatus'));
+    if (context.vars.expectEmploymentType) checks.push(check(o.employmentType, context.vars.expectEmploymentType as string, 'employmentType'));
+    if (context.vars.expectOffersCount) checks.push(check(offers.length, context.vars.expectOffersCount as number, 'offers.length'));
 
     if (checks.length === 0) {
       return { pass: false, score: 0, reason: `Unknown caseId: ${caseId}` };
@@ -154,8 +190,8 @@ module.exports = function (output, context) {
 
     const result = all(...checks);
     if (result.pass && context.vars.expectedReason) {
-      return { pass: true, score: 1, reason: context.vars.expectedReason };
+      return { pass: true, score: 1, reason: context.vars.expectedReason as string };
     }
     return result;
   }
-};
+}

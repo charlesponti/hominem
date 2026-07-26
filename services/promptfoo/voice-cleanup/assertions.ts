@@ -1,11 +1,17 @@
-const { parseModelJson } = require('./json-utils');
+import { parseModelJson } from '../shared/json-utils';
 
-module.exports = function (output, context) {
-  let parsed;
+interface AssertionResult {
+  pass: boolean;
+  score: number;
+  reason: string;
+}
+
+export = function (output: string, context: { vars: Record<string, unknown> }): AssertionResult {
+  let parsed: { cleanedText: string };
   try {
-    parsed = parseModelJson(output);
+    parsed = parseModelJson(output) as unknown as { cleanedText: string };
   } catch (e) {
-    return { pass: false, score: 0, reason: `Invalid JSON: ${e.message}` };
+    return { pass: false, score: 0, reason: `Invalid JSON: ${(e as Error).message}` };
   }
 
   const cleaned = parsed.cleanedText;
@@ -14,9 +20,9 @@ module.exports = function (output, context) {
   }
 
   const lower = cleaned.toLowerCase();
-  const problems = [];
+  const problems: string[] = [];
 
-  const mustKeep = context.vars.mustPreserve ? JSON.parse(context.vars.mustPreserve) : [];
+  const mustKeep: string[] = context.vars.mustPreserve ? JSON.parse(context.vars.mustPreserve as string) : [];
   for (const term of mustKeep) {
     if (!lower.includes(term.toLowerCase())) {
       problems.push(`Lost preserved detail: "${term}"`);
@@ -33,4 +39,4 @@ module.exports = function (output, context) {
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'Filler removed, key details preserved' };
-};
+}

@@ -9,7 +9,6 @@ TEST_AUTH_E2E_SECRET := 'otp-secret'
 
 mod db 'just/db.just'
 mod deploy 'just/deploy.just'
-mod eval 'just/eval.just'
 mod mcp 'just/mcp.just'
 mod mobile 'just/mobile.just'
 

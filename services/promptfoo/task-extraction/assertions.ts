@@ -1,11 +1,21 @@
-const { parseModelJson } = require('./json-utils');
+import { parseModelJson } from '../shared/json-utils';
 
-module.exports = function (output, context) {
-  let parsed;
+interface AssertionResult {
+  pass: boolean;
+  score: number;
+  reason: string;
+}
+
+interface Task {
+  title?: string;
+}
+
+export = function (output: string, context: { vars: Record<string, unknown> }): AssertionResult {
+  let parsed: { tasks: Task[] };
   try {
-    parsed = parseModelJson(output);
+    parsed = parseModelJson(output) as unknown as { tasks: Task[] };
   } catch (e) {
-    return { pass: false, score: 0, reason: `Invalid JSON: ${e.message}` };
+    return { pass: false, score: 0, reason: `Invalid JSON: ${(e as Error).message}` };
   }
 
   const tasks = parsed.tasks;
@@ -13,7 +23,7 @@ module.exports = function (output, context) {
     return { pass: false, score: 0, reason: 'Missing or non-array "tasks" field' };
   }
 
-  const caseId = context.vars.caseId;
+  const caseId = context.vars.caseId as string;
 
   if (caseId === 'multi-task') {
     if (tasks.length !== 2) {
@@ -22,8 +32,7 @@ module.exports = function (output, context) {
     const titles = tasks.map((t) => (t.title || '').toLowerCase());
     if (titles.some((t) => t.includes('repaint'))) {
       return {
-        pass: false,
-        score: 0,
+        pass: false, score: 0,
         reason: 'Fabricated a task from the non-actionable "maybe repainting... at some point" mention',
       };
     }
@@ -52,8 +61,6 @@ module.exports = function (output, context) {
   }
 
   if (caseId === 'implicit-actionable') {
-    // The user never says "I need to" — the actionable item is implied by
-    // narrating a problem with an obvious required next step.
     if (tasks.length !== 1) {
       return { pass: false, score: 0, reason: `Expected 1 task, got ${tasks.length}` };
     }
@@ -65,4 +72,4 @@ module.exports = function (output, context) {
   }
 
   return { pass: false, score: 0, reason: `Unknown caseId: ${caseId}` };
-};
+}

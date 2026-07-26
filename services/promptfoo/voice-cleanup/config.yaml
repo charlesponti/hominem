@@ -11,7 +11,7 @@ providers:
       temperature: 0
 
 prompts:
-  - file://prompts/voice-cleanup.json
+  - file://prompt.json
 
 tests:
   - vars:
@@ -20,18 +20,18 @@ tests:
         john about the uh about the meeting on thursday i think it's at like 3pm or something
       # Encoded as a JSON string, not a YAML list — promptfoo treats a plain
       # YAML-list var as a test-case matrix (one row per element) rather than
-      # a single array value. See assertions/voice-cleanup.js for the parse side.
+      # a single array value. See assertions/voice-cleanup.ts for the parse side.
       mustPreserve: '["dry cleaning", "john", "thursday", "3"]'
     assert:
       - type: javascript
-        value: file://assertions/voice-cleanup.js
+        value: file://assertions.ts
 
   - vars:
       rawText: 'i i need to call call the the bank about about my account tomorrow'
       mustPreserve: '["bank", "account", "tomorrow"]'
     assert:
       - type: javascript
-        value: file://assertions/voice-cleanup.js
+        value: file://assertions.ts
 
   - vars:
       rawText: >-
@@ -40,7 +40,7 @@ tests:
       mustPreserve: '["sarah", "4521", "fifteenth"]'
     assert:
       - type: javascript
-        value: file://assertions/voice-cleanup.js
+        value: file://assertions.ts
 
   - vars:
       # No filler at all — the prompt says "if uncertain, return the original
@@ -50,4 +50,4 @@ tests:
       mustPreserve: '["milk", "eggs", "way home"]'
     assert:
       - type: javascript
-        value: file://assertions/voice-cleanup.js
+        value: file://assertions.ts

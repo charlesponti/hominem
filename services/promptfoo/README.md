@@ -3,13 +3,13 @@
 Run the time-block regression suite while iterating on the extraction prompt:
 
 ```bash
-pnpm exec promptfoo eval -c experiments/promptfoo/time-block-extraction.config.yaml --no-cache
+pnpm exec promptfoo eval -c services/promptfoo/time-block-extraction.config.yaml --no-cache
 ```
 
 Run the held-out release suite only after selecting a prompt/model candidate:
 
 ```bash
-pnpm exec promptfoo eval -c experiments/promptfoo/time-block-extraction-holdout.config.yaml --no-cache
+pnpm exec promptfoo eval -c services/promptfoo/time-block-extraction-holdout.config.yaml --no-cache
 ```
 
 Both suites use fixed date/time and timezone context. They score JSON shape,

@@ -15,7 +15,7 @@ providers:
       temperature: 0.7
 
 prompts:
-  - file://prompts/chat-assistant.json
+  - file://prompt.json
 
 # llm-rubric needs a judge model with a real API key. Pin it explicitly so this
 # doesn't silently fall back to whatever credential happens to be present.

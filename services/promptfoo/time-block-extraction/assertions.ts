@@ -1,63 +1,77 @@
-const { parseModelJson } = require('./json-utils');
+import { parseModelJson } from '../shared/json-utils';
+
+interface AssertionResult {
+  pass: boolean;
+  score: number;
+  reason: string;
+}
+
+interface TimeBlock {
+  primary_intent?: string;
+  title?: string;
+  target_title?: string;
+  participants?: string[];
+  location?: string;
+  duration?: number;
+  start_time?: string;
+  end_time?: string;
+  scheduling_window_start?: string;
+  scheduling_window_end?: string;
+  deadline_fixed?: boolean;
+  recurrence_rule?: string;
+  [key: string]: unknown;
+}
 
 const FIELDS = [
-  'primary_intent',
-  'title',
-  'target_title',
-  'participants',
-  'location',
-  'duration',
-  'start_time',
-  'end_time',
-  'scheduling_window_start',
-  'scheduling_window_end',
-  'deadline_fixed',
-  'recurrence_rule',
-];
+  'primary_intent', 'title', 'target_title', 'participants', 'location',
+  'duration', 'start_time', 'end_time', 'scheduling_window_start',
+  'scheduling_window_end', 'deadline_fixed', 'recurrence_rule',
+] as const;
 
-function parseList(value) {
+function parseList(value: string | undefined): string[] {
   return value ? value.split(/[|,]/).map((item) => item.trim()).filter(Boolean) : [];
 }
 
-function normalize(value) {
+function normalize(value: string): string {
   return String(value).trim().toLowerCase();
 }
 
-function sameInstant(actual, expected) {
+function sameInstant(actual: string | undefined, expected: string): boolean {
+  if (!actual) return false;
   const actualTime = Date.parse(actual);
   const expectedTime = Date.parse(expected);
   return Number.isFinite(actualTime) && actualTime === expectedTime;
 }
 
-module.exports = function (output, context) {
-  let block;
+export = function (output: string, context: { vars: Record<string, unknown> }): AssertionResult {
+  let block: TimeBlock;
   try {
-    block = parseModelJson(output);
+    block = parseModelJson(output) as unknown as TimeBlock;
   } catch (error) {
-    return { pass: false, score: 0, reason: `Invalid JSON: ${error.message}` };
+    return { pass: false, score: 0, reason: `Invalid JSON: ${(error as Error).message}` };
   }
 
-  const problems = [];
+  const problems: string[] = [];
   for (const field of FIELDS) {
     if (!(field in block)) problems.push(`Missing required field ${field}`);
   }
 
-  const expectedIntent = context.vars.expectedIntent;
-  if (block.primary_intent !== expectedIntent) {
+  const expectedIntent = context.vars.expectedIntent as string | undefined;
+  if (expectedIntent && block.primary_intent !== expectedIntent) {
     problems.push(`Expected intent ${expectedIntent}, got ${JSON.stringify(block.primary_intent)}`);
   }
 
   if (context.vars.expectedTitlePattern) {
-    const pattern = new RegExp(context.vars.expectedTitlePattern, 'i');
+    const pattern = new RegExp(context.vars.expectedTitlePattern as string, 'i');
     if (typeof block.title !== 'string' || !pattern.test(block.title)) {
-      problems.push(`Title ${JSON.stringify(block.title)} does not match ${pattern}`);
+      problems.push(`Title ${JSON.stringify(block.title)} does not match ${String(pattern)}`);
     }
   }
 
   if (context.vars.expectedTargetTitlePattern) {
-    const pattern = new RegExp(context.vars.expectedTargetTitlePattern, 'i');
+    const pattern = new RegExp(context.vars.expectedTargetTitlePattern as string, 'i');
     if (typeof block.target_title !== 'string' || !pattern.test(block.target_title)) {
-      problems.push(`Target title ${JSON.stringify(block.target_title)} does not match ${pattern}`);
+      problems.push(`Target title ${JSON.stringify(block.target_title)} does not match ${String(pattern)}`);
     }
   }
 
@@ -69,18 +83,18 @@ module.exports = function (output, context) {
   }
 
   if (context.vars.expectedStartTime) {
-    if (typeof block.start_time !== 'string' || !sameInstant(block.start_time, context.vars.expectedStartTime)) {
+    if (typeof block.start_time !== 'string' || !sameInstant(block.start_time, context.vars.expectedStartTime as string)) {
       problems.push(`Expected start_time ${context.vars.expectedStartTime}, got ${JSON.stringify(block.start_time)}`);
     }
   }
 
   if (context.vars.expectedEndTime) {
-    if (typeof block.end_time !== 'string' || !sameInstant(block.end_time, context.vars.expectedEndTime)) {
+    if (typeof block.end_time !== 'string' || !sameInstant(block.end_time, context.vars.expectedEndTime as string)) {
       problems.push(`Expected end_time ${context.vars.expectedEndTime}, got ${JSON.stringify(block.end_time)}`);
     }
   }
 
-  if (context.vars.expectedDeadline && block.deadline_fixed !== context.vars.expectedDeadline) {
+  if (context.vars.expectedDeadline && block.deadline_fixed !== (context.vars.expectedDeadline as boolean)) {
     problems.push(`Expected deadline_fixed ${context.vars.expectedDeadline}, got ${JSON.stringify(block.deadline_fixed)}`);
   }
 
@@ -94,18 +108,18 @@ module.exports = function (output, context) {
   }
 
   if (context.vars.expectedWindowStart) {
-    if (typeof block.scheduling_window_start !== 'string' || !sameInstant(block.scheduling_window_start, context.vars.expectedWindowStart)) {
+    if (typeof block.scheduling_window_start !== 'string' || !sameInstant(block.scheduling_window_start, context.vars.expectedWindowStart as string)) {
       problems.push(`Expected scheduling_window_start ${context.vars.expectedWindowStart}, got ${JSON.stringify(block.scheduling_window_start)}`);
     }
   }
 
   if (context.vars.expectedWindowEnd) {
-    if (typeof block.scheduling_window_end !== 'string' || !sameInstant(block.scheduling_window_end, context.vars.expectedWindowEnd)) {
+    if (typeof block.scheduling_window_end !== 'string' || !sameInstant(block.scheduling_window_end, context.vars.expectedWindowEnd as string)) {
       problems.push(`Expected scheduling_window_end ${context.vars.expectedWindowEnd}, got ${JSON.stringify(block.scheduling_window_end)}`);
     }
   }
 
-  const expectedParticipants = parseList(context.vars.expectedParticipants).map(normalize).sort();
+  const expectedParticipants = parseList(context.vars.expectedParticipants as string | undefined).map(normalize).sort();
   if (expectedParticipants.length) {
     if (!Array.isArray(block.participants)) {
       problems.push(`Expected participants ${expectedParticipants.join(', ')}, got ${JSON.stringify(block.participants)}`);
@@ -117,7 +131,7 @@ module.exports = function (output, context) {
     }
   }
 
-  for (const field of parseList(context.vars.nullFields)) {
+  for (const field of parseList(context.vars.nullFields as string | undefined)) {
     if (block[field] !== null) {
       problems.push(`Expected ${field} to be null, got ${JSON.stringify(block[field])}`);
     }
@@ -126,4 +140,4 @@ module.exports = function (output, context) {
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'All structured time-block assertions passed' };
-};
+}
