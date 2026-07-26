@@ -136,3 +136,4 @@ build/
 # Credentials
 credentials/
 credentials.json
+owid-covid-data.csv
