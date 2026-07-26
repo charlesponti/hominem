@@ -40,14 +40,14 @@ describe('LA vs London — real case from comparison doc', () => {
     const costs = computeMovingCosts({
       origin: 'los-angeles',
       dest: 'london',
-      hasDog: true,
+      petCount: 1,
       boxCount: 6,
     });
 
     const paris = costs.find((c) => c.route === 'paris-eurotunnel');
     expect(paris).toBeDefined();
     expect(paris!.total).toBeLessThanOrEqual(6_300);
-    expect(paris!.pet).toBeLessThanOrEqual(1_500);
+    expect(paris!.pet).toBe(1_150);
 
     const cargo = costs.find((c) => c.route === 'direct-cargo');
     expect(cargo).toBeDefined();
@@ -90,7 +90,7 @@ describe('LA vs London — real case from comparison doc', () => {
         homeCity: 'los-angeles',
         currentSavings: 40_000,
         currentRetirement: 80_000,
-        hasDog: true,
+        petCount: 1,
       },
       {
         city: 'los-angeles',

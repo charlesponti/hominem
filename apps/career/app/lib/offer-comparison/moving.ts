@@ -9,43 +9,36 @@ export interface MovingCosts {
 interface MovingInput {
   origin: string;
   dest: string;
-  hasDog: boolean;
+  petCount: number;
   boxCount: number;
 }
 
-const LA_LDN_ROUTES: Record<string, MovingCosts[]> = {
+interface RouteBase {
+  petPerPet: number;
+  shipping: number;
+  furniture: number;
+  route: MovingCosts['route'];
+}
+
+const LA_LDN_ROUTES: Record<string, RouteBase[]> = {
   'los-angeles→london': [
-    {
-      pet: 4_000,
-      shipping: 600,
-      furniture: 3_350,
-      total: 7_950,
-      route: 'direct-cargo',
-    },
-    {
-      pet: 1_150,
-      shipping: 600,
-      furniture: 3_350,
-      total: 5_100,
-      route: 'paris-eurotunnel',
-    },
+    { petPerPet: 4_000, shipping: 600, furniture: 3_350, route: 'direct-cargo' },
+    { petPerPet: 1_150, shipping: 600, furniture: 3_350, route: 'paris-eurotunnel' },
   ],
 };
 
 export function computeMovingCosts(input: MovingInput): MovingCosts[] {
   const key = `${input.origin}→${input.dest}`;
-  const routes = LA_LDN_ROUTES[key];
-  if (routes && input.hasDog) return routes;
-  if (routes && !input.hasDog) {
-    return routes.map((r) => {
-      const zeroed = { ...r, pet: 0 };
-      zeroed.total = zeroed.pet + zeroed.shipping + zeroed.furniture;
-      return zeroed;
+  const routeBase = LA_LDN_ROUTES[key];
+  if (routeBase) {
+    return routeBase.map((r) => {
+      const pet = input.petCount * r.petPerPet;
+      return { ...r, pet, total: pet + r.shipping + r.furniture };
     });
   }
 
   const base = {
-    pet: input.hasDog ? 5_000 : 0,
+    pet: input.petCount * 5_000,
     shipping: 150 + input.boxCount * 75,
     furniture: 3_000,
   };

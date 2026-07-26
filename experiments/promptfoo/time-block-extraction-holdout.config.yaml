@@ -1,0 +1,102 @@
+description: 'Structured time-block extraction — held-out release gate'
+
+providers:
+  - id: ollama:chat:gemma4:e2b-mlx
+    label: gemma4-e2b-mlx (local)
+    config:
+      temperature: 0
+      max_tokens: 768
+  - id: openrouter:qwen/qwen3.5-flash-02-23
+    label: qwen3.5-flash (production candidate)
+    config:
+      temperature: 0
+      max_tokens: 768
+  - id: openrouter:google/gemini-2.5-flash-lite
+    label: gemini-2.5-flash-lite (comparison)
+    config:
+      temperature: 0
+      max_tokens: 768
+
+prompts:
+  - id: file://prompts/time-block-extraction.json
+    label: v1-production-contract
+
+tests:
+  - vars:
+      caseId: dst-fixed-event
+      referenceDateTime: '2026-10-31T10:00:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Team sync with Mia at 9 AM tomorrow for 30 minutes'
+      expectedIntent: add_event
+      expectedTitlePattern: 'team.*sync|sync'
+      expectedParticipants: Mia
+      expectedDuration: 30
+      expectedStartTime: '2026-11-01T09:00:00-08:00'
+      expectedEndTime: '2026-11-01T09:30:00-08:00'
+      nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: future-window
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Need to plan the quarterly roadmap next week for three hours'
+      expectedIntent: add_task
+      expectedTitlePattern: 'quarterly.*roadmap|roadmap'
+      expectedDuration: 180
+      expectedWindowStart: '2026-07-27T00:00:00-07:00'
+      expectedWindowEnd: '2026-08-03T00:00:00-07:00'
+      nullFields: 'participants,location,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: availability-with-window
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Monday 13:00–14:00 busy; Monday 16:00–17:30 busy.'
+      conversationContext: 'None.'
+      input: 'Find a 90 minute gap Monday afternoon for a design review'
+      expectedIntent: schedule_gap_fill
+      expectedTitlePattern: 'design.*review|review'
+      expectedDuration: 90
+      nullFields: 'participants,location,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: appointment-without-clock
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Schedule a dentist appointment Monday'
+      expectedIntent: add_event
+      expectedTitlePattern: dentist
+      expectedWindowStart: '2026-07-27T00:00:00-07:00'
+      expectedWindowEnd: '2026-07-28T00:00:00-07:00'
+      nullFields: 'participants,location,duration,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: search-never-creates
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'What deadlines do I have this week?'
+      expectedIntent: search
+      nullFields: 'title,participants,location,duration,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js

@@ -1,0 +1,423 @@
+description: 'Structured time-block extraction — intent, temporal grounding, and no-invention safety'
+
+providers:
+  - id: ollama:chat:gemma4:e2b-mlx
+    label: gemma4-e2b-mlx (local)
+    config:
+      temperature: 0
+      max_tokens: 768
+  - id: openrouter:qwen/qwen3.5-flash-02-23
+    label: qwen3.5-flash (production candidate)
+    config:
+      temperature: 0
+      max_tokens: 768
+  - id: openrouter:google/gemini-2.5-flash-lite
+    label: gemini-2.5-flash-lite (comparison)
+    config:
+      temperature: 0
+      max_tokens: 768
+
+prompts:
+  - id: file://prompts/time-block-extraction.json
+    label: v1-production-contract
+
+tests:
+  - vars:
+      caseId: fixed-event
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Meeting with Sarah at 10 AM tomorrow for an hour'
+      expectedIntent: add_event
+      expectedTitlePattern: 'meeting|sarah'
+      expectedParticipants: Sarah
+      expectedDuration: 60
+      expectedStartTime: '2026-07-26T10:00:00-07:00'
+      expectedEndTime: '2026-07-26T11:00:00-07:00'
+      nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: flexible-task
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Need to write pitch deck tomorrow 2h'
+      expectedIntent: add_task
+      expectedTitlePattern: 'write.*pitch|pitch.*deck'
+      expectedDuration: 120
+      expectedWindowStart: '2026-07-26T00:00:00-07:00'
+      expectedWindowEnd: '2026-07-27T00:00:00-07:00'
+      nullFields: 'participants,location,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: tonight
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Gym tonight for 1h'
+      expectedIntent: add_event
+      expectedTitlePattern: gym
+      expectedDuration: 60
+      nullFields: 'participants,location,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: gap-fill
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Tuesday 10:00–11:00 busy; Wednesday 14:00–15:00 busy.'
+      conversationContext: 'Alex is a colleague.'
+      input: 'When can I meet with Alex this week for 30m?'
+      expectedIntent: schedule_gap_fill
+      expectedTitlePattern: 'meet|alex'
+      expectedParticipants: Alex
+      expectedDuration: 30
+      nullFields: 'location,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: schedule-search
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Today: design review at 14:00.'
+      conversationContext: 'None.'
+      input: 'What do I have going on today?'
+      expectedIntent: search
+      nullFields: 'title,participants,location,duration,start_time,end_time,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: explicit-deadline
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Need to finish the expense report by Friday'
+      expectedIntent: add_task
+      expectedTitlePattern: 'finish.*expense|expense.*report'
+      expectedDeadline: '2026-07-31'
+      nullFields: 'participants,location,duration,start_time,end_time,scheduling_window_start,scheduling_window_end'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: correction-wins
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Lunch with Morgan tomorrow at 10—actually Friday at 2 PM for 45 minutes'
+      expectedIntent: add_event
+      expectedTitlePattern: lunch
+      expectedParticipants: Morgan
+      expectedDuration: 45
+      expectedStartTime: '2026-07-31T14:00:00-07:00'
+      expectedEndTime: '2026-07-31T14:45:00-07:00'
+      nullFields: 'location,scheduling_window_start,scheduling_window_end,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: no-invention
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'I should organize the studio sometime'
+      expectedIntent: add_task
+      expectedTitlePattern: 'organize.*studio|studio'
+      nullFields: 'participants,location,duration,start_time,end_time,scheduling_window_start,scheduling_window_end,deadline_fixed'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: call-mom-sunday-afternoon
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Call Mom Sunday afternoon for 30 minutes'
+      expectedIntent: add_event
+      expectedTitlePattern: 'call.*mom|mom'
+      expectedDuration: 30
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: deep-work-tomorrow-morning
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Block two hours for deep work tomorrow morning'
+      expectedIntent: add_event
+      expectedTitlePattern: 'deep work'
+      expectedDuration: 120
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: dentist-monday-afternoon
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Dentist appointment Monday at 3 PM'
+      expectedIntent: add_event
+      expectedTitlePattern: dentist
+      expectedStartTime: '2026-07-27T15:00:00-07:00'
+      expectedEndTime: '2026-07-27T16:00:00-07:00'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: lunch-alex-next-thursday
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Lunch with Alex next Thursday at noon'
+      expectedIntent: add_event
+      expectedTitlePattern: lunch
+      expectedParticipants: Alex
+      expectedStartTime: '2026-07-30T12:00:00-07:00'
+      expectedEndTime: '2026-07-30T13:00:00-07:00'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: submit-invoice-friday
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Remind me to submit the invoice by Friday'
+      expectedIntent: add_task
+      expectedTitlePattern: 'submit.*invoice|invoice'
+      expectedDeadline: '2026-07-31'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: board-meeting-next-week
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'I need to prepare for the board meeting sometime next week'
+      expectedIntent: add_task
+      expectedTitlePattern: 'prepare.*board|board.*meeting'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: find-slot-sarah
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Sarah is busy Monday 9:00–10:00 and Tuesday 13:00–14:00.'
+      conversationContext: 'Sarah is a colleague.'
+      input: 'Find me a 45-minute slot with Sarah this week'
+      expectedIntent: schedule_gap_fill
+      expectedParticipants: Sarah
+      expectedDuration: 45
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: workout-tomorrow
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'When can I work out tomorrow?'
+      expectedIntent: schedule_gap_fill
+      expectedTitlePattern: work out|workout
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: move-meeting-time
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Existing event: planning meeting from 2026-07-26T14:00:00-07:00 to 2026-07-26T15:00:00-07:00.'
+      conversationContext: 'None.'
+      input: 'Move my 2 PM meeting to 4 PM'
+      expectedIntent: edit_event
+      expectedTargetTitlePattern: meeting
+      expectedStartTime: '2026-07-26T16:00:00-07:00'
+      expectedEndTime: '2026-07-26T17:00:00-07:00'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: correction-friday
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Schedule it tomorrow at 10, actually Friday at 2 PM'
+      expectedIntent: add_event
+      expectedStartTime: '2026-07-31T14:00:00-07:00'
+      expectedEndTime: '2026-07-31T15:00:00-07:00'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: recurring-team-sync
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Add a team sync every Monday at 9 AM'
+      expectedIntent: add_recurring_event
+      expectedTitlePattern: team sync|sync
+      expectedRecurrenceRule: 'FREQ=WEEKLY;BYDAY=MO'
+      expectedStartTime: '2026-07-27T09:00:00-07:00'
+      expectedEndTime: '2026-07-27T10:00:00-07:00'
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: haircut-saturday-morning
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Book a haircut sometime Saturday morning'
+      expectedIntent: add_event
+      expectedTitlePattern: haircut
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: groceries-after-work
+      referenceDateTime: '2026-07-25T17:30:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Plan groceries after work today'
+      expectedIntent: add_task
+      expectedTitlePattern: groceries
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: presentation-afternoon-window
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Work on the presentation between 2 and 5 PM'
+      expectedIntent: add_event
+      expectedTitlePattern: presentation
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: jordan-office-planning
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'Jordan is a colleague.'
+      input: 'Schedule 90 minutes with Jordan at the office'
+      expectedIntent: add_event
+      expectedParticipants: Jordan
+      expectedDuration: 90
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: search-after-lunch
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Today: design review at 14:00.'
+      conversationContext: 'None.'
+      input: 'What do I have scheduled after lunch?'
+      expectedIntent: search
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: free-time-tomorrow-morning
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Tomorrow: standup at 9:00; focus time at 11:00.'
+      conversationContext: 'None.'
+      input: 'Do I have any free time tomorrow morning?'
+      expectedIntent: schedule_gap_fill
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: cancel-dentist
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Existing event: dentist appointment Monday at 3 PM.'
+      conversationContext: 'None.'
+      input: 'Cancel my dentist appointment'
+      expectedIntent: cancel_event
+      expectedTargetTitlePattern: dentist
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: reschedule-meeting
+      referenceDateTime: '2026-07-25T11:17:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'Existing event: meeting Sunday at 10 AM.'
+      conversationContext: 'None.'
+      input: "I can't make the 10 AM meeting—find another time"
+      expectedIntent: edit_event
+      expectedTargetTitlePattern: meeting
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js
+
+  - vars:
+      caseId: reading-before-bed
+      referenceDateTime: '2026-07-25T21:00:00-07:00'
+      timezone: America/Los_Angeles
+      calendarContext: 'No calendar data supplied.'
+      conversationContext: 'None.'
+      input: 'Put reading before bed tonight'
+      expectedIntent: add_event
+      expectedTitlePattern: reading
+    assert:
+      - type: javascript
+        value: file://assertions/time-block-extraction.js

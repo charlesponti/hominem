@@ -12,7 +12,7 @@ export interface Person {
   homeCity: string;
   currentSavings: number;
   currentRetirement: number;
-  hasDog: boolean;
+  petCount: number;
 }
 
 export interface Offer {
@@ -99,7 +99,7 @@ export function compareOffers(person: Person, offerA: Offer, offerB: Offer): Off
   const moving = computeMovingCosts({
     origin: person.homeCity,
     dest: offerB.city,
-    hasDog: person.hasDog,
+    petCount: person.petCount,
     boxCount: 6,
   });
 
