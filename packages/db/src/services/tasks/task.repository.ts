@@ -6,6 +6,17 @@ import type { AppTasks } from '../../types/database';
 
 type TaskRow = Selectable<AppTasks>;
 
+export interface TaskParticipantRecord {
+  id: string;
+  displayName: string;
+  email: string | null;
+}
+
+export interface TaskParticipantInput {
+  displayName: string;
+  email?: string | null;
+}
+
 export interface TaskRecord {
   id: string;
   ownerUserId: string;
@@ -15,6 +26,13 @@ export interface TaskRecord {
   status: string;
   priority: string;
   dueAt: string | null;
+  durationMinutes: number | null;
+  schedulingWindowStartAt: string | null;
+  schedulingWindowEndAt: string | null;
+  scheduledStartAt: string | null;
+  scheduledEndAt: string | null;
+  timeZone: string | null;
+  location: string | null;
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +47,13 @@ export interface CreateTaskInput {
   parentTaskId?: string | null;
   priority?: string;
   dueAt?: string | null;
+  durationMinutes?: number | null;
+  schedulingWindowStartAt?: string | null;
+  schedulingWindowEndAt?: string | null;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  timeZone?: string | null;
+  location?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -36,6 +61,13 @@ export interface UpdateTaskInput {
   description?: string | null;
   priority?: string;
   dueAt?: string | null;
+  durationMinutes?: number | null;
+  schedulingWindowStartAt?: string | null;
+  schedulingWindowEndAt?: string | null;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  timeZone?: string | null;
+  location?: string | null;
 }
 
 export interface CreateTaskBatchInput {
@@ -68,6 +100,17 @@ function toTaskRecord(row: TaskRow, artifactType: 'task' | 'task_list'): TaskRec
     status: row.status,
     priority: row.priority,
     dueAt: row.dueAt ? new Date(row.dueAt).toISOString() : null,
+    durationMinutes: row.durationMinutes,
+    schedulingWindowStartAt: row.schedulingWindowStartAt
+      ? new Date(row.schedulingWindowStartAt).toISOString()
+      : null,
+    schedulingWindowEndAt: row.schedulingWindowEndAt
+      ? new Date(row.schedulingWindowEndAt).toISOString()
+      : null,
+    scheduledStartAt: row.scheduledStartAt ? new Date(row.scheduledStartAt).toISOString() : null,
+    scheduledEndAt: row.scheduledEndAt ? new Date(row.scheduledEndAt).toISOString() : null,
+    timeZone: row.timeZone,
+    location: row.location,
     completedAt: row.completedAt ? new Date(row.completedAt).toISOString() : null,
     createdAt: new Date(row.createdat).toISOString(),
     updatedAt: new Date(row.updatedat).toISOString(),
@@ -76,6 +119,53 @@ function toTaskRecord(row: TaskRow, artifactType: 'task' | 'task_list'): TaskRec
 }
 
 export const TaskRepository = {
+  async listParticipants(
+    handle: DbHandle,
+    input: { taskId: string; userId: string },
+  ): Promise<TaskParticipantRecord[]> {
+    const rows = await handle
+      .selectFrom('app.taskParticipants as participant')
+      .innerJoin('app.tasks as task', 'task.id', 'participant.taskId')
+      .select(['participant.id', 'participant.displayName', 'participant.email'])
+      .where('participant.taskId', '=', input.taskId)
+      .where('task.ownerUserid', '=', input.userId)
+      .orderBy('participant.createdat', 'asc')
+      .execute();
+
+    return rows.map((row) => ({
+      id: row.id,
+      displayName: row.displayName,
+      email: row.email ?? null,
+    }));
+  },
+
+  async replaceParticipants(
+    handle: DbHandle,
+    input: { taskId: string; userId: string; participants: TaskParticipantInput[] },
+  ): Promise<TaskParticipantRecord[]> {
+    const task = await TaskRepository.getOwned(handle, input.taskId, input.userId);
+    if (!task) {
+      throw new NotFoundError('Task', { taskId: input.taskId });
+    }
+
+    await handle.deleteFrom('app.taskParticipants').where('taskId', '=', input.taskId).execute();
+
+    if (input.participants.length > 0) {
+      await handle
+        .insertInto('app.taskParticipants')
+        .values(
+          input.participants.map((participant) => ({
+            taskId: input.taskId,
+            displayName: participant.displayName.trim(),
+            email: participant.email?.trim() || null,
+          })),
+        )
+        .execute();
+    }
+
+    return TaskRepository.listParticipants(handle, { taskId: input.taskId, userId: input.userId });
+  },
+
   async create(handle: DbHandle, input: CreateTaskInput): Promise<TaskRecord> {
     const task = await handle
       .insertInto('app.tasks')
@@ -87,6 +177,17 @@ export const TaskRepository = {
         primarySpaceId: null,
         ...(input.priority ? { priority: input.priority } : {}),
         dueAt: input.dueAt ? new Date(input.dueAt) : null,
+        durationMinutes: input.durationMinutes ?? null,
+        schedulingWindowStartAt: input.schedulingWindowStartAt
+          ? new Date(input.schedulingWindowStartAt)
+          : null,
+        schedulingWindowEndAt: input.schedulingWindowEndAt
+          ? new Date(input.schedulingWindowEndAt)
+          : null,
+        scheduledStartAt: input.scheduledStartAt ? new Date(input.scheduledStartAt) : null,
+        scheduledEndAt: input.scheduledEndAt ? new Date(input.scheduledEndAt) : null,
+        timeZone: input.timeZone?.trim() || null,
+        location: input.location?.trim() || null,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -226,6 +327,29 @@ export const TaskRepository = {
           : {}),
         ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
         ...(patch.dueAt !== undefined ? { dueAt: patch.dueAt ? new Date(patch.dueAt) : null } : {}),
+        ...(patch.durationMinutes !== undefined ? { durationMinutes: patch.durationMinutes } : {}),
+        ...(patch.schedulingWindowStartAt !== undefined
+          ? {
+              schedulingWindowStartAt: patch.schedulingWindowStartAt
+                ? new Date(patch.schedulingWindowStartAt)
+                : null,
+            }
+          : {}),
+        ...(patch.schedulingWindowEndAt !== undefined
+          ? {
+              schedulingWindowEndAt: patch.schedulingWindowEndAt
+                ? new Date(patch.schedulingWindowEndAt)
+                : null,
+            }
+          : {}),
+        ...(patch.scheduledStartAt !== undefined
+          ? { scheduledStartAt: patch.scheduledStartAt ? new Date(patch.scheduledStartAt) : null }
+          : {}),
+        ...(patch.scheduledEndAt !== undefined
+          ? { scheduledEndAt: patch.scheduledEndAt ? new Date(patch.scheduledEndAt) : null }
+          : {}),
+        ...(patch.timeZone !== undefined ? { timeZone: patch.timeZone?.trim() || null } : {}),
+        ...(patch.location !== undefined ? { location: patch.location?.trim() || null } : {}),
       })
       .where('id', '=', id)
       .where('ownerUserid', '=', userId)

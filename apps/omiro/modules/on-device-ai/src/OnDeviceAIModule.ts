@@ -13,6 +13,30 @@ export type OnDeviceAIAvailability = 'available' | 'unavailable' | 'unsupported'
 
 export type CalendarPermissionStatus = 'authorized' | 'denied' | 'notDetermined';
 
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  isAllDay: boolean;
+  location: string | null;
+  calendarTitle: string | null;
+  notes: string | null;
+  participants: string[];
+  recurrenceDescription: string | null;
+  isEditable: boolean;
+}
+
+export type CalendarEventPatch = {
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string | null;
+  notes?: string | null;
+};
+
+export type CalendarRecurrenceScope = 'thisEvent' | 'futureEvents';
+
 export interface OnDeviceAIResult {
   text: string;
   isOnDevice: true;
@@ -32,6 +56,21 @@ export type OnDeviceAIModuleType = {
   getAvailability(): Promise<OnDeviceAIAvailability>;
   getCalendarPermissions(): Promise<CalendarPermissionStatus>;
   requestCalendarPermissions(): Promise<CalendarPermissionStatus>;
+  getCalendarEvents(startDate: string, endDate: string): Promise<CalendarEvent[]>;
+  createCalendarEvent(
+    title: string,
+    startDate: string,
+    endDate: string,
+    location: string | null,
+    recurrenceRule?: string | null,
+  ): Promise<CalendarEvent>;
+  getCalendarEvent(id: string): Promise<CalendarEvent>;
+  updateCalendarEvent(
+    id: string,
+    patch: CalendarEventPatch,
+    recurrenceScope: CalendarRecurrenceScope,
+  ): Promise<CalendarEvent>;
+  deleteCalendarEvent(id: string, recurrenceScope: CalendarRecurrenceScope): Promise<void>;
   askCalendar(prompt: string): Promise<OnDeviceAIResult>;
   addListener(
     eventName: 'onDeviceAILog',

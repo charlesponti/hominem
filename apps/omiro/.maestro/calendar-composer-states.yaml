@@ -1,0 +1,30 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Requires a signed-in test account and calendar access. Exercises controls by
+# testID because iOS can merge text elements in the accessibility tree.
+- runFlow: startup.yaml
+- tapOn:
+    id: workspace-context-calendar
+- assertVisible:
+    id: calendar-screen
+- assertVisible:
+    id: calendar-input
+- assertNotVisible:
+    id: calendar-ask-button
+- tapOn:
+    id: calendar-input
+- inputText: Buy milk
+- assertVisible:
+    id: calendar-ask-button
+- tapOn:
+    id: calendar-ask-button
+- extendedWaitUntil:
+    visible:
+      id: time-block-preview
+    timeout: 45000
+- assertVisible:
+    id: time-block-cancel
+- tapOn:
+    id: time-block-cancel
+- assertVisible:
+    id: calendar-input

@@ -67,6 +67,21 @@ export class StructuredOutputError extends Error {
   }
 }
 
+function describeStructuredOutputError(error: unknown) {
+  if (error instanceof z.ZodError) {
+    const issues = error.issues
+      .slice(0, 5)
+      .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
+      .join('; ');
+
+    return issues
+      ? `OpenRouter returned invalid structured output: ${issues}`
+      : 'OpenRouter returned invalid structured output';
+  }
+
+  return 'OpenRouter returned invalid structured output';
+}
+
 export function createOpenRouterTextAdapter(options: OpenRouterTextAdapterOptions = {}) {
   if (options.adapter) {
     return options.adapter;
@@ -448,7 +463,7 @@ export async function createStructuredChatCompletion<TSchema extends z.ZodTypeAn
       usage,
     };
   } catch (error) {
-    throw new StructuredOutputError('OpenRouter returned invalid structured output', {
+    throw new StructuredOutputError(describeStructuredOutputError(error), {
       usage,
       cause: error,
     });

@@ -4,10 +4,11 @@ import { RefreshControl, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CalendarQuery } from '~/components/calendar/CalendarQuery';
 import { Composer } from '~/components/composer/Composer';
 import { InboxList, type InboxListRef, type InboxTab } from '~/components/inbox/InboxList';
+import type { WorkspaceContext } from '~/components/navigation/WorkspaceContextPicker.ios';
 import { WorkspaceToolbar } from '~/components/navigation/WorkspaceToolbar.ios';
-import { TasksPane } from '~/components/tasks/TasksPane';
 import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
@@ -18,7 +19,7 @@ import {
 import { SETTINGS_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
-type InboxScreenTab = InboxTab | 'tasks';
+type InboxScreenTab = WorkspaceContext;
 
 export default function InboxScreen() {
   const styles = useStyles();
@@ -39,7 +40,7 @@ export default function InboxScreen() {
   const [activeTab, setActiveTab] = useState<InboxScreenTab>('notes');
   const [isSearchPresented, setIsSearchPresented] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const isTasksTab = activeTab === 'tasks';
+  const isCalendarTab = activeTab === 'calendar';
   const inboxDraft = readInboxDraft();
 
   const handleOpenSettings = useCallback(() => router.push(SETTINGS_ROUTE), [router]);
@@ -74,17 +75,15 @@ export default function InboxScreen() {
         onSearchCancel={handleSearchCancel}
         onSearchChange={setSearchQuery}
         onSearchStart={() => setIsSearchPresented(true)}
-        searchPlaceholder={
-          isTasksTab ? t.inbox.screen.searchTasksPlaceholder : t.inbox.screen.searchPlaceholder
-        }
+        searchPlaceholder={t.inbox.screen.searchPlaceholder}
         searchQuery={searchQuery}
       />
 
-      <View style={styles.listWrap}>
-        <View style={styles.listInner}>
-          {isTasksTab ? (
-            <TasksPane isFocused={isFocused} searchQuery={searchQuery} />
-          ) : (
+      {isCalendarTab ? (
+        <CalendarQuery isFocused={isFocused} />
+      ) : (
+        <View style={styles.listWrap}>
+          <View style={styles.listInner}>
             <InboxList
               contentPaddingBottom={insets.bottom + 164}
               contentPaddingTop={4}
@@ -93,17 +92,17 @@ export default function InboxScreen() {
               isLoading={isInitialLoading}
               items={displayItems}
               listRef={listRef}
-              tab={activeTab}
+              tab={activeTab as InboxTab}
               onEndReached={() => {
                 if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
               }}
               refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
             />
-          )}
+          </View>
         </View>
-      </View>
+      )}
 
-      {isTasksTab ? null : (
+      {isCalendarTab ? null : (
         <KeyboardStickyView
           offset={{ closed: 0, opened: 40 }}
           pointerEvents="box-none"

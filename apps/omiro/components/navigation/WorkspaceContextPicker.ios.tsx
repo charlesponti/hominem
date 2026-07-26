@@ -1,14 +1,23 @@
 import { Host } from '@expo/ui';
-import { Picker, Text } from '@expo/ui/swift-ui';
+import { Label, Picker } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel,
   accessibilityIdentifier,
   environment,
+  labelStyle,
   pickerStyle,
   tag,
 } from '@expo/ui/swift-ui/modifiers';
+import type { SFSymbol } from 'expo-symbols';
 import { useColorScheme } from 'react-native';
 
-export type WorkspaceContext = 'chats' | 'notes' | 'tasks';
+export type WorkspaceContext = 'chats' | 'notes' | 'calendar';
+
+const contextIcons: Record<WorkspaceContext, SFSymbol> = {
+  chats: 'bubble.left.and.bubble.right.fill',
+  notes: 'note.text',
+  calendar: 'calendar',
+};
 
 interface WorkspaceContextPickerProps {
   value: WorkspaceContext;
@@ -19,7 +28,7 @@ export function WorkspaceContextPicker({ value, onChange }: WorkspaceContextPick
   const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
 
   return (
-    <Host style={{ height: 44, width: 232 }}>
+    <Host style={{ height: 44, width: 220 }}>
       <Picker
         modifiers={[
           environment({ key: 'colorScheme', value: colorScheme }),
@@ -28,16 +37,25 @@ export function WorkspaceContextPicker({ value, onChange }: WorkspaceContextPick
         selection={value}
         onSelectionChange={(nextValue) => onChange(nextValue as WorkspaceContext)}
       >
-        <Text modifiers={[tag('chats'), accessibilityIdentifier('workspace-context-chats')]}>
-          Chats
-        </Text>
-        <Text modifiers={[tag('notes'), accessibilityIdentifier('workspace-context-notes')]}>
-          Notes
-        </Text>
-        <Text modifiers={[tag('tasks'), accessibilityIdentifier('workspace-context-tasks')]}>
-          Tasks
-        </Text>
+        <WorkspaceContextOption value="chats" label="Chats" />
+        <WorkspaceContextOption value="notes" label="Notes" />
+        <WorkspaceContextOption value="calendar" label="Calendar" />
       </Picker>
     </Host>
+  );
+}
+
+function WorkspaceContextOption({ value, label }: { value: WorkspaceContext; label: string }) {
+  return (
+    <Label
+      title={label}
+      systemImage={contextIcons[value]}
+      modifiers={[
+        labelStyle('iconOnly'),
+        tag(value),
+        accessibilityLabel(label),
+        accessibilityIdentifier(`workspace-context-${value}`),
+      ]}
+    />
   );
 }

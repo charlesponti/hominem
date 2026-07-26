@@ -17,10 +17,9 @@ import AppIcon from '~/components/ui/icon';
 import { Input } from '~/components/ui/input';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
 import { getPreventScreenshots, setPreventScreenshots } from '~/hooks/use-screen-capture';
-import OnDeviceAIModule, { type CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { useAuth } from '~/services/auth/auth-provider';
 import { resolveProtectedRouteState } from '~/services/auth/protected-route-state';
-import { ARCHIVED_CHATS_ROUTE, ON_DEVICE_CALENDAR_ROUTE } from '~/services/navigation/routes';
+import { ARCHIVED_CHATS_ROUTE } from '~/services/navigation/routes';
 import { useMonthlyUsage } from '~/services/usage/use-usage-query';
 import t from '~/translations';
 
@@ -261,9 +260,6 @@ function Settings() {
   });
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [calendarPermission, setCalendarPermission] = useState<CalendarPermissionStatus | null>(
-    null,
-  );
 
   const normalizedName = state.name.trim();
   const initialNormalizedName = initialName.trim();
@@ -280,10 +276,6 @@ function Settings() {
 
     return () => clearTimeout(timeout);
   }, [saveStatus]);
-
-  useEffect(() => {
-    void OnDeviceAIModule.getCalendarPermissions().then(setCalendarPermission);
-  }, []);
 
   const onSavePress = async () => {
     if (!nameChanged) {
@@ -324,15 +316,6 @@ function Settings() {
 
   const onArchivedChatsPress = () => {
     router.push(ARCHIVED_CHATS_ROUTE);
-  };
-
-  const onOnDeviceCalendarSpikePress = () => {
-    router.push(ON_DEVICE_CALENDAR_ROUTE);
-  };
-
-  const onCalendarPress = async () => {
-    const status = await OnDeviceAIModule.requestCalendarPermissions();
-    setCalendarPermission(status);
   };
 
   const protectedRouteState = resolveProtectedRouteState({ isPending, isSignedIn });
@@ -417,36 +400,6 @@ function Settings() {
           {saveError}
         </Text>
       ) : null}
-
-      {/* Account */}
-      <View style={styles.section}>
-        <SectionLabel>Account</SectionLabel>
-        <SettingsRow
-          testID="settings-calendar-connect"
-          icon="calendar"
-          label="Calendar"
-          description={
-            calendarPermission === 'authorized'
-              ? 'Connected'
-              : calendarPermission === 'denied'
-                ? 'Access denied'
-                : 'Connect your calendar'
-          }
-          accessory={
-            <Button
-              testID="settings-calendar-action"
-              label={calendarPermission === 'authorized' ? 'Query' : 'Connect'}
-              onPress={() =>
-                calendarPermission === 'authorized'
-                  ? onOnDeviceCalendarSpikePress()
-                  : void onCalendarPress()
-              }
-              variant={calendarPermission === 'authorized' ? 'outline' : 'primary'}
-              size="sm"
-            />
-          }
-        />
-      </View>
 
       {/* Usage */}
       {monthlyUsage ? (

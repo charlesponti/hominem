@@ -56,6 +56,7 @@ export { cleanupVoiceTranscript } from './voice-cleanup';
 export type { VoiceTranscriptCleanupInput, VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
+export { extractTimeBlock, parseTimeBlockExtractionOutput, TimeBlockIntent } from './time-block-extraction';
 
 export type {
   ExtractedTask,
@@ -65,3 +66,8 @@ export type {
   VoiceTaskExtractionInput,
   VoiceTaskExtractionOutput,
 } from './task-extraction';
+export type {
+  TimeBlock,
+  TimeBlockExtractionInput,
+  TimeBlockExtractionResult,
+} from './time-block-extraction';

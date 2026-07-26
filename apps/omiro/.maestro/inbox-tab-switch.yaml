@@ -1,6 +1,6 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Switches between the Chats, Notes, and Tasks contexts in the Workspace
+# Switches between the Chats, Notes, and Time contexts in the Workspace
 # top toolbar. Context changes remain local to the Workspace route.
 - runFlow: startup.yaml
 - assertVisible:
@@ -17,15 +17,15 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible: Notes
 - assertVisible:
     id: inbox-composer-input
-# Tasks is embedded in this same screen (not a pushed route): the context
-# control stays visible and there's no composer dock (Tasks has its own floating
-# add/voice buttons instead).
+# Time is embedded in this same screen and owns the natural-language composer.
 - tapOn:
-    id: workspace-context-tasks
+    id: workspace-context-calendar
 - assertVisible:
     id: workspace-context-chats
 - assertVisible:
-    id: tasks-add-button
+    id: calendar-screen
+- assertVisible:
+    id: calendar-input
 - assertNotVisible:
     id: inbox-composer-input
 - tapOn:

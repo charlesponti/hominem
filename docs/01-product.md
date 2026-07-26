@@ -18,15 +18,16 @@ The system earns complexity only when it removes friction from that loop.
 
 Words define product boundaries. Use them consistently.
 
-| Term | Meaning |
-| --- | --- |
-| inbox | Signed-in root surface and mixed recent list. |
-| chat | A conversation. |
-| note | A saved note. |
-| composer | The input surface that creates notes or starts chats. |
-| task | An actionable item derived from a chat, note, or direct creation. |
-| settings | Account and app settings. |
-| archived chats | Conversations intentionally removed from the active flow. |
+| Term           | Meaning                                                                 |
+| -------------- | ----------------------------------------------------------------------- |
+| inbox          | Signed-in root surface and mixed recent list.                           |
+| chat           | A conversation.                                                         |
+| note           | A saved note.                                                           |
+| composer       | The input surface that creates notes or starts chats.                   |
+| task           | An actionable item derived from a chat, note, or direct creation.       |
+| time block     | A task or calendar event that occupies, or is intended to occupy, time. |
+| settings       | Account and app settings.                                               |
+| archived chats | Conversations intentionally removed from the active flow.               |
 
 Do not use `workspace` as a product or module concept. Do not use `feed` as an
 active app concept. Reserve `session` for authentication. Avoid `artifact` in
@@ -48,6 +49,14 @@ into product language.
   the transcript for recovery.
 - Setup, permissions, and operational machinery stay out of the task surface
   until the person actually needs them.
+- Tasks and calendar events share one time model. A fixed block has a scheduled
+  interval; a flexible block has a duration and scheduling window until it is
+  placed.
+- Time is the single task-and-calendar surface. The workspace switcher does not
+  expose a separate Tasks view; task details remain available from a time block.
+- Time keeps unscheduled tasks in a distinct Unscheduled section below the
+  chronological schedule. They do not appear in the default scheduled list
+  until they receive a due date or scheduled interval.
 
 ## Product decision test
 
@@ -60,4 +69,3 @@ Before adding a feature, answer all four questions in the implementation:
 
 If those answers are unclear, the feature is not ready to spread across the
 system.
-

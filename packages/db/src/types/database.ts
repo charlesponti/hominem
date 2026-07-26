@@ -1018,17 +1018,50 @@ export interface AppTaskAssignments {
   taskId: string;
 }
 
+export interface AppTaskExternalProjections {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  errorMessage: string | null;
+  externalId: string;
+  externalListId: string | null;
+  externalUpdatedAt: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  lastSyncedAt: ColumnType<string, Date | string, Date | string> | null;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  provider: string;
+  syncStatus: Generated<string>;
+  taskId: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppTaskParticipants {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  displayName: string;
+  email: string | null;
+  id: Generated<string>;
+  personId: string | null;
+  taskId: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppTasks {
   completedAt: ColumnType<string, Date | string, Date | string> | null;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   description: string | null;
   dueAt: ColumnType<string, Date | string, Date | string> | null;
+  durationMinutes: number | null;
   id: Generated<string>;
+  location: string | null;
   ownerUserid: string;
   parentTaskId: string | null;
   primarySpaceId: string | null;
   priority: Generated<string>;
+  scheduledEndAt: ColumnType<string, Date | string, Date | string> | null;
+  scheduledStartAt: ColumnType<string, Date | string, Date | string> | null;
+  schedulingWindowEndAt: ColumnType<string, Date | string, Date | string> | null;
+  schedulingWindowStartAt: ColumnType<string, Date | string, Date | string> | null;
   status: Generated<string>;
+  timeZone: string | null;
   title: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
@@ -1355,6 +1388,8 @@ export interface DB {
   'app.tagAssignments': AppTagAssignments;
   'app.tags': AppTags;
   'app.taskAssignments': AppTaskAssignments;
+  'app.taskExternalProjections': AppTaskExternalProjections;
+  'app.taskParticipants': AppTaskParticipants;
   'app.tasks': AppTasks;
   'app.testimonials': AppTestimonials;
   'app.travelSegments': AppTravelSegments;

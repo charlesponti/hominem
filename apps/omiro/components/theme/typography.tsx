@@ -3,9 +3,10 @@ import {
   type TextProps as RNTextProps,
   type StyleProp,
   type TextStyle,
+  useColorScheme,
 } from 'react-native';
 
-import type { ColorToken } from '~/components/theme/tokens';
+import { colorThemes, type ColorToken } from '~/components/theme/tokens';
 
 import { colors } from './colors';
 
@@ -180,6 +181,7 @@ const variantStyles = {
 } satisfies Record<string, TextStyle>;
 
 function Text({ color, muted = false, style, variant = 'body', ...props }: TextProps) {
+  const colors = useColorScheme() === 'dark' ? colorThemes.dark : colorThemes.light;
   const resolvedColor = color
     ? colors[color]
     : muted

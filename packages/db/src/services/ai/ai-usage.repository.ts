@@ -11,6 +11,7 @@ export type AIUsageFeature =
   | 'text_enhance'
   | 'task_extract'
   | 'voice_task_extract'
+  | 'time_block_extract'
   | 'voice_cleanup'
   | 'embedding'
   | 'mcp_tool_call'

@@ -71,6 +71,7 @@ describe('createStructuredChatCompletion', () => {
 
     await expect(result).rejects.toBeInstanceOf(StructuredOutputError);
     await expect(result).rejects.toMatchObject({
+      message: expect.stringContaining('ok: Invalid input'),
       usage: expect.objectContaining({
         totalTokens: 10,
         costUsd: 0,

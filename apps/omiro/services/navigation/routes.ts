@@ -12,10 +12,15 @@ export interface ResumeTarget {
 export const INBOX_ROUTE = '/(protected)';
 export const SETTINGS_ROUTE = '/(protected)/settings' as RelativePathString;
 export const ARCHIVED_CHATS_ROUTE = '/(protected)/settings/archived-chats';
-export const ON_DEVICE_CALENDAR_ROUTE = '/(protected)/settings/calendar';
+
+export type TimeBlockSource = 'task' | 'event';
+
+export function getTimeBlockRoute(source: TimeBlockSource, id: string) {
+  return `/(protected)/time/${source}/${id}`;
+}
 
 export function getTaskDetailRoute(id: string) {
-  return `/(protected)/tasks/${id}`;
+  return getTimeBlockRoute('task', id);
 }
 
 export function getContentRoute(kind: ContentKind, id: string) {

@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { extractTasks, extractVoiceTasks, getStructuredOutputUsage } from '@hominem/ai';
+import {
+  extractTasks,
+  extractTimeBlock,
+  extractVoiceTasks,
+  getStructuredOutputUsage,
+} from '@hominem/ai';
 import { db, NotFoundError, runInTransaction, TaskRepository } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
@@ -15,6 +20,7 @@ import {
   CreateTaskBatchSchema,
   CreateTaskSchema,
   ExtractTasksInputSchema,
+  ParseTimeBlockInputSchema,
   TaskParamSchema,
   UpdateTaskSchema,
   UpdateTaskStatusSchema,
@@ -22,7 +28,11 @@ import {
 } from '../../schemas/tasks.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
-import { TASK_EXTRACTION_PROMPT, VOICE_TASK_EXTRACTION_PROMPT } from '../prompts';
+import {
+  TASK_EXTRACTION_PROMPT,
+  TIME_BLOCK_EXTRACTION_PROMPT,
+  VOICE_TASK_EXTRACTION_PROMPT,
+} from '../prompts';
 
 function buildTaskListTitle(tasks: { title: string }[]): string {
   return tasks.length === 1 ? tasks[0].title : `${tasks.length} tasks`;
@@ -46,14 +56,31 @@ export const tasksRoutes = new Hono<AppContext>()
       }
     }
 
-    const task = await TaskRepository.create(db, {
-      artifactType: input.artifactType,
-      description: input.description ?? null,
-      title: input.title,
-      userId,
-      priority: input.priority,
-      dueAt: input.dueAt,
-      parentTaskId: input.parentTaskId ?? null,
+    const task = await runInTransaction(async (trx) => {
+      const created = await TaskRepository.create(trx, {
+        artifactType: input.artifactType,
+        description: input.description ?? null,
+        title: input.title,
+        userId,
+        priority: input.priority,
+        dueAt: input.dueAt,
+        durationMinutes: input.durationMinutes,
+        schedulingWindowStartAt: input.schedulingWindowStartAt,
+        schedulingWindowEndAt: input.schedulingWindowEndAt,
+        scheduledStartAt: input.scheduledStartAt,
+        scheduledEndAt: input.scheduledEndAt,
+        timeZone: input.timeZone,
+        location: input.location,
+        parentTaskId: input.parentTaskId ?? null,
+      });
+      if (input.participants) {
+        await TaskRepository.replaceParticipants(trx, {
+          taskId: created.id,
+          userId,
+          participants: input.participants,
+        });
+      }
+      return created;
     });
 
     return c.json(task, 201);
@@ -97,6 +124,53 @@ export const tasksRoutes = new Hono<AppContext>()
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       return c.json({ error: 'Task extraction failed' }, 500);
+    }
+  })
+  .use('/parse', rateLimitMiddleware({ bucket: 'ai-time-block-parse', windowSec: 60, max: 30 }))
+  .post('/parse', zValidator('json', ParseTimeBlockInputSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const input = c.req.valid('json');
+
+    await assertUnderMonthlyUsageLimit(userId);
+
+    const eventId = randomUUID();
+    const getDurationMs = startAIUsageTimer();
+    try {
+      const result = await extractTimeBlock(
+        {
+          transcript: input.transcript,
+          referenceDate: input.referenceDate ?? new Date().toISOString(),
+          timezone: input.timezone,
+          conversationContext: input.conversationContext,
+          calendarContext: input.calendarContext,
+        },
+        TIME_BLOCK_EXTRACTION_PROMPT,
+      );
+      await recordAIUsageEvent({
+        eventId,
+        userId,
+        feature: 'time_block_extract',
+        operation: 'structured_output',
+        usage: result.usage,
+        status: 'succeeded',
+        durationMs: getDurationMs(),
+      });
+      return c.json({ block: result.block });
+    } catch (error) {
+      await recordAIUsageEvent({
+        eventId,
+        userId,
+        feature: 'time_block_extract',
+        operation: 'structured_output',
+        usage: getStructuredOutputUsage(error),
+        status: 'failed',
+        error,
+        durationMs: getDurationMs(),
+      });
+      logger.error('[ai/tasks/parse] OpenRouter error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return c.json({ error: 'Time block extraction failed' }, 500);
     }
   })
   .post('/batch', zValidator('json', CreateTaskBatchSchema), async (c) => {
@@ -210,7 +284,8 @@ export const tasksRoutes = new Hono<AppContext>()
         ? await TaskRepository.listChildren(db, { parentId: id, userId })
         : [];
 
-    return c.json({ task, children });
+    const participants = await TaskRepository.listParticipants(db, { taskId: id, userId });
+    return c.json({ task, participants, children });
   })
   .patch(
     '/:id/complete',
@@ -234,7 +309,17 @@ export const tasksRoutes = new Hono<AppContext>()
       const { id } = c.req.valid('param');
       const patch = c.req.valid('json');
 
-      const task = await TaskRepository.update(db, id, userId, patch);
+      const task = await runInTransaction(async (trx) => {
+        const updated = await TaskRepository.update(trx, id, userId, patch);
+        if (patch.participants) {
+          await TaskRepository.replaceParticipants(trx, {
+            taskId: id,
+            userId,
+            participants: patch.participants,
+          });
+        }
+        return updated;
+      });
       return c.json(task);
     },
   )

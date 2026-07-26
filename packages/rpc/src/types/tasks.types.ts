@@ -27,3 +27,7 @@ export type TasksUpdateOutput = InferResponseType<_TaskUpdateEndpoint, 200>;
 type _TasksVoiceEndpoint = HonoClient['api']['tasks']['voice']['$post'];
 export type TasksVoiceInput = InferRequestType<_TasksVoiceEndpoint>['json'];
 export type TasksVoiceOutput = InferResponseType<_TasksVoiceEndpoint, 201>;
+
+type _TasksParseEndpoint = HonoClient['api']['tasks']['parse']['$post'];
+export type TasksParseInput = InferRequestType<_TasksParseEndpoint>['json'];
+export type TasksParseOutput = InferResponseType<_TasksParseEndpoint, 200>;

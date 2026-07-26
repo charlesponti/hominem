@@ -11,7 +11,7 @@ Hierarchy comes from **typography and whitespace first**. Color, borders,
 radius, and containers are not alternate ways to achieve the same hierarchy
 — they are exceptions that require the first two tools to have already
 failed. Before adding a background, a border, or a card, the question is
-always: *can a bigger gap or a heavier type token say this instead?* If
+always: _can a bigger gap or a heavier type token say this instead?_ If
 yes, that's the answer.
 
 This means:
@@ -52,23 +52,23 @@ route/screen code is a review failure, not a style nitpick.
 Two colors, plus two state colors. That's the whole palette. Screen code
 references `foreground`, never a hex value or a raw palette step.
 
-| Token              | Purpose                                       |
-| ------------------ | ---------------------------------------------- |
-| `background`       | The only background. Every screen, row, and input sits directly on it. |
-| `foreground`       | The only text/icon color. Hierarchy within text comes from the opacity steps below, not a second color. |
-| `accent`           | The single interactive/brand color. Selection, primary actions, links. |
-| `text-on-accent`   | Text/icon color on top of `accent` or `destructive` fills. |
-| `destructive`      | Destructive actions and error state only.        |
-| `divider`          | The *only* border/line token in the system. Reserved for the rare, documented exception in Rule 10a — never a default. |
-| `overlay-scrim`    | Modal/sheet backdrop only.                       |
+| Token            | Purpose                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `background`     | The only background. Every screen, row, and input sits directly on it.                                                 |
+| `foreground`     | The only text/icon color. Hierarchy within text comes from the opacity steps below, not a second color.                |
+| `accent`         | The single interactive/brand color. Selection, primary actions, links.                                                 |
+| `text-on-accent` | Text/icon color on top of `accent` or `destructive` fills.                                                             |
+| `destructive`    | Destructive actions and error state only.                                                                              |
+| `divider`        | The _only_ border/line token in the system. Reserved for the rare, documented exception in Rule 10a — never a default. |
+| `overlay-scrim`  | Modal/sheet backdrop only.                                                                                             |
 
 Opacity steps (applied to `foreground`, not separate colors):
 
-| Token                | Opacity | Use                                       |
-| -------------------- | ------- | -------------------------------------------|
-| `foreground/100`     | 100%    | Primary reading text, active icons.        |
-| `foreground/64`      | 64%     | Supporting text, secondary labels.         |
-| `foreground/38`      | 38%     | Placeholder, disabled, metadata, timestamps. |
+| Token            | Opacity | Use                                          |
+| ---------------- | ------- | -------------------------------------------- |
+| `foreground/100` | 100%    | Primary reading text, active icons.          |
+| `foreground/64`  | 64%     | Supporting text, secondary labels.           |
+| `foreground/38`  | 38%     | Placeholder, disabled, metadata, timestamps. |
 
 Rules:
 
@@ -86,15 +86,15 @@ Rules:
 
 8pt grid. 4pt exists only for internal alignment inside a control (icon-to-label gaps, text baseline nudges) — it never sets margin or padding between two semantic groups.
 
-| Token        | Value | Legal use                                    |
-| ------------ | ----- | --------------------------------------------- |
-| `space-025`  | 4pt   | Internal alignment only. Never a group gap.   |
-| `space-050`  | 8pt   | Tightest legal gap between related elements.  |
-| `space-100`  | 16pt  | Screen horizontal gutter. Default group gap.  |
-| `space-150`  | 24pt  | Gap between sections.                          |
-| `space-200`  | 32pt  | Gap between major screen regions.              |
-| `space-300`  | 48pt  | Rare: full-screen empty/error state padding.  |
-| `space-400`  | 64pt  | Reserved. Do not use without a documented exception below. |
+| Token       | Value | Legal use                                                  |
+| ----------- | ----- | ---------------------------------------------------------- |
+| `space-025` | 4pt   | Internal alignment only. Never a group gap.                |
+| `space-050` | 8pt   | Tightest legal gap between related elements.               |
+| `space-100` | 16pt  | Screen horizontal gutter. Default group gap.               |
+| `space-150` | 24pt  | Gap between sections.                                      |
+| `space-200` | 32pt  | Gap between major screen regions.                          |
+| `space-300` | 48pt  | Rare: full-screen empty/error state padding.               |
+| `space-400` | 64pt  | Reserved. Do not use without a documented exception below. |
 
 - Mobile content uses `space-100` (16pt) as the horizontal gutter. Content
   never touches the screen edge.
@@ -105,9 +105,9 @@ Rules:
 One radius, applied everywhere a radius is legal, plus the one exception
 that is a geometric necessity rather than a style choice.
 
-| Token         | Value  | Legal use                                        |
-| ------------- | ------ | --------------------------------------------------|
-| `radius`      | 8pt    | The only radius. Buttons, inputs, Modal/Sheet, any control that needs one. |
+| Token         | Value  | Legal use                                                                                                                  |
+| ------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `radius`      | 8pt    | The only radius. Buttons, inputs, Modal/Sheet, any control that needs one.                                                 |
 | `radius-full` | 9999pt | Circles and capsules only: avatars, icon buttons, pills. Not a style choice — a capsule mathematically can't use `radius`. |
 
 There is no scale to choose from. A control either uses `radius`, uses
@@ -118,15 +118,15 @@ little more rounded" than something else on the same screen.
 
 One type scale. No screen defines its own font size.
 
-| Token       | Size / Line height | Weight    | Use                                  |
-| ----------- | ------------------- | --------- | -------------------------------------- |
-| `title-lg`  | 28 / 34             | Bold      | Rare: a screen's single hero title, if any. |
-| `title`     | 22 / 28             | Semibold  | Screen title.                          |
-| `headline`  | 17 / 22             | Semibold  | Section header, row title.             |
-| `body`      | 17 / 22             | Regular   | Default reading text, button labels.   |
-| `subhead`   | 15 / 20             | Regular   | Secondary row text, form labels.       |
-| `caption`   | 13 / 18             | Regular   | Metadata, timestamps, helper text.     |
-| `footnote`  | 11 / 13             | Regular   | Legal text, rare fine print.           |
+| Token      | Size / Line height | Weight   | Use                                         |
+| ---------- | ------------------ | -------- | ------------------------------------------- |
+| `title-lg` | 28 / 34            | Bold     | Rare: a screen's single hero title, if any. |
+| `title`    | 22 / 28            | Semibold | Screen title.                               |
+| `headline` | 17 / 22            | Semibold | Section header, row title.                  |
+| `body`     | 17 / 22            | Regular  | Default reading text, button labels.        |
+| `subhead`  | 15 / 20            | Regular  | Secondary row text, form labels.            |
+| `caption`  | 13 / 18            | Regular  | Metadata, timestamps, helper text.          |
+| `footnote` | 11 / 13            | Regular  | Legal text, rare fine print.                |
 
 All-caps rendering (`text-transform: uppercase`) is not a legal style on
 any token. Sentence case is enforced at the copy layer (Pattern rules,
@@ -137,10 +137,10 @@ any token. Sentence case is enforced at the copy layer (Pattern rules,
 Almost everything is `elevation-0`. There is exactly one thing that is
 ever allowed to sit above it.
 
-| Token           | Surface token | Shadow                          | Use                                    |
-| --------------- | -------------- | -------------------------------- | ----------------------------------------|
-| `elevation-0`   | `background`  | None.                             | Every screen, row, input, list — everything except Modal/Sheet. |
-| `elevation-1`   | `background`  | One functional shadow or scrim.  | Modal/Sheet only. It needs to read as "above" the screen; nothing else does. |
+| Token         | Surface token | Shadow                          | Use                                                                          |
+| ------------- | ------------- | ------------------------------- | ---------------------------------------------------------------------------- |
+| `elevation-0` | `background`  | None.                           | Every screen, row, input, list — everything except Modal/Sheet.              |
+| `elevation-1` | `background`  | One functional shadow or scrim. | Modal/Sheet only. It needs to read as "above" the screen; nothing else does. |
 
 There is no `elevation-2`. Cards, rows, and sections do not get their own
 background tint or shadow to separate from the screen — that's what
@@ -162,12 +162,12 @@ third elevation step, it's composed wrong: flatten it (Rule 10, 10a).
 
 ### 1.7 Motion
 
-| Token             | Duration | Easing                          | Use                                  |
-| ----------------- | -------- | -------------------------------- | --------------------------------------|
-| `duration-instant`| 100ms    | `ease-out`                       | Press/tap feedback.                   |
-| `duration-fast`   | 150ms    | `ease-out`                       | Toggles, small state changes.         |
-| `duration-base`   | 200ms    | `cubic-bezier(0.2, 0, 0, 1)`     | Sheet/modal entrance, screen transitions. |
-| `duration-slow`   | 300ms    | `cubic-bezier(0.2, 0, 0, 1)`     | Full-screen transitions only.         |
+| Token              | Duration | Easing                       | Use                                       |
+| ------------------ | -------- | ---------------------------- | ----------------------------------------- |
+| `duration-instant` | 100ms    | `ease-out`                   | Press/tap feedback.                       |
+| `duration-fast`    | 150ms    | `ease-out`                   | Toggles, small state changes.             |
+| `duration-base`    | 200ms    | `cubic-bezier(0.2, 0, 0, 1)` | Sheet/modal entrance, screen transitions. |
+| `duration-slow`    | 300ms    | `cubic-bezier(0.2, 0, 0, 1)` | Full-screen transitions only.             |
 
 Every token above must resolve to `duration-instant` (or off) when the
 system reduced-motion setting is on. There is no token for entertainment
@@ -244,7 +244,7 @@ shadcn's variant taxonomy, translated to this system's tokens.
   even when the visual glyph or label is smaller — the track and its
   internal padding expand to guarantee this, they never shrink to fit a
   cramped header. A track sized to match a neighboring icon button's
-  *visual* size without also matching its *tap* size (icon buttons get
+  _visual_ size without also matching its _tap_ size (icon buttons get
   this for free via `hitSlop`) is a contract violation, not a style
   choice — this happened once already and produced a real sub-44pt
   control.
@@ -300,7 +300,7 @@ Pass/fail rules for how primitives assemble into a screen.
 10. Modal and Sheet are the only components allowed a visible container
     (background separation, radius, elevation). Nothing nests inside
     itself: no sheet inside a sheet, no modal inside a modal.
-10a. Whitespace is the default separator between every other pair of
+    10a. Whitespace is the default separator between every other pair of
     elements on a screen. A `divider` line, a tinted row background, or a
     Button's `outline` border are named exceptions (List row and Button,
     Primitives §2) and need a reason — "it looked bare" is not one.
@@ -346,7 +346,7 @@ Pass/fail rules for how primitives assemble into a screen.
 28. Titles describe the task: `Calendar`, `Archived chats`, `Account`.
 29. Button labels use a verb and are two words or fewer whenever possible.
 30. Labels describe the resulting action, not the component (`Delete
-    chat`, not `Delete button`).
+chat`, not `Delete button`).
 31. Placeholder text describes the expected input, not a hint of tone.
 32. A title is never repeated in a subtitle beneath it.
 33. An action is not explained when its label already makes it obvious.
@@ -397,8 +397,8 @@ Pass/fail rules for how primitives assemble into a screen.
     not "your data").
 57. Privacy copy describes actual behavior, not a generic assurance.
 
-   Good: `Calendar data is processed on this device.`
-   Bad: `Your data is always safe.`
+Good: `Calendar data is processed on this device.`
+Bad: `Your data is always safe.`
 
 58. Source metadata is shown only when it helps a user verify a result.
 59. Raw implementation details are not shown by default.
@@ -465,7 +465,6 @@ Pass/fail rules for how primitives assemble into a screen.
     reliable observation path. A platform primitive that cannot supply one is
     an implementation constraint to resolve or report before completion.
 
-
 ---
 
 ## 4. Review gates
@@ -494,3 +493,319 @@ The governing rule:
 > component must come from §2. Typography and whitespace are tried first;
 > color, border, radius, and containers are the exception, not the
 > vocabulary. There is no third option.
+
+---
+
+## 5. Time composer interaction specification
+
+This section governs the Time composer: the natural-language field that can
+create a task, create a calendar event, find scheduled work, or ask for an
+opening. It is the interaction contract for the unified time model in Product
+§1. A later implementation may change code, but not this behavior without an
+explicit product decision.
+
+### 5.1 The intended feeling
+
+Time should feel like a clear schedule with one calm place to express intent.
+The user should never have to decide whether something is a task or an event
+before typing it. They should see what the system understood, correct it
+without losing their words, and make one deliberate commitment.
+
+The reference image's failure is structural, not decorative: it renders the
+same thought as a text field, a chip card, and a large button at once. Those
+three nested surfaces compete for attention, cover the schedule, and make the
+primary action feel disconnected from the result. Time uses one input boundary
+and otherwise relies on type, space, and motion.
+
+### 5.2 Composition
+
+The screen has three regions, in this order:
+
+1. **Schedule canvas.** A chronological, infinitely loaded stream of calendar
+   events and scheduled tasks, followed by the distinct Unscheduled section.
+   This is the durable content and remains the visual anchor in every composer
+   state.
+2. **Transient result.** When a request has a result, it appears immediately
+   above the composer as text on the screen background. It is not a card,
+   toast, sheet, or floating answer bubble.
+3. **Composer.** The one bordered input at the bottom safe area. It is the
+   only persistent control for entering a time request.
+
+The composer is not a toolbar and does not become a second screen. It has a
+single 44pt minimum input boundary, a leading `sparkles` affordance that is not
+tappable, and a trailing send control. There is no filled background behind the
+send control. The send control is visible only when a non-whitespace request is
+ready to submit; the empty composer has no dead primary-action shape.
+
+The schedule must reserve enough bottom inset for the composer and the current
+transient result. Neither may overlap, clip, or hide a list row. The keyboard
+may cover older schedule content, but it may never cover the active composer,
+the result being reviewed, its primary action, or its cancellation control.
+
+### 5.3 Schedule canvas
+
+The schedule is one infinitely loaded list because a time block is one product
+concept.
+
+- Each day starts with a `headline` day label and a `caption` date. The first
+  day is `Today`; the next is `Tomorrow`; later days use weekday and date.
+- Every scheduled row uses an eyebrow time above a `body` title. This answers
+  the first question—_when?_—before the second—_what?_—without a separate time
+  column.
+- The leading icon is 24pt visual size. It identifies the interaction model,
+  not a category color: calendar for an external event; open/completed circle
+  for a task. The task completion control remains a distinct 44pt target.
+- A location or source line is optional supporting text. It is exactly one
+  line and ellipsizes; it never increases a row's height unpredictably.
+- Rows sit directly on `background`. There are no colored category rails,
+  tile backgrounds, or decorative borders.
+- Unscheduled is a separate Section after the chronological stream. Its rows
+  do not pretend to have a time, date, or chronological order.
+
+### 5.4 Composer state machine
+
+The state is explicit. A control from one state must not survive into another
+state when it no longer represents the current action.
+
+| State                   | Composer                                                                                 | Transient result                                                                                                                                                                       | Schedule canvas                                                                                       | Available actions                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Idle                    | Empty input, placeholder `Add or search anything…`; send hidden.                         | None.                                                                                                                                                                                  | Normal timeline or its loading/empty state.                                                           | Type, dictate if voice input is available.                |
+| Composing               | Raw user text; send is enabled. Input grows only to two lines, then scrolls internally.  | None.                                                                                                                                                                                  | Remains visible behind the keyboard.                                                                  | Edit text, submit, dismiss keyboard.                      |
+| Parsing                 | Submitted text remains visible but is non-editable; send morphs to a progress indicator. | None.                                                                                                                                                                                  | Remains visually stable.                                                                              | Cancel parsing; no duplicate submit.                      |
+| Draft: create task      | Composer clears and returns to its idle shape.                                           | Title at `headline`; one supporting sentence describing duration, deadline, or scheduling window; one primary `Add task` action and one `Cancel` ghost action.                         | Unchanged until commitment.                                                                           | Add, cancel, edit a displayed detail.                     |
+| Draft: create event     | Composer clears and returns to its idle shape.                                           | Title at `headline`; time interval or unresolved broad period at `subhead`; optional location/participants at `caption`; one primary `Add event` action and one `Cancel` ghost action. | Unchanged until commitment.                                                                           | Add, cancel, edit a displayed detail.                     |
+| Draft: incomplete event | Composer clears and returns to its idle shape.                                           | Title plus a plain-language missing-detail message, such as `Choose a time to add this event.` No primary add action.                                                                  | Unchanged.                                                                                            | Edit the missing detail, cancel.                          |
+| Search answer           | Composer is immediately ready for a follow-up.                                           | Direct answer in `body`, followed by supporting schedule rows where available. No `Add` button.                                                                                        | Existing rows remain the source of truth.                                                             | Ask follow-up, open a supporting task.                    |
+| Availability proposal   | Composer is immediately ready for a follow-up.                                           | Requested duration and up to three proposed openings as plain list rows, not chips.                                                                                                    | Matching open intervals are temporarily accented by position and text, never by a new category color. | Select one proposal, revise request, cancel.              |
+| Saving                  | Composer stays ready but disabled for duplicate submission.                              | Draft remains in place; primary action preserves size and shows a Spinner.                                                                                                             | Existing timeline remains stable.                                                                     | Wait; cancel only if the underlying write is cancellable. |
+| Saved                   | Composer returns to idle.                                                                | Result collapses.                                                                                                                                                                      | New task/event inserts at its actual position; a flexible task inserts under Unscheduled.             | Continue typing.                                          |
+| Parse/save error        | Raw user input is restored to the composer and remains editable.                         | One `destructive` inline sentence: what failed and how to recover.                                                                                                                     | Unchanged.                                                                                            | Correct text, retry, dismiss error.                       |
+
+`edit_event`, `cancel_event`, and recurring-event requests are not silently
+converted into creation. They require their own reviewed result and explicit
+confirmation flow before any external calendar write. They use the unified Time
+Block detail screen defined in §5.6; there is no task-only editor or separate
+calendar-event editor in the Time experience.
+
+### 5.5 Draft result anatomy
+
+A draft is a short, readable sentence about the user's time—not an exposed
+model object. It never shows `primary_intent`, raw ISO timestamps, field names,
+or a row of schema chips.
+
+For a task:
+
+```text
+Buy milk
+Unscheduled · 20 min
+                         Add task
+Cancel
+```
+
+For an event:
+
+```text
+Dinner with Maya
+Tomorrow, 7:00–8:00 PM · Chez Panisse
+                         Add event
+Cancel
+```
+
+The title and each populated supporting detail are individually tappable. A
+tap replaces only that piece with an inline Input in the transient result. It
+does not reopen the raw prompt, discard other extracted values, or add a modal.
+The editing field is labelled in human terms (`Title`, `Time`, `Duration`,
+`People`, `Location`, `Deadline`) rather than API keys. Pressing return or
+tapping outside commits the local edit; `Cancel` on the draft discards the
+whole draft and returns focus to the composer with the original raw request
+restored.
+
+The primary action is visually adjacent to the result it commits. It must not
+be a full-width bar separated from the draft by another surface. At compact
+widths it sits below the detail line; at wider widths it may sit trailing the
+content. It remains the only filled control in the active result state.
+
+### 5.6 Unified Time Block detail
+
+Tapping any task or calendar event opens the same Time Block detail screen.
+The screen is source-aware but not source-shaped: common time concepts occupy
+the same positions and use the same language regardless of where they are
+stored.
+
+The reading order is:
+
+1. completion control for tasks, followed by the editable title;
+2. exact interval, scheduling window, or `Unscheduled`;
+3. duration;
+4. location and participants when present;
+5. notes/description when present;
+6. recurrence when present;
+7. source disclosure: `Omiro` or the precise iOS Calendar name;
+8. destructive action at the end of the screen.
+
+Every populated row is tappable and opens the narrowest native editor that can
+change that value. Date/time uses native Apple date and time controls. Duration
+uses fixed common values plus a custom value. Location, people, title, and notes
+use focused text entry. Substantial editing remains on this screen; it is not
+placed in `TaskEditorSheet`.
+
+Task-only behavior:
+
+- completion is immediate and reversible;
+- a flexible task may show a scheduling window without an exact interval;
+- `Schedule` converts a flexible task into an exact interval while preserving
+  its duration;
+- `Unschedule` removes only the exact interval and preserves the task,
+  duration, deadline, and scheduling window;
+- subtasks appear as a final Section and use the same row language as the
+  agenda.
+
+Calendar-event-only behavior:
+
+- completion is absent;
+- save, reschedule, recurrence, and delete call EventKit and update the visible
+  agenda only after EventKit confirms success;
+- read-only calendar events expose their values but disable edits with precise
+  copy explaining why;
+- the source calendar is always visible before a destructive action.
+
+Destructive actions use confirmation copy that names both the block and its
+source. A failed save leaves the editor open with all local edits intact. Back
+navigation with unsaved edits asks whether to discard them.
+
+### 5.7 State transitions and motion
+
+Motion explains continuity; it never performs for attention.
+
+| Transition                 | Motion                                                                                                     | Duration           | Reduced motion                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------- |
+| Idle → composing           | Send control fades in once text becomes non-empty.                                                         | `duration-instant` | Immediate.                                  |
+| Composing → parsing        | Send arrow morphs into Spinner in the same 44pt target. Submitted text holds position.                     | `duration-fast`    | Immediate icon swap.                        |
+| Parsing → draft/result     | Result fades in and translates upward 8pt from the composer; the composer returns to empty simultaneously. | `duration-base`    | Immediate appearance.                       |
+| Draft detail → inline edit | Tapped text crossfades into the field without moving neighboring content.                                  | `duration-fast`    | Immediate replacement.                      |
+| Draft → saving             | Primary label swaps to Spinner without width/height change.                                                | `duration-instant` | Immediate swap.                             |
+| Saving → saved             | Result fades out while the committed row fades into its correct list position. The list never jumps.       | `duration-base`    | Immediate result removal and row insertion. |
+| Any active state → error   | Composer restores its raw input; error line fades in below it. No shake animation.                         | `duration-fast`    | Immediate.                                  |
+| Cancel                     | Result fades out; original raw request restores to the composer and receives focus.                        | `duration-fast`    | Immediate.                                  |
+
+No animation may change a control's target while the finger is down. Animations
+must use the existing motion tokens and respect the system reduced-motion
+setting.
+
+### 5.8 Keyboard, focus, and gestures
+
+- Tapping the composer focuses the text cursor and scrolls the schedule only
+  enough to keep the composer and active result entirely above the keyboard.
+- The composer maintains focus while text is being entered. Submission removes
+  focus only after the request is accepted for parsing; it must not cause the
+  keyboard to flash closed and open.
+- A parsed draft does not automatically reopen the keyboard. Tapping a detail
+  does.
+- Keyboard dismissal never discards composing text or a draft.
+- Pull to refresh is disabled only while a calendar write is in progress;
+  parsing and draft review do not make the schedule stale.
+- Swipe-to-complete remains an action on a task row. It must not conflict with
+  vertical list scrolling or the composer gesture area.
+
+### 5.9 Failure, absence, and permission states
+
+The user must be able to recover meaning in every state.
+
+- **Calendar content loading:** use timeline-shaped Skeleton rows; do not
+  replace the whole screen with a spinner or move the composer.
+- **No calendar events:** show the schedule's empty sentence in the canvas;
+  the composer remains usable for tasks.
+- **Calendar access unavailable or denied:** the Time surface still shows
+  database-backed tasks and lets the user create flexible tasks. Calendar-only
+  requests state precisely that iOS Calendar access is needed and provide the
+  approved permission route. This route must not be hidden behind a decorative
+  connect card.
+- **Network/model parse failure:** preserve raw text, expose one actionable
+  error, and leave the user able to retry or edit. A failed parse never creates
+  a task/event and never clears input.
+- **Calendar write failure:** retain the reviewed draft and its edits; explain
+  that the event was not added to iOS Calendar. Retry is safe and must not
+  create duplicates.
+- **Task write failure:** retain the reviewed draft and its edits; explain
+  that the task was not saved.
+- **Offline:** a model-backed request cannot enter parsing. The composer keeps
+  the text and states that a connection is needed to interpret it; manually
+  available local actions remain available.
+
+### 5.10 Accessibility contract
+
+- The composer has the accessible name `Add or search time`; its send control
+  is `Interpret time request` while enabled and `Interpreting time request`
+  while parsing.
+- Dynamic result changes announce exactly one concise status: `Draft task
+ready`, `Draft event ready`, `Answer ready`, `Time request failed`, or
+  `Task added` / `Event added`.
+- Every tappable detail has a role, a human-readable name, and a 44×44pt target
+  even when the text itself is smaller.
+- The visual distinction between task/event comes from icon and copy, not
+  color alone. Completion uses icon plus text decoration/state.
+- At the largest supported Dynamic Type size, the result reflows vertically;
+  its primary action remains visible and the composer remains reachable.
+
+### 5.11 Explicit prohibitions
+
+The Time composer must not:
+
+- show raw extraction fields, ISO strings, intent names, or a chip cloud;
+- use nested cards, a tinted preview panel, or a second bordered container for
+  the draft;
+- show a full-width primary button detached from the draft it commits;
+- keep a stale `Add task`/`Plan event` button after the input changes, parse
+  fails, or the request becomes a search;
+- cover the active result with the keyboard or composer;
+- invent a time for a broad-period request merely to make a primary action
+  available; or
+- imply an event was added before EventKit confirms it.
+
+The wider Time experience must not retain the existing emoji priority picker,
+all-caps field labels, schema chips, categorical priority dots, or a
+content-heavy task editor sheet. Those patterns conflict with this document's
+typography, color, and Modal/Sheet rules.
+
+### 5.12 Implementation sequence
+
+The redesign ships as one coherent interaction system in four ordered slices:
+
+1. **Agenda foundation.** Introduce the explicit screen state model, stable row
+   geometry, timeline Skeletons, and dynamic bottom inset calculation.
+2. **Composer and review.** Replace chips and preview panels with the transient
+   human-readable result; implement idle, composing, parsing, draft, editing,
+   saving, success, error, cancellation, search, and availability states.
+3. **Unified detail.** Replace the task-only sheet/detail split with the Time
+   Block detail screen; add source-aware persistence for database tasks and
+   EventKit events.
+4. **Trust and polish.** Complete permission/offline/read-only behavior,
+   accessibility announcements, reduced-motion transitions, optimistic list
+   insertion only after confirmed writes, and deterministic Maestro coverage.
+
+No slice ships with a second visual language. The old preview, task editor
+sheet, and source-specific detail flows are removed in the same slice that
+replaces their behavior.
+
+### 5.13 Implementation and verification gate
+
+No visual change to Time is ready until it is observed on the iPhone simulator
+at the smallest supported viewport in each of these paths:
+
+1. idle, composing, and keyboard-dismissed input retention;
+2. parsing, parse error, retry, and cancellation;
+3. flexible-task draft, detail edit, save, save failure, and Unscheduled
+   insertion;
+4. fixed-event draft, unified detail edit, EventKit save, and chronological
+   insertion;
+5. incomplete event with no premature primary action;
+6. search answer and availability proposal;
+7. no events, calendar permission unavailable, calendar loading, and offline;
+8. unified detail for a task, editable event, recurring event, and read-only
+   event;
+9. reduced motion, VoiceOver announcement order, and largest Dynamic Type.
+
+Maestro flows must select app-owned controls by `testID` and assert the visible
+state after each transition. Screenshots are required for idle, composing,
+parsing, draft, error, and saved states; a successful typecheck is not visual
+or interaction evidence.

@@ -105,8 +105,8 @@ function ProtectedShell() {
             <Stack.Screen name="inbox/[kind]/[id]" options={{}} />
             <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
             <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
-            <Stack.Screen name="settings/calendar" options={{ title: 'Calendar' }} />
             <Stack.Screen name="tasks/[id]" options={{}} />
+            <Stack.Screen name="time/[source]/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: true }} />
           </Stack>
         </View>

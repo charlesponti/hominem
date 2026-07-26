@@ -35,11 +35,13 @@ export function useVoiceTasks() {
         ]);
         queryClient.setQueryData(taskKeys.detail(parent.id), {
           task: parent,
+          participants: [],
           children: tasks,
         } satisfies TaskDetailOutput);
         for (const task of tasks) {
           queryClient.setQueryData(taskKeys.detail(task.id), {
             task,
+            participants: [],
             children: [],
           } satisfies TaskDetailOutput);
         }
@@ -53,6 +55,7 @@ export function useVoiceTasks() {
       ]);
       queryClient.setQueryData(taskKeys.detail(task.id), {
         task,
+        participants: [],
         children: [],
       } satisfies TaskDetailOutput);
     },

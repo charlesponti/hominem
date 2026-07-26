@@ -1,7 +1,7 @@
 appId: com.pontistudios.hakumi.dev
 ---
 # Drives 15 date-related prompts through the on-device calendar spike
-# (settings/calendar.tsx) and screenshots each response so a
+# main-app Calendar section and screenshots each response so a
 # human or agent can review whether lookupCalendarEvents resolved the right
 # startDate/endDate/dayPart. This is an exploratory/diagnostic flow, not a
 # pass/fail regression test — responses are free-form on-device model output,
@@ -14,15 +14,12 @@ appId: com.pontistudios.hakumi.dev
 #     macOS/Xcode versions allow the simulator to run FoundationModels using
 #     the host Mac's model
 #   - a test account signed in with the test OTP (000000), and Calendar
-#     connected from Account settings
+#     connected from the main app's Calendar section
 #   - EXPO_PUBLIC_ON_DEVICE_AI_SPIKE_ENABLED=true, or a __DEV__ build, so the
 #     Calendar query action is visible
 - runFlow: startup.yaml
 - tapOn:
-    id: inbox-open-settings
-- assertVisible: Settings
-- tapOn:
-    id: settings-calendar-action
+    id: workspace-context-calendar
 - assertVisible:
     id: calendar-screen
 
@@ -33,10 +30,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What do I have today?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 01-what-do-i-have-today
 
@@ -47,10 +44,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What's on my calendar tomorrow morning?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 02-tomorrow-morning
 
@@ -61,10 +58,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What do I have this week?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 03-this-week
 
@@ -75,10 +72,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: Am I free Thursday afternoon?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 04-free-thursday-afternoon
 
@@ -89,10 +86,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What's my next meeting?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 05-next-meeting
 
@@ -103,10 +100,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: How many meetings do I have this week versus last week?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 06-this-week-vs-last-week
 
@@ -117,10 +114,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What did I have going on this time last month?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 07-this-time-last-month
 
@@ -131,10 +128,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What's on my calendar for the rest of the day?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 08-rest-of-the-day
 
@@ -145,10 +142,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: Do I have anything conflicting with a 3pm call tomorrow?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 09-conflict-check
 
@@ -159,10 +156,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What's my first thing tomorrow?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 10-first-thing-tomorrow
 
@@ -173,10 +170,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What do I have between now and Friday?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 11-now-until-friday
 
@@ -187,10 +184,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: Show me everything I have next week.
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 12-next-week
 
@@ -201,10 +198,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What did I do the week I was out sick?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 13-the-week-i-was-sick
 
@@ -215,10 +212,10 @@ appId: com.pontistudios.hakumi.dev
 - inputText: What's on my calendar every Monday this month?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 14-every-monday-this-month
 
@@ -229,9 +226,9 @@ appId: com.pontistudios.hakumi.dev
 - inputText: How much free time do I have this afternoon?
 - back
 - tapOn:
-    text: Ask
+    id: calendar-ask-button
 - extendedWaitUntil:
     visible:
-      id: calendar-response
+      id: calendar-answer-state
     timeout: 45000
 - takeScreenshot: 15-free-time-this-afternoon

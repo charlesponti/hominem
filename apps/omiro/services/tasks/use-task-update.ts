@@ -14,6 +14,14 @@ interface UpdateTaskInput {
   description?: string | null;
   priority?: 'low' | 'medium' | 'high';
   dueAt?: string | null;
+  durationMinutes?: number | null;
+  schedulingWindowStartAt?: string | null;
+  schedulingWindowEndAt?: string | null;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  timeZone?: string | null;
+  location?: string | null;
+  participants?: { displayName: string; email?: string | null }[];
 }
 
 function applyPatch<T extends Task>(task: T, patch: UpdateTaskInput): T {
@@ -23,6 +31,17 @@ function applyPatch<T extends Task>(task: T, patch: UpdateTaskInput): T {
     ...(patch.description !== undefined ? { description: patch.description } : {}),
     ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
     ...(patch.dueAt !== undefined ? { dueAt: patch.dueAt } : {}),
+    ...(patch.durationMinutes !== undefined ? { durationMinutes: patch.durationMinutes } : {}),
+    ...(patch.schedulingWindowStartAt !== undefined
+      ? { schedulingWindowStartAt: patch.schedulingWindowStartAt }
+      : {}),
+    ...(patch.schedulingWindowEndAt !== undefined
+      ? { schedulingWindowEndAt: patch.schedulingWindowEndAt }
+      : {}),
+    ...(patch.scheduledStartAt !== undefined ? { scheduledStartAt: patch.scheduledStartAt } : {}),
+    ...(patch.scheduledEndAt !== undefined ? { scheduledEndAt: patch.scheduledEndAt } : {}),
+    ...(patch.timeZone !== undefined ? { timeZone: patch.timeZone } : {}),
+    ...(patch.location !== undefined ? { location: patch.location } : {}),
   };
 }
 

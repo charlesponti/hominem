@@ -1,10 +1,7 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Covers expand-on-tap search across the Chats/Notes/Tasks contexts. The
+# Covers expand-on-tap search across the Chats and Notes contexts. The
 # focused state replaces the idle header composition with a field and Cancel.
-# Assumes seed data: a task_list titled
-# "3 tasks", and a standalone task "Buy groceries" (see tasks-navigation.yaml
-# / tasks-edit.yaml for the same fixtures).
 - runFlow: startup.yaml
 
 - assertNotVisible:
@@ -21,17 +18,14 @@ appId: com.pontistudios.hakumi.dev
     id: inbox-composer-input
 # Switching contexts while search is active re-scopes it instead of closing it.
 - tapOn:
-    id: workspace-context-tasks
-- assertVisible: "3 tasks"
-- assertVisible: Buy groceries
+    id: workspace-context-notes
 - tapOn: Search
 - assertVisible:
     id: workspace-search-input
 - assertVisible:
     id: workspace-context-chats
-- inputText: groceries
-- assertVisible: Buy groceries
-- assertNotVisible: "3 tasks"
+- inputText: project
 - tapOn:
     id: workspace-search-cancel
-- assertVisible: "3 tasks"
+- assertVisible:
+    id: workspace-context-notes

@@ -54,6 +54,95 @@ private func dayFormatter() -> DateFormatter {
   return formatter
 }
 
+private func iso8601Date(_ value: String) -> Date? {
+  let fractionalFormatter = ISO8601DateFormatter()
+  fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+  if let date = fractionalFormatter.date(from: value) {
+    return date
+  }
+
+  let formatter = ISO8601DateFormatter()
+  formatter.formatOptions = [.withInternetDateTime]
+  return formatter.date(from: value)
+}
+
+private func calendarEventRecord(_ event: EKEvent, formatter: ISO8601DateFormatter) -> [String: Any] {
+  [
+    "id": event.eventIdentifier ?? UUID().uuidString,
+    "title": event.title ?? "Untitled event",
+    "startDate": formatter.string(from: event.startDate),
+    "endDate": formatter.string(from: event.endDate),
+    "isAllDay": event.isAllDay,
+    "location": event.location as Any,
+    "calendarTitle": event.calendar?.title as Any,
+    "notes": event.notes as Any,
+    "participants": event.attendees?.compactMap { participant in
+      participant.name ?? participant.url.absoluteString
+    } ?? [],
+    "recurrenceDescription": event.recurrenceRules?.first?.description as Any,
+    "isEditable": event.calendar?.allowsContentModifications ?? false,
+  ]
+}
+
+private func calendarSpan(_ scope: String) -> EKSpan {
+  scope == "futureEvents" ? .futureEvents : .thisEvent
+}
+
+private func recurrenceRule(_ value: String?) throws -> EKRecurrenceRule? {
+  guard let value, !value.isEmpty else { return nil }
+
+  let fields = Dictionary(
+    uniqueKeysWithValues: value
+      .uppercased()
+      .replacingOccurrences(of: "RRULE:", with: "")
+      .split(separator: ";")
+      .compactMap { field -> (String, String)? in
+        let parts = field.split(separator: "=", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        return (parts[0], parts[1])
+      }
+  )
+  let frequency: EKRecurrenceFrequency
+  switch fields["FREQ"] {
+  case "DAILY": frequency = .daily
+  case "WEEKLY": frequency = .weekly
+  case "MONTHLY": frequency = .monthly
+  case "YEARLY": frequency = .yearly
+  default:
+    throw OnDeviceAIException(
+      code: "INVALID_RECURRENCE_RULE",
+      message: "This recurrence pattern is not supported."
+    )
+  }
+  let interval = max(Int(fields["INTERVAL"] ?? "1") ?? 1, 1)
+  let weekdays: [EKRecurrenceDayOfWeek]? = fields["BYDAY"]?
+    .split(separator: ",")
+    .compactMap { day in
+      switch day.suffix(2) {
+      case "MO": return EKRecurrenceDayOfWeek(.monday)
+      case "TU": return EKRecurrenceDayOfWeek(.tuesday)
+      case "WE": return EKRecurrenceDayOfWeek(.wednesday)
+      case "TH": return EKRecurrenceDayOfWeek(.thursday)
+      case "FR": return EKRecurrenceDayOfWeek(.friday)
+      case "SA": return EKRecurrenceDayOfWeek(.saturday)
+      case "SU": return EKRecurrenceDayOfWeek(.sunday)
+      default: return nil
+      }
+    }
+  let end = Int(fields["COUNT"] ?? "").map { EKRecurrenceEnd(occurrenceCount: $0) }
+  return EKRecurrenceRule(
+    recurrenceWith: frequency,
+    interval: interval,
+    daysOfTheWeek: weekdays?.isEmpty == false ? weekdays : nil,
+    daysOfTheMonth: nil,
+    monthsOfTheYear: nil,
+    weeksOfTheYear: nil,
+    daysOfTheYear: nil,
+    setPositions: nil,
+    end: end
+  )
+}
+
 // Human-readable "today" anchor, e.g. "Monday, 2026-07-20". Given to the
 // model so it can resolve relative phrases ("this time last year", "end of
 // next month") into concrete dates itself, instead of the tool guessing at
@@ -351,6 +440,156 @@ public class OnDeviceAIModule: Module {
     AsyncFunction("requestCalendarPermissions") { () async -> String in
       let status = await requestCalendarAuthorization()
       return permissionStatusString(status)
+    }
+
+    AsyncFunction("getCalendarEvents") { (startDate: String, endDate: String) throws -> [[String: Any]] in
+      guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+        throw OnDeviceAIException.missingPermission
+      }
+
+      let formatter = ISO8601DateFormatter()
+      guard let start = iso8601Date(startDate), let end = iso8601Date(endDate), start < end else {
+        throw OnDeviceAIException(
+          code: "INVALID_DATE_RANGE",
+          message: "Calendar event dates must be ISO 8601 timestamps."
+        )
+      }
+
+      let store = EKEventStore()
+      let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
+      return store.events(matching: predicate)
+        .sorted { $0.startDate < $1.startDate }
+        .map { calendarEventRecord($0, formatter: formatter) }
+    }
+
+    AsyncFunction("createCalendarEvent") { (
+      title: String,
+      startDate: String,
+      endDate: String,
+      location: String?,
+      recurrenceRuleValue: String?
+    ) throws -> [String: Any] in
+      guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+        throw OnDeviceAIException.missingPermission
+      }
+
+      guard let start = iso8601Date(startDate), let end = iso8601Date(endDate), start < end else {
+        throw OnDeviceAIException(
+          code: "INVALID_DATE_RANGE",
+          message: "Calendar event dates must be ISO 8601 timestamps."
+        )
+      }
+
+      let store = EKEventStore()
+      guard let calendar = store.defaultCalendarForNewEvents else {
+        throw OnDeviceAIException(
+          code: "CALENDAR_UNAVAILABLE",
+          message: "No calendar is available for new events."
+        )
+      }
+
+      let event = EKEvent(eventStore: store)
+      event.title = title
+      event.startDate = start
+      event.endDate = end
+      event.location = location
+      event.calendar = calendar
+      event.recurrenceRules = try recurrenceRule(recurrenceRuleValue).map { [$0] }
+      try store.save(event, span: .thisEvent)
+
+      return calendarEventRecord(event, formatter: ISO8601DateFormatter())
+    }
+
+    AsyncFunction("getCalendarEvent") { (id: String) throws -> [String: Any] in
+      guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+        throw OnDeviceAIException.missingPermission
+      }
+
+      let store = EKEventStore()
+      guard let event = store.event(withIdentifier: id) else {
+        throw OnDeviceAIException(
+          code: "EVENT_NOT_FOUND",
+          message: "This calendar event is no longer available."
+        )
+      }
+
+      return calendarEventRecord(event, formatter: ISO8601DateFormatter())
+    }
+
+    AsyncFunction("updateCalendarEvent") { (
+      id: String,
+      patch: [String: Any],
+      recurrenceScope: String
+    ) throws -> [String: Any] in
+      guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+        throw OnDeviceAIException.missingPermission
+      }
+
+      let store = EKEventStore()
+      guard let event = store.event(withIdentifier: id) else {
+        throw OnDeviceAIException(
+          code: "EVENT_NOT_FOUND",
+          message: "This calendar event is no longer available."
+        )
+      }
+      guard event.calendar?.allowsContentModifications ?? false else {
+        throw OnDeviceAIException(
+          code: "EVENT_READ_ONLY",
+          message: "This calendar does not allow changes from Omiro."
+        )
+      }
+
+      if let title = patch["title"] as? String {
+        event.title = title
+      }
+      if patch.keys.contains("location") {
+        event.location = patch["location"] as? String
+      }
+      if patch.keys.contains("notes") {
+        event.notes = patch["notes"] as? String
+      }
+
+      guard let existingStart = event.startDate, let existingEnd = event.endDate else {
+        throw OnDeviceAIException(
+          code: "INVALID_DATE_RANGE",
+          message: "This calendar event does not have a valid time range."
+        )
+      }
+      let start = (patch["startDate"] as? String).flatMap(iso8601Date) ?? existingStart
+      let end = (patch["endDate"] as? String).flatMap(iso8601Date) ?? existingEnd
+      guard start < end else {
+        throw OnDeviceAIException(
+          code: "INVALID_DATE_RANGE",
+          message: "Calendar event dates must be ISO 8601 timestamps."
+        )
+      }
+      event.startDate = start
+      event.endDate = end
+
+      try store.save(event, span: calendarSpan(recurrenceScope), commit: true)
+      return calendarEventRecord(event, formatter: ISO8601DateFormatter())
+    }
+
+    AsyncFunction("deleteCalendarEvent") { (id: String, recurrenceScope: String) throws -> Void in
+      guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+        throw OnDeviceAIException.missingPermission
+      }
+
+      let store = EKEventStore()
+      guard let event = store.event(withIdentifier: id) else {
+        throw OnDeviceAIException(
+          code: "EVENT_NOT_FOUND",
+          message: "This calendar event is no longer available."
+        )
+      }
+      guard event.calendar?.allowsContentModifications ?? false else {
+        throw OnDeviceAIException(
+          code: "EVENT_READ_ONLY",
+          message: "This calendar does not allow changes from Omiro."
+        )
+      }
+
+      try store.remove(event, span: calendarSpan(recurrenceScope), commit: true)
     }
 
     AsyncFunction("askCalendar") { (prompt: String) async throws -> OnDeviceAIResult in

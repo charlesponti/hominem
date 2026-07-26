@@ -13,6 +13,14 @@ interface CreateTaskInput {
   description?: string | null;
   priority?: 'low' | 'medium' | 'high';
   dueAt?: string | null;
+  durationMinutes?: number | null;
+  schedulingWindowStartAt?: string | null;
+  schedulingWindowEndAt?: string | null;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  timeZone?: string | null;
+  location?: string | null;
+  participants?: { displayName: string; email?: string | null }[];
   parentTaskId?: string | null;
 }
 
@@ -28,6 +36,13 @@ function buildOptimisticTask(input: CreateTaskInput, optimisticId: string): Task
     status: 'pending',
     priority: input.priority ?? 'medium',
     dueAt: input.dueAt ?? null,
+    durationMinutes: input.durationMinutes ?? null,
+    schedulingWindowStartAt: input.schedulingWindowStartAt ?? null,
+    schedulingWindowEndAt: input.schedulingWindowEndAt ?? null,
+    scheduledStartAt: input.scheduledStartAt ?? null,
+    scheduledEndAt: input.scheduledEndAt ?? null,
+    timeZone: input.timeZone ?? null,
+    location: input.location ?? null,
     completedAt: null,
     createdAt: now,
     updatedAt: now,
@@ -48,6 +63,14 @@ export function useTaskCreate({ parentId }: UseTaskCreateOptions = {}) {
           artifactType: 'task',
           priority: input.priority,
           dueAt: input.dueAt ?? null,
+          durationMinutes: input.durationMinutes ?? null,
+          schedulingWindowStartAt: input.schedulingWindowStartAt ?? null,
+          schedulingWindowEndAt: input.schedulingWindowEndAt ?? null,
+          scheduledStartAt: input.scheduledStartAt ?? null,
+          scheduledEndAt: input.scheduledEndAt ?? null,
+          timeZone: input.timeZone ?? null,
+          location: input.location ?? null,
+          participants: input.participants,
           parentTaskId: parentId ?? input.parentTaskId ?? null,
         },
       });
@@ -123,6 +146,7 @@ export function useTaskCreate({ parentId }: UseTaskCreateOptions = {}) {
         );
         queryClient.setQueryData(taskKeys.detail(createdTask.id), {
           task: createdTask,
+          participants: [],
           children: [],
         } satisfies TaskDetailOutput);
       }

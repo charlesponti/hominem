@@ -1,8 +1,0 @@
-appId: com.pontistudios.hakumi.dev
----
-# Assumes no tasks exist for the signed-in user (run after clearing app.tasks,
-# or before any tasks have been created).
-- runFlow: startup.yaml
-- tapOn: Tasks
-- assertVisible: No tasks yet
-- assertVisible: Tasks created from your chats and notes will appear here.

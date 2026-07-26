@@ -57,6 +57,10 @@ known; no first-party usage is not proof that no external client depends on it.
   `@hominem/db` and the server-owned code that uses it.
 - Generated database types are checked artifacts. Generate them through
   `just db codegen`; CI rejects drift.
+- Omiro's database is authoritative for tasks and their scheduling intent.
+  Apple Calendar and Reminders are device integrations represented as external
+  projections; their identifiers and synchronization state do not replace the
+  canonical task record.
 - Tests that can mutate data reject non-test databases at the database boundary,
   even when launched outside the normal command path.
 
@@ -68,4 +72,3 @@ known; no first-party usage is not proof that no external client depends on it.
 | Career data model | One documented server/DB or API-backed model; database imports stay in its permitted layer. |
 | Finance release tier | README, CI, deployment configuration, and command scopes agree. |
 | Better Auth bearer sessions | Keep or remove the plugin with a tested external compatibility contract. |
-
