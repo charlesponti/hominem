@@ -1,107 +1,87 @@
-import { type ReactNode, useEffect, useRef } from 'react';
-import { TextInput, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 
-import { lineHeights, makeStyles } from '~/components/theme';
+import { ComposerDock } from '~/components/composer/ComposerDock';
+import { ComposerSurface } from '~/components/composer/ComposerSurface';
+import { ComposerTextField } from '~/components/composer/ComposerTextField';
+import { makeStyles, useThemeColors } from '~/components/theme';
+import AppIcon from '~/components/ui/icon';
 import { IconButton } from '~/components/ui/icon-button';
-import { Input } from '~/components/ui/input';
 
 interface TimeComposerProps {
-  bottomInset: number;
   children?: ReactNode;
   disabled: boolean;
   onChangeText: (value: string) => void;
+  onHeightChange: (height: number) => void;
   onSubmit: () => void;
   state: 'idle' | 'parsing';
   value: string;
 }
 
 export function TimeComposer({
-  bottomInset,
   children,
   disabled,
   onChangeText,
+  onHeightChange,
   onSubmit,
   state,
   value,
 }: TimeComposerProps) {
   const styles = useStyles();
+  const themeColors = useThemeColors();
   const inputRef = useRef<TextInput>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const canSubmit = value.trim().length > 0;
 
   useEffect(() => {
-    if (state === 'idle' && !value) return;
-    if (state === 'idle') inputRef.current?.focus();
+    if (state === 'idle' && value) inputRef.current?.focus();
   }, [state, value]);
 
   return (
-    <KeyboardStickyView
-      offset={{ closed: 0, opened: 40 }}
-      pointerEvents="box-none"
-      style={[styles.dock, { paddingBottom: Math.max(bottomInset, 12) }]}
-    >
+    <ComposerDock onHeightChange={onHeightChange} testID="time-composer-dock">
       {children}
-      <View style={styles.composer}>
-        <Input
-          ref={inputRef}
+      <ComposerSurface
+        focused={isFocused}
+        leading={<AppIcon name="sparkles" size={22} tintColor={themeColors['text-primary']} />}
+        testID="time-composer"
+        trailing={
+          canSubmit || state === 'parsing' ? (
+            <IconButton
+              accessibilityLabel={
+                state === 'parsing' ? 'Interpreting time request' : 'Interpret time request'
+              }
+              circular
+              disabled={disabled || !canSubmit}
+              icon="arrow.up"
+              isAnimating={state === 'parsing'}
+              style={styles.submit}
+              testID="time-composer-submit"
+              tintColor={themeColors['primary-foreground']}
+              variant="surface"
+              onPress={onSubmit}
+            />
+          ) : null
+        }
+      >
+        <ComposerTextField
           accessibilityLabel="Add or search time"
-          editable={!disabled}
+          disabled={disabled}
+          inputRef={inputRef}
+          onBlur={() => setIsFocused(false)}
           onChangeText={onChangeText}
+          onFocus={() => setIsFocused(true)}
           onSubmitEditing={onSubmit}
           placeholder="Add or search anything…"
           returnKeyType="send"
-          style={styles.input}
+          submitBehavior="submit"
           testID="time-composer-input"
           value={value}
         />
-        {canSubmit || state === 'parsing' ? (
-          <IconButton
-            accessibilityLabel={
-              state === 'parsing' ? 'Interpreting time request' : 'Interpret time request'
-            }
-            disabled={disabled || !canSubmit}
-            icon="arrow.up.circle.fill"
-            isAnimating={state === 'parsing'}
-            testID="time-composer-submit"
-            tintColor={styles.icon.color}
-            variant="ghost"
-            onPress={onSubmit}
-          />
-        ) : null}
-      </View>
-    </KeyboardStickyView>
+      </ComposerSurface>
+    </ComposerDock>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
-  composer: {
-    alignItems: 'center',
-    backgroundColor: theme.colors['card'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginHorizontal: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  dock: {
-    bottom: 0,
-    gap: 8,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-  },
-  icon: { color: theme.colors.primary },
-  input: {
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    flex: 1,
-    height: 44,
-    lineHeight: lineHeights.body,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    transform: [{ translateY: -2 }],
-  },
+  submit: { backgroundColor: theme.colors.primary },
 }));

@@ -11,7 +11,11 @@ import { ComposerProvider } from './ComposerContext';
 import { ComposerShell } from './ComposerShell';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import { ComposerTextInput } from './ComposerTextInput';
-import { ComposerToolbar } from './ComposerToolbar';
+import {
+  ComposerLeadingAction,
+  ComposerSecondaryActions,
+  ComposerTrailingAction,
+} from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
 import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
@@ -58,7 +62,6 @@ function ComposerContent(props: ComposerProps) {
     [controller, submission],
   );
 
-  const isInbox = props.mode === 'inbox';
   const secondaryActionConfig = presentation.secondaryAction;
   const secondaryAction = secondaryActionConfig
     ? {
@@ -72,23 +75,24 @@ function ComposerContent(props: ComposerProps) {
   return (
     <ComposerShell
       testID={presentation.shellTestID}
+      focused={controller.isFocused}
       isRecording={controller.voice.isRecording}
-      isColumnLayout={controller.isColumnLayout}
       accessory={controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
       inlinePanel={
-        controller.voice.isRecording ? (
-          <VoiceRecordingPanel
-            startedAt={controller.voice.recordingStartedAt}
-            onCancel={() => void controller.voice.cancelVoiceRecording()}
-            onDone={() => void controller.voice.handleVoicePress()}
-          />
-        ) : (
+        !controller.voice.isRecording ? (
           <InlineEnhancePanel
             enhance={controller.enhance}
             text={controller.message}
             onEnhanced={controller.setMessage}
           />
-        )
+        ) : undefined
+      }
+      recordingPanel={
+        <VoiceRecordingPanel
+          startedAt={controller.voice.recordingStartedAt}
+          onCancel={() => void controller.voice.cancelVoiceRecording()}
+          onDone={() => void controller.voice.handleVoicePress()}
+        />
       }
       errorBanner={
         controller.voice.voiceState === 'failed' && controller.voice.error ? (
@@ -105,29 +109,32 @@ function ComposerContent(props: ComposerProps) {
           onChangeText={controller.setMessage}
           placeholder={presentation.placeholder}
           testID={presentation.inputTestID}
-          isColumnLayout={controller.isColumnLayout}
           onFocus={controller.handleInputFocus}
           onBlur={controller.handleInputBlur}
         />
       }
-      toolbar={
-        <ComposerToolbar
-          isInbox={isInbox}
-          isRecording={controller.voice.isRecording}
+      leading={<ComposerLeadingAction canPickMedia={controller.canPickMedia} />}
+      trailing={
+        <ComposerTrailingAction
+          canSubmit={controller.canSubmit}
+          canToggleVoice={controller.canToggleVoice}
+          hasContent={controller.hasContent}
           isRecordingElsewhere={controller.voice.isRecordingElsewhere}
           isVoiceBusy={controller.voice.isBusy}
-          isEnhancing={controller.enhance.isEnhancing}
-          isCleaningVoice={controller.voice.isCleaningVoice}
-          canPickMedia={controller.canPickMedia}
-          canToggleVoice={controller.canToggleVoice}
-          canEnhance={controller.canOpenEnhance}
-          canSubmit={controller.canSubmit}
           isSubmitting={submission.isSubmitting}
-          onVoicePress={() => void controller.voice.handleVoicePress()}
-          onEnhancePress={controller.enhance.toggleEnhance}
           onSubmit={() => submit(presentation.primarySubmitKind)}
+          onVoicePress={() => void controller.voice.handleVoicePress()}
           submitTestID={presentation.submitTestID}
           submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+        />
+      }
+      secondaryActions={
+        <ComposerSecondaryActions
+          canEnhance={controller.canOpenEnhance}
+          hasContent={controller.hasContent}
+          isCleaningVoice={controller.voice.isCleaningVoice}
+          isEnhancing={controller.enhance.isEnhancing}
+          onEnhancePress={controller.enhance.toggleEnhance}
           secondaryAction={secondaryAction}
         />
       }

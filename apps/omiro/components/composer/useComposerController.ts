@@ -75,6 +75,8 @@ export function useComposerController({
 
   return useMemo(
     () => ({
+      hasContent,
+      isFocused,
       message: draft.message,
       setMessage: draft.setMessage,
       showAttachments,
@@ -93,6 +95,8 @@ export function useComposerController({
     }),
     [
       draft.message,
+      hasContent,
+      isFocused,
       draft.setMessage,
       showAttachments,
       uploadedAttachmentIds,

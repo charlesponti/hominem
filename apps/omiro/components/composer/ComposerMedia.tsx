@@ -2,8 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { ActionSheetIOS } from 'react-native';
 
 import { useComposerContext } from '~/components/composer/ComposerContext';
-import { TOOLBAR_ICON_SIZE, TOOL_BTN_SIZE } from '~/components/composer/constants';
 import { CameraModal } from '~/components/media/camera-modal';
+import { componentSizes } from '~/components/theme';
 import { spacing } from '~/components/theme/tokens';
 import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
@@ -28,8 +28,6 @@ export function ComposerMedia({ accessibilityLabel, disabled = false }: Composer
         cancelButtonIndex: 0,
       },
       (i) => {
-        // Indices line up with `options` above: 0 is Cancel, 1 is Take Photo,
-        // 2 is Choose From Library — ActionSheetIOS gives no named-key access.
         if (i === 1) setIsCameraOpen(true);
         else if (i === 2) void pickAttachment();
       },
@@ -41,8 +39,7 @@ export function ComposerMedia({ accessibilityLabel, disabled = false }: Composer
       <IconButton
         accessibilityLabel={accessibilityLabel}
         icon="plus"
-        iconSize={TOOLBAR_ICON_SIZE}
-        size={TOOL_BTN_SIZE}
+        iconSize={componentSizes.icon}
         variant="ghost"
         circular
         disabled={disabled}

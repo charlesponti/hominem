@@ -7,8 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { TOOLBAR_ICON_SIZE, TOOL_BTN_SIZE } from '~/components/composer/constants';
-import { Text, makeStyles, useThemeColors } from '~/components/theme';
+import { Text, componentSizes, makeStyles, radii, useThemeColors } from '~/components/theme';
 import { spacing } from '~/components/theme/tokens';
 import { IconButton } from '~/components/ui/icon-button';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
@@ -46,8 +45,7 @@ export function VoiceRecordingPanel({
         circular
         disabled={false}
         icon="xmark"
-        iconSize={TOOLBAR_ICON_SIZE}
-        size={TOOL_BTN_SIZE}
+        iconSize={componentSizes.icon}
         testID="composer-cancel-recording-button"
         tintColor={themeColors['tertiary']}
         variant="surface"
@@ -68,9 +66,8 @@ export function VoiceRecordingPanel({
           circular
           disabled={false}
           icon="stop.fill"
-          iconSize={TOOLBAR_ICON_SIZE}
-          size={TOOL_BTN_SIZE}
-          testID="composer-stop-recording-button"
+        iconSize={componentSizes.icon}
+        testID="composer-stop-recording-button"
           variant="primary"
           onPress={onDone}
         />
@@ -91,9 +88,9 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[2],
-    height: TOOL_BTN_SIZE,
+    height: componentSizes.xl,
     paddingHorizontal: spacing[3],
-    borderRadius: TOOL_BTN_SIZE / 2,
+    borderRadius: radii.full,
     backgroundColor: theme.colors['card'],
   },
   dot: {

@@ -28,6 +28,7 @@ export const componentSizes = {
   md: 24,
   lg: 32,
   xl: 44,
+  icon: 20,
 } as const;
 
 export const typography = {

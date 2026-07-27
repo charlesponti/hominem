@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { getTimeBlockRoute } from '~/services/navigation/routes';
@@ -75,6 +76,9 @@ export function TimeWorkspace({
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [hasLoadedEvents, setHasLoadedEvents] = useState(events.length > 0);
   const [isSaving, setIsSaving] = useState(false);
+  const [composerHeight, setComposerHeight] = useState(() =>
+    getCollapsedComposerDockHeight(insets.bottom),
+  );
   const loadingRef = useRef(false);
   const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
   const { mutate: toggleTask } = useTaskComplete();
@@ -378,7 +382,7 @@ export function TimeWorkspace({
   return (
     <View style={styles.container} testID="time-screen">
       <TimeStream
-        bottomPadding={insets.bottom + 220}
+        bottomPadding={composerHeight + 8}
         error={interaction.kind === 'error' ? interaction.message : ''}
         hasScheduledItems={scheduledItems.length > 0}
         isLoadingEvents={isLoadingEvents}
@@ -398,8 +402,8 @@ export function TimeWorkspace({
       />
       {hasLoadedEvents ? <View testID="time-events-ready" /> : null}
       <TimeComposer
-        bottomInset={insets.bottom}
         disabled={interaction.kind === 'parsing' || isSaving}
+        onHeightChange={setComposerHeight}
         onChangeText={(value) => {
           setPrompt(value);
           if (interaction.kind === 'error') setInteraction({ kind: 'idle' });

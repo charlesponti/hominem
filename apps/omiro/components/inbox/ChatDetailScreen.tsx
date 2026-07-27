@@ -1,10 +1,8 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -17,6 +15,7 @@ import {
 } from '~/components/chat';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
+import { ComposerDock, getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
@@ -46,12 +45,6 @@ const useStyles = makeStyles(() => ({
     left: 0,
     top: 0,
     pointerEvents: 'box-none',
-    position: 'absolute',
-    right: 0,
-  },
-  composerOverlay: {
-    bottom: 0,
-    left: 0,
     position: 'absolute',
     right: 0,
   },
@@ -85,15 +78,10 @@ export function ChatDetailScreen() {
   const { data: activeChat } = useActiveChat(id);
   const styles = useStyles();
   const chatId = activeChat?.id ?? id;
-  const [composerHeight, setComposerHeight] = useState(0);
+  const [composerHeight, setComposerHeight] = useState(() =>
+    getCollapsedComposerDockHeight(insets.bottom),
+  );
   const canGoBack = navigation.canGoBack();
-
-  const handleComposerLayout = useCallback((e: LayoutChangeEvent) => {
-    const nextHeight = e.nativeEvent.layout.height;
-    setComposerHeight((currentHeight) =>
-      currentHeight === nextHeight ? currentHeight : nextHeight,
-    );
-  }, []);
 
   const services = useMemo<ChatServices>(
     () => ({
@@ -284,7 +272,7 @@ export function ChatDetailScreen() {
           }}
           renderIcon={renderChatIcon}
           formatTimestamp={formatRelativeAge}
-          contentPaddingBottom={composerHeight + insets.bottom}
+          contentPaddingBottom={composerHeight + 8}
           emptyState={controller.messagesError ? errorState : emptyState}
           refreshControl={
             <RefreshControl
@@ -295,18 +283,9 @@ export function ChatDetailScreen() {
             />
           }
         />
-        <KeyboardStickyView
-          offset={{ closed: 0, opened: insets.bottom + 10 }}
-          pointerEvents="box-none"
-          style={[
-            styles.composerOverlay,
-            { paddingBottom: insets.bottom + 10, paddingHorizontal: 12 },
-          ]}
-        >
-          <View onLayout={handleComposerLayout}>
-            <Composer mode="chat" chatId={chatId} />
-          </View>
-        </KeyboardStickyView>
+        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
+          <Composer mode="chat" chatId={chatId} />
+        </ComposerDock>
         <View style={styles.reviewOverlay}>
           <ChatReviewOverlay
             pendingReview={controller.pendingReview}

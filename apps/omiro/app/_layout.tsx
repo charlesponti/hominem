@@ -28,7 +28,7 @@ import { resolveAuthRedirect } from '~/navigation/auth-route-guard';
 import { AuthProvider, useAuth } from '~/services/auth/auth-provider';
 import { consumeRestoreAttempt, consumeResumeTarget } from '~/services/navigation/launch-state';
 import { getContentRoute } from '~/services/navigation/routes';
-import { initObservability } from '~/services/observability';
+import { initObservability, isSentryEnabled } from '~/services/observability';
 import { POSTHOG_ENABLED, posthog } from '~/services/posthog';
 import queryClient from '~/services/query-client';
 import { mobilePersistOptions } from '~/services/query-persistence';
@@ -252,4 +252,4 @@ function RootLayout() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;

@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Composer } from '~/components/composer/Composer';
+import { ComposerDock, getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
 import { InboxList, type InboxTab } from '~/components/inbox/InboxList';
 import { WorkspaceToolbar } from '~/components/navigation/WorkspaceToolbar.ios';
 import { makeStyles } from '~/components/theme';
@@ -46,6 +46,9 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
   });
   const [timeSnapshot, setTimeSnapshot] = useState<TimeWorkspaceSnapshot>(
     initialTimeWorkspaceSnapshot,
+  );
+  const [composerHeight, setComposerHeight] = useState(() =>
+    getCollapsedComposerDockHeight(insets.bottom),
   );
   const isContentWorkspace = activeContext !== 'time';
   const {
@@ -118,7 +121,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
       ) : (
         <View style={styles.listWrap}>
           <InboxList
-            contentPaddingBottom={insets.bottom + 164}
+            contentPaddingBottom={composerHeight + 8}
             contentPaddingTop={4}
             error={error}
             isFetchingNextPage={isFetchingNextPage}
@@ -136,11 +139,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
       )}
 
       {activeContext === 'time' ? null : (
-        <KeyboardStickyView
-          offset={{ closed: -(insets.bottom + 10), opened: -10 }}
-          pointerEvents="box-none"
-          style={styles.composerWrap}
-        >
+        <ComposerDock onHeightChange={setComposerHeight} testID="workspace-composer-dock">
           <Composer
             mode="inbox"
             entryMode={activeContext === 'chats' ? 'chat' : 'note'}
@@ -148,14 +147,13 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
             onClearDraft={clearInboxDraft}
             onDraftChange={writeInboxDraft}
           />
-        </KeyboardStickyView>
+        </ComposerDock>
       )}
     </View>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
-  composerWrap: { paddingHorizontal: 8 },
   container: { backgroundColor: theme.colors.background, flex: 1 },
   listWrap: { flex: 1 },
 }));

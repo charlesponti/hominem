@@ -23,7 +23,6 @@ export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps
         accessibilityLabel={t.inboxComposer.composer.dismissErrorHint}
         icon="xmark"
         iconSize={13}
-        size={26}
         variant="ghost"
         onPress={onDismiss}
       />

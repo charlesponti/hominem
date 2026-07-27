@@ -4,12 +4,15 @@ import { Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
-import { makeStyles, useThemeColors } from '~/components/theme';
+import { fontSizes, lineHeights, makeStyles, useThemeColors } from '~/components/theme';
 import { createLayoutTransition } from '~/components/theme/animations';
 import { radii, spacing } from '~/components/theme/tokens';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
+
+const THUMB_SIZE = spacing[4] * 3;
+const BADGE_SIZE = spacing[2] * 2;
 
 export function ComposerAttachmentRow() {
   const { attachments, errors, isUploading, progressByAssetId, onRemove } =
@@ -30,8 +33,6 @@ export function ComposerAttachmentRow() {
         >
           {attachments.map((a) => {
             const progress = progressByAssetId[a.id] ?? 0;
-            // 0 means still queued (not started); 100 means settled (done or
-            // errored) — the progress overlay only makes sense in between.
             const uploading = progress > 0 && progress < 100;
             return (
               <Pressable
@@ -42,16 +43,12 @@ export function ComposerAttachmentRow() {
                 accessibilityRole="button"
               >
                 {a.localUri && (
-                  <Image
-                    source={{ uri: a.localUri }}
-                    style={styles.thumbImage}
-                    contentFit="cover"
-                  />
+                  <Image source={{ uri: a.localUri }} style={styles.thumbImage} contentFit="cover" />
                 )}
                 <View style={styles.thumbBadge} pointerEvents="none">
                   <AppIcon
                     name="xmark"
-                    size={spacing[2] * 2}
+                    size={BADGE_SIZE}
                     tintColor={themeColors['primary-foreground']}
                   />
                 </View>
@@ -81,23 +78,23 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: spacing[1],
   },
   thumb: {
-    width: spacing[4] * 3,
-    height: spacing[4] * 3,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: radii.md,
     borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: theme.colors['card'],
   },
   thumbImage: {
-    width: spacing[4] * 3,
-    height: spacing[4] * 3,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
   },
   thumbBadge: {
     position: 'absolute',
     top: spacing[1],
     right: spacing[1],
-    width: spacing[2] * 2,
-    height: spacing[2] * 2,
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
     borderRadius: radii.sm,
     backgroundColor: theme.colors['overlay-scrim'],
     alignItems: 'center',
@@ -124,8 +121,8 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
   },
   errorText: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: fontSizes.caption1,
+    lineHeight: lineHeights.caption,
     color: theme.colors.destructive,
   },
 }));

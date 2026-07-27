@@ -64,7 +64,6 @@ function ActionIconButton({
       iconSize={16}
       onPress={onPress}
       pressedOpacity={0.65}
-      size={28}
       tintColor={isDestructive ? themeColors.destructive : themeColors['text-secondary']}
     />
   );

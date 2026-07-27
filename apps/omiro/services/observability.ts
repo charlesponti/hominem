@@ -7,7 +7,7 @@ import { env } from '~/env';
 
 import { posthog } from './posthog';
 
-const isSentryEnabled = APP_ENV === 'production';
+export const isSentryEnabled = APP_ENV === 'production';
 
 if (isSentryEnabled) {
   Sentry.init({

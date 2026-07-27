@@ -29,7 +29,6 @@ function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButton
       hitSlop={6}
       icon={icon}
       iconSize={17}
-      size={36}
       onPress={onPress}
     />
   );

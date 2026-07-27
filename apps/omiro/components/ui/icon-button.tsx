@@ -17,7 +17,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { componentSizes, makeStyles, themeSpacing, useThemeColors } from '~/components/theme';
+import { componentSizes, makeStyles, radii, themeSpacing, useThemeColors } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 import AppIcon from './icon';
@@ -28,7 +28,6 @@ export interface IconButtonProps extends Omit<PressableProps, 'children' | 'onPr
   accessibilityLabel: string;
   icon: SFSymbol;
   iconSize?: number;
-  size?: number;
   variant?: IconButtonVariant;
   circular?: boolean;
   tintColor?: ColorValue;
@@ -47,11 +46,10 @@ export function IconButton({
   disabledOpacity = 0.35,
   hitSlop = themeSpacing.sm,
   icon,
-  iconSize = componentSizes.md,
+  iconSize = 20,
   isAnimating = false,
   onPress,
   pressedOpacity = 0.65,
-  size = componentSizes.lg,
   style,
   tintColor,
   variant = 'ghost',
@@ -106,10 +104,10 @@ export function IconButton({
         }}
         style={({ pressed }) => [
           styles.button,
-          { height: size, width: size },
+          { height: componentSizes.xl, width: componentSizes.xl },
           variant === 'surface' ? styles.surface : null,
           variant === 'primary' ? styles.primary : null,
-          circular ? { borderRadius: size / 2 } : null,
+          circular ? { borderRadius: radii.full } : null,
           style,
           disabled ? { opacity: disabledOpacity } : pressed ? { opacity: pressedOpacity } : null,
         ]}

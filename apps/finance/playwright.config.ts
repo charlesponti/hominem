@@ -35,7 +35,6 @@ export default defineConfig({
         ROCCO_URL: 'http://rocco.lvh.me:4446',
         DATABASE_URL: 'postgresql://postgres:postgres@db-test.compose.orb.local:5432/app-test',
         BETTER_AUTH_SECRET: 'e2e-better-auth-secret',
-        AUTH_TEST_OTP_ENABLED: 'true',
         AUTH_E2E_SECRET: 'otp-secret',
         AUTH_E2E_ENABLED: 'true',
         AUTH_EMAIL_OTP_EXPIRES_SECONDS: '60',

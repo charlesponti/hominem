@@ -3,9 +3,8 @@ import * as z from 'zod';
 // Shared by every Node server package (services/api, packages/db,
 // packages/storage, packages/services, packages/ai, apps/career's server
 // env, ...). Extend this instead of re-declaring these fields locally —
-// duplicate schemas are exactly how AUTH_TEST_OTP_ENABLED's "false" bug and
-// the orphaned services/api/src/rpc/lib/env.ts schema happened: fields
-// drift apart with different defaults and nobody notices.
+// duplicate schemas invite drift — fields end up with different defaults
+// across packages and nobody notices until a production incident.
 export const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.url().optional(),

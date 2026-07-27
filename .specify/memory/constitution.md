@@ -87,8 +87,7 @@ Arrow-function shorthand: `() => fn(args)` rather than `() => { return fn(args);
 - **Pre-commit**: `pnpm run precommit` (format + lint)
 - **Pre-push**: `pnpm run prepush` (full test suite)
 - **Pre-build**: `pnpm run check` (typecheck + lint + build + test)
-- **Runtime guidance**: See `CLAUDE.md` and `AGENTS.md` for agent-specific instructions.
-  Each app/package MAY have its own `CLAUDE.md` for module-specific guidance.
+- **Runtime guidance**: See `AGENTS.md` for agent instructions.
 
 ## Governance
 

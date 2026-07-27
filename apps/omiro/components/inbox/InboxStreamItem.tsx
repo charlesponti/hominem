@@ -1,4 +1,5 @@
 import { MenuView } from '@expo/ui/community/menu';
+import { GlassView } from 'expo-glass-effect';
 import { Link, useRouter } from 'expo-router';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
@@ -106,57 +107,58 @@ export const InboxStreamItem = memo(({ item, swipeEnabled = true }: InboxStreamI
   );
 
   const row = (
-    <View style={styles.row}>
-      <Link href={item.route} disabled={isPending} asChild>
-        <Link.Trigger withAppleZoom={isChat}>
-          <Pressable
-            accessibilityLabel={`${primaryText}, ${isChat ? 'Chat' : 'Note'}`}
-            accessibilityRole="button"
-            disabled={isPending}
-            onPressIn={() => setIsRowPressed(true)}
-            onPressOut={() => setIsRowPressed(false)}
-            style={contentButtonStyle}
-            testID={`inbox-item-${item.kind}-open`}
-          >
-            <View style={styles.titleRow}>
-              <View style={styles.copyColumn}>
-                <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                  {primaryText}
-                </Text>
+    <GlassView glassEffectStyle="regular" style={styles.glassRow}>
+      <View style={styles.row}>
+        <Link href={item.route} disabled={isPending} asChild>
+          <Link.Trigger withAppleZoom={isChat}>
+            <Pressable
+              accessibilityLabel={`${primaryText}, ${isChat ? 'Chat' : 'Note'}`}
+              accessibilityRole="button"
+              disabled={isPending}
+              onPressIn={() => setIsRowPressed(true)}
+              onPressOut={() => setIsRowPressed(false)}
+              style={contentButtonStyle}
+              testID={`inbox-item-${item.kind}-open`}
+            >
+              <View style={styles.titleRow}>
+                <View style={styles.copyColumn}>
+                  <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                    {primaryText}
+                  </Text>
+                </View>
               </View>
-            </View>
-          </Pressable>
-        </Link.Trigger>
-      </Link>
+            </Pressable>
+          </Link.Trigger>
+        </Link>
 
-      <MenuView
-        actions={[
-          {
-            id: 'open-item',
-            title: t.inbox.item.open,
-            image: isChat ? 'bubble.left' : 'doc.text',
-          },
-          {
-            id: isChat ? 'archive-chat' : 'delete-note',
-            title: isChat ? t.inbox.item.archive : t.inbox.item.deleteNote.menu,
-            image: isChat ? 'archivebox' : 'trash',
-            attributes: isChat ? undefined : { destructive: true },
-          },
-        ]}
-        onPressAction={handleMenuAction}
-        style={styles.menuHost}
-      >
-        <IconButton
-          accessibilityLabel={t.inbox.item.actionsLabel}
-          icon="ellipsis"
-          size={44}
-          iconSize={18}
-          style={styles.menuButton}
-          testID={`inbox-item-${item.kind}-actions`}
-          tintColor={themeColors['text-secondary']}
-        />
-      </MenuView>
-    </View>
+        <MenuView
+          actions={[
+            {
+              id: 'open-item',
+              title: t.inbox.item.open,
+              image: isChat ? 'bubble.left' : 'doc.text',
+            },
+            {
+              id: isChat ? 'archive-chat' : 'delete-note',
+              title: isChat ? t.inbox.item.archive : t.inbox.item.deleteNote.menu,
+              image: isChat ? 'archivebox' : 'trash',
+              attributes: isChat ? undefined : { destructive: true },
+            },
+          ]}
+          onPressAction={handleMenuAction}
+          style={styles.menuHost}
+        >
+          <IconButton
+            accessibilityLabel={t.inbox.item.actionsLabel}
+            icon="ellipsis"
+            iconSize={18}
+            style={styles.menuButton}
+            testID={`inbox-item-${item.kind}-actions`}
+            tintColor={themeColors['text-secondary']}
+          />
+        </MenuView>
+      </View>
+    </GlassView>
   );
 
   return (
@@ -191,6 +193,11 @@ function cleanText(value: string | null): string | null {
 const useStyles = makeStyles((theme) => ({
   outer: {
     marginBottom: themeSpacing.md,
+    paddingHorizontal: themeSpacing.sm,
+  },
+  glassRow: {
+    borderRadius: 18,
+    overflow: 'hidden',
   },
   swipeableContainer: {
     overflow: 'visible',
@@ -202,7 +209,7 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'stretch',
-    paddingLeft: themeSpacing.md,
+    paddingLeft: themeSpacing.sm,
     paddingRight: themeSpacing.sm,
   },
   contentButton: {
