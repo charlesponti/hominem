@@ -61,7 +61,7 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center gap-12 py-8 text-center sm:py-12">
       <div className="mx-auto max-w-2xl space-y-4">
-        <p className="callout text-muted-foreground">Personal Finance</p>
+        <p className="text-muted-foreground">Personal Finance</p>
         <h1 className="display-2 text-foreground">See where your money goes.</h1>
         <p className="body-1 text-muted-foreground">
           Connect your accounts, track spending across categories, and finally understand your

@@ -230,7 +230,6 @@ export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEd
           onClick={handleSave}
           disabled={!canSave}
           variant="outline"
-          size="default"
           className="shrink-0"
         >
           {isSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}

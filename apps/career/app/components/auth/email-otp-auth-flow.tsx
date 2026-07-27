@@ -51,8 +51,8 @@ function AuthScaffold({
     <div className="bg-base flex items-center justify-center px-4 py-10">
       <div className="mx-auto flex w-full max-w-sm flex-col items-center text-center">
         <div className="space-y-2">
-          <h1 className="heading-2 text-primary">{title}</h1>
-          <p className="callout text-secondary">{helperText}</p>
+          <h1 className="heading-2 text-foreground">{title}</h1>
+          <p className="text-muted-foreground">{helperText}</p>
         </div>
         <div className="mt-6 w-full text-left">{children}</div>
       </div>
@@ -87,7 +87,7 @@ function OtpInput({
           key={index}
           autoFocus={index === 0}
           className={cn(
-            'border-subtle bg-panel text-primary h-12 w-10 rounded-md border text-center text-base font-semibold',
+            'border-subtle bg-panel text-foreground h-12 w-10 rounded-md border text-center text-base font-semibold',
             error && 'border-destructive',
           )}
           aria-label={`Character ${index + 1} of ${OTP_LENGTH}`}
@@ -162,7 +162,7 @@ export function EmailOtpAuthFlow({
       >
         <input type="hidden" name="email" value={email} />
         <div className="flex flex-col gap-1.5">
-          <label className="body-3 text-primary font-medium" htmlFor="otp-verification-code">
+          <label className="body-3 text-foreground font-medium" htmlFor="otp-verification-code">
             {copy.codeLabel}
           </label>
           <OtpInput
@@ -172,7 +172,7 @@ export function EmailOtpAuthFlow({
             value={otp}
           />
           {error ? (
-            <p className="body-4 text-destructive" role="alert">
+            <p className="body-4 text-destructive-text" role="alert">
               {error}
             </p>
           ) : null}

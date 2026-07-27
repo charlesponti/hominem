@@ -16,6 +16,8 @@
   --color-surface-pressed: color-mix(in srgb, var(--card) 84%, var(--text-primary));
   --color-surface-selected: color-mix(in srgb, var(--card) 88%, var(--primary));
   --color-surface-disabled: color-mix(in srgb, var(--card) 70%, var(--background));
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--tertiary);
   --color-text-disabled: var(--tertiary);
   --color-accent-hover: color-mix(in srgb, var(--primary) 88%, var(--text-primary));
@@ -29,10 +31,23 @@
   --color-text-on-success: var(--primary-foreground);
   --color-text-on-warning: var(--text-primary);
   --color-border-subtle: color-mix(in srgb, var(--border-default) 70%, transparent);
+  /* Bare alias: Tailwind resolves `border-subtle` (no `border-` prefix in the
+   * key itself) against `--color-subtle`, not `--color-border-subtle`. */
+  --color-subtle: color-mix(in srgb, var(--border-default) 70%, transparent);
   --color-border-strong: var(--border-default);
   --color-border-accent: var(--primary);
   --color-border-destructive: var(--destructive);
+  /* Ascending visual-weight scale, anchored on the pre-existing `subtle`
+   * value. Word order (minimal < subtle < lower < medium < high < highest)
+   * is a best-effort reading of the names, not a recovered spec — these
+   * tokens were never defined in any released version. Swap the percentages
+   * between names if the intended ranking differs. */
+  --color-emphasis-minimal: color-mix(in srgb, var(--border-default) 50%, transparent);
   --color-emphasis-subtle: var(--border-default);
+  --color-emphasis-lower: color-mix(in srgb, var(--border-default) 85%, var(--text-primary));
+  --color-emphasis-medium: color-mix(in srgb, var(--border-default) 65%, var(--text-primary));
+  --color-emphasis-high: color-mix(in srgb, var(--border-default) 40%, var(--text-primary));
+  --color-emphasis-highest: color-mix(in srgb, var(--border-default) 15%, var(--text-primary));
 }
 
 @layer base {

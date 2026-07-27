@@ -23,21 +23,6 @@ cng-check:
 build-config-check:
     bash "{{ justfile_directory() }}/scripts/check-omiro-eas-build-config.sh"
 
-prebuild environment:
-    #!/usr/bin/env bash
-    case "{{ environment }}" in
-      development) cd "{{ OMIRO_DIR }}" && APP_ENV=development pnpm exec expo prebuild --platform ios --clean ;;
-      production|screenshots) cd "{{ OMIRO_DIR }}" && APP_ENV="{{ environment }}" pnpm exec expo prebuild --platform ios --clean ;;
-      *) echo "error: unknown environment '{{ environment }}'" >&2; exit 1 ;;
-    esac
-
-build environment:
-    #!/usr/bin/env bash
-    case "{{ environment }}" in
-      development|e2e|production|screenshots) cd "{{ OMIRO_DIR }}" && pnpm dlx eas-cli@21.2.0 build --platform ios --profile "{{ environment }}" ;;
-      *) echo "error: unknown environment '{{ environment }}'" >&2; exit 1 ;;
-    esac
-
 update environment:
     #!/usr/bin/env bash
     case "{{ environment }}" in

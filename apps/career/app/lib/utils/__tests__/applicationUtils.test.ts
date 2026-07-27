@@ -142,7 +142,7 @@ describe('Application Utils', () => {
   describe('hasActiveFilters', () => {
     it('should return false when no filters are active', () => {
       expect(hasActiveFilters({})).toBe(false);
-      expect(hasActiveFilters({ search: '', statuses: [], source: undefined })).toBe(false);
+      expect(hasActiveFilters({ search: '', source: undefined })).toBe(false);
     });
 
     it('should return true when search filter is active', () => {
@@ -150,8 +150,9 @@ describe('Application Utils', () => {
     });
 
     it('should return true when status filters are active', () => {
-      expect(hasActiveFilters({ statuses: ['APPLIED'] })).toBe(true);
-      expect(hasActiveFilters({ statuses: ['APPLIED', 'INTERVIEW'] })).toBe(true);
+      expect(hasActiveFilters({ status: 'APPLIED' })).toBe(true);
+      expect(hasActiveFilters({ status: 'APPLIED' })).toBe(true);
+      expect(hasActiveFilters({ status: 'INTERVIEW' })).toBe(true);
     });
 
     it('should return true when source filter is active', () => {
@@ -162,7 +163,7 @@ describe('Application Utils', () => {
       expect(
         hasActiveFilters({
           search: 'engineer',
-          statuses: ['APPLIED'],
+          status: 'APPLIED',
           source: 'LinkedIn',
         }),
       ).toBe(true);

@@ -113,8 +113,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@ponti-studios/ui':
-        specifier: 0.4.1
-        version: 0.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
+        specifier: 0.4.2
+        version: 0.4.2(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
       '@react-router/node':
         specifier: 8.2.0
         version: 8.2.0(react-router@8.2.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)
@@ -237,8 +237,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@ponti-studios/ui':
-        specifier: 0.4.1
-        version: 0.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
+        specifier: 0.4.2
+        version: 0.4.2(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.20(@types/react-dom@19.1.7(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -370,8 +370,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@ponti-studios/ui':
-        specifier: 0.4.1
-        version: 0.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
+        specifier: 0.4.2
+        version: 0.4.2(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
       '@react-native-community/netinfo':
         specifier: 12.0.1
         version: 12.0.1(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)
@@ -3140,8 +3140,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@ponti-studios/ui@0.4.1':
-    resolution: {integrity: sha512-/svr3agSrnHimRLnMqy827pvwSlw/oE7ztgefig/lad32FyjwyleP/11xqcmqzRpmm+B3zPU2TgBFYne4hEn+A==}
+  '@ponti-studios/ui@0.4.2':
+    resolution: {integrity: sha512-Jap2gRbEW7wweo6E0uWZjRv6yVI9mCzzgacRgivSE8O7alt1iQaCim9Vz7nOEJgDZzlSor+kPjDC9Le1kcCk1g==}
     peerDependencies:
       react: 19.2.3
       react-dom: 19.2.3
@@ -11580,7 +11580,7 @@ snapshots:
     dependencies:
       playwright: 1.61.1
 
-  '@ponti-studios/ui@0.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)':
+  '@ponti-studios/ui@0.4.2(@date-fns/tz@1.5.0)(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.10)(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@base-ui/react': 1.6.0(@date-fns/tz@1.5.0)(@types/react@19.2.10)(date-fns@4.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/colors': 3.0.0
