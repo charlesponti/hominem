@@ -1,9 +1,10 @@
 import { PostHog } from 'posthog-react-native';
 
 import { E2E_TESTING } from '~/constants';
+import { env } from '~/env';
 
-const apiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? '';
-const host = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+const apiKey = env.EXPO_PUBLIC_POSTHOG_API_KEY;
+const host = env.EXPO_PUBLIC_POSTHOG_HOST;
 const disabled = __DEV__ || E2E_TESTING || !apiKey;
 export const POSTHOG_ENABLED = !disabled;
 

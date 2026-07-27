@@ -18,6 +18,9 @@ import { useEmailOtp } from '~/services/auth/hooks/use-email-otp';
 import { useResetAuthForE2E } from '~/services/auth/hooks/use-reset-auth-for-e2e';
 import { useSignOut } from '~/services/auth/hooks/use-sign-out';
 import { useUpdateProfile } from '~/services/auth/hooks/use-update-profile';
+import queryClient from '~/services/query-client';
+import { clearPersistedQueryCache } from '~/services/query-persistence';
+import { LocalStore } from '~/services/storage/local-store';
 
 type AuthContextType = {
   isPending: boolean;
@@ -99,6 +102,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const handleUnauthorized = useCallback(async () => {
     await authClient.signOut().catch(() => undefined);
+    queryClient.clear();
+    await clearPersistedQueryCache();
+    await LocalStore.clearAllData();
   }, []);
 
   const value = useMemo<AuthContextType>(

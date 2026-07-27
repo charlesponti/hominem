@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/react-native';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { APP_ENV } from '~/constants';
+import { env } from '~/env';
 
 import { posthog } from './posthog';
 
@@ -10,8 +11,8 @@ const isSentryEnabled = APP_ENV === 'production';
 
 if (isSentryEnabled) {
   Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    environment: process.env.APP_ENV ?? 'development',
+    dsn: env.EXPO_PUBLIC_SENTRY_DSN,
+    environment: APP_ENV,
     sendDefaultPii: false,
     tracesSampleRate: 0.2,
   });

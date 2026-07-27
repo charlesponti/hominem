@@ -9,7 +9,6 @@ import {
   normalizeChatTitle,
   updateChatTitleCaches,
 } from '~/services/chat/chat-title';
-import type { ChatWithActivity } from '~/services/chat/chat-types';
 import { chatKeys } from '~/services/notes/query-keys';
 
 describe('chat title helpers', () => {
@@ -50,7 +49,7 @@ describe('chat title helpers', () => {
     expect(getChatTitle(null, newSource)).toBe(DEFAULT_CHAT_TITLE);
   });
 
-  it('updates the active and chat caches together', () => {
+  it('updates the canonical chat record', () => {
     const queryClient = new QueryClient();
     const chat: Chat = {
       archivedAt: null,
@@ -61,13 +60,7 @@ describe('chat title helpers', () => {
       updatedAt: '2026-04-13T01:29:18.000Z',
       userId: 'user-1',
     };
-    const resumableChat: ChatWithActivity = {
-      ...chat,
-      activityAt: chat.updatedAt,
-    };
-
     queryClient.setQueryData(chatKeys.activeChat(chat.id), chat);
-    queryClient.setQueryData(chatKeys.resumableChats, [resumableChat]);
 
     updateChatTitleCaches(queryClient, {
       chatId: chat.id,
@@ -79,12 +72,5 @@ describe('chat title helpers', () => {
       title: 'A better title',
       updatedAt: '2026-04-13T01:30:00.000Z',
     });
-    expect(queryClient.getQueryData(chatKeys.resumableChats)).toMatchObject([
-      {
-        title: 'A better title',
-        updatedAt: '2026-04-13T01:30:00.000Z',
-        activityAt: '2026-04-13T01:30:00.000Z',
-      },
-    ]);
   });
 });

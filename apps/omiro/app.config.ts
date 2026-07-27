@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
+import { z } from 'zod';
 
 const EXPO_OWNER = 'pontistudios';
 const EXPO_PROJECT_ID = '4dfac82b-644f-4ff3-be42-e8f941287aa1';
@@ -26,6 +27,7 @@ const ROOT_ASSETS_DIR = './assets';
 type AppEnvironment = keyof typeof APP_ENVIRONMENTS;
 type AppEnvironmentConfig = (typeof APP_ENVIRONMENTS)[AppEnvironment];
 type ReleaseChannel = (typeof RELEASE_CHANNELS)[number];
+const appEnvironmentSchema = z.enum(['development', 'e2e', 'production', 'screenshots']);
 
 function getBrandAssetPaths(appEnvironment: AppEnvironment): { icon: string; splash: string } {
   const icon = `${ROOT_ASSETS_DIR}/${ENVIRONMENT_ICON_NAMES[appEnvironment]}`;
@@ -35,29 +37,8 @@ function getBrandAssetPaths(appEnvironment: AppEnvironment): { icon: string; spl
   };
 }
 
-function getExpoExtraConfig(
-  env: Record<string, string | undefined>,
-): {
-  apiBaseUrl: string;
-  noteNativeShellEnabled: string;
-  posthogApiKey: string;
-  posthogHost: string;
-} {
-  const getEnvValue = (value: string | undefined, fallback: string): string => value ?? fallback;
-  return {
-    apiBaseUrl: getEnvValue(env.EXPO_PUBLIC_API_BASE_URL, ''),
-    noteNativeShellEnabled: getEnvValue(env.EXPO_PUBLIC_NOTE_NATIVE_SHELL_ENABLED, 'false'),
-    posthogApiKey: getEnvValue(env.EXPO_PUBLIC_POSTHOG_API_KEY, ''),
-    posthogHost: getEnvValue(env.EXPO_PUBLIC_POSTHOG_HOST, 'https://us.i.posthog.com'),
-  };
-}
-
 function getAppEnvironment(rawEnvironment = process.env.APP_ENV ?? 'development'): AppEnvironment {
-  if (Object.prototype.hasOwnProperty.call(APP_ENVIRONMENTS, rawEnvironment)) {
-    return rawEnvironment as AppEnvironment;
-  }
-
-  throw new Error(`Unsupported APP_ENV: ${rawEnvironment}`);
+  return appEnvironmentSchema.parse(rawEnvironment);
 }
 
 function getAppEnvironmentConfig(
@@ -178,17 +159,6 @@ export default ({ config }: ConfigContext) => {
     ]);
   }
 
-  const extraConfig = getExpoExtraConfig(process.env);
-
-  if (appEnvironment === 'production') {
-    if (!extraConfig.apiBaseUrl) {
-      throw new Error('EXPO_PUBLIC_API_BASE_URL is required for production builds.');
-    }
-    if (/localhost|127\.0\.0\.1|::1/.test(extraConfig.apiBaseUrl)) {
-      throw new Error('Production builds cannot target a local API URL.');
-    }
-  }
-
   return {
     ...config,
     name: appEnvironmentConfig.displayName,
@@ -234,7 +204,6 @@ export default ({ config }: ConfigContext) => {
       appEnvironment,
       appScheme: appEnvironmentConfig.scheme,
       isDevClient: hasDevelopmentClient,
-      ...extraConfig,
       eas: {
         projectId: EXPO_PROJECT_ID,
       },

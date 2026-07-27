@@ -12,7 +12,6 @@ export const inboxKeys = {
 } as const;
 
 export const noteKeys = {
-  all: queryKeys.notes.all,
   detail: (id: string) => queryKeys.notes.detail(id),
 } as const;
 
@@ -20,5 +19,6 @@ export const chatKeys = {
   resumableChats: queryKeys.chats.sessions,
   archivedChats: queryKeys.chats.archived,
   messages: (chatId: string) => queryKeys.chats.messages(chatId),
+  detail: (chatId: string) => ['chats', 'detail', chatId] as const,
   activeChat: (chatId: string | null) => ['chats', 'detail', chatId] as const,
 } as const;

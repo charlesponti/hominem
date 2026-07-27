@@ -2,10 +2,8 @@ import { CHAT_TITLE_MAX_LENGTH } from '@hominem/rpc/types';
 import type { Chat, SessionSource } from '@hominem/rpc/types';
 import type { QueryClient } from '@tanstack/react-query';
 
-import { writeCachedChat } from '~/services/content-cache';
-import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
-
-import type { ChatWithActivity } from './chat-types';
+import { patchInboxEntity } from '~/services/inbox/inbox-entities';
+import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 
 export const DEFAULT_CHAT_TITLE = 'New conversation';
 
@@ -52,49 +50,11 @@ export function updateChatTitleCaches(
 ) {
   const { chatId, title, updatedAt } = input;
 
-  queryClient.setQueryData<Chat | null>(
-    chatKeys.activeChat(chatId),
-    (currentChat: Chat | null | undefined) =>
-      currentChat
-        ? (() => {
-            const nextChat = {
-              ...currentChat,
-              title,
-              ...(updatedAt ? { updatedAt } : null),
-            };
-            writeCachedChat(nextChat);
-            return nextChat;
-          })()
-        : currentChat,
+  queryClient.setQueriesData<Chat | null>({ queryKey: ['chats', 'detail'] }, (currentChat) =>
+    currentChat?.id === chatId
+      ? { ...currentChat, title, ...(updatedAt ? { updatedAt } : null) }
+      : currentChat,
   );
-
-  queryClient.setQueryData<ChatWithActivity[] | undefined>(
-    chatKeys.resumableChats,
-    (sessions: ChatWithActivity[] | undefined) =>
-      sessions?.map((session) =>
-        session.id === chatId
-          ? {
-              ...session,
-              title,
-              ...(updatedAt ? { updatedAt, activityAt: updatedAt } : null),
-            }
-          : session,
-      ),
-  );
-
-  queryClient.setQueryData<ChatWithActivity[] | undefined>(
-    chatKeys.archivedChats,
-    (sessions: ChatWithActivity[] | undefined) =>
-      sessions?.map((session) =>
-        session.id === chatId
-          ? {
-              ...session,
-              title,
-              ...(updatedAt ? { updatedAt, activityAt: updatedAt } : null),
-            }
-          : session,
-      ),
-  );
-
-  void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
+  patchInboxEntity(queryClient, { kind: 'chat', entityId: chatId }, { title, updatedAt });
+  void invalidateInboxQueries(queryClient);
 }

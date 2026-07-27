@@ -2,13 +2,6 @@ import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessageDto as RpcChatMessage } from '@hominem/rpc/types';
 import { useQuery } from '@tanstack/react-query';
 
-import {
-  readCachedChat,
-  readCachedChatMessages,
-  writeCachedChat,
-  writeCachedChatMessages,
-} from '~/services/content-cache';
-
 import { chatKeys } from '../notes/query-keys';
 import { selectChat } from './chat-activity';
 import { type MessageOutput } from './chatMessages';
@@ -38,9 +31,6 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
 
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const client = useApiClient();
-  const cachedMessages = readCachedChatMessages(chatId);
-  const hasCachedMessages = cachedMessages.length > 0;
-
   return useQuery<MessageOutput[]>({
     queryKey: chatKeys.messages(chatId),
     queryFn: async () => {
@@ -54,12 +44,9 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
         const output = toMessageOutput(message as RpcChatMessage);
         return output ? [output] : [];
       });
-      writeCachedChatMessages(chatId, nextMessages);
       return nextMessages;
     },
     enabled: Boolean(chatId),
-    initialData: hasCachedMessages ? cachedMessages : undefined,
-    initialDataUpdatedAt: hasCachedMessages ? 0 : undefined,
     refetchOnWindowFocus: false,
     staleTime: 30_000,
   });
@@ -67,8 +54,6 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
 
 export const useActiveChat = (chatId?: string | null) => {
   const client = useApiClient();
-  const cachedChat = chatId ? readCachedChat(chatId) : null;
-
   return useQuery<Chat | null>({
     queryKey: chatKeys.activeChat(chatId ?? null),
     queryFn: async () => {
@@ -76,7 +61,6 @@ export const useActiveChat = (chatId?: string | null) => {
         const res = await client.api.chats[':id'].$get({ param: { id: chatId } });
         const chat = await res.json();
         const { messages: _messages, ...chatRecord } = chat;
-        writeCachedChat(chatRecord);
         return chatRecord;
       }
 
@@ -84,7 +68,6 @@ export const useActiveChat = (chatId?: string | null) => {
       const chats = await listRes.json();
       return selectChat(chats, chatId);
     },
-    initialData: cachedChat,
-    initialDataUpdatedAt: cachedChat ? 0 : undefined,
+    enabled: Boolean(chatId),
   });
 };

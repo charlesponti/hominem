@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "APP_ENV=development expo start --clear",
-    "format": "oxfmt components app config constants hooks services tests types --write",
-    "format:check": "oxfmt components app config constants hooks services tests types --check",
+    "format": "oxfmt env.ts components app config constants hooks services tests types --write",
+    "format:check": "oxfmt env.ts components app config constants hooks services tests types --check",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "oxlint app components config constants hooks services tests types",
-    "lint:fix": "oxlint app components config constants hooks services tests types --fix"
+    "lint": "oxlint env.ts app components config constants hooks services tests types",
+    "lint:fix": "oxlint env.ts app components config constants hooks services tests types --fix"
   },
   "dependencies": {
     "@better-auth/expo": "^1.6.11",
@@ -29,7 +29,9 @@
     "@react-native-community/netinfo": "12.0.1",
     "@sentry/react-native": "^8.20.0",
     "@shopify/flash-list": "2.0.2",
+    "@tanstack/query-sync-storage-persister": "5.100.10",
     "@tanstack/react-query": "5.100.10",
+    "@tanstack/react-query-persist-client": "5.100.10",
     "better-auth": "^1.6.13",
     "expo": "^57.0.8",
     "expo-application": "~57.0.2",
@@ -89,7 +91,9 @@
   },
   "expo": {
     "install": {
-      "exclude": ["@sentry/react-native"]
+      "exclude": [
+        "@sentry/react-native"
+      ]
     },
     "doctor": {
       "appConfigFieldsNotSyncedCheck": {

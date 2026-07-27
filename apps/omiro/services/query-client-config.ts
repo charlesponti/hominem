@@ -20,7 +20,7 @@ export const mobileQueryDefaultOptions: DefaultOptions = {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     staleTime: 60_000,
-    gcTime: 10 * 60_000,
+    gcTime: 7 * 24 * 60 * 60_000,
     retry: shouldRetryQuery,
     retryDelay: getQueryRetryDelayMs,
     networkMode: 'offlineFirst',

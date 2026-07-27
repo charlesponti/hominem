@@ -1,7 +1,6 @@
 import type { Chat } from '@hominem/rpc/types';
 import type { QueryClient } from '@tanstack/react-query';
 
-import { writeCachedChat, writeCachedChatMessages } from '~/services/content-cache';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import {
@@ -10,11 +9,10 @@ import {
   type MessageOutput,
 } from './chatMessages';
 
-function persistMessages(queryClient: QueryClient, chatId: string) {
-  const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId));
-  if (messages) {
-    writeCachedChatMessages(chatId, messages);
-  }
+const CHAT_MESSAGES_LIMIT = 50;
+
+function keepLatestMessages(messages: MessageOutput[]) {
+  return messages.slice(-CHAT_MESSAGES_LIMIT);
 }
 
 export function seedStartedChat(
@@ -28,13 +26,14 @@ export function seedStartedChat(
 ) {
   const { assistantMessageId, chat, message, userMessageId } = input;
 
-  writeCachedChat(chat);
   queryClient.setQueryData(chatKeys.activeChat(chat.id), chat);
-  queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chat.id), [
-    createOptimisticMessage(chat.id, message, null, userMessageId),
-    createStreamingPlaceholder(chat.id, assistantMessageId),
-  ]);
-  persistMessages(queryClient, chat.id);
+  queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chat.id), (previous = []) =>
+    keepLatestMessages([
+      ...previous,
+      createOptimisticMessage(chat.id, message, null, userMessageId),
+      createStreamingPlaceholder(chat.id, assistantMessageId),
+    ]),
+  );
 }
 
 export function appendAssistantChunk(
@@ -54,7 +53,6 @@ export function appendAssistantChunk(
         : message,
     ),
   );
-  persistMessages(queryClient, chatId);
 }
 
 export function finishAssistantStream(
@@ -71,7 +69,6 @@ export function finishAssistantStream(
       message.id === assistantMessageId ? { ...message, isStreaming: false } : message,
     ),
   );
-  persistMessages(queryClient, chatId);
 }
 
 export function failAssistantStream(
@@ -98,5 +95,4 @@ export function failAssistantStream(
         : message,
     ),
   );
-  persistMessages(queryClient, chatId);
 }

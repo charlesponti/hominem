@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Alert } from 'react-native';
 
-import { writeCachedNote } from '~/services/content-cache';
+import { patchInboxEntity } from '~/services/inbox/inbox-entities';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { noteKeys } from '~/services/notes/query-keys';
 import t from '~/translations';
@@ -22,12 +22,16 @@ export function useNoteEditor(noteId: string) {
   const commitServerResponse = useCallback(
     (updatedNote: Note) => {
       hasShownSaveErrorRef.current = false;
-      writeCachedNote(updatedNote);
       queryClient.setQueryData<Note>(noteKeys.detail(updatedNote.id), updatedNote);
-      queryClient.setQueryData<Note[]>(noteKeys.all, (current) => {
-        if (!current) return [updatedNote];
-        return current.map((entry) => (entry.id === updatedNote.id ? updatedNote : entry));
-      });
+      patchInboxEntity(
+        queryClient,
+        { kind: 'note', entityId: updatedNote.id },
+        {
+          preview: updatedNote.excerpt,
+          title: updatedNote.title,
+          updatedAt: updatedNote.updatedAt,
+        },
+      );
       void invalidateInboxQueries(queryClient);
     },
     [queryClient],
@@ -85,7 +89,13 @@ export function useNoteEditor(noteId: string) {
         prev
           ? (() => {
               const nextNote = { ...prev, ...patch };
-              writeCachedNote(nextNote);
+              patchInboxEntity(
+                queryClient,
+                { kind: 'note', entityId: noteId },
+                {
+                  title: nextNote.title,
+                },
+              );
               return nextNote;
             })()
           : prev,

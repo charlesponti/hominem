@@ -1,11 +1,14 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from '~/services/auth/analytics';
 import { authClient } from '~/services/auth/auth-client';
 import { clearPendingAuthEmail } from '~/services/auth/pending-email';
+import { clearPersistedQueryCache } from '~/services/query-persistence';
 import { LocalStore } from '~/services/storage/local-store';
 
 export function useSignOut(currentEmail: string | null | undefined) {
+  const queryClient = useQueryClient();
   return useCallback(async () => {
     const startedAt = Date.now();
 
@@ -21,6 +24,8 @@ export function useSignOut(currentEmail: string | null | undefined) {
       }
 
       clearPendingAuthEmail();
+      queryClient.clear();
+      await clearPersistedQueryCache();
       await LocalStore.clearAllData();
       captureAuthAnalyticsEvent('auth_sign_out_succeeded', {
         phase: 'sign_out',
@@ -40,5 +45,5 @@ export function useSignOut(currentEmail: string | null | undefined) {
       });
       throw resolvedError;
     }
-  }, [currentEmail]);
+  }, [currentEmail, queryClient]);
 }

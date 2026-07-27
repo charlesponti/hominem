@@ -2,32 +2,15 @@ import type { TaskListItem, TasksParseOutput } from '@hominem/rpc/types';
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, {
-  FadeInUp,
-  FadeOut,
-  useAnimatedStyle,
-  useDerivedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  makeStyles,
-  radii,
-  spacing,
-  Text,
-  transitionDurations,
-  useThemeColors,
-} from '~/components/theme';
+import { makeStyles, radii, spacing, Text, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconButton } from '~/components/ui/icon-button';
 import { Input } from '~/components/ui/input';
-import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import OnDeviceAIModule, {
   type CalendarEvent,
   type CalendarPermissionStatus,
@@ -47,24 +30,6 @@ type TimelineItem =
   | { kind: 'now' };
 type TimelineRowItem = Extract<TimelineItem, { kind: 'event' | 'task' }>;
 type TimeBlock = TasksParseOutput['block'];
-
-function useThinkingPulse(reducedMotion: boolean) {
-  const opacity = useDerivedValue(
-    () =>
-      reducedMotion
-        ? 1
-        : withRepeat(
-            withSequence(
-              withTiming(0.45, { duration: transitionDurations[150] * 3 }),
-              withTiming(1, { duration: transitionDurations[150] * 3 }),
-            ),
-            -1,
-          ),
-    [reducedMotion],
-  );
-
-  return useAnimatedStyle(() => ({ opacity: opacity.value }));
-}
 
 function startOfToday() {
   const today = new Date();
@@ -233,8 +198,6 @@ function CalendarResult({
 }: CalendarResultProps) {
   const styles = useStyles();
   const themeColors = useThemeColors();
-  const prefersReducedMotion = useReducedMotion();
-  const pulseStyle = useThinkingPulse(prefersReducedMotion);
   const actionLabel =
     timeBlock?.primary_intent === 'add_task'
       ? 'Add task'
@@ -245,19 +208,14 @@ function CalendarResult({
   if (!isAsking && !answer && !timeBlock) return null;
 
   return (
-    <Animated.View
-      entering={prefersReducedMotion ? undefined : FadeInUp.duration(transitionDurations[150])}
-      exiting={prefersReducedMotion ? undefined : FadeOut.duration(transitionDurations[100])}
-      style={styles.resultSurface}
-      testID="calendar-answer-state"
-    >
+    <View style={styles.resultSurface} testID="calendar-answer-state">
       {isAsking ? (
         <View
           accessibilityLabel="Looking at your calendar"
           style={styles.thinkingRow}
           testID="calendar-thinking-state"
         >
-          <Animated.View style={[styles.thinkingDot, pulseStyle]} />
+          <ActivityIndicator color={themeColors.primary} size="small" />
           <Text color="text-secondary">Looking at your calendar…</Text>
         </View>
       ) : null}
@@ -332,7 +290,7 @@ function CalendarResult({
           />
         </View>
       ) : null}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -919,12 +877,6 @@ const useStyles = makeStyles((theme) => ({
     marginHorizontal: spacing[4],
     marginBottom: spacing[3],
     padding: spacing[3],
-  },
-  thinkingDot: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: radii.full,
-    height: 8,
-    width: 8,
   },
   thinkingRow: {
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import { Stack, useIsFocused, useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { WorkspaceToolbar } from '~/components/navigation/WorkspaceToolbar.ios';
 import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
+  clearResumeTarget,
   clearInboxDraft,
   readInboxDraft,
   writeInboxDraft,
@@ -42,6 +43,10 @@ export default function InboxScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const isCalendarTab = activeTab === 'calendar';
   const inboxDraft = readInboxDraft();
+
+  useEffect(() => {
+    if (isFocused) clearResumeTarget();
+  }, [isFocused]);
 
   const handleOpenSettings = useCallback(() => router.push(SETTINGS_ROUTE), [router]);
   const handleSearchCancel = useCallback(() => {

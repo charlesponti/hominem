@@ -6,7 +6,6 @@ import { useCallback, useRef } from 'react';
 
 import { API_BASE_URL } from '~/constants';
 import { useAuth } from '~/services/auth/auth-provider';
-import { writeCachedChatMessages } from '~/services/content-cache';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 import { isTestMode, MOCK_AI_RESPONSE } from '~/services/testing/test-mode';
 
@@ -34,13 +33,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const chunkBufferRef = useRef('');
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const persistMessages = useCallback(() => {
-    const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId));
-    if (messages) {
-      writeCachedChatMessages(chatId, messages);
-    }
-  }, [chatId, queryClient]);
-
   const writeBuffer = useCallback(() => {
     const id = streamingIdRef.current;
     const buffer = chunkBufferRef.current;
@@ -49,8 +41,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
       prev?.map((m) => (m.id === id ? { ...m, message: m.message + buffer } : m)),
     );
-    persistMessages();
-  }, [chatId, persistMessages, queryClient]);
+  }, [chatId, queryClient]);
 
   const scheduleFlush = useCallback(() => {
     if (flushTimerRef.current !== null) return;
@@ -96,13 +87,14 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       streamingIdRef.current = assistantMsgId;
       chunkBufferRef.current = '';
 
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), [
-        ...previousMessages,
-        createOptimisticMessage(chatId, message, null, userMsgId),
-        createStreamingPlaceholder(chatId, assistantMsgId),
-      ]);
-      persistMessages();
-
+      queryClient.setQueryData<MessageOutput[]>(
+        chatKeys.messages(chatId),
+        [
+          ...previousMessages,
+          createOptimisticMessage(chatId, message, null, userMsgId),
+          createStreamingPlaceholder(chatId, assistantMsgId),
+        ].slice(-50),
+      );
       return { previousMessages, assistantMsgId };
     },
 
@@ -136,7 +128,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
         prev?.map((m) => (m.id === context?.assistantMsgId ? { ...m, isStreaming: false } : m)),
       );
-      persistMessages();
       // In test mode the mock never writes to the server, so a background refetch
       // would overwrite the local optimistic data with an empty array.
       if (!isTestMode()) {
@@ -150,7 +141,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       flushNow();
       if (context?.previousMessages) {
         queryClient.setQueryData(chatKeys.messages(chatId), context.previousMessages);
-        persistMessages();
       }
     },
   });

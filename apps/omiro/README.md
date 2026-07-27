@@ -23,6 +23,13 @@ just mobile update production
 
 The runtime version is the committed app version. Native compatibility is checked separately from an immutable release manifest before publishing an EAS Update.
 
+## API configuration
+
+`EXPO_PUBLIC_API_BASE_URL` is the sole API address used by the app. Set it in
+`.env.development.local`: use `http://localhost:4040` for the iOS Simulator,
+or a reachable LAN/tunnel URL for a physical device. Production builds and OTA
+updates receive the value from the EAS production environment.
+
 ## Working In Zed
 
 Zed can edit the TypeScript/React Native sources directly, but Swift diagnostics for the native modules only work after the generated iOS project exists locally.

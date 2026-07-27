@@ -1,8 +1,9 @@
-import type { InboxOutput, InboxStreamItem } from '@hominem/rpc/types';
-import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import type { InboxStreamItem } from '@hominem/rpc/types';
+import type { QueryClient } from '@tanstack/react-query';
 
-import { removeCachedInboxItem } from '~/services/inbox/cache';
 import { inboxKeys } from '~/services/notes/query-keys';
+
+import { removeInboxEntity } from './inbox-entities';
 
 const INBOX_REFRESH_QUERY_KEYS = [inboxKeys.pages()] as const;
 
@@ -24,25 +25,7 @@ interface InboxItemIdentity {
  * item visually disappears, which reads as the list flashing on delete/archive.
  */
 export function removeInboxStreamItem(queryClient: QueryClient, identity: InboxItemIdentity) {
-  queryClient.setQueriesData<InfiniteData<InboxOutput, string | null>>(
-    { queryKey: inboxKeys.pages() },
-    (data) => {
-      if (!data) return data;
-
-      return {
-        ...data,
-        pages: data.pages.map((page) => ({
-          ...page,
-          items: page.items.filter(
-            (item: InboxStreamItem) =>
-              !(item.kind === identity.kind && item.entityId === identity.entityId),
-          ),
-        })),
-      };
-    },
-  );
-
-  removeCachedInboxItem(identity);
+  removeInboxEntity(queryClient, identity);
 
   void queryClient.invalidateQueries({ queryKey: inboxKeys.pages(), refetchType: 'none' });
 }

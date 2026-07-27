@@ -1,6 +1,7 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { useIsRestoring } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import {
   DefaultTheme,
   SplashScreen,
@@ -30,6 +31,7 @@ import { getContentRoute } from '~/services/navigation/routes';
 import { initObservability } from '~/services/observability';
 import { POSTHOG_ENABLED, posthog } from '~/services/posthog';
 import queryClient from '~/services/query-client';
+import { mobilePersistOptions } from '~/services/query-persistence';
 import { recordActiveDay } from '~/services/review-prompt/review-prompt';
 
 SplashScreen.preventAutoHideAsync();
@@ -77,6 +79,7 @@ function InnerRootLayout() {
   const segments = useSegments() as string[];
   const segmentKey = segments.join('/');
   const { isPending, isSignedIn, isSigningOut, currentUser, resetAuthForE2E, signOut } = useAuth();
+  const isRestoring = useIsRestoring();
   const hasMarkedShellReady = React.useRef(false);
   const lastRedirectSignatureRef = React.useRef<string | null>(null);
   useEffect(() => {
@@ -92,14 +95,14 @@ function InnerRootLayout() {
     // Boot resolution decides whether we land on (auth) or (protected); hiding
     // the splash before that resolves flashes the wrong screen. The timeout is
     // a safety net in case boot never settles.
-    if (!isPending) {
+    if (!isPending && !isRestoring) {
       hide();
       return;
     }
 
     const timeout = setTimeout(hide, 3000);
     return () => clearTimeout(timeout);
-  }, [isPending]);
+  }, [isPending, isRestoring]);
 
   useEffect(() => {
     if (isSignedIn && currentUser?.id) {
@@ -110,12 +113,12 @@ function InnerRootLayout() {
   }, [currentUser, isPending, isSignedIn]);
 
   useEffect(() => {
-    if (!hasMarkedShellReady.current && !isPending) {
+    if (!hasMarkedShellReady.current && !isPending && !isRestoring) {
       hasMarkedShellReady.current = true;
     }
 
     const target = resolveAuthRedirect({
-      isPending,
+      isPending: isPending || isRestoring,
       isSignedIn,
       isSigningOut,
       segments,
@@ -134,10 +137,10 @@ function InnerRootLayout() {
     if (target) {
       router.replace(target as RelativePathString);
     }
-  }, [isPending, isSignedIn, isSigningOut, router, segmentKey, segments]);
+  }, [isPending, isRestoring, isSignedIn, isSigningOut, router, segmentKey, segments]);
 
   useEffect(() => {
-    if (isPending || !isSignedIn || !currentUser?.id) {
+    if (isPending || isRestoring || !isSignedIn || !currentUser?.id) {
       return;
     }
 
@@ -154,7 +157,7 @@ function InnerRootLayout() {
     if (pathname !== target) {
       router.replace(target);
     }
-  }, [currentUser?.id, isPending, isSignedIn, pathname, router]);
+  }, [currentUser?.id, isPending, isRestoring, isSignedIn, pathname, router]);
 
   return (
     <RootErrorBoundary
@@ -226,7 +229,7 @@ function RootLayout() {
 
   const content = (
     <ThemeProvider value={navigationTheme}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={mobilePersistOptions}>
         <SafeAreaProvider>
           <GestureHandlerRootView style={rootStyles.gestureRoot}>
             <KeyboardProvider>
@@ -238,7 +241,7 @@ function RootLayout() {
             </KeyboardProvider>
           </GestureHandlerRootView>
         </SafeAreaProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </ThemeProvider>
   );
 

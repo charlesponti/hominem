@@ -14,7 +14,6 @@ interface CreateNoteInput {
 
 interface CreateNoteContext {
   optimisticId: string;
-  previousNotes: Note[] | undefined;
 }
 
 function buildOptimisticNote(text: string, optimisticId: string): Note {
@@ -66,32 +65,24 @@ export const useCreateNote = (): UseMutationResult<
       return res.json();
     },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: noteKeys.all });
-
-      const previousNotes = queryClient.getQueryData<Note[]>(noteKeys.all);
       const optimisticId = `optimistic-note-${Date.now().toString()}`;
       const optimisticNote = buildOptimisticNote(input.text, optimisticId);
 
-      queryClient.setQueryData<Note[]>(noteKeys.all, (current) => [
-        optimisticNote,
-        ...(current ?? []),
-      ]);
+      queryClient.setQueryData(noteKeys.detail(optimisticId), optimisticNote);
 
       return {
         optimisticId,
-        previousNotes,
       };
     },
     onError: (_error, _input, context) => {
-      queryClient.setQueryData(noteKeys.all, context?.previousNotes ?? []);
+      if (context) {
+        queryClient.removeQueries({ queryKey: noteKeys.detail(context.optimisticId), exact: true });
+      }
     },
     onSuccess: async (createdNote, _input, context) => {
-      queryClient.setQueryData<Note[]>(noteKeys.all, (current) => {
-        const withoutOptimistic = (current ?? []).filter(
-          (item) => item.id !== context?.optimisticId,
-        );
-        return [createdNote, ...withoutOptimistic];
-      });
+      if (context) {
+        queryClient.removeQueries({ queryKey: noteKeys.detail(context.optimisticId), exact: true });
+      }
       queryClient.setQueryData(noteKeys.detail(createdNote.id), createdNote);
 
       await invalidateInboxQueries(queryClient);

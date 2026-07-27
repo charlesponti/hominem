@@ -145,4 +145,37 @@ describe('chat stream cache', () => {
       }),
     ]);
   });
+
+  it('keeps only the latest fifty messages for a chat', () => {
+    const chat: Chat = {
+      archivedAt: null,
+      createdAt: '2026-07-01T08:00:00.000Z',
+      id: 'chat-1',
+      noteId: null,
+      title: 'First chat',
+      updatedAt: '2026-07-01T08:00:00.000Z',
+      userId: 'user-1',
+    };
+    queryClient.setQueryData(
+      chatKeys.messages(chat.id),
+      Array.from({ length: 49 }, (_, index) => ({
+        id: `old-${index}`,
+        isStreaming: false,
+        message: String(index),
+        role: 'user' as const,
+      })),
+    );
+
+    seedStartedChat(queryClient, {
+      chat,
+      message: 'Newest user message',
+      userMessageId: 'user-message-1',
+      assistantMessageId: 'assistant-message-1',
+    });
+
+    const messages = queryClient.getQueryData<Array<{ id: string }>>(chatKeys.messages(chat.id));
+    expect(messages).toHaveLength(50);
+    expect(messages?.[0]?.id).toBe('old-1');
+    expect(messages?.at(-1)?.id).toBe('assistant-message-1');
+  });
 });

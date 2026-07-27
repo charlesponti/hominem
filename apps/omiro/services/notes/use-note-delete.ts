@@ -1,8 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { InboxOutput, Note } from '@hominem/rpc/types';
-import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { clearCachedNote } from '~/services/content-cache';
 import { removeInboxStreamItem } from '~/services/inbox/inbox-refresh';
 import { clearResumeTarget, readResumeTarget } from '~/services/navigation/launch-state';
 import { inboxKeys } from '~/services/notes/query-keys';
@@ -23,7 +21,7 @@ export function useNoteDelete({ noteId }: UseNoteDeleteOptions) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: inboxKeys.pages() });
-      const previousInboxPages = queryClient.getQueriesData<InfiniteData<InboxOutput>>({
+      const previousInboxPages = queryClient.getQueriesData({
         queryKey: inboxKeys.pages(),
       });
 
@@ -40,10 +38,7 @@ export function useNoteDelete({ noteId }: UseNoteDeleteOptions) {
       if (readResumeTarget()?.id === noteId) {
         clearResumeTarget();
       }
-      clearCachedNote(noteId);
-      queryClient.setQueryData<Note[]>(noteKeys.all, (current) =>
-        current?.filter((note) => note.id !== noteId),
-      );
+      queryClient.removeQueries({ queryKey: noteKeys.detail(noteId), exact: true });
     },
   });
 }

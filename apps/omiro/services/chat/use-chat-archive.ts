@@ -1,14 +1,9 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { InboxOutput } from '@hominem/rpc/types';
-import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { writeCachedChat } from '~/services/content-cache';
 import { removeInboxStreamItem } from '~/services/inbox/inbox-refresh';
 import { clearResumeTarget, readResumeTarget } from '~/services/navigation/launch-state';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
-
-import { getChatActivityAt } from './chat-activity';
-import type { ChatWithActivity } from './chat-types';
 
 interface UseChatArchiveOptions {
   chatId: string;
@@ -26,7 +21,7 @@ export function useChatArchive({ chatId, onSuccess }: UseChatArchiveOptions) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: inboxKeys.pages() });
-      const previousInboxPages = queryClient.getQueriesData<InfiniteData<InboxOutput>>({
+      const previousInboxPages = queryClient.getQueriesData({
         queryKey: inboxKeys.pages(),
       });
 
@@ -43,22 +38,9 @@ export function useChatArchive({ chatId, onSuccess }: UseChatArchiveOptions) {
       if (readResumeTarget()?.id === chatId) {
         clearResumeTarget();
       }
-      writeCachedChat(archivedChat);
       queryClient.setQueryData(chatKeys.activeChat(chatId), archivedChat);
-      queryClient.setQueryData<ChatWithActivity[] | undefined>(
-        chatKeys.archivedChats,
-        (sessions) => {
-          const nextArchivedChat: ChatWithActivity = {
-            ...archivedChat,
-            activityAt: getChatActivityAt(archivedChat),
-          };
-
-          if (!sessions) {
-            return [nextArchivedChat];
-          }
-
-          return [nextArchivedChat, ...sessions.filter((session) => session.id !== chatId)];
-        },
+      queryClient.setQueryData<string[] | undefined>(chatKeys.archivedChats, (ids) =>
+        ids ? [chatId, ...ids.filter((id) => id !== chatId)] : [chatId],
       );
       onSuccess?.();
     },

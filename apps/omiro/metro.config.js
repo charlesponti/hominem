@@ -3,8 +3,8 @@ const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getSentryExpoConfig(__dirname);
 
-config.resolver.unstable_enablePackageExports = true;
-
+// Shared ESM packages use explicit .js imports while the app consumes their
+// TypeScript source. Metro needs the extensionless retry for those imports.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.endsWith('.js')) {
     try {

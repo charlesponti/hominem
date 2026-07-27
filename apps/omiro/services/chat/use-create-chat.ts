@@ -1,7 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { writeCachedChat } from '~/services/content-cache';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { chatKeys } from '~/services/notes/query-keys';
 
@@ -19,7 +18,6 @@ export function useCreateChat() {
       return res.json();
     },
     onSuccess: (chat) => {
-      writeCachedChat(chat);
       queryClient.setQueryData(chatKeys.activeChat(chat.id), chat);
       void invalidateInboxQueries(queryClient);
     },
