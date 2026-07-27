@@ -3,11 +3,14 @@ import { accessibilityIdentifier, frame, padding } from '@expo/ui/swift-ui/modif
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 
-import { WorkspaceContextPicker, type WorkspaceContext } from './WorkspaceContextPicker.ios';
+import type { WorkspaceContext } from '~/components/workspace/workspace-types';
+
+import { WorkspaceContextPicker } from './WorkspaceContextPicker.ios';
 
 interface WorkspaceToolbarProps {
   activeContext: WorkspaceContext;
   isSearching: boolean;
+  showSearch: boolean;
   searchPlaceholder: string;
   searchQuery: string;
   onContextChange: (context: WorkspaceContext) => void;
@@ -20,6 +23,7 @@ interface WorkspaceToolbarProps {
 export function WorkspaceToolbar({
   activeContext,
   isSearching,
+  showSearch,
   searchPlaceholder,
   searchQuery,
   onContextChange,
@@ -44,7 +48,7 @@ export function WorkspaceToolbar({
         />
         <Stack.Toolbar.Button
           accessibilityLabel="Search"
-          hidden={isSearching}
+          hidden={isSearching || !showSearch}
           icon="magnifyingglass"
           onPress={onSearchStart}
         />

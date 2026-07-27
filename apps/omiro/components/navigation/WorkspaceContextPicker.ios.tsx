@@ -11,12 +11,12 @@ import {
 import { useColorMode } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 
-export type WorkspaceContext = 'chats' | 'notes' | 'calendar';
+import type { WorkspaceContext } from '~/components/workspace/workspace-types';
 
 const contextIcons: Record<WorkspaceContext, SFSymbol> = {
   chats: 'bubble.left.and.bubble.right.fill',
   notes: 'note.text',
-  calendar: 'calendar',
+  time: 'clock.fill',
 };
 
 interface WorkspaceContextPickerProps {
@@ -39,7 +39,7 @@ export function WorkspaceContextPicker({ value, onChange }: WorkspaceContextPick
       >
         <WorkspaceContextOption value="chats" label="Chats" />
         <WorkspaceContextOption value="notes" label="Notes" />
-        <WorkspaceContextOption value="calendar" label="Calendar" />
+        <WorkspaceContextOption value="time" label="Time" />
       </Picker>
     </Host>
   );

@@ -14,15 +14,16 @@ import type {
   CalendarEventPatch,
   CalendarRecurrenceScope,
 } from '~/modules/on-device-ai';
-import OnDeviceAIModule from '~/modules/on-device-ai';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
 import { useTaskDelete } from '~/services/tasks/use-task-delete';
 import { useTaskQuery } from '~/services/tasks/use-task-query';
 import { useTaskUpdate } from '~/services/tasks/use-task-update';
 
+import { timeEventGateway } from './time-event-gateway';
+
 export type TimeBlockDetailSource = 'task' | 'event';
 
-type EditableField = 'title' | 'location' | 'notes' | 'people' | 'time';
+type EditableField = 'title' | 'location' | 'notes' | 'people' | 'time' | 'duration';
 
 function formatInterval(start: string, end: string) {
   const startDate = new Date(start);
@@ -113,7 +114,8 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
   useEffect(() => {
     if (source !== 'event') return;
     let mounted = true;
-    void OnDeviceAIModule.getCalendarEvent(id)
+    void timeEventGateway
+      .getEvent(id)
       .then((nextEvent) => {
         if (mounted) setEvent(nextEvent);
       })
@@ -138,6 +140,17 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
         const defaultStart = new Date();
         setDraftStart(start ? new Date(start) : defaultStart);
         setDraftEnd(end ? new Date(end) : new Date(defaultStart.getTime() + 60 * 60 * 1000));
+        return;
+      }
+      if (field === 'duration') {
+        const start = isTask ? task?.scheduledStartAt : event?.startDate;
+        const end = isTask ? task?.scheduledEndAt : event?.endDate;
+        const duration = isTask
+          ? task?.durationMinutes
+          : start && end
+            ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000)
+            : null;
+        setEditValue(duration ? String(duration) : '');
         return;
       }
       setEditValue(
@@ -183,7 +196,8 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
       new Promise<void>((resolve) => {
         withRecurrenceScope((scope) => {
           setIsSavingEvent(true);
-          void OnDeviceAIModule.updateCalendarEvent(id, patch, scope)
+          void timeEventGateway
+            .updateEvent(id, patch, scope)
             .then((updated) => {
               setEvent(updated);
               setEditingField(null);
@@ -205,6 +219,32 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
 
   const saveField = useCallback(async () => {
     if (!editingField) return;
+    if (editingField === 'duration') {
+      const durationMinutes = Number(editValue);
+      if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
+        setEventError('Duration must be a positive number of minutes.');
+        return;
+      }
+      try {
+        if (isTask) {
+          await updateTask({ taskId: id, durationMinutes });
+        } else if (event) {
+          await saveEventPatch({
+            endDate: new Date(
+              new Date(event.startDate).getTime() + durationMinutes * 60_000,
+            ).toISOString(),
+          });
+          return;
+        }
+        setEditingField(null);
+        setEventError('');
+      } catch (saveError) {
+        setEventError(
+          saveError instanceof Error ? saveError.message : 'Unable to save this change.',
+        );
+      }
+      return;
+    }
     if (editingField === 'time') {
       if (!draftStart || !draftEnd || draftEnd <= draftStart) {
         setEventError('End time must be after start time.');
@@ -288,7 +328,8 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
         return;
       }
       withRecurrenceScope((scope) => {
-        void OnDeviceAIModule.deleteCalendarEvent(id, scope)
+        void timeEventGateway
+          .deleteEvent(id, scope)
           .then(() => router.back())
           .catch((deleteError) =>
             setEventError(
@@ -302,6 +343,17 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
       { text: 'Delete', style: 'destructive', onPress: confirm },
     ]);
   }, [deleteTask, id, isTask, router, title, withRecurrenceScope]);
+
+  const goBack = useCallback(() => {
+    if (!editingField) {
+      router.back();
+      return;
+    }
+    Alert.alert('Discard changes?', 'Your unsaved changes will be lost.', [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
+    ]);
+  }, [editingField, router]);
 
   if (isLoading) {
     return (
@@ -383,6 +435,7 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
             ) : (
               <Input
                 autoFocus
+                keyboardType={editingField === 'duration' ? 'number-pad' : 'default'}
                 multiline={editingField === 'notes'}
                 onChangeText={setEditValue}
                 placeholder={
@@ -407,8 +460,24 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
             value={interval}
             onPress={readOnlyEvent ? undefined : () => beginEdit('time')}
           />
-          {isTask && task?.durationMinutes ? (
-            <DetailRow label="Duration" value={`${task.durationMinutes} min`} />
+          <DetailRow
+            label="Duration"
+            value={
+              isTask
+                ? task?.durationMinutes
+                  ? `${task.durationMinutes} min`
+                  : 'Add duration'
+                : event
+                  ? `${Math.round((new Date(event.endDate).getTime() - new Date(event.startDate).getTime()) / 60_000)} min`
+                  : ''
+            }
+            onPress={readOnlyEvent ? undefined : () => beginEdit('duration')}
+          />
+          {isTask && (task?.schedulingWindowStartAt || task?.schedulingWindowEndAt) ? (
+            <DetailRow
+              label="Scheduling window"
+              value={`${task.schedulingWindowStartAt ? new Date(task.schedulingWindowStartAt).toLocaleString() : 'Any time'} – ${task.schedulingWindowEndAt ? new Date(task.schedulingWindowEndAt).toLocaleString() : 'No deadline'}`}
+            />
           ) : null}
           <DetailRow
             label="Location"
@@ -442,13 +511,16 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
           ) : null}
         </View>
 
-        {isTask && task?.scheduledStartAt ? (
+        {isTask ? (
           <Button
-            label="Unschedule"
+            label={task?.scheduledStartAt ? 'Unschedule' : 'Schedule'}
             loading={saving}
             onPress={() =>
-              void updateTask({ taskId: id, scheduledStartAt: null, scheduledEndAt: null })
+              task?.scheduledStartAt
+                ? void updateTask({ taskId: id, scheduledStartAt: null, scheduledEndAt: null })
+                : beginEdit('time')
             }
+            testID={task?.scheduledStartAt ? 'time-block-unschedule' : 'time-block-schedule'}
             variant="secondary"
           />
         ) : null}
@@ -464,7 +536,7 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
         <Pressable
           accessibilityLabel="Back"
           hitSlop={8}
-          onPress={() => router.back()}
+          onPress={goBack}
           style={styles.backPressable}
           testID="time-block-back"
         >

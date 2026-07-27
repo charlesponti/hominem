@@ -1,0 +1,16 @@
+appId: com.pontistudios.hakumi.dev
+---
+- launchApp
+- tapOn:
+    id: workspace-context-time
+- assertVisible:
+    id: time-screen
+- assertVisible:
+    id: time-stream
+- assertVisible:
+    id: time-composer-input
+- tapOn:
+    id: time-composer-input
+- inputText: Buy milk
+- assertVisible:
+    id: time-composer-submit

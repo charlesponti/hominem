@@ -16,7 +16,7 @@ const authCopy = {
   emailHelper: 'Enter your email and we’ll send a one-time verification code.',
   emailLabel: 'Email address',
   emailPlaceholder: 'you@example.com',
-  emailTitle: 'Sign in to Career',
+  emailTitle: 'Career | Auth',
   otpTitle: 'Check your email',
   resend: 'Resend code',
   resendLoading: 'Sending code',

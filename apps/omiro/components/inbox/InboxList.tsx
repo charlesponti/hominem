@@ -1,8 +1,9 @@
-import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
-import React, { memo, useCallback, type RefObject } from 'react';
+import type { ListRenderItem } from '@shopify/flash-list';
+import React, { memo, useCallback } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import { View } from 'react-native';
 
+import { StreamList } from '~/components/stream/StreamList';
 import { Text, makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import t from '~/translations';
@@ -27,7 +28,6 @@ export type InboxListRow =
       item: InboxStreamItemData;
     };
 
-export type InboxListRef = FlashListRef<InboxListRow>;
 export type InboxTab = 'chats' | 'notes';
 
 interface InboxListProps {
@@ -37,9 +37,10 @@ interface InboxListProps {
   sectionTitle?: string;
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
-  listRef?: RefObject<FlashListRef<InboxListRow> | null>;
   onEndReached?: () => void;
+  onScrollOffsetChange?: (offset: number) => void;
   refreshControl?: React.ReactElement<RefreshControlProps>;
+  restoredScrollOffset?: number;
   contentPaddingBottom?: number;
   contentPaddingTop?: number;
 }
@@ -64,9 +65,10 @@ export function InboxList({
   items,
   isLoading = false,
   isFetchingNextPage = false,
-  listRef,
   onEndReached,
+  onScrollOffsetChange,
   refreshControl,
+  restoredScrollOffset,
   contentPaddingBottom,
   contentPaddingTop,
 }: InboxListProps) {
@@ -109,15 +111,10 @@ export function InboxList({
   }
 
   return (
-    <FlashList
-      ref={listRef}
-      contentContainerStyle={{
-        paddingTop: contentPaddingTop ?? 0,
-        paddingBottom: contentPaddingBottom ?? 16,
-      }}
-      contentInsetAdjustmentBehavior="automatic"
+    <StreamList
+      contentPaddingBottom={contentPaddingBottom ?? 16}
+      contentPaddingTop={contentPaddingTop}
       data={rows}
-      keyboardDismissMode="on-drag"
       keyExtractor={(item) => item.id}
       ListFooterComponent={
         isFetchingNextPage ? (
@@ -127,10 +124,11 @@ export function InboxList({
         ) : null
       }
       onEndReached={onEndReached}
-      onEndReachedThreshold={0.4}
+      onScrollOffsetChange={onScrollOffsetChange}
       refreshControl={refreshControl}
       renderItem={renderItem}
-      showsVerticalScrollIndicator={false}
+      restoredScrollOffset={restoredScrollOffset}
+      testID="content-stream"
     />
   );
 }
