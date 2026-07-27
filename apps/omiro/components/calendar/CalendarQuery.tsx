@@ -4,13 +4,30 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import Animated, {
+  FadeInUp,
+  FadeOut,
+  useAnimatedStyle,
+  useDerivedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, spacing, Text, useThemeColors } from '~/components/theme';
+import {
+  makeStyles,
+  radii,
+  spacing,
+  Text,
+  transitionDurations,
+  useThemeColors,
+} from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconButton } from '~/components/ui/icon-button';
 import { Input } from '~/components/ui/input';
+import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import OnDeviceAIModule, {
   type CalendarEvent,
   type CalendarPermissionStatus,
@@ -30,6 +47,24 @@ type TimelineItem =
   | { kind: 'now' };
 type TimelineRowItem = Extract<TimelineItem, { kind: 'event' | 'task' }>;
 type TimeBlock = TasksParseOutput['block'];
+
+function useThinkingPulse(reducedMotion: boolean) {
+  const opacity = useDerivedValue(
+    () =>
+      reducedMotion
+        ? 1
+        : withRepeat(
+            withSequence(
+              withTiming(0.45, { duration: transitionDurations[150] * 3 }),
+              withTiming(1, { duration: transitionDurations[150] * 3 }),
+            ),
+            -1,
+          ),
+    [reducedMotion],
+  );
+
+  return useAnimatedStyle(() => ({ opacity: opacity.value }));
+}
 
 function startOfToday() {
   const today = new Date();
@@ -123,7 +158,7 @@ function TimelineRow({
           <AppIcon
             name={isTask ? (completed ? 'checkmark.circle.fill' : 'circle') : 'calendar'}
             size={16}
-            tintColor={isTask ? themeColors.success : themeColors.accent}
+            tintColor={isTask ? themeColors.success : themeColors.primary}
           />
         </View>
         <Pressable
@@ -138,14 +173,16 @@ function TimelineRow({
           </Text>
           <Text
             variant="body"
-            color={completed ? 'text-tertiary' : 'text-primary'}
+            color={completed ? 'tertiary' : 'text-primary'}
             style={completed ? styles.completedTitle : undefined}
           >
             {item.value.title}
           </Text>
-          <Text ellipsizeMode="tail" numberOfLines={1} variant="caption1" color="text-secondary">
-            {isTask ? 'Task' : (item.value.location ?? 'Calendar event')}
-          </Text>
+          {item.value.location && (
+            <Text ellipsizeMode="tail" numberOfLines={1} variant="caption1" color="text-secondary">
+              {item.value.location}
+            </Text>
+          )}
         </Pressable>
         {isTask ? (
           <IconButton
@@ -154,12 +191,148 @@ function TimelineRow({
             iconSize={20}
             size={44}
             testID={`calendar-task-toggle-${item.value.id}`}
-            tintColor={completed ? themeColors.success : themeColors['text-tertiary']}
+            tintColor={completed ? themeColors.success : themeColors['tertiary']}
             onPress={onToggleTask}
           />
         ) : null}
       </View>
     </View>
+  );
+}
+
+interface CalendarResultProps {
+  answer: string;
+  canSubmitTimeBlock: boolean;
+  draftDetails: string;
+  draftTitle: string;
+  editingField: EditableTimeBlockField | null;
+  isAsking: boolean;
+  isCreatingTask: boolean;
+  isSavingTimeBlock: boolean;
+  onCancel: () => void;
+  onEdit: (field: EditableTimeBlockField) => void;
+  onEditValue: (value: string) => void;
+  onSubmit: () => void;
+  timeBlock: TimeBlock | null;
+}
+
+function CalendarResult({
+  answer,
+  canSubmitTimeBlock,
+  draftDetails,
+  draftTitle,
+  editingField,
+  isAsking,
+  isCreatingTask,
+  isSavingTimeBlock,
+  onCancel,
+  onEdit,
+  onEditValue,
+  onSubmit,
+  timeBlock,
+}: CalendarResultProps) {
+  const styles = useStyles();
+  const themeColors = useThemeColors();
+  const prefersReducedMotion = useReducedMotion();
+  const pulseStyle = useThinkingPulse(prefersReducedMotion);
+  const actionLabel =
+    timeBlock?.primary_intent === 'add_task'
+      ? 'Add task'
+      : timeBlock?.primary_intent === 'add_recurring_event'
+        ? 'Add recurring event'
+        : 'Add event';
+
+  if (!isAsking && !answer && !timeBlock) return null;
+
+  return (
+    <Animated.View
+      entering={prefersReducedMotion ? undefined : FadeInUp.duration(transitionDurations[150])}
+      exiting={prefersReducedMotion ? undefined : FadeOut.duration(transitionDurations[100])}
+      style={styles.resultSurface}
+      testID="calendar-answer-state"
+    >
+      {isAsking ? (
+        <View
+          accessibilityLabel="Looking at your calendar"
+          style={styles.thinkingRow}
+          testID="calendar-thinking-state"
+        >
+          <Animated.View style={[styles.thinkingDot, pulseStyle]} />
+          <Text color="text-secondary">Looking at your calendar…</Text>
+        </View>
+      ) : null}
+
+      {answer ? (
+        <View style={styles.answerRow} testID="calendar-answer-content">
+          <View style={styles.answerIcon}>
+            <AppIcon name="calendar" size={16} tintColor={themeColors.primary} />
+          </View>
+          <Text variant="callout" color="text-primary" style={styles.answerCopy}>
+            {answer}
+          </Text>
+        </View>
+      ) : null}
+
+      {timeBlock ? (
+        <View style={styles.timeBlockContent} testID="time-block-preview">
+          <Pressable
+            accessibilityLabel="Edit title"
+            onPress={() => onEdit('title')}
+            testID="time-block-edit-title-trigger"
+          >
+            <Text variant="headline" color="text-primary">
+              {draftTitle}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Edit time details"
+            onPress={() => onEdit(timeBlock.duration ? 'duration' : 'location')}
+            testID="time-block-edit-details-trigger"
+          >
+            <Text variant="subhead" color="text-secondary">
+              {draftDetails}
+            </Text>
+          </Pressable>
+          {(timeBlock.primary_intent === 'add_event' ||
+            timeBlock.primary_intent === 'add_recurring_event') &&
+          !canSubmitTimeBlock ? (
+            <Text color="destructive">Choose a start and end time before adding this event.</Text>
+          ) : null}
+          {timeBlock.primary_intent !== 'add_task' &&
+          timeBlock.primary_intent !== 'add_event' &&
+          timeBlock.primary_intent !== 'add_recurring_event' ? (
+            <Text color="text-secondary">Review this request in Time Block details.</Text>
+          ) : null}
+          {editingField ? (
+            <Input
+              autoFocus
+              accessibilityLabel={`Edit ${editingField}`}
+              onChangeText={onEditValue}
+              placeholder={
+                editingField === 'duration' ? 'Duration in minutes' : `Edit ${editingField}`
+              }
+              testID={`time-block-edit-${editingField}`}
+              value={String(timeBlock[editingField] ?? '')}
+            />
+          ) : null}
+          {canSubmitTimeBlock ? (
+            <Button
+              label={actionLabel}
+              loading={isCreatingTask || isSavingTimeBlock}
+              onPress={onSubmit}
+              testID="time-block-submit"
+            />
+          ) : null}
+          <Button
+            label="Cancel"
+            onPress={onCancel}
+            size="sm"
+            testID="time-block-cancel"
+            variant="ghost"
+          />
+        </View>
+      ) : null}
+    </Animated.View>
   );
 }
 
@@ -506,12 +679,6 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
   );
 
   const isAuthorized = calendarPermission === 'authorized';
-  const actionLabel =
-    timeBlock?.primary_intent === 'add_task'
-      ? 'Add task'
-      : timeBlock?.primary_intent === 'add_recurring_event'
-        ? 'Add recurring event'
-        : 'Add event';
   const canSubmitTimeBlock =
     timeBlock?.primary_intent === 'add_task' ||
     ((timeBlock?.primary_intent === 'add_event' ||
@@ -567,7 +734,7 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
         }
         ListFooterComponent={
           isLoadingEvents ? (
-            <Text color="text-tertiary" style={styles.footerText}>
+            <Text color="tertiary" style={styles.footerText}>
               Loading more time…
             </Text>
           ) : null
@@ -592,88 +759,37 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
       />
       {hasLoadedEvents ? <View testID="calendar-events-ready" /> : null}
 
-      {answer ? (
-        <View style={styles.transientResult}>
-          <Text color="text-primary" testID="calendar-answer-state">
-            {answer}
-          </Text>
-        </View>
-      ) : null}
-
-      {timeBlock ? (
-        <View style={styles.transientResult} testID="time-block-preview">
-          <Pressable
-            accessibilityLabel="Edit title"
-            onPress={() => setEditingField('title')}
-            testID="time-block-edit-title-trigger"
-          >
-            <Text variant="headline" color="text-primary">
-              {draftTitle}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Edit time details"
-            onPress={() => setEditingField(timeBlock.duration ? 'duration' : 'location')}
-            testID="time-block-edit-details-trigger"
-          >
-            <Text variant="subhead" color="text-secondary">
-              {draftDetails}
-            </Text>
-          </Pressable>
-          {(timeBlock.primary_intent === 'add_event' ||
-            timeBlock.primary_intent === 'add_recurring_event') &&
-          !canSubmitTimeBlock ? (
-            <Text color="destructive">Choose a start and end time before adding this event.</Text>
-          ) : null}
-          {timeBlock.primary_intent !== 'add_task' &&
-          timeBlock.primary_intent !== 'add_event' &&
-          timeBlock.primary_intent !== 'add_recurring_event' ? (
-            <Text color="text-secondary">Review this request in Time Block details.</Text>
-          ) : null}
-          {editingField ? (
-            <Input
-              autoFocus
-              accessibilityLabel={`Edit ${editingField}`}
-              onChangeText={(value) => {
-                setTimeBlock((current) =>
-                  current
-                    ? {
-                        ...current,
-                        [editingField]:
-                          editingField === 'duration' ? Number(value) || null : value || null,
-                      }
-                    : current,
-                );
-              }}
-              placeholder={
-                editingField === 'duration' ? 'Duration in minutes' : `Edit ${editingField}`
-              }
-              testID={`time-block-edit-${editingField}`}
-              value={String(timeBlock[editingField] ?? '')}
-            />
-          ) : null}
-          {canSubmitTimeBlock ? (
-            <Button
-              label={actionLabel}
-              loading={isCreatingTask || isSavingTimeBlock}
-              onPress={() => void submitTimeBlock()}
-              testID="time-block-submit"
-            />
-          ) : null}
-          <Button
-            label="Cancel"
-            onPress={() => {
-              setPrompt(submittedPrompt);
-              setTimeBlock(null);
-              setEditingField(null);
-              setError('');
-            }}
-            size="sm"
-            testID="time-block-cancel"
-            variant="ghost"
-          />
-        </View>
-      ) : null}
+      <CalendarResult
+        answer={answer}
+        canSubmitTimeBlock={canSubmitTimeBlock}
+        draftDetails={draftDetails}
+        draftTitle={draftTitle}
+        editingField={editingField}
+        isAsking={isAsking}
+        isCreatingTask={isCreatingTask}
+        isSavingTimeBlock={isSavingTimeBlock}
+        timeBlock={timeBlock}
+        onCancel={() => {
+          setPrompt(submittedPrompt);
+          setTimeBlock(null);
+          setEditingField(null);
+          setError('');
+        }}
+        onEdit={setEditingField}
+        onEditValue={(value) => {
+          if (!editingField) return;
+          setTimeBlock((current) =>
+            current
+              ? {
+                  ...current,
+                  [editingField]:
+                    editingField === 'duration' ? Number(value) || null : value || null,
+                }
+              : current,
+          );
+        }}
+        onSubmit={() => void submitTimeBlock()}
+      />
 
       <KeyboardStickyView
         offset={{ closed: 0, opened: 40 }}
@@ -681,7 +797,6 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
         style={[styles.composerDock, { paddingBottom: Math.max(insets.bottom, 12) }]}
       >
         <View style={styles.composer}>
-          <AppIcon name="sparkles" size={20} tintColor={styles.composerIcon.color} />
           <Input
             testID="calendar-input"
             value={prompt}
@@ -692,20 +807,16 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
             onSubmitEditing={() => void ask()}
             style={styles.input}
           />
-          {prompt.trim() || isAsking ? (
-            <IconButton
-              accessibilityLabel={isAsking ? 'Interpreting time request' : 'Interpret time request'}
-              disabled={!prompt.trim() || isAsking}
-              icon="arrow.up.circle.fill"
-              isAnimating={isAsking}
-              testID="calendar-ask-button"
-              tintColor={styles.composerIcon.color}
-              variant="ghost"
-              onPress={() => void ask()}
-            />
-          ) : (
-            <View style={styles.composerActionPlaceholder} />
-          )}
+          <IconButton
+            accessibilityLabel={isAsking ? 'Interpreting time request' : 'Interpret time request'}
+            disabled={!prompt.trim() || isAsking}
+            icon="arrow.up.circle.fill"
+            isAnimating={isAsking}
+            testID="calendar-ask-button"
+            tintColor={styles.composerIcon.color}
+            variant="ghost"
+            onPress={() => void ask()}
+          />
         </View>
       </KeyboardStickyView>
     </View>
@@ -715,7 +826,7 @@ export function CalendarQuery({ isFocused }: CalendarQueryProps) {
 const useStyles = makeStyles((theme) => ({
   composer: {
     alignItems: 'center',
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderColor: theme.colors['border-default'],
     borderRadius: 18,
     borderWidth: 1,
@@ -736,10 +847,26 @@ const useStyles = makeStyles((theme) => ({
     width: 44,
   },
   composerIcon: {
-    color: theme.colors.accent,
+    color: theme.colors.primary,
   },
   container: {
     flex: 1,
+  },
+  answerRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing[2],
+  },
+  answerCopy: {
+    flex: 1,
+  },
+  answerIcon: {
+    alignItems: 'center',
+    backgroundColor: theme.colors['muted'],
+    borderRadius: radii.full,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
   },
   dayHeader: {
     alignItems: 'baseline',
@@ -783,13 +910,32 @@ const useStyles = makeStyles((theme) => ({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
   },
-  transientResult: {
+  resultSurface: {
+    backgroundColor: theme.colors['card'],
+    borderColor: theme.colors['border-default'],
+    borderRadius: radii.lg,
+    borderWidth: 1,
     gap: spacing[2],
     marginHorizontal: spacing[4],
     marginBottom: spacing[3],
+    padding: spacing[3],
+  },
+  thinkingDot: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: radii.full,
+    height: 8,
+    width: 8,
+  },
+  thinkingRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing[2],
+  },
+  timeBlockContent: {
+    gap: spacing[2],
   },
   unscheduledHeader: {
-    backgroundColor: theme.colors['surface-inset'],
+    backgroundColor: theme.colors['muted'],
     borderTopColor: theme.colors['border-default'],
     borderTopWidth: 1,
     gap: spacing[1],

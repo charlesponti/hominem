@@ -109,13 +109,13 @@ function MessageEditModal({
             value={draftMessage}
             onChangeText={onChangeDraft}
             placeholder={t.chat.messageEdit.placeholder}
-            placeholderTextColor={themeColors['text-tertiary']}
+            placeholderTextColor={themeColors['tertiary']}
             selectionColor={themeColors['text-primary']}
             cursorColor={themeColors['text-primary']}
             style={[
               styles.editInput,
               {
-                backgroundColor: themeColors['surface-panel'],
+                backgroundColor: themeColors['card'],
                 borderColor: themeColors['border-default'],
                 color: themeColors['text-primary'],
               },
@@ -482,7 +482,7 @@ export function renderChatMessage(
 
 const useChatMessageStyles = makeStyles((theme) => ({
   actionTimestamp: {
-    color: theme.colors['text-tertiary'],
+    color: theme.colors['tertiary'],
     fontSize: 12,
   },
   actionsRow: {
@@ -526,8 +526,8 @@ const useChatMessageStyles = makeStyles((theme) => ({
     textAlignVertical: 'top',
   },
   editSheet: {
-    backgroundColor: theme.colors['surface-canvas'],
-    borderColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['background'],
+    borderColor: theme.colors['border-default'],
     borderRadius: radii.md,
     borderWidth: 1,
     gap: spacing[3],
@@ -540,7 +540,7 @@ const useChatMessageStyles = makeStyles((theme) => ({
     fontSize: 16,
   },
   focusItem: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     borderColor: theme.colors['border-default'],
     borderRadius: radii.md,
     borderWidth: 1,
@@ -560,7 +560,7 @@ const useChatMessageStyles = makeStyles((theme) => ({
   },
   referencedNoteChip: {
     alignItems: 'center',
-    backgroundColor: theme.colors['surface-raised'],
+    backgroundColor: theme.colors['popover'],
     borderColor: theme.colors['border-default'],
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -586,15 +586,15 @@ const useChatMessageStyles = makeStyles((theme) => ({
     // open, no background
   },
   rowUser: {
-    backgroundColor: theme.colors['surface-raised'],
+    backgroundColor: theme.colors['popover'],
     borderCurve: 'continuous',
     borderRadius: radii.lg,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[2],
   },
   toolCall: {
-    backgroundColor: theme.colors['surface-canvas'],
-    borderColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['background'],
+    borderColor: theme.colors['border-default'],
     borderRadius: radii.md,
     borderWidth: 1,
     gap: spacing[1],
@@ -618,7 +618,7 @@ const useChatMessageStyles = makeStyles((theme) => ({
     width: '100%',
   },
   transcriptSurface: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     borderColor: theme.colors['border-default'],
     borderRadius: radii.md,
     borderWidth: 1,

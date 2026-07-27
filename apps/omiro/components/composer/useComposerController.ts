@@ -13,6 +13,10 @@ interface UseComposerControllerOptions {
   onClearDraft?: () => void;
 }
 
+// Composes the composer's independent concerns — draft text, attachments,
+// voice input, inline enhance, and focus — into the single set of derived
+// capabilities and handlers that Composer.tsx renders from. Submission itself
+// (what happens on save/send) lives in useComposerSubmission, not here.
 export function useComposerController({
   initialMessage,
   isSubmitting = false,

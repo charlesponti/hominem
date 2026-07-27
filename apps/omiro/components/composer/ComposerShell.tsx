@@ -61,7 +61,7 @@ export function ComposerShell({
           -1,
           true,
         )
-      : themeColors['border-subtle'],
+      : themeColors['border-default'],
   }));
 
   return (
@@ -130,14 +130,14 @@ const useStyles = makeStyles((theme) => ({
   },
   surface: {
     boxShadow: nativeShadows.sm,
-    borderColor: theme.colors['border-subtle'],
+    borderColor: theme.colors['border-default'],
     borderWidth: 1,
     elevation: 6,
     overflow: 'hidden',
     width: '100%',
   },
   surfaceActive: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     borderRadius: radii.xl,
     paddingHorizontal: spacing[3],
     paddingTop: spacing[3],
@@ -145,7 +145,7 @@ const useStyles = makeStyles((theme) => ({
     gap: spacing[1],
   },
   surfaceIdle: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderRadius: radii.full,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],

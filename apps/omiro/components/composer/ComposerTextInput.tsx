@@ -2,7 +2,7 @@ import React from 'react';
 import { TextInput } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { ROW_MODE_INPUT_MARGIN } from '~/components/composer/constants';
+import { TOOL_BTN_SIZE } from '~/components/composer/constants';
 import { makeStyles, useThemeColors } from '~/components/theme';
 import { createComposerReflowTransition } from '~/components/theme/animations';
 import { spacing } from '~/components/theme/tokens';
@@ -19,8 +19,16 @@ interface ComposerTextInputProps {
   onBlur?: () => void;
 }
 
-const INPUT_MIN_H = spacing[6] + spacing[4];
-const INPUT_MAX_H = spacing[6] * 9;
+// Floor: keeps the input from ever rendering shorter than one comfortable
+// line, so it doesn't jump-grow the instant the first character is typed.
+const MIN_INPUT_HEIGHT = spacing[6] + spacing[4];
+// Ceiling: caps multiline growth at roughly 9 lines; beyond that the input
+// scrolls internally instead of pushing the composer any taller.
+const MAX_INPUT_HEIGHT = spacing[6] * 9;
+
+// In `idle` mode, the attach/mic buttons are positioned absolutely on top of the input's row.
+// This is the horizontal space the input must leave clear on each side so typed text is not beneath the buttons.
+export const IDLE_CLEARANCE = TOOL_BTN_SIZE + spacing[2];
 
 export function ComposerTextInput({
   inputRef,
@@ -37,6 +45,11 @@ export function ComposerTextInput({
   const prefersReducedMotion = useReducedMotion();
 
   return (
+    // isColumnLayout: active/focused state, toolbar renders below as its own
+    // row (see ComposerShell's controlsAnchorColumn) — the input can use the
+    // full width. !isColumnLayout: idle state, the toolbar overlays this same
+    // row instead (controlsAnchorOverlay) — inputContainerRowMode leaves
+    // clearance so the input's text doesn't render under those icons.
     <Animated.View
       style={[styles.inputContainer, isColumnLayout ? null : styles.inputContainerRowMode]}
       layout={createComposerReflowTransition(prefersReducedMotion)}
@@ -49,9 +62,9 @@ export function ComposerTextInput({
         onFocus={onFocus}
         onBlur={onBlur}
         placeholder={placeholder}
-        placeholderTextColor={themeColors['text-tertiary']}
-        cursorColor={themeColors.accent}
-        selectionColor={themeColors.accent}
+        placeholderTextColor={themeColors['tertiary']}
+        cursorColor={themeColors.primary}
+        selectionColor={themeColors.primary}
         style={styles.input}
         testID={testID}
       />
@@ -62,14 +75,15 @@ export function ComposerTextInput({
 const useStyles = makeStyles((theme) => ({
   inputContainer: {
     flexShrink: 1,
+    // Centers the TextInput vertically to vertically align the text with the toolbar icons
     justifyContent: 'center',
-    maxHeight: INPUT_MAX_H,
-    minHeight: INPUT_MIN_H,
+    maxHeight: MAX_INPUT_HEIGHT,
+    minHeight: MIN_INPUT_HEIGHT,
     minWidth: 0,
   },
   inputContainerRowMode: {
-    marginLeft: ROW_MODE_INPUT_MARGIN,
-    marginRight: ROW_MODE_INPUT_MARGIN,
+    marginLeft: IDLE_CLEARANCE,
+    marginRight: IDLE_CLEARANCE,
   },
   input: {
     color: theme.colors['text-primary'],

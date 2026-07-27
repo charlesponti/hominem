@@ -204,11 +204,11 @@ function RootLayout() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: themeColors['surface-canvas'],
+      background: themeColors['background'],
       border: themeColors['border-default'],
-      card: themeColors['surface-canvas'],
-      notification: themeColors.accent,
-      primary: themeColors.accent,
+      card: themeColors['background'],
+      notification: themeColors.primary,
+      primary: themeColors.primary,
       text: themeColors['text-primary'],
     },
   };

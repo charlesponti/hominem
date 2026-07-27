@@ -65,6 +65,8 @@ export function ComposerToolbar({
   const styles = useStyles();
   const themeColors = useThemeColors();
 
+  // While recording, the attach/mic/enhance/submit row hides entirely — the
+  // recording panel (rendered elsewhere as inlinePanel) owns stop/cancel instead.
   return (
     <View style={styles.toolbar}>
       <View style={styles.leading}>
@@ -94,6 +96,9 @@ export function ComposerToolbar({
             onPress={onVoicePress}
           />
         )}
+        {/* Enhance, secondary action, and submit all gate on canSubmit (content
+            present, nothing busy) — with an empty draft there's nothing to
+            enhance or send, so they slide out rather than render disabled. */}
         {canSubmit ? (
           <Reanimated.View entering={buttonEnter} exiting={buttonExit}>
             <IconButton
@@ -123,7 +128,7 @@ export function ComposerToolbar({
               iconSize={TOOLBAR_ICON_SIZE}
               size={TOOL_BTN_SIZE}
               testID={secondaryAction.testID}
-              tintColor={themeColors['text-tertiary']}
+              tintColor={themeColors['tertiary']}
               variant="surface"
               onPress={secondaryAction.onPress}
             />
@@ -142,7 +147,7 @@ export function ComposerToolbar({
               iconSize={TOOLBAR_ICON_SIZE}
               size={PRIMARY_BTN_SIZE}
               style={styles.primarySubmit}
-              tintColor={themeColors['text-on-accent']}
+              tintColor={themeColors['primary-foreground']}
               testID={submitTestID}
               variant="primary"
               onPress={onSubmit}
@@ -173,7 +178,7 @@ const useStyles = makeStyles((theme) => ({
     paddingHorizontal: spacing[1],
   },
   primarySubmit: {
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.primary,
   },
   secondaryAction: {
     marginLeft: spacing[2],

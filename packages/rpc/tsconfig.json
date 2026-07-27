@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/react-bundler-lib.json",
+  "extends": "../../tsconfig.profiles/react-package.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     // This package has no build script (nothing consumes dist/ — downstream

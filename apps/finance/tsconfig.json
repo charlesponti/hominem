@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/vite-app.json",
+  "extends": "../../tsconfig.profiles/web-app.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     "rootDirs": [".", "./.react-router/types"],

@@ -10,6 +10,9 @@ export function useComposerDraft({
   onDraftChange,
 }: UseComposerDraftOptions = {}) {
   const [message, setMessageState] = useState(() => initialMessage);
+  // Mirrors `message` so callbacks that fire later (e.g. voice transcription
+  // finishing after the user kept typing) can read the latest draft via
+  // getMessage() without depending on `message` and re-creating on every keystroke.
   const messageRef = useRef(initialMessage);
 
   const applyMessage = useCallback(

@@ -95,7 +95,7 @@ function ProtectedShell() {
             initialRouteName="index"
             screenOptions={{
               ...screenOptions,
-              contentStyle: { backgroundColor: themeColors['surface-canvas'] },
+              contentStyle: { backgroundColor: themeColors['background'] },
               headerLargeTitle: false,
               headerShadowVisible: false,
               headerTintColor: themeColors['text-primary'],

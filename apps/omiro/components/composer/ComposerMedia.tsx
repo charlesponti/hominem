@@ -28,6 +28,8 @@ export function ComposerMedia({ accessibilityLabel, disabled = false }: Composer
         cancelButtonIndex: 0,
       },
       (i) => {
+        // Indices line up with `options` above: 0 is Cancel, 1 is Take Photo,
+        // 2 is Choose From Library — ActionSheetIOS gives no named-key access.
         if (i === 1) setIsCameraOpen(true);
         else if (i === 2) void pickAttachment();
       },

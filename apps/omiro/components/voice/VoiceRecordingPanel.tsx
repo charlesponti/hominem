@@ -49,7 +49,7 @@ export function VoiceRecordingPanel({
         iconSize={TOOLBAR_ICON_SIZE}
         size={TOOL_BTN_SIZE}
         testID="composer-cancel-recording-button"
-        tintColor={themeColors['text-tertiary']}
+        tintColor={themeColors['tertiary']}
         variant="surface"
         onPress={onCancel}
       />
@@ -94,7 +94,7 @@ const useStyles = makeStyles((theme) => ({
     height: TOOL_BTN_SIZE,
     paddingHorizontal: spacing[3],
     borderRadius: TOOL_BTN_SIZE / 2,
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
   },
   dot: {
     width: 8,

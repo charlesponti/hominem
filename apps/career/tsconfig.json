@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/vite-app.json",
+  "extends": "../../tsconfig.profiles/web-app.json",
   "compilerOptions": {
     "rootDirs": [".", "./.react-router/types"],
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
@@ -18,7 +18,6 @@
       "~/*": ["./app/*"],
       "@hominem/api/career": ["../../services/api/src/rpc/routes/career.ts"]
     },
-    "types": ["vite/client", "node"]
   },
   "include": [
     "app/**/*.ts",

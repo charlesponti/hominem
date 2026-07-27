@@ -59,7 +59,7 @@ export function RecordingLevelMeter() {
   return (
     <View style={styles.row}>
       {bars.map((db, index) => (
-        <LevelBar key={index} db={db} tintColor={themeColors.accent} />
+        <LevelBar key={index} db={db} tintColor={themeColors.primary} />
       ))}
     </View>
   );

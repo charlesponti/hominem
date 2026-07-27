@@ -23,6 +23,10 @@ interface ComposerSubmitInput {
   message: string;
 }
 
+// Owns the actual submit actions (save note / start chat / send message) and,
+// per mode, where the draft comes from and how it's persisted:
+// inbox mode delegates draft storage to the caller via props; chat mode
+// persists to launch-state so a draft survives the app being killed mid-chat.
 export function useComposerSubmission(props: ComposerProps) {
   const queryClient = useQueryClient();
   const { mutateAsync: createNote, isPending: isSaving } = useCreateNote();
@@ -46,6 +50,9 @@ export function useComposerSubmission(props: ComposerProps) {
     ) => {
       if (!canSubmit) return;
 
+      // Each branch re-checks its own in-flight flag (isSaving/isStartingChat/
+      // isChatSending) in addition to canSubmit, since canSubmit is memoized
+      // from render state and can lag a rapid double-tap by one frame.
       if (kind === 'note') {
         if (isSaving) return;
         await createNote({ text: message.trim(), fileIds });

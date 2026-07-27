@@ -1,3 +1,6 @@
+// Props are keyed by `mode` because the composer's whole behavior forks on it:
+// inbox mode saves notes/starts chats and takes its draft from the caller,
+// chat mode sends messages and manages its own draft (see useComposerSubmission).
 interface ComposerInboxProps {
   mode: 'inbox';
   initialMessage?: string;

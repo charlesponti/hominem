@@ -56,7 +56,7 @@ export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessage
 
 const useShimmerStyles = makeStyles((theme) => ({
   line: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderRadius: radii.md,
     height: 16,
   },
@@ -76,7 +76,7 @@ const useShimmerStyles = makeStyles((theme) => ({
     width: '100%',
   },
   userRow: {
-    backgroundColor: theme.colors['surface-raised'],
+    backgroundColor: theme.colors['popover'],
     borderCurve: 'continuous',
     borderRadius: radii.lg,
     gap: spacing[2],

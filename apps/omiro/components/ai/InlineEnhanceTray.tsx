@@ -1,8 +1,9 @@
 import { Host, Picker, Label as SwiftUILabel } from '@expo/ui/swift-ui';
 import { environment, labelStyle, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
+import { useColorMode } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { View } from 'react-native';
 import type { TextInput } from 'react-native';
 
 import { makeStyles, Text, useThemeColors } from '~/components/theme';
@@ -42,7 +43,7 @@ export function InlineEnhanceTray({
 }: InlineEnhanceTrayProps) {
   const themeColors = useThemeColors();
   const styles = useStyles();
-  const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const colorScheme = useColorMode();
   const customInputRef = useRef<TextInput>(null);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
 
@@ -111,11 +112,11 @@ export function InlineEnhanceTray({
           value={instruction}
           onChangeText={onInstructionChange}
           placeholder={t.enhance.instructionPlaceholder}
-          placeholderTextColor={themeColors['text-tertiary']}
+          placeholderTextColor={themeColors['tertiary']}
           style={[
             styles.input,
             {
-              backgroundColor: themeColors['surface-raised'],
+              backgroundColor: themeColors['popover'],
               color: themeColors['text-primary'],
             },
           ]}
@@ -159,7 +160,7 @@ const useStyles = makeStyles((theme) => ({
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderRadius: radii.full,
     height: spacing[6],
     justifyContent: 'center',

@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/package-bundler.json",
+  "extends": "../../tsconfig.profiles/package.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "./build",

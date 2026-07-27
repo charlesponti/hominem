@@ -1,46 +1,39 @@
 @import '@ponti-studios/ui/styles.css';
 @import 'tw-animate-css';
 
-::view-transition-old(application-tab-panel),
-::view-transition-new(application-tab-panel) {
-  animation-duration: 220ms;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-  mix-blend-mode: normal;
-}
-
-::view-transition-old(application-tab-panel) {
-  animation-name: application-tab-panel-exit;
-}
-
-::view-transition-new(application-tab-panel) {
-  animation-name: application-tab-panel-enter;
-}
-
-@keyframes application-tab-panel-exit {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
-@keyframes application-tab-panel-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @source '../node_modules/@ponti-studios/ui/src';
+
+/* Hominem-only compatibility tokens for legacy app surfaces. These derive
+ * missing semantic states from the 0.4.1 base palette without extending the
+ * shared package's public token contract. */
+@theme inline {
+  --color-base: var(--background);
+  --color-panel: var(--card);
+  --color-surface: var(--card);
+  --color-surface-raised: var(--popover);
+  --color-surface-inset: var(--muted);
+  --color-surface-hover: color-mix(in srgb, var(--card) 92%, var(--text-primary));
+  --color-surface-pressed: color-mix(in srgb, var(--card) 84%, var(--text-primary));
+  --color-surface-selected: color-mix(in srgb, var(--card) 88%, var(--primary));
+  --color-surface-disabled: color-mix(in srgb, var(--card) 70%, var(--background));
+  --color-text-tertiary: var(--tertiary);
+  --color-text-disabled: var(--tertiary);
+  --color-accent-hover: color-mix(in srgb, var(--primary) 88%, var(--text-primary));
+  --color-accent-pressed: color-mix(in srgb, var(--primary) 76%, var(--text-primary));
+  --color-accent-subtle: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --color-destructive-hover: color-mix(in srgb, var(--destructive) 88%, var(--text-primary));
+  --color-destructive-pressed: color-mix(in srgb, var(--destructive) 76%, var(--text-primary));
+  --color-destructive-subtle: color-mix(in srgb, var(--destructive) 12%, var(--background));
+  --color-success-subtle: color-mix(in srgb, var(--success) 12%, var(--background));
+  --color-warning-subtle: color-mix(in srgb, var(--warning) 16%, var(--background));
+  --color-text-on-success: var(--primary-foreground);
+  --color-text-on-warning: var(--text-primary);
+  --color-border-subtle: color-mix(in srgb, var(--border-default) 70%, transparent);
+  --color-border-strong: var(--border-default);
+  --color-border-accent: var(--primary);
+  --color-border-destructive: var(--destructive);
+  --color-emphasis-subtle: var(--border-default);
+}
 
 @layer base {
   body {

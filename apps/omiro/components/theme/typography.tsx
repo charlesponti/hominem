@@ -1,14 +1,12 @@
+import { useThemeColors } from '@ponti-studios/ui/native';
 import {
   Text as RNText,
   type TextProps as RNTextProps,
   type StyleProp,
   type TextStyle,
-  useColorScheme,
 } from 'react-native';
 
-import { colorThemes, type ColorToken } from '~/components/theme/tokens';
-
-import { colors } from './colors';
+import { type ColorToken } from '~/components/theme/tokens';
 
 export const fontFamiliesNative = {
   primary: 'System',
@@ -181,12 +179,8 @@ const variantStyles = {
 } satisfies Record<string, TextStyle>;
 
 function Text({ color, muted = false, style, variant = 'body', ...props }: TextProps) {
-  const colors = useColorScheme() === 'dark' ? colorThemes.dark : colorThemes.light;
-  const resolvedColor = color
-    ? colors[color]
-    : muted
-      ? colors['text-tertiary']
-      : colors['text-primary'];
+  const colors = useThemeColors();
+  const resolvedColor = color ? colors[color] : muted ? colors['tertiary'] : colors['text-primary'];
 
   return <RNText style={[variantStyles[variant], { color: resolvedColor }, style]} {...props} />;
 }

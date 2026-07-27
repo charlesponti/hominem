@@ -60,7 +60,7 @@ export function ChatThinkingIndicator() {
           <Animated.View style={[styles.dot, dot1Style]} />
           <Animated.View style={[styles.dot, dot2Style]} />
           <Animated.View style={[styles.dot, dot3Style]} />
-          <Text color="text-tertiary" style={styles.thinkingText}>
+          <Text color="tertiary" style={styles.thinkingText}>
             {t.chat.thinkingIndicator}
           </Text>
         </View>

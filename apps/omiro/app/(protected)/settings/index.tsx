@@ -204,7 +204,7 @@ function SettingsRow({
         <AppIcon
           name={icon}
           size={18}
-          tintColor={destructive ? themeColors.destructive : themeColors['text-tertiary']}
+          tintColor={destructive ? themeColors.destructive : themeColors['tertiary']}
         />
         <View style={styles.rowCopy}>
           <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
@@ -336,7 +336,7 @@ function Settings() {
     >
       {/* Identity */}
       <View style={styles.identity}>
-        <View style={[styles.avatar, { backgroundColor: themeColors['surface-raised'] }]}>
+        <View style={[styles.avatar, { backgroundColor: themeColors['popover'] }]}>
           <Text style={[styles.avatarText, { color: themeColors['text-primary'] }]}>
             {getInitials(state.name, currentUser?.email ?? '?')}
           </Text>
@@ -346,7 +346,7 @@ function Settings() {
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
             placeholder={t.settings.name.placeholder}
-            placeholderTextColor={themeColors['text-tertiary']}
+            placeholderTextColor={themeColors['tertiary']}
             returnKeyType="done"
             selectionColor={themeColors['text-primary']}
             cursorColor={themeColors['text-primary']}
@@ -426,7 +426,7 @@ function Settings() {
               ]}
             />
           </View>
-          <Text style={[styles.usageNote, { color: themeColors['text-tertiary'] }]}>
+          <Text style={[styles.usageNote, { color: themeColors['tertiary'] }]}>
             {monthlyUsage.isOverLimit
               ? "You've reached this month's free AI usage limit. It resets at the start of next month."
               : 'Resets at the start of next month.'}
@@ -472,9 +472,7 @@ function Settings() {
           icon="archivebox"
           label={t.settings.archivedChats}
           onPress={onArchivedChatsPress}
-          accessory={
-            <AppIcon name="chevron.right" size={12} tintColor={themeColors['text-tertiary']} />
-          }
+          accessory={<AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />}
         />
       </View>
 

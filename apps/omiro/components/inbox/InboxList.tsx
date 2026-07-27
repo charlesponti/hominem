@@ -121,7 +121,7 @@ export function InboxList({
       keyExtractor={(item) => item.id}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <Text variant="caption1" color="text-tertiary" style={styles.footerText}>
+          <Text variant="caption1" color="tertiary" style={styles.footerText}>
             Loading more...
           </Text>
         ) : null

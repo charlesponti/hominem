@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing[2],
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderColor: theme.colors['border-default'],
     borderWidth: 1,
     borderRadius: radii.lg,

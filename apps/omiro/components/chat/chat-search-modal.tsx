@@ -92,7 +92,7 @@ const useChatSearchStyles = makeStyles((theme) => ({
     justifyContent: 'space-between',
   },
   input: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderColor: theme.colors['border-default'],
     borderRadius: 12,
     borderWidth: 1,
@@ -103,7 +103,7 @@ const useChatSearchStyles = makeStyles((theme) => ({
     paddingVertical: spacing[2],
   },
   inputPlaceholder: {
-    color: theme.colors['text-tertiary'],
+    color: theme.colors['tertiary'],
   },
   title: {
     color: theme.colors['text-primary'],
@@ -116,7 +116,7 @@ const useChatSearchStyles = makeStyles((theme) => ({
     paddingTop: spacing[7],
   },
   searchPanel: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     borderColor: theme.colors['border-default'],
     borderRadius: SEARCH_PANEL_RADIUS,
     borderWidth: 1,

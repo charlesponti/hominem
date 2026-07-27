@@ -294,7 +294,7 @@ function VerifyScreen() {
         style={[
           styles.container,
           styles.successContainer,
-          { backgroundColor: themeColors['surface-canvas'] },
+          { backgroundColor: themeColors['background'] },
         ]}
       >
         <Animated.View entering={FadeIn.duration(300)} style={styles.successContent}>
@@ -315,7 +315,7 @@ function VerifyScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors['surface-canvas'] }]}
+      style={[styles.container, { backgroundColor: themeColors['background'] }]}
       behavior="padding"
     >
       <ScrollView
@@ -342,7 +342,7 @@ function VerifyScreen() {
                   onPress={handleChangeEmail}
                   style={({ pressed }) => [
                     styles.emailChip,
-                    { backgroundColor: themeColors['surface-panel'], opacity: pressed ? 0.65 : 1 },
+                    { backgroundColor: themeColors['card'], opacity: pressed ? 0.65 : 1 },
                   ]}
                 >
                   <Text style={[styles.emailChipText, { color: themeColors['text-primary'] }]}>
@@ -359,7 +359,7 @@ function VerifyScreen() {
                   style={[
                     styles.inputRow,
                     {
-                      backgroundColor: themeColors['surface-panel'],
+                      backgroundColor: themeColors['card'],
                       borderColor: authError
                         ? themeColors.destructive
                         : themeColors['border-default'],
@@ -371,7 +371,7 @@ function VerifyScreen() {
                     testID="auth-otp-input"
                     value={normalizedOtp}
                     placeholder={t.auth.verify.codePlaceholder}
-                    placeholderTextColor={themeColors['text-tertiary']}
+                    placeholderTextColor={themeColors['tertiary']}
                     keyboardType="number-pad"
                     textContentType="oneTimeCode"
                     autoCapitalize="none"

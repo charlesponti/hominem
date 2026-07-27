@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/react-bundler-lib.json",
+  "extends": "../../tsconfig.profiles/react-package.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "./build",

@@ -129,7 +129,7 @@ const Onboarding = () => {
             <Input
               value={name}
               placeholder={t.onboarding.namePlaceholder}
-              placeholderTextColor={themeColors['text-tertiary']}
+              placeholderTextColor={themeColors['tertiary']}
               autoCapitalize="words"
               autoCorrect={false}
               editable={!isSubmitting}
@@ -139,7 +139,7 @@ const Onboarding = () => {
               style={[
                 styles.input,
                 {
-                  backgroundColor: themeColors['surface-panel'],
+                  backgroundColor: themeColors['card'],
                   borderColor: themeColors['border-default'],
                   color: themeColors['text-primary'],
                 },

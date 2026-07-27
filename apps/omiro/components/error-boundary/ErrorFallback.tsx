@@ -84,7 +84,7 @@ export function ErrorFallback({
         <Text style={[styles.message, { color: themeColors['text-secondary'] }]}>{message}</Text>
 
         {__DEV__ && debugMessage ? (
-          <Text style={[styles.debugMessage, { color: themeColors['text-tertiary'] }]}>
+          <Text style={[styles.debugMessage, { color: themeColors['tertiary'] }]}>
             {debugMessage}
           </Text>
         ) : null}

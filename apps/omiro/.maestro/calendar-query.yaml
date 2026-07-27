@@ -29,12 +29,14 @@ appId: com.pontistudios.hakumi.dev
 - back
 - tapOn:
     id: calendar-ask-button
+- assertVisible:
+    id: calendar-thinking-state
 - extendedWaitUntil:
     visible:
-      id: calendar-answer-state
+      id: calendar-answer-content
     timeout: 45000
 - assertVisible:
-    id: calendar-answer-state
+    id: calendar-answer-content
 
 # Verify returning to the prior main-app context and re-entering Calendar.
 - tapOn:

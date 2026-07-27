@@ -21,6 +21,10 @@ export interface ComposerPresentation {
   secondaryAction: ComposerSecondaryActionConfig | undefined;
 }
 
+// Pure presentation mapping from mode/entryMode to copy, test IDs, and which
+// submit action is primary vs. secondary. Kept separate from the actual submit
+// logic in useComposerSubmission.ts so the two "submission" concerns — what the
+// button says versus what it does — can change independently.
 export function getComposerSubmissionConfig(props: ComposerProps): ComposerPresentation {
   const isInbox = props.mode === 'inbox';
   const entryMode = isInbox ? (props.entryMode ?? 'mixed') : undefined;

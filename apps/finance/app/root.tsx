@@ -41,7 +41,7 @@ export const meta: Route.MetaFunction = () => {
   return [
     { title: 'Florin' },
     { name: 'description', content: 'Manage your personal finances with Florin' },
-    { name: 'theme-color', content: colorThemes.light['surface-canvas'] },
+    { name: 'theme-color', content: colorThemes.light.background },
   ];
 };
 

@@ -44,7 +44,7 @@ export function TaskListItem({ task, onPress, onToggleComplete }: TaskListItemPr
         <AppIcon
           name={isCompleted ? 'checkmark.circle.fill' : 'circle'}
           size={22}
-          tintColor={isCompleted ? themeColors.accent : themeColors['text-tertiary']}
+          tintColor={isCompleted ? themeColors.primary : themeColors['tertiary']}
         />
       </Pressable>
 
@@ -72,7 +72,7 @@ export function TaskListItem({ task, onPress, onToggleComplete }: TaskListItemPr
             numberOfLines={1}
             style={[
               styles.title,
-              { color: isCompleted ? themeColors['text-tertiary'] : themeColors['text-primary'] },
+              { color: isCompleted ? themeColors['tertiary'] : themeColors['text-primary'] },
               isCompleted && styles.titleCompleted,
             ]}
           >
@@ -96,7 +96,7 @@ export function TaskListItem({ task, onPress, onToggleComplete }: TaskListItemPr
       </Pressable>
 
       {isList ? (
-        <AppIcon name="chevron.right" size={12} tintColor={themeColors['text-tertiary']} />
+        <AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />
       ) : null}
     </View>
   );
@@ -126,7 +126,7 @@ const useStyles = makeStyles((theme) => ({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colors['border-subtle'],
+    borderBottomColor: theme.colors['border-default'],
     borderBottomWidth: 1,
     flexDirection: 'row',
     gap: themeSpacing.sm,

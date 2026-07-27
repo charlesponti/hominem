@@ -148,7 +148,7 @@ const useClassificationStyles = makeStyles((theme) => ({
     gap: spacing[1],
   },
   preview: {
-    backgroundColor: theme.colors['surface-inset'],
+    backgroundColor: theme.colors['muted'],
     borderColor: theme.colors['border-default'],
     borderRadius: radii.md,
     borderWidth: 1,
@@ -159,7 +159,7 @@ const useClassificationStyles = makeStyles((theme) => ({
     fontFamily: fontFamiliesNative.mono,
   },
   sheet: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     borderColor: theme.colors['border-default'],
     borderTopLeftRadius: radii.md,
     borderTopRightRadius: radii.md,

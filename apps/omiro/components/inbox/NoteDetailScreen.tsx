@@ -378,9 +378,9 @@ function NoteEditorBody({
           value={draft.title}
           onChangeText={handleTitleChange}
           placeholder={t.notes.editor.titlePlaceholder}
-          placeholderTextColor={themeColors['text-tertiary']}
+          placeholderTextColor={themeColors['tertiary']}
           scrollEnabled={false}
-          selectionColor={themeColors.accent}
+          selectionColor={themeColors.primary}
           style={styles.titleInput}
           testID="note-title-input"
           textAlignVertical="top"
@@ -408,9 +408,9 @@ function NoteEditorBody({
             onSelectionChange={formatting.onSelectionChange}
             onFocus={() => formatting.onFocus(draft.content)}
             placeholder={t.notes.editor.contentPlaceholder}
-            placeholderTextColor={themeColors['text-tertiary']}
-            cursorColor={themeColors.accent}
-            selectionColor={themeColors.accent}
+            placeholderTextColor={themeColors['tertiary']}
+            cursorColor={themeColors.primary}
+            selectionColor={themeColors.primary}
             style={styles.contentInput}
             textAlignVertical="top"
             scrollEnabled={false}
@@ -444,7 +444,7 @@ function NoteEditorBody({
                       pressed ? styles.filePillDetachButtonPressed : null,
                     ]}
                   >
-                    <AppIcon name="xmark" size={12} tintColor={themeColors['text-tertiary']} />
+                    <AppIcon name="xmark" size={12} tintColor={themeColors['tertiary']} />
                   </Pressable>
                 </View>
               ))}
@@ -492,7 +492,7 @@ const useNoteStyles = makeStyles((theme) => ({
     paddingBottom: COMPOSER_CLEARANCE,
   },
   enhanceTray: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
     paddingHorizontal: 16,
     paddingBottom: theme.spacing.xl * 2,
   },
@@ -514,7 +514,7 @@ const useNoteStyles = makeStyles((theme) => ({
     width: '72%',
   },
   placeholderDateline: {
-    backgroundColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['border-default'],
     borderRadius: theme.borderRadii.sm,
     height: 12,
     marginBottom: 14,
@@ -525,7 +525,7 @@ const useNoteStyles = makeStyles((theme) => ({
     paddingTop: 4,
   },
   placeholderLine: {
-    backgroundColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['border-default'],
     borderRadius: theme.borderRadii.sm,
     height: 16,
     width: '100%',
@@ -534,12 +534,12 @@ const useNoteStyles = makeStyles((theme) => ({
     width: '58%',
   },
   dateline: {
-    color: theme.colors['text-tertiary'],
+    color: theme.colors['tertiary'],
     marginBottom: 14,
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['border-default'],
     marginBottom: 20,
   },
   contentInput: {
@@ -552,7 +552,7 @@ const useNoteStyles = makeStyles((theme) => ({
     minHeight: 240,
   },
   previewEmpty: {
-    color: theme.colors['text-tertiary'],
+    color: theme.colors['tertiary'],
     fontStyle: 'italic',
     minHeight: 240,
   },
@@ -564,7 +564,7 @@ const useNoteStyles = makeStyles((theme) => ({
     fontSize: 12,
     fontWeight: '500',
     letterSpacing: 0.4,
-    color: theme.colors['text-tertiary'],
+    color: theme.colors['tertiary'],
     textTransform: 'uppercase',
   },
   filesList: {
@@ -576,7 +576,7 @@ const useNoteStyles = makeStyles((theme) => ({
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: theme.colors['surface-raised'],
+    backgroundColor: theme.colors['popover'],
     borderRadius: 10,
     borderCurve: 'continuous',
   },
@@ -624,26 +624,26 @@ function markdownStyles(colors: ReturnType<typeof useThemeColors>) {
     },
     strong: { color: colors['text-primary'], fontWeight: '700' as const },
     em: { color: colors['text-primary'], fontStyle: 'italic' as const },
-    link: { color: colors.accent, textDecorationLine: 'underline' as const },
+    link: { color: colors.primary, textDecorationLine: 'underline' as const },
     bullet_list: { marginVertical: 6 },
     ordered_list: { marginVertical: 6 },
     code_inline: {
       color: colors['text-primary'],
-      backgroundColor: colors['surface-raised'],
+      backgroundColor: colors['popover'],
       borderRadius: 4,
       fontFamily: 'Menlo',
       paddingHorizontal: 4,
     },
     code_block: {
       color: colors['text-primary'],
-      backgroundColor: colors['surface-raised'],
+      backgroundColor: colors['popover'],
       borderRadius: 8,
       fontFamily: 'Menlo',
       padding: 12,
     },
     fence: {
       color: colors['text-primary'],
-      backgroundColor: colors['surface-raised'],
+      backgroundColor: colors['popover'],
       borderRadius: 8,
       fontFamily: 'Menlo',
       padding: 12,
@@ -651,11 +651,11 @@ function markdownStyles(colors: ReturnType<typeof useThemeColors>) {
     blockquote: {
       color: colors['text-secondary'],
       backgroundColor: 'transparent',
-      borderColor: colors['border-subtle'],
+      borderColor: colors['border-default'],
       borderLeftWidth: 3,
       marginVertical: 6,
       paddingLeft: 12,
     },
-    hr: { backgroundColor: colors['border-subtle'], height: 1, marginVertical: 12 },
+    hr: { backgroundColor: colors['border-default'], height: 1, marginVertical: 12 },
   };
 }

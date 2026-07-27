@@ -28,7 +28,7 @@ type CameraModalProps = {
 
 const useStyles = makeStyles((theme) => ({
   sheetBackground: {
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
   },
   dragHandle: {
     backgroundColor: theme.colors['border-default'],
@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
   },
   container: {
     flex: 1,
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
   },
   cameraContainer: {
     flex: 1,
@@ -68,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
     height: 72,
     borderRadius: theme.borderRadii.sm,
     borderWidth: 4,
-    borderColor: theme.colors['text-on-accent'],
+    borderColor: theme.colors['primary-foreground'],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -79,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
     width: 56,
     height: 56,
     borderRadius: theme.borderRadii.md,
-    backgroundColor: theme.colors['text-on-accent'],
+    backgroundColor: theme.colors['primary-foreground'],
   },
   permissionContainer: {
     flex: 1,
@@ -196,7 +196,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
                 style={styles.sideButton}
                 accessibilityLabel={t.camera.closeA11y}
               >
-                <AppIcon name="xmark" size={20} tintColor={themeColors['text-on-accent']} />
+                <AppIcon name="xmark" size={20} tintColor={themeColors['primary-foreground']} />
               </Pressable>
 
               <Pressable
@@ -213,7 +213,11 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
                 style={styles.sideButton}
                 accessibilityLabel={t.camera.flipCameraA11y}
               >
-                <AppIcon name="camera.rotate" size={20} tintColor={themeColors['text-on-accent']} />
+                <AppIcon
+                  name="camera.rotate"
+                  size={20}
+                  tintColor={themeColors['primary-foreground']}
+                />
               </Pressable>
             </View>
           </View>

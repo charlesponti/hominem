@@ -50,6 +50,8 @@ interface ComposerProviderProps {
   initialAttachments?: ComposerAttachment[];
 }
 
+// The server's `type` classification is preferred; falling back to a client-side
+// mimetype guess only covers files the server couldn't categorize.
 function getAttachmentType(uploadedFile: UploadedFile): string {
   return uploadedFile.type !== 'unknown'
     ? uploadedFile.type
@@ -204,6 +206,11 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     ],
   );
 
+  // Deletes any uploaded file left attached when this provider unmounts —
+  // e.g. the user backed out of the composer without submitting. Files that
+  // markAttachmentsSubmitted() already claimed for an in-flight submission are
+  // skipped so a race between unmount and that submission can't delete files
+  // the note/chat/message is about to reference.
   useEffect(
     () => () => {
       attachmentsRef.current.forEach((attachment) => {

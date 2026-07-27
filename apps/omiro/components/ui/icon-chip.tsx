@@ -22,7 +22,7 @@ export function IconChip({ icon, size = 36, radius = 10, iconSize, tintColor }: 
     <View
       style={{
         alignItems: 'center',
-        backgroundColor: themeColors['surface-panel'],
+        backgroundColor: themeColors['card'],
         borderRadius: radius,
         height: size,
         justifyContent: 'center',

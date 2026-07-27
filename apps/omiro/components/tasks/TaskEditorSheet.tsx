@@ -144,9 +144,9 @@ export function TaskEditorSheet({
               value={title}
               onChangeText={setTitle}
               placeholder={t.tasks.editor.titlePlaceholder}
-              placeholderTextColor={themeColors['text-tertiary']}
-              cursorColor={themeColors.accent}
-              selectionColor={themeColors.accent}
+              placeholderTextColor={themeColors['tertiary']}
+              cursorColor={themeColors.primary}
+              selectionColor={themeColors.primary}
               style={styles.titleInput}
               testID="task-editor-title-input"
             />
@@ -158,9 +158,9 @@ export function TaskEditorSheet({
               value={description ?? ''}
               onChangeText={setDescription}
               placeholder={t.tasks.editor.descriptionPlaceholder}
-              placeholderTextColor={themeColors['text-tertiary']}
-              cursorColor={themeColors.accent}
-              selectionColor={themeColors.accent}
+              placeholderTextColor={themeColors['tertiary']}
+              cursorColor={themeColors.primary}
+              selectionColor={themeColors.primary}
               style={styles.descriptionInput}
               testID="task-editor-description-input"
             />
@@ -270,11 +270,11 @@ function Chip({ label, selected, onPress, testID }: ChipProps) {
       testID={testID}
       style={({ pressed }) => [
         styles.chip,
-        selected && { backgroundColor: themeColors.accent, borderColor: themeColors.accent },
+        selected && { backgroundColor: themeColors.primary, borderColor: themeColors.primary },
         pressed && styles.chipPressed,
       ]}
     >
-      <Text color={selected ? 'text-on-accent' : 'text-secondary'} style={styles.chipText}>
+      <Text color={selected ? 'primary-foreground' : 'text-secondary'} style={styles.chipText}>
         {label}
       </Text>
     </Pressable>
@@ -283,7 +283,7 @@ function Chip({ label, selected, onPress, testID }: ChipProps) {
 
 const useStyles = makeStyles((theme) => ({
   sheet: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderColor: theme.colors['border-default'],
     borderTopLeftRadius: radii.md,
     borderTopRightRadius: radii.md,
@@ -303,7 +303,7 @@ const useStyles = makeStyles((theme) => ({
     gap: spacing[3],
   },
   divider: {
-    backgroundColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['border-default'],
     height: 1,
   },
   titleInput: {
@@ -348,7 +348,7 @@ const useStyles = makeStyles((theme) => ({
     paddingVertical: spacing[1],
   },
   priorityEmojiButtonSelected: {
-    backgroundColor: theme.colors['surface-raised'],
+    backgroundColor: theme.colors['popover'],
     opacity: 1,
   },
   priorityEmoji: {

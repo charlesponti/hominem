@@ -1,7 +1,7 @@
 import type { TimeSeriesDataPoint } from '@hominem/rpc/finance';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
-import { colors } from '@ponti-studios/ui/tokens';
+import { colorThemes } from '@ponti-studios/ui/tokens';
 import { subMonths } from 'date-fns';
 import { useMemo, useState } from 'react';
 import {
@@ -19,6 +19,7 @@ import {
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
+const colors = colorThemes.light;
 const SPENDING_COLOR = colors.destructive;
 
 interface AccountSpendingChartProps {

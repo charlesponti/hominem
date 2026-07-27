@@ -81,9 +81,9 @@ export function IconButton({
   const resolvedTintColor =
     tintColor ??
     (disabled
-      ? themeColors['text-tertiary']
+      ? themeColors['tertiary']
       : variant === 'primary'
-        ? themeColors['surface-canvas']
+        ? themeColors['background']
         : variant === 'ghost'
           ? themeColors['text-primary']
           : themeColors['text-primary']);
@@ -130,7 +130,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden',
   },
   surface: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
   },

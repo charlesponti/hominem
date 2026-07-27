@@ -1,5 +1,5 @@
 {
-  "extends": "./package-bundler.json",
+  "extends": "./package.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",

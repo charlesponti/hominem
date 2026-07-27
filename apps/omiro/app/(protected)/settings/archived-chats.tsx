@@ -193,7 +193,7 @@ const ArchivedChatRow = memo(
               Archived {formatRelativeAge(chat.archivedAt ?? chat.activityAt)}
             </Text>
           </View>
-          <AppIcon name="chevron.right" size={12} tintColor={themeColors['text-tertiary']} />
+          <AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />
         </Pressable>
       </View>
     );

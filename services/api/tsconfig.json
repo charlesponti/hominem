@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.profiles/bundler-noemit.json",
+  "extends": "../../tsconfig.profiles/service.json",
   "compilerOptions": {
     "composite": false,
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",

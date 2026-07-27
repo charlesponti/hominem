@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { useThemeColors } from '@ponti-studios/ui/native';
 
 import {
   colorThemes,
@@ -50,9 +50,7 @@ export type Theme = ReturnType<typeof createTheme>;
 
 export const theme = createTheme(colorThemes.dark);
 
-export function useThemeColors() {
-  return useColorScheme() === 'dark' ? colorThemes.dark : colorThemes.light;
-}
+export { useThemeColors };
 
 export function useTheme() {
   return createTheme(useThemeColors());

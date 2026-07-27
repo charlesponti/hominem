@@ -8,8 +8,8 @@ import {
   pickerStyle,
   tag,
 } from '@expo/ui/swift-ui/modifiers';
+import { useColorMode } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
-import { useColorScheme } from 'react-native';
 
 export type WorkspaceContext = 'chats' | 'notes' | 'calendar';
 
@@ -25,7 +25,7 @@ interface WorkspaceContextPickerProps {
 }
 
 export function WorkspaceContextPicker({ value, onChange }: WorkspaceContextPickerProps) {
-  const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const colorScheme = useColorMode();
 
   return (
     <Host style={{ height: 44, width: 220 }}>

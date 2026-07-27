@@ -139,7 +139,7 @@ function AuthScreen() {
   return (
     <>
       <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: themeColors['surface-canvas'] }]}
+        style={[styles.container, { backgroundColor: themeColors['background'] }]}
         behavior="padding"
       >
         <ScrollView
@@ -169,7 +169,7 @@ function AuthScreen() {
                       testID="auth-email-input"
                       value={email}
                       placeholder={t.auth.emailEntry.emailPlaceholder}
-                      placeholderTextColor={themeColors['text-tertiary']}
+                      placeholderTextColor={themeColors['tertiary']}
                       keyboardType="email-address"
                       textContentType="emailAddress"
                       autoCapitalize="none"
@@ -181,7 +181,7 @@ function AuthScreen() {
                       style={[
                         styles.input,
                         {
-                          backgroundColor: themeColors['surface-panel'],
+                          backgroundColor: themeColors['card'],
                           borderColor: displayError
                             ? themeColors.destructive
                             : themeColors['border-default'],

@@ -35,13 +35,13 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const borderColor = error
     ? themeColors.destructive
     : focused
-      ? themeColors.accent
+      ? themeColors.primary
       : themeColors['border-default'];
 
   return (
     <TextInput
       ref={ref}
-      placeholderTextColor={themeColors['text-tertiary']}
+      placeholderTextColor={themeColors['tertiary']}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

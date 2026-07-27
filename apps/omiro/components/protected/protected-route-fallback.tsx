@@ -5,7 +5,7 @@ import { makeStyles } from '~/components/theme';
 const useStyles = makeStyles((theme) => ({
   root: {
     flex: 1,
-    backgroundColor: theme.colors['surface-canvas'],
+    backgroundColor: theme.colors['background'],
   },
 }));
 

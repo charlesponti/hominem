@@ -19,6 +19,11 @@ interface UseVoiceComposerInputOptions {
   onError?: (error: VoiceComposerError) => void;
 }
 
+// Drives the voice pipeline end to end: useVoiceRecorder owns record/stop and
+// its own permission/start errors; once a recording stops, this hook takes over
+// for transcription (on-device, synchronous with the UI) and cleanup (an LLM
+// pass that runs in the background and swaps in cleaner text if it finishes
+// before the user has changed the draft further).
 export function useVoiceComposerInput({
   getMessage,
   setMessage,
@@ -129,6 +134,8 @@ export function useVoiceComposerInput({
     onError,
   });
 
+  // recorderError (permission/start failures) takes priority since it means
+  // transcription never got a chance to run at all.
   const error = recorderError ?? transcriptionError;
 
   const clearError = useCallback(() => {

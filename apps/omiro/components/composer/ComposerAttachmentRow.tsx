@@ -30,6 +30,8 @@ export function ComposerAttachmentRow() {
         >
           {attachments.map((a) => {
             const progress = progressByAssetId[a.id] ?? 0;
+            // 0 means still queued (not started); 100 means settled (done or
+            // errored) — the progress overlay only makes sense in between.
             const uploading = progress > 0 && progress < 100;
             return (
               <Pressable
@@ -50,7 +52,7 @@ export function ComposerAttachmentRow() {
                   <AppIcon
                     name="xmark"
                     size={spacing[2] * 2}
-                    tintColor={themeColors['text-on-accent']}
+                    tintColor={themeColors['primary-foreground']}
                   />
                 </View>
                 {uploading && (
@@ -84,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: radii.md,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
   },
   thumbImage: {
     width: spacing[4] * 3,
@@ -118,7 +120,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.colors['overlay-scrim'],
   },
   progressFill: {
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.primary,
     height: '100%',
   },
   errorText: {

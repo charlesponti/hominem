@@ -97,7 +97,7 @@ export const InboxStreamItem = memo(({ item, swipeEnabled = true }: InboxStreamI
           iconName={isChat ? 'archivebox' : 'trash'}
           onPress={isChat ? handleArchive : handleDelete}
           accessibilityLabel={isChat ? t.inbox.item.archive : t.inbox.item.deleteNote.confirm}
-          backgroundColor={isChat ? themeColors.accent : themeColors.destructive}
+          backgroundColor={isChat ? themeColors.primary : themeColors.destructive}
           style={styles.swipeAction}
         />
       );
@@ -212,7 +212,7 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 64,
   },
   rowPressed: {
-    backgroundColor: theme.colors['surface-panel'],
+    backgroundColor: theme.colors['card'],
   },
   rowPending: {
     opacity: 0.45,

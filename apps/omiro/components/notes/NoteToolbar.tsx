@@ -179,7 +179,7 @@ const useToolbarStyles = makeStyles((theme) => ({
     gap: theme.spacing.sm,
   },
   divider: {
-    backgroundColor: theme.colors['border-subtle'],
+    backgroundColor: theme.colors['border-default'],
     height: 20,
     marginHorizontal: theme.spacing.sm,
     width: 1,

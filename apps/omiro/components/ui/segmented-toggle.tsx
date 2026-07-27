@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: fontWeights.semibold,
   },
   labelSelected: {
-    color: theme.colors['text-on-accent'],
+    color: theme.colors['primary-foreground'],
   },
   segment: {
     alignItems: 'center',
@@ -59,14 +59,14 @@ const useStyles = makeStyles((theme) => ({
     paddingHorizontal: componentSizes.md,
   },
   segmentSelected: {
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.colors.primary,
   },
   track: {
     // componentSizes.xl (44pt) guarantees every segment clears the
     // platform's minimum tap target (Rule 20, 74) — this must never shrink
     // to visually match a neighboring icon button's smaller *visual* size,
     // since IconButton only clears 44pt via hitSlop, not its own frame.
-    backgroundColor: theme.colors['surface-inset'],
+    backgroundColor: theme.colors['muted'],
     borderRadius: radii.full,
     flexDirection: 'row',
     padding: 2,
@@ -98,7 +98,9 @@ export function SegmentedToggle<T extends string>({
       {options.map((option) => {
         const selected = option.value === value;
         const isIcon = Boolean(option.icon || option.sfSymbol);
-        const tintColor = selected ? themeColors['text-on-accent'] : themeColors['text-secondary'];
+        const tintColor = selected
+          ? themeColors['primary-foreground']
+          : themeColors['text-secondary'];
 
         return (
           <Pressable
