@@ -14,13 +14,11 @@ tags:
 
 **First principle:** Information should be quickly digestible and true.
 
-| Dimension     | Question                            |
-| ------------- | ----------------------------------- |
-| **Accuracy**  | Is it true?                         |
-| **Clarity**   | Can the reader grasp it in seconds? |
-| **Hierarchy** | What's most important?              |
-| **Context**   | Why should the reader care?         |
-| **Flow**      | What comes next?                    |
+- **Accuracy** — Is it true?
+- **Clarity** — Can the reader grasp it in seconds?
+- **Hierarchy** — What's most important?
+- **Context** — Why should the reader care?
+- **Flow** — What comes next?
 
 ### Applications
 
@@ -64,3 +62,4 @@ The rounded corner is a "safe area" scam. Developers spend half their lives codi
 Sharp corners are the mark of a tool — scalpels, chisels, reference monitors. When we round the corner, we admit the phone is no longer a tool for production but a lozenge for consumption. We traded the precision of the grid for the aesthetics of the nursery.
 
 **Key question:** Can you build a revolution on a radius?
+

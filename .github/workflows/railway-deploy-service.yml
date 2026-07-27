@@ -55,4 +55,4 @@ jobs:
           }
 
       - name: deploy-to-railway
-        run: just deploy railway "${{ inputs.service_name }}" "${{ inputs.config_path }}"
+        run: bash just/deploy.sh "${{ inputs.service_name }}" "${{ inputs.config_path }}"

@@ -1,0 +1,10 @@
+{
+  "camelCase": true,
+  "dateParser": "string",
+  "outFile": "./src/types/database.ts",
+  "typeMapping": {
+    "timestamp": "ColumnType<string, Date | string, Date | string>",
+    "timestamptz": "ColumnType<string, Date | string, Date | string>",
+    "date": "ColumnType<string, Date | string, Date | string>"
+  }
+}

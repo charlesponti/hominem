@@ -125,7 +125,7 @@ description: "Task list for Build MCP feature implementation"
 ### Polish
 
 - [x] T056 Implement daily cost budget throttling — query `app.ai_usage_events`, 429 if budget exceeded
-- [ ] T051 [P] Update documentation — `docs/02-system.md`
+- [ ] T051 [P] Update documentation — `docs/architecture.md`
 - [ ] T052 [P] Run `pnpm run check` (typecheck + lint + build + test) across full workspace
 - [ ] T053 [P] Run quickstart.md validation scenarios
 - [ ] T054 Code cleanup and edge-case hardening

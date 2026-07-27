@@ -1,3 +1,16 @@
-
 .env.local
-ios/sentry.properties
+
+# expo managed workflow
+ios/
+.expo/
+expo-env.d.ts
+
+# metro
+.metro-health-check*
+
+# build artifacts
+*.ipa
+*.apk
+*.aab
+*.jsbundle
+*.jks

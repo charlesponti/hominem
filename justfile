@@ -8,7 +8,6 @@ TEST_DATABASE_URL := 'postgresql://postgres:postgres@127.0.0.1:5434/app-test'
 TEST_AUTH_E2E_SECRET := 'otp-secret'
 
 mod db 'just/db.just'
-mod deploy 'just/deploy.just'
 mod mcp 'just/mcp.just'
 mod mobile 'just/mobile.just'
 

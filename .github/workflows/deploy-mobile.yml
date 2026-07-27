@@ -59,7 +59,7 @@ jobs:
         run: |
           mkdir -p ../../artifacts
           pnpm dlx eas-cli@21.2.0 build:list --platform ios --build-profile production --git-commit-hash "${GITHUB_SHA}" --limit 1 --json --non-interactive > ../../artifacts/omiro-release-build.json
-          node ../../scripts/create-omiro-release-manifest.mjs ../../artifacts/omiro-release-build.json ../../artifacts/omiro-release-manifest.json
+          node scripts/create-release-manifest.mjs ../../artifacts/omiro-release-build.json ../../artifacts/omiro-release-manifest.json
 
       - name: upload-release-manifest
         uses: actions/upload-artifact@v4

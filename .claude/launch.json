@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "career",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hominem/career", "dev"],
+      "port": 4451,
+      "autoPort": true
+    },
+    {
+      "name": "finance",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hominem/finance", "dev"],
+      "port": 4444
+    }
+  ]
+}

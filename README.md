@@ -1,22 +1,40 @@
 # Hominem
 
-Hominem is a product monorepo with two active surfaces:
+Hominem is a product monorepo. Active products:
 
-- api in `services/api`
-- omiro in `apps/omiro`
+- **Omiro** — `apps/omiro`, the Apple-native surface
+- **API** — `services/api`, identity and data authority
+- **Career** — web product, server-owned data access
+- **Finance** — in monorepo, release tier governed by explicit portfolio decision
 
 ## The Bible
 
-The repository's operating law lives in five parts:
+The repository's operating law lives in `docs/`. Read the relevant part before
+changing a system boundary. Package READMEs are setup entrypoints only.
 
-1. [Product](./docs/01-product.md)
-2. [System](./docs/02-system.md)
-3. [Experience](./docs/03-experience.md)
-4. [Voice](./docs/04-voice.md)
-5. [Operations](./docs/05-operations.md)
+### Product
+- [Product](./docs/product.md)
 
-Read the relevant part before changing a system boundary. Package READMEs are
-setup entrypoints only.
+### System
+- [Architecture](./docs/architecture.md)
+- [Authentication](./docs/auth.md)
+- [Data](./docs/data.md)
+
+### Experience
+- [Time](./docs/time.md)
+- Design system: `@ponti-studios/ui/docs/`
+
+### Voice
+- [Voice](./docs/voice.md)
+
+### Operations
+- [Developer](./docs/developer.md)
+- [Evidence](./docs/evidence.md)
+- [Sentry](./docs/sentry.md)
+- [Production](./docs/production.md)
+
+### Other
+- [Design](./docs/design.md)
 
 The reusable mobile starter extracted from Omiro now lives in the standalone
 `/Users/charlesponti/Developer/ponti-mobile-starter` repo. Hominem continues to own the
