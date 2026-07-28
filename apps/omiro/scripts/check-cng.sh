@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-app_dir="$repo_root/apps/omiro"
+app_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/omiro-cng.XXXXXX")"
 
 restore_native_dir() {
