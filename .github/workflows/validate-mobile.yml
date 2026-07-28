@@ -60,7 +60,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [26.5.0]
+        node-version: [24.18.0]
 
     services:
       postgres:
