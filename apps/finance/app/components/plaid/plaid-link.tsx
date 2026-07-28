@@ -73,6 +73,12 @@ export function PlaidLink({
         return;
       }
 
+      if (!publicToken) {
+        console.error('No public token returned from Plaid Link');
+        onError?.(new Error('Failed to connect bank account'));
+        return;
+      }
+
       // Use the current exchangeToken mutation directly
       exchangeToken.mutate(
         {
