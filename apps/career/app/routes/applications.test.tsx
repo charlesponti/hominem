@@ -49,7 +49,7 @@ describe('Applications route', () => {
             },
             filters: {
               search: undefined,
-              statuses: [],
+              status: undefined,
               source: undefined,
             },
           }}
@@ -81,7 +81,7 @@ describe('Applications route', () => {
             },
             filters: {
               search: undefined,
-              statuses: [],
+              status: undefined,
               source: undefined,
             },
           }}
