@@ -51,16 +51,16 @@ Or all at once from a cold start:
 .claude/skills/run-omiro/driver.sh all
 ```
 
-| command | what it does |
-|---|---|
-| `env` | writes/fixes `.env.development.local` |
-| `boot` | boots a simulator if none is booted, prints UDID |
-| `build` | `expo run:ios`; falls back to manual `simctl install` if devicectl install fails |
-| `metro` | starts `expo start --clear` in background, waits for `:8081/status` to report running |
-| `launch` | `simctl terminate` + `simctl launch` the installed app (reconnects to Metro) |
-| `screenshot [path]` | `simctl io screenshot`, default `/tmp/omiro-sim.png` |
-| `status` | prints booted simulator, Metro status, API reachability |
-| `all` | env → boot → metro → build → launch → screenshot |
+| command             | what it does                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| `env`               | writes/fixes `.env.development.local`                                                 |
+| `boot`              | boots a simulator if none is booted, prints UDID                                      |
+| `build`             | `expo run:ios`; falls back to manual `simctl install` if devicectl install fails      |
+| `metro`             | starts `expo start --clear` in background, waits for `:8081/status` to report running |
+| `launch`            | `simctl terminate` + `simctl launch` the installed app (reconnects to Metro)          |
+| `screenshot [path]` | `simctl io screenshot`, default `/tmp/omiro-sim.png`                                  |
+| `status`            | prints booted simulator, Metro status, API reachability                               |
+| `all`               | env → boot → metro → build → launch → screenshot                                      |
 
 Metro log: `/tmp/omiro-metro.log`. Metro pid: `/tmp/omiro-metro.pid`.
 
@@ -85,24 +85,24 @@ pnpm --filter=@hominem/omiro test
 
 ## Gotchas
 
-- **`expo run:ios --device "iPhone 17 Pro"` can target a *shutdown*
+- **`expo run:ios --device "iPhone 17 Pro"` can target a _shutdown_
   simulator** when more than one device shares that name (this
   project's simctl list had two "iPhone 17 Pro" entries). The install
   step then fails with `ERROR: The capability "Install Application" is
-  not supported by this device.` — devicectl refuses to install onto a
+not supported by this device.` — devicectl refuses to install onto a
   non-booted device. `driver.sh build` boots a simulator by name
-  *first* and installs manually via `simctl install` + `simctl launch`
+  _first_ and installs manually via `simctl install` + `simctl launch`
   as a fallback if `expo run:ios`'s own install step fails.
 - **Empty/placeholder `EXPO_PUBLIC_SENTRY_DSN` crashes every route.**
   The env schema (`env.ts`) declares it `z.url().optional()` —
-  `.optional()` only tolerates an *absent* key, not `""` or the
+  `.optional()` only tolerates an _absent_ key, not `""` or the
   `.env.example` placeholder string. Either fails Zod validation and
   every route throws `Cannot read property 'ErrorBoundary' of
-  undefined` before rendering anything. Delete the line outright
+undefined` before rendering anything. Delete the line outright
   rather than blanking its value.
 - **Missing `EXPO_PUBLIC_API_BASE_URL` fails the same way** — the app
   never gets past the splash screen, with a `ZodError: Missing
-  EXPO_PUBLIC_API_BASE_URL` repeated once per route in the Metro log.
+EXPO_PUBLIC_API_BASE_URL` repeated once per route in the Metro log.
   Always run `driver.sh env` before first launch.
 - **A relaunch right after `expo start --clear` shows only the splash
   screen for several seconds** — Metro is bundling on first connect
@@ -112,7 +112,7 @@ pnpm --filter=@hominem/omiro test
 ## Troubleshooting
 
 - **`Error: ERROR: The capability "Install Application" is not
-  supported by this device.`**: target simulator wasn't booted. Run
+supported by this device.`**: target simulator wasn't booted. Run
   `driver.sh boot` before `build`, or use `driver.sh build` which does
   this automatically.
 - **`[ZodError: ... "Missing EXPO_PUBLIC_API_BASE_URL"]` spamming the
