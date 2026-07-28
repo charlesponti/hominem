@@ -23,12 +23,7 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButtonProps) {
   return (
-    <IconButton
-      accessibilityLabel={label}
-      disabled={disabled}
-      icon={icon}
-      onPress={onPress}
-    />
+    <IconButton accessibilityLabel={label} disabled={disabled} icon={icon} onPress={onPress} />
   );
 }
 

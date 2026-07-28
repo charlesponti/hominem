@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react';
 import { ActionSheetIOS, View } from 'react-native';
-import type { SFSymbol } from 'expo-symbols';
-import Reanimated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { CameraModal } from '~/components/media/camera-modal';
 import { useComposerContext } from '~/components/composer/ComposerContext';
-import { IconButton } from '~/components/ui/icon-button';
+import { CameraModal } from '~/components/media/camera-modal';
+import { PillButton } from '~/components/ui/pill-button';
 import t from '~/translations';
+
+import { useComposerSurfaceStyles } from './composer.styles';
 
 interface ComposerToolbarProps {
   canEnhance: boolean;
@@ -21,12 +21,6 @@ interface ComposerToolbarProps {
   onEnhancePress: () => void;
   onSubmit: () => void;
   onVoicePress: () => void;
-  secondaryAction?: {
-    accessibilityLabel: string;
-    icon: SFSymbol;
-    onPress: () => void;
-    testID?: string;
-  };
   submitAccessibilityLabel?: string;
   submitTestID: string;
 }
@@ -34,6 +28,7 @@ interface ComposerToolbarProps {
 export function ComposerToolbar(props: ComposerToolbarProps) {
   const { pickAttachment, handleCameraCapture } = useComposerContext();
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const styles = useComposerSurfaceStyles();
 
   const showMenu = useCallback(() => {
     ActionSheetIOS.showActionSheetWithOptions(
@@ -54,53 +49,35 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
 
   return (
     <>
-      <Reanimated.View
-        entering={FadeIn.duration(150)}
-        exiting={FadeOut.duration(120)}
-        testID="composer-secondary-actions"
-        style={{ borderColor: 'purple', borderWidth: 2, flexDirection: 'row', gap: 8 }}
-      >
-        <View style={{ flex: 1 }} />
-        <IconButton
+      <View style={styles.row}>
+        <PillButton
           accessibilityLabel={t.inboxComposer.composer.addAttachmentA11y}
           disabled={!props.canPickMedia}
           icon="paperclip"
-          pill
           testID="composer-attach-button"
           onPress={showMenu}
         />
         {props.hasContent ? (
-          <IconButton
+          <PillButton
             accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
             disabled={!props.canEnhance}
             icon="wand.and.sparkles"
-            pill
             onPress={props.onEnhancePress}
           />
         ) : null}
-        {props.secondaryAction && props.hasContent ? (
-          <IconButton
-            accessibilityLabel={props.secondaryAction.accessibilityLabel}
-            icon={props.secondaryAction.icon}
-            pill
-            testID={props.secondaryAction.testID}
-            onPress={props.secondaryAction.onPress}
-          />
-        ) : null}
         {props.hasContent ? (
-          <IconButton
+          <PillButton
             accessibilityLabel={
               props.submitAccessibilityLabel ??
               (props.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
             }
             disabled={!props.canSubmit}
             icon="arrow.up"
-            pill
             testID={props.submitTestID}
             onPress={props.onSubmit}
           />
         ) : (
-          <IconButton
+          <PillButton
             accessibilityLabel={
               props.isRecordingElsewhere
                 ? t.inboxComposer.composer.recordingElsewhereA11y
@@ -108,12 +85,11 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
             }
             disabled={!props.canToggleVoice}
             icon="mic.fill"
-            pill
             testID="composer-mic-button"
             onPress={props.onVoicePress}
           />
         )}
-      </Reanimated.View>
+      </View>
       <CameraModal
         visible={isCameraOpen}
         onCapture={(photo) => {

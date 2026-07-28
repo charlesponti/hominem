@@ -1,8 +1,8 @@
 import type { TaskListItem } from '@hominem/rpc/types';
 
-import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
+import type { CalendarEvent } from '~/modules/on-device-ai';
 
-import type { TimeBlock, TimeItem, TimeOpening, TimeStreamRow } from './time-types';
+import type { TimeBlock, TimeItem, TimeOpening, TimeSection, TimeStreamRow } from './time-types';
 
 export const PAGE_DAYS = 30;
 const DEFAULT_AVAILABILITY_DAYS = 7;
@@ -85,55 +85,45 @@ export function buildTimeStreamRows({
   events,
   loadedUntil,
   now = new Date(),
-  permission,
-  showEarlier,
+  section,
   tasks,
 }: {
   events: CalendarEvent[];
   loadedUntil: Date;
   now?: Date;
-  permission: CalendarPermissionStatus | null;
-  showEarlier: boolean;
+  section: TimeSection;
   tasks: TaskListItem[];
 }): TimeStreamRow[] {
   const scheduledItems = getScheduledTimeItems({ events, loadedUntil, tasks });
   const unscheduledTasks = tasks.filter((value) => !value.scheduledStartAt && !value.dueAt);
-  const today = startOfToday();
-  const isElapsed = (item: TimeItem) => {
+  const isPast = (item: TimeItem) => {
     const date = itemDate(item);
-    if (!date || new Date(date).toDateString() !== today.toDateString()) return false;
+    if (!date) return false;
     if (item.kind === 'event') return new Date(item.value.endDate) <= now;
     return item.value.status === 'completed' || new Date(date) < now;
   };
-  const earlierItems = scheduledItems.filter(isElapsed);
-  const visibleItems = showEarlier
-    ? scheduledItems
-    : scheduledItems.filter((item) => !isElapsed(item));
+  const pastItems = scheduledItems.filter(isPast).sort((left, right) => {
+    return new Date(itemDate(right) ?? 0).getTime() - new Date(itemDate(left) ?? 0).getTime();
+  });
+  const visibleItems = scheduledItems.filter((item) => !isPast(item));
   const firstFutureIndex = visibleItems.findIndex((item) => {
     const date = itemDate(item);
     return date ? new Date(date) >= now : false;
   });
-  const scheduledRows: TimeStreamRow[] = [
-    ...(earlierItems.length > 0 && !showEarlier
-      ? [{ kind: 'section' as const, id: 'earlier' as const, count: earlierItems.length }]
-      : []),
-    ...visibleItems.slice(0, firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
-    ...(scheduledItems.length > 0 ? [{ kind: 'now' as const }] : []),
-    ...visibleItems.slice(firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
-  ];
+  const scheduledRows: TimeStreamRow[] =
+    section === 'past'
+      ? pastItems
+      : section === 'unscheduled'
+        ? unscheduledTasks.map((value) => ({ kind: 'task' as const, value }))
+        : [
+            ...visibleItems.slice(
+              0,
+              firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex,
+            ),
+            ...visibleItems.slice(firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
+          ];
 
-  return [
-    ...(permission && permission !== 'authorized'
-      ? [{ kind: 'permission-notice' as const, status: permission }]
-      : []),
-    ...scheduledRows,
-    ...(unscheduledTasks.length > 0
-      ? [
-          { kind: 'section' as const, id: 'unscheduled' as const },
-          ...unscheduledTasks.map((value) => ({ kind: 'task' as const, value })),
-        ]
-      : []),
-  ];
+  return scheduledRows;
 }
 
 export function getAvailabilityRange(block: TimeBlock, now = new Date()) {

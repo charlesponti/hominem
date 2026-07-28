@@ -1,9 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { getTimeBlockRoute } from '~/services/navigation/routes';
@@ -13,7 +11,12 @@ import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 import { useTimeBlockParse } from '~/services/tasks/use-time-block-parse';
 
 import { timeEventGateway, type TimeEventGateway } from './time-event-gateway';
-import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
+import type {
+  EditableTimeBlockField,
+  TimeInteractionState,
+  TimeOpening,
+  TimeSection,
+} from './time-types';
 import {
   buildTimeStreamRows,
   findEventCandidates,
@@ -24,27 +27,24 @@ import {
   startOfToday,
 } from './time-utils';
 import { TimeComposer } from './TimeComposer';
-import { TimeResult } from './TimeResult';
 import { TimeStream } from './TimeStream';
 
 export interface TimeWorkspaceSnapshot {
-  editingField: EditableTimeBlockField | null;
   events: CalendarEvent[];
   interaction: TimeInteractionState;
   loadedUntil: string;
   prompt: string;
   scrollOffset: number;
-  showEarlier: boolean;
+  section: TimeSection;
 }
 
 export const initialTimeWorkspaceSnapshot = (): TimeWorkspaceSnapshot => ({
-  editingField: null,
   events: [],
   interaction: { kind: 'idle' },
   loadedUntil: startOfToday().toISOString(),
   prompt: '',
   scrollOffset: 0,
-  showEarlier: false,
+  section: 'now',
 });
 
 interface TimeWorkspaceProps {
@@ -61,24 +61,17 @@ export function TimeWorkspace({
   snapshot,
 }: TimeWorkspaceProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const styles = useStyles();
   const [prompt, setPrompt] = useState(snapshot.prompt);
   const [events, setEvents] = useState(snapshot.events);
   const [loadedUntil, setLoadedUntil] = useState(() => new Date(snapshot.loadedUntil));
-  const [showEarlier, setShowEarlier] = useState(snapshot.showEarlier);
+  const [section, setSection] = useState<TimeSection>(snapshot.section);
   const [scrollOffset, setScrollOffset] = useState(snapshot.scrollOffset);
   const [interaction, setInteraction] = useState<TimeInteractionState>(snapshot.interaction);
-  const [editingField, setEditingField] = useState<EditableTimeBlockField | null>(
-    snapshot.editingField,
-  );
   const [permission, setPermission] = useState<CalendarPermissionStatus | null>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [hasLoadedEvents, setHasLoadedEvents] = useState(events.length > 0);
   const [isSaving, setIsSaving] = useState(false);
-  const [composerHeight, setComposerHeight] = useState(() =>
-    getCollapsedComposerDockHeight(insets.bottom),
-  );
   const loadingRef = useRef(false);
   const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
   const { mutate: toggleTask } = useTaskComplete();
@@ -87,24 +80,14 @@ export function TimeWorkspace({
 
   useEffect(() => {
     onSnapshotChange({
-      editingField,
       events,
       interaction,
       loadedUntil: loadedUntil.toISOString(),
       prompt,
       scrollOffset,
-      showEarlier,
+      section,
     });
-  }, [
-    editingField,
-    events,
-    interaction,
-    loadedUntil,
-    onSnapshotChange,
-    prompt,
-    scrollOffset,
-    showEarlier,
-  ]);
+  }, [events, interaction, loadedUntil, onSnapshotChange, prompt, scrollOffset, section]);
 
   useEffect(() => {
     void gateway.getPermission().then(setPermission);
@@ -159,7 +142,9 @@ export function TimeWorkspace({
         ...tasks
           .filter((task) => task.scheduledStartAt ?? task.dueAt)
           .map((task) => `${task.title} at ${task.scheduledStartAt ?? task.dueAt}`),
-      ].join('\n'),
+      ]
+        .join('\n')
+        .slice(0, 19000),
     [events, tasks],
   );
 
@@ -173,7 +158,7 @@ export function TimeWorkspace({
     if (!submittedPrompt || interaction.kind === 'parsing' || isSaving) return;
 
     setInteraction({ kind: 'parsing', submittedPrompt });
-    setEditingField(null);
+
     try {
       const { block } = await parseTimeBlock.mutateAsync({
         transcript: submittedPrompt,
@@ -337,7 +322,6 @@ export function TimeWorkspace({
         return;
       }
       setInteraction({ kind: 'idle' });
-      setEditingField(null);
     } catch (error) {
       restoreError(
         error instanceof Error ? error.message : 'Unable to save this time block.',
@@ -359,7 +343,6 @@ export function TimeWorkspace({
           : '';
     setPrompt(submittedPrompt);
     setInteraction({ kind: 'idle' });
-    setEditingField(null);
   }, [interaction]);
 
   const resetStream = useCallback(() => {
@@ -373,8 +356,7 @@ export function TimeWorkspace({
   const rows = buildTimeStreamRows({
     events,
     loadedUntil,
-    permission,
-    showEarlier,
+    section,
     tasks,
   });
   const unscheduledTaskCount = tasks.filter((task) => !task.scheduledStartAt && !task.dueAt).length;
@@ -382,7 +364,7 @@ export function TimeWorkspace({
   return (
     <View style={styles.container} testID="time-screen">
       <TimeStream
-        bottomPadding={composerHeight + 8}
+        calendarPermission={permission}
         error={interaction.kind === 'error' ? interaction.message : ''}
         hasScheduledItems={scheduledItems.length > 0}
         isLoadingEvents={isLoadingEvents}
@@ -391,43 +373,39 @@ export function TimeWorkspace({
         onEndReached={() => void loadNextPage()}
         onRefresh={resetStream}
         onScrollOffsetChange={setScrollOffset}
-        onToggleEarlier={() => setShowEarlier((value) => !value)}
+        onSectionChange={(nextSection) => {
+          setSection(nextSection);
+          setScrollOffset(0);
+        }}
         onToggleTask={(item) =>
           toggleTask({ taskId: item.value.id, completed: item.value.status !== 'completed' })
         }
         restoredScrollOffset={scrollOffset}
         rows={rows}
-        showEarlier={showEarlier}
+        section={section}
         unscheduledTaskCount={unscheduledTaskCount}
       />
       {hasLoadedEvents ? <View testID="time-events-ready" /> : null}
       <TimeComposer
         disabled={interaction.kind === 'parsing' || isSaving}
-        onHeightChange={setComposerHeight}
+        isSaving={isSaving}
         onChangeText={(value) => {
           setPrompt(value);
           if (interaction.kind === 'error') setInteraction({ kind: 'idle' });
         }}
+        onCancel={cancelResult}
+        onChooseEvent={(id) => router.push(getTimeBlockRoute('event', id))}
+        onChooseOpening={chooseOpening}
+        onEditField={(field, value) => updateDraft(field, value)}
         onSubmit={() => void ask()}
-        state={interaction.kind === 'parsing' ? 'parsing' : 'idle'}
+        onSubmitDraft={() => void submitDraft()}
+        state={interaction}
         value={prompt}
-      >
-        <TimeResult
-          editingField={editingField}
-          isSaving={isSaving}
-          onCancel={cancelResult}
-          onChooseEvent={(id) => router.push(getTimeBlockRoute('event', id))}
-          onChooseOpening={chooseOpening}
-          onEdit={setEditingField}
-          onEditValue={(value) => {
-            if (editingField) updateDraft(editingField, value);
-          }}
-          onSubmit={() => void submitDraft()}
-          state={interaction}
-        />
-      </TimeComposer>
+      />
     </View>
   );
 }
 
-const useStyles = makeStyles(() => ({ container: { flex: 1 } }));
+const useStyles = makeStyles((theme) => ({
+  container: { backgroundColor: theme.colors.background, flex: 1 },
+}));

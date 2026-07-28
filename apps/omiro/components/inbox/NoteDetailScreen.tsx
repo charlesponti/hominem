@@ -29,8 +29,6 @@ import { useNoteDelete } from '~/services/notes/use-note-delete';
 import { useNoteQuery } from '~/services/notes/use-note-query';
 import t from '~/translations';
 
-const COMPOSER_CLEARANCE = 220;
-
 interface NoteDraft {
   title: string;
   content: string;
@@ -489,7 +487,6 @@ const useNoteStyles = makeStyles((theme) => ({
   content: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: COMPOSER_CLEARANCE,
   },
   enhanceTray: {
     backgroundColor: theme.colors['background'],

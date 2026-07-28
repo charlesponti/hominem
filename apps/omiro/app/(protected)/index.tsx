@@ -6,7 +6,7 @@ export default function ProtectedIndexRoute() {
   const isFocused = useIsFocused();
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: '' }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <WorkspaceScreen isFocused={isFocused} />
     </>
   );

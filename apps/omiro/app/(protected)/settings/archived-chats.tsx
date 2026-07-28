@@ -56,12 +56,6 @@ const useStyles = makeStyles(() => ({
     fontSize: 15,
     lineHeight: 22,
   },
-  listContent: {
-    paddingBottom: 24,
-  },
-  listFooter: {
-    height: 16,
-  },
   rowWrap: {
     paddingHorizontal: 16,
   },
@@ -153,13 +147,11 @@ function ArchivedChatsSwiftUI({
 
   return (
     <FlashList
-      contentContainerStyle={styles.listContent}
       contentInsetAdjustmentBehavior="automatic"
       data={chats}
       keyExtractor={(chat) => chat.id}
       ListEmptyComponent={empty}
       ListHeaderComponent={header}
-      ListFooterComponent={<View style={styles.listFooter} />}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       renderItem={renderItem}
       showsVerticalScrollIndicator={false}

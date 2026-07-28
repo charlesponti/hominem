@@ -6,7 +6,7 @@ import {
   findOpenings,
   getAvailabilityRange,
 } from '~/components/time/time-utils';
-import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
+import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
   calendarTitle: 'Work',
@@ -36,22 +36,39 @@ const task = (overrides = {}) =>
   }) as never;
 
 describe('Time stream rows', () => {
-  it.each<[CalendarPermissionStatus, boolean]>([
-    ['denied', true],
-    ['notDetermined', true],
-    ['authorized', false],
-  ])('keeps task rows available for %s Calendar permission', (permission, expectsNotice) => {
+  it('keeps task rows available without calendar permission', () => {
     const rows = buildTimeStreamRows({
       events: [],
       loadedUntil: new Date('2026-08-01T00:00:00.000Z'),
       now: new Date('2026-07-27T09:00:00.000Z'),
-      permission,
-      showEarlier: false,
+      section: 'now',
       tasks: [task()],
     });
 
     expect(rows.some((row) => row.kind === 'task')).toBe(true);
-    expect(rows.some((row) => row.kind === 'permission-notice')).toBe(expectsNotice);
+  });
+
+  it('sorts past items in reverse chronological order', () => {
+    const rows = buildTimeStreamRows({
+      events: [
+        event({
+          id: 'older-event',
+          startDate: '2026-07-25T10:00:00.000Z',
+          endDate: '2026-07-25T11:00:00.000Z',
+        }),
+        event({
+          id: 'newer-event',
+          startDate: '2026-07-26T10:00:00.000Z',
+          endDate: '2026-07-26T11:00:00.000Z',
+        }),
+      ],
+      loadedUntil: new Date('2026-07-27T00:00:00.000Z'),
+      now: new Date('2026-07-27T09:00:00.000Z'),
+      section: 'past',
+      tasks: [],
+    });
+
+    expect(rows.map((row) => row.value.id)).toEqual(['newer-event', 'older-event']);
   });
 });
 

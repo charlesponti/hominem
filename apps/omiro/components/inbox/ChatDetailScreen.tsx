@@ -1,9 +1,8 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { RefreshControl, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   ChatMessageList,
@@ -15,7 +14,7 @@ import {
 } from '~/components/chat';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
-import { ComposerDock, getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
+import { ComposerDock } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
@@ -74,13 +73,9 @@ export function ChatDetailScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const { data: activeChat } = useActiveChat(id);
   const styles = useStyles();
   const chatId = activeChat?.id ?? id;
-  const [composerHeight, setComposerHeight] = useState(() =>
-    getCollapsedComposerDockHeight(insets.bottom),
-  );
   const canGoBack = navigation.canGoBack();
 
   const services = useMemo<ChatServices>(
@@ -272,7 +267,6 @@ export function ChatDetailScreen() {
           }}
           renderIcon={renderChatIcon}
           formatTimestamp={formatRelativeAge}
-          contentPaddingBottom={composerHeight + 8}
           emptyState={controller.messagesError ? errorState : emptyState}
           refreshControl={
             <RefreshControl
@@ -283,7 +277,7 @@ export function ChatDetailScreen() {
             />
           }
         />
-        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
+        <ComposerDock testID="chat-composer-dock">
           <Composer mode="chat" chatId={chatId} />
         </ComposerDock>
         <View style={styles.reviewOverlay}>

@@ -1,16 +1,14 @@
 import type { TaskListItem, TasksParseOutput } from '@hominem/rpc/types';
 
-import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
+import type { CalendarEvent } from '~/modules/on-device-ai';
 
 export type TimeItem =
   | { kind: 'event'; value: CalendarEvent }
   | { kind: 'task'; value: TaskListItem };
 
-export type TimeStreamRow =
-  | TimeItem
-  | { kind: 'section'; id: 'earlier' | 'unscheduled'; count?: number }
-  | { kind: 'now' }
-  | { kind: 'permission-notice'; status: Exclude<CalendarPermissionStatus, 'authorized'> };
+export type TimeSection = 'now' | 'past' | 'unscheduled';
+
+export type TimeStreamRow = TimeItem;
 
 export type TimeBlock = TasksParseOutput['block'];
 

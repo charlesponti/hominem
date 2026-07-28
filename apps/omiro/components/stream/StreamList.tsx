@@ -3,7 +3,6 @@ import { type ReactElement, useEffect, useRef } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native';
 
 interface StreamListProps<T> {
-  contentPaddingBottom: number;
   contentPaddingTop?: number;
   data: readonly T[];
   keyExtractor: (item: T) => string;
@@ -19,7 +18,6 @@ interface StreamListProps<T> {
 }
 
 export function StreamList<T>({
-  contentPaddingBottom,
   contentPaddingTop = 0,
   data,
   keyExtractor,
@@ -52,7 +50,7 @@ export function StreamList<T>({
   return (
     <FlashList
       ref={listRef}
-      contentContainerStyle={{ paddingBottom: contentPaddingBottom, paddingTop: contentPaddingTop }}
+      contentContainerStyle={{ paddingTop: contentPaddingTop }}
       contentInsetAdjustmentBehavior="automatic"
       data={[...data]}
       keyboardDismissMode="on-drag"

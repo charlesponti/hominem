@@ -5,14 +5,15 @@ import { Pressable, RefreshControl, View } from 'react-native';
 import { StreamList } from '~/components/stream/StreamList';
 import { makeStyles, spacing, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
+import type { CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { getTimeBlockRoute } from '~/services/navigation/routes';
 
-import type { TimeItem, TimeStreamRow } from './time-types';
+import type { TimeItem, TimeSection, TimeStreamRow } from './time-types';
 import { dayKey } from './time-utils';
 import { TimeRow } from './TimeRow';
 
 interface TimeStreamProps {
-  bottomPadding: number;
+  calendarPermission: CalendarPermissionStatus | null;
   error: string;
   hasScheduledItems: boolean;
   isLoadingEvents: boolean;
@@ -21,16 +22,16 @@ interface TimeStreamProps {
   onEndReached: () => void;
   onRefresh: () => void;
   onScrollOffsetChange: (offset: number) => void;
-  onToggleEarlier: () => void;
+  onSectionChange: (section: TimeSection) => void;
   onToggleTask: (item: Extract<TimeItem, { kind: 'task' }>) => void;
   restoredScrollOffset: number;
   rows: TimeStreamRow[];
-  showEarlier: boolean;
+  section: TimeSection;
   unscheduledTaskCount: number;
 }
 
 export function TimeStream({
-  bottomPadding,
+  calendarPermission,
   error,
   hasScheduledItems,
   isLoadingEvents,
@@ -39,69 +40,17 @@ export function TimeStream({
   onEndReached,
   onRefresh,
   onScrollOffsetChange,
-  onToggleEarlier,
+  onSectionChange,
   onToggleTask,
   restoredScrollOffset,
   rows,
-  showEarlier,
+  section,
   unscheduledTaskCount,
 }: TimeStreamProps) {
   const router = useRouter();
   const styles = useStyles();
   const renderItem = useCallback(
     ({ item, index }: { item: TimeStreamRow; index: number }) => {
-      if (item.kind === 'now') {
-        return (
-          <View style={styles.nowMarker} testID="time-now-marker">
-            <Text variant="caption1" color="text-secondary">
-              Now
-            </Text>
-          </View>
-        );
-      }
-      if (item.kind === 'permission-notice') {
-        return (
-          <View style={styles.permissionNotice} testID="time-calendar-permission-notice">
-            <Text variant="subhead" color="text-primary">
-              Connect your iOS Calendar to include scheduled events.
-            </Text>
-            <Text color="text-secondary">
-              Tasks and flexible planning remain available in Time.
-            </Text>
-            <Button
-              label={item.status === 'denied' ? 'Open Settings' : 'Connect Calendar'}
-              onPress={onConnectCalendar}
-              size="sm"
-              testID="time-calendar-connect"
-              variant="secondary"
-            />
-          </View>
-        );
-      }
-      if (item.kind === 'section') {
-        return item.id === 'earlier' ? (
-          <Pressable
-            accessibilityLabel={showEarlier ? 'Hide earlier time' : 'Show earlier time'}
-            onPress={onToggleEarlier}
-            style={styles.earlierHeader}
-            testID="time-earlier-toggle"
-          >
-            <Text variant="subhead" color="text-secondary">
-              {showEarlier ? 'Hide earlier' : `Earlier · ${item.count ?? 0}`}
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={styles.unscheduledHeader} testID="time-unscheduled-section">
-            <Text variant="title2" color="text-primary">
-              Unscheduled
-            </Text>
-            <Text variant="caption1" color="text-secondary">
-              {unscheduledTaskCount} {unscheduledTaskCount === 1 ? 'task' : 'tasks'}
-            </Text>
-          </View>
-        );
-      }
-
       const previous = rows
         .slice(0, index)
         .reverse()
@@ -109,6 +58,7 @@ export function TimeStream({
           (candidate): candidate is TimeItem =>
             candidate.kind === 'task' || candidate.kind === 'event',
         );
+
       return (
         <TimeRow
           item={item}
@@ -120,83 +70,112 @@ export function TimeStream({
         />
       );
     },
-    [
-      onConnectCalendar,
-      onToggleEarlier,
-      onToggleTask,
-      router,
-      rows,
-      showEarlier,
-      styles,
-      unscheduledTaskCount,
-    ],
+    [onToggleTask, router, rows],
   );
 
   const scheduledRows = rows.filter((row) => row.kind === 'task' || row.kind === 'event');
+
   return (
-    <StreamList
-      contentPaddingBottom={bottomPadding}
-      contentPaddingTop={spacing[2]}
-      data={rows}
-      keyExtractor={(row) =>
-        row.kind === 'section'
-          ? row.id
-          : row.kind === 'now'
-            ? 'now'
-            : row.kind === 'permission-notice'
-              ? 'calendar-permission'
-              : `${row.kind}:${row.value.id}:${row.kind === 'event' ? row.value.startDate : ''}`
-      }
-      ListEmptyComponent={
-        !isLoadingEvents && scheduledRows.length === 0 && unscheduledTaskCount === 0 ? (
-          <Text color="text-secondary" style={styles.emptyText}>
-            Nothing scheduled yet.
+    <View style={styles.container}>
+      {calendarPermission && calendarPermission !== 'authorized' ? (
+        <View style={styles.permissionNotice} testID="time-calendar-permission-notice">
+          <Text variant="subhead" color="text-primary">
+            Connect your iOS Calendar to include scheduled events.
           </Text>
-        ) : null
-      }
-      ListFooterComponent={
-        isLoadingEvents ? (
-          <View style={styles.skeletons} testID="time-loading-state">
-            <View style={styles.skeletonRow} />
-            <View style={styles.skeletonRow} />
-            <View style={styles.skeletonRow} />
-          </View>
-        ) : null
-      }
-      ListHeaderComponent={
-        <View style={styles.header}>
-          <Text variant="title2">Time</Text>
-          <Text color="text-secondary">Everything that has a place in your day.</Text>
-          {!hasScheduledItems && unscheduledTaskCount > 0 ? (
-            <Text color="text-secondary">No scheduled time yet.</Text>
-          ) : null}
-          {error ? (
-            <Text color="destructive" testID="time-error">
-              {error}
-            </Text>
-          ) : null}
+          <Text color="text-secondary">Tasks and flexible planning remain available in Time.</Text>
+          <Button
+            label={calendarPermission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
+            onPress={onConnectCalendar}
+            size="sm"
+            testID="time-calendar-connect"
+            variant="secondary"
+          />
         </View>
-      }
-      onEndReached={onEndReached}
-      onScrollOffsetChange={onScrollOffsetChange}
-      refreshControl={
-        <RefreshControl
-          refreshing={isWriting || (isLoadingEvents && rows.length > 0)}
-          onRefresh={onRefresh}
-        />
-      }
-      renderItem={renderItem}
-      restoredScrollOffset={restoredScrollOffset}
-      testID="time-stream"
-    />
+      ) : null}
+      <StreamList
+        key={section}
+        contentPaddingTop={spacing[2]}
+        data={rows}
+        keyExtractor={(row) =>
+          `${row.kind}:${row.value.id}:${row.kind === 'event' ? row.value.startDate : ''}`
+        }
+        ListEmptyComponent={
+          !isLoadingEvents && scheduledRows.length === 0 ? (
+            <Text color="text-secondary" style={styles.emptyText}>
+              Nothing scheduled yet.
+            </Text>
+          ) : null
+        }
+        ListFooterComponent={
+          isLoadingEvents ? (
+            <View style={styles.skeletons} testID="time-loading-state">
+              <View style={styles.skeletonRow} />
+              <View style={styles.skeletonRow} />
+              <View style={styles.skeletonRow} />
+            </View>
+          ) : null
+        }
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text variant="title1">Time</Text>
+            <View accessibilityRole="tablist" style={styles.sectionSwitch}>
+              {(['now', 'past', 'unscheduled'] as const).map((option) => {
+                const selected = section === option;
+                const label =
+                  option === 'past' ? 'Past' : option[0].toUpperCase() + option.slice(1);
+                return (
+                  <Pressable
+                    accessibilityLabel={label}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected }}
+                    key={option}
+                    onPress={() => onSectionChange(option)}
+                    style={({ pressed }) => [
+                      styles.sectionButton,
+                      selected && styles.sectionButtonActive,
+                      pressed && styles.pressed,
+                    ]}
+                    testID={`time-section-${option}`}
+                  >
+                    <Text
+                      color={selected ? 'text-primary' : 'text-secondary'}
+                      style={styles.sectionLabel}
+                      variant="caption1"
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {!hasScheduledItems && unscheduledTaskCount > 0 ? (
+              <Text color="text-secondary">No scheduled time yet.</Text>
+            ) : null}
+            {error ? (
+              <Text color="destructive" testID="time-error">
+                {error}
+              </Text>
+            ) : null}
+          </View>
+        }
+        onEndReached={onEndReached}
+        onScrollOffsetChange={onScrollOffsetChange}
+        refreshControl={
+          <RefreshControl
+            refreshing={isWriting || (isLoadingEvents && rows.length > 0)}
+            onRefresh={onRefresh}
+          />
+        }
+        renderItem={renderItem}
+        restoredScrollOffset={restoredScrollOffset}
+        testID="time-stream"
+      />
+    </View>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
-  earlierHeader: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[3],
-  },
+  container: { flex: 1 },
   emptyText: {
     paddingHorizontal: spacing[4],
     paddingTop: spacing[6],
@@ -205,12 +184,12 @@ const useStyles = makeStyles((theme) => ({
     gap: spacing[2],
     padding: spacing[4],
   },
-  nowMarker: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-  },
   permissionNotice: {
+    borderColor: theme.colors['border-default'],
+    borderRadius: theme.borderRadii.md,
+    borderWidth: 1,
     gap: spacing[2],
+    margin: spacing[4],
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
@@ -223,13 +202,31 @@ const useStyles = makeStyles((theme) => ({
     gap: spacing[2],
     padding: spacing[4],
   },
-  unscheduledHeader: {
-    backgroundColor: theme.colors['muted'],
-    borderTopColor: theme.colors['border-default'],
-    borderTopWidth: 1,
-    gap: spacing[1],
-    marginTop: spacing[4],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
+  pressed: {
+    opacity: 0.6,
+  },
+  sectionButton: {
+    alignItems: 'center',
+    borderRadius: theme.borderRadii.sm,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing[2],
+  },
+  sectionButtonActive: {
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors['border-default'],
+    borderWidth: 1,
+  },
+  sectionLabel: {
+    fontWeight: '600',
+  },
+  sectionSwitch: {
+    backgroundColor: theme.colors.muted,
+    borderColor: theme.colors['border-default'],
+    borderRadius: theme.borderRadii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    height: 40,
+    padding: 2,
   },
 }));

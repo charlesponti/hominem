@@ -29,7 +29,7 @@
     "@hominem/services": "workspace:*",
     "@hominem/storage": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "@ponti-studios/ui": "0.4.2",
+    "@ponti-studios/ui": "catalog:",
     "@react-router/node": "8.2.0",
     "@react-router/serve": "8.2.0",
     "@tanstack/react-query": "^5.80.6",

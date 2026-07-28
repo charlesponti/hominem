@@ -82,7 +82,7 @@ export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowPro
   );
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   completedTitle: { textDecorationLine: 'line-through' },
   copy: {
     flex: 1,
@@ -106,8 +106,13 @@ const useStyles = makeStyles(() => ({
   },
   row: {
     alignItems: 'center',
+    borderColor: theme.colors['border-default'],
+    borderRadius: theme.borderRadii.md,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: spacing[2],
+    marginHorizontal: spacing[4],
+    marginBottom: spacing[2],
     minHeight: 72,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],

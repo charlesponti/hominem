@@ -61,7 +61,6 @@ interface ChatMessageListProps {
   onShare: (message: ChatMessageItem) => void;
   renderIcon: ChatRenderIcon;
   formatTimestamp: (value: string) => string;
-  contentPaddingBottom?: number;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 }
@@ -80,7 +79,6 @@ export function ChatMessageList({
   onShare,
   renderIcon,
   formatTimestamp,
-  contentPaddingBottom = 0,
   emptyState,
   refreshControl,
 }: ChatMessageListProps) {
@@ -164,11 +162,6 @@ export function ChatMessageList({
   }, [hasSearchQuery, searchQuery]);
 
   const listEmptyComponent = hasSearchQuery ? emptySearch : (emptyState ?? null);
-  const messagesContainerStyle = useMemo(
-    () => [styles.messagesContainer, { paddingBottom: contentPaddingBottom }],
-    [contentPaddingBottom],
-  );
-
   if (isMessagesLoading && displayMessages.length === 0) {
     return (
       <View style={styles.shimmerContainer}>
@@ -190,7 +183,7 @@ export function ChatMessageList({
           <Pressable onPress={() => setActiveActionMessageId(null)} style={styles.dismissArea} />
         ) : null
       }
-      contentContainerStyle={messagesContainerStyle}
+      contentContainerStyle={styles.messagesContainer}
       data={displayMessages}
       keyExtractor={keyExtractor}
       onScroll={handleScroll}

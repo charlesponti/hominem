@@ -13,11 +13,8 @@ import {
 import { Button } from './button';
 import AppIcon from './icon';
 
-const DEFAULT_BOTTOM_OFFSET = themeSpacing.xl * 3;
-
 interface EmptyStateProps {
   action?: { label: string; onPress: () => void };
-  bottomOffset?: number;
   imageSource?: ImageSourcePropType;
   sfSymbol?: SFSymbol;
   title: string;
@@ -48,21 +45,12 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function EmptyState({
-  action,
-  bottomOffset = DEFAULT_BOTTOM_OFFSET,
-  imageSource,
-  sfSymbol,
-  title,
-}: EmptyStateProps) {
+function EmptyState({ action, imageSource, sfSymbol, title }: EmptyStateProps) {
   const themeColors = useThemeColors();
   const styles = useStyles();
 
   return (
-    <Reanimated.View
-      entering={FadeIn.duration(280)}
-      style={[styles.container, { paddingBottom: bottomOffset }]}
-    >
+    <Reanimated.View entering={FadeIn.duration(280)} style={styles.container}>
       <View style={styles.content}>
         {imageSource ? (
           <Image accessibilityIgnoresInvertColors source={imageSource} style={styles.asset} />

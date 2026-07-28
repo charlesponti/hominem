@@ -1,10 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Composer } from '~/components/composer/Composer';
-import { ComposerDock, getCollapsedComposerDockHeight } from '~/components/composer/ComposerDock';
+import { ComposerDock } from '~/components/composer/ComposerDock';
 import { InboxList, type InboxTab } from '~/components/inbox/InboxList';
 import { WorkspaceToolbar } from '~/components/navigation/WorkspaceToolbar.ios';
 import { makeStyles } from '~/components/theme';
@@ -36,7 +35,6 @@ interface WorkspaceScreenProps {
 export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
   const styles = useStyles();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [activeContext, setActiveContext] = useState<WorkspaceContext>('notes');
   const [contentSnapshots, setContentSnapshots] = useState<
     Record<InboxTab, ContentWorkspaceSnapshot>
@@ -46,9 +44,6 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
   });
   const [timeSnapshot, setTimeSnapshot] = useState<TimeWorkspaceSnapshot>(
     initialTimeWorkspaceSnapshot,
-  );
-  const [composerHeight, setComposerHeight] = useState(() =>
-    getCollapsedComposerDockHeight(insets.bottom),
   );
   const isContentWorkspace = activeContext !== 'time';
   const {
@@ -119,35 +114,32 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
           onSnapshotChange={setTimeSnapshot}
         />
       ) : (
-        <View style={styles.listWrap}>
-          <InboxList
-            contentPaddingBottom={composerHeight + 8}
-            contentPaddingTop={56}
-            error={error}
-            isFetchingNextPage={isFetchingNextPage}
-            isLoading={isInitialLoading}
-            items={displayItems}
-            restoredScrollOffset={activeContentSnapshot.scrollOffset}
-            tab={activeContext}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-            }}
-            onScrollOffsetChange={(scrollOffset) => updateActiveContentSnapshot({ scrollOffset })}
-            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
-          />
-        </View>
-      )}
-
-      {activeContext === 'time' ? null : (
-        <ComposerDock onHeightChange={setComposerHeight} testID="workspace-composer-dock">
-          <Composer
-            mode="inbox"
-            entryMode={activeContext === 'chats' ? 'chat' : 'note'}
-            initialMessage={readInboxDraft()}
-            onClearDraft={clearInboxDraft}
-            onDraftChange={writeInboxDraft}
-          />
-        </ComposerDock>
+        <>
+          <View style={styles.listWrap}>
+            <InboxList
+              error={error}
+              isFetchingNextPage={isFetchingNextPage}
+              isLoading={isInitialLoading}
+              items={displayItems}
+              restoredScrollOffset={activeContentSnapshot.scrollOffset}
+              tab={activeContext}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+              }}
+              onScrollOffsetChange={(scrollOffset) => updateActiveContentSnapshot({ scrollOffset })}
+              refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
+            />
+          </View>
+          <ComposerDock testID="workspace-composer-dock">
+            <Composer
+              mode="inbox"
+              entryMode={activeContext === 'chats' ? 'chat' : 'note'}
+              initialMessage={readInboxDraft()}
+              onClearDraft={clearInboxDraft}
+              onDraftChange={writeInboxDraft}
+            />
+          </ComposerDock>
+        </>
       )}
     </View>
   );

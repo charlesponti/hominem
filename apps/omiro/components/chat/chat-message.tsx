@@ -55,14 +55,7 @@ function ActionIconButton({
 }) {
   const themeColors = useThemeColors();
 
-  return (
-    <IconButton
-      accessibilityLabel={icon}
-      disabled={disabled}
-      icon={icon}
-      onPress={onPress}
-    />
-  );
+  return <IconButton accessibilityLabel={icon} disabled={disabled} icon={icon} onPress={onPress} />;
 }
 
 export async function loadMarkdown() {

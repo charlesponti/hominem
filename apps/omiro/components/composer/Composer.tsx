@@ -1,18 +1,18 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
+import { View } from 'react-native';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
+import { useTheme } from '~/components/theme';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
+import { Input } from '~/components/ui/input';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 
+import { useComposerRootStyles, useComposerSurfaceStyles } from './composer.styles';
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
-import { ComposerShell } from './ComposerShell';
-import { ComposerTextField } from './ComposerTextField';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
-import {
-  ComposerToolbar,
-} from './ComposerToolbar';
+import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
 import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
@@ -28,6 +28,7 @@ export function Composer(props: ComposerProps) {
 }
 
 function ComposerContent(props: ComposerProps) {
+  const theme = useTheme();
   const submission = useComposerSubmission(props);
   const controller = useComposerController({
     initialMessage: submission.initialMessage,
@@ -36,12 +37,11 @@ function ComposerContent(props: ComposerProps) {
     onClearDraft: submission.onClearDraft,
   });
   const presentation = getComposerSubmissionConfig(props);
+  const rootStyles = useComposerRootStyles();
+  const surfaceStyles = useComposerSurfaceStyles();
 
   const submit = useCallback(
     (kind: ComposerSubmitKind) => {
-      // Marked before the async submission starts so this provider unmounting
-      // mid-flight (e.g. navigating to the newly created chat) can't race the
-      // cleanup effect into deleting files that were just handed off.
       if (controller.canSubmit) {
         controller.markAttachmentsSubmitted(controller.uploadedAttachmentIds);
       }
@@ -58,75 +58,75 @@ function ComposerContent(props: ComposerProps) {
     [controller, submission],
   );
 
-  const secondaryActionConfig = presentation.secondaryAction;
-  const secondaryAction = secondaryActionConfig
-    ? {
-        accessibilityLabel: secondaryActionConfig.accessibilityLabel,
-        icon: secondaryActionConfig.icon,
-        onPress: () => submit(secondaryActionConfig.kind),
-        testID: secondaryActionConfig.testID,
-      }
-    : undefined;
+  const isRecording = controller.voice.isRecording;
+  const focused = controller.isFocused;
+  const borderColor = focused
+    ? theme.colors.primary
+    : isRecording
+      ? theme.colors.destructive
+      : theme.colors['border-default'];
+
+  const errorBanner =
+    controller.voice.voiceState === 'failed' && controller.voice.error ? (
+      <InlineErrorBanner
+        message={getVoiceComposerErrorPresentation(controller.voice.error.code).message}
+        onDismiss={controller.voice.clearError}
+      />
+    ) : undefined;
 
   return (
-    <ComposerShell
-      testID={presentation.shellTestID}
-      focused={controller.isFocused}
-      isRecording={controller.voice.isRecording}
-      accessory={controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
-      inlinePanel={
-        !controller.voice.isRecording ? (
-          <InlineEnhancePanel
-            enhance={controller.enhance}
-            text={controller.message}
-            onEnhanced={controller.setMessage}
+    <View style={rootStyles.root} testID={presentation.shellTestID}>
+      {errorBanner}
+      {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
+      {!isRecording ? (
+        <InlineEnhancePanel
+          enhance={controller.enhance}
+          text={controller.message}
+          onEnhanced={controller.setMessage}
+        />
+      ) : undefined}
+      <View
+        style={[surfaceStyles.surface, { borderColor }]}
+        testID={`${presentation.shellTestID ?? 'composer'}-surface`}
+      >
+        {isRecording ? (
+          <VoiceRecordingPanel
+            startedAt={controller.voice.recordingStartedAt}
+            onCancel={() => void controller.voice.cancelVoiceRecording()}
+            onDone={() => void controller.voice.handleVoicePress()}
           />
-        ) : undefined
-      }
-      recordingPanel={
-        <VoiceRecordingPanel
-          startedAt={controller.voice.recordingStartedAt}
-          onCancel={() => void controller.voice.cancelVoiceRecording()}
-          onDone={() => void controller.voice.handleVoicePress()}
-        />
-      }
-      errorBanner={
-        controller.voice.voiceState === 'failed' && controller.voice.error ? (
-          <InlineErrorBanner
-            message={getVoiceComposerErrorPresentation(controller.voice.error.code).message}
-            onDismiss={controller.voice.clearError}
+        ) : (
+          <Input
+            value={controller.message}
+            onChangeText={controller.setMessage}
+            placeholder={presentation.placeholder}
+            testID={presentation.inputTestID}
+            onFocus={controller.handleInputFocus}
+            onBlur={controller.handleInputBlur}
+            multiline
+            numberOfLines={5}
+            style={surfaceStyles.input}
           />
-        ) : undefined
-      }
-      input={
-        <ComposerTextField
-          value={controller.message}
-          onChangeText={controller.setMessage}
-          placeholder={presentation.placeholder}
-          testID={presentation.inputTestID}
-          onFocus={controller.handleInputFocus}
-          onBlur={controller.handleInputBlur}
-        />
-      }
-      actions={
-        <ComposerToolbar
-          canEnhance={controller.canOpenEnhance}
-          canPickMedia={controller.canPickMedia}
-          canSubmit={controller.canSubmit}
-          canToggleVoice={controller.canToggleVoice}
-          hasContent={controller.hasContent}
-          isEnhancing={controller.enhance.isEnhancing}
-          isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-          isSubmitting={submission.isSubmitting}
-          isVoiceBusy={controller.voice.isBusy}
-          onEnhancePress={controller.enhance.toggleEnhance}
-          onSubmit={() => submit(presentation.primarySubmitKind)}
-          onVoicePress={() => void controller.voice.handleVoicePress()}
-          secondaryAction={secondaryAction}
-          submitAccessibilityLabel={presentation.submitAccessibilityLabel}
-          submitTestID={presentation.submitTestID}
-        />
-      }
-    />
+        )}
+        {isRecording ? null : (
+          <ComposerToolbar
+            canEnhance={controller.canOpenEnhance}
+            canPickMedia={controller.canPickMedia}
+            canSubmit={controller.canSubmit}
+            canToggleVoice={controller.canToggleVoice}
+            hasContent={controller.hasContent}
+            isEnhancing={controller.enhance.isEnhancing}
+            isRecordingElsewhere={controller.voice.isRecordingElsewhere}
+            isSubmitting={submission.isSubmitting}
+            isVoiceBusy={controller.voice.isBusy}
+            onEnhancePress={controller.enhance.toggleEnhance}
+            onSubmit={() => submit(presentation.primarySubmitKind)}
+            onVoicePress={() => void controller.voice.handleVoicePress()}
+            submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+            submitTestID={presentation.submitTestID}
+          />
+        )}
+      </View>
+    </View>
   );
 }

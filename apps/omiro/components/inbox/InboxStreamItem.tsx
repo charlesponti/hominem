@@ -1,11 +1,6 @@
 import { Host } from '@expo/ui';
 import { Button, ContextMenu, HStack, Spacer } from '@expo/ui/swift-ui';
-import {
-  buttonStyle,
-  disabled as disabledModifier,
-  frame,
-  glassEffect,
-} from '@expo/ui/swift-ui/modifiers';
+import { buttonStyle, disabled as disabledModifier, frame } from '@expo/ui/swift-ui/modifiers';
 import { useRouter } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { Alert, View } from 'react-native';
@@ -51,8 +46,8 @@ export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
     archiveChat();
   }, [archiveChat]);
 
-  const row = (
-    <View>
+  return (
+    <View testID={`inbox-item-${item.kind}`}>
       <InboxItemRow
         disabled={isPending}
         isChat={isChat}
@@ -63,8 +58,6 @@ export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
       />
     </View>
   );
-
-  return <View testID={`inbox-item-${item.kind}`}>{row}</View>;
 });
 
 InboxStreamItem.displayName = 'InboxStreamItem';
@@ -92,21 +85,14 @@ function InboxItemRow({ disabled, isChat, onArchive, onDelete, onOpen, title }: 
         <ContextMenu.Trigger>
           <HStack
             alignment="center"
-            modifiers={[
-              frame({ height: 56, maxWidth: Infinity }),
-              glassEffect({
-                glass: { interactive: true, variant: 'regular' },
-                cornerRadius: 16,
-                shape: 'roundedRectangle',
-              }),
-            ]}
+            modifiers={[frame({ height: 56, maxWidth: Infinity })]}
             spacing={0}
           >
             <Button
               label={title}
               modifiers={[
                 buttonStyle('plain'),
-                frame({ alignment: 'leading', minHeight: 56 }),
+                frame({ alignment: 'leading', maxWidth: Infinity, minHeight: 56 }),
                 ...(disabled ? [disabledModifier()] : []),
               ]}
               onPress={onOpen}

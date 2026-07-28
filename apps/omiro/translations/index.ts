@@ -397,6 +397,21 @@ const t = {
       },
     },
   },
+  timeResult: {
+    fieldLabels: {
+      title: 'Title',
+      target_title: 'Event',
+      participants: 'People',
+      location: 'Location',
+      duration: 'Duration',
+      start_time: 'Start time',
+      end_time: 'End time',
+      scheduling_window_start: 'Time window',
+      scheduling_window_end: 'Time window',
+      deadline_fixed: 'Deadline',
+      recurrence_rule: 'Repeats',
+    },
+  },
   camera: {
     savePhoto: {
       title: 'Save photo?',

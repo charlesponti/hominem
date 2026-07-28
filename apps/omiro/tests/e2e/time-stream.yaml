@@ -10,6 +10,18 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible:
     id: time-composer-input
 - tapOn:
+    id: time-section-past
+- waitForAnimationToEnd
+- takeScreenshot: /tmp/omiro-time-past-tab
+- tapOn:
+    id: time-section-unscheduled
+- waitForAnimationToEnd
+- takeScreenshot: /tmp/omiro-time-unscheduled-tab
+- tapOn:
+    id: time-section-now
+- waitForAnimationToEnd
+- takeScreenshot: /tmp/omiro-time-now-tab
+- tapOn:
     id: time-composer-input
 - inputText: Buy milk
 - assertVisible:

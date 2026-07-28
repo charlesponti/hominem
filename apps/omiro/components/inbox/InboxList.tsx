@@ -40,7 +40,6 @@ interface InboxListProps {
   onScrollOffsetChange?: (offset: number) => void;
   refreshControl?: React.ReactElement<RefreshControlProps>;
   restoredScrollOffset?: number;
-  contentPaddingBottom?: number;
   contentPaddingTop?: number;
 }
 
@@ -68,7 +67,6 @@ export function InboxList({
   onScrollOffsetChange,
   refreshControl,
   restoredScrollOffset,
-  contentPaddingBottom,
   contentPaddingTop,
 }: InboxListProps) {
   const styles = useStyles();
@@ -129,7 +127,6 @@ export function InboxList({
       <FlashList
         ref={listRef}
         contentContainerStyle={{
-          paddingBottom: contentPaddingBottom ?? 16,
           paddingTop: contentPaddingTop,
         }}
         contentInsetAdjustmentBehavior="automatic"
@@ -169,7 +166,7 @@ const useStyles = makeStyles((theme) => ({
   container: {
     borderRadius: 12,
     flex: 1,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: 0,
   },
   footerText: {
     paddingVertical: theme.spacing.lg,

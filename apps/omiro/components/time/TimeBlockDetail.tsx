@@ -377,10 +377,7 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
 
   return (
     <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 64 }]}
-        contentInsetAdjustmentBehavior="automatic"
-      >
+      <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
         <View style={styles.titleActions}>
           {isTask ? (
             <Button
