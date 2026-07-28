@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.529.0",
-    "@aws-sdk/s3-request-presigner": "^3.529.0",
+    "@aws-sdk/s3-request-presigner": "^3.1096.0",
     "@hominem/env": "workspace:*",
     "@hominem/utils": "workspace:*",
     "zod": "catalog:"
