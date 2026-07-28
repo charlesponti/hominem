@@ -1,8 +1,9 @@
 {
-  "extends": "./base.json",
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "skipDefaultLibCheck": true,
@@ -14,6 +15,9 @@
     "checkJs": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"]
-  }
+    "types": [
+      "node"
+    ]
+  },
+  "extends": "./base.json"
 }

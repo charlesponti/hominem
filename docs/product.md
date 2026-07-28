@@ -47,4 +47,3 @@ Before adding a feature, answer all four questions in the implementation:
 4. Which existing product word and surface own it?
 
 If those answers are unclear, the feature is not ready to spread across the system.
-

@@ -27,8 +27,7 @@ export const queryKeys = {
     all: ['chats'] as const,
     list: ['chats', 'list'] as const,
     detail: (chatId: string) => ['chats', 'detail', chatId] as const,
-    messages: (chatId: string, limit = 50) =>
-      ['chats', 'messages', { chatId, limit }] as const,
+    messages: (chatId: string, limit = 50) => ['chats', 'messages', { chatId, limit }] as const,
     sessions: ['chats', 'sessions'] as const,
     archived: ['chats', 'archived'] as const,
   },

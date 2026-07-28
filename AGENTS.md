@@ -37,13 +37,13 @@ pnpm monorepo orchestrated with Turbo. Key directories:
 
 ## Commands
 
-Use `just` for every repo-level command. Package scripts are internal Turbo primitives.
+Use `just` for `setup`, `check`, and `db`; use `pnpm` for dev/lint/format/typecheck/build/test. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives.
 
 ```bash
-just dev api
-just check api
-just check mobile
-just format write
+pnpm --filter @hominem/api dev
+pnpm test --filter=@hominem/api...
+pnpm test --filter=@hominem/omiro...
+pnpm format
 just db migrate
 ```
 
@@ -51,7 +51,7 @@ just db migrate
 
 - Linter: **oxlint** — `typescript/no-explicit-any` is an **error**, not a warning
 - Formatter: **oxfmt** — single quotes, imports sorted ascending case-insensitively
-- Run `just format write` to apply formatting before any edit is considered done
+- Run `pnpm format` to apply formatting before any edit is considered done
 - If a function only calls a function use `() => <function name>(<args>)` style instead of unnecessary curly braces
 
 ## Git conventions
@@ -193,7 +193,7 @@ The booted simulator is iPhone 17 Pro (UDID `BD390792-D3EC-4351-BE57-EAF642FABD3
 - `src/rpc/app.ts` is the type-safe RPC contract consumed by clients through `@hominem/api/types`. Update affected clients in the same change as an RPC contract change.
 - Use `isServiceError` from `src/errors.ts` for known domain failures. Throw typed errors and let the global handler map them to HTTP responses.
 - Job handlers live in `src/workers/` and register in `src/worker.ts`. The worker is a separate process and shares no HTTP-server memory.
-- From `services/api`, build with `node build.mjs`; standard Turbo build is not its build path. Use `just test api` and `just dev api` for its normal lanes.
+- From `services/api`, build with `node build.mjs`; standard Turbo build is not its build path. Use `pnpm test --filter=@hominem/api...` and `pnpm --filter @hominem/api dev` for its normal lanes.
 
 ## Database implementation rules
 

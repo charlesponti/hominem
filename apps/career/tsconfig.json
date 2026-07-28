@@ -17,7 +17,7 @@
     "paths": {
       "~/*": ["./app/*"],
       "@hominem/api/career": ["../../services/api/src/rpc/routes/career.ts"]
-    },
+    }
   },
   "include": [
     "app/**/*.ts",

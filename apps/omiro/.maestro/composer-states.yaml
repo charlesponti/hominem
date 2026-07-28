@@ -58,7 +58,7 @@ appId: com.pontistudios.hakumi.dev
 # from below, so this holds regardless of prior keyboard state.
 - hideKeyboard
 - tapOn:
-    point: "201,197"
+    point: '201,197'
 - extendedWaitUntil:
     visible:
       id: chat-composer-input

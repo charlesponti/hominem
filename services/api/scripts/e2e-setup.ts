@@ -17,7 +17,6 @@
  */
 
 import 'dotenv/config';
-
 import { TEST_OTP } from '../src/auth/better-auth';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:4040').replace(/\/$/, '');

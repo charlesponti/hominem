@@ -138,7 +138,7 @@ That's it. Output goes to `TECH_DEBT_AUDIT.md` in the repo root. First run takes
 
 Most "code review" prompts produce a bulleted list of generic best-practice violations dressed up as findings. This skill is built to avoid that failure mode. Three design choices do most of the work:
 
-**Forced orientation before judgment.** Phase 1 isn't optional decoration. Without a real mental model of the architecture, every Phase 2 finding is just pattern-matching against generic heuristics. Reading `git log` for churn data is what surfaces the files that *actually* have debt versus the files that just look messy.
+**Forced orientation before judgment.** Phase 1 isn't optional decoration. Without a real mental model of the architecture, every Phase 2 finding is just pattern-matching against generic heuristics. Reading `git log` for churn data is what surfaces the files that _actually_ have debt versus the files that just look messy.
 
 **File:line citations on every finding.** This is the single biggest quality lever. A finding without a citation is a vibe. Vibes don't get fixed.
 
@@ -188,7 +188,7 @@ The system is a [...]
 
 **Project-level overrides.** A `.claude/skills/tech-debt-audit/SKILL.md` in a specific repo overrides the global one. Useful when a project needs custom dimensions — e.g., an agent codebase might add "prompt injection surface area" or "tool-call cost per turn" as audit categories.
 
-**Mid-audit course correction.** After Phase 1 completes, you can interrupt with: *"Before Phase 2, tell me what surprised you in Phase 1 and what you want to investigate that isn't in the dimensions list."* The best findings often come from things the prompt didn't anticipate. Worth doing on first run for any new codebase.
+**Mid-audit course correction.** After Phase 1 completes, you can interrupt with: _"Before Phase 2, tell me what surprised you in Phase 1 and what you want to investigate that isn't in the dimensions list."_ The best findings often come from things the prompt didn't anticipate. Worth doing on first run for any new codebase.
 
 **Tuning severity calibration.** If the model is over- or under-flagging, edit the Phase 2 dimensions list to add explicit thresholds. Example: change "god files (>500 LOC)" to ">800 LOC" if your codebase has a higher baseline.
 

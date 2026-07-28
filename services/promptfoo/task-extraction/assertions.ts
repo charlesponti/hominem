@@ -32,8 +32,10 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     const titles = tasks.map((t) => (t.title || '').toLowerCase());
     if (titles.some((t) => t.includes('repaint'))) {
       return {
-        pass: false, score: 0,
-        reason: 'Fabricated a task from the non-actionable "maybe repainting... at some point" mention',
+        pass: false,
+        score: 0,
+        reason:
+          'Fabricated a task from the non-actionable "maybe repainting... at some point" mention',
       };
     }
     return { pass: true, score: 1, reason: 'Correct task count, no fabricated tasks' };
@@ -43,7 +45,11 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     if (tasks.length !== 0) {
       return { pass: false, score: 0, reason: `Expected empty task list, got ${tasks.length}` };
     }
-    return { pass: true, score: 1, reason: 'Correctly returned no tasks for a non-actionable conversation' };
+    return {
+      pass: true,
+      score: 1,
+      reason: 'Correctly returned no tasks for a non-actionable conversation',
+    };
   }
 
   if (caseId === 'single-task') {
@@ -66,10 +72,14 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     }
     const title = (tasks[0].title || '').toLowerCase();
     if (!/passport|renew/.test(title)) {
-      return { pass: false, score: 0, reason: `Expected a passport-renewal task, got "${tasks[0].title}"` };
+      return {
+        pass: false,
+        score: 0,
+        reason: `Expected a passport-renewal task, got "${tasks[0].title}"`,
+      };
     }
     return { pass: true, score: 1, reason: 'Correctly inferred the implicit actionable item' };
   }
 
   return { pass: false, score: 0, reason: `Unknown caseId: ${caseId}` };
-}
+};

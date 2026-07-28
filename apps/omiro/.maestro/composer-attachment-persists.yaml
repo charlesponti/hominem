@@ -23,7 +23,7 @@ appId: com.pontistudios.hakumi.dev
     index: 0
 - tapOn: Done
 - assertVisible:
-    text: "^Remove .*"
+    text: '^Remove .*'
 - tapOn:
     id: inbox-composer-input
 - inputText: Attachment persistence check
@@ -33,14 +33,14 @@ appId: com.pontistudios.hakumi.dev
 # give it real time instead of a bare assertVisible's short default timeout.
 - extendedWaitUntil:
     visible:
-      text: "Attachment persistence check"
+      text: 'Attachment persistence check'
     timeout: 30000
 # Tapped by its own text, not index — inbox-item-note-open's resource-id is
 # shared across every row, so an index-based tap right after an insert can
 # race the list's re-sort and hit the wrong note.
 - tapOn:
     id: inbox-item-note-open
-    text: "Attachment persistence check"
+    text: 'Attachment persistence check'
 # Confirms the file survived the note-creation mutation and clearComposer()
 # instead of being deleted by ComposerContext's unmount cleanup effect.
 # Filename varies by picker source (IMG_XXXX.jpg from the simulated camera

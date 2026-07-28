@@ -13,4 +13,3 @@
 The root README is the front door. This directory contains the Bible's product, system, voice, and operational parts, plus per-feature specs (Time). The design system lives in `@ponti-studios/ui/docs/`. Durable product, system, experience, voice, and operational laws belong in their part; temporary execution belongs in the work tracker; local implementation detail belongs in code.
 
 When a change alters a durable law, update the relevant part in the same pull request. Delete statements that are no longer true. The Bible explains the system as it exists now.
-

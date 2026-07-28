@@ -40,7 +40,10 @@ module.exports = function withPrivacyManifest(config) {
   config = withDangerousMod(config, [
     'ios',
     async (config) => {
-      const manifestPath = path.join(config.modRequest.platformProjectRoot, 'PrivacyInfo.xcprivacy');
+      const manifestPath = path.join(
+        config.modRequest.platformProjectRoot,
+        'PrivacyInfo.xcprivacy',
+      );
       fs.writeFileSync(manifestPath, PRIVACY_MANIFEST);
       return config;
     },

@@ -1,9 +1,6 @@
 {
   "name": "hominem",
   "private": true,
-  "scripts": {
-    "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
-  },
   "description": "hominem",
   "keywords": [],
   "homepage": "https://github.com/hackefeller/hominem#readme",
@@ -19,6 +16,17 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hackefeller/hominem.git"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --ui stream",
+    "format": "oxfmt . --write",
+    "format:check": "oxfmt . --check",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "test": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5434/app-test AUTH_E2E_SECRET=otp-secret turbo run test",
+    "typecheck": "turbo run typecheck",
+    "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
   },
   "devDependencies": {
     "@expo/image-utils": "^0.10.1",

@@ -22,7 +22,10 @@ function hasNoonTime(isoString: unknown): boolean {
   return typeof isoString === 'string' && isoString.includes('T12:00:00');
 }
 
-function checkPriority(task: Task, { expected, mustNotBeOmitted, mustBeOmitted }: PriorityCheck = {}): string[] {
+function checkPriority(
+  task: Task,
+  { expected, mustNotBeOmitted, mustBeOmitted }: PriorityCheck = {},
+): string[] {
   const problems: string[] = [];
   if (mustBeOmitted && task.priority !== undefined) {
     problems.push(`priority should be omitted, got ${JSON.stringify(task.priority)}`);
@@ -31,7 +34,9 @@ function checkPriority(task: Task, { expected, mustNotBeOmitted, mustBeOmitted }
     if (task.priority === undefined) {
       problems.push('priority omitted, but explicit urgency language was stated');
     } else if (task.priority === 'none' || task.priority === '') {
-      problems.push(`priority fabricated as ${JSON.stringify(task.priority)} instead of a real value or omission`);
+      problems.push(
+        `priority fabricated as ${JSON.stringify(task.priority)} instead of a real value or omission`,
+      );
     } else if (expected && task.priority !== expected) {
       problems.push(`priority should be "${expected}", got ${JSON.stringify(task.priority)}`);
     }
@@ -76,7 +81,9 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
         problems.push(`Dentist task priority "${dentist.priority}" contradicts stated "no rush"`);
       }
       if (dentist.dueAt && !hasNoonTime(dentist.dueAt)) {
-        problems.push(`Dentist task due "next Friday" (no time given) should default to noon, got ${dentist.dueAt}`);
+        problems.push(
+          `Dentist task due "next Friday" (no time given) should default to noon, got ${dentist.dueAt}`,
+        );
       }
     }
   } else if (caseId === 'noon-default') {
@@ -116,12 +123,18 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     const low = tasks.find((t) => /book|read/i.test(t.title || ''));
     const neutral = tasks.find((t) => /grocer/i.test(t.title || ''));
     if (!highPriorityTask || !low || !neutral) {
-      problems.push('Could not find all three expected tasks (server/high, book/low, groceries/neutral)');
+      problems.push(
+        'Could not find all three expected tasks (server/high, book/low, groceries/neutral)',
+      );
     } else {
-      problems.push(...checkPriority(highPriorityTask, { expected: 'high', mustNotBeOmitted: true }));
+      problems.push(
+        ...checkPriority(highPriorityTask, { expected: 'high', mustNotBeOmitted: true }),
+      );
       problems.push(...checkPriority(low, { mustNotBeOmitted: true }));
       if (low.priority && /high/i.test(low.priority)) {
-        problems.push(`Book task priority "${low.priority}" contradicts stated "whenever I get a chance"`);
+        problems.push(
+          `Book task priority "${low.priority}" contradicts stated "whenever I get a chance"`,
+        );
       }
       problems.push(...checkPriority(neutral, { mustBeOmitted: true }));
     }
@@ -136,4 +149,4 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'All checks passed' };
-}
+};

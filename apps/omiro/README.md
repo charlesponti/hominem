@@ -61,12 +61,12 @@ If the error still appears, the local generated `apps/omiro/ios` directory is li
 
 ## Useful Commands
 
-| Need | Run | When to use it |
-| --- | --- | --- |
-| Generate the dev iOS project | `just mobile prebuild development` | First-time setup or after native config changes during development |
-| Generate the production iOS project | `just mobile prebuild production` | Local CNG verification before a native release |
-| Launch the iOS app | `just mobile dev` | Daily mobile development |
-| Create a production iOS build | `just mobile build production` | App Store/TestFlight release builds |
-| Publish a production OTA update | `just mobile update production` | Ship a production-compatible OTA update |
-| Start Metro / Expo | `just mobile start` | When you want to attach to an existing native build |
-| Read Omiro's governing decisions | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior |
+| Need                                | Run                                           | When to use it                                                     |
+| ----------------------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
+| Generate the dev iOS project        | `just mobile prebuild development`            | First-time setup or after native config changes during development |
+| Generate the production iOS project | `just mobile prebuild production`             | Local CNG verification before a native release                     |
+| Launch the iOS app                  | `just mobile dev`                             | Daily mobile development                                           |
+| Create a production iOS build       | `just mobile build production`                | App Store/TestFlight release builds                                |
+| Publish a production OTA update     | `just mobile update production`               | Ship a production-compatible OTA update                            |
+| Start Metro / Expo                  | `just mobile start`                           | When you want to attach to an existing native build                |
+| Read Omiro's governing decisions    | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |

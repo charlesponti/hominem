@@ -10,14 +10,14 @@ appId: com.pontistudios.hakumi.dev
     id: inbox-item-note-open
 - assertVisible:
     id: note-title-input
-- tapOn: "Note actions"
-- assertVisible: "Start chat"
-- tapOn: "Start chat"
+- tapOn: 'Note actions'
+- assertVisible: 'Start chat'
+- tapOn: 'Start chat'
 - assertVisible:
     id: chat-composer-input
 - extendedWaitUntil:
     visible:
-      text: ".*talk about this note.*"
+      text: '.*talk about this note.*'
     timeout: 20000
 - tapOn:
     id: BackButton

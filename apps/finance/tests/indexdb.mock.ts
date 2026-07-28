@@ -1,9 +1,9 @@
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 interface IDBRequestMock {
-  result?: unknown
-  onsuccess?: () => void
-  onerror?: () => void
+  result?: unknown;
+  onsuccess?: () => void;
+  onerror?: () => void;
 }
 
 export const indexedDB = {
@@ -27,20 +27,20 @@ export const indexedDB = {
             })),
             get: vi.fn(() => ({
               onsuccess: vi.fn(function (this: IDBRequestMock) {
-                this.result = null
+                this.result = null;
               }),
               onerror: vi.fn(),
             })),
             getAll: vi.fn(() => ({
               onsuccess: vi.fn(function (this: IDBRequestMock) {
-                this.result = []
+                this.result = [];
               }),
               onerror: vi.fn(),
             })),
             index: vi.fn(() => ({
               getAll: vi.fn(() => ({
                 onsuccess: vi.fn(function (this: IDBRequestMock) {
-                  this.result = []
+                  this.result = [];
                 }),
                 onerror: vi.fn(),
               })),
@@ -56,15 +56,15 @@ export const indexedDB = {
         objectStoreNames: {
           contains: vi.fn(() => true),
         },
-      }
-      this.onerror = vi.fn()
+      };
+      this.onerror = vi.fn();
       setTimeout(() => {
-        if (this.onsuccess) this.onsuccess()
-      }, 0)
+        if (this.onsuccess) this.onsuccess();
+      }, 0);
     }),
     onerror: vi.fn(),
   })),
-}
+};
 
 // Assign the mock to global
-global.indexedDB = indexedDB as unknown as IDBFactory
+global.indexedDB = indexedDB as unknown as IDBFactory;

@@ -195,4 +195,3 @@ No visual change to Time is ready until it is observed on the iPhone simulator a
 9. reduced motion, VoiceOver announcement order, and largest Dynamic Type.
 
 Maestro flows must select app-owned controls by `testID` and assert the visible state after each transition. Screenshots are required for idle, composing, parsing, draft, error, and saved states; a successful typecheck is not visual or interaction evidence.
-

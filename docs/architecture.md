@@ -22,4 +22,3 @@ API
 - A deployable service is not automatically a client contract package. Runtime handlers and public transport contracts are separate responsibilities.
 - Shared packages expose narrow, real boundaries. Root barrels stay small and must not become import-anything buckets.
 - Type-only imports do not create workspace dependency edges. Use a local TypeScript path alias to the source contract instead.
-

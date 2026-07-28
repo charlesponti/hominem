@@ -23,13 +23,27 @@ interface TimeBlock {
 }
 
 const FIELDS = [
-  'primary_intent', 'title', 'target_title', 'participants', 'location',
-  'duration', 'start_time', 'end_time', 'scheduling_window_start',
-  'scheduling_window_end', 'deadline_fixed', 'recurrence_rule',
+  'primary_intent',
+  'title',
+  'target_title',
+  'participants',
+  'location',
+  'duration',
+  'start_time',
+  'end_time',
+  'scheduling_window_start',
+  'scheduling_window_end',
+  'deadline_fixed',
+  'recurrence_rule',
 ] as const;
 
 function parseList(value: string | undefined): string[] {
-  return value ? value.split(/[|,]/).map((item) => item.trim()).filter(Boolean) : [];
+  return value
+    ? value
+        .split(/[|,]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
 }
 
 function normalize(value: string): string {
@@ -71,7 +85,9 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   if (context.vars.expectedTargetTitlePattern) {
     const pattern = new RegExp(context.vars.expectedTargetTitlePattern as string, 'i');
     if (typeof block.target_title !== 'string' || !pattern.test(block.target_title)) {
-      problems.push(`Target title ${JSON.stringify(block.target_title)} does not match ${String(pattern)}`);
+      problems.push(
+        `Target title ${JSON.stringify(block.target_title)} does not match ${String(pattern)}`,
+      );
     }
   }
 
@@ -83,50 +99,84 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   }
 
   if (context.vars.expectedStartTime) {
-    if (typeof block.start_time !== 'string' || !sameInstant(block.start_time, context.vars.expectedStartTime as string)) {
-      problems.push(`Expected start_time ${context.vars.expectedStartTime}, got ${JSON.stringify(block.start_time)}`);
+    if (
+      typeof block.start_time !== 'string' ||
+      !sameInstant(block.start_time, context.vars.expectedStartTime as string)
+    ) {
+      problems.push(
+        `Expected start_time ${context.vars.expectedStartTime}, got ${JSON.stringify(block.start_time)}`,
+      );
     }
   }
 
   if (context.vars.expectedEndTime) {
-    if (typeof block.end_time !== 'string' || !sameInstant(block.end_time, context.vars.expectedEndTime as string)) {
-      problems.push(`Expected end_time ${context.vars.expectedEndTime}, got ${JSON.stringify(block.end_time)}`);
+    if (
+      typeof block.end_time !== 'string' ||
+      !sameInstant(block.end_time, context.vars.expectedEndTime as string)
+    ) {
+      problems.push(
+        `Expected end_time ${context.vars.expectedEndTime}, got ${JSON.stringify(block.end_time)}`,
+      );
     }
   }
 
-  if (context.vars.expectedDeadline && block.deadline_fixed !== (context.vars.expectedDeadline as boolean)) {
-    problems.push(`Expected deadline_fixed ${context.vars.expectedDeadline}, got ${JSON.stringify(block.deadline_fixed)}`);
+  if (
+    context.vars.expectedDeadline &&
+    block.deadline_fixed !== (context.vars.expectedDeadline as boolean)
+  ) {
+    problems.push(
+      `Expected deadline_fixed ${context.vars.expectedDeadline}, got ${JSON.stringify(block.deadline_fixed)}`,
+    );
   }
 
   if (context.vars.expectedRecurrenceRule) {
-    const actualRule = typeof block.recurrence_rule === 'string'
-      ? block.recurrence_rule.replace(/^RRULE:/i, '')
-      : block.recurrence_rule;
+    const actualRule =
+      typeof block.recurrence_rule === 'string'
+        ? block.recurrence_rule.replace(/^RRULE:/i, '')
+        : block.recurrence_rule;
     if (actualRule !== context.vars.expectedRecurrenceRule) {
-      problems.push(`Expected recurrence_rule ${context.vars.expectedRecurrenceRule}, got ${JSON.stringify(block.recurrence_rule)}`);
+      problems.push(
+        `Expected recurrence_rule ${context.vars.expectedRecurrenceRule}, got ${JSON.stringify(block.recurrence_rule)}`,
+      );
     }
   }
 
   if (context.vars.expectedWindowStart) {
-    if (typeof block.scheduling_window_start !== 'string' || !sameInstant(block.scheduling_window_start, context.vars.expectedWindowStart as string)) {
-      problems.push(`Expected scheduling_window_start ${context.vars.expectedWindowStart}, got ${JSON.stringify(block.scheduling_window_start)}`);
+    if (
+      typeof block.scheduling_window_start !== 'string' ||
+      !sameInstant(block.scheduling_window_start, context.vars.expectedWindowStart as string)
+    ) {
+      problems.push(
+        `Expected scheduling_window_start ${context.vars.expectedWindowStart}, got ${JSON.stringify(block.scheduling_window_start)}`,
+      );
     }
   }
 
   if (context.vars.expectedWindowEnd) {
-    if (typeof block.scheduling_window_end !== 'string' || !sameInstant(block.scheduling_window_end, context.vars.expectedWindowEnd as string)) {
-      problems.push(`Expected scheduling_window_end ${context.vars.expectedWindowEnd}, got ${JSON.stringify(block.scheduling_window_end)}`);
+    if (
+      typeof block.scheduling_window_end !== 'string' ||
+      !sameInstant(block.scheduling_window_end, context.vars.expectedWindowEnd as string)
+    ) {
+      problems.push(
+        `Expected scheduling_window_end ${context.vars.expectedWindowEnd}, got ${JSON.stringify(block.scheduling_window_end)}`,
+      );
     }
   }
 
-  const expectedParticipants = parseList(context.vars.expectedParticipants as string | undefined).map(normalize).sort();
+  const expectedParticipants = parseList(context.vars.expectedParticipants as string | undefined)
+    .map(normalize)
+    .sort();
   if (expectedParticipants.length) {
     if (!Array.isArray(block.participants)) {
-      problems.push(`Expected participants ${expectedParticipants.join(', ')}, got ${JSON.stringify(block.participants)}`);
+      problems.push(
+        `Expected participants ${expectedParticipants.join(', ')}, got ${JSON.stringify(block.participants)}`,
+      );
     } else {
       const actualParticipants = block.participants.map(normalize).sort();
       if (actualParticipants.join('|') !== expectedParticipants.join('|')) {
-        problems.push(`Expected participants ${expectedParticipants.join(', ')}, got ${actualParticipants.join(', ')}`);
+        problems.push(
+          `Expected participants ${expectedParticipants.join(', ')}, got ${actualParticipants.join(', ')}`,
+        );
       }
     }
   }
@@ -140,4 +190,4 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'All structured time-block assertions passed' };
-}
+};

@@ -1,4 +1,5 @@
 import type { InferRequestType, InferResponseType } from 'hono/client';
+
 import type { HonoClient } from '../core/api-client';
 
 type _TasksCreateEndpoint = HonoClient['api']['tasks']['$post'];

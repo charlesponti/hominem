@@ -47,5 +47,3 @@ Any callback-based API introduced here has an explicit lifetime owner for its de
 - A failed task extraction exposes its raw transcript.
 - Background cleanup cannot overwrite subsequent human edits.
 - Temporary recordings are cleaned up after failures.
-
-

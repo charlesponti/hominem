@@ -1,4 +1,5 @@
 import type { InferResponseType } from 'hono/client';
+
 import type { HonoClient } from '../core/api-client';
 
 type _InboxEndpoint = HonoClient['api']['inbox']['$get'];

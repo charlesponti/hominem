@@ -22,7 +22,9 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   const lower = cleaned.toLowerCase();
   const problems: string[] = [];
 
-  const mustKeep: string[] = context.vars.mustPreserve ? JSON.parse(context.vars.mustPreserve as string) : [];
+  const mustKeep: string[] = context.vars.mustPreserve
+    ? JSON.parse(context.vars.mustPreserve as string)
+    : [];
   for (const term of mustKeep) {
     if (!lower.includes(term.toLowerCase())) {
       problems.push(`Lost preserved detail: "${term}"`);
@@ -39,4 +41,4 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
   return problems.length
     ? { pass: false, score: 0, reason: problems.join('; ') }
     : { pass: true, score: 1, reason: 'Filler removed, key details preserved' };
-}
+};

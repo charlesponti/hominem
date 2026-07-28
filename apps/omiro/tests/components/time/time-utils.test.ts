@@ -119,6 +119,7 @@ describe('event intent matching', () => {
         }),
       ],
       'planning',
+      new Date('2026-07-28T09:00:00.000Z'),
     );
 
     expect(candidates.map((candidate) => candidate.id)).toEqual(['event-1', 'event-2']);

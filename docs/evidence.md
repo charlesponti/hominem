@@ -13,4 +13,3 @@ Completion is conditional on evidence of the exact changed behavior in its real 
 - Before composing controls in a bounded surface, prove the complete composition fits. If the approved behavior does not fit in the chosen primitive, report the constraint and stop; do not silently change product behavior.
 - Automation must have a deterministic selection and observation path for app-owned controls and outcomes. If it does not, resolve the testability gap or report it before completion.
 - A completion report names the evidence, its scope, and any behavior that remains unverified. It never substitutes an assumed result for evidence.
-

@@ -16,5 +16,5 @@ appId: com.pontistudios.hakumi.dev
     element:
       text: Test Chat
 - tapOn:
-    text: "^Archive$"
+    text: '^Archive$'
 - assertNotVisible: Test Chat

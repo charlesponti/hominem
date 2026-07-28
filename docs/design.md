@@ -62,4 +62,3 @@ The rounded corner is a "safe area" scam. Developers spend half their lives codi
 Sharp corners are the mark of a tool — scalpels, chisels, reference monitors. When we round the corner, we admit the phone is no longer a tool for production but a lozenge for consumption. We traded the precision of the grid for the aesthetics of the nursery.
 
 **Key question:** Can you build a revolution on a radius?
-

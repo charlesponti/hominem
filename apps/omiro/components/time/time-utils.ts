@@ -186,14 +186,18 @@ export function findOpenings({
   return openings.slice(0, 3);
 }
 
-export function findEventCandidates(events: CalendarEvent[], targetTitle: string | null) {
+export function findEventCandidates(
+  events: CalendarEvent[],
+  targetTitle: string | null,
+  now: Date = new Date(),
+) {
   const normalizedTitle = targetTitle?.trim().toLocaleLowerCase();
   if (!normalizedTitle) return [];
-  const now = Date.now();
+  const nowMs = now.getTime();
   return events.filter(
     (event) =>
       event.title.trim().toLocaleLowerCase() === normalizedTitle &&
-      new Date(event.endDate).getTime() >= now,
+      new Date(event.endDate).getTime() >= nowMs,
   );
 }
 

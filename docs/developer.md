@@ -4,8 +4,8 @@ The system is only real when a clean checkout, a deployment, and a production fa
 
 ## Developer law
 
-- `just` is the only repository-level command interface. Package scripts are Turbo primitives, not contributor instructions.
-- Run the smallest relevant validation lane first: `just check api`, `just check mobile`, `just check career`, or `just check finance`.
+- `just` and root `pnpm` scripts are the repository-level command interface. Package scripts are Turbo primitives, not contributor instructions.
+- Run the smallest relevant validation lane first: `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `pnpm test`, each scoped with `--filter=@hominem/<package>...` (e.g. `--filter=@hominem/api...`, `--filter=@hominem/omiro...`, `--filter=@hominem/career...`, `--filter=@hominem/finance...`).
 - Source-first workspace exports are the local-development model. Production deployables build explicit artifacts; stale `build/` directories are never a second source of truth.
 - One Node and pnpm line governs local development, CI, Docker, Railway, and EAS. Version drift is a defect.
 - `@hominem/env` owns shared environment semantics. Framework prefixes adapt a variable for a runtime; they do not invent a second meaning.
@@ -38,4 +38,3 @@ TestFlight candidates and App Store releases use the same production bundle, bac
 The marketing version is committed in app config and is the EAS Update runtime version. EAS remotely increments only the iOS build number. A native compatibility fingerprint is recorded in the release manifest and must match before an OTA update can be published.
 
 Production OTA updates are manually rolled out at 10%, 50%, and 100%, with rollback available at every stage. Native changes require a new TestFlight candidate and App Store release.
-

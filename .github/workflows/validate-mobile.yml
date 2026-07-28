@@ -104,7 +104,12 @@ jobs:
         run: just db migrate test
 
       - name: validate-mobile
-        run: just check mobile
+        run: |
+          pnpm format:check
+          pnpm lint --filter=@hominem/omiro...
+          pnpm typecheck --filter=@hominem/omiro...
+          pnpm build --filter=@hominem/omiro...
+          pnpm test --filter=@hominem/omiro...
 
       - name: validate-omiro-cng
         env:

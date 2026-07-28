@@ -45,14 +45,26 @@ function locMatch(val: string | undefined | null, expected: string): boolean {
 
 function check<T>(val: T, expected: T, label: string): AssertionResult | null {
   if (val !== expected) {
-    return { pass: false, score: 0, reason: `Expected ${label} = ${JSON.stringify(expected)}, got ${JSON.stringify(val)}` };
+    return {
+      pass: false,
+      score: 0,
+      reason: `Expected ${label} = ${JSON.stringify(expected)}, got ${JSON.stringify(val)}`,
+    };
   }
   return null;
 }
 
-function checkLoc(val: string | undefined | null, expected: string, label: string): AssertionResult | null {
+function checkLoc(
+  val: string | undefined | null,
+  expected: string,
+  label: string,
+): AssertionResult | null {
   if (!locMatch(val, expected)) {
-    return { pass: false, score: 0, reason: `Expected ${label} matching "${expected}", got ${JSON.stringify(val)}` };
+    return {
+      pass: false,
+      score: 0,
+      reason: `Expected ${label} matching "${expected}", got ${JSON.stringify(val)}`,
+    };
   }
   return null;
 }
@@ -91,7 +103,9 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
         check(o.baseSalary, 215000, 'baseSalary'),
         check(o.currency, 'USD', 'currency'),
         checkLoc(o.location, 'los angeles', 'location'),
-        p.filingStatus && p.filingStatus !== 'single' ? check(p.filingStatus, 'single', 'filingStatus') : null,
+        p.filingStatus && p.filingStatus !== 'single'
+          ? check(p.filingStatus, 'single', 'filingStatus')
+          : null,
       );
 
     case 'london-offer':
@@ -108,8 +122,12 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
         check(o.baseSalary, 135000, 'baseSalary'),
         check(o.hasEquity, true, 'hasEquity'),
         check(o.hasBonus, true, 'hasBonus'),
-        o.relocationAllowance == null ? { pass: false, score: 0, reason: 'Expected relocationAllowance to be set' } : null,
-        o.equityGrantTotal == null && o.equityValue == null ? { pass: false, score: 0, reason: 'Expected some equity value to be extracted' } : null,
+        o.relocationAllowance == null
+          ? { pass: false, score: 0, reason: 'Expected relocationAllowance to be set' }
+          : null,
+        o.equityGrantTotal == null && o.equityValue == null
+          ? { pass: false, score: 0, reason: 'Expected some equity value to be extracted' }
+          : null,
       );
 
     case 'ambiguous-currency':
@@ -144,7 +162,12 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     case 'contractor':
       return all(
         o.employmentType === 'contractor' || o.employmentType === 'self-employed'
-          ? null : { pass: false, score: 0, reason: `Expected employmentType contractor/self-employed, got ${o.employmentType}` },
+          ? null
+          : {
+              pass: false,
+              score: 0,
+              reason: `Expected employmentType contractor/self-employed, got ${o.employmentType}`,
+            },
         check(p.filingStatus, 'single', 'filingStatus'),
       );
 
@@ -157,7 +180,8 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
       );
 
     case 'multi-offer':
-      if (offers.length !== 2) return { pass: false, score: 0, reason: `Expected 2 offers, got ${offers.length}` };
+      if (offers.length !== 2)
+        return { pass: false, score: 0, reason: `Expected 2 offers, got ${offers.length}` };
       return all(
         check(offers[0].baseSalary, 220000, 'offers[0].baseSalary'),
         checkLoc(offers[0].location, 'new york', 'offers[0].location'),
@@ -173,16 +197,24 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     const expectedBase = context.vars.expectedBase as number | undefined;
     const checks: Array<AssertionResult | null> = [];
 
-    if (expectedCurrency !== undefined) checks.push(check(o.currency, expectedCurrency, 'currency'));
-    if (expectedLocation !== undefined) checks.push(checkLoc(o.location, expectedLocation, 'location'));
+    if (expectedCurrency !== undefined)
+      checks.push(check(o.currency, expectedCurrency, 'currency'));
+    if (expectedLocation !== undefined)
+      checks.push(checkLoc(o.location, expectedLocation, 'location'));
     if (expectedBase !== undefined) checks.push(check(o.baseSalary, expectedBase, 'baseSalary'));
     if (context.vars.expectNullCurrency) checks.push(check(o.currency, null, 'currency'));
-    if (context.vars.expectAmbiguousCurrency) checks.push(check(o.currencyAmbiguous, true, 'currencyAmbiguous'));
+    if (context.vars.expectAmbiguousCurrency)
+      checks.push(check(o.currencyAmbiguous, true, 'currencyAmbiguous'));
     if (context.vars.expectEquity) checks.push(check(o.hasEquity, true, 'hasEquity'));
     if (context.vars.expectBonus) checks.push(check(o.hasBonus, true, 'hasBonus'));
-    if (context.vars.expectFilingStatus) checks.push(check(p.filingStatus, context.vars.expectFilingStatus as string, 'filingStatus'));
-    if (context.vars.expectEmploymentType) checks.push(check(o.employmentType, context.vars.expectEmploymentType as string, 'employmentType'));
-    if (context.vars.expectOffersCount) checks.push(check(offers.length, context.vars.expectOffersCount as number, 'offers.length'));
+    if (context.vars.expectFilingStatus)
+      checks.push(check(p.filingStatus, context.vars.expectFilingStatus as string, 'filingStatus'));
+    if (context.vars.expectEmploymentType)
+      checks.push(
+        check(o.employmentType, context.vars.expectEmploymentType as string, 'employmentType'),
+      );
+    if (context.vars.expectOffersCount)
+      checks.push(check(offers.length, context.vars.expectOffersCount as number, 'offers.length'));
 
     if (checks.length === 0) {
       return { pass: false, score: 0, reason: `Unknown caseId: ${caseId}` };
@@ -194,4 +226,4 @@ export = function (output: string, context: { vars: Record<string, unknown> }): 
     }
     return result;
   }
-}
+};

@@ -13,6 +13,6 @@ appId: com.pontistudios.hakumi.dev
 - tapOn: Delete
 - assertVisible: Delete note
 - tapOn:
-    text: "^Delete$"
+    text: '^Delete$'
 - assertNotVisible:
     id: inbox-item-note

@@ -18,4 +18,3 @@
 - **Career data model** — One documented server/DB or API-backed model; database imports stay in its permitted layer.
 - **Finance release tier** — README, CI, deployment configuration, and command scopes agree.
 - **Better Auth bearer sessions** — Keep or remove the plugin with a tested external compatibility contract.
-
