@@ -1,10 +1,8 @@
 import { useEmailOtpAuthRoute } from '@hominem/auth/client/email-otp-route';
 import { maskEmail } from '@hominem/auth/shared/mask-email';
-import { resolveOAuthResumeUrl } from '@hominem/auth/shared/redirect-policy';
 import { redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';
-import { serverEnv } from '~/lib/env';
 import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/index';
@@ -34,26 +32,20 @@ export const meta: Route.MetaFunction = () => [
   },
 ];
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
-  const apiBaseUrl = serverEnv().VITE_PUBLIC_API_URL;
-  const oauthResumeUrl = resolveOAuthResumeUrl(new URL(request.url).search, apiBaseUrl);
 
   if (user) {
-    throw redirect(oauthResumeUrl ?? AUTH_CONFIG.defaultRedirect);
+    throw redirect(AUTH_CONFIG.defaultRedirect);
   }
-
-  return { apiBaseUrl };
 }
 
-export default function AuthEntryPage({ loaderData }: Route.ComponentProps) {
+export default function AuthEntryPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const auth = useEmailOtpAuthRoute({
     allowedRedirectPrefixes: AUTH_CONFIG.allowedRedirectPrefixes,
-    apiBaseUrl: loaderData.apiBaseUrl,
     defaultRedirect: AUTH_CONFIG.defaultRedirect,
-    enableOAuthResume: true,
     search: location.search,
     onNavigate: (to) => navigate(to),
   });

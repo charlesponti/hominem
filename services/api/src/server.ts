@@ -19,6 +19,7 @@ import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
 import { authRoutes } from './routes/auth';
 import { imagesRoutes } from './routes/images';
+import { loginRoutes } from './routes/login';
 import { statusRoutes } from './routes/status';
 import { rpcApp } from './rpc/app';
 
@@ -112,6 +113,7 @@ function registerApiRoutes(app: Hono<AppEnv>) {
   app.route('/', rpcApp);
   // OAuth discovery for MCP clients — must be at root per RFC 8414 / RFC 9728
   app.route('/', oauthDiscoveryRoutes);
+  app.route('/', loginRoutes);
   // Custom auth extras first (session/logout reshape for apps/finance, e2e helpers).
   // Unmatched /api/auth/* falls through to the Better Auth catch-all handler.
   app.route('/api/auth', authRoutes);

@@ -225,10 +225,10 @@ function getAuthPlugins() {
     // Bearer lets getSession honor Authorization when clients send BA session tokens.
     bearer(),
     mcp({
-      loginPage: new URL('/login', env.CAREER_URL).toString(),
+      loginPage: new URL('/login', env.API_URL).toString(),
       resource: new URL('/api/mcp', env.API_URL).toString(),
       oidcConfig: {
-        loginPage: new URL('/login', env.CAREER_URL).toString(),
+        loginPage: new URL('/login', env.API_URL).toString(),
         scopes: [...MCP_SCOPES],
         metadata: {
           scopes_supported: ['openid', 'profile', 'email', 'offline_access', ...MCP_SCOPES],
