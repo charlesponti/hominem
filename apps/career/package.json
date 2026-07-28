@@ -57,7 +57,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitest/coverage-v8": "4.1.2",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.0",
     "msw": "^2.12.13",
     "playwright": "^1.61.1",
     "tailwindcss": "^4.1.8",
