@@ -6,8 +6,7 @@ set -euo pipefail
 # an incompatible eas.json setting, etc.) fails in seconds here instead of
 # after minutes of remote archiving in build-and-submit-production.
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-app_dir="$repo_root/apps/omiro"
+app_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 : "${EXPO_TOKEN:?EXPO_TOKEN must be set to resolve EAS build config}"
 
