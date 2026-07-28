@@ -1,6 +1,5 @@
 {
   "name": "hominem",
-  "version": "1.0.0",
   "private": true,
   "scripts": {
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
