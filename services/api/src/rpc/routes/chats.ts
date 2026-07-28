@@ -4,6 +4,7 @@ import { getChatCompletionUsage, streamChatCompletion } from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, db, runInTransaction } from '@hominem/db';
 import { embeddingQueue } from '@hominem/queues';
+import { fileStorageService } from '@hominem/storage';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
@@ -24,7 +25,55 @@ import { ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { CHAT_ASSISTANT_PROMPT } from '../prompts';
+import { synthesizeChatReplySpeech } from './chat-speech.service';
 import { toChatDto, toChatMessageDto, toStoredUserMessageContent } from './chats.mapper';
+
+async function synthesizeReplyAudioFile(
+  userId: string,
+  assistantText: string,
+): Promise<ChatMessageFileRecord | null> {
+  const eventId = randomUUID();
+  const getDurationMs = startAIUsageTimer();
+  const result = await synthesizeChatReplySpeech(assistantText);
+
+  if (result.kind === 'error') {
+    await recordAIUsageEvent({
+      eventId,
+      userId,
+      feature: 'chat_speech',
+      operation: 'speech',
+      usage: null,
+      status: 'failed',
+      error: result.message,
+      durationMs: getDurationMs(),
+      metadata: {},
+    });
+    return null;
+  }
+
+  const stored = await fileStorageService.storeFile(result.buffer, result.mimeType, userId, {
+    originalName: 'reply.mp3',
+  });
+
+  await recordAIUsageEvent({
+    eventId,
+    userId,
+    feature: 'chat_speech',
+    operation: 'speech',
+    usage: null,
+    status: 'succeeded',
+    durationMs: getDurationMs(),
+    metadata: {},
+  });
+
+  return {
+    type: 'audio',
+    url: stored.url,
+    filename: stored.originalName,
+    mimeType: result.mimeType,
+    size: result.buffer.byteLength,
+  };
+}
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
   await embeddingQueue.add(
@@ -167,7 +216,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     await assertUnderMonthlyUsageLimit(userId);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const { message, fileIds = [], noteIds = [] } = c.req.valid('json');
+    const { message, fileIds = [], noteIds = [], responseModality } = c.req.valid('json');
 
     const history = await ChatRepository.getMessages(db, chatId, 30, 0);
     const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
@@ -240,6 +289,14 @@ const chatByIdRoutes = new Hono<AppContext>()
       }
 
       try {
+        let audioFile: ChatMessageFileRecord | null = null;
+        if (responseModality === 'audio' && assistantText.trim().length > 0) {
+          // Best-effort: the text reply already succeeded, so a speech
+          // synthesis failure shouldn't fail the whole request — just skip
+          // attaching audio and let the client fall back to text.
+          audioFile = await synthesizeReplyAudioFile(userId, assistantText).catch(() => null);
+        }
+
         if (assistantText.trim().length > 0) {
           await runInTransaction(async (trx) => {
             await ChatRepository.insertMessage(trx, {
@@ -247,6 +304,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               authorUserId: userId,
               role: 'assistant',
               content: assistantText,
+              files: audioFile ? [audioFile] : null,
             });
             await ChatRepository.touchLastMessage(trx, chatId);
           });
@@ -254,6 +312,12 @@ const chatByIdRoutes = new Hono<AppContext>()
         }
 
         await stream.writeSSE({ data: '[DONE]' });
+
+        if (audioFile?.url && audioFile.mimeType) {
+          await stream.writeSSE({
+            data: JSON.stringify({ type: 'audio', url: audioFile.url, mimeType: audioFile.mimeType }),
+          });
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Stream error';
         await writeErrorEvent(stream, message);

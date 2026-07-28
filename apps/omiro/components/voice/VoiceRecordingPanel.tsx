@@ -19,6 +19,10 @@ interface VoiceRecordingPanelProps {
   onCancel: () => void;
   onDone?: () => void;
   doneAccessibilityLabel?: string;
+  // 'sending' covers the gap between a walkie-talkie auto-send and the
+  // spoken reply arriving — recording has already stopped, there's nothing
+  // left to cancel or stop, so those controls are hidden.
+  phase?: 'recording' | 'sending';
 }
 
 export function VoiceRecordingPanel({
@@ -26,6 +30,7 @@ export function VoiceRecordingPanel({
   onCancel,
   onDone,
   doneAccessibilityLabel,
+  phase = 'recording',
 }: VoiceRecordingPanelProps) {
   const styles = useStyles();
   const elapsed = useElapsedTimer(startedAt);
@@ -36,6 +41,17 @@ export function VoiceRecordingPanel({
       true,
     ),
   }));
+
+  if (phase === 'sending') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.visualizer}>
+          <Animated.View style={[styles.dot, dotOpacity]} />
+          <Text style={styles.timer}>{t.inboxComposer.composer.sendingA11y}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -21,6 +21,7 @@ interface ComposerSubmitInput {
   clearComposer: () => void;
   fileIds: string[];
   message: string;
+  responseModality?: 'text' | 'audio';
 }
 
 // Owns the actual submit actions (save note / start chat / send message) and,
@@ -45,7 +46,7 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const submit = useCallback(
     async (
-      { canSubmit, clearComposer, fileIds, message }: ComposerSubmitInput,
+      { canSubmit, clearComposer, fileIds, message, responseModality }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
       if (!canSubmit) return;
@@ -87,7 +88,7 @@ export function useComposerSubmission(props: ComposerProps) {
       }
 
       if (isChatSending) return;
-      await sendChatMessage({ message: message.trim(), fileIds, noteIds: [] });
+      await sendChatMessage({ message: message.trim(), fileIds, noteIds: [], responseModality });
       await autoUpdateChatTitle(message.trim());
       clearComposer();
     },

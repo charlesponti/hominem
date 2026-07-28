@@ -5,6 +5,7 @@ export const ChatsSendSchema = z
     message: z.string(),
     fileIds: z.array(z.uuid()).max(5).optional(),
     noteIds: z.array(z.uuid()).max(10).optional(),
+    responseModality: z.enum(['text', 'audio']).optional(),
   })
   .superRefine((value, ctx) => {
     if (

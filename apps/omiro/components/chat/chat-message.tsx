@@ -4,6 +4,7 @@ import { memo, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
+import { useAudioPlayback } from '~/components/media/useAudioPlayback';
 import {
   Text,
   fontFamiliesNative,
@@ -344,7 +345,16 @@ const ChatMessage = memo(function ChatMessage({
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
   const canDelete = !isStreaming && onDelete !== undefined;
   const canCopy = !isStreaming && onCopy !== undefined;
-  const canSpeak = !isUser && !isStreaming && onSpeak !== undefined && Boolean(content?.trim());
+  // Playback for a generated walkie-talkie reply is intrinsic to the message
+  // (message.audio), not something callers wire up per-render — fall back to
+  // the shared audio-playback singleton when no explicit onSpeak override is
+  // passed in (chat-message-list.tsx doesn't pass one today).
+  const audioUrl = message.audio?.url ?? null;
+  const playback = useAudioPlayback(message.id, audioUrl);
+  const effectiveIsSpeaking = onSpeak ? isSpeaking : playback.isSpeaking;
+  const effectiveOnSpeak = onSpeak ?? (audioUrl ? playback.toggle : undefined);
+  const canSpeak =
+    !isUser && !isStreaming && effectiveOnSpeak !== undefined && Boolean(content?.trim());
   const canShare = !isUser && !isStreaming && onShare !== undefined && Boolean(content?.trim());
   const hasReasoning = Boolean(message.reasoning && message.reasoning.trim().length > 0);
   const renderedToolCalls = message.toolCalls ?? [];
@@ -424,7 +434,7 @@ const ChatMessage = memo(function ChatMessage({
           canSpeak={canSpeak}
           isActive={isActive}
           isUser={isUser}
-          isSpeaking={isSpeaking}
+          isSpeaking={effectiveIsSpeaking}
           message={message}
           onCopy={onCopy}
           onDelete={onDelete}
@@ -434,7 +444,7 @@ const ChatMessage = memo(function ChatMessage({
           }}
           onRegenerate={onRegenerate}
           onShare={onShare}
-          onSpeak={onSpeak}
+          onSpeak={effectiveOnSpeak}
           styles={styles}
           timestamp={timestamp}
         />

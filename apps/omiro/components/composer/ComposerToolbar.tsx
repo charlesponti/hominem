@@ -3,6 +3,7 @@ import { ActionSheetIOS, View } from 'react-native';
 
 import { useComposerContext } from '~/components/composer/ComposerContext';
 import { CameraModal } from '~/components/media/camera-modal';
+import { useThemeColors } from '~/components/theme';
 import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
@@ -18,9 +19,11 @@ interface ComposerToolbarProps {
   isRecordingElsewhere: boolean;
   isSubmitting: boolean;
   isVoiceBusy: boolean;
+  isWalkieTalkie?: boolean;
   onEnhancePress: () => void;
   onSubmit: () => void;
   onVoicePress: () => void;
+  onToggleWalkieTalkie?: () => void;
   submitAccessibilityLabel?: string;
   submitTestID: string;
 }
@@ -29,6 +32,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
   const { pickAttachment, handleCameraCapture } = useComposerContext();
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const styles = useComposerSurfaceStyles();
+  const themeColors = useThemeColors();
 
   const showMenu = useCallback(() => {
     ActionSheetIOS.showActionSheetWithOptions(
@@ -77,17 +81,32 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
             onPress={props.onSubmit}
           />
         ) : (
-          <IconButton
-            accessibilityLabel={
-              props.isRecordingElsewhere
-                ? t.inboxComposer.composer.recordingElsewhereA11y
-                : t.inboxComposer.composer.startVoiceInputA11y
-            }
-            disabled={!props.canToggleVoice}
-            icon="mic.fill"
-            testID="composer-mic-button"
-            onPress={props.onVoicePress}
-          />
+          <>
+            {props.onToggleWalkieTalkie ? (
+              <IconButton
+                accessibilityLabel={
+                  props.isWalkieTalkie
+                    ? t.inboxComposer.composer.disableWalkieTalkieA11y
+                    : t.inboxComposer.composer.enableWalkieTalkieA11y
+                }
+                icon="antenna.radiowaves.left.and.right"
+                testID="composer-walkie-talkie-toggle"
+                tintColor={props.isWalkieTalkie ? themeColors.primary : undefined}
+                onPress={props.onToggleWalkieTalkie}
+              />
+            ) : null}
+            <IconButton
+              accessibilityLabel={
+                props.isRecordingElsewhere
+                  ? t.inboxComposer.composer.recordingElsewhereA11y
+                  : t.inboxComposer.composer.startVoiceInputA11y
+              }
+              disabled={!props.canToggleVoice}
+              icon="mic.fill"
+              testID="composer-mic-button"
+              onPress={props.onVoicePress}
+            />
+          </>
         )}
       </View>
       <CameraModal

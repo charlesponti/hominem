@@ -17,7 +17,10 @@ const mocks = vi.hoisted(() => ({
   runInTransaction: vi.fn(),
   streamChatCompletion: vi.fn(),
   recordAIUsageEvent: vi.fn(),
+  assertUnderMonthlyUsageLimit: vi.fn(),
   enqueueEmbedding: vi.fn(),
+  synthesizeChatReplySpeech: vi.fn(),
+  storeFile: vi.fn(),
 }));
 
 vi.mock('@hominem/ai', () => ({
@@ -45,6 +48,12 @@ vi.mock('@hominem/queues', () => ({
   },
 }));
 
+vi.mock('@hominem/storage', () => ({
+  fileStorageService: {
+    storeFile: mocks.storeFile,
+  },
+}));
+
 vi.mock('@hominem/telemetry', () => ({
   logger: {
     error: vi.fn(),
@@ -55,7 +64,24 @@ vi.mock('@hominem/telemetry', () => ({
 
 vi.mock('../../application/ai-usage.service', () => ({
   recordAIUsageEvent: mocks.recordAIUsageEvent,
+  assertUnderMonthlyUsageLimit: mocks.assertUnderMonthlyUsageLimit,
   startAIUsageTimer: () => () => 0,
+}));
+
+vi.mock('./chat-speech.service', () => ({
+  synthesizeChatReplySpeech: mocks.synthesizeChatReplySpeech,
+}));
+
+// The `/:id/stream` route sits behind rateLimitMiddleware, which lazily
+// imports the real Redis client — mock it so tests hitting that route don't
+// attempt a real connection (rate-limit fails open on errors, but ioredis's
+// default retry behavior can hang well past the test timeout instead of
+// rejecting fast).
+vi.mock('@hominem/services/redis', () => ({
+  redis: {
+    incr: vi.fn().mockResolvedValue(1),
+    expire: vi.fn().mockResolvedValue(1),
+  },
 }));
 
 vi.mock('./chats.mapper', () => ({
@@ -108,7 +134,9 @@ describe('chat stream accounting', () => {
       async (callback: (trx: unknown) => Promise<unknown>) => callback({}),
     );
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
+    mocks.assertUnderMonthlyUsageLimit.mockResolvedValue(undefined);
     mocks.enqueueEmbedding.mockResolvedValue(undefined);
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
     mocks.streamChatCompletion.mockReturnValue(
       (async function* () {
         yield {
@@ -146,5 +174,137 @@ describe('chat stream accounting', () => {
         usage: expect.objectContaining({ totalTokens: 15, costUsd: 0.12 }),
       }),
     );
+  });
+});
+
+describe('chat stream walkie-talkie audio leg', () => {
+  beforeEach(() => {
+    mocks.synthesizeChatReplySpeech.mockReset();
+    mocks.storeFile.mockReset();
+    mocks.insertMessage.mockReset();
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getMessages.mockResolvedValue([]);
+    mocks.insertMessage.mockResolvedValue(undefined);
+    mocks.touchLastMessage.mockResolvedValue(undefined);
+    mocks.resolveReferencedNotes.mockResolvedValue([]);
+    mocks.resolveChatFiles.mockResolvedValue([]);
+    mocks.runInTransaction.mockImplementation(
+      async (callback: (trx: unknown) => Promise<unknown>) => callback({}),
+    );
+    mocks.recordAIUsageEvent.mockResolvedValue(undefined);
+    mocks.assertUnderMonthlyUsageLimit.mockResolvedValue(undefined);
+    mocks.enqueueEmbedding.mockResolvedValue(undefined);
+    mocks.streamChatCompletion.mockReturnValue(
+      (async function* () {
+        yield { choices: [{ delta: { content: 'Hi there' } }] };
+      })(),
+    );
+  });
+
+  it('synthesizes and attaches audio, emitting a trailing audio event after [DONE]', async () => {
+    mocks.synthesizeChatReplySpeech.mockResolvedValue({
+      kind: 'success',
+      buffer: Buffer.from('fake-mp3-bytes'),
+      mimeType: 'audio/mpeg',
+    });
+    mocks.storeFile.mockResolvedValue({
+      id: 'file-id',
+      originalName: 'reply.mp3',
+      filename: 'reply.mp3',
+      mimetype: 'audio/mpeg',
+      size: 14,
+      url: 'https://files.example.com/reply.mp3',
+      uploadedAt: new Date(),
+    });
+
+    const response = await createApp().request('/api/chats/chat-id/stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Hello', responseModality: 'audio' }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    const frames = body
+      .split(/\n\n/)
+      .map((frame) => frame.replace(/^data: /, ''))
+      .filter(Boolean);
+
+    const doneIndex = frames.indexOf('[DONE]');
+    const audioFrameIndex = frames.findIndex((frame) => frame.includes('"type":"audio"'));
+
+    expect(doneIndex).toBeGreaterThanOrEqual(0);
+    expect(audioFrameIndex).toBeGreaterThan(doneIndex);
+    expect(JSON.parse(frames[audioFrameIndex])).toEqual({
+      type: 'audio',
+      url: 'https://files.example.com/reply.mp3',
+      mimeType: 'audio/mpeg',
+    });
+
+    expect(mocks.synthesizeChatReplySpeech).toHaveBeenCalledWith('Hi there');
+    expect(mocks.storeFile).toHaveBeenCalledWith(
+      expect.any(Buffer),
+      'audio/mpeg',
+      testUser.id,
+      expect.objectContaining({ originalName: 'reply.mp3' }),
+    );
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        role: 'assistant',
+        files: [
+          expect.objectContaining({
+            type: 'audio',
+            url: 'https://files.example.com/reply.mp3',
+            mimeType: 'audio/mpeg',
+          }),
+        ],
+      }),
+    );
+    expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ feature: 'chat_speech', operation: 'speech', status: 'succeeded' }),
+    );
+  });
+
+  it('degrades silently to text-only when speech synthesis fails', async () => {
+    mocks.synthesizeChatReplySpeech.mockResolvedValue({
+      kind: 'error',
+      message: 'provider down',
+    });
+
+    const response = await createApp().request('/api/chats/chat-id/stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Hello', responseModality: 'audio' }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    const frames = body
+      .split(/\n\n/)
+      .map((frame) => frame.replace(/^data: /, ''))
+      .filter(Boolean);
+
+    expect(frames).toContain('[DONE]');
+    expect(frames.some((frame) => frame.includes('"type":"audio"'))).toBe(false);
+    expect(mocks.storeFile).not.toHaveBeenCalled();
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ role: 'assistant', files: null }),
+    );
+  });
+
+  it('does not synthesize audio when responseModality is omitted', async () => {
+    const response = await createApp().request('/api/chats/chat-id/stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Hello' }),
+    });
+
+    expect(response.status).toBe(200);
+    await response.text();
+
+    expect(mocks.synthesizeChatReplySpeech).not.toHaveBeenCalled();
+    expect(mocks.storeFile).not.toHaveBeenCalled();
   });
 });

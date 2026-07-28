@@ -14,6 +14,7 @@ export {
   DEFAULT_TASK_EXTRACTION_MODEL,
   DEFAULT_TEXT_MODEL,
   DEFAULT_TRANSCRIPTION_MODEL,
+  DEFAULT_TTS_MODEL,
   DEFAULT_VOICE_CLEANUP_MODEL,
   isJsonObject,
   normalizeOpenRouterChatUsage,
@@ -54,6 +55,10 @@ export { generateImageFromPrompt } from './image';
 export { cleanupVoiceTranscript } from './voice-cleanup';
 
 export type { VoiceTranscriptCleanupInput, VoiceTranscriptCleanupOutput } from './voice-cleanup';
+
+export { synthesizeSpeech } from './speech';
+
+export type { SynthesizeSpeechInput, SynthesizeSpeechResult } from './speech';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
 export {
