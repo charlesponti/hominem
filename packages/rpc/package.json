@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@hominem/chat": "workspace:*",
-    "@tanstack/react-query": "5.100.10",
+    "@tanstack/react-query": "5.101.4",
     "hono": "4.12.27",
     "zod": "catalog:"
   },
