@@ -88,9 +88,22 @@ export function useComposerSubmission(props: ComposerProps) {
       }
 
       if (isChatSending) return;
-      await sendChatMessage({ message: message.trim(), fileIds, noteIds: [], responseModality });
-      await autoUpdateChatTitle(message.trim());
-      clearComposer();
+      try {
+        await sendChatMessage({
+          message: message.trim(),
+          fileIds,
+          noteIds: [],
+          responseModality,
+        });
+        await autoUpdateChatTitle(message.trim());
+        clearComposer();
+      } catch (error) {
+        const alertMessage =
+          error instanceof Error && error.message === 'offline_unavailable'
+            ? 'You appear to be offline. Please reconnect and try again.'
+            : 'We could not send that message right now. Please try again.';
+        Alert.alert('Could not send message', alertMessage, [{ text: 'OK' }]);
+      }
     },
     [
       autoUpdateChatTitle,

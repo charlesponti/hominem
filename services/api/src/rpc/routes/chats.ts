@@ -51,28 +51,43 @@ async function synthesizeReplyAudioFile(
     return null;
   }
 
-  const stored = await fileStorageService.storeFile(result.buffer, result.mimeType, userId, {
-    originalName: 'reply.mp3',
-  });
+  try {
+    const stored = await fileStorageService.storeFile(result.buffer, result.mimeType, userId, {
+      originalName: 'reply.mp3',
+    });
 
-  await recordAIUsageEvent({
-    eventId,
-    userId,
-    feature: 'chat_speech',
-    operation: 'speech',
-    usage: null,
-    status: 'succeeded',
-    durationMs: getDurationMs(),
-    metadata: {},
-  });
+    await recordAIUsageEvent({
+      eventId,
+      userId,
+      feature: 'chat_speech',
+      operation: 'speech',
+      usage: null,
+      status: 'succeeded',
+      durationMs: getDurationMs(),
+      metadata: {},
+    });
 
-  return {
-    type: 'audio',
-    url: stored.url,
-    filename: stored.originalName,
-    mimeType: result.mimeType,
-    size: result.buffer.byteLength,
-  };
+    return {
+      type: 'audio',
+      url: stored.url,
+      filename: stored.originalName,
+      mimeType: result.mimeType,
+      size: result.buffer.byteLength,
+    };
+  } catch (error) {
+    await recordAIUsageEvent({
+      eventId,
+      userId,
+      feature: 'chat_speech',
+      operation: 'speech',
+      usage: null,
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'File storage failed',
+      durationMs: getDurationMs(),
+      metadata: {},
+    });
+    return null;
+  }
 }
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
