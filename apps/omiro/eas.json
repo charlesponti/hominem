@@ -10,7 +10,8 @@
       "pnpm": "11.10.0",
       "env": {
         "SENTRY_ORG": "ponti-studios",
-        "SENTRY_PROJECT": "omiro"
+        "SENTRY_PROJECT": "omiro",
+        "SENTRY_USE_XCFRAMEWORK": "0"
       }
     },
     "development": {
