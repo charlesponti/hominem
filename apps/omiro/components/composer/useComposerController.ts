@@ -11,6 +11,7 @@ interface UseComposerControllerOptions {
   isSubmitting?: boolean;
   onDraftChange?: (message: string) => void;
   onClearDraft?: () => void;
+  onWalkieTalkieTranscript?: (rawText: string) => void;
 }
 
 // Composes the composer's independent concerns — draft text, attachments,
@@ -22,6 +23,7 @@ export function useComposerController({
   isSubmitting = false,
   onDraftChange,
   onClearDraft,
+  onWalkieTalkieTranscript,
 }: UseComposerControllerOptions) {
   const draft = useComposerDraft({ initialMessage, onDraftChange });
   const { attachments, errors, isUploading, clearAttachments, markAttachmentsSubmitted } =
@@ -38,6 +40,7 @@ export function useComposerController({
   const voice = useVoiceComposerInput({
     getMessage: draft.getMessage,
     setMessage: draft.setMessage,
+    onWalkieTalkieSend: onWalkieTalkieTranscript,
   });
   const enhance = useInlineEnhance();
 

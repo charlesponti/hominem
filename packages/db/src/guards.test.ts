@@ -38,6 +38,28 @@ describe('chat message guards', () => {
     expect(parseChatMessageFiles([{ type: 'file', metadata: null }])).toBeNull();
   });
 
+  it('parses a generated audio reply attachment', () => {
+    expect(
+      parseChatMessageFiles([
+        {
+          type: 'audio',
+          url: 'https://files.example.com/reply.mp3',
+          filename: 'reply.mp3',
+          mimeType: 'audio/mpeg',
+          size: 4096,
+        },
+      ]),
+    ).toEqual([
+      {
+        type: 'audio',
+        url: 'https://files.example.com/reply.mp3',
+        filename: 'reply.mp3',
+        mimeType: 'audio/mpeg',
+        size: 4096,
+      },
+    ]);
+  });
+
   it('parses valid tool call records', () => {
     expect(
       parseChatMessageToolCalls([

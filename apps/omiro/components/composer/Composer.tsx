@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
@@ -30,12 +30,35 @@ export function Composer(props: ComposerProps) {
 function ComposerContent(props: ComposerProps) {
   const theme = useTheme();
   const submission = useComposerSubmission(props);
+  // useVoiceComposerInput's onWalkieTalkieSend fires from processStoppedRecording,
+  // which is defined before submission.submit's caller (controller) exists —
+  // route through a ref rather than restructuring the hook order, mirroring
+  // the onRecordingStoppedRef pattern already used in useVoiceRecorder.ts.
+  const clearComposerRef = useRef<() => void>(() => {});
+  const handleWalkieTalkieTranscript = useCallback(
+    (rawText: string) => {
+      if (!rawText.trim()) return;
+      void submission.submit(
+        {
+          canSubmit: true,
+          clearComposer: () => clearComposerRef.current(),
+          fileIds: [],
+          message: rawText,
+          responseModality: 'audio',
+        },
+        'message',
+      );
+    },
+    [submission],
+  );
   const controller = useComposerController({
     initialMessage: submission.initialMessage,
     isSubmitting: submission.isSubmitting,
     onDraftChange: submission.onDraftChange,
     onClearDraft: submission.onClearDraft,
+    onWalkieTalkieTranscript: props.mode === 'chat' ? handleWalkieTalkieTranscript : undefined,
   });
+  clearComposerRef.current = controller.clearComposer;
   const presentation = getComposerSubmissionConfig(props);
   const rootStyles = useComposerRootStyles();
   const surfaceStyles = useComposerSurfaceStyles();
@@ -59,6 +82,13 @@ function ComposerContent(props: ComposerProps) {
   );
 
   const isRecording = controller.voice.isRecording;
+  // Bridges the gap between a walkie-talkie auto-send (recording already
+  // stopped) and the reply arriving — without this the panel would flash back
+  // to the idle TextField mid-send, since isRecording flips false immediately
+  // once stopRecording resolves, before the send has even started.
+  const isWalkieTalkieSending =
+    controller.voice.isWalkieTalkie && !isRecording && submission.isSubmitting;
+  const showVoicePanel = isRecording || isWalkieTalkieSending;
   const focused = controller.isFocused;
   const borderColor = focused
     ? theme.colors.primary
@@ -78,7 +108,7 @@ function ComposerContent(props: ComposerProps) {
     <View style={rootStyles.root} testID={presentation.shellTestID}>
       {errorBanner}
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
-      {!isRecording ? (
+      {!showVoicePanel ? (
         <InlineEnhancePanel
           enhance={controller.enhance}
           text={controller.message}
@@ -89,11 +119,12 @@ function ComposerContent(props: ComposerProps) {
         style={[surfaceStyles.surface, { borderColor }]}
         testID={`${presentation.shellTestID ?? 'composer'}-surface`}
       >
-        {isRecording ? (
+        {showVoicePanel ? (
           <VoiceRecordingPanel
             startedAt={controller.voice.recordingStartedAt}
             onCancel={() => void controller.voice.cancelVoiceRecording()}
             onDone={() => void controller.voice.handleVoicePress()}
+            phase={isRecording ? 'recording' : 'sending'}
           />
         ) : (
           <TextField
@@ -108,7 +139,7 @@ function ComposerContent(props: ComposerProps) {
             style={surfaceStyles.input}
           />
         )}
-        {isRecording ? null : (
+        {showVoicePanel ? null : (
           <ComposerToolbar
             canEnhance={controller.canOpenEnhance}
             canPickMedia={controller.canPickMedia}
@@ -119,9 +150,15 @@ function ComposerContent(props: ComposerProps) {
             isRecordingElsewhere={controller.voice.isRecordingElsewhere}
             isSubmitting={submission.isSubmitting}
             isVoiceBusy={controller.voice.isBusy}
+            isWalkieTalkie={controller.voice.isWalkieTalkie}
             onEnhancePress={controller.enhance.toggleEnhance}
             onSubmit={() => submit(presentation.primarySubmitKind)}
             onVoicePress={() => void controller.voice.handleVoicePress()}
+            onToggleWalkieTalkie={
+              props.mode === 'chat'
+                ? () => controller.voice.setWalkieTalkie((prev) => !prev)
+                : undefined
+            }
             submitAccessibilityLabel={presentation.submitAccessibilityLabel}
             submitTestID={presentation.submitTestID}
           />

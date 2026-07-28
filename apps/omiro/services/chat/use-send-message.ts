@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
 
+import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
@@ -23,6 +24,7 @@ export interface SendInput {
   message: string;
   fileIds?: string[];
   noteIds?: string[];
+  responseModality?: 'text' | 'audio';
 }
 
 export function useSendMessage({ chatId }: { chatId: string }) {
@@ -61,6 +63,18 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
   const onEvent = useCallback(
     (event: ChatStreamEvent) => {
+      if (event.type === 'audio') {
+        const id = streamingIdRef.current;
+        if (!id) return;
+        queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
+          prev?.map((m) =>
+            m.id === id ? { ...m, audio: { url: event.url, mimeType: event.mimeType } } : m,
+          ),
+        );
+        playAudioReply(id, event.url);
+        return;
+      }
+
       if (event.type !== 'chunk') {
         return;
       }
@@ -68,7 +82,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       chunkBufferRef.current += event.chunk;
       scheduleFlush();
     },
-    [scheduleFlush],
+    [chatId, queryClient, scheduleFlush],
   );
 
   const mutation = useMutation<
@@ -98,7 +112,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       return { previousMessages, assistantMsgId };
     },
 
-    mutationFn: async ({ message, fileIds, noteIds }) => {
+    mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
       if (isTestMode()) {
         // Simulate streaming token-by-token without hitting the real API.
         for (const char of MOCK_AI_RESPONSE) {
@@ -114,7 +128,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       await streamSSE<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
-        payload: { message: message.trim(), fileIds, noteIds },
+        payload: { message: message.trim(), fileIds, noteIds, responseModality },
         getHeaders: getAuthHeaders,
         onEvent,
         onDone: flushNow,

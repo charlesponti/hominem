@@ -1,5 +1,5 @@
 export interface ChatMessageFileRecord {
-  type: 'image' | 'file';
+  type: 'image' | 'file' | 'audio';
   fileId?: string;
   url?: string;
   filename?: string;
@@ -39,7 +39,7 @@ function isString(value: unknown): boolean {
 }
 
 function isChatMessageFileType(value: unknown): boolean {
-  return value === 'image' || value === 'file';
+  return value === 'image' || value === 'file' || value === 'audio';
 }
 
 function isToolCallType(value: unknown): boolean {

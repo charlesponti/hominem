@@ -12,6 +12,10 @@ export const DEFAULT_EMBEDDING_MODEL = 'google/gemini-embedding-2';
 export const DEFAULT_TRANSCRIPTION_MODEL = 'mistralai/voxtral-mini-transcribe';
 export const DEFAULT_ENHANCE_MODEL = 'google/gemini-2.5-flash-lite';
 export const DEFAULT_SPEECH_MODEL = 'openai/gpt-audio-mini';
+// Dedicated TTS-only model used for the walkie-talkie speech leg (packages/ai/src/speech.ts).
+// Distinct from DEFAULT_SPEECH_MODEL, which is for chat-completions audio-output modalities —
+// kokoro-82m isn't a chat model and can't go through that path.
+export const DEFAULT_TTS_MODEL = 'hexgrad/kokoro-82m';
 export const DEFAULT_VOICE_CLEANUP_MODEL = env.OPENROUTER_VOICE_CLEANUP_MODEL;
 export const DEFAULT_TASK_EXTRACTION_MODEL = env.OPENROUTER_TASK_EXTRACTION_MODEL;
 
@@ -47,7 +51,7 @@ export type ImageGenerationOptions = OpenRouterClientOptions & {
 };
 
 export type JsonObject = Record<string, unknown>;
-export type OpenRouterClientLike = Pick<OpenRouter, 'chat' | 'embeddings'>;
+export type OpenRouterClientLike = Pick<OpenRouter, 'chat' | 'embeddings' | 'tts'>;
 
 export type AIUsageMetrics = {
   provider: 'openrouter';

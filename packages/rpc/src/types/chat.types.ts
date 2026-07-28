@@ -58,13 +58,19 @@ export interface ChatStreamErrorEvent {
   message: string;
 }
 
+export interface ChatStreamAudioEvent {
+  type: 'audio';
+  url: string;
+  mimeType: string;
+}
+
 export interface ChatsStartStreamReadyEvent {
   type: 'ready';
   chatId: string;
   chat: Chat;
 }
 
-export type ChatStreamEvent = ChatStreamChunkEvent | ChatStreamErrorEvent;
+export type ChatStreamEvent = ChatStreamChunkEvent | ChatStreamErrorEvent | ChatStreamAudioEvent;
 export type ChatsStartStreamEvent = ChatsStartStreamReadyEvent | ChatStreamEvent;
 
 // ============================================================================
@@ -110,6 +116,7 @@ export type ChatsSendInput = {
   fileIds?: string[];
   noteIds?: string[];
   chatId?: string;
+  responseModality?: 'text' | 'audio';
 };
 
 export type ChatUIMessageInput = {

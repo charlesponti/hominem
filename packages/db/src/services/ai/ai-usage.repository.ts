@@ -13,6 +13,7 @@ export type AIUsageFeature =
   | 'voice_task_extract'
   | 'time_block_extract'
   | 'voice_cleanup'
+  | 'chat_speech'
   | 'embedding'
   | 'mcp_tool_call'
   | 'career_resume_convert'
@@ -22,7 +23,7 @@ export type AIUsageFeature =
   | 'file_image_analyze'
   | 'file_document_summarize';
 
-export type AIUsageOperation = 'chat_completion' | 'structured_output' | 'embedding';
+export type AIUsageOperation = 'chat_completion' | 'structured_output' | 'embedding' | 'speech';
 export type AIUsageEventStatus = 'succeeded' | 'failed';
 
 export interface AIUsageEventRecord {

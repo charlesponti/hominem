@@ -13,6 +13,8 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     return null;
   }
 
+  const audioFile = message.files?.find((file) => file.type === 'audio');
+
   return {
     id: message.id,
     role: message.role,
@@ -26,6 +28,10 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     referencedNotes: message.referencedNotes ?? null,
     toolCalls: message.toolCalls ?? null,
     isStreaming: false,
+    audio:
+      audioFile?.url && audioFile.mimeType
+        ? { url: audioFile.url, mimeType: audioFile.mimeType }
+        : null,
   };
 }
 

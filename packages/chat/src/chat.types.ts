@@ -28,6 +28,7 @@ export interface ChatMessageItem {
   referencedNotes: ChatMessageReferencedNote[] | null;
   toolCalls: ChatMessageToolCall[] | null;
   isStreaming?: boolean;
+  audio?: { url: string; mimeType: string } | null;
 }
 
 export function getReferencedNoteLabel(note: ChatMessageReferencedNote) {
