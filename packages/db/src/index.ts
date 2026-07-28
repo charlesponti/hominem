@@ -168,12 +168,6 @@ export type {
   UpdateJobApplicationInput,
 } from './services/career/job-application.repository';
 
-export { CareerEventRepository } from './services/career/career-event.repository';
-export type { CareerEventRecord } from './services/career/career-event.repository';
-
-export { JobApplicationStatusHistoryRepository } from './services/career/job-application-status-history.repository';
-export type { JobApplicationStatusHistoryRecord } from './services/career/job-application-status-history.repository';
-
 export { SocialLinksRepository } from './services/career/social-links.repository';
 export type {
   SaveUserSocialLinksInput,
