@@ -9,7 +9,7 @@ import type { TextInput } from 'react-native';
 import { makeStyles, Text, useThemeColors } from '~/components/theme';
 import { radii, spacing } from '~/components/theme/tokens';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 interface InlineEnhanceTrayProps {
@@ -107,7 +107,7 @@ export function InlineEnhanceTray({
       </View>
 
       {isCustomOpen ? (
-        <Input
+        <TextField
           ref={customInputRef}
           value={instruction}
           onChangeText={onInstructionChange}

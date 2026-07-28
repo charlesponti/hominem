@@ -16,7 +16,7 @@ export const ARCHIVED_CHATS_ROUTE = '/(protected)/settings/archived-chats';
 export type TimeBlockSource = 'task' | 'event';
 
 export function getTimeBlockRoute(source: TimeBlockSource, id: string) {
-  return `/(protected)/time/${source}/${id}`;
+  return `/(protected)?context=time&timeSource=${source}&timeId=${encodeURIComponent(id)}`;
 }
 
 export function getTaskDetailRoute(id: string) {

@@ -17,7 +17,6 @@ export type EditableTimeBlockField =
   | 'target_title'
   | 'participants'
   | 'location'
-  | 'duration'
   | 'start_time'
   | 'end_time'
   | 'scheduling_window_start'
@@ -31,8 +30,7 @@ export type TimeInteractionState =
   | { kind: 'draft'; block: TimeBlock; submittedPrompt: string }
   | { kind: 'answer'; answer: string }
   | { kind: 'availability'; block: TimeBlock; openings: TimeOpening[]; submittedPrompt: string }
-  | { kind: 'event-choice'; candidates: CalendarEvent[]; submittedPrompt: string }
-  | { kind: 'error'; message: string; submittedPrompt: string };
+  | { kind: 'event-choice'; candidates: CalendarEvent[]; submittedPrompt: string };
 
 export interface TimeOpening {
   end: string;

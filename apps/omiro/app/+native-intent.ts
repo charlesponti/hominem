@@ -1,4 +1,10 @@
-import { INBOX_ROUTE, SETTINGS_ROUTE, getContentRoute } from '~/services/navigation/routes';
+import {
+  INBOX_ROUTE,
+  SETTINGS_ROUTE,
+  getContentRoute,
+  getTimeBlockRoute,
+  type TimeBlockSource,
+} from '~/services/navigation/routes';
 
 /**
  * +native-intent.ts
@@ -16,6 +22,8 @@ import { INBOX_ROUTE, SETTINGS_ROUTE, getContentRoute } from '~/services/navigat
  *   hakumi://focus/<id>                -> /(protected)/inbox/note/<id>
  *   hakumi://account                   -> /(protected)/settings
  *   hakumi://note/add                  -> /(protected)
+ *   hakumi://time/task/<id>             -> /(protected)?context=time&timeSource=task&timeId=<id>
+ *   hakumi://time/event/<id>            -> /(protected)?context=time&timeSource=event&timeId=<id>
  */
 export function redirectSystemPath({
   path,
@@ -35,6 +43,11 @@ export function redirectSystemPath({
   // OTP verification link: verify?token=xxx -> /(auth)/verify?token=xxx
   if (normalized.startsWith('verify')) {
     return `/(auth)/${normalized}`;
+  }
+
+  const timeBlockMatch = normalized.match(/^time\/(task|event)\/([^?]+)/);
+  if (timeBlockMatch) {
+    return getTimeBlockRoute(timeBlockMatch[1] as TimeBlockSource, timeBlockMatch[2]);
   }
 
   // Chat with specific ID: chat/<id>

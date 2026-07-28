@@ -1,0 +1,23 @@
+appId: com.pontistudios.hakumi.dev
+---
+- launchApp
+- tapOn:
+    id: workspace-context-time
+- tapOn:
+    id: time-item-event-time-fixture-editable-open
+- assertVisible:
+    id: time-block-editor
+- tapOn:
+    id: time-block-edit-title
+- assertVisible:
+    id: time-block-title
+- eraseText
+- inputText: Updated fixture planning
+- tapOn:
+    id: time-block-save
+- assertVisible: Updated fixture planning
+- swipe:
+    start: '50%, 35%'
+    end: '50%, 95%'
+- assertVisible:
+    id: time-stream

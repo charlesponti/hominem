@@ -13,7 +13,7 @@ import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBo
 import { makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { useAuth } from '~/services/auth/auth-provider';
 import { resolveAuthScreenState } from '~/services/auth/auth-screen-state';
@@ -165,7 +165,7 @@ function AuthScreen() {
               {!isProbing ? (
                 <View style={styles.formSection}>
                   <Animated.View style={shakeStyle}>
-                    <Input
+                    <TextField
                       testID="auth-email-input"
                       value={email}
                       placeholder={t.auth.emailEntry.emailPlaceholder}

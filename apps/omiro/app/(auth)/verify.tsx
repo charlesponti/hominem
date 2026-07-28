@@ -22,7 +22,7 @@ import { FeatureErrorBoundary } from '../../components/error-boundary/FeatureErr
 import { Button } from '../../components/ui/button';
 import AppIcon from '../../components/ui/icon';
 import { IconChip } from '../../components/ui/icon-chip';
-import { Input } from '../../components/ui/input';
+import { TextField } from '../../components/ui/text-field';
 import { useAuth } from '../../services/auth/auth-provider';
 import { normalizeOtp } from '../../services/auth/validation';
 import { posthog } from '../../services/posthog';
@@ -120,8 +120,11 @@ const useStyles = makeStyles(() => ({
     paddingVertical: 12,
   },
   input: {
+    borderRadius: 0,
+    borderWidth: 0,
     flex: 1,
     fontSize: 16,
+    minHeight: 0,
     padding: 0,
   },
   countdown: {
@@ -367,7 +370,7 @@ function VerifyScreen() {
                     },
                   ]}
                 >
-                  <Input
+                  <TextField
                     testID="auth-otp-input"
                     value={normalizedOtp}
                     placeholder={t.auth.verify.codePlaceholder}

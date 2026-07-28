@@ -3,8 +3,8 @@ import { Pressable, View, type TextInput } from 'react-native';
 
 import { Text, makeStyles, spacing } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
-import { Input } from '~/components/ui/input';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
+import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 interface ChatSearchModalProps {
@@ -38,7 +38,7 @@ export function ChatSearchModal({
               </Pressable>
             </View>
 
-            <Input
+            <TextField
               key={visible ? 'visible' : 'hidden'}
               ref={searchInputRef}
               autoFocus

@@ -1,8 +1,10 @@
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { makeStyles, spacing, Text } from '~/components/theme';
+import { IconButton } from '~/components/ui/icon-button';
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { getTimeBlockRoute } from '~/services/navigation/routes';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
@@ -14,6 +16,7 @@ import { timeEventGateway, type TimeEventGateway } from './time-event-gateway';
 import type {
   EditableTimeBlockField,
   TimeInteractionState,
+  TimeItem,
   TimeOpening,
   TimeSection,
 } from './time-types';
@@ -32,6 +35,7 @@ import { TimeStream } from './TimeStream';
 export interface TimeWorkspaceSnapshot {
   events: CalendarEvent[];
   interaction: TimeInteractionState;
+  loadedSince: string;
   loadedUntil: string;
   prompt: string;
   scrollOffset: number;
@@ -41,6 +45,7 @@ export interface TimeWorkspaceSnapshot {
 export const initialTimeWorkspaceSnapshot = (): TimeWorkspaceSnapshot => ({
   events: [],
   interaction: { kind: 'idle' },
+  loadedSince: startOfToday().toISOString(),
   loadedUntil: startOfToday().toISOString(),
   prompt: '',
   scrollOffset: 0,
@@ -50,6 +55,7 @@ export const initialTimeWorkspaceSnapshot = (): TimeWorkspaceSnapshot => ({
 interface TimeWorkspaceProps {
   gateway?: TimeEventGateway;
   isFocused: boolean;
+  onOpenItem: (item: TimeItem) => void;
   onSnapshotChange: (snapshot: TimeWorkspaceSnapshot) => void;
   snapshot: TimeWorkspaceSnapshot;
 }
@@ -57,6 +63,7 @@ interface TimeWorkspaceProps {
 export function TimeWorkspace({
   gateway = timeEventGateway,
   isFocused,
+  onOpenItem,
   onSnapshotChange,
   snapshot,
 }: TimeWorkspaceProps) {
@@ -64,6 +71,7 @@ export function TimeWorkspace({
   const styles = useStyles();
   const [prompt, setPrompt] = useState(snapshot.prompt);
   const [events, setEvents] = useState(snapshot.events);
+  const [loadedSince, setLoadedSince] = useState(() => new Date(snapshot.loadedSince));
   const [loadedUntil, setLoadedUntil] = useState(() => new Date(snapshot.loadedUntil));
   const [section, setSection] = useState<TimeSection>(snapshot.section);
   const [scrollOffset, setScrollOffset] = useState(snapshot.scrollOffset);
@@ -72,6 +80,9 @@ export function TimeWorkspace({
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [hasLoadedEvents, setHasLoadedEvents] = useState(events.length > 0);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [toastKey, setToastKey] = useState(0);
+  const [toastExpanded, setToastExpanded] = useState(false);
   const loadingRef = useRef(false);
   const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
   const { mutate: toggleTask } = useTaskComplete();
@@ -82,12 +93,22 @@ export function TimeWorkspace({
     onSnapshotChange({
       events,
       interaction,
+      loadedSince: loadedSince.toISOString(),
       loadedUntil: loadedUntil.toISOString(),
       prompt,
       scrollOffset,
       section,
     });
-  }, [events, interaction, loadedUntil, onSnapshotChange, prompt, scrollOffset, section]);
+  }, [
+    events,
+    interaction,
+    loadedSince,
+    loadedUntil,
+    onSnapshotChange,
+    prompt,
+    scrollOffset,
+    section,
+  ]);
 
   useEffect(() => {
     void gateway.getPermission().then(setPermission);
@@ -97,9 +118,13 @@ export function TimeWorkspace({
     if (permission !== 'authorized' || loadingRef.current) return;
     loadingRef.current = true;
     setIsLoadingEvents(true);
-    const start = loadedUntil;
+    const isInitialLoad = !hasLoadedEvents && loadedSince.getTime() === loadedUntil.getTime();
+    const start = isInitialLoad
+      ? new Date(loadedSince.getTime() - PAGE_DAYS * 24 * 60 * 60 * 1000)
+      : loadedUntil;
     const end = new Date(start);
     end.setDate(end.getDate() + PAGE_DAYS);
+    if (isInitialLoad) end.setDate(end.getDate() + PAGE_DAYS);
     try {
       const page = await gateway.listEvents(start.toISOString(), end.toISOString());
       setEvents((current) => {
@@ -109,23 +134,51 @@ export function TimeWorkspace({
           ...page.filter((event) => !existing.has(`${event.id}:${event.startDate}`)),
         ];
       });
+      if (isInitialLoad) setLoadedSince(start);
       setLoadedUntil(end);
       setHasLoadedEvents(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load scheduled events.';
-      setInteraction((current) =>
-        current.kind === 'idle' ? { kind: 'error', message, submittedPrompt: prompt } : current,
-      );
+      setToastKey((k) => k + 1);
+      setErrorToast(message);
     } finally {
       loadingRef.current = false;
       setIsLoadingEvents(false);
     }
-  }, [gateway, loadedUntil, permission, prompt]);
+  }, [gateway, hasLoadedEvents, loadedSince, loadedUntil, permission]);
+
+  const loadPreviousPage = useCallback(async () => {
+    if (permission !== 'authorized' || loadingRef.current) return;
+    loadingRef.current = true;
+    setIsLoadingEvents(true);
+    const end = loadedSince;
+    const start = new Date(end);
+    start.setDate(start.getDate() - PAGE_DAYS);
+    try {
+      const page = await gateway.listEvents(start.toISOString(), end.toISOString());
+      setEvents((current) => {
+        const existing = new Set(current.map((event) => `${event.id}:${event.startDate}`));
+        return [
+          ...page.filter((event) => !existing.has(`${event.id}:${event.startDate}`)),
+          ...current,
+        ];
+      });
+      setLoadedSince(start);
+      setHasLoadedEvents(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load past events.';
+      setToastKey((k) => k + 1);
+      setErrorToast(message);
+    } finally {
+      loadingRef.current = false;
+      setIsLoadingEvents(false);
+    }
+  }, [gateway, loadedSince, permission]);
 
   useEffect(() => {
-    if (permission !== 'authorized' || events.length > 0 || loadingRef.current) return;
+    if (permission !== 'authorized' || hasLoadedEvents || loadingRef.current) return;
     void loadNextPage();
-  }, [events.length, loadNextPage, permission]);
+  }, [hasLoadedEvents, loadNextPage, permission]);
 
   const onConnectCalendar = useCallback(async () => {
     if (permission === 'denied') {
@@ -148,9 +201,12 @@ export function TimeWorkspace({
     [events, tasks],
   );
 
-  const restoreError = useCallback((message: string, submittedPrompt: string) => {
+  const showError = useCallback((message: string, submittedPrompt: string) => {
     setPrompt(submittedPrompt);
-    setInteraction({ kind: 'error', message, submittedPrompt });
+    setInteraction({ kind: 'idle' });
+    setToastExpanded(false);
+    setToastKey((k) => k + 1);
+    setErrorToast(message);
   }, []);
 
   const ask = useCallback(async () => {
@@ -167,7 +223,7 @@ export function TimeWorkspace({
       setPrompt('');
       if (block.primary_intent === 'search') {
         if (permission !== 'authorized') {
-          restoreError('Connect your iOS Calendar to search scheduled events.', submittedPrompt);
+          showError('Connect your iOS Calendar to search scheduled events.', submittedPrompt);
           return;
         }
         const result = await gateway.askSchedule(submittedPrompt);
@@ -176,7 +232,7 @@ export function TimeWorkspace({
       }
       if (block.primary_intent === 'schedule_gap_fill') {
         if (permission !== 'authorized') {
-          restoreError('Connect your iOS Calendar to find available time.', submittedPrompt);
+          showError('Connect your iOS Calendar to find available time.', submittedPrompt);
           return;
         }
         const range = getAvailabilityRange(block);
@@ -191,7 +247,7 @@ export function TimeWorkspace({
           tasks,
         });
         if (openings.length === 0) {
-          restoreError('No opening fits that request in the selected time range.', submittedPrompt);
+          showError('No opening fits that request in the selected time range.', submittedPrompt);
           return;
         }
         setInteraction({ kind: 'availability', block, openings, submittedPrompt });
@@ -199,12 +255,12 @@ export function TimeWorkspace({
       }
       if (block.primary_intent === 'edit_event' || block.primary_intent === 'cancel_event') {
         if (permission !== 'authorized') {
-          restoreError('Connect your iOS Calendar to review that event.', submittedPrompt);
+          showError('Connect your iOS Calendar to review that event.', submittedPrompt);
           return;
         }
         const candidates = findEventCandidates(events, block.target_title);
         if (candidates.length === 0) {
-          restoreError('I could not find that upcoming calendar event.', submittedPrompt);
+          showError('I could not find that upcoming calendar event.', submittedPrompt);
           return;
         }
         if (candidates.length === 1) {
@@ -217,7 +273,7 @@ export function TimeWorkspace({
       }
       setInteraction({ kind: 'draft', block, submittedPrompt });
     } catch (error) {
-      restoreError(
+      showError(
         error instanceof Error ? error.message : 'Unable to interpret that time request.',
         submittedPrompt,
       );
@@ -231,7 +287,7 @@ export function TimeWorkspace({
     parseTimeBlock,
     permission,
     prompt,
-    restoreError,
+    showError,
     router,
     tasks,
   ]);
@@ -259,7 +315,7 @@ export function TimeWorkspace({
         ...current,
         block: {
           ...current.block,
-          [field]: field === 'duration' ? Number(value) || null : value || null,
+          [field]: value || null,
         },
       };
     });
@@ -270,7 +326,7 @@ export function TimeWorkspace({
     const { block } = interaction;
     const title = block.title?.trim();
     if (!title) {
-      restoreError('Add a title before saving this time block.', interaction.submittedPrompt);
+      showError('Add a title before saving this time block.', interaction.submittedPrompt);
       return;
     }
     setIsSaving(true);
@@ -294,14 +350,14 @@ export function TimeWorkspace({
         block.primary_intent === 'add_recurring_event'
       ) {
         if (permission !== 'authorized') {
-          restoreError(
+          showError(
             'Connect your iOS Calendar before adding an event.',
             interaction.submittedPrompt,
           );
           return;
         }
         if (!block.start_time || !block.end_time) {
-          restoreError(
+          showError(
             'Choose a start and end time before adding this event.',
             interaction.submittedPrompt,
           );
@@ -318,19 +374,19 @@ export function TimeWorkspace({
           [...current, event].sort((a, b) => a.startDate.localeCompare(b.startDate)),
         );
       } else {
-        restoreError('Review this request before making a change.', interaction.submittedPrompt);
+        showError('Review this request before making a change.', interaction.submittedPrompt);
         return;
       }
       setInteraction({ kind: 'idle' });
     } catch (error) {
-      restoreError(
+      showError(
         error instanceof Error ? error.message : 'Unable to save this time block.',
         interaction.submittedPrompt,
       );
     } finally {
       setIsSaving(false);
     }
-  }, [createTask, gateway, interaction, isSaving, permission, restoreError]);
+  }, [createTask, gateway, interaction, isSaving, permission, showError]);
 
   const cancelResult = useCallback(() => {
     const submittedPrompt =
@@ -338,15 +394,14 @@ export function TimeWorkspace({
       interaction.kind === 'availability' ||
       interaction.kind === 'event-choice'
         ? interaction.submittedPrompt
-        : interaction.kind === 'error'
-          ? interaction.submittedPrompt
-          : '';
+        : '';
     setPrompt(submittedPrompt);
     setInteraction({ kind: 'idle' });
   }, [interaction]);
 
   const resetStream = useCallback(() => {
     const start = startOfToday();
+    setLoadedSince(start);
     setLoadedUntil(start);
     setEvents([]);
     setHasLoadedEvents(false);
@@ -365,12 +420,12 @@ export function TimeWorkspace({
     <View style={styles.container} testID="time-screen">
       <TimeStream
         calendarPermission={permission}
-        error={interaction.kind === 'error' ? interaction.message : ''}
         hasScheduledItems={scheduledItems.length > 0}
         isLoadingEvents={isLoadingEvents}
         isWriting={isSaving}
         onConnectCalendar={() => void onConnectCalendar()}
-        onEndReached={() => void loadNextPage()}
+        onEndReached={() => void (section === 'past' ? loadPreviousPage() : loadNextPage())}
+        onOpenItem={onOpenItem}
         onRefresh={resetStream}
         onScrollOffsetChange={setScrollOffset}
         onSectionChange={(nextSection) => {
@@ -386,12 +441,45 @@ export function TimeWorkspace({
         unscheduledTaskCount={unscheduledTaskCount}
       />
       {hasLoadedEvents ? <View testID="time-events-ready" /> : null}
+      {errorToast !== null ? (
+        <View key={toastKey} style={styles.toast}>
+          <Pressable
+            accessibilityLabel={`Error: ${errorToast}`}
+            accessibilityRole="button"
+            onPress={() => {
+              setToastExpanded((v) => !v);
+            }}
+            style={styles.toastContent}
+          >
+            <Text
+              color="destructive"
+              numberOfLines={toastExpanded ? undefined : 1}
+              style={styles.toastMessage}
+              variant="footnote"
+            >
+              {errorToast}
+            </Text>
+            <IconButton
+              accessibilityLabel="Copy error"
+              icon="doc.on.doc"
+              onPress={() => void Clipboard.setStringAsync(errorToast)}
+            />
+          </Pressable>
+          <IconButton
+            accessibilityLabel="Dismiss error"
+            icon="xmark"
+            onPress={() => {
+              setErrorToast(null);
+              setToastExpanded(false);
+            }}
+          />
+        </View>
+      ) : null}
       <TimeComposer
         disabled={interaction.kind === 'parsing' || isSaving}
         isSaving={isSaving}
         onChangeText={(value) => {
           setPrompt(value);
-          if (interaction.kind === 'error') setInteraction({ kind: 'idle' });
         }}
         onCancel={cancelResult}
         onChooseEvent={(id) => router.push(getTimeBlockRoute('event', id))}
@@ -408,4 +496,25 @@ export function TimeWorkspace({
 
 const useStyles = makeStyles((theme) => ({
   container: { backgroundColor: theme.colors.background, flex: 1 },
+  toast: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.destructive,
+    borderRadius: theme.borderRadii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[1],
+    marginHorizontal: spacing[4],
+    marginBottom: spacing[1],
+    padding: spacing[2],
+  },
+  toastContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
+  },
+  toastMessage: {
+    flex: 1,
+  },
 }));

@@ -3,7 +3,7 @@ import { ActionSheetIOS, View } from 'react-native';
 
 import { useComposerContext } from '~/components/composer/ComposerContext';
 import { CameraModal } from '~/components/media/camera-modal';
-import { PillButton } from '~/components/ui/pill-button';
+import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
 import { useComposerSurfaceStyles } from './composer.styles';
@@ -50,7 +50,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
   return (
     <>
       <View style={styles.row}>
-        <PillButton
+        <IconButton
           accessibilityLabel={t.inboxComposer.composer.addAttachmentA11y}
           disabled={!props.canPickMedia}
           icon="paperclip"
@@ -58,7 +58,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
           onPress={showMenu}
         />
         {props.hasContent ? (
-          <PillButton
+          <IconButton
             accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
             disabled={!props.canEnhance}
             icon="wand.and.sparkles"
@@ -66,7 +66,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
           />
         ) : null}
         {props.hasContent ? (
-          <PillButton
+          <IconButton
             accessibilityLabel={
               props.submitAccessibilityLabel ??
               (props.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
@@ -77,7 +77,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
             onPress={props.onSubmit}
           />
         ) : (
-          <PillButton
+          <IconButton
             accessibilityLabel={
               props.isRecordingElsewhere
                 ? t.inboxComposer.composer.recordingElsewhereA11y

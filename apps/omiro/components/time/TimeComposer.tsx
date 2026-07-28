@@ -8,14 +8,14 @@ import { ComposerDock } from '~/components/composer/ComposerDock';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
 import { makeStyles, spacing, Text, useTheme } from '~/components/theme';
-import { Collapsible } from '~/components/ui/collapsible';
+import { IconButton } from '~/components/ui/icon-button';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
-import { Input } from '~/components/ui/input';
-import { PillButton } from '~/components/ui/pill-button';
+import { TextField } from '~/components/ui/text-field';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 import t from '~/translations';
 
 import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
+import { formatDraftDetails } from './time-utils';
 
 interface TimeComposerProps {
   disabled: boolean;
@@ -110,7 +110,7 @@ export function TimeComposer({
               onDone={() => void voice.handleVoicePress()}
             />
           ) : (
-            <Input
+            <TextField
               editable={!disabled}
               ref={inputRef}
               onBlur={() => setIsFocused(false)}
@@ -129,14 +129,14 @@ export function TimeComposer({
           )}
           {voice.isRecording ? null : (
             <View style={surfaceStyles.row}>
-              <PillButton
+              <IconButton
                 accessibilityLabel="Start voice input"
                 disabled={voice.isRecordingElsewhere}
                 icon="mic.fill"
                 testID="time-composer-mic-button"
                 onPress={() => void voice.handleVoicePress()}
               />
-              <PillButton
+              <IconButton
                 accessibilityLabel={
                   isParsing ? 'Interpreting time request' : 'Interpret time request'
                 }
@@ -188,14 +188,10 @@ function ResultSurface({
   const surfaceStyles = useComposerSurfaceStyles();
   const styles = useResultStyles();
   const reducedMotion = useReducedMotion();
-  const [showLocation, setShowLocation] = useState(false);
-
   const isSimple = !state || state.kind === 'parsing';
 
   const inner = isSimple ? (
     children
-  ) : state.kind === 'error' ? (
-    <Text color="destructive">{state.message}</Text>
   ) : state.kind === 'answer' ? (
     <Text variant="body" color="text-primary">
       {state.answer}
@@ -224,7 +220,7 @@ function ResultSurface({
         </Pressable>
       ))}
       <View style={styles.row}>
-        <PillButton
+        <IconButton
           accessibilityLabel="Cancel"
           icon="xmark"
           testID="time-event-choice-cancel"
@@ -262,7 +258,7 @@ function ResultSurface({
         </Pressable>
       ))}
       <View style={styles.row}>
-        <PillButton
+        <IconButton
           accessibilityLabel="Cancel"
           icon="xmark"
           testID="time-availability-cancel"
@@ -279,69 +275,49 @@ function ResultSurface({
         ((block.primary_intent === 'add_event' || block.primary_intent === 'add_recurring_event') &&
           !!block.start_time &&
           !!block.end_time);
-      const actionLabel =
-        block.primary_intent === 'add_task'
-          ? 'Add task'
-          : block.primary_intent === 'add_recurring_event'
-            ? 'Add recurring event'
-            : 'Add event';
+      const intentLabel = {
+        add_task: 'Task',
+        add_event: 'Event',
+        add_recurring_event: 'Recurring event',
+        edit_event: 'Edit event',
+        cancel_event: 'Cancel event',
+        search: 'Search',
+        schedule_gap_fill: 'Find time',
+      }[block.primary_intent];
+      const details = formatDraftDetails(block);
 
       return (
         <>
-          <Input
+          <Text color="text-secondary" variant="caption1">
+            {intentLabel}
+          </Text>
+          <TextField
             accessibilityLabel="Edit title"
+            autoFocus
             onChangeText={(value) => onEditField?.('title', value)}
             placeholder={t.timeResult.fieldLabels.title}
             testID="time-draft-edit-title"
             value={block.title ?? ''}
           />
-          <Input
-            accessibilityLabel="Edit duration"
-            keyboardType="number-pad"
-            onChangeText={(value) => onEditField?.('duration', value)}
-            placeholder={t.timeResult.fieldLabels.duration}
-            testID="time-draft-edit-duration"
-            value={block.duration ? String(block.duration) : ''}
-          />
-          <Collapsible visible={showLocation}>
-            <Input
-              accessibilityLabel="Edit location"
-              onChangeText={(value) => onEditField?.('location', value)}
-              placeholder={t.timeResult.fieldLabels.location}
-              testID="time-draft-edit-location"
-              value={block.location ?? ''}
-            />
-          </Collapsible>
-
-          {(block.primary_intent === 'add_event' ||
-            block.primary_intent === 'add_recurring_event') &&
-          !canSubmit ? (
-            <Text color="destructive">Choose a start and end time before adding this event.</Text>
+          {details ? (
+            <Text color="text-secondary" variant="body">
+              {details}
+            </Text>
           ) : null}
-
-          <View style={styles.row}>
-            <PillButton
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <IconButton
               accessibilityLabel="Cancel"
               icon="xmark"
               testID="time-draft-cancel"
               onPress={onCancel}
             />
-            <PillButton
-              accessibilityLabel="Toggle location"
-              icon="mappin.and.ellipse"
-              testID="time-draft-toggle-location"
-              tintColor={showLocation ? theme.colors.primary : undefined}
-              onPress={() => setShowLocation((v) => !v)}
+            <IconButton
+              accessibilityLabel="Confirm"
+              disabled={isSaving || !canSubmit}
+              icon="arrow.up"
+              testID="time-draft-submit"
+              onPress={onSubmitDraft}
             />
-            {canSubmit ? (
-              <PillButton
-                accessibilityLabel={actionLabel}
-                disabled={isSaving}
-                icon="arrow.up"
-                testID="time-draft-submit"
-                onPress={onSubmitDraft}
-              />
-            ) : null}
           </View>
         </>
       );

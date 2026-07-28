@@ -73,7 +73,7 @@ export const VoiceTasksInputSchema = z.object({
 
 export const ParseTimeBlockInputSchema = z.object({
   transcript: z.string().trim().min(1).max(20000),
-  referenceDate: z.iso.datetime().optional(),
+  referenceDate: z.iso.datetime({ offset: true }).optional(),
   timezone: z.string().optional(),
   conversationContext: z.string().max(20000).optional(),
   calendarContext: z.string().max(20000).optional(),

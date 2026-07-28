@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { makeStyles, Text, useThemeColors } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import type { WorkspaceContext } from '~/components/workspace/workspace-types';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -143,7 +143,7 @@ function WorkspaceSearch({
 
   return (
     <View style={styles.searchRow}>
-      <Input
+      <TextField
         ref={inputRef}
         autoCapitalize="none"
         autoCorrect={false}

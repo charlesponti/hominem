@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Pressable, View, type TextInput } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import {
 } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
+import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
@@ -138,7 +139,7 @@ export function TaskEditorSheet({
           <View style={styles.handle} />
 
           <View style={styles.form}>
-            <TextInput
+            <TextField
               ref={titleInputRef}
               autoFocus
               value={title}
@@ -153,7 +154,7 @@ export function TaskEditorSheet({
 
             <View style={styles.divider} />
 
-            <TextInput
+            <TextField
               multiline
               value={description ?? ''}
               onChangeText={setDescription}
@@ -307,15 +308,22 @@ const useStyles = makeStyles((theme) => ({
     height: 1,
   },
   titleInput: {
+    borderRadius: 0,
+    borderWidth: 0,
     color: theme.colors['text-primary'],
     fontSize: fontSizes.md,
+    minHeight: 0,
+    paddingHorizontal: 0,
     paddingVertical: spacing[2],
   },
   descriptionInput: {
+    borderRadius: 0,
+    borderWidth: 0,
     color: theme.colors['text-secondary'],
     fontSize: fontSizes.sm,
     maxHeight: 96,
     minHeight: 44,
+    paddingHorizontal: 0,
     paddingVertical: spacing[2],
   },
   fieldLabel: {

@@ -1,14 +1,12 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
-import { GlassView } from 'expo-glass-effect';
-import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActionSheetIOS, Alert, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { makeStyles, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
-import AppIcon from '~/components/ui/icon';
-import { Input } from '~/components/ui/input';
+import { IconButton } from '~/components/ui/icon-button';
+import { TextField } from '~/components/ui/text-field';
 import type {
   CalendarEvent,
   CalendarEventPatch,
@@ -22,74 +20,72 @@ import { useTaskUpdate } from '~/services/tasks/use-task-update';
 import { timeEventGateway } from './time-event-gateway';
 
 export type TimeBlockDetailSource = 'task' | 'event';
+type ActiveField = 'location' | 'notes' | 'people' | 'time' | 'title' | null;
 
-type EditableField = 'title' | 'location' | 'notes' | 'people' | 'time' | 'duration';
-
-function formatInterval(start: string, end: string) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  return `${startDate.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  })} · ${startDate.toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  })} – ${endDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+function formatInterval(start: Date, end: Date) {
+  return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}–${end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-function DetailRow({
+function DetailBlock({
+  children,
   label,
-  value,
   onPress,
+  testID,
 }: {
+  children: React.ReactNode;
   label: string;
-  value: string;
   onPress?: () => void;
+  testID?: string;
 }) {
   const styles = useStyles();
   const content = (
     <>
-      <Text variant="subhead" color="text-secondary">
+      <Text color="text-secondary" variant="overline">
         {label}
       </Text>
-      <View style={styles.detailValue}>
-        <Text
-          numberOfLines={label === 'Location' ? 1 : undefined}
-          variant="body"
-          color="text-primary"
-        >
-          {value}
-        </Text>
-        {onPress ? <AppIcon name="chevron.right" size={14} /> : null}
-      </View>
+      {children}
     </>
   );
 
-  return onPress ? (
-    <Pressable accessibilityLabel={`Edit ${label}`} onPress={onPress} style={styles.detailRow}>
+  return (
+    <Pressable
+      accessibilityLabel={`Edit ${label}`}
+      disabled={!onPress}
+      onPress={onPress}
+      style={({ pressed }) => [styles.detailBlock, pressed && styles.pressed]}
+      testID={testID}
+    >
       {content}
     </Pressable>
-  ) : (
-    <View style={styles.detailRow}>{content}</View>
   );
 }
 
-export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockDetailSource }) {
+export function TimeBlockDetail({
+  id,
+  source,
+  onClose,
+}: {
+  id: string;
+  source: TimeBlockDetailSource;
+  onClose: () => void;
+}) {
   const styles = useStyles();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
   const taskQuery = useTaskQuery({ taskId: id, enabled: source === 'task' });
   const { mutateAsync: updateTask, isPending: isSavingTask } = useTaskUpdate();
-  const { mutateAsync: deleteTask, isPending: isDeletingTask } = useTaskDelete();
+  const { mutateAsync: deleteTask } = useTaskDelete();
   const { mutate: toggleTask } = useTaskComplete();
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [eventError, setEventError] = useState('');
   const [isSavingEvent, setIsSavingEvent] = useState(false);
-  const [editingField, setEditingField] = useState<EditableField | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const [draftDuration, setDraftDuration] = useState('');
   const [draftStart, setDraftStart] = useState<Date | null>(null);
   const [draftEnd, setDraftEnd] = useState<Date | null>(null);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftLocation, setDraftLocation] = useState('');
+  const [draftNotes, setDraftNotes] = useState('');
+  const [draftPeople, setDraftPeople] = useState('');
+  const [activeField, setActiveField] = useState<ActiveField>(null);
+  const [isScheduling, setIsScheduling] = useState(false);
 
   const task = taskQuery.data?.task;
   const isTask = source === 'task';
@@ -103,14 +99,8 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
   const title = block?.title ?? 'Time block';
   const location = block?.location ?? null;
   const notes = isTask ? (task?.description ?? null) : (event?.notes ?? null);
-  const interval = useMemo(() => {
-    if (isTask) {
-      if (!task?.scheduledStartAt || !task.scheduledEndAt) return 'Unscheduled';
-      return formatInterval(task.scheduledStartAt, task.scheduledEndAt);
-    }
-    return event ? formatInterval(event.startDate, event.endDate) : '';
-  }, [event, isTask, task?.scheduledEndAt, task?.scheduledStartAt]);
-
+  const originalPeople =
+    taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '';
   useEffect(() => {
     if (source !== 'event') return;
     let mounted = true;
@@ -131,50 +121,76 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
     };
   }, [id, source]);
 
-  const beginEdit = useCallback(
-    (field: EditableField) => {
-      setEditingField(field);
-      if (field === 'time') {
-        const start = isTask ? task?.scheduledStartAt : event?.startDate;
-        const end = isTask ? task?.scheduledEndAt : event?.endDate;
-        const defaultStart = new Date();
-        setDraftStart(start ? new Date(start) : defaultStart);
-        setDraftEnd(end ? new Date(end) : new Date(defaultStart.getTime() + 60 * 60 * 1000));
-        return;
-      }
-      if (field === 'duration') {
-        const start = isTask ? task?.scheduledStartAt : event?.startDate;
-        const end = isTask ? task?.scheduledEndAt : event?.endDate;
-        const duration = isTask
-          ? task?.durationMinutes
-          : start && end
-            ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000)
-            : null;
-        setEditValue(duration ? String(duration) : '');
-        return;
-      }
-      setEditValue(
-        field === 'title'
-          ? title
-          : field === 'location'
-            ? (location ?? '')
-            : field === 'people'
-              ? (taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '')
-              : (notes ?? ''),
-      );
-    },
-    [
-      event?.endDate,
-      event?.startDate,
-      isTask,
-      location,
-      notes,
-      task?.scheduledEndAt,
-      task?.scheduledStartAt,
-      taskQuery.data?.participants,
-      title,
-    ],
-  );
+  useEffect(() => {
+    if (!block) return;
+    const start = isTask ? task?.scheduledStartAt : event?.startDate;
+    const end = isTask ? task?.scheduledEndAt : event?.endDate;
+    const duration = isTask
+      ? task?.durationMinutes
+      : start && end
+        ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000)
+        : null;
+    const defaultStart = new Date();
+    setDraftDuration(duration ? String(duration) : '');
+    setDraftEnd(end ? new Date(end) : new Date(defaultStart.getTime() + 60 * 60 * 1000));
+    setDraftLocation(location ?? '');
+    setDraftNotes(notes ?? '');
+    setDraftPeople(
+      taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '',
+    );
+    setDraftStart(start ? new Date(start) : defaultStart);
+    setDraftTitle(title);
+    setIsScheduling(Boolean(start && end));
+  }, [
+    block,
+    event?.endDate,
+    event?.startDate,
+    isTask,
+    location,
+    notes,
+    task?.durationMinutes,
+    task?.scheduledEndAt,
+    task?.scheduledStartAt,
+    taskQuery.data?.participants,
+    title,
+  ]);
+
+  const isDirty = useMemo(() => {
+    const start = isTask ? task?.scheduledStartAt : event?.startDate;
+    const end = isTask ? task?.scheduledEndAt : event?.endDate;
+    const duration = isTask
+      ? task?.durationMinutes
+      : start && end
+        ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000)
+        : null;
+    return (
+      draftDuration !== (duration ? String(duration) : '') ||
+      draftEnd?.toISOString() !== (end ? new Date(end).toISOString() : undefined) ||
+      draftLocation !== (location ?? '') ||
+      draftNotes !== (notes ?? '') ||
+      draftPeople !== originalPeople ||
+      draftStart?.toISOString() !== (start ? new Date(start).toISOString() : undefined) ||
+      draftTitle !== title
+    );
+  }, [
+    draftDuration,
+    draftEnd,
+    draftLocation,
+    draftNotes,
+    draftPeople,
+    draftStart,
+    draftTitle,
+    event?.endDate,
+    event?.startDate,
+    isTask,
+    location,
+    notes,
+    originalPeople,
+    task?.durationMinutes,
+    task?.scheduledEndAt,
+    task?.scheduledStartAt,
+    title,
+  ]);
 
   const withRecurrenceScope = useCallback(
     (action: (scope: CalendarRecurrenceScope) => void, onCancel?: () => void) => {
@@ -193,129 +209,85 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
 
   const saveEventPatch = useCallback(
     (patch: CalendarEventPatch) =>
-      new Promise<void>((resolve) => {
-        withRecurrenceScope((scope) => {
-          setIsSavingEvent(true);
-          void timeEventGateway
-            .updateEvent(id, patch, scope)
-            .then((updated) => {
-              setEvent(updated);
-              setEditingField(null);
-              setEventError('');
-            })
-            .catch((saveError) =>
-              setEventError(
-                saveError instanceof Error ? saveError.message : 'Unable to save this change.',
-              ),
-            )
-            .finally(() => {
-              setIsSavingEvent(false);
-              resolve();
-            });
-        }, resolve);
+      new Promise<boolean>((resolve, reject) => {
+        withRecurrenceScope(
+          (scope) => {
+            setIsSavingEvent(true);
+            void timeEventGateway
+              .updateEvent(id, patch, scope)
+              .then(() => timeEventGateway.getEvent(id))
+              .then((persistedEvent) => {
+                setEvent(persistedEvent);
+                setEventError('');
+                resolve(true);
+              })
+              .catch(reject)
+              .finally(() => {
+                setIsSavingEvent(false);
+              });
+          },
+          () => resolve(false),
+        );
       }),
     [id, withRecurrenceScope],
   );
 
-  const saveField = useCallback(async () => {
-    if (!editingField) return;
-    if (editingField === 'duration') {
-      const durationMinutes = Number(editValue);
-      if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
-        setEventError('Duration must be a positive number of minutes.');
-        return;
-      }
-      try {
-        if (isTask) {
-          await updateTask({ taskId: id, durationMinutes });
-        } else if (event) {
-          await saveEventPatch({
-            endDate: new Date(
-              new Date(event.startDate).getTime() + durationMinutes * 60_000,
-            ).toISOString(),
-          });
-          return;
-        }
-        setEditingField(null);
-        setEventError('');
-      } catch (saveError) {
-        setEventError(
-          saveError instanceof Error ? saveError.message : 'Unable to save this change.',
-        );
-      }
+  const saveChanges = useCallback(async () => {
+    if (!draftStart || !draftEnd || draftEnd <= draftStart) {
+      setEventError('End time must be after start time.');
       return;
     }
-    if (editingField === 'time') {
-      if (!draftStart || !draftEnd || draftEnd <= draftStart) {
-        setEventError('End time must be after start time.');
-        return;
-      }
-      try {
-        if (isTask) {
-          await updateTask({
-            taskId: id,
-            scheduledStartAt: draftStart.toISOString(),
-            scheduledEndAt: draftEnd.toISOString(),
-          });
-          setEditingField(null);
-        } else {
-          await saveEventPatch({
-            startDate: draftStart.toISOString(),
-            endDate: draftEnd.toISOString(),
-          });
-        }
-        setEventError('');
-      } catch (saveError) {
-        setEventError(
-          saveError instanceof Error ? saveError.message : 'Unable to save this change.',
-        );
-      }
+    const durationMinutes = draftDuration ? Number(draftDuration) : null;
+    if (durationMinutes !== null && (!Number.isInteger(durationMinutes) || durationMinutes <= 0)) {
+      setEventError('Duration must be a positive number of minutes.');
       return;
     }
-    const value = editValue.trim() || null;
     try {
       if (isTask) {
         await updateTask({
           taskId: id,
-          ...(editingField === 'title' ? { title: value ?? title } : {}),
-          ...(editingField === 'location' ? { location: value } : {}),
-          ...(editingField === 'notes' ? { description: value } : {}),
-          ...(editingField === 'people'
-            ? {
-                participants: editValue
-                  .split('\n')
-                  .map((person) => person.trim())
-                  .filter(Boolean)
-                  .map((displayName) => ({ displayName })),
-              }
-            : {}),
+          description: draftNotes.trim() || null,
+          durationMinutes,
+          location: draftLocation.trim() || null,
+          participants: draftPeople
+            .split('\n')
+            .map((person) => person.trim())
+            .filter(Boolean)
+            .map((displayName) => ({ displayName })),
+          scheduledEndAt: isScheduling ? draftEnd.toISOString() : null,
+          scheduledStartAt: isScheduling ? draftStart.toISOString() : null,
+          title: draftTitle.trim() || title,
         });
-        if (editingField === 'people') {
-          await taskQuery.refetch();
-        }
+        await taskQuery.refetch();
       } else {
-        const patch: CalendarEventPatch =
-          editingField === 'title'
-            ? { title: value ?? title }
-            : editingField === 'location'
-              ? { location: value }
-              : { notes: value };
-        await saveEventPatch(patch);
-        return;
+        const didSave = await saveEventPatch({
+          endDate: draftEnd.toISOString(),
+          location: draftLocation.trim() || null,
+          notes: draftNotes.trim() || null,
+          startDate: draftStart.toISOString(),
+          title: draftTitle.trim() || title,
+        });
+        if (!didSave) return;
       }
-      setEditingField(null);
       setEventError('');
+      setActiveField(null);
     } catch (saveError) {
       setEventError(saveError instanceof Error ? saveError.message : 'Unable to save this change.');
     }
   }, [
+    draftDuration,
     draftEnd,
+    draftLocation,
+    draftNotes,
+    draftPeople,
     draftStart,
-    editValue,
-    editingField,
+    draftTitle,
+    event,
     id,
     isTask,
+    isScheduling,
     saveEventPatch,
+    task?.scheduledEndAt,
     taskQuery,
     title,
     updateTask,
@@ -324,13 +296,13 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
   const remove = useCallback(() => {
     const confirm = () => {
       if (isTask) {
-        void deleteTask(id).then(() => router.back());
+        void deleteTask(id).then(onClose);
         return;
       }
       withRecurrenceScope((scope) => {
         void timeEventGateway
           .deleteEvent(id, scope)
-          .then(() => router.back())
+          .then(onClose)
           .catch((deleteError) =>
             setEventError(
               deleteError instanceof Error ? deleteError.message : 'Unable to delete event.',
@@ -342,18 +314,20 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: confirm },
     ]);
-  }, [deleteTask, id, isTask, router, title, withRecurrenceScope]);
+  }, [deleteTask, id, isTask, onClose, title, withRecurrenceScope]);
 
-  const goBack = useCallback(() => {
-    if (!editingField) {
-      router.back();
-      return;
-    }
-    Alert.alert('Discard changes?', 'Your unsaved changes will be lost.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
-    ]);
-  }, [editingField, router]);
+  const showActions = useCallback(() => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: 1,
+        options: ['Cancel', 'Delete'],
+      },
+      (index) => {
+        if (index === 1) remove();
+      },
+    );
+  }, [remove]);
 
   if (isLoading) {
     return (
@@ -367,7 +341,7 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
     return (
       <View style={styles.centered}>
         <Text color="destructive">{error || 'This time block is unavailable.'}</Text>
-        <Button label="Go back" onPress={() => router.back()} variant="secondary" />
+        <Button label="Close" onPress={onClose} variant="secondary" />
       </View>
     );
   }
@@ -376,42 +350,68 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
   const saving = isSavingTask || isSavingEvent;
 
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
-        <View style={styles.titleActions}>
-          {isTask ? (
-            <Button
-              label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
-              onPress={() =>
-                task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
-              }
-              size="sm"
-              variant="secondary"
-            />
+    <KeyboardAvoidingView behavior="padding" style={styles.screen} testID="time-block-editor">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+        style={styles.scroll}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerActions}>
+            {isTask ? (
+              <Button
+                label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
+                onPress={() =>
+                  task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
+                }
+                size="sm"
+                variant="ghost"
+              />
+            ) : null}
+            {!readOnlyEvent ? (
+              <IconButton accessibilityLabel="More actions" icon="ellipsis" onPress={showActions} />
+            ) : null}
+          </View>
+          <DetailBlock
+            label={isTask ? 'Task' : (event?.calendarTitle ?? 'Calendar')}
+            onPress={() => setActiveField('title')}
+            testID="time-block-edit-title"
+          >
+            {activeField === 'title' ? (
+              <TextField
+                autoFocus
+                onChangeText={setDraftTitle}
+                testID="time-block-title"
+                value={draftTitle}
+              />
+            ) : (
+              <Text variant="display">{draftTitle}</Text>
+            )}
+          </DetailBlock>
+          {isTask && task?.status === 'completed' ? (
+            <Text color="text-secondary">Completed</Text>
+          ) : null}
+          {readOnlyEvent ? (
+            <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
           ) : null}
         </View>
 
-        <Pressable
-          accessibilityLabel="Edit title"
-          disabled={readOnlyEvent}
-          onPress={() => beginEdit('title')}
-        >
-          <Text variant="title1" color="text-primary">
-            {title}
-          </Text>
-        </Pressable>
-        {isTask && task?.status === 'completed' ? (
-          <Text color="text-secondary">Completed</Text>
-        ) : null}
-        {readOnlyEvent ? (
-          <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
-        ) : null}
-
-        {editingField ? (
-          <View style={styles.editForm}>
-            {editingField === 'time' && draftStart && draftEnd ? (
-              <>
-                <Text color="text-secondary">Starts</Text>
+        <View style={styles.section}>
+          <DetailBlock
+            label="When"
+            onPress={
+              readOnlyEvent
+                ? undefined
+                : () => {
+                    if (isTask && !isScheduling) setIsScheduling(true);
+                    setActiveField('time');
+                  }
+            }
+            testID="time-block-edit-time"
+          >
+            {activeField === 'time' && draftStart && draftEnd ? (
+              <View style={styles.timeEditor}>
                 <DateTimePicker
                   display="compact"
                   mode="datetime"
@@ -419,7 +419,6 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
                   testID="time-block-start-picker"
                   value={draftStart}
                 />
-                <Text color="text-secondary">Ends</Text>
                 <DateTimePicker
                   display="compact"
                   minimumDate={draftStart}
@@ -428,123 +427,116 @@ export function TimeBlockDetail({ id, source }: { id: string; source: TimeBlockD
                   testID="time-block-end-picker"
                   value={draftEnd}
                 />
-              </>
+                <TextField
+                  keyboardType="number-pad"
+                  onChangeText={setDraftDuration}
+                  placeholder="Duration in minutes"
+                  testID="time-block-duration"
+                  value={draftDuration}
+                />
+              </View>
+            ) : draftStart && draftEnd ? (
+              <Text variant="title2">{formatInterval(draftStart, draftEnd)}</Text>
             ) : (
-              <Input
-                autoFocus
-                keyboardType={editingField === 'duration' ? 'number-pad' : 'default'}
-                multiline={editingField === 'notes'}
-                onChangeText={setEditValue}
-                placeholder={
-                  editingField === 'people' ? 'One person per line' : `Edit ${editingField}`
-                }
-                value={editValue}
-              />
+              <Text color="text-secondary">Set a time</Text>
             )}
-            <Button label="Save" loading={saving} onPress={() => void saveField()} />
-            <Button
-              label="Cancel"
-              onPress={() => setEditingField(null)}
-              size="sm"
-              variant="ghost"
-            />
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <DetailRow
-            label="Time"
-            value={interval}
-            onPress={readOnlyEvent ? undefined : () => beginEdit('time')}
-          />
-          <DetailRow
-            label="Duration"
-            value={
-              isTask
-                ? task?.durationMinutes
-                  ? `${task.durationMinutes} min`
-                  : 'Add duration'
-                : event
-                  ? `${Math.round((new Date(event.endDate).getTime() - new Date(event.startDate).getTime()) / 60_000)} min`
-                  : ''
-            }
-            onPress={readOnlyEvent ? undefined : () => beginEdit('duration')}
-          />
-          {isTask && (task?.schedulingWindowStartAt || task?.schedulingWindowEndAt) ? (
-            <DetailRow
-              label="Scheduling window"
-              value={`${task.schedulingWindowStartAt ? new Date(task.schedulingWindowStartAt).toLocaleString() : 'Any time'} – ${task.schedulingWindowEndAt ? new Date(task.schedulingWindowEndAt).toLocaleString() : 'No deadline'}`}
-            />
-          ) : null}
-          <DetailRow
+          </DetailBlock>
+          <DetailBlock
             label="Location"
-            value={location ?? 'Add location'}
-            onPress={readOnlyEvent ? undefined : () => beginEdit('location')}
-          />
-          <DetailRow
+            onPress={readOnlyEvent ? undefined : () => setActiveField('location')}
+            testID="time-block-edit-location"
+          >
+            {activeField === 'location' ? (
+              <TextField
+                autoFocus
+                onChangeText={setDraftLocation}
+                placeholder="Add location"
+                testID="time-block-location"
+                value={draftLocation}
+              />
+            ) : (
+              <Text color={draftLocation ? 'text-primary' : 'text-secondary'}>
+                {draftLocation || 'Add location'}
+              </Text>
+            )}
+          </DetailBlock>
+          <DetailBlock
             label="Notes"
-            value={notes ?? 'Add notes'}
-            onPress={readOnlyEvent ? undefined : () => beginEdit('notes')}
-          />
-          <DetailRow
-            label="Source"
-            value={isTask ? 'Omiro' : (event?.calendarTitle ?? 'iOS Calendar')}
-          />
-          {!isTask && event?.participants.length ? (
-            <DetailRow label="People" value={event.participants.join(', ')} />
-          ) : null}
+            onPress={readOnlyEvent ? undefined : () => setActiveField('notes')}
+            testID="time-block-edit-notes"
+          >
+            {activeField === 'notes' ? (
+              <TextField
+                autoFocus
+                multiline
+                onChangeText={setDraftNotes}
+                placeholder="Add notes"
+                testID="time-block-notes"
+                value={draftNotes}
+              />
+            ) : (
+              <Text color={draftNotes ? 'text-primary' : 'text-secondary'}>
+                {draftNotes || 'Add notes'}
+              </Text>
+            )}
+          </DetailBlock>
           {isTask ? (
-            <DetailRow
+            <DetailBlock
               label="People"
-              value={
-                taskQuery.data?.participants.map((person) => person.displayName).join(', ') ||
-                'Add people'
-              }
-              onPress={() => beginEdit('people')}
-            />
+              onPress={() => setActiveField('people')}
+              testID="time-block-edit-people"
+            >
+              {activeField === 'people' ? (
+                <TextField
+                  autoFocus
+                  multiline
+                  onChangeText={setDraftPeople}
+                  placeholder="One person per line"
+                  testID="time-block-people"
+                  value={draftPeople}
+                />
+              ) : (
+                <Text color={draftPeople ? 'text-primary' : 'text-secondary'}>
+                  {draftPeople || 'Add people'}
+                </Text>
+              )}
+            </DetailBlock>
+          ) : null}
+          {!isTask && event?.participants.length ? (
+            <DetailBlock label="People">
+              <Text>{event.participants.join(', ')}</Text>
+            </DetailBlock>
           ) : null}
           {!isTask && event?.recurrenceDescription ? (
-            <DetailRow label="Repeats" value="Recurring event" />
+            <DetailBlock label="Repeats">
+              <Text>Recurring event</Text>
+            </DetailBlock>
           ) : null}
         </View>
-
-        {isTask ? (
-          <Button
-            label={task?.scheduledStartAt ? 'Unschedule' : 'Schedule'}
-            loading={saving}
-            onPress={() =>
-              task?.scheduledStartAt
-                ? void updateTask({ taskId: id, scheduledStartAt: null, scheduledEndAt: null })
-                : beginEdit('time')
-            }
-            testID={task?.scheduledStartAt ? 'time-block-unschedule' : 'time-block-schedule'}
-            variant="secondary"
-          />
-        ) : null}
-        {!readOnlyEvent ? (
-          <Button label="Delete" loading={isDeletingTask} onPress={remove} variant="destructive" />
-        ) : null}
       </ScrollView>
-      <GlassView
-        glassEffectStyle="regular"
-        isInteractive
-        style={[styles.backButton, { top: insets.top + 8 }]}
-      >
-        <Pressable
-          accessibilityLabel="Back"
-          hitSlop={8}
-          onPress={goBack}
-          style={styles.backPressable}
-          testID="time-block-back"
-        >
-          <AppIcon name="chevron.left" size={18} />
-        </Pressable>
-      </GlassView>
-    </View>
+      {!readOnlyEvent && isDirty ? (
+        <View style={styles.actions}>
+          <Button
+            label="Save changes"
+            loading={saving}
+            onPress={() => void saveChanges()}
+            testID="time-block-save"
+          />
+        </View>
+      ) : null}
+    </KeyboardAvoidingView>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
+  actions: {
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors['border-default'],
+    borderTopWidth: 1,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+  },
   centered: {
     alignItems: 'center',
     flex: 1,
@@ -552,34 +544,25 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
-  backButton: {
-    borderRadius: 22,
-    left: theme.spacing.lg,
-    overflow: 'hidden',
-    position: 'absolute',
-  },
-  backPressable: {
-    alignItems: 'center',
-    height: 44,
-    justifyContent: 'center',
-    width: 44,
-  },
   content: {
     gap: theme.spacing.lg,
     padding: theme.spacing.lg,
   },
-  detailRow: {
+  detailBlock: {
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
   },
-  detailValue: {
+  header: {
+    gap: theme.spacing.md,
+  },
+  headerActions: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
     justifyContent: 'space-between',
+    minHeight: 36,
   },
-  editForm: {
-    gap: theme.spacing.sm,
+  pressed: {
+    opacity: 0.7,
   },
   section: {
     gap: theme.spacing.sm,
@@ -587,8 +570,8 @@ const useStyles = makeStyles((theme) => ({
   screen: {
     flex: 1,
   },
-  titleActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+  scroll: { flex: 1 },
+  timeEditor: {
+    gap: theme.spacing.sm,
   },
 }));

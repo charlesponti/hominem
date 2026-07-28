@@ -403,7 +403,6 @@ const t = {
       target_title: 'Event',
       participants: 'People',
       location: 'Location',
-      duration: 'Duration',
       start_time: 'Start time',
       end_time: 'End time',
       scheduling_window_start: 'Time window',

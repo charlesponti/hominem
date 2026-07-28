@@ -1,4 +1,5 @@
 import type { SFSymbol } from 'expo-symbols';
+import type { ColorValue } from 'react-native';
 import { Pressable } from 'react-native';
 
 import { componentSizes, makeStyles, useThemeColors } from '~/components/theme';
@@ -9,8 +10,8 @@ interface IconButtonProps {
   disabled?: boolean;
   icon: SFSymbol;
   onPress?: () => void;
-  pill?: boolean;
   testID?: string;
+  tintColor?: ColorValue;
 }
 
 export function IconButton({
@@ -18,8 +19,8 @@ export function IconButton({
   disabled = false,
   icon,
   onPress,
-  pill = false,
   testID,
+  tintColor,
 }: IconButtonProps) {
   const themeColors = useThemeColors();
   const styles = useStyles();
@@ -32,28 +33,25 @@ export function IconButton({
       onPress={onPress}
       testID={testID}
       style={({ pressed }) => [
-        styles.base,
-        pill && styles.pill,
+        styles.pill,
         { borderColor: themeColors['border-default'] },
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
     >
-      <AppIcon name={icon} size={componentSizes.icon} />
+      <AppIcon name={icon} size={componentSizes.icon} tintColor={tintColor} />
     </Pressable>
   );
 }
 
 const useStyles = makeStyles(() => ({
-  base: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   pill: {
     width: componentSizes.lg,
     height: componentSizes.lg,
     borderRadius: 999,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.7,

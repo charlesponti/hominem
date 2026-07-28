@@ -1,7 +1,7 @@
 import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from '@hominem/chat';
 import { getReferencedNoteLabel } from '@hominem/chat';
 import { memo, useMemo, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
 import {
@@ -16,6 +16,7 @@ import {
 import { IconButton } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
+import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
@@ -92,7 +93,7 @@ function MessageEditModal({
       <View style={styles.editBackdropInset}>
         <View style={styles.editSheet}>
           <Text style={styles.editTitle}>{t.chat.messageEdit.title}</Text>
-          <TextInput
+          <TextField
             multiline
             value={draftMessage}
             onChangeText={onChangeDraft}

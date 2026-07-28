@@ -5,6 +5,7 @@ import {
   INBOX_ROUTE,
   SETTINGS_ROUTE,
   getContentRoute,
+  getTimeBlockRoute,
 } from '~/services/navigation/routes';
 
 describe('inbox routes', () => {
@@ -18,5 +19,14 @@ describe('inbox routes', () => {
 
   it('rejects an empty content id', () => {
     expect(() => getContentRoute('chat', '')).toThrow('Content route requires an id');
+  });
+
+  it('builds canonical Time item sheet routes', () => {
+    expect(getTimeBlockRoute('task', 'task 1')).toBe(
+      '/(protected)?context=time&timeSource=task&timeId=task%201',
+    );
+    expect(getTimeBlockRoute('event', 'event-1')).toBe(
+      '/(protected)?context=time&timeSource=event&timeId=event-1',
+    );
   });
 });

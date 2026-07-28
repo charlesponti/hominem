@@ -15,7 +15,7 @@ import {
 } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
 import { getPreventScreenshots, setPreventScreenshots } from '~/hooks/use-screen-capture';
 import { useAuth } from '~/services/auth/auth-provider';
@@ -343,7 +343,7 @@ function Settings() {
           </Text>
         </View>
         <View style={styles.identityCopy}>
-          <Input
+          <TextField
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
             placeholder={t.settings.name.placeholder}

@@ -34,6 +34,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   size?: 'sm' | 'md';
+  style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
   testID?: string;
 }
@@ -67,6 +68,7 @@ export function Button({
   disabled = false,
   loading = false,
   size = 'md',
+  style,
   variant = 'primary',
   testID,
 }: ButtonProps) {
@@ -125,10 +127,11 @@ export function Button({
   const pressableStyle = useCallback(
     ({ pressed }: PressableStateCallbackType) => [
       resolvedStyles.container,
+      style,
       loading && styles.loading,
       pressed && !isInteractionDisabled && styles.pressed,
     ],
-    [isInteractionDisabled, loading, resolvedStyles.container],
+    [isInteractionDisabled, loading, resolvedStyles.container, style],
   );
 
   return (

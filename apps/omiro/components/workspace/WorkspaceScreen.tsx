@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
@@ -7,6 +7,8 @@ import { ComposerDock } from '~/components/composer/ComposerDock';
 import { InboxList, type InboxTab } from '~/components/inbox/InboxList';
 import { WorkspaceToolbar } from '~/components/navigation/WorkspaceToolbar.ios';
 import { makeStyles } from '~/components/theme';
+import type { TimeItem } from '~/components/time/time-types';
+import { TimeBlockSheet } from '~/components/time/TimeBlockSheet';
 import {
   initialTimeWorkspaceSnapshot,
   TimeWorkspace,
@@ -19,7 +21,7 @@ import {
   readInboxDraft,
   writeInboxDraft,
 } from '~/services/navigation/launch-state';
-import { SETTINGS_ROUTE } from '~/services/navigation/routes';
+import { SETTINGS_ROUTE, type TimeBlockSource } from '~/services/navigation/routes';
 import t from '~/translations';
 
 import {
@@ -32,10 +34,22 @@ interface WorkspaceScreenProps {
   isFocused: boolean;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
   const styles = useStyles();
   const router = useRouter();
-  const [activeContext, setActiveContext] = useState<WorkspaceContext>('notes');
+  const { context, timeId, timeSource } = useLocalSearchParams<{
+    context?: string;
+    timeId?: string;
+    timeSource?: TimeBlockSource;
+  }>();
+  const isTimeRoute = context === 'time';
+  const [activeContext, setActiveContext] = useState<WorkspaceContext>(
+    isTimeRoute ? 'time' : 'notes',
+  );
   const [contentSnapshots, setContentSnapshots] = useState<
     Record<InboxTab, ContentWorkspaceSnapshot>
   >({
@@ -58,6 +72,14 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
   } = useInboxStreamItems({ enabled: isContentWorkspace });
   const activeContentContext = activeContext === 'time' ? 'notes' : activeContext;
   const activeContentSnapshot = contentSnapshots[activeContentContext];
+  const timeSelection =
+    isTimeRoute && timeId && (timeSource === 'event' || (timeSource === 'task' && isUuid(timeId)))
+      ? { id: timeId, source: timeSource }
+      : null;
+
+  useEffect(() => {
+    if (isTimeRoute) setActiveContext('time');
+  }, [isTimeRoute]);
 
   useEffect(() => {
     if (isFocused) clearResumeTarget();
@@ -73,6 +95,30 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
     [activeContentContext],
   );
   const handleOpenSettings = useCallback(() => router.push(SETTINGS_ROUTE), [router]);
+  const handleContextChange = useCallback(
+    (nextContext: WorkspaceContext) => {
+      setActiveContext(nextContext);
+      if (nextContext === 'time') {
+        router.setParams({ context: 'time' });
+        return;
+      }
+      router.setParams({ context: undefined, timeId: undefined, timeSource: undefined });
+    },
+    [router],
+  );
+  const handleOpenTimeItem = useCallback(
+    (item: TimeItem) =>
+      router.setParams({
+        context: 'time',
+        timeId: item.value.id,
+        timeSource: item.kind,
+      }),
+    [router],
+  );
+  const handleDismissTimeItem = useCallback(
+    () => router.setParams({ timeId: undefined, timeSource: undefined }),
+    [router],
+  );
   const handleSearchCancel = useCallback(
     () => updateActiveContentSnapshot({ isSearching: false, searchQuery: '' }),
     [updateActiveContentSnapshot],
@@ -98,7 +144,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
         activeContext={activeContext}
         isSearching={isContentWorkspace && activeContentSnapshot.isSearching}
         showSearch={isContentWorkspace}
-        onContextChange={setActiveContext}
+        onContextChange={handleContextChange}
         onOpenSettings={handleOpenSettings}
         onSearchCancel={handleSearchCancel}
         onSearchChange={(searchQuery) => updateActiveContentSnapshot({ searchQuery })}
@@ -110,6 +156,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
       {activeContext === 'time' ? (
         <TimeWorkspace
           isFocused={isFocused}
+          onOpenItem={handleOpenTimeItem}
           snapshot={timeSnapshot}
           onSnapshotChange={setTimeSnapshot}
         />
@@ -141,6 +188,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
           </ComposerDock>
         </>
       )}
+      <TimeBlockSheet onDismiss={handleDismissTimeItem} selection={timeSelection} />
     </View>
   );
 }

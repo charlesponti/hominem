@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
 import { useTheme } from '~/components/theme';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 
 import { useComposerRootStyles, useComposerSurfaceStyles } from './composer.styles';
@@ -96,7 +96,7 @@ function ComposerContent(props: ComposerProps) {
             onDone={() => void controller.voice.handleVoicePress()}
           />
         ) : (
-          <Input
+          <TextField
             value={controller.message}
             onChangeText={controller.setMessage}
             placeholder={presentation.placeholder}

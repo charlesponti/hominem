@@ -5,7 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 
 import { makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
+import { TextField } from '~/components/ui/text-field';
 import { useAuth } from '~/services/auth/auth-provider';
 import { INBOX_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
@@ -126,7 +126,7 @@ const Onboarding = () => {
           </View>
 
           <View style={styles.formSection}>
-            <Input
+            <TextField
               value={name}
               placeholder={t.onboarding.namePlaceholder}
               placeholderTextColor={themeColors['tertiary']}

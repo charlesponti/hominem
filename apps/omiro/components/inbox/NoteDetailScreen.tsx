@@ -19,6 +19,7 @@ import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
 import { Text, makeStyles, useThemeColors } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
+import { TextField } from '~/components/ui/text-field';
 import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
@@ -371,7 +372,7 @@ function NoteEditorBody({
         }
         showsVerticalScrollIndicator={false}
       >
-        <TextInput
+        <TextField
           multiline
           value={draft.title}
           onChangeText={handleTitleChange}
@@ -397,7 +398,7 @@ function NoteEditorBody({
             <Text style={styles.previewEmpty}>{t.notes.editor.previewEmpty}</Text>
           )
         ) : (
-          <TextInput
+          <TextField
             ref={contentInputRef}
             multiline
             value={draft.content}
@@ -495,12 +496,15 @@ const useNoteStyles = makeStyles((theme) => ({
   },
   titleInput: {
     alignSelf: 'stretch',
+    borderRadius: 0,
+    borderWidth: 0,
     color: theme.colors['text-primary'],
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 34,
     marginBottom: 6,
     minHeight: 36,
+    paddingHorizontal: 0,
     paddingVertical: 0,
   },
   placeholderTitle: {
@@ -540,6 +544,8 @@ const useNoteStyles = makeStyles((theme) => ({
     marginBottom: 20,
   },
   contentInput: {
+    borderRadius: 0,
+    borderWidth: 0,
     fontSize: 17,
     lineHeight: 28,
     letterSpacing: -0.1,

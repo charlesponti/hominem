@@ -1,8 +1,8 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
-import { TimeBlockDetail, type TimeBlockDetailSource } from '~/components/time/TimeBlockDetail';
+import { getTimeBlockRoute, type TimeBlockSource } from '~/services/navigation/routes';
 
 export default function TimeBlockDetailRoute() {
-  const { id, source } = useLocalSearchParams<{ id: string; source: TimeBlockDetailSource }>();
-  return <TimeBlockDetail id={id} source={source} />;
+  const { id, source } = useLocalSearchParams<{ id: string; source: TimeBlockSource }>();
+  return <Redirect href={getTimeBlockRoute(source, id)} />;
 }

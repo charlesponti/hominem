@@ -1,0 +1,11 @@
+appId: com.pontistudios.hakumi.dev
+---
+- launchApp
+- openLink: hakumi-dev://time/event/time-fixture-editable
+- assertVisible:
+    id: time-block-editor
+- swipe:
+    start: '50%, 35%'
+    end: '50%, 95%'
+- assertVisible:
+    id: time-stream

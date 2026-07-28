@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Pressable, RefreshControl, View } from 'react-native';
 
@@ -6,7 +5,6 @@ import { StreamList } from '~/components/stream/StreamList';
 import { makeStyles, spacing, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import type { CalendarPermissionStatus } from '~/modules/on-device-ai';
-import { getTimeBlockRoute } from '~/services/navigation/routes';
 
 import type { TimeItem, TimeSection, TimeStreamRow } from './time-types';
 import { dayKey } from './time-utils';
@@ -14,12 +12,12 @@ import { TimeRow } from './TimeRow';
 
 interface TimeStreamProps {
   calendarPermission: CalendarPermissionStatus | null;
-  error: string;
   hasScheduledItems: boolean;
   isLoadingEvents: boolean;
   isWriting: boolean;
   onConnectCalendar: () => void;
   onEndReached: () => void;
+  onOpenItem: (item: TimeItem) => void;
   onRefresh: () => void;
   onScrollOffsetChange: (offset: number) => void;
   onSectionChange: (section: TimeSection) => void;
@@ -32,12 +30,12 @@ interface TimeStreamProps {
 
 export function TimeStream({
   calendarPermission,
-  error,
   hasScheduledItems,
   isLoadingEvents,
   isWriting,
   onConnectCalendar,
   onEndReached,
+  onOpenItem,
   onRefresh,
   onScrollOffsetChange,
   onSectionChange,
@@ -47,7 +45,6 @@ export function TimeStream({
   section,
   unscheduledTaskCount,
 }: TimeStreamProps) {
-  const router = useRouter();
   const styles = useStyles();
   const renderItem = useCallback(
     ({ item, index }: { item: TimeStreamRow; index: number }) => {
@@ -62,7 +59,7 @@ export function TimeStream({
       return (
         <TimeRow
           item={item}
-          onOpen={() => router.push(getTimeBlockRoute(item.kind, item.value.id))}
+          onOpen={() => onOpenItem(item)}
           onToggleTask={() => {
             if (item.kind === 'task') onToggleTask(item);
           }}
@@ -70,7 +67,7 @@ export function TimeStream({
         />
       );
     },
-    [onToggleTask, router, rows],
+    [onOpenItem, onToggleTask, rows],
   );
 
   const scheduledRows = rows.filter((row) => row.kind === 'task' || row.kind === 'event');
@@ -150,11 +147,6 @@ export function TimeStream({
             </View>
             {!hasScheduledItems && unscheduledTaskCount > 0 ? (
               <Text color="text-secondary">No scheduled time yet.</Text>
-            ) : null}
-            {error ? (
-              <Text color="destructive" testID="time-error">
-                {error}
-              </Text>
             ) : null}
           </View>
         }

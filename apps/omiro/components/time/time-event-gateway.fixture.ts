@@ -13,6 +13,19 @@ export type TimeFixtureScenario = 'authorized' | 'denied' | 'error' | 'loading' 
 const fixtureEvents: CalendarEvent[] = [
   {
     calendarTitle: 'Omiro test calendar',
+    endDate: '2026-07-26T11:00:00.000Z',
+    id: 'time-fixture-past',
+    isAllDay: false,
+    isEditable: true,
+    location: 'Studio',
+    notes: null,
+    participants: ['Avery'],
+    recurrenceDescription: null,
+    startDate: '2026-07-26T10:00:00.000Z',
+    title: 'Fixture completed planning',
+  },
+  {
+    calendarTitle: 'Omiro test calendar',
     endDate: '2026-07-28T10:00:00.000Z',
     id: 'time-fixture-editable',
     isAllDay: false,
