@@ -315,7 +315,11 @@ const chatByIdRoutes = new Hono<AppContext>()
 
         if (audioFile?.url && audioFile.mimeType) {
           await stream.writeSSE({
-            data: JSON.stringify({ type: 'audio', url: audioFile.url, mimeType: audioFile.mimeType }),
+            data: JSON.stringify({
+              type: 'audio',
+              url: audioFile.url,
+              mimeType: audioFile.mimeType,
+            }),
           });
         }
       } catch (error) {
