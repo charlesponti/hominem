@@ -60,7 +60,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInboxStreamItems({ enabled: isFocused && isContentWorkspace });
+  } = useInboxStreamItems({ enabled: isContentWorkspace });
   const activeContentContext = activeContext === 'time' ? 'notes' : activeContext;
   const activeContentSnapshot = contentSnapshots[activeContentContext];
 
@@ -122,7 +122,7 @@ export function WorkspaceScreen({ isFocused }: WorkspaceScreenProps) {
         <View style={styles.listWrap}>
           <InboxList
             contentPaddingBottom={composerHeight + 8}
-            contentPaddingTop={4}
+            contentPaddingTop={56}
             error={error}
             isFetchingNextPage={isFetchingNextPage}
             isLoading={isInitialLoading}

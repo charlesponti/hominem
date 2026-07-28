@@ -15,5 +15,7 @@ export function useTasksQuery({ enabled = true }: { enabled?: boolean } = {}) {
       return tasks;
     },
     enabled,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 }

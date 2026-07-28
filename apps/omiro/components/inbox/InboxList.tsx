@@ -1,9 +1,8 @@
-import type { ListRenderItem } from '@shopify/flash-list';
-import React, { memo, useCallback } from 'react';
-import type { RefreshControlProps } from 'react-native';
+import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
+import type { NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native';
 import { View } from 'react-native';
 
-import { StreamList } from '~/components/stream/StreamList';
 import { Text, makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import t from '~/translations';
@@ -73,7 +72,22 @@ export function InboxList({
   contentPaddingTop,
 }: InboxListProps) {
   const styles = useStyles();
+  const listRef = useRef<FlashListRef<InboxListRow>>(null);
+  const hasRestoredScrollRef = useRef(false);
   const rows = buildRows({ items });
+
+  useEffect(() => {
+    if (hasRestoredScrollRef.current || restoredScrollOffset == null || restoredScrollOffset <= 0) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({ animated: false, offset: restoredScrollOffset });
+      hasRestoredScrollRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [restoredScrollOffset]);
 
   const renderItem = useCallback<ListRenderItem<InboxListRow>>(({ item }) => {
     if (item.type === 'section') return null;
@@ -82,7 +96,7 @@ export function InboxList({
 
   if (error && items.length === 0) {
     return (
-      <View style={styles.emptyWrap}>
+      <View style={[styles.emptyWrap, styles.debugBorder]}>
         <EmptyState
           action={
             refreshControl?.props.onRefresh
@@ -101,7 +115,7 @@ export function InboxList({
 
   if (!isLoading && items.length === 0) {
     return (
-      <View style={styles.emptyWrap}>
+      <View style={[styles.emptyWrap, styles.debugBorder]}>
         <EmptyState
           imageSource={EMPTY_STATE_ASSETS[tab]}
           title={tab === 'notes' ? t.inbox.screen.emptyNotesTitle : t.inbox.empty.title}
@@ -111,31 +125,51 @@ export function InboxList({
   }
 
   return (
-    <StreamList
-      contentPaddingBottom={contentPaddingBottom ?? 16}
-      contentPaddingTop={contentPaddingTop}
-      data={rows}
-      keyExtractor={(item) => item.id}
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <Text variant="caption1" color="tertiary" style={styles.footerText}>
-            Loading more...
-          </Text>
-        ) : null
-      }
-      onEndReached={onEndReached}
-      onScrollOffsetChange={onScrollOffsetChange}
-      refreshControl={refreshControl}
-      renderItem={renderItem}
-      restoredScrollOffset={restoredScrollOffset}
-      testID="content-stream"
-    />
+    <View style={styles.container}>
+      <FlashList
+        ref={listRef}
+        contentContainerStyle={{
+          paddingBottom: contentPaddingBottom ?? 16,
+          paddingTop: contentPaddingTop,
+        }}
+        contentInsetAdjustmentBehavior="automatic"
+        data={[...rows]}
+        keyboardDismissMode="on-drag"
+        keyExtractor={(item) => item.id}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <Text variant="caption1" color="tertiary" style={styles.footerText}>
+              Loading more...
+            </Text>
+          ) : null
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.4}
+        onScroll={(event: NativeSyntheticEvent<NativeScrollEvent>) =>
+          onScrollOffsetChange?.(event.nativeEvent.contentOffset.y)
+        }
+        refreshControl={refreshControl}
+        renderItem={renderItem}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        testID="content-stream"
+      />
+    </View>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
   emptyWrap: {
     flex: 1,
+  },
+  debugBorder: {
+    borderColor: '#ff0000',
+    borderWidth: 1,
+  },
+  container: {
+    borderRadius: 12,
+    flex: 1,
+    paddingHorizontal: theme.spacing.sm,
   },
   footerText: {
     paddingVertical: theme.spacing.lg,

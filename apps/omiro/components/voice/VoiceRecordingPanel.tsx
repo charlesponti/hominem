@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Text, componentSizes, makeStyles, radii, useThemeColors } from '~/components/theme';
+import { Text, componentSizes, makeStyles } from '~/components/theme';
 import { spacing } from '~/components/theme/tokens';
 import { IconButton } from '~/components/ui/icon-button';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
@@ -28,7 +28,6 @@ export function VoiceRecordingPanel({
   doneAccessibilityLabel,
 }: VoiceRecordingPanelProps) {
   const styles = useStyles();
-  const themeColors = useThemeColors();
   const elapsed = useElapsedTimer(startedAt);
   const dotOpacity = useAnimatedStyle(() => ({
     opacity: withRepeat(
@@ -42,13 +41,8 @@ export function VoiceRecordingPanel({
     <View style={styles.container}>
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.cancelRecordingA11y}
-        circular
-        disabled={false}
         icon="xmark"
-        iconSize={componentSizes.icon}
         testID="composer-cancel-recording-button"
-        tintColor={themeColors['tertiary']}
-        variant="surface"
         onPress={onCancel}
       />
       {/* Fills the entire row between the cancel and stop buttons, mirroring the
@@ -63,12 +57,8 @@ export function VoiceRecordingPanel({
       {onDone ? (
         <IconButton
           accessibilityLabel={doneAccessibilityLabel ?? t.inboxComposer.composer.stopVoiceInputA11y}
-          circular
-          disabled={false}
           icon="stop.fill"
-        iconSize={componentSizes.icon}
-        testID="composer-stop-recording-button"
-          variant="primary"
+          testID="composer-stop-recording-button"
           onPress={onDone}
         />
       ) : null}
@@ -90,7 +80,7 @@ const useStyles = makeStyles((theme) => ({
     gap: spacing[2],
     height: componentSizes.xl,
     paddingHorizontal: spacing[3],
-    borderRadius: radii.full,
+    borderRadius: componentSizes.xl / 2,
     backgroundColor: theme.colors['card'],
   },
   dot: {

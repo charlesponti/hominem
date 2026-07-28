@@ -59,12 +59,8 @@ function ActionIconButton({
     <IconButton
       accessibilityLabel={icon}
       disabled={disabled}
-      disabledOpacity={0.35}
       icon={icon}
-      iconSize={16}
       onPress={onPress}
-      pressedOpacity={0.65}
-      tintColor={isDestructive ? themeColors.destructive : themeColors['text-secondary']}
     />
   );
 }

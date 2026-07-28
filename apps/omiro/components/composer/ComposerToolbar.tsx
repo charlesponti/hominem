@@ -1,18 +1,19 @@
+import { useCallback, useState } from 'react';
+import { ActionSheetIOS, View } from 'react-native';
 import type { SFSymbol } from 'expo-symbols';
 import Reanimated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { ComposerMedia } from '~/components/composer/ComposerMedia';
-import { componentSizes, makeStyles, spacing, useThemeColors } from '~/components/theme';
+import { CameraModal } from '~/components/media/camera-modal';
+import { useComposerContext } from '~/components/composer/ComposerContext';
 import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
-interface ComposerActionProps {
+interface ComposerToolbarProps {
   canEnhance: boolean;
   canPickMedia: boolean;
   canSubmit: boolean;
   canToggleVoice: boolean;
   hasContent: boolean;
-  isCleaningVoice: boolean;
   isEnhancing: boolean;
   isRecordingElsewhere: boolean;
   isSubmitting: boolean;
@@ -30,136 +31,96 @@ interface ComposerActionProps {
   submitTestID: string;
 }
 
-export function ComposerLeadingAction({ canPickMedia }: Pick<ComposerActionProps, 'canPickMedia'>) {
-  return (
-    <ComposerMedia
-      accessibilityLabel={t.inboxComposer.composer.addAttachmentA11y}
-      disabled={!canPickMedia}
-    />
-  );
-}
+export function ComposerToolbar(props: ComposerToolbarProps) {
+  const { pickAttachment, handleCameraCapture } = useComposerContext();
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
-export function ComposerTrailingAction({
-  canSubmit,
-  canToggleVoice,
-  hasContent,
-  isRecordingElsewhere,
-  isSubmitting,
-  isVoiceBusy,
-  onSubmit,
-  onVoicePress,
-  submitAccessibilityLabel,
-  submitTestID,
-}: Pick<
-  ComposerActionProps,
-  | 'canSubmit'
-  | 'canToggleVoice'
-  | 'hasContent'
-  | 'isRecordingElsewhere'
-  | 'isSubmitting'
-  | 'isVoiceBusy'
-  | 'onSubmit'
-  | 'onVoicePress'
-  | 'submitAccessibilityLabel'
-  | 'submitTestID'
->) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
-  const tintColor = themeColors['primary-foreground'];
-
-  return hasContent ? (
-    <IconButton
-      accessibilityLabel={
-        submitAccessibilityLabel ??
-        (isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
-      }
-      circular
-      disabled={!canSubmit}
-      icon="arrow.up"
-      iconSize={componentSizes.icon}
-      isAnimating={isSubmitting}
-      style={styles.primary}
-      testID={submitTestID}
-      tintColor={tintColor}
-      variant="surface"
-      onPress={onSubmit}
-    />
-  ) : (
-    <IconButton
-      accessibilityLabel={
-        isRecordingElsewhere
-          ? t.inboxComposer.composer.recordingElsewhereA11y
-          : t.inboxComposer.composer.startVoiceInputA11y
-      }
-      circular
-      disabled={!canToggleVoice}
-      icon="mic.fill"
-      iconSize={componentSizes.icon}
-      isAnimating={isVoiceBusy}
-      testID="composer-mic-button"
-      variant="ghost"
-      onPress={onVoicePress}
-    />
-  );
-}
-
-export function ComposerSecondaryActions({
-  canEnhance,
-  hasContent,
-  isCleaningVoice,
-  isEnhancing,
-  onEnhancePress,
-  secondaryAction,
-}: Pick<
-  ComposerActionProps,
-  | 'canEnhance'
-  | 'hasContent'
-  | 'isCleaningVoice'
-  | 'isEnhancing'
-  | 'onEnhancePress'
-  | 'secondaryAction'
->) {
-  const styles = useStyles();
-  if (!hasContent) return null;
+  const showMenu = useCallback(() => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: [
+          t.chat.input.actionSheet.cancel,
+          t.chat.input.actionSheet.takePhoto,
+          t.chat.input.actionSheet.chooseFromLibrary,
+        ],
+        cancelButtonIndex: 0,
+      },
+      (i) => {
+        if (i === 1) setIsCameraOpen(true);
+        else if (i === 2) void pickAttachment();
+      },
+    );
+  }, [pickAttachment]);
 
   return (
-    <Reanimated.View
-      entering={FadeIn.duration(150)}
-      exiting={FadeOut.duration(120)}
-      style={styles.secondary}
-      testID="composer-secondary-actions"
-    >
-      <IconButton
-        accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
-        circular
-        disabled={!canEnhance}
-        icon="wand.and.sparkles"
-        iconSize={componentSizes.icon}
-        isAnimating={isEnhancing || isCleaningVoice}
-        variant="surface"
-        onPress={onEnhancePress}
-      />
-      {secondaryAction ? (
+    <>
+      <Reanimated.View
+        entering={FadeIn.duration(150)}
+        exiting={FadeOut.duration(120)}
+        testID="composer-secondary-actions"
+        style={{ borderColor: 'purple', borderWidth: 2, flexDirection: 'row', gap: 8 }}
+      >
+        <View style={{ flex: 1 }} />
         <IconButton
-          accessibilityLabel={secondaryAction.accessibilityLabel}
-          circular
-          icon={secondaryAction.icon}
-          iconSize={componentSizes.icon}
-          testID={secondaryAction.testID}
-          variant="surface"
-          onPress={secondaryAction.onPress}
+          accessibilityLabel={t.inboxComposer.composer.addAttachmentA11y}
+          disabled={!props.canPickMedia}
+          icon="paperclip"
+          pill
+          testID="composer-attach-button"
+          onPress={showMenu}
         />
-      ) : null}
-    </Reanimated.View>
+        {props.hasContent ? (
+          <IconButton
+            accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
+            disabled={!props.canEnhance}
+            icon="wand.and.sparkles"
+            pill
+            onPress={props.onEnhancePress}
+          />
+        ) : null}
+        {props.secondaryAction && props.hasContent ? (
+          <IconButton
+            accessibilityLabel={props.secondaryAction.accessibilityLabel}
+            icon={props.secondaryAction.icon}
+            pill
+            testID={props.secondaryAction.testID}
+            onPress={props.secondaryAction.onPress}
+          />
+        ) : null}
+        {props.hasContent ? (
+          <IconButton
+            accessibilityLabel={
+              props.submitAccessibilityLabel ??
+              (props.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
+            }
+            disabled={!props.canSubmit}
+            icon="arrow.up"
+            pill
+            testID={props.submitTestID}
+            onPress={props.onSubmit}
+          />
+        ) : (
+          <IconButton
+            accessibilityLabel={
+              props.isRecordingElsewhere
+                ? t.inboxComposer.composer.recordingElsewhereA11y
+                : t.inboxComposer.composer.startVoiceInputA11y
+            }
+            disabled={!props.canToggleVoice}
+            icon="mic.fill"
+            pill
+            testID="composer-mic-button"
+            onPress={props.onVoicePress}
+          />
+        )}
+      </Reanimated.View>
+      <CameraModal
+        visible={isCameraOpen}
+        onCapture={(photo) => {
+          void handleCameraCapture(photo).finally(() => setIsCameraOpen(false));
+        }}
+        onClose={() => setIsCameraOpen(false)}
+      />
+    </>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  primary: { backgroundColor: theme.colors.primary },
-  secondary: {
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-}));

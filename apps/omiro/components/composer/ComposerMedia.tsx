@@ -3,8 +3,6 @@ import { ActionSheetIOS } from 'react-native';
 
 import { useComposerContext } from '~/components/composer/ComposerContext';
 import { CameraModal } from '~/components/media/camera-modal';
-import { componentSizes } from '~/components/theme';
-import { spacing } from '~/components/theme/tokens';
 import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
@@ -38,14 +36,9 @@ export function ComposerMedia({ accessibilityLabel, disabled = false }: Composer
     <>
       <IconButton
         accessibilityLabel={accessibilityLabel}
-        icon="plus"
-        iconSize={componentSizes.icon}
-        variant="ghost"
-        circular
         disabled={disabled}
-        disabledOpacity={0.4}
-        pressedOpacity={0.65}
-        hitSlop={spacing[2]}
+        icon="paperclip"
+        pill
         testID="composer-attach-button"
         onPress={showPlusMenu}
       />

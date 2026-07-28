@@ -1,10 +1,10 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import type { TextInput } from 'react-native';
+import type { TextInputRef } from '@expo/ui';
 
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { ComposerSurface } from '~/components/composer/ComposerSurface';
 import { ComposerTextField } from '~/components/composer/ComposerTextField';
-import { makeStyles, useThemeColors } from '~/components/theme';
+import { useThemeColors } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { IconButton } from '~/components/ui/icon-button';
 
@@ -27,9 +27,8 @@ export function TimeComposer({
   state,
   value,
 }: TimeComposerProps) {
-  const styles = useStyles();
   const themeColors = useThemeColors();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputRef>(null);
   const [isFocused, setIsFocused] = useState(false);
   const canSubmit = value.trim().length > 0;
 
@@ -42,31 +41,27 @@ export function TimeComposer({
       {children}
       <ComposerSurface
         focused={isFocused}
-        leading={<AppIcon name="sparkles" size={22} tintColor={themeColors['text-primary']} />}
         testID="time-composer"
-        trailing={
-          canSubmit || state === 'parsing' ? (
-            <IconButton
-              accessibilityLabel={
-                state === 'parsing' ? 'Interpreting time request' : 'Interpret time request'
-              }
-              circular
-              disabled={disabled || !canSubmit}
-              icon="arrow.up"
-              isAnimating={state === 'parsing'}
-              style={styles.submit}
-              testID="time-composer-submit"
-              tintColor={themeColors['primary-foreground']}
-              variant="surface"
-              onPress={onSubmit}
-            />
-          ) : null
+        actions={
+          <>
+            <AppIcon name="sparkles" size={22} tintColor={themeColors['text-primary']} />
+            {canSubmit || state === 'parsing' ? (
+              <IconButton
+                accessibilityLabel={
+                  state === 'parsing' ? 'Interpreting time request' : 'Interpret time request'
+                }
+                disabled={disabled || !canSubmit}
+                icon="arrow.up"
+                testID="time-composer-submit"
+                onPress={onSubmit}
+              />
+            ) : null}
+          </>
         }
       >
         <ComposerTextField
-          accessibilityLabel="Add or search time"
           disabled={disabled}
-          inputRef={inputRef}
+          ref={inputRef}
           onBlur={() => setIsFocused(false)}
           onChangeText={onChangeText}
           onFocus={() => setIsFocused(true)}
@@ -81,7 +76,3 @@ export function TimeComposer({
     </ComposerDock>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  submit: { backgroundColor: theme.colors.primary },
-}));

@@ -8,10 +8,8 @@ appId: com.pontistudios.hakumi.dev
     timeout: 3000
 - assertVisible:
     id: 'inbox-item-note'
-- assertVisible:
-    id: 'inbox-item-note-actions'
-- tapOn:
-    id: 'inbox-item-note-actions'
+- longPressOn:
+    id: 'inbox-item-note'
     index: 0
 - assertVisible: 'Delete'
 - takeScreenshot: /tmp/omiro_inbox_note_actions_menu

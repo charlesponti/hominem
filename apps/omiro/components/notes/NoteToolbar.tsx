@@ -26,9 +26,7 @@ function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButton
     <IconButton
       accessibilityLabel={label}
       disabled={disabled}
-      hitSlop={6}
       icon={icon}
-      iconSize={17}
       onPress={onPress}
     />
   );

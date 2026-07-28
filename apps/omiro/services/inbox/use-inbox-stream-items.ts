@@ -48,6 +48,8 @@ export function useInboxStreamItems({ enabled = true }: UseInboxStreamItemsOptio
       return indexInboxPage(queryClient, page);
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     staleTime: INBOX_STREAM_STALE_TIME_MS,
     enabled,
   });

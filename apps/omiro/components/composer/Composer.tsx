@@ -1,5 +1,4 @@
-import React, { useCallback, useRef } from 'react';
-import { TextInput } from 'react-native';
+import React, { useCallback } from 'react';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
@@ -9,12 +8,10 @@ import type { ComposerProps, ComposerSubmitKind } from './composer.types';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
 import { ComposerShell } from './ComposerShell';
+import { ComposerTextField } from './ComposerTextField';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
-import { ComposerTextInput } from './ComposerTextInput';
 import {
-  ComposerLeadingAction,
-  ComposerSecondaryActions,
-  ComposerTrailingAction,
+  ComposerToolbar,
 } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
@@ -32,7 +29,6 @@ export function Composer(props: ComposerProps) {
 
 function ComposerContent(props: ComposerProps) {
   const submission = useComposerSubmission(props);
-  const inputRef = useRef<TextInput>(null);
   const controller = useComposerController({
     initialMessage: submission.initialMessage,
     isSubmitting: submission.isSubmitting,
@@ -103,8 +99,7 @@ function ComposerContent(props: ComposerProps) {
         ) : undefined
       }
       input={
-        <ComposerTextInput
-          inputRef={inputRef}
+        <ComposerTextField
           value={controller.message}
           onChangeText={controller.setMessage}
           placeholder={presentation.placeholder}
@@ -113,29 +108,23 @@ function ComposerContent(props: ComposerProps) {
           onBlur={controller.handleInputBlur}
         />
       }
-      leading={<ComposerLeadingAction canPickMedia={controller.canPickMedia} />}
-      trailing={
-        <ComposerTrailingAction
+      actions={
+        <ComposerToolbar
+          canEnhance={controller.canOpenEnhance}
+          canPickMedia={controller.canPickMedia}
           canSubmit={controller.canSubmit}
           canToggleVoice={controller.canToggleVoice}
           hasContent={controller.hasContent}
+          isEnhancing={controller.enhance.isEnhancing}
           isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-          isVoiceBusy={controller.voice.isBusy}
           isSubmitting={submission.isSubmitting}
+          isVoiceBusy={controller.voice.isBusy}
+          onEnhancePress={controller.enhance.toggleEnhance}
           onSubmit={() => submit(presentation.primarySubmitKind)}
           onVoicePress={() => void controller.voice.handleVoicePress()}
-          submitTestID={presentation.submitTestID}
-          submitAccessibilityLabel={presentation.submitAccessibilityLabel}
-        />
-      }
-      secondaryActions={
-        <ComposerSecondaryActions
-          canEnhance={controller.canOpenEnhance}
-          hasContent={controller.hasContent}
-          isCleaningVoice={controller.voice.isCleaningVoice}
-          isEnhancing={controller.enhance.isEnhancing}
-          onEnhancePress={controller.enhance.toggleEnhance}
           secondaryAction={secondaryAction}
+          submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+          submitTestID={presentation.submitTestID}
         />
       }
     />

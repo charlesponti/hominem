@@ -1,18 +1,16 @@
 import { Image } from 'expo-image';
-import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
 import { fontSizes, lineHeights, makeStyles, useThemeColors } from '~/components/theme';
 import { createLayoutTransition } from '~/components/theme/animations';
-import { radii, spacing } from '~/components/theme/tokens';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
 
-const THUMB_SIZE = spacing[4] * 3;
-const BADGE_SIZE = spacing[2] * 2;
+const THUMB_SIZE = 48;
+const BADGE_SIZE = 16;
 
 export function ComposerAttachmentRow() {
   const { attachments, errors, isUploading, progressByAssetId, onRemove } =
@@ -26,11 +24,7 @@ export function ComposerAttachmentRow() {
   return (
     <Animated.View layout={createLayoutTransition(prefersReducedMotion)}>
       {attachments.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {attachments.map((a) => {
             const progress = progressByAssetId[a.id] ?? 0;
             const uploading = progress > 0 && progress < 100;
@@ -43,7 +37,11 @@ export function ComposerAttachmentRow() {
                 accessibilityRole="button"
               >
                 {a.localUri && (
-                  <Image source={{ uri: a.localUri }} style={styles.thumbImage} contentFit="cover" />
+                  <Image
+                    source={{ uri: a.localUri }}
+                    style={styles.thumbImage}
+                    contentFit="cover"
+                  />
                 )}
                 <View style={styles.thumbBadge} pointerEvents="none">
                   <AppIcon
@@ -73,14 +71,9 @@ export function ComposerAttachmentRow() {
 }
 
 const useStyles = makeStyles((theme) => ({
-  row: {
-    gap: spacing[2],
-    paddingBottom: spacing[1],
-  },
   thumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: radii.md,
     borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: theme.colors['card'],
@@ -91,11 +84,10 @@ const useStyles = makeStyles((theme) => ({
   },
   thumbBadge: {
     position: 'absolute',
-    top: spacing[1],
-    right: spacing[1],
+    top: 4,
+    right: 4,
     width: BADGE_SIZE,
     height: BADGE_SIZE,
-    borderRadius: radii.sm,
     backgroundColor: theme.colors['overlay-scrim'],
     alignItems: 'center',
     justifyContent: 'center',
@@ -113,7 +105,7 @@ const useStyles = makeStyles((theme) => ({
     bottom: 0,
     left: 0,
     right: 0,
-    height: spacing[1],
+    height: 4,
     backgroundColor: theme.colors['overlay-scrim'],
   },
   progressFill: {

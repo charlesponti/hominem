@@ -73,9 +73,7 @@ export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowPro
           <IconButton
             accessibilityLabel={completed ? 'Mark task incomplete' : 'Mark task complete'}
             icon={completed ? 'checkmark.circle.fill' : 'circle'}
-            iconSize={20}
             testID={`time-item-task-${item.value.id}-toggle`}
-            tintColor={completed ? themeColors.success : themeColors.tertiary}
             onPress={onToggleTask}
           />
         ) : null}

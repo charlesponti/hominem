@@ -25,6 +25,7 @@ export const useArchivedChats = ({ enabled = true }: UseArchivedChatsOptions = {
       return archivedChats.map((chat) => chat.id);
     },
     enabled,
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: ARCHIVED_CHATS_STALE_TIME_MS,
   });
