@@ -16,6 +16,8 @@ export const themeSpacing = {
   xl: tokenSpacing[6],
 } as const;
 
+export const SCREEN_MARGIN_HORIZONTAL = 4;
+
 const borderRadii = {
   sm: radii.sm,
   md: radii.md,
@@ -31,6 +33,16 @@ export const componentSizes = {
   icon: 20,
 } as const;
 
+const streamItem = {
+  borderRadius: borderRadii.md,
+  borderWidth: 1,
+  gap: tokenSpacing[2],
+  iconSize: componentSizes.md,
+  minHeight: 50,
+  paddingHorizontal: tokenSpacing[2],
+  paddingVertical: tokenSpacing[1],
+} as const;
+
 export const typography = {
   families: fontFamiliesNative,
   sizes: fontSizes,
@@ -44,6 +56,7 @@ export const createTheme = (colors: ColorTheme) =>
     spacing: themeSpacing,
     borderRadii,
     componentSizes,
+    streamItem,
     typography,
   }) as const;
 

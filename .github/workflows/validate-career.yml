@@ -55,6 +55,7 @@ jobs:
       RESEND_FROM_EMAIL: 'test@example.com'
       RESEND_FROM_NAME: 'Test Sender'
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5434/app-test
+      BETTER_AUTH_SECRET: 'ci-test-better-auth-secret'
 
     strategy:
       matrix:

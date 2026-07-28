@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { KeyboardStickyView } from '~/components/ui/keyboard-sticky-view';
 
 interface ComposerDockProps {
   children: ReactNode;

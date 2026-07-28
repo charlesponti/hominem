@@ -19,6 +19,22 @@ on:
       - '.github/actions/setup-pnpm-workspace/**'
       - '.github/workflows/validate-api.yml'
   pull_request:
+    branches: [main]
+    paths:
+      - 'services/api/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - '.dockerignore'
+      - 'turbo.json'
+      - 'tsconfig.json'
+      - 'tsconfig.profiles/**'
+      - 'justfile'
+      - 'scripts/**'
+      - '.github/actions/setup-pnpm-workspace/**'
+      - '.github/workflows/validate-api.yml'
 
 concurrency:
   group: validate-api-${{ github.head_ref || github.ref }}

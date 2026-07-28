@@ -4,7 +4,7 @@ import React from 'react';
 import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
-import { makeStyles } from '~/components/theme';
+import { makeStyles, SCREEN_MARGIN_HORIZONTAL } from '~/components/theme';
 import { IconButton } from '~/components/ui/icon-button';
 import t from '~/translations';
 
@@ -154,7 +154,7 @@ const useToolbarStyles = makeStyles((theme) => ({
     borderRadius: 12,
     flexDirection: 'row',
     height: 48,
-    marginHorizontal: 8,
+    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
     overflow: 'hidden',
   },
   scroll: {
@@ -173,7 +173,7 @@ const useToolbarStyles = makeStyles((theme) => ({
   divider: {
     backgroundColor: theme.colors['border-default'],
     height: 20,
-    marginHorizontal: theme.spacing.sm,
+    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
     width: 1,
   },
 }));

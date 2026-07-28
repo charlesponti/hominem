@@ -1,10 +1,10 @@
 import { Host } from '@expo/ui';
-import { Button, ContextMenu, HStack, Spacer } from '@expo/ui/swift-ui';
-import { buttonStyle, disabled as disabledModifier, frame } from '@expo/ui/swift-ui/modifiers';
+import { Button, ContextMenu } from '@expo/ui/swift-ui';
 import { useRouter } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
+import { StreamItem } from '~/components/stream/StreamItem';
 import { makeStyles } from '~/components/theme';
 import { useChatArchive } from '~/services/chat/use-chat-archive';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
@@ -54,6 +54,7 @@ export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
         onArchive={handleArchive}
         onDelete={handleDelete}
         onOpen={() => router.push(item.route)}
+        preview={isChat || !titleText ? null : previewText}
         title={primaryText}
       />
     </View>
@@ -73,32 +74,34 @@ interface InboxItemRowProps {
   onArchive: () => void;
   onDelete: () => void;
   onOpen: () => void;
+  preview: string | null;
   title: string;
 }
 
-function InboxItemRow({ disabled, isChat, onArchive, onDelete, onOpen, title }: InboxItemRowProps) {
+function InboxItemRow({
+  disabled,
+  isChat,
+  onArchive,
+  onDelete,
+  onOpen,
+  preview,
+  title,
+}: InboxItemRowProps) {
   const styles = useStyles();
 
   return (
     <Host style={styles.host}>
       <ContextMenu>
         <ContextMenu.Trigger>
-          <HStack
-            alignment="center"
-            modifiers={[frame({ height: 56, maxWidth: Infinity })]}
-            spacing={0}
-          >
-            <Button
-              label={title}
-              modifiers={[
-                buttonStyle('plain'),
-                frame({ alignment: 'leading', maxWidth: Infinity, minHeight: 56 }),
-                ...(disabled ? [disabledModifier()] : []),
-              ]}
+          <View pointerEvents={disabled ? 'none' : 'auto'}>
+            <StreamItem
+              accessibilityLabel={title}
               onPress={onOpen}
+              supportingText={preview}
+              testID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
+              title={title}
             />
-            <Spacer />
-          </HStack>
+          </View>
         </ContextMenu.Trigger>
         <ContextMenu.Items>
           <Button label="Open" onPress={onOpen} />
@@ -115,7 +118,7 @@ function InboxItemRow({ disabled, isChat, onArchive, onDelete, onOpen, title }: 
 
 const useStyles = makeStyles(() => ({
   host: {
-    minHeight: 56,
+    minHeight: 50,
     width: '100%',
   },
 }));

@@ -9,6 +9,7 @@ import {
   fontSizes,
   makeStyles,
   radii,
+  SCREEN_MARGIN_HORIZONTAL,
   spacing,
   useThemeColors,
 } from '~/components/theme';
@@ -171,7 +172,7 @@ const useStyles = makeStyles(() => ({
   usageTrack: {
     borderRadius: 4,
     height: 4,
-    marginHorizontal: 16,
+    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
     overflow: 'hidden',
   },
 }));

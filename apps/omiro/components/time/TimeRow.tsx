@@ -1,6 +1,7 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
-import { makeStyles, spacing, Text, useThemeColors } from '~/components/theme';
+import { StreamItem } from '~/components/stream/StreamItem';
+import { makeStyles, Text, useThemeColors } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { IconButton } from '~/components/ui/icon-button';
 
@@ -38,83 +39,45 @@ export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowPro
           </Text>
         </View>
       ) : null}
-      <View style={styles.row} testID={`time-item-${item.kind}-${item.value.id}`}>
-        <View style={styles.icon}>
+      <StreamItem
+        accessibilityLabel={item.value.title}
+        actionTestID={`time-item-${item.kind}-${item.value.id}-open`}
+        eyebrow={isTask ? formatTaskTime(item.value) : formatEventTime(item.value)}
+        leading={
           <AppIcon
             name={isTask ? (completed ? 'checkmark.circle.fill' : 'circle') : 'calendar'}
             size={24}
             tintColor={isTask ? themeColors.success : themeColors.primary}
           />
-        </View>
-        <Pressable
-          accessibilityLabel={item.value.title}
-          accessibilityRole="button"
-          onPress={onOpen}
-          style={styles.copy}
-          testID={`time-item-${item.kind}-${item.value.id}-open`}
-        >
-          <Text variant="caption2" color="text-secondary" style={styles.eyebrow}>
-            {isTask ? formatTaskTime(item.value) : formatEventTime(item.value)}
-          </Text>
-          <Text
-            variant="body"
-            color={completed ? 'tertiary' : 'text-primary'}
-            style={completed ? styles.completedTitle : undefined}
-          >
-            {item.value.title}
-          </Text>
-          {supportingText ? (
-            <Text ellipsizeMode="tail" numberOfLines={1} variant="caption1" color="text-secondary">
-              {supportingText}
-            </Text>
-          ) : null}
-        </Pressable>
-        {isTask ? (
-          <IconButton
-            accessibilityLabel={completed ? 'Mark task incomplete' : 'Mark task complete'}
-            icon={completed ? 'checkmark.circle.fill' : 'circle'}
-            testID={`time-item-task-${item.value.id}-toggle`}
-            onPress={onToggleTask}
-          />
-        ) : null}
-      </View>
+        }
+        onPress={onOpen}
+        supportingText={supportingText}
+        testID={`time-item-${item.kind}-${item.value.id}`}
+        title={item.value.title}
+        titleStyle={completed ? styles.completedTitle : undefined}
+        trailing={
+          isTask ? (
+            <IconButton
+              accessibilityLabel={completed ? 'Mark task incomplete' : 'Mark task complete'}
+              icon={completed ? 'checkmark.circle.fill' : 'circle'}
+              testID={`time-item-task-${item.value.id}-toggle`}
+              onPress={onToggleTask}
+            />
+          ) : null
+        }
+      />
     </View>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
   completedTitle: { textDecorationLine: 'line-through' },
-  copy: {
-    flex: 1,
-    gap: spacing[1],
-    minWidth: 0,
-  },
   dayHeader: {
     alignItems: 'baseline',
     flexDirection: 'row',
-    gap: spacing[2],
-    paddingBottom: spacing[2],
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
-  },
-  eyebrow: { letterSpacing: 0.2 },
-  icon: {
-    alignItems: 'center',
-    height: 24,
-    justifyContent: 'center',
-    width: 24,
-  },
-  row: {
-    alignItems: 'center',
-    borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[2],
-    minHeight: 72,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
+    gap: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
   },
 }));
