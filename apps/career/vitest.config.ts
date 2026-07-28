@@ -2,12 +2,15 @@ import 'dotenv/config'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
+const testDatabaseUrl = 'postgresql://postgres:postgres@127.0.0.1:5434/app-test'
+
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
   test: {
     env: {
+      DATABASE_URL: testDatabaseUrl,
       NODE_ENV: 'test',
     },
     globals: true,

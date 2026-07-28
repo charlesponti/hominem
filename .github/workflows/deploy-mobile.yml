@@ -1,4 +1,4 @@
-name: mobile-release-candidate
+name: deploy-mobile
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
         type: string
 
 concurrency:
-  group: mobile-release-candidate
+  group: deploy-mobile
   cancel-in-progress: false
 
 permissions:
@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   release-candidate:
-    name: Build and submit TestFlight candidate
+    name: release
     runs-on: ubuntu-latest
     environment: omiro-testflight
     timeout-minutes: 90

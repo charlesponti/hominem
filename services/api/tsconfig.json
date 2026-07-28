@@ -2,12 +2,14 @@
   "extends": "../../tsconfig.profiles/service.json",
   "compilerOptions": {
     "composite": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "build", ".turbo", ".cache", "coverage", "*.tsbuildinfo"]
   // Deliberately NOT wired into the composite project-reference graph:
   // rpc/app.ts's `typeof rpcApp` inference re-exports types from these
