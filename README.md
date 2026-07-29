@@ -42,11 +42,6 @@ changing a system boundary. Package READMEs are setup entrypoints only.
 
 - [Design](./docs/design.md)
 
-The reusable mobile starter extracted from Omiro now lives in the standalone
-`/Users/charlesponti/Developer/ponti-mobile-starter` repo. Hominem continues to own the
-production Omiro app, while `ponti-mobile-starter` owns the reusable mobile shell,
-theming, auth seams, and starter contract for future experiments.
-
 ## Architecture
 
 ```text
@@ -59,13 +54,13 @@ The default direction is from apps into shared packages, and from shared package
 
 ## Ponti UI package
 
-`@ponti-studios/ui` is installed from GitHub Packages, not copied into this repository. Before installing dependencies outside GitHub Actions, configure a user-level credential with a token that has `read:packages` access to the `ponti-studios` organization:
+`@ponti-studios/ui` is the published Ponti Studios UI package. Install it from npm; do not copy its source into this repository.
 
 ```bash
-pnpm config set --location=user //npm.pkg.github.com/:_authToken "$NODE_AUTH_TOKEN"
+@ponti-studios:registry=https://registry.npmjs.org
 ```
 
-After the initial package publication, grant this repository Actions read access in the package's **Package settings → Manage Actions access**. Railway builds also need the same read-only token configured in their user-level npm configuration; do not put it in this repository's `.npmrc`.
+Consumers that need authentication should configure an npm token outside the committed project `.npmrc`.
 
 ## Golden Path
 
