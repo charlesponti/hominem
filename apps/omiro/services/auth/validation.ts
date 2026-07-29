@@ -3,4 +3,4 @@ export {
   isValidOtp,
   normalizeEmail,
   normalizeOtp,
-} from '@hominem/auth/shared/validation';
+} from '@ponti-studios/auth/shared/validation';

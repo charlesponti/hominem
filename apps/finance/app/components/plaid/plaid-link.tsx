@@ -1,4 +1,4 @@
-import { useAuthContext } from '@hominem/auth/client/provider';
+import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { Alert, AlertDescription, AlertTitle } from '@ponti-studios/ui/feedback';
 import { Button } from '@ponti-studios/ui/primitives';
 import {

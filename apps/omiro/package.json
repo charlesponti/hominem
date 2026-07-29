@@ -34,7 +34,7 @@
     "@expo/metro-runtime": "~57.0.7",
     "@expo/ui": "~57.0.7",
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@hominem/auth": "workspace:*",
+    "@ponti-studios/auth": "workspace:*",
     "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/rpc": "workspace:*",

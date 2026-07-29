@@ -1,4 +1,4 @@
-import { AuthProvider } from '@hominem/auth/client/provider';
+import { AuthProvider } from '@ponti-studios/auth/client/provider';
 import { Button, buttonVariants, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { colorThemes } from '@ponti-studios/ui/tokens';
 import type React from 'react';

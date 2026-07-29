@@ -1,4 +1,4 @@
-import { useAuthContext } from '@hominem/auth/client/provider';
+import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { useApiClient } from '@hominem/rpc/react';
 import {
   AlertDialog,

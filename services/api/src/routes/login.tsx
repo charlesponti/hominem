@@ -1,4 +1,4 @@
-import { resolveOAuthResumeUrl } from '@hominem/auth/shared/redirect-policy';
+import { resolveOAuthResumeUrl } from '@ponti-studios/auth/shared/redirect-policy';
 import { Hono } from 'hono';
 import { z } from 'zod';
 

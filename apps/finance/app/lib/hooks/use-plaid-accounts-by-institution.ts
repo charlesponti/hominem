@@ -1,4 +1,4 @@
-import { useAuthContext } from '@hominem/auth/client/provider';
+import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { useApiClient } from '@ponti-studios/ui/hooks';
 import { useQuery } from '@tanstack/react-query';
 

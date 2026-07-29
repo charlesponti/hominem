@@ -1,5 +1,5 @@
-import { useEmailAuth } from '@hominem/auth/client/provider';
-import { maskEmail } from '@hominem/auth/shared/mask-email';
+import { useEmailAuth } from '@ponti-studios/auth/client/provider';
+import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';

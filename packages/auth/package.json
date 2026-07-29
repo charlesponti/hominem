@@ -1,5 +1,5 @@
 {
-  "name": "@hominem/auth",
+  "name": "@ponti-studios/auth",
   "version": "0.0.0",
   "description": "Unified authentication package for Hominem apps (web, mobile, CLI)",
   "type": "module",

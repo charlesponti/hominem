@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 import type { PortfolioRecord } from '@hominem/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

@@ -1,4 +1,4 @@
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 import { useCallback } from 'react';
 
 import { authClient } from '~/services/auth/auth-client';

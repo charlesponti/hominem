@@ -1,4 +1,4 @@
-import { normalizeEmail } from '@hominem/auth/shared/validation';
+import { normalizeEmail } from '@ponti-studios/auth/shared/validation';
 
 import { API_BASE_URL, APP_ENV, RELEASE_CHANNEL } from '~/constants';
 import { posthog } from '~/services/posthog';

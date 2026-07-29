@@ -1,4 +1,4 @@
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 import { logger, LOG_MESSAGES } from '@hominem/telemetry';
 import { z } from 'zod';
 

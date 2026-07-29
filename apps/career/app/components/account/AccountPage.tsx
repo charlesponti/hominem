@@ -1,4 +1,4 @@
-import { useAuthClient } from '@hominem/auth/client/provider';
+import { useAuthClient } from '@ponti-studios/auth/client/provider';
 import { useState } from 'react';
 import { useNavigate, useRevalidator } from 'react-router';
 

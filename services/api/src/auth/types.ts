@@ -1,4 +1,4 @@
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 
 export type AuthCredential = 'session' | 'mcp-oauth';
 export type AuthUser = User & { isAdmin?: boolean };

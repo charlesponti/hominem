@@ -1,5 +1,5 @@
-import { getServerAuth as sharedGetServerAuth } from '@hominem/auth/server';
-import type { User } from '@hominem/auth/types';
+import { getServerAuth as sharedGetServerAuth } from '@ponti-studios/auth/server';
+import type { User } from '@ponti-studios/auth/types';
 
 import { serverEnv } from './env';
 

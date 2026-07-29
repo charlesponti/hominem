@@ -1,4 +1,4 @@
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 import { createMMKV } from 'react-native-mmkv';
 
 import type { Media, Settings } from '../../validation/schemas';

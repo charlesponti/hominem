@@ -1,4 +1,4 @@
-import type { User } from '@hominem/auth/types';
+import type { User } from '@ponti-studios/auth/types';
 import { authDb } from '@hominem/db';
 import type { MiddlewareHandler } from 'hono';
 

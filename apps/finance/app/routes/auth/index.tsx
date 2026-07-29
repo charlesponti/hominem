@@ -1,5 +1,5 @@
-import { useEmailOtpAuthRoute } from '@hominem/auth/client/email-otp-route';
-import { maskEmail } from '@hominem/auth/shared/mask-email';
+import { useEmailOtpAuthRoute } from '@ponti-studios/auth/client/email-otp-route';
+import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
 import { redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';

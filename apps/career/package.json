@@ -23,7 +23,7 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@hominem/ai": "workspace:*",
-    "@hominem/auth": "workspace:*",
+    "@ponti-studios/auth": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/services": "workspace:*",

@@ -34,7 +34,7 @@
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",
     "@hominem/ai": "workspace:*",
-    "@hominem/auth": "workspace:*",
+    "@ponti-studios/auth": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/finance-services": "workspace:*",
