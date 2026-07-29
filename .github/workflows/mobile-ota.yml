@@ -40,6 +40,11 @@ jobs:
         with:
           node-version: '24.18.0'
 
+      - name: check-ota-safe
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: just mobile ota-safe-check
+
       - name: validate-mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
