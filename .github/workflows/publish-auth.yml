@@ -32,10 +32,9 @@ jobs:
         run: pnpm --filter @ponti-studios/auth build
 
       - name: write-npmrc
-        working-directory: packages/auth
         run: |
-          echo "@ponti-studios:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+          echo "@ponti-studios:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
