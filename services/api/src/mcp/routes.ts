@@ -3,7 +3,7 @@ import { logger } from '@hominem/telemetry';
 import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
 import { Hono, type Context, type Next } from 'hono';
 
-import { betterAuthMcpServer } from '../auth/better-auth';
+import { betterAuthMcpServer, MCP_SCOPES } from '../auth/better-auth';
 import { env } from '../env';
 import { isRateLimited } from './rate-limiter';
 import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
@@ -15,19 +15,45 @@ const enabledScopes = new Set(
     .map((scope: string) => scope.trim())
     .filter(Boolean),
 );
+const requiredScope = MCP_SCOPES.join(' ');
 
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
 }
 
+async function addMcpScopes(response: Response): Promise<Response> {
+  const metadata = (await response.json()) as { scopes_supported?: string[] } & Record<
+    string,
+    unknown
+  >;
+  const headers = new Headers(response.headers);
+  headers.set('content-type', 'application/json');
+
+  return new Response(
+    JSON.stringify({
+      ...metadata,
+      scopes_supported: [...new Set([...(metadata.scopes_supported ?? []), ...MCP_SCOPES])],
+    }),
+    { status: response.status, headers },
+  );
+}
+
+function createMcpAuthChallenge(error?: 'insufficient_scope') {
+  const resourceMetadataUrl = new URL(
+    '/.well-known/oauth-protected-resource/api/mcp',
+    env.API_URL,
+  ).toString();
+  const errorParameters =
+    error === 'insufficient_scope'
+      ? ', error="insufficient_scope", error_description="Missing required MCP scope"'
+      : '';
+
+  return `Bearer realm="Hominem", scope="${requiredScope}"${errorParameters}, resource_metadata="${resourceMetadataUrl}"`;
+}
+
 async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
   const auth = c.get('auth');
-  if (!auth) {
-    const resourceMetadataUrl = new URL(
-      '/.well-known/oauth-protected-resource/api/mcp',
-      env.API_URL,
-    ).toString();
-
+  if (!auth || auth.credential !== 'mcp-oauth') {
     return new Response(
       JSON.stringify({
         error: 'unauthorized',
@@ -38,7 +64,24 @@ async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
         status: 401,
         headers: {
           'content-type': 'application/json',
-          'WWW-Authenticate': `Bearer realm="Hominem", resource_metadata="${resourceMetadataUrl}"`,
+          'WWW-Authenticate': createMcpAuthChallenge(),
+        },
+      },
+    );
+  }
+
+  if (!MCP_SCOPES.every((scope) => auth.scopes.includes(scope))) {
+    return new Response(
+      JSON.stringify({
+        error: 'insufficient_scope',
+        code: 'INSUFFICIENT_SCOPE',
+        message: 'The MCP token does not include the required scope',
+      }),
+      {
+        status: 403,
+        headers: {
+          'content-type': 'application/json',
+          'WWW-Authenticate': createMcpAuthChallenge('insufficient_scope'),
         },
       },
     );
@@ -107,7 +150,7 @@ export const mcpRoutes = new Hono<McpHonoEnv>()
  */
 export const oauthDiscoveryRoutes = new Hono()
   .get('/.well-known/oauth-authorization-server', async (c) => {
-    return oAuthDiscoveryMetadata(betterAuthMcpServer)(c.req.raw);
+    return addMcpScopes(await oAuthDiscoveryMetadata(betterAuthMcpServer)(c.req.raw));
   })
   .get('/.well-known/oauth-protected-resource/*', async (c) => {
     return oAuthProtectedResourceMetadata(betterAuthMcpServer)(c.req.raw);

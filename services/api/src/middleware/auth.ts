@@ -2,9 +2,8 @@ import type { User } from '@hominem/auth/types';
 import { authDb } from '@hominem/db';
 import type { MiddlewareHandler } from 'hono';
 
-import { betterAuthMcpServer, betterAuthServer, MCP_SCOPES } from '../auth/better-auth';
+import { betterAuthMcpServer, betterAuthServer } from '../auth/better-auth';
 import type { AuthContext } from '../auth/types';
-import { env } from '../env';
 
 type AuthErrorCode = 'invalid_token' | 'expired_token' | 'invalid_session';
 
@@ -93,7 +92,7 @@ export const authMiddleware = (): MiddlewareHandler => {
         userId,
         sessionId,
         credential: 'session',
-        scopes: isMcpRequest(path) && env.NODE_ENV !== 'production' ? [...MCP_SCOPES] : [],
+        scopes: [],
       });
       return await next();
     }

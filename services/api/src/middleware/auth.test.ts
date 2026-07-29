@@ -59,7 +59,7 @@ describe('auth middleware', () => {
     mocks.executeTakeFirst.mockResolvedValue(user);
   });
 
-  it('resolves a normal Better Auth session into the canonical context', async () => {
+  it('resolves a normal Better Auth session without granting MCP scopes', async () => {
     mocks.getSession.mockResolvedValue({
       user,
       session: { id: 'session-123' },
@@ -75,24 +75,9 @@ describe('auth middleware', () => {
       userId: user.id,
       sessionId: 'session-123',
       credential: 'session',
-      scopes: ['career:read'],
+      scopes: [],
     });
     expect(mocks.getMcpSession).not.toHaveBeenCalled();
-  });
-
-  it('does not grant implicit MCP scopes to a production session', async () => {
-    mocks.getSession.mockResolvedValue({
-      user,
-      session: { id: 'session-123' },
-    });
-
-    const app = await createApp({ NODE_ENV: 'production' });
-    const response = await app.request('/api/mcp', {
-      headers: { 'x-mcp-scopes': 'career:read' },
-    });
-    const auth = (await response.json()) as AuthContext;
-
-    expect(auth).toMatchObject({ credential: 'session', scopes: [] });
   });
 
   it('resolves MCP OAuth without performing a second normal session lookup', async () => {
@@ -115,20 +100,17 @@ describe('auth middleware', () => {
     expect(mocks.getSession).not.toHaveBeenCalled();
   });
 
-  it('keeps Better Auth bearer-session fallback for now', async () => {
+  it('does not treat an unrecognized bearer token as a Better Auth session', async () => {
     mocks.getMcpSession.mockResolvedValue(null);
-    mocks.getSession.mockResolvedValue({
-      user,
-      session: { id: 'session-123' },
-    });
+    mocks.getSession.mockResolvedValue(null);
 
     const app = await createApp();
     const response = await app.request('/api/mcp', {
       headers: { authorization: 'Bearer better-auth-session-token' },
     });
-    const auth = (await response.json()) as AuthContext;
+    const auth = await response.json();
 
-    expect(auth.credential).toBe('session');
+    expect(auth).toBeNull();
     expect(mocks.getSession).toHaveBeenCalledOnce();
   });
 });

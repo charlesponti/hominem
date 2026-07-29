@@ -32,7 +32,7 @@
     "e2e:setup": "tsx scripts/e2e-setup.ts"
   },
   "dependencies": {
-    "@better-auth/kysely-adapter": "^1.6.13",
+    "@better-auth/kysely-adapter": "1.6.23",
     "@hominem/ai": "workspace:*",
     "@hominem/auth": "workspace:*",
     "@hominem/db": "workspace:*",
@@ -48,7 +48,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@scalar/hono-api-reference": "^0.11.11",
     "@sentry/node": "^8.54.0",
-    "better-auth": "^1.6.13",
+    "better-auth": "1.6.23",
     "bullmq": "5.66.4",
     "dotenv": "17.2.3",
     "hono": "4.12.27",

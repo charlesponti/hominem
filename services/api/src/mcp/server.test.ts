@@ -8,7 +8,7 @@ import type { AppContext, RpcUser } from '../rpc/middleware/auth';
 import { requestIdMiddleware } from '../rpc/middleware/auth';
 import { apiErrorHandler } from '../rpc/middleware/error';
 import { validationErrorMiddleware } from '../rpc/middleware/validation';
-import { mcpRoutes } from './routes';
+import { mcpRoutes, oauthDiscoveryRoutes } from './routes';
 
 const testUser: RpcUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -21,22 +21,16 @@ const testUser: RpcUser = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-function createApp(authenticated: boolean) {
+function createApp(auth?: AuthContext) {
   const app = new Hono<AppContext>()
     .onError(apiErrorHandler)
     .use(requestIdMiddleware)
     .use(validationErrorMiddleware)
     .basePath('/api');
 
-  if (authenticated) {
+  if (auth) {
     app.use('*', async (c, next) => {
-      c.set('auth', {
-        user: testUser,
-        userId: testUser.id,
-        sessionId: 'session-123',
-        credential: 'session',
-        scopes: process.env.NODE_ENV === 'production' ? [] : ['career:read'],
-      } satisfies AuthContext);
+      c.set('auth', auth);
       await next();
     });
   }
@@ -45,6 +39,13 @@ function createApp(authenticated: boolean) {
 
   return app;
 }
+
+const mcpAuthContext = {
+  user: testUser,
+  userId: testUser.id,
+  credential: 'mcp-oauth',
+  scopes: ['career:read'],
+} satisfies AuthContext;
 
 async function createClient(app: Hono<AppContext>) {
   const transport = new StreamableHTTPClientTransport(new URL('http://localhost/api/mcp'), {
@@ -56,18 +57,57 @@ async function createClient(app: Hono<AppContext>) {
 }
 
 describe('mcp server transport', () => {
+  it('advertises career:read in protected resource metadata', async () => {
+    const app = new Hono().route('/', oauthDiscoveryRoutes);
+    const response = await app.request('/.well-known/oauth-protected-resource/api/mcp');
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      scopes_supported: expect.arrayContaining(['career:read']),
+    });
+  });
+
+  it('advertises career:read in authorization server metadata', async () => {
+    const app = new Hono().route('/', oauthDiscoveryRoutes);
+    const response = await app.request('/.well-known/oauth-authorization-server');
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      scopes_supported: expect.arrayContaining(['career:read']),
+    });
+  });
+
   it('requires authentication at the route boundary', async () => {
-    const app = createApp(false);
+    const app = createApp();
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
 
     expect(response.status).toBe(401);
+    expect(response.headers.get('www-authenticate')).toContain('scope="career:read"');
+    expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
       code: 'UNAUTHORIZED',
     });
   });
 
+  it('rejects an MCP token without career:read', async () => {
+    const app = createApp({ ...mcpAuthContext, scopes: ['openid', 'profile'] });
+    const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
+    expect(response.headers.get('www-authenticate')).toContain('scope="career:read"');
+    await expect(response.json()).resolves.toMatchObject({ code: 'INSUFFICIENT_SCOPE' });
+  });
+
+  it('does not authorize a Better Auth cookie session as MCP', async () => {
+    const app = createApp({ ...mcpAuthContext, credential: 'session', sessionId: 'session-123' });
+    const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
+
+    expect(response.status).toBe(401);
+  });
+
   it('connects and initializes over streamable HTTP', async () => {
-    const client = await createClient(createApp(true));
+    const client = await createClient(createApp(mcpAuthContext));
     try {
       expect(client.getServerVersion()).toMatchObject({ name: 'Hominem MCP', version: '1.0.0' });
     } finally {
@@ -76,7 +116,7 @@ describe('mcp server transport', () => {
   });
 
   it('lists registered career tools', async () => {
-    const client = await createClient(createApp(true));
+    const client = await createClient(createApp(mcpAuthContext));
     try {
       const tools = await client.listTools();
       const toolNames = tools.tools.map((t) => t.name);
@@ -87,8 +127,23 @@ describe('mcp server transport', () => {
     }
   });
 
+  it('invokes a career tool with a scoped MCP token', async () => {
+    const client = await createClient(createApp(mcpAuthContext));
+    try {
+      const result = await client.callTool({
+        name: 'list_career_experiences',
+        arguments: { limit: 1 },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({ experiences: [] });
+    } finally {
+      await client.close();
+    }
+  });
+
   it('rejects tool calls with invalid input', async () => {
-    const client = await createClient(createApp(true));
+    const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
         name: 'list_career_experiences',
@@ -107,7 +162,7 @@ describe('mcp server transport', () => {
   });
 
   it('returns a client error for malformed JSON-RPC requests', async () => {
-    const app = createApp(true);
+    const app = createApp(mcpAuthContext);
     const response = await app.fetch(
       new Request('http://localhost/api/mcp', {
         method: 'POST',

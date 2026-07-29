@@ -34,13 +34,6 @@ const DEV_OPENAPI_SERVER = {
   url: 'http://localhost:4040',
   description: 'Local development server',
 };
-const BEARER_SECURITY_SCHEME = {
-  type: 'http',
-  scheme: 'bearer',
-  bearerFormat: 'session',
-  description: 'Better Auth session (cookie or bearer plugin token)',
-} as const;
-
 function createAllowedOrigins() {
   return new Set([env.API_URL, env.WEB_URL, env.FINANCE_URL, env.CAREER_URL]);
 }
@@ -85,16 +78,6 @@ function createOpenApiDocumentation() {
         description: 'Production API server',
       },
       ...(env.NODE_ENV !== 'production' ? [DEV_OPENAPI_SERVER] : []),
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: BEARER_SECURITY_SCHEME,
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
     ],
   };
 }
