@@ -19,6 +19,9 @@ test-watch:
 cng-check:
     pnpm --filter @hominem/omiro check:cng
 
+ota-safe-check:
+    pnpm --filter @hominem/omiro check:ota-safe
+
 build-config-check:
     pnpm --filter @hominem/omiro check:build-config
 

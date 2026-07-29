@@ -11,6 +11,7 @@
     "release": "APP_ENV=production pnpm dlx eas-cli@21.2.0 build --platform ios --profile production --auto-submit --non-interactive",
     "check:cng": "bash scripts/check-cng.sh",
     "check:build-config": "bash scripts/check-eas-build-config.sh",
+    "check:ota-safe": "bash scripts/check-ota-safe.sh",
     "dev": "APP_ENV=development expo start --clear",
     "format": "oxfmt env.ts components app config constants hooks services tests types --write",
     "format:check": "oxfmt env.ts components app config constants hooks services tests types --check",
