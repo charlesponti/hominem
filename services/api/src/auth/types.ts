@@ -7,6 +7,7 @@ export interface AuthContext {
   user: AuthUser;
   userId: string;
   sessionId?: string;
+  clientId?: string;
   credential: AuthCredential;
   scopes: string[];
 }

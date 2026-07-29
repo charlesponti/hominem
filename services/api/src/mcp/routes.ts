@@ -1,5 +1,3 @@
-import { db, sql } from '@hominem/db';
-import { logger } from '@hominem/telemetry';
 import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
 import { Hono, type Context, type Next } from 'hono';
 
@@ -87,56 +85,15 @@ async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
     );
   }
 
-  // Rate limit check (production only — tests/dev share user IDs and would false-trigger)
-  if (env.NODE_ENV === 'production' && isRateLimited(auth.userId)) {
+  // Rate limit check (production only)
+  if (env.NODE_ENV === 'production' && (await isRateLimited(auth.userId))) {
     return new Response(
       JSON.stringify({ error: 'rate_limited', code: 'RATE_LIMITED', message: 'Too many requests' }),
       { status: 429, headers: { 'content-type': 'application/json' } },
     );
   }
 
-  // Daily cost budget throttle (production only)
-  if (env.NODE_ENV === 'production') {
-    const throttled = await checkCostBudget(auth.userId);
-    if (throttled) return throttled;
-  }
-
   return next();
-}
-
-const DAILY_COST_BUDGET_USD = env.MCP_DAILY_COST_BUDGET_CENTS / 100;
-
-async function checkCostBudget(userId: string): Promise<Response | null> {
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const row = await sql<{ total_cost_usd: string | null }>`
-      SELECT COALESCE(SUM(cost_usd), 0)::text AS total_cost_usd
-      FROM app.ai_usage_events
-      WHERE owner_userid = ${userId}
-        AND feature = 'mcp_tool_call'
-        AND createdat >= ${today}::timestamptz
-    `.execute(db);
-
-    const total = Number.parseFloat(row.rows[0]?.total_cost_usd ?? '0');
-    if (total >= DAILY_COST_BUDGET_USD) {
-      return new Response(
-        JSON.stringify({
-          error: 'cost_budget_exceeded',
-          code: 'COST_BUDGET_EXCEEDED',
-          message: `Daily AI cost budget of $${DAILY_COST_BUDGET_USD.toFixed(2)} exceeded`,
-        }),
-        { status: 429, headers: { 'content-type': 'application/json' } },
-      );
-    }
-  } catch (error) {
-    logger.warn('[mcp] cost budget check failed', {
-      userId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    // Cost budget check is non-fatal — allow invocation if the query fails
-  }
-
-  return null;
 }
 
 export const mcpRoutes = new Hono<McpHonoEnv>()

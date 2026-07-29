@@ -1,41 +1,54 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  incr: vi.fn(),
+  expire: vi.fn(),
+}));
+
+vi.mock('@hominem/services/redis', () => ({
+  redis: mocks,
+}));
 
 import { isRateLimited } from './rate-limiter';
 
-const userId = 'test-user-1';
-
 describe('rate limiter', () => {
-  it('allows up to 5 requests per second', () => {
-    for (let i = 0; i < 5; i++) {
-      expect(isRateLimited(userId)).toBe(false);
-    }
+  beforeEach(() => {
+    mocks.incr.mockReset();
+    mocks.expire.mockReset();
   });
 
-  it('blocks the 6th request within the same window', () => {
-    // Previous test already consumed 5 slots
-    expect(isRateLimited(userId)).toBe(true);
+  it('allows the first five requests', async () => {
+    mocks.incr.mockResolvedValueOnce(1).mockResolvedValueOnce(2).mockResolvedValueOnce(3);
+    mocks.incr.mockResolvedValueOnce(4).mockResolvedValueOnce(5);
+
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    expect(mocks.expire).toHaveBeenCalledOnce();
   });
 
-  it('tracks different users independently', () => {
-    const otherUser = 'test-user-2';
-    for (let i = 0; i < 5; i++) {
-      expect(isRateLimited(otherUser)).toBe(false);
-    }
-    expect(isRateLimited(otherUser)).toBe(true);
+  it('blocks the sixth request in the window', async () => {
+    mocks.incr.mockResolvedValue(6);
+
+    await expect(isRateLimited('user-1')).resolves.toBe(true);
+    expect(mocks.expire).not.toHaveBeenCalled();
   });
 
-  it('allows requests after the window resets', async () => {
-    const freshUser = 'test-user-3';
+  it('uses a separate hashed Redis key per user', async () => {
+    mocks.incr.mockResolvedValue(1);
 
-    // Consume all 5 slots
-    for (let i = 0; i < 5; i++) {
-      isRateLimited(freshUser);
-    }
+    await isRateLimited('user-1');
+    await isRateLimited('user-2');
 
-    // Wait for window to pass
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    expect(mocks.incr.mock.calls[0]?.[0]).not.toBe(mocks.incr.mock.calls[1]?.[0]);
+    expect(mocks.incr.mock.calls[0]?.[0]).toMatch(/^ratelimit:mcp:[a-f0-9]{32}$/);
+  });
 
-    // Should be allowed again
-    expect(isRateLimited(freshUser)).toBe(false);
-  }, 3000);
+  it('fails open when Redis is unavailable', async () => {
+    mocks.incr.mockRejectedValue(new Error('redis unavailable'));
+
+    await expect(isRateLimited('user-1')).resolves.toBe(false);
+  });
 });

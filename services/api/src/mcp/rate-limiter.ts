@@ -1,39 +1,29 @@
-/**
- * MCP rate limiter — per-user sliding window of 5 requests/second.
- * Returns HTTP 429 when the limit is exceeded.
- */
-const userBuckets = new Map<string, number[]>();
+import { createHash } from 'node:crypto';
 
 const MAX_REQUESTS_PER_SEC = 5;
-const WINDOW_MS = 1000;
+const WINDOW_SEC = 1;
 
-export function isRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const bucket = userBuckets.get(userId) ?? [];
-
-  // Remove timestamps outside the current window
-  const recent = bucket.filter((ts) => now - ts < WINDOW_MS);
-
-  if (recent.length >= MAX_REQUESTS_PER_SEC) {
-    return true;
-  }
-
-  recent.push(now);
-  userBuckets.set(userId, recent);
-  return false;
+function rateLimitKey(userId: string) {
+  const identifier = createHash('sha256').update(userId).digest('hex').slice(0, 32);
+  return `ratelimit:mcp:${identifier}`;
 }
 
-/** Clean up stale entries periodically to prevent memory leak */
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const cutoff = Date.now() - WINDOW_MS * 2;
-    for (const [userId, bucket] of userBuckets) {
-      const fresh = bucket.filter((ts) => ts > cutoff);
-      if (fresh.length === 0) {
-        userBuckets.delete(userId);
-      } else {
-        userBuckets.set(userId, fresh);
-      }
+/**
+ * Enforce the MCP request limit through the shared Redis instance so the limit
+ * applies consistently across API processes and deployments.
+ *
+ * Cache failures fail open to preserve API availability; authentication and
+ * scope checks remain mandatory at the route boundary.
+ */
+export async function isRateLimited(userId: string): Promise<boolean> {
+  try {
+    const { redis } = await import('@hominem/services/redis');
+    const count = await redis.incr(rateLimitKey(userId));
+    if (count === 1) {
+      await redis.expire(rateLimitKey(userId), WINDOW_SEC);
     }
-  }, 60_000);
+    return count > MAX_REQUESTS_PER_SEC;
+  } catch {
+    return false;
+  }
 }

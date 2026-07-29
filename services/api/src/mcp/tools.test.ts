@@ -40,4 +40,44 @@ describe('MCP tool registry', () => {
       content: [{ type: 'text', text: 'null' }],
     });
   });
+
+  it('validates tool output against its declared schema', async () => {
+    registerTool(
+      'invalid_output_tool',
+      {
+        name: 'invalid_output_tool',
+        title: 'Invalid output tool',
+        description: 'Returns output that violates its schema.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ value: z.string() }),
+        readOnly: true,
+        scopes: ['career:read'],
+        sensitivity: 'standard',
+        resultCap: 1,
+      },
+      async () => ({ value: 123 }),
+    );
+
+    await expect(callTool(userId, 'invalid_output_tool', {})).rejects.toThrow();
+  });
+
+  it('enforces the declared result cap', async () => {
+    registerTool(
+      'oversized_output_tool',
+      {
+        name: 'oversized_output_tool',
+        title: 'Oversized output tool',
+        description: 'Returns more records than allowed.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ items: z.array(z.number()) }),
+        readOnly: true,
+        scopes: ['career:read'],
+        sensitivity: 'standard',
+        resultCap: 1,
+      },
+      async () => ({ items: [1, 2] }),
+    );
+
+    await expect(callTool(userId, 'oversized_output_tool', {})).rejects.toThrow(/cap/);
+  });
 });

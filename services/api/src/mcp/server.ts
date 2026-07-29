@@ -26,7 +26,6 @@ export type McpHonoEnv = {
 interface McpAuthInfoExtra {
   ownerUserId: string;
   sessionId: string | null;
-  authTime: number;
 }
 
 const transportOptions: WebStandardStreamableHTTPServerTransportOptions = {
@@ -40,6 +39,8 @@ function createErrorResult(message: string): CallToolResult {
     isError: true,
   };
 }
+
+const PUBLIC_TOOL_ERROR = 'Unable to complete the MCP tool request.';
 
 function resolveRequestContext(authInfo?: AuthInfo) {
   const extra = authInfo?.extra as Partial<McpAuthInfoExtra> | undefined;
@@ -71,7 +72,7 @@ function createToolHandler(definition: McpToolDefinition) {
         userId: context.ownerUserId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      return createErrorResult(error instanceof Error ? error.message : 'Unknown MCP tool error');
+      return createErrorResult(PUBLIC_TOOL_ERROR);
     }
   };
 }
@@ -108,12 +109,11 @@ export async function handleMcpRequestWithSession(c: Context<McpHonoEnv>): Promi
 
   const authInfo: AuthInfo = {
     token: c.req.header('authorization')?.replace(/^Bearer\s+/i, '') ?? '',
-    clientId: c.req.header('user-agent') ?? 'hominem-mcp',
+    clientId: auth.clientId ?? 'hominem-mcp',
     scopes: auth.scopes,
     extra: {
       ownerUserId: auth.userId,
       sessionId: auth.sessionId ?? null,
-      authTime: Math.floor(Date.now() / 1000),
     } satisfies McpAuthInfoExtra,
   };
 

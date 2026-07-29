@@ -1,6 +1,7 @@
 import * as z from 'zod';
 
 import { CareerService } from '../../application/career.service';
+import { MCP_SCOPES } from '../../auth/better-auth';
 import {
   careerExperiencesQuerySchema,
   careerExperiencesSchema,
@@ -13,6 +14,7 @@ const careerService = new CareerService();
 
 // No-input schema — the tool resolves the authenticated user's portfolio internally
 const noInputSchema = z.object({});
+const portfolioResultSchema = z.object({ portfolio: careerPortfolioSchema.nullable() });
 
 /** Fields redacted from work experience responses for privacy */
 const REDACTED_FIELDS = [
@@ -40,9 +42,9 @@ registerTool(
     description:
       'Returns your own career portfolio data (name, title, bio, work experiences, skills — no compensation data).',
     inputSchema: noInputSchema,
-    outputSchema: careerPortfolioSchema.nullable(),
+    outputSchema: portfolioResultSchema,
     readOnly: true,
-    scopes: ['career:read'],
+    scopes: MCP_SCOPES,
     sensitivity: 'standard',
     resultCap: 1,
   },
@@ -51,10 +53,10 @@ registerTool(
     if (!portfolio) {
       logRedaction('get_career_portfolio', REDACTED_FIELDS, 0);
       // Per FR-006: report no-data rather than implying completeness
-      return null;
+      return { portfolio: null };
     }
     logRedaction('get_career_portfolio', REDACTED_FIELDS, portfolio.workExperiences.length);
-    return portfolio;
+    return { portfolio };
   },
 );
 
@@ -68,7 +70,7 @@ registerTool(
     inputSchema: careerExperiencesQuerySchema,
     outputSchema: careerExperiencesSchema,
     readOnly: true,
-    scopes: ['career:read'],
+    scopes: MCP_SCOPES,
     sensitivity: 'standard',
     resultCap: 50,
   },

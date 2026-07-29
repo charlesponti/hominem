@@ -2,7 +2,33 @@
 -- Schema is owned by Goose migrations; this file only inserts data.
 -- Safe to re-run: all inserts are guarded by existence checks.
 
+-- Override this with a psql variable when seeding an existing local user:
+-- psql -v seed_user_email='charles.ponti@icloud.com' -f seed-career-dev.sql
+\if :{?seed_user_email}
+\else
+\set seed_user_email 'charles@ponti.io'
+\endif
+
 BEGIN;
+
+-- Resolve the target from its email. Seeding an unknown or ambiguous user is
+-- unsafe, so fail before writing any career data.
+CREATE TEMP TABLE seed_target_user ON COMMIT DROP AS
+SELECT id
+FROM "user"
+WHERE email = :'seed_user_email';
+
+DO $$
+BEGIN
+  IF (SELECT count(*) FROM seed_target_user) <> 1 THEN
+    RAISE EXCEPTION 'Expected exactly one user matching seed_user_email, found %',
+      (SELECT count(*) FROM seed_target_user);
+  END IF;
+END;
+$$;
+
+SELECT id AS seed_user_id FROM seed_target_user;
+\gset
 
 -- Helpers that migrations assume exist at runtime
 CREATE OR REPLACE FUNCTION public.set_updated_at()
@@ -26,18 +52,13 @@ LANGUAGE sql STABLE AS $$
   SELECT COALESCE(NULLIF(current_setting('app.is_service_role', true), ''), 'false') = 'true'
 $$;
 
--- Dev user
-INSERT INTO "user" (id, name, email, "emailVerified")
-SELECT 'dev-user-001', 'Charles Ponti', 'charles@ponti.io', true
-WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE id = 'dev-user-001');
-
 -- Portfolio
 INSERT INTO app.portfolios (
   id, owner_userId, slug, title, name, initials, job_title, bio, tagline,
   current_location, email, is_public, is_active
 )
 SELECT '565a8da7-0258-48de-80c9-edbed5e72e5b',
-  'dev-user-001',
+  :'seed_user_id',
   'charles-ponti',
   'Charles Ponti — Portfolio',
   'Charles Ponti',
@@ -46,35 +67,35 @@ SELECT '565a8da7-0258-48de-80c9-edbed5e72e5b',
   'Building products at the intersection of design, infrastructure, and taste. Previously led engineering teams across fintech, media, and enterprise SaaS.',
   'I build things that work.',
   'Los Angeles, CA',
-  'charles@ponti.io',
+  :'seed_user_email',
   true, true
 WHERE NOT EXISTS (SELECT 1 FROM app.portfolios WHERE id = '565a8da7-0258-48de-80c9-edbed5e72e5b');
 
 -- Social links
 INSERT INTO app.user_social_links (user_id, github, linkedin, twitter, website)
-SELECT 'dev-user-001',
+SELECT :'seed_user_id',
   'https://github.com/ponti-studios',
   'https://linkedin.com/in/charlesponti',
   'https://x.com/charlesponti',
   'https://ponti.io'
-WHERE NOT EXISTS (SELECT 1 FROM app.user_social_links WHERE user_id = 'dev-user-001');
+WHERE NOT EXISTS (SELECT 1 FROM app.user_social_links WHERE user_id = :'seed_user_id');
 
 -- Work experiences
 INSERT INTO app.work_experiences (
   id, portfolio_id, role, company, description, start_date, end_date,
   employment_type, work_arrangement, seniority_level, is_visible, sort_order
 )
-SELECT v.id, '565a8da7-0258-48de-80c9-edbed5e72e5b',
+SELECT v.id::uuid, '565a8da7-0258-48de-80c9-edbed5e72e5b',
   v.role, v.company, v.description,
   v.start_date::timestamptz, v.end_date::timestamptz,
   v.employment_type, v.work_arrangement, v.seniority_level, true, v.sort_order
 FROM (VALUES
-  ('we-ponti',         'Founder & CEO',             'Ponti Studios',     'Building experimental products across AI, media, and infrastructure.',                                '2022-01-01', NULL,             'full-time', 'remote', 'c-level',      1),
-  ('we-humana',        'Staff Engineer',            'Humana',             'Led health platform architecture for 5M+ members.',                                                  '2020-03-01', '2021-12-31',    'full-time', 'remote', 'staff',       2),
-  ('we-mimecast',      'Senior Software Engineer',  'Mimecast',           'Built cloud security infrastructure serving 40K+ businesses.',                                       '2017-06-01', '2020-02-29',    'full-time', 'office', 'senior',      3),
-  ('we-sandp',         'Software Engineer',          'S&P Global',         'Developed financial data platforms and market intelligence tools.',                                   '2014-09-01', '2017-05-31',    'full-time', 'office', 'mid-level',   4),
-  ('we-thomson',       'Software Engineer',          'Thomson Reuters',    'Built legal research and compliance platforms.',                                                      '2012-01-01', '2014-08-31',    'full-time', 'office', 'mid-level',   5),
-  ('we-streamyard',    'Senior Engineer',            'StreamYard',         'Scaled live streaming infrastructure to support 1M+ concurrent viewers.',                             '2021-01-01', '2021-12-31',    'contract',  'remote', 'senior',      6)
+  ('10000000-0000-4000-8000-000000000001',         'Founder & CEO',             'Ponti Studios',     'Building experimental products across AI, media, and infrastructure.',                                '2022-01-01', NULL,             'full-time', 'remote', 'c-level',      1),
+  ('10000000-0000-4000-8000-000000000002',        'Staff Engineer',            'Humana',             'Led health platform architecture for 5M+ members.',                                                  '2020-03-01', '2021-12-31',    'full-time', 'remote', 'staff',       2),
+  ('10000000-0000-4000-8000-000000000003',      'Senior Software Engineer',  'Mimecast',           'Built cloud security infrastructure serving 40K+ businesses.',                                       '2017-06-01', '2020-02-29',    'full-time', 'office', 'senior',      3),
+  ('10000000-0000-4000-8000-000000000004',         'Software Engineer',          'S&P Global',         'Developed financial data platforms and market intelligence tools.',                                   '2014-09-01', '2017-05-31',    'full-time', 'office', 'mid-level',   4),
+  ('10000000-0000-4000-8000-000000000005',       'Software Engineer',          'Thomson Reuters',    'Built legal research and compliance platforms.',                                                      '2012-01-01', '2014-08-31',    'full-time', 'office', 'mid-level',   5),
+  ('10000000-0000-4000-8000-000000000006',    'Senior Engineer',            'StreamYard',         'Scaled live streaming infrastructure to support 1M+ concurrent viewers.',                             '2021-01-01', '2021-12-31',    'contract',  'remote', 'senior',      6)
 ) AS v(id, role, company, description, start_date, end_date, employment_type, work_arrangement, seniority_level, sort_order)
 WHERE NOT EXISTS (SELECT 1 FROM app.work_experiences WHERE portfolio_id = '565a8da7-0258-48de-80c9-edbed5e72e5b');
 
@@ -180,103 +201,103 @@ WHERE NOT EXISTS (
 -- Companies + job applications
 INSERT INTO app.companies (owner_userid, name)
 VALUES
-  ('dev-user-001', 'Airbnb'),
-  ('dev-user-001', 'AllTrails'),
-  ('dev-user-001', 'Amazon'),
-  ('dev-user-001', 'Bask Health'),
-  ('dev-user-001', 'BuildOps'),
-  ('dev-user-001', 'CTP'),
-  ('dev-user-001', 'Canva'),
-  ('dev-user-001', 'Chance App'),
-  ('dev-user-001', 'Change.org'),
-  ('dev-user-001', 'Charthop'),
-  ('dev-user-001', 'Clear Point Consultants'),
-  ('dev-user-001', 'Clear Point'),
-  ('dev-user-001', 'Coinbase'),
-  ('dev-user-001', 'Creator Club'),
-  ('dev-user-001', 'Duro'),
-  ('dev-user-001', 'EliseAI'),
-  ('dev-user-001', 'Empatico'),
-  ('dev-user-001', 'Epsilon Records / AudioKit'),
-  ('dev-user-001', 'EvenUp'),
-  ('dev-user-001', 'FIGS'),
-  ('dev-user-001', 'FINESSE'),
-  ('dev-user-001', 'Fabric Labs'),
-  ('dev-user-001', 'Faire'),
-  ('dev-user-001', 'FairyGodBoss'),
-  ('dev-user-001', 'Fanfix'),
-  ('dev-user-001', 'Farmdrop'),
-  ('dev-user-001', 'Figma'),
-  ('dev-user-001', 'Flex'),
-  ('dev-user-001', 'Forward Health'),
-  ('dev-user-001', 'Function Health'),
-  ('dev-user-001', 'Ghost'),
-  ('dev-user-001', 'Github'),
-  ('dev-user-001', 'Goldman Sachs'),
-  ('dev-user-001', 'Good Day Farm'),
-  ('dev-user-001', 'Guideline'),
-  ('dev-user-001', 'Harry''s'),
-  ('dev-user-001', 'Headspace'),
-  ('dev-user-001', 'Homes.com'),
-  ('dev-user-001', 'Hopper'),
-  ('dev-user-001', 'Howrecruit'),
-  ('dev-user-001', 'HubSpot'),
-  ('dev-user-001', 'Jobot'),
-  ('dev-user-001', 'Lab49'),
-  ('dev-user-001', 'Lightspark'),
-  ('dev-user-001', 'LinkedIn'),
-  ('dev-user-001', 'Luminate'),
-  ('dev-user-001', 'Makespace'),
-  ('dev-user-001', 'Mavely by Later'),
-  ('dev-user-001', 'Mavely'),
-  ('dev-user-001', 'Metalab'),
-  ('dev-user-001', 'Metropolis Technologies'),
-  ('dev-user-001', 'NBC Universal'),
-  ('dev-user-001', 'Needle'),
-  ('dev-user-001', 'Netflix'),
-  ('dev-user-001', 'New York Times'),
-  ('dev-user-001', 'Newsweek'),
-  ('dev-user-001', 'Oliver Wyman'),
-  ('dev-user-001', 'Onetera'),
-  ('dev-user-001', 'Pager'),
-  ('dev-user-001', 'Patagonia'),
-  ('dev-user-001', 'Peony.Ink'),
-  ('dev-user-001', 'Peony.lnk'),
-  ('dev-user-001', 'Pinterest'),
-  ('dev-user-001', 'Posh'),
-  ('dev-user-001', 'Producto'),
-  ('dev-user-001', 'Prologue'),
-  ('dev-user-001', 'Quilt'),
-  ('dev-user-001', 'Reddit'),
-  ('dev-user-001', 'Remo'),
-  ('dev-user-001', 'Resend'),
-  ('dev-user-001', 'Rhino'),
-  ('dev-user-001', 'Riverside'),
-  ('dev-user-001', 'Samsung TV Plus'),
-  ('dev-user-001', 'Samsung'),
-  ('dev-user-001', 'Sensay'),
-  ('dev-user-001', 'Serotonin'),
-  ('dev-user-001', 'Snapchat'),
-  ('dev-user-001', 'Spotter'),
-  ('dev-user-001', 'Squarespace'),
-  ('dev-user-001', 'Storm2'),
-  ('dev-user-001', 'Stubhub'),
-  ('dev-user-001', 'Substack'),
-  ('dev-user-001', 'Tasty'),
-  ('dev-user-001', 'Tatari'),
-  ('dev-user-001', 'ThreadBeast'),
-  ('dev-user-001', 'Tomo'),
-  ('dev-user-001', 'Tubi'),
-  ('dev-user-001', 'Twitch'),
-  ('dev-user-001', 'Two Chairs'),
-  ('dev-user-001', 'Vendigo'),
-  ('dev-user-001', 'Venue Platform, Inc.'),
-  ('dev-user-001', 'Vimeo'),
-  ('dev-user-001', 'Warner Bros Discovery'),
-  ('dev-user-001', 'Wealthfront'),
-  ('dev-user-001', 'Webflow'),
-  ('dev-user-001', 'Writer'),
-  ('dev-user-001', 'Zume')
+  (:'seed_user_id', 'Airbnb'),
+  (:'seed_user_id', 'AllTrails'),
+  (:'seed_user_id', 'Amazon'),
+  (:'seed_user_id', 'Bask Health'),
+  (:'seed_user_id', 'BuildOps'),
+  (:'seed_user_id', 'CTP'),
+  (:'seed_user_id', 'Canva'),
+  (:'seed_user_id', 'Chance App'),
+  (:'seed_user_id', 'Change.org'),
+  (:'seed_user_id', 'Charthop'),
+  (:'seed_user_id', 'Clear Point Consultants'),
+  (:'seed_user_id', 'Clear Point'),
+  (:'seed_user_id', 'Coinbase'),
+  (:'seed_user_id', 'Creator Club'),
+  (:'seed_user_id', 'Duro'),
+  (:'seed_user_id', 'EliseAI'),
+  (:'seed_user_id', 'Empatico'),
+  (:'seed_user_id', 'Epsilon Records / AudioKit'),
+  (:'seed_user_id', 'EvenUp'),
+  (:'seed_user_id', 'FIGS'),
+  (:'seed_user_id', 'FINESSE'),
+  (:'seed_user_id', 'Fabric Labs'),
+  (:'seed_user_id', 'Faire'),
+  (:'seed_user_id', 'FairyGodBoss'),
+  (:'seed_user_id', 'Fanfix'),
+  (:'seed_user_id', 'Farmdrop'),
+  (:'seed_user_id', 'Figma'),
+  (:'seed_user_id', 'Flex'),
+  (:'seed_user_id', 'Forward Health'),
+  (:'seed_user_id', 'Function Health'),
+  (:'seed_user_id', 'Ghost'),
+  (:'seed_user_id', 'Github'),
+  (:'seed_user_id', 'Goldman Sachs'),
+  (:'seed_user_id', 'Good Day Farm'),
+  (:'seed_user_id', 'Guideline'),
+  (:'seed_user_id', 'Harry''s'),
+  (:'seed_user_id', 'Headspace'),
+  (:'seed_user_id', 'Homes.com'),
+  (:'seed_user_id', 'Hopper'),
+  (:'seed_user_id', 'Howrecruit'),
+  (:'seed_user_id', 'HubSpot'),
+  (:'seed_user_id', 'Jobot'),
+  (:'seed_user_id', 'Lab49'),
+  (:'seed_user_id', 'Lightspark'),
+  (:'seed_user_id', 'LinkedIn'),
+  (:'seed_user_id', 'Luminate'),
+  (:'seed_user_id', 'Makespace'),
+  (:'seed_user_id', 'Mavely by Later'),
+  (:'seed_user_id', 'Mavely'),
+  (:'seed_user_id', 'Metalab'),
+  (:'seed_user_id', 'Metropolis Technologies'),
+  (:'seed_user_id', 'NBC Universal'),
+  (:'seed_user_id', 'Needle'),
+  (:'seed_user_id', 'Netflix'),
+  (:'seed_user_id', 'New York Times'),
+  (:'seed_user_id', 'Newsweek'),
+  (:'seed_user_id', 'Oliver Wyman'),
+  (:'seed_user_id', 'Onetera'),
+  (:'seed_user_id', 'Pager'),
+  (:'seed_user_id', 'Patagonia'),
+  (:'seed_user_id', 'Peony.Ink'),
+  (:'seed_user_id', 'Peony.lnk'),
+  (:'seed_user_id', 'Pinterest'),
+  (:'seed_user_id', 'Posh'),
+  (:'seed_user_id', 'Producto'),
+  (:'seed_user_id', 'Prologue'),
+  (:'seed_user_id', 'Quilt'),
+  (:'seed_user_id', 'Reddit'),
+  (:'seed_user_id', 'Remo'),
+  (:'seed_user_id', 'Resend'),
+  (:'seed_user_id', 'Rhino'),
+  (:'seed_user_id', 'Riverside'),
+  (:'seed_user_id', 'Samsung TV Plus'),
+  (:'seed_user_id', 'Samsung'),
+  (:'seed_user_id', 'Sensay'),
+  (:'seed_user_id', 'Serotonin'),
+  (:'seed_user_id', 'Snapchat'),
+  (:'seed_user_id', 'Spotter'),
+  (:'seed_user_id', 'Squarespace'),
+  (:'seed_user_id', 'Storm2'),
+  (:'seed_user_id', 'Stubhub'),
+  (:'seed_user_id', 'Substack'),
+  (:'seed_user_id', 'Tasty'),
+  (:'seed_user_id', 'Tatari'),
+  (:'seed_user_id', 'ThreadBeast'),
+  (:'seed_user_id', 'Tomo'),
+  (:'seed_user_id', 'Tubi'),
+  (:'seed_user_id', 'Twitch'),
+  (:'seed_user_id', 'Two Chairs'),
+  (:'seed_user_id', 'Vendigo'),
+  (:'seed_user_id', 'Venue Platform, Inc.'),
+  (:'seed_user_id', 'Vimeo'),
+  (:'seed_user_id', 'Warner Bros Discovery'),
+  (:'seed_user_id', 'Wealthfront'),
+  (:'seed_user_id', 'Webflow'),
+  (:'seed_user_id', 'Writer'),
+  (:'seed_user_id', 'Zume')
 ON CONFLICT (owner_userid, lower(name)) DO UPDATE SET updatedat = now();
 
 INSERT INTO app.job_applications (
@@ -284,7 +305,7 @@ INSERT INTO app.job_applications (
   application_date, company_notes, response_date, salary_quoted, createdat, updatedat
 )
 SELECT
-  'dev-user-001', c.id, ja.position, ja.status, ja.start_date, ja.location,
+  :'seed_user_id', c.id, ja.position, ja.status, ja.start_date, ja.location,
   ja.source, ja.link, ja.application_date, ja.company_notes,
   ja.response_date, ja.salary_quoted, ja.createdat, ja.updatedat
 FROM (VALUES
@@ -387,7 +408,7 @@ FROM (VALUES
   ('Posh', 'Staff Full Stack Software Engineer', 'APPLIED', '2025-02-27T20:55:00.000Z'::timestamptz, 'Remote', 'linkedin', 'http://www.linkedin.com/jobs/view/4152432408', '2025-02-27T20:55:00.000Z'::timestamptz, 'Email: cj@ponti.io', '2025-11-29T00:00:00.000Z'::timestamptz, '$150,000 - $195,000', '2026-06-30T02:07:18.000Z'::timestamptz, '2026-06-30T02:07:18.000Z'::timestamptz),
   ('Needle', 'Senior Software Engineer', 'APPLIED', '2025-02-28T22:32:00.000Z'::timestamptz, 'Remote', 'linkedin', 'http://www.linkedin.com/jobs/view/4170601461', '2025-02-28T22:32:00.000Z'::timestamptz, 'Email: cj@ponti.io', '2025-12-04T00:00:00.000Z'::timestamptz, '$150,000 - $195,000', '2026-06-30T02:07:18.000Z'::timestamptz, '2026-06-30T02:07:18.000Z'::timestamptz)
 ) AS ja(company_name, position, status, start_date, location, source, link, application_date, company_notes, response_date, salary_quoted, createdat, updatedat)
-JOIN app.companies c ON c.owner_userid = 'dev-user-001' AND lower(c.name) = lower(ja.company_name)
-WHERE NOT EXISTS (SELECT 1 FROM app.job_applications WHERE owner_userid = 'dev-user-001');
+JOIN app.companies c ON c.owner_userid = :'seed_user_id' AND lower(c.name) = lower(ja.company_name)
+WHERE NOT EXISTS (SELECT 1 FROM app.job_applications WHERE owner_userid = :'seed_user_id');
 
 COMMIT;

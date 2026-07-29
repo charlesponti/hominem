@@ -33,6 +33,22 @@ function toolResult(structuredContent: Record<string, unknown> | null): McpToolR
   };
 }
 
+function enforceResultCap(
+  result: Record<string, unknown> | null,
+  toolName: string,
+  resultCap: number,
+) {
+  if (!result) return;
+
+  for (const [field, value] of Object.entries(result)) {
+    if (Array.isArray(value) && value.length > resultCap) {
+      throw new ValidationError(
+        `MCP tool result exceeds its cap: ${toolName}.${field} (${resultCap})`,
+      );
+    }
+  }
+}
+
 const tools = new Map<string, ToolImplementation>();
 
 export function listTools(): McpToolDefinition[] {
@@ -57,19 +73,23 @@ export async function callTool(
     throw new ValidationError(`Unknown MCP tool: ${name}`);
   }
 
-  const structuredContent = await implementation.invoke(ownerUserId, input);
+  const parsedInput = implementation.definition.inputSchema.parse(input);
+  const structuredContent = await implementation.invoke(ownerUserId, parsedInput);
+  const parsedOutput = implementation.definition.outputSchema.parse(structuredContent);
 
-  if (structuredContent === null) {
+  if (parsedOutput === null) {
     return toolResult(null);
   }
 
   if (
-    structuredContent === undefined ||
-    typeof structuredContent !== 'object' ||
-    Array.isArray(structuredContent)
+    parsedOutput === undefined ||
+    typeof parsedOutput !== 'object' ||
+    Array.isArray(parsedOutput)
   ) {
     throw new ValidationError(`MCP tool returned invalid structured content: ${name}`);
   }
 
-  return toolResult(structuredContent as Record<string, unknown>);
+  const result = parsedOutput as Record<string, unknown>;
+  enforceResultCap(result, name, implementation.definition.resultCap);
+  return toolResult(result);
 }

@@ -71,6 +71,7 @@ export const authMiddleware = (): MiddlewareHandler => {
           setAuthContext(c, {
             user,
             userId: user.id,
+            clientId: mcpSession.clientId,
             credential: 'mcp-oauth',
             scopes: mcpSession.scopes.split(' ').filter(Boolean),
           });

@@ -2,6 +2,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
+import * as z from 'zod';
 
 import type { AuthContext } from '../auth/types';
 import type { AppContext, RpcUser } from '../rpc/middleware/auth';
@@ -9,6 +10,7 @@ import { requestIdMiddleware } from '../rpc/middleware/auth';
 import { apiErrorHandler } from '../rpc/middleware/error';
 import { validationErrorMiddleware } from '../rpc/middleware/validation';
 import { mcpRoutes, oauthDiscoveryRoutes } from './routes';
+import { registerTool } from './tools';
 
 const testUser: RpcUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -142,6 +144,21 @@ describe('mcp server transport', () => {
     }
   });
 
+  it('invokes the portfolio tool with an object-shaped result', async () => {
+    const client = await createClient(createApp(mcpAuthContext));
+    try {
+      const result = await client.callTool({
+        name: 'get_career_portfolio',
+        arguments: {},
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({ portfolio: null });
+    } finally {
+      await client.close();
+    }
+  });
+
   it('rejects tool calls with invalid input', async () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
@@ -156,6 +173,39 @@ describe('mcp server transport', () => {
           expect.objectContaining({ text: expect.stringMatching(/-32602|validation|expected/i) }),
         ]),
       );
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('does not return internal tool errors to the client', async () => {
+    registerTool(
+      'failing_tool',
+      {
+        name: 'failing_tool',
+        title: 'Failing test tool',
+        description: 'Fails for error redaction coverage.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ value: z.string() }),
+        readOnly: true,
+        scopes: ['career:read'],
+        sensitivity: 'standard',
+        resultCap: 1,
+      },
+      async () => {
+        throw new Error('secret database detail');
+      },
+    );
+
+    const client = await createClient(createApp(mcpAuthContext));
+    try {
+      const result = await client.callTool({ name: 'failing_tool', arguments: {} });
+
+      expect(result.isError).toBe(true);
+      expect(result.content).toEqual([
+        { type: 'text', text: 'Unable to complete the MCP tool request.' },
+      ]);
+      expect(JSON.stringify(result)).not.toContain('secret database detail');
     } finally {
       await client.close();
     }

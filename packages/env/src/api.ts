@@ -37,7 +37,6 @@ export const apiSchema = baseSchema.extend({
   SAVE_VOICE_AUDIO: z.stringbool().default(false),
   // Comma-separated MCP tool scopes to register (see services/api/src/mcp/routes.ts).
   MCP_ENABLED_SCOPES: z.string().default(''),
-  MCP_DAILY_COST_BUDGET_CENTS: z.coerce.number().int().positive().default(100),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
   OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),
