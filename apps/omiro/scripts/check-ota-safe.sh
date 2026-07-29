@@ -31,6 +31,7 @@ cd "$app_dir"
 APP_ENV=production NODE_ENV=production \
   EXPO_PUBLIC_API_BASE_URL="${EXPO_PUBLIC_API_BASE_URL:-https://cng.invalid}" \
   pnpm exec expo prebuild --platform ios --clean --no-install >/dev/null
+mv "$app_dir/ios" "$temp_dir/ios-generated"
 
 current_fingerprint="$(
   APP_ENV=production NODE_ENV=production \
@@ -59,9 +60,9 @@ if [[ -z "$latest_fingerprint" ]]; then
 fi
 
 if [[ "$current_fingerprint" != "$latest_fingerprint" ]]; then
-  echo "error: this ref's native fingerprint doesn't match the last shipped production build." >&2
-  echo "  current:  $current_fingerprint" >&2
-  echo "  shipped:  $latest_fingerprint" >&2
+  echo "error: this ref's native fingerprint doesn't match the latest finished production build." >&2
+  echo "  current:            $current_fingerprint" >&2
+  echo "  latest build:       $latest_fingerprint" >&2
   echo >&2
   echo "This means something needs a new native binary (native dependency bump," >&2
   echo "config plugin, permissions/entitlements, etc.) -- an OTA update can't ship" >&2
@@ -69,4 +70,4 @@ if [[ "$current_fingerprint" != "$latest_fingerprint" ]]; then
   exit 1
 fi
 
-echo "OTA-safe: fingerprint matches the last shipped production build ($current_fingerprint)."
+echo "OTA-safe: fingerprint matches the latest finished production build ($current_fingerprint)."
