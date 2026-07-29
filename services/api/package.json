@@ -34,7 +34,6 @@
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",
     "@hominem/ai": "workspace:*",
-    "@ponti-studios/auth": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/finance-services": "workspace:*",
@@ -46,6 +45,7 @@
     "@hono/standard-validator": "^0.3.0",
     "@hono/zod-validator": "^0.7.6",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@ponti-studios/auth": "workspace:*",
     "@scalar/hono-api-reference": "^0.11.11",
     "@sentry/node": "^8.54.0",
     "better-auth": "1.6.23",

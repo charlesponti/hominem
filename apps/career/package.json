@@ -23,12 +23,12 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@hominem/ai": "workspace:*",
-    "@ponti-studios/auth": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/storage": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "@ponti-studios/auth": "workspace:*",
     "@ponti-studios/ui": "catalog:",
     "@react-router/node": "catalog:",
     "@react-router/serve": "catalog:",

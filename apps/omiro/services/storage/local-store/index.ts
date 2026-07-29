@@ -1,5 +1,5 @@
-import type { User } from '@ponti-studios/auth/types';
 import { logger, LOG_MESSAGES } from '@hominem/telemetry';
+import type { User } from '@ponti-studios/auth/types';
 import { z } from 'zod';
 
 import { SettingsSchema, MediaSchema } from '../../validation/schemas';

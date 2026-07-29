@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveAppRedirectUrl, resolveAuthRedirect, resolveOAuthResumeUrl } from './redirect-policy';
+import {
+  resolveAppRedirectUrl,
+  resolveAuthRedirect,
+  resolveOAuthResumeUrl,
+} from './redirect-policy';
 
 describe('resolveAuthRedirect', () => {
   it('falls back when redirect is missing', () => {
@@ -104,9 +108,7 @@ describe('resolveAppRedirectUrl', () => {
   });
 
   it('rejects non-http(s) protocols even if the origin string matches', () => {
-    expect(
-      resolveAppRedirectUrl('javascript:alert(1)', ['javascript:alert(1)']),
-    ).toBeNull();
+    expect(resolveAppRedirectUrl('javascript:alert(1)', ['javascript:alert(1)'])).toBeNull();
   });
 
   it('returns the URL unchanged when the origin is allow-listed', () => {

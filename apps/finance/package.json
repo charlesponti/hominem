@@ -18,11 +18,11 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@ponti-studios/auth": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/queues": "workspace:*",
     "@hominem/rpc": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "@ponti-studios/auth": "workspace:*",
     "@ponti-studios/ui": "catalog:",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.24",

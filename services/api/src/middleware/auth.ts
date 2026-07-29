@@ -1,5 +1,5 @@
-import type { User } from '@ponti-studios/auth/types';
 import { authDb } from '@hominem/db';
+import type { User } from '@ponti-studios/auth/types';
 import type { MiddlewareHandler } from 'hono';
 
 import { betterAuthMcpServer, betterAuthServer } from '../auth/better-auth';

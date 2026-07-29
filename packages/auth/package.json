@@ -2,6 +2,14 @@
   "name": "@ponti-studios/auth",
   "version": "0.1.0",
   "description": "Unified authentication package for Hominem apps (web, mobile, CLI)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ponti-studios/hominem.git",
+    "directory": "packages/auth"
+  },
+  "files": [
+    "build"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -45,42 +53,7 @@
       "default": "./src/server.ts"
     }
   },
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "format": "oxfmt src --write",
-    "format:check": "oxfmt src --check",
-    "lint": "oxlint src",
-    "lint:fix": "oxlint src --fix"
-  },
-  "dependencies": {
-    "better-auth": "1.6.23"
-  },
-  "devDependencies": {
-    "@hominem/utils": "workspace:*",
-    "react": "catalog:",
-    "vitest": "4.1.0"
-  },
-  "peerDependencies": {
-    "@hominem/utils": "workspace:*",
-    "react": "catalog:"
-  },
-  "peerDependenciesMeta": {
-    "@hominem/utils": {
-      "optional": true
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ponti-studios/hominem.git",
-    "directory": "packages/auth"
-  },
-  "files": [
-    "build"
-  ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "exports": {
       ".": {
         "types": "./build/index.d.ts",
@@ -122,6 +95,33 @@
         "types": "./build/server.d.ts",
         "default": "./build/server.js"
       }
+    },
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt src --write",
+    "format:check": "oxfmt src --check",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint src --fix"
+  },
+  "dependencies": {
+    "better-auth": "1.6.23"
+  },
+  "devDependencies": {
+    "@hominem/utils": "workspace:*",
+    "react": "catalog:",
+    "vitest": "4.1.0"
+  },
+  "peerDependencies": {
+    "@hominem/utils": "workspace:*",
+    "react": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@hominem/utils": {
+      "optional": true
     }
   }
 }
