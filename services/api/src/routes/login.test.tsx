@@ -45,6 +45,17 @@ describe('API login route', () => {
     const response = await createApp().request('http://localhost/login');
 
     expect(response.status).toBe(400);
+    await expect(response.text()).resolves.toContain(
+      'Open the authorization link from your MCP client to sign in.',
+    );
+  });
+
+  it('serves the Hominem logo used by the auth card', async () => {
+    const response = await createApp().request('http://localhost/logo.hominem.500x500.webp');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/webp');
+    expect((await response.arrayBuffer()).byteLength).toBeGreaterThan(0);
   });
 
   it('sends the OTP through Better Auth and advances to verification', async () => {
@@ -87,5 +98,31 @@ describe('API login route', () => {
     expect(response.headers.get('set-cookie')).toContain('better-auth.session_token=session-token');
     const request = mocks.handler.mock.calls[0]?.[0] as Request;
     expect(request.url).toContain('/api/auth/sign-in/email-otp');
+  });
+
+  it('renders a signed-out state when no browser session exists', async () => {
+    const response = await createApp().request('http://localhost/logout');
+
+    expect(response.status).toBe(200);
+    await expect(response.text()).resolves.toContain('Signed out');
+  });
+
+  it('clears the Better Auth session and renders the logout confirmation', async () => {
+    mocks.handler.mockResolvedValue(
+      new Response(null, {
+        headers: {
+          'set-cookie': 'better-auth.session_token=; Max-Age=0; Path=/; HttpOnly',
+        },
+        status: 200,
+      }),
+    );
+
+    const response = await createApp().request('http://localhost/logout', { method: 'POST' });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('set-cookie')).toContain('Max-Age=0');
+    await expect(response.text()).resolves.toContain('Signed out');
+    const request = mocks.handler.mock.calls[0]?.[0] as Request;
+    expect(request.url).toContain('/api/auth/sign-out');
   });
 });

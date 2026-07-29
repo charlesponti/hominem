@@ -35,6 +35,7 @@ RUN apk add --no-cache ca-certificates && \
 
 # Fully bundled application — no node_modules needed at runtime
 COPY --from=builder --chown=apiuser:apiuser /app/services/api/dist ./dist
+COPY --from=builder --chown=apiuser:apiuser /app/services/api/public ./public
 
 USER apiuser
 

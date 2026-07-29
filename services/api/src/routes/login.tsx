@@ -1,13 +1,16 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { resolveOAuthResumeUrl } from '@ponti-studios/auth/shared/redirect-policy';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { betterAuthServer } from '../auth/better-auth';
-import { API_BRAND } from '../brand';
 import { env } from '../env';
 
 const emailSchema = z.string().email();
 const otpSchema = z.string().length(6);
+const logoPath = join(process.cwd(), 'public', 'logo.hominem.500x500.webp');
 
 type LoginPageProps = {
   email: string;
@@ -15,6 +18,338 @@ type LoginPageProps = {
   oauthQuery: string;
   step: 'email' | 'otp';
 };
+
+type OAuthErrorPageProps = {
+  description?: string;
+  error?: string;
+};
+
+const pageStyles = `
+  :root {
+    color-scheme: dark;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0c1014;
+    color: #f3f0e8;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: #0c1014;
+  }
+
+  button, input { font: inherit; }
+
+  .auth-page {
+    isolation: isolate;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+  }
+
+  .auth-page::before {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    width: min(680px, 90vw);
+    aspect-ratio: 1;
+    top: -28%;
+    left: -18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(244, 20, 143, .16), transparent 64%);
+    filter: blur(12px);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+
+  .auth-page::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    width: min(620px, 90vw);
+    aspect-ratio: 1;
+    right: -22%;
+    bottom: -35%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(88, 120, 255, .13), transparent 65%);
+    filter: blur(18px);
+    animation: drift 18s ease-in-out infinite alternate-reverse;
+  }
+
+  .auth-grid {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: .25;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+  }
+
+  .auth-layout {
+    width: min(100%, 1040px);
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(380px, 460px);
+    align-items: center;
+    gap: clamp(44px, 8vw, 120px);
+    animation: enter .7s cubic-bezier(.22, 1, .36, 1) both;
+  }
+
+  .auth-intro { padding: 20px 0; }
+
+  .brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    color: #f3f0e8;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(244, 20, 143, .75);
+    border-radius: 9px;
+    color: #0c1014;
+    background: #f4148f;
+    box-shadow: 0 0 28px rgba(244, 20, 143, .18);
+    font-size: 17px;
+    font-weight: 900;
+    transform: rotate(-8deg);
+  }
+
+  .eyebrow {
+    margin: clamp(54px, 10vh, 112px) 0 18px;
+    color: #f4148f;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .auth-intro h1 {
+    max-width: 520px;
+    margin: 0;
+    color: #f3f0e8;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(42px, 6vw, 74px);
+    font-weight: 400;
+    letter-spacing: -.055em;
+    line-height: .96;
+  }
+
+  .intro-copy {
+    max-width: 390px;
+    margin: 28px 0 0;
+    color: #8f9ba7;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .signal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 42px;
+    color: #7e8993;
+    font-size: 12px;
+    letter-spacing: .02em;
+  }
+
+  .signal-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f4148f;
+    box-shadow: 0 0 0 5px rgba(244, 20, 143, .08), 0 0 18px rgba(244, 20, 143, .65);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  .auth-card {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(28px, 5vw, 46px);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 28px;
+    color: #20231f;
+    background: #f3f0e8;
+    box-shadow: 0 30px 100px rgba(0,0,0,.32), 0 2px 0 rgba(255,255,255,.14) inset;
+  }
+
+  .auth-card::before {
+    content: "";
+    position: absolute;
+    width: 230px;
+    height: 230px;
+    top: -130px;
+    right: -80px;
+    border-radius: 50%;
+    background: #f4148f;
+    opacity: .5;
+    filter: blur(1px);
+  }
+
+  .card-topline {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 46px;
+    color: #687168;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .secure-label { display: inline-flex; align-items: center; gap: 7px; }
+  .secure-label::before { display: none; }
+  .step-label { color: #9aa199; }
+
+  .auth-card h2 {
+    position: relative;
+    margin: 0;
+    color: #20231f;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(31px, 4vw, 43px);
+    font-weight: 400;
+    letter-spacing: -.05em;
+    line-height: 1;
+  }
+
+  .card-copy {
+    position: relative;
+    margin: 14px 0 30px;
+    color: #697168;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .card-copy strong { color: #20231f; font-weight: 650; }
+
+  .alert {
+    position: relative;
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    border: 1px solid rgba(174, 62, 49, .25);
+    border-radius: 12px;
+    color: #8e3329;
+    background: #fff0ed;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .field { position: relative; display: grid; gap: 9px; }
+  .field label { color: #4d574e; font-size: 12px; font-weight: 750; letter-spacing: .02em; }
+  .field input {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 16px;
+    border: 1px solid #d2d6cc;
+    border-radius: 12px;
+    outline: none;
+    color: #20231f;
+    background: rgba(255,255,255,.7);
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .field input:hover { border-color: #aab2a7; }
+  .field input:focus { border-color: #d4147c; background: #fff; box-shadow: 0 0 0 4px rgba(244, 20, 143, .24); }
+  .otp-input { font-size: 25px; font-weight: 700; letter-spacing: .28em; text-align: center; }
+
+  .primary-button {
+    width: 100%;
+    min-height: 54px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #17200f;
+    background: #f4148f;
+    box-shadow: 0 8px 18px rgba(196, 14, 113, .16);
+    font-size: 14px;
+    font-weight: 800;
+    transition: transform .2s, box-shadow .2s, background .2s;
+  }
+  .primary-button:hover { background: #ff48ad; box-shadow: 0 12px 26px rgba(196, 14, 113, .24); transform: translateY(-2px); }
+  .primary-button:active { transform: translateY(0); }
+  .primary-button:focus-visible, .secondary-button:focus-visible { outline: 3px solid #d4147c; outline-offset: 3px; }
+
+  .secondary-button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 4px 8px;
+    border: 0;
+    cursor: pointer;
+    color: #697168;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .secondary-button:hover { color: #20231f; }
+
+  .card-footnote {
+    position: relative;
+    margin: 28px 0 0;
+    color: #92998f;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .error-card { text-align: center; }
+  .error-symbol { position: relative; display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 28px; border: 1px solid #d2d6cc; border-radius: 16px; color: #8e3329; background: #fff0ed; font-size: 22px; }
+  .error-card .card-copy { max-width: 320px; margin-right: auto; margin-left: auto; }
+.error-card a { display: inline-flex; align-items: center; justify-content: center; min-height: 50px; width: 100%; border-radius: 12px; color: #fff; background: #f4148f; font-size: 14px; font-weight: 800; text-decoration: none; }
+  .logout-card { text-align: center; }
+  .logout-card .brand-mark { margin: 0 auto 28px; }
+
+  @keyframes enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes drift { from { transform: translate3d(-2%, -2%, 0) scale(1); } to { transform: translate3d(5%, 4%, 0) scale(1.08); } }
+  @keyframes pulse { 50% { opacity: .45; transform: scale(.75); } }
+
+  @media (max-width: 780px) {
+    .auth-page { padding: 24px 16px; }
+    .auth-layout { grid-template-columns: 1fr; gap: 28px; max-width: 500px; }
+    .auth-intro { padding: 0; }
+    .eyebrow { margin: 42px 0 14px; }
+    .auth-intro h1 { font-size: clamp(42px, 13vw, 64px); }
+    .intro-copy { margin-top: 18px; font-size: 14px; }
+    .signal { margin-top: 24px; }
+    .auth-card { border-radius: 22px; }
+    .card-topline { margin-bottom: 34px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+   }
+
+   /* The auth surface is intentionally one quiet card. */
+   .auth-page { background: #0c1014; }
+   .auth-page::before, .auth-page::after, .auth-grid { display: none; }
+   .auth-layout { display: block; width: min(100%, 420px); }
+   .auth-intro { display: none; }
+   .auth-card { padding: 32px; border-radius: 22px; }
+   .auth-card::before { display: none; }
+   .auth-card .brand-lockup { margin-bottom: 34px; color: #20231f; }
+   .brand-logo { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
+   .card-topline { margin-bottom: 28px; }
+   .auth-card h2 { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 30px; font-weight: 750; letter-spacing: -.04em; }
+   .card-copy { margin-bottom: 24px; }
+   .card-footnote { margin-top: 20px; }
+   .logout-card .brand-mark { width: 42px; height: 42px; margin: 0 auto 28px; border: 0; border-radius: 12px; object-fit: cover; transform: none; }
+`;
 
 function getFormValue(form: Record<string, string | File>, name: string) {
   const value = form[name];
@@ -40,54 +375,181 @@ function loginUrl(input: {
   return url.toString();
 }
 
-function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
-  const isOtpStep = step === 'otp';
-
+function PageFrame({
+  children,
+  title = 'Secure access | Hominem',
+}: {
+  children: unknown;
+  title?: string;
+}) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <title>Sign in | {API_BRAND.appName}</title>
+        <meta content="#0c1014" name="theme-color" />
+        <title>{title}</title>
+        <style dangerouslySetInnerHTML={{ __html: pageStyles }} />
       </head>
       <body>
-        <main>
-          <h1>Sign in to {API_BRAND.appName}</h1>
-          <p>
-            {isOtpStep
-              ? `We sent a verification code to ${email}.`
-              : 'Enter your email to continue.'}
+        <div class="auth-page">
+          <div aria-hidden="true" class="auth-grid" />
+          {children}
+        </div>
+      </body>
+    </html>
+  );
+}
+
+function BrandLockup() {
+  return (
+    <div class="brand-lockup">
+      <img alt="Hominem" class="brand-logo" src="/logo.hominem.500x500.webp" />
+      <span>Hominem</span>
+    </div>
+  );
+}
+
+function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
+  const isOtpStep = step === 'otp';
+
+  return (
+    <PageFrame>
+      <main class="auth-layout">
+        <section aria-labelledby="auth-title" class="auth-card">
+          <BrandLockup />
+          <div class="card-topline">
+            <span class="secure-label">OAuth access</span>
+            <span class="step-label">{isOtpStep ? '02 / 02' : '01 / 02'}</span>
+          </div>
+          <h2 id="auth-title">{isOtpStep ? 'Check your inbox.' : 'Sign in'}</h2>
+          <p class="card-copy">
+            {isOtpStep ? (
+              <>
+                Code sent to <strong>{email}</strong>.
+              </>
+            ) : (
+              'Enter your email to continue.'
+            )}
           </p>
-          {error ? <p role="alert">{error}</p> : null}
+          {error ? (
+            <p aria-live="polite" class="alert" role="alert">
+              {error}
+            </p>
+          ) : null}
           <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
             <input name="oauth" type="hidden" value={oauthQuery} />
             {isOtpStep ? (
               <>
                 <input name="email" type="hidden" value={email} />
-                <label>
-                  Verification code
-                  <input autoComplete="one-time-code" inputMode="numeric" name="otp" required />
-                </label>
+                <div class="field">
+                  <label htmlFor="otp">Verification code</label>
+                  <input
+                    autoComplete="one-time-code"
+                    autoFocus
+                    class="otp-input"
+                    id="otp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    name="otp"
+                    pattern="[0-9]{6}"
+                    required
+                  />
+                </div>
               </>
             ) : (
-              <label>
-                Email address
-                <input autoComplete="email" name="email" required type="email" value={email} />
-              </label>
+              <div class="field">
+                <label htmlFor="email">Email address</label>
+                <input
+                  autoComplete="email"
+                  autoFocus
+                  id="email"
+                  name="email"
+                  required
+                  type="email"
+                  value={email}
+                />
+              </div>
             )}
-            <button type="submit">{isOtpStep ? 'Verify and continue' : 'Continue'}</button>
+            <button class="primary-button" type="submit">
+              {isOtpStep ? 'Verify and continue' : 'Send my code'}
+            </button>
           </form>
           {isOtpStep ? (
             <form action="/login/send" method="post">
               <input name="oauth" type="hidden" value={oauthQuery} />
               <input name="email" type="hidden" value={email} />
-              <button type="submit">Resend code</button>
+              <button class="secondary-button" type="submit">
+                Resend code
+              </button>
             </form>
           ) : null}
-        </main>
-      </body>
-    </html>
+        </section>
+      </main>
+    </PageFrame>
   );
+}
+
+function OAuthErrorPage({ description, error }: OAuthErrorPageProps) {
+  return (
+    <PageFrame>
+      <main class="auth-layout">
+        <section aria-labelledby="error-title" class="auth-card error-card">
+          <BrandLockup />
+          <div aria-hidden="true" class="error-symbol">
+            !
+          </div>
+          <div class="card-topline">
+            <span class="secure-label">OAuth access</span>
+            <span class="step-label">ERROR</span>
+          </div>
+          <h2 id="error-title">Authorization stopped</h2>
+          <p class="card-copy">
+            {description ??
+              (error ? `The request ended with ${error}.` : 'This request could not be completed.')}
+          </p>
+          <p class="card-copy">Return to your MCP client and try again.</p>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+function LogoutPage({ signedOut = false }: { signedOut?: boolean }) {
+  return (
+    <PageFrame title="Sign out | Hominem">
+      <main class="auth-layout">
+        <section aria-labelledby="logout-title" class="auth-card logout-card">
+          <BrandLockup />
+          <h2 id="logout-title">{signedOut ? 'Signed out' : 'Sign out?'}</h2>
+          <p class="card-copy">
+            {signedOut
+              ? 'Your browser session has been cleared.'
+              : 'This clears your Hominem browser session.'}
+          </p>
+          {signedOut ? (
+            <p class="card-copy">Start a new sign-in from your MCP client.</p>
+          ) : (
+            <form action="/logout" method="post">
+              <button class="primary-button" type="submit">
+                Sign me out
+              </button>
+            </form>
+          )}
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+function copySetCookieHeaders(headers: Headers) {
+  const copied = new Headers(headers);
+  const setCookies = headers.getSetCookie();
+  if (setCookies.length > 0) {
+    copied.delete('set-cookie');
+    for (const setCookie of setCookies) copied.append('set-cookie', setCookie);
+  }
+  return copied;
 }
 
 async function callBetterAuth(input: {
@@ -109,11 +571,28 @@ async function callBetterAuth(input: {
 }
 
 export const loginRoutes = new Hono()
+  .get('/logo.hominem.500x500.webp', async () => {
+    const logo = await readFile(logoPath);
+    return new Response(logo, {
+      headers: {
+        'cache-control': 'public, max-age=86400',
+        'content-type': 'image/webp',
+      },
+    });
+  })
   .get('/login', async (c) => {
     const url = new URL(c.req.url);
     const oauthQuery = url.searchParams.toString();
     const oauthResumeUrl = getOAuthResumeUrl(oauthQuery);
-    if (!oauthResumeUrl) return c.text('Invalid OAuth authorization request.', 400);
+    if (!oauthResumeUrl) {
+      return c.html(
+        <OAuthErrorPage
+          description="Open the authorization link from your MCP client to sign in."
+          error="invalid_request"
+        />,
+        400,
+      );
+    }
 
     const session = await betterAuthServer.api.getSession({ headers: c.req.raw.headers });
     if (session) return c.redirect(oauthResumeUrl);
@@ -131,6 +610,29 @@ export const loginRoutes = new Hono()
         step={step}
       />,
     );
+  })
+  .get('/error', (c) =>
+    c.html(
+      <OAuthErrorPage
+        description={c.req.query('error_description')}
+        error={c.req.query('error')}
+      />,
+    ),
+  )
+  .get('/logout', async (c) => {
+    const session = await betterAuthServer.api.getSession({ headers: c.req.raw.headers });
+    return c.html(<LogoutPage signedOut={!session} />);
+  })
+  .post('/logout', async (c) => {
+    const response = await callBetterAuth({
+      body: {},
+      path: '/sign-out',
+      request: c.req.raw,
+    });
+    const pageResponse = await c.html(<LogoutPage signedOut />);
+    const headers = copySetCookieHeaders(response.headers);
+    headers.set('content-type', pageResponse.headers.get('content-type') ?? 'text/html');
+    return new Response(await pageResponse.text(), { status: 200, headers });
   })
   .post('/login/send', async (c) => {
     const form = await c.req.parseBody();
