@@ -16,12 +16,13 @@ if (env.NODE_ENV !== 'production') {
   enableTestOtpStore();
 }
 
-function getTrustedOrigins() {
+export function getTrustedOrigins() {
   const origins = new Set([
     env.API_URL,
     env.CAREER_URL,
     env.FINANCE_URL,
     env.WEB_URL,
+    env.LABS_URL,
     'hakumi://',
     'hakumi-dev://',
     'hakumi-e2e://',

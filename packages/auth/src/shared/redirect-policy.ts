@@ -90,3 +90,33 @@ export function resolveOAuthResumeUrl(search: string, apiBaseUrl: string): strin
   url.search = search;
   return url.toString();
 }
+
+/**
+ * Resolves a post-login redirect target for apps that don't host their own
+ * login UI and instead send users to the shared hosted `/login` page with
+ * `?next=<absolute-url>` (see services/api/src/routes/login.tsx's "app
+ * redirect" mode). Unlike resolveAuthRedirect (same-origin relative paths
+ * only), `next` here is a cross-origin absolute URL by necessity — the
+ * destination is a different app's origin entirely — so the allowlist of
+ * trusted app origins is the only thing standing between this and an open
+ * redirect. Only `next`'s origin is checked; the path/query/hash are
+ * forwarded as-is once the origin clears the allowlist.
+ */
+export function resolveAppRedirectUrl(
+  next: string | null | undefined,
+  allowedOrigins: readonly string[],
+): string | null {
+  if (!next) return null;
+
+  let url: URL;
+  try {
+    url = new URL(next);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+  if (!allowedOrigins.includes(url.origin)) return null;
+
+  return url.toString();
+}

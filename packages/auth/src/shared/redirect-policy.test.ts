@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveAuthRedirect, resolveOAuthResumeUrl } from './redirect-policy';
+import { resolveAppRedirectUrl, resolveAuthRedirect, resolveOAuthResumeUrl } from './redirect-policy';
 
 describe('resolveAuthRedirect', () => {
   it('falls back when redirect is missing', () => {
@@ -82,5 +82,42 @@ describe('resolveOAuthResumeUrl', () => {
     const result = resolveOAuthResumeUrl(maliciousSearch, apiBaseUrl);
     expect(result).not.toBeNull();
     expect(new URL(result!).origin).toBe(apiBaseUrl);
+  });
+});
+
+describe('resolveAppRedirectUrl', () => {
+  const allowedOrigins = ['https://labs.ponti.io', 'https://career.ponti.io'];
+
+  it('returns null when next is missing', () => {
+    expect(resolveAppRedirectUrl(null, allowedOrigins)).toBeNull();
+    expect(resolveAppRedirectUrl(undefined, allowedOrigins)).toBeNull();
+    expect(resolveAppRedirectUrl('', allowedOrigins)).toBeNull();
+  });
+
+  it('returns null when next is not a valid URL', () => {
+    expect(resolveAppRedirectUrl('/relative/path', allowedOrigins)).toBeNull();
+    expect(resolveAppRedirectUrl('not a url', allowedOrigins)).toBeNull();
+  });
+
+  it('returns null when the origin is not allow-listed', () => {
+    expect(resolveAppRedirectUrl('https://evil.example/steal', allowedOrigins)).toBeNull();
+  });
+
+  it('rejects non-http(s) protocols even if the origin string matches', () => {
+    expect(
+      resolveAppRedirectUrl('javascript:alert(1)', ['javascript:alert(1)']),
+    ).toBeNull();
+  });
+
+  it('returns the URL unchanged when the origin is allow-listed', () => {
+    expect(
+      resolveAppRedirectUrl('https://labs.ponti.io/games/realitea?foo=bar#top', allowedOrigins),
+    ).toBe('https://labs.ponti.io/games/realitea?foo=bar#top');
+  });
+
+  it('matches origin only — path is irrelevant to the allowlist', () => {
+    expect(resolveAppRedirectUrl('https://career.ponti.io/anything/at/all', allowedOrigins)).toBe(
+      'https://career.ponti.io/anything/at/all',
+    );
   });
 });

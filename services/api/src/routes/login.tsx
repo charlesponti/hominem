@@ -1,27 +1,41 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { resolveOAuthResumeUrl } from '@ponti-studios/auth/shared/redirect-policy';
+import {
+  resolveAppRedirectUrl,
+  resolveOAuthResumeUrl,
+} from '@ponti-studios/auth/shared/redirect-policy';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { betterAuthServer } from '../auth/better-auth';
+import { betterAuthServer, getTrustedOrigins } from '../auth/better-auth';
 import { env } from '../env';
 
 const emailSchema = z.string().email();
 const otpSchema = z.string().length(6);
 const logoPath = join(process.cwd(), 'public', 'logo.hominem.500x500.webp');
 
+// Two callers land on this one hosted login page:
+//  - 'oauth': Better Auth's MCP plugin resuming an authorize request
+//    (response_type/client_id/redirect_uri query params).
+//  - 'app': another hominem-authenticated app (labs, career, finance, ...)
+//    that doesn't host its own login UI, via ?next=<absolute-url>.
+type ResumeMode = 'app' | 'oauth';
+
+type Resume = { mode: ResumeMode; url: string };
+
 type LoginPageProps = {
   email: string;
   error?: string;
-  oauthQuery: string;
+  mode: ResumeMode;
+  resumeQuery: string;
   step: 'email' | 'otp';
 };
 
-type OAuthErrorPageProps = {
+type AuthErrorPageProps = {
   description?: string;
   error?: string;
+  mode?: ResumeMode;
 };
 
 const pageStyles = `
@@ -356,18 +370,32 @@ function getFormValue(form: Record<string, string | File>, name: string) {
   return typeof value === 'string' ? value : '';
 }
 
-function getOAuthResumeUrl(query: string) {
-  return resolveOAuthResumeUrl(query, env.API_URL);
+/**
+ * Resolves where to send the browser once the user is signed in. Tries the
+ * app-redirect mode first (?next=<absolute-url>, allow-listed by origin via
+ * getTrustedOrigins) and falls back to the MCP OAuth resume mode. A request
+ * matching neither is not a valid entry point to this page.
+ */
+function resolveResume(query: string): Resume | null {
+  const params = new URLSearchParams(query);
+  const next = params.get('next');
+  if (next !== null) {
+    const url = resolveAppRedirectUrl(next, getTrustedOrigins());
+    return url ? { mode: 'app', url } : null;
+  }
+
+  const url = resolveOAuthResumeUrl(query, env.API_URL);
+  return url ? { mode: 'oauth', url } : null;
 }
 
 function loginUrl(input: {
   email?: string;
   error?: string;
-  oauthQuery: string;
+  resumeQuery: string;
   step: 'email' | 'otp';
 }) {
   const url = new URL('/login', env.API_URL);
-  const query = new URLSearchParams(input.oauthQuery);
+  const query = new URLSearchParams(input.resumeQuery);
   query.set('step', input.step);
   if (input.email) query.set('email', input.email);
   if (input.error) query.set('error', input.error);
@@ -410,8 +438,9 @@ function BrandLockup() {
   );
 }
 
-function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
+function LoginPage({ email, error, mode, resumeQuery, step }: LoginPageProps) {
   const isOtpStep = step === 'otp';
+  const accessLabel = mode === 'oauth' ? 'OAuth access' : 'App access';
 
   return (
     <PageFrame>
@@ -419,7 +448,7 @@ function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
         <section aria-labelledby="auth-title" class="auth-card">
           <BrandLockup />
           <div class="card-topline">
-            <span class="secure-label">OAuth access</span>
+            <span class="secure-label">{accessLabel}</span>
             <span class="step-label">{isOtpStep ? '02 / 02' : '01 / 02'}</span>
           </div>
           <h2 id="auth-title">{isOtpStep ? 'Check your inbox.' : 'Sign in'}</h2>
@@ -438,7 +467,7 @@ function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
             </p>
           ) : null}
           <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
-            <input name="oauth" type="hidden" value={oauthQuery} />
+            <input name="resume" type="hidden" value={resumeQuery} />
             {isOtpStep ? (
               <>
                 <input name="email" type="hidden" value={email} />
@@ -477,7 +506,7 @@ function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
           </form>
           {isOtpStep ? (
             <form action="/login/send" method="post">
-              <input name="oauth" type="hidden" value={oauthQuery} />
+              <input name="resume" type="hidden" value={resumeQuery} />
               <input name="email" type="hidden" value={email} />
               <button class="secondary-button" type="submit">
                 Resend code
@@ -490,7 +519,13 @@ function LoginPage({ email, error, oauthQuery, step }: LoginPageProps) {
   );
 }
 
-function OAuthErrorPage({ description, error }: OAuthErrorPageProps) {
+function AuthErrorPage({ description, error, mode }: AuthErrorPageProps) {
+  const accessLabel = mode === 'app' ? 'App access' : 'OAuth access';
+  const returnCopy =
+    mode === 'app'
+      ? 'Return to the app you came from and try again.'
+      : 'Return to your MCP client and try again.';
+
   return (
     <PageFrame>
       <main class="auth-layout">
@@ -500,7 +535,7 @@ function OAuthErrorPage({ description, error }: OAuthErrorPageProps) {
             !
           </div>
           <div class="card-topline">
-            <span class="secure-label">OAuth access</span>
+            <span class="secure-label">{accessLabel}</span>
             <span class="step-label">ERROR</span>
           </div>
           <h2 id="error-title">Authorization stopped</h2>
@@ -508,7 +543,7 @@ function OAuthErrorPage({ description, error }: OAuthErrorPageProps) {
             {description ??
               (error ? `The request ended with ${error}.` : 'This request could not be completed.')}
           </p>
-          <p class="card-copy">Return to your MCP client and try again.</p>
+          <p class="card-copy">{returnCopy}</p>
         </section>
       </main>
     </PageFrame>
@@ -582,12 +617,12 @@ export const loginRoutes = new Hono()
   })
   .get('/login', async (c) => {
     const url = new URL(c.req.url);
-    const oauthQuery = url.searchParams.toString();
-    const oauthResumeUrl = getOAuthResumeUrl(oauthQuery);
-    if (!oauthResumeUrl) {
+    const resumeQuery = url.searchParams.toString();
+    const resume = resolveResume(resumeQuery);
+    if (!resume) {
       return c.html(
-        <OAuthErrorPage
-          description="Open the authorization link from your MCP client to sign in."
+        <AuthErrorPage
+          description="Open the sign-in link from the app or client you came from."
           error="invalid_request"
         />,
         400,
@@ -595,7 +630,7 @@ export const loginRoutes = new Hono()
     }
 
     const session = await betterAuthServer.api.getSession({ headers: c.req.raw.headers });
-    if (session) return c.redirect(oauthResumeUrl);
+    if (session) return c.redirect(resume.url);
 
     const email = url.searchParams.get('email') ?? '';
     const step =
@@ -606,17 +641,15 @@ export const loginRoutes = new Hono()
       <LoginPage
         email={email}
         error={url.searchParams.get('error') ?? undefined}
-        oauthQuery={oauthQuery}
+        mode={resume.mode}
+        resumeQuery={resumeQuery}
         step={step}
       />,
     );
   })
   .get('/error', (c) =>
     c.html(
-      <OAuthErrorPage
-        description={c.req.query('error_description')}
-        error={c.req.query('error')}
-      />,
+      <AuthErrorPage description={c.req.query('error_description')} error={c.req.query('error')} />,
     ),
   )
   .get('/logout', async (c) => {
@@ -637,11 +670,11 @@ export const loginRoutes = new Hono()
   .post('/login/send', async (c) => {
     const form = await c.req.parseBody();
     const email = getFormValue(form, 'email');
-    const oauthQuery = getFormValue(form, 'oauth');
+    const resumeQuery = getFormValue(form, 'resume');
 
-    if (!getOAuthResumeUrl(oauthQuery) || !emailSchema.safeParse(email).success) {
+    if (!resolveResume(resumeQuery) || !emailSchema.safeParse(email).success) {
       return c.redirect(
-        loginUrl({ error: 'Enter a valid email address.', oauthQuery, step: 'email' }),
+        loginUrl({ error: 'Enter a valid email address.', resumeQuery, step: 'email' }),
         303,
       );
     }
@@ -656,32 +689,28 @@ export const loginRoutes = new Hono()
         loginUrl({
           email,
           error: 'Unable to send a verification code. Try again.',
-          oauthQuery,
+          resumeQuery,
           step: 'email',
         }),
         303,
       );
     }
 
-    return c.redirect(loginUrl({ email, oauthQuery, step: 'otp' }), 303);
+    return c.redirect(loginUrl({ email, resumeQuery, step: 'otp' }), 303);
   })
   .post('/login/verify', async (c) => {
     const form = await c.req.parseBody();
     const email = getFormValue(form, 'email');
-    const oauthQuery = getFormValue(form, 'oauth');
+    const resumeQuery = getFormValue(form, 'resume');
     const otp = getFormValue(form, 'otp');
-    const oauthResumeUrl = getOAuthResumeUrl(oauthQuery);
+    const resume = resolveResume(resumeQuery);
 
-    if (
-      !oauthResumeUrl ||
-      !emailSchema.safeParse(email).success ||
-      !otpSchema.safeParse(otp).success
-    ) {
+    if (!resume || !emailSchema.safeParse(email).success || !otpSchema.safeParse(otp).success) {
       return c.redirect(
         loginUrl({
           email,
           error: 'Enter the six-digit verification code.',
-          oauthQuery,
+          resumeQuery,
           step: 'otp',
         }),
         303,
@@ -698,7 +727,7 @@ export const loginRoutes = new Hono()
         loginUrl({
           email,
           error: 'Verification failed. Check your code and try again.',
-          oauthQuery,
+          resumeQuery,
           step: 'otp',
         }),
         303,
@@ -706,6 +735,6 @@ export const loginRoutes = new Hono()
     }
 
     const headers = new Headers(response.headers);
-    headers.set('location', oauthResumeUrl);
+    headers.set('location', resume.url);
     return new Response(null, { headers, status: 303 });
   });

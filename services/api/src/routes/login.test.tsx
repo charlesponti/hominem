@@ -11,6 +11,7 @@ vi.mock('../auth/better-auth', () => ({
     api: { getSession: mocks.getSession },
     handler: mocks.handler,
   },
+  getTrustedOrigins: () => ['https://labs.ponti.io'],
 }));
 
 import { loginRoutes } from './login';
@@ -46,8 +47,23 @@ describe('API login route', () => {
 
     expect(response.status).toBe(400);
     await expect(response.text()).resolves.toContain(
-      'Open the authorization link from your MCP client to sign in.',
+      'Open the sign-in link from the app or client you came from.',
     );
+  });
+
+  it('renders the OTP form for an allow-listed app redirect request', async () => {
+    const next = encodeURIComponent('https://labs.ponti.io/games/realitea');
+    const response = await createApp().request(`http://localhost/login?next=${next}`);
+
+    expect(response.status).toBe(200);
+    await expect(response.text()).resolves.toContain('Enter your email to continue.');
+  });
+
+  it('rejects an app redirect request to a non-allow-listed origin', async () => {
+    const next = encodeURIComponent('https://evil.example/steal');
+    const response = await createApp().request(`http://localhost/login?next=${next}`);
+
+    expect(response.status).toBe(400);
   });
 
   it('serves the Hominem logo used by the auth card', async () => {
@@ -63,7 +79,7 @@ describe('API login route', () => {
     const response = await createApp().request('http://localhost/login/send', {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ email: 'mcp@example.com', oauth: oauthQuery }).toString(),
+      body: new URLSearchParams({ email: 'mcp@example.com', resume: oauthQuery }).toString(),
     });
 
     expect(response.status).toBe(303);
@@ -88,7 +104,7 @@ describe('API login route', () => {
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         email: 'mcp@example.com',
-        oauth: oauthQuery,
+        resume: oauthQuery,
         otp: '123456',
       }).toString(),
     });

@@ -12,6 +12,10 @@ export const apiSchema = baseSchema.extend({
   CAREER_URL: z.url().default('http://localhost:4451'),
   WEB_URL: z.url().default('http://localhost:4445'),
   FINANCE_URL: z.url().default('http://localhost:4444'),
+  // ponti-studios/labs — a separate repo/deploy target (labs.ponti.io in
+  // prod), not one of this monorepo's own apps. Trusted so its Realitea
+  // game can use the shared hosted /login page's app-redirect mode.
+  LABS_URL: z.url().default('http://localhost:3001'),
   DATABASE_URL: z.url(),
   // No default — a missing secret must fail loudly at boot, not silently run
   // with a hardcoded, publicly-known value.
