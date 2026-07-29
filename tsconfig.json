@@ -21,8 +21,7 @@
     { "path": "packages/services" },
     { "path": "packages/storage" },
     { "path": "packages/telemetry" },
-    { "path": "packages/utils" },
-    { "path": "apps/omiro" }
+    { "path": "packages/utils" }
   ],
   "exclude": [
     "node_modules",
