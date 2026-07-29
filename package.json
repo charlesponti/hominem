@@ -20,8 +20,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --ui stream",
-    "format": "oxfmt . --write",
-    "format:check": "oxfmt . --check",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "test": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5434/app-test AUTH_E2E_SECRET=otp-secret turbo run test",
