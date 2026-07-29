@@ -1,0 +1,44 @@
+name: publish-auth
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-auth:
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TELEMETRY_DISABLED: '1'
+
+    strategy:
+      matrix:
+        node-version: [24.18.0]
+
+    steps:
+      - name: checkout-repository
+        uses: actions/checkout@v7
+
+      - name: setup-pnpm-workspace
+        uses: ./.github/actions/setup-pnpm-workspace
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: build-auth-package
+        run: pnpm --filter @ponti-studios/auth build
+
+      - name: write-npmrc
+        working-directory: packages/auth
+        run: |
+          echo "@ponti-studios:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: publish-to-github-packages
+        working-directory: packages/auth
+        run: pnpm publish --no-git-checks

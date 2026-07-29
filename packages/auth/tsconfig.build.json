@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "*.tsbuildinfo",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
+}

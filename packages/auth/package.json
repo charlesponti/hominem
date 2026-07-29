@@ -1,6 +1,6 @@
 {
   "name": "@ponti-studios/auth",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Unified authentication package for Hominem apps (web, mobile, CLI)",
   "type": "module",
   "exports": {
@@ -46,7 +46,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "oxfmt src --write",
@@ -55,14 +55,73 @@
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
-    "@hominem/utils": "workspace:*",
     "better-auth": "1.6.23"
   },
   "devDependencies": {
+    "@hominem/utils": "workspace:*",
     "react": "catalog:",
     "vitest": "4.1.0"
   },
   "peerDependencies": {
+    "@hominem/utils": "workspace:*",
     "react": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@hominem/utils": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ponti-studios/hominem.git",
+    "directory": "packages/auth"
+  },
+  "files": [
+    "build"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      },
+      "./types": {
+        "types": "./build/types.d.ts",
+        "default": "./build/types.js"
+      },
+      "./shared/mask-email": {
+        "types": "./build/shared/mask-email.d.ts",
+        "default": "./build/shared/mask-email.js"
+      },
+      "./shared/validation": {
+        "types": "./build/shared/validation.d.ts",
+        "default": "./build/shared/validation.js"
+      },
+      "./shared/redirect-policy": {
+        "types": "./build/shared/redirect-policy.d.ts",
+        "default": "./build/shared/redirect-policy.js"
+      },
+      "./shared/protocol": {
+        "types": "./build/shared/protocol.d.ts",
+        "default": "./build/shared/protocol.js"
+      },
+      "./client/provider": {
+        "types": "./build/client/provider.d.ts",
+        "default": "./build/client/provider.js"
+      },
+      "./client/email-auth": {
+        "types": "./build/client/email-auth.d.ts",
+        "default": "./build/client/email-auth.js"
+      },
+      "./client/email-otp-route": {
+        "types": "./build/client/email-otp-route.d.ts",
+        "default": "./build/client/email-otp-route.js"
+      },
+      "./server": {
+        "types": "./build/server.d.ts",
+        "default": "./build/server.js"
+      }
+    }
   }
 }
