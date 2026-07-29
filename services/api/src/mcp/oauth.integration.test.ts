@@ -142,7 +142,7 @@ describe('MCP OAuth integration', () => {
         cookie: cookies.header(),
         'content-type': 'application/x-www-form-urlencoded',
       },
-      body: formBody({ email: userEmail, oauth: authorizationQuery }),
+      body: formBody({ email: userEmail, resume: authorizationQuery }),
     });
     expect(sendOtpResponse.status).toBe(303);
     cookies.update(sendOtpResponse);
@@ -153,7 +153,7 @@ describe('MCP OAuth integration', () => {
         cookie: cookies.header(),
         'content-type': 'application/x-www-form-urlencoded',
       },
-      body: formBody({ email: userEmail, oauth: authorizationQuery, otp }),
+      body: formBody({ email: userEmail, resume: authorizationQuery, otp }),
     });
     expect(verifyOtpResponse.status).toBe(303);
     cookies.update(verifyOtpResponse);
