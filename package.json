@@ -29,7 +29,7 @@
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
   },
   "devDependencies": {
-    "@expo/image-utils": "^0.10.1",
+    "@expo/image-utils": "^0.11.4",
     "@expo/prebuild-config": "~56.0.16",
     "@railway/cli": "5.25.1",
     "@types/node": "^25.4.0",
