@@ -1,6 +1,6 @@
 {
   "name": "@ponti-studios/auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unified authentication package for Hominem apps (web, mobile, CLI)",
   "repository": {
     "type": "git",
@@ -111,17 +111,10 @@
     "better-auth": "1.6.23"
   },
   "devDependencies": {
-    "@hominem/utils": "workspace:*",
     "react": "catalog:",
     "vitest": "4.1.0"
   },
   "peerDependencies": {
-    "@hominem/utils": "workspace:*",
     "react": "catalog:"
-  },
-  "peerDependenciesMeta": {
-    "@hominem/utils": {
-      "optional": true
-    }
   }
 }
