@@ -59,6 +59,7 @@ jobs:
       - name: publish-production-update
         working-directory: apps/omiro
         env:
+          APP_ENV: production
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: >-
           pnpm dlx eas-cli@21.2.0 update
