@@ -1,6 +1,6 @@
 {
   "name": "@ponti-studios/auth",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Unified authentication package for Hominem apps (web, mobile, CLI)",
   "repository": {
     "type": "git",
@@ -8,100 +8,46 @@
     "directory": "packages/auth"
   },
   "files": [
-    "build",
-    "src"
+    "build"
   ],
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
     },
     "./types": {
-      "types": "./src/types.ts",
-      "default": "./src/types.ts"
+      "types": "./build/types.d.ts",
+      "default": "./build/types.js"
     },
     "./shared/mask-email": {
-      "types": "./src/shared/mask-email.ts",
-      "default": "./src/shared/mask-email.ts"
+      "types": "./build/shared/mask-email.d.ts",
+      "default": "./build/shared/mask-email.js"
     },
     "./shared/validation": {
-      "types": "./src/shared/validation.ts",
-      "default": "./src/shared/validation.ts"
+      "types": "./build/shared/validation.d.ts",
+      "default": "./build/shared/validation.js"
     },
     "./shared/redirect-policy": {
-      "types": "./src/shared/redirect-policy.ts",
-      "default": "./src/shared/redirect-policy.ts"
+      "types": "./build/shared/redirect-policy.d.ts",
+      "default": "./build/shared/redirect-policy.js"
     },
     "./shared/protocol": {
-      "types": "./src/shared/protocol.ts",
-      "default": "./src/shared/protocol.ts"
-    },
-    "./client/provider": {
-      "types": "./src/client/provider.tsx",
-      "default": "./src/client/provider.tsx"
-    },
-    "./client/email-auth": {
-      "types": "./src/client/email-auth.ts",
-      "default": "./src/client/email-auth.ts"
-    },
-    "./client/email-otp-route": {
-      "types": "./src/client/email-otp-route.ts",
-      "default": "./src/client/email-otp-route.ts"
+      "types": "./build/shared/protocol.d.ts",
+      "default": "./build/shared/protocol.js"
     },
     "./server": {
-      "types": "./src/server.ts",
-      "default": "./src/server.ts"
+      "types": "./build/server.d.ts",
+      "default": "./build/server.js"
     }
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org",
-    "exports": {
-      ".": {
-        "types": "./build/index.d.ts",
-        "default": "./build/index.js"
-      },
-      "./types": {
-        "types": "./build/types.d.ts",
-        "default": "./build/types.js"
-      },
-      "./shared/mask-email": {
-        "types": "./build/shared/mask-email.d.ts",
-        "default": "./build/shared/mask-email.js"
-      },
-      "./shared/validation": {
-        "types": "./build/shared/validation.d.ts",
-        "default": "./build/shared/validation.js"
-      },
-      "./shared/redirect-policy": {
-        "types": "./build/shared/redirect-policy.d.ts",
-        "default": "./build/shared/redirect-policy.js"
-      },
-      "./shared/protocol": {
-        "types": "./build/shared/protocol.d.ts",
-        "default": "./build/shared/protocol.js"
-      },
-      "./client/provider": {
-        "types": "./build/client/provider.d.ts",
-        "default": "./build/client/provider.js"
-      },
-      "./client/email-auth": {
-        "types": "./build/client/email-auth.d.ts",
-        "default": "./build/client/email-auth.js"
-      },
-      "./client/email-otp-route": {
-        "types": "./build/client/email-otp-route.d.ts",
-        "default": "./build/client/email-otp-route.js"
-      },
-      "./server": {
-        "types": "./build/server.d.ts",
-        "default": "./build/server.js"
-      }
-    }
+    "registry": "https://registry.npmjs.org"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepack": "pnpm build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "oxfmt src --write",
@@ -109,14 +55,7 @@
     "lint": "oxlint src",
     "lint:fix": "oxlint src --fix"
   },
-  "dependencies": {
-    "better-auth": "1.6.23"
-  },
   "devDependencies": {
-    "react": "catalog:",
     "vitest": "4.1.0"
-  },
-  "peerDependencies": {
-    "react": "catalog:"
   }
 }

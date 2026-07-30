@@ -1,4 +1,3 @@
-import type { User } from '@ponti-studios/auth/types';
 import type { Queue } from 'bullmq';
 
 import type { AuthContext } from '../auth/types';

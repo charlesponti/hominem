@@ -1,5 +1,5 @@
 import { authDb } from '@hominem/db';
-import type { User } from '@ponti-studios/auth/types';
+import type { AuthUser } from '@ponti-studios/auth/types';
 import type { MiddlewareHandler } from 'hono';
 
 import { betterAuthMcpServer, betterAuthServer } from '../auth/better-auth';
@@ -14,15 +14,14 @@ declare module 'hono' {
   }
 }
 
-function toAuthUser(user: {
-  id: string;
-  email: string;
-  emailVerified: boolean;
-  name: string;
-  image?: string | null | undefined;
-  createdAt: Date;
-  updatedAt: Date;
-}): User {
+function toAuthUser(
+  session: Awaited<ReturnType<typeof betterAuthServer.api.getSession>>,
+): AuthUser {
+  if (!session || !session.user) {
+    throw new Error('Invalid session');
+  }
+
+  const user = session.user;
   return {
     id: user.id,
     email: user.email,
@@ -38,7 +37,7 @@ function isMcpRequest(path: string) {
   return path === '/api/mcp' || path.startsWith('/api/mcp/');
 }
 
-async function getUser(userId: string): Promise<User | null> {
+async function getUser(userId: string): Promise<AuthUser | null> {
   return (
     (await authDb.selectFrom('user').selectAll().where('id', '=', userId).executeTakeFirst()) ??
     null
@@ -89,7 +88,7 @@ export const authMiddleware = (): MiddlewareHandler => {
 
     if (userId && sessionId) {
       setAuthContext(c, {
-        user: toAuthUser(betterAuthSession.user),
+        user: toAuthUser(betterAuthSession),
         userId,
         sessionId,
         credential: 'session',

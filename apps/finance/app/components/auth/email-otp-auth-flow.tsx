@@ -2,6 +2,7 @@ import { OTPField } from '@base-ui/react/otp-field';
 import { TextField } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { cn } from '@ponti-studios/ui/utilities';
+import { useEffect, useState } from 'react';
 
 const OTP_LENGTH = 6;
 
@@ -113,6 +114,12 @@ export function EmailOtpAuthFlow({
   otpHelperText,
   step,
 }: EmailOtpAuthFlowProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   if (step === 'email') {
     return (
       <AuthScaffold title={copy.emailTitle} helperText={copy.emailHelper}>
@@ -131,7 +138,7 @@ export function EmailOtpAuthFlow({
             autoComplete="email"
             required
             placeholder={copy.emailPlaceholder}
-            disabled={isSubmitting}
+            disabled={!isHydrated || isSubmitting}
             error={error}
             onChange={(event) => onEmailChange(event.target.value)}
           />
@@ -149,7 +156,7 @@ export function EmailOtpAuthFlow({
     );
   }
 
-  const canSubmit = otp.length === OTP_LENGTH && !isSubmitting && !isResending;
+  const canSubmit = isHydrated && otp.length === OTP_LENGTH && !isSubmitting && !isResending;
 
   return (
     <AuthScaffold title={copy.otpTitle} helperText={otpHelperText}>

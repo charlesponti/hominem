@@ -1,9 +1,9 @@
-import { useEmailOtpAuthRoute } from '@ponti-studios/auth/client/email-otp-route';
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
 import { redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';
 import { userContext } from '~/lib/middleware';
+import { useEmailOtpAuthRoute } from '~/lib/use-email-otp-auth-route';
 
 import { Route } from './+types/index';
 import { AUTH_CONFIG } from './config';
@@ -62,10 +62,10 @@ export default function AuthEntryPage() {
       step={auth.step}
       onChangeEmail={auth.changeEmail}
       onEmailChange={auth.handleEmailChange}
-      onEmailSubmit={() => auth.handleSendOtp(auth.email)}
+      onEmailSubmit={() => auth.handleSendOtp()}
       onOtpChange={auth.handleOtpChange}
-      onOtpSubmit={() => auth.handleVerifyOtp(auth.email, auth.otp)}
-      onResendOtp={() => auth.handleResendOtp(auth.email)}
+      onOtpSubmit={() => auth.handleVerifyOtp()}
+      onResendOtp={() => auth.handleResendOtp()}
     />
   );
 }

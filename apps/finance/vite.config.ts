@@ -1,9 +1,13 @@
+import path from 'node:path';
+
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const authSource = path.resolve(import.meta.dirname, '../../packages/auth/src');
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production';
@@ -128,6 +132,16 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
     },
     resolve: {
+      alias:
+        mode === 'development'
+          ? [
+              {
+                find: /^@ponti-studios\/auth\/(.+)$/,
+                replacement: `${authSource}/$1`,
+              },
+              { find: '@ponti-studios/auth', replacement: `${authSource}/index.ts` },
+            ]
+          : [],
       dedupe: ['react', 'react-dom', '@tanstack/react-query'],
       tsconfigPaths: true,
     },

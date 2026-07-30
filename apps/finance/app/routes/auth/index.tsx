@@ -1,9 +1,10 @@
-import { useEmailOtpAuthRoute } from '@ponti-studios/auth/client/email-otp-route';
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
-import { redirect, useLocation, useNavigate } from 'react-router';
+import { data, redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';
 import { getServerAuth } from '~/lib/auth.server';
+import { serverEnv } from '~/lib/env';
+import { useEmailOtpAuthRoute } from '~/lib/use-email-otp-auth-route';
 
 import type { Route } from './+types/index';
 import { AUTH_CONFIG } from './config';
@@ -40,6 +41,20 @@ export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
+export async function action({ request }: Route.ActionArgs) {
+  const email = String((await request.formData()).get('email') ?? '');
+  const apiBaseUrl = serverEnv.VITE_AUTH_API_URL ?? serverEnv.VITE_PUBLIC_API_URL;
+  const response = await fetch(new URL('/api/auth/email-otp/send-verification-otp', apiBaseUrl), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: apiBaseUrl },
+    body: JSON.stringify({ email, type: 'sign-in' }),
+  });
+  if (!response.ok) {
+    return data({ error: 'Failed to send verification code' }, { status: 400 });
+  }
+  throw redirect(`/auth?email=${encodeURIComponent(email)}&step=otp`);
+}
+
 export default function AuthEntryPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,10 +77,10 @@ export default function AuthEntryPage() {
       step={auth.step}
       onChangeEmail={auth.changeEmail}
       onEmailChange={auth.handleEmailChange}
-      onEmailSubmit={() => auth.handleSendOtp(auth.email)}
+      onEmailSubmit={() => auth.handleSendOtp()}
       onOtpChange={auth.handleOtpChange}
-      onOtpSubmit={() => auth.handleVerifyOtp(auth.email, auth.otp)}
-      onResendOtp={() => auth.handleResendOtp(auth.email)}
+      onOtpSubmit={() => auth.handleVerifyOtp()}
+      onResendOtp={() => auth.handleResendOtp()}
     />
   );
 }

@@ -13,6 +13,8 @@
     "check:build-config": "bash scripts/check-eas-build-config.sh",
     "check:ota-safe": "bash scripts/check-ota-safe.sh",
     "dev": "APP_ENV=development expo start --clear",
+    "eas-build-post-install": "pnpm --filter @ponti-studios/auth build",
+    "export:embed:ios": "pnpm --filter @ponti-studios/auth build && APP_ENV=production expo export:embed --eager --platform ios --dev false",
     "format": "oxfmt env.ts components app config constants hooks services tests types --write",
     "format:check": "oxfmt env.ts components app config constants hooks services tests types --check",
     "lint": "oxlint env.ts app components config constants hooks services tests types",

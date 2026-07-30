@@ -15,6 +15,7 @@ RUN npm install -g pnpm@11.10.0 && \
     pnpm install --frozen-lockfile --filter @hominem/api...
 
 # Bundle API + all npm dependencies into dist/ (fully self-contained)
+RUN pnpm --filter @ponti-studios/auth build
 RUN pnpm --filter @hominem/api run build
 
 FROM node:26.5.0-alpine AS release

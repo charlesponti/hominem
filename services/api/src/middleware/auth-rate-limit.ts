@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import type { MiddlewareHandler } from 'hono';
 
+import { getRedis } from '../redis';
 import type { AppEnv } from '../server';
 
 interface AuthRateLimit {
@@ -15,11 +16,6 @@ interface AuthRateLimit {
 const AUTH_RATE_LIMITS: AuthRateLimit[] = [
   { path: '/api/auth/mobile/e2e/login', bucket: 'mobile-e2e-login', windowSec: 60, max: 20 },
 ];
-
-async function getRedis() {
-  const { redis } = await import('@hominem/services/redis');
-  return redis;
-}
 
 export function authRateLimitMiddleware(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {

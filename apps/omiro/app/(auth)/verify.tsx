@@ -1,4 +1,3 @@
-import { useEmailAuth } from '@ponti-studios/auth/client/provider';
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,6 +23,7 @@ import AppIcon from '../../components/ui/icon';
 import { IconChip } from '../../components/ui/icon-chip';
 import { TextField } from '../../components/ui/text-field';
 import { useAuth } from '../../services/auth/auth-provider';
+import { useEmailAuth } from '../../services/auth/use-email-auth';
 import { normalizeOtp } from '../../services/auth/validation';
 import { posthog } from '../../services/posthog';
 

@@ -1,6 +1,7 @@
-import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { useApiClient } from '@ponti-studios/ui/hooks';
 import { useQuery } from '@tanstack/react-query';
+
+import { useAuthContext } from '~/lib/auth-client';
 
 // Define query keys
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = (institutionId: string) => [

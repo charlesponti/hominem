@@ -1,4 +1,3 @@
-import { useAuthClient } from '@ponti-studios/auth/client/provider';
 import { useState } from 'react';
 import { useNavigate, useRevalidator } from 'react-router';
 
@@ -12,11 +11,11 @@ import type {
   BasicInfoFormValues,
   SocialLinksFormValues,
 } from '~/lib/account/types';
+import { authClient } from '~/lib/auth-client';
 
 export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
   const navigate = useNavigate();
   const revalidator = useRevalidator();
-  const authClient = useAuthClient();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);

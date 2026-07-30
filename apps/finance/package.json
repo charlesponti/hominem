@@ -17,6 +17,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "better-auth": "1.6.23",
     "@base-ui/react": "^1.6.0",
     "@hominem/env": "workspace:*",
     "@hominem/queues": "workspace:*",

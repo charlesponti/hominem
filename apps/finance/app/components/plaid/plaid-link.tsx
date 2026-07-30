@@ -1,4 +1,3 @@
-import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { Alert, AlertDescription, AlertTitle } from '@ponti-studios/ui/feedback';
 import { Button } from '@ponti-studios/ui/primitives';
 import {
@@ -12,6 +11,7 @@ import { AlertCircle, Building2, Link } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link';
 
+import { useAuthContext } from '~/lib/auth-client';
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid';
 import { toast } from '~/lib/toast';
 import { cn } from '~/lib/utils';

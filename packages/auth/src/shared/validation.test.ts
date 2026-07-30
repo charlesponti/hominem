@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isValidEmail, isValidOtp, normalizeEmail, normalizeOtp } from './validation';
+import { isValidEmail, isValidOtp, normalizeEmail, normalizeOtp } from './validation.js';
 
 describe('auth validation helpers', () => {
   it('normalizes email addresses', () => {

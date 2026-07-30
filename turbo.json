@@ -83,6 +83,7 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]
     },
     "test:coverage": {

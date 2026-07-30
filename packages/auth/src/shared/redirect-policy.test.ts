@@ -4,7 +4,7 @@ import {
   resolveAppRedirectUrl,
   resolveAuthRedirect,
   resolveOAuthResumeUrl,
-} from './redirect-policy';
+} from './redirect-policy.js';
 
 describe('resolveAuthRedirect', () => {
   it('falls back when redirect is missing', () => {

@@ -7,7 +7,7 @@ import { apiErrorHandler } from '../middleware/error';
 import { validationErrorMiddleware } from '../middleware/validation';
 
 const repositories = vi.hoisted(() => ({
-  financeMonthlySummary: vi.fn(),
+  getMonthlySummary: vi.fn(),
 }));
 
 const errorClasses = vi.hoisted(() => {
@@ -39,9 +39,6 @@ const errorClasses = vi.hoisted(() => {
 });
 
 vi.mock('@hominem/db', () => ({
-  FinanceQueryRepository: {
-    monthlySummary: repositories.financeMonthlySummary,
-  },
   ConflictError: errorClasses.MockServiceError,
   ForbiddenError: errorClasses.MockServiceError,
   InternalError: errorClasses.MockServiceError,
@@ -57,6 +54,10 @@ vi.mock('@hominem/db', () => ({
       'code' in value &&
       'statusCode' in value &&
       'message' in value),
+}));
+
+vi.mock('@hominem/finance-services', () => ({
+  getMonthlySummary: repositories.getMonthlySummary,
 }));
 
 import { personalRoutes } from './personal';
@@ -104,13 +105,13 @@ describe('personal routes', () => {
   });
 
   it('validates finance month queries before calling repositories', async () => {
-    repositories.financeMonthlySummary.mockClear();
+    repositories.getMonthlySummary.mockClear();
 
     const response = await createApp(true).request(
       '/api/personal/finance/monthly-summary?month=March',
     );
 
     expect(response.status).toBe(400);
-    expect(repositories.financeMonthlySummary).not.toHaveBeenCalled();
+    expect(repositories.getMonthlySummary).not.toHaveBeenCalled();
   });
 });

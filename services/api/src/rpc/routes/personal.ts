@@ -1,7 +1,7 @@
+import { getMonthlySummary } from '@hominem/finance-services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { FinanceService } from '../../application/finance.service';
 import {
   financeMonthlySummaryQuerySchema,
   financeMonthlySummarySchema,
@@ -10,7 +10,6 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 import { respondWithData } from '../response';
 
 const routes = new Hono<AppContext>();
-const financeService = new FinanceService();
 
 routes.get(
   '/finance/monthly-summary',
@@ -19,7 +18,7 @@ routes.get(
   async (c) => {
     const userId = c.get('auth')!.userId;
     const input = c.req.valid('query');
-    const summary = await financeService.monthlySummary(userId, input);
+    const summary = await getMonthlySummary({ ownerUserId: userId, ...input });
     return respondWithData(c, financeMonthlySummarySchema, summary);
   },
 );
