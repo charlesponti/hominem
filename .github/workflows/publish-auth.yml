@@ -28,9 +28,17 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: setup-npm-auth
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org
+
       - name: build-auth-package
         run: pnpm --filter @ponti-studios/auth build
 
       - name: publish-to-npm
         working-directory: packages/auth
-        run: npm publish --provenance --access public
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
