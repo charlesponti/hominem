@@ -58,3 +58,7 @@ jobs:
 
       - name: deploy-to-railway
         run: bash just/deploy.sh "${{ inputs.service_name }}" "${{ inputs.config_path }}"
+
+      - name: clear-github-packages-token
+        if: always() && env.SERVICE != '' && env.RAILWAY_TOKEN != ''
+        run: printf 'unused\n' | railway variable set GITHUB_PACKAGES_TOKEN --stdin --service "$SERVICE" --skip-deploys

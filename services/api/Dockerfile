@@ -4,6 +4,12 @@ WORKDIR /app
 
 ENV TURBO_TELEMETRY_DISABLED=1
 
+# Railway's remote builder cannot see GitHub Actions secrets directly. The
+# deploy workflow stores this as a service variable, which Railway exposes as
+# a Docker build arg. GitHub Packages requires authentication even for the
+# public @ponti-studios packages.
+ARG GITHUB_PACKAGES_TOKEN
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages ./packages
 COPY services/api ./services/api
@@ -11,6 +17,10 @@ COPY tsconfig.profiles ./tsconfig.profiles
 COPY tsconfig.base.json ./
 COPY tsconfig.json ./
 
+# Read the build variable indirectly so the token is not interpolated into
+# Railway's rendered build command/log output. The npmrc remains in the
+# intermediate builder stage and is never copied into the runtime image.
+RUN env | awk -F= '$1 == "GITHUB_PACKAGES_TOKEN" { print "//npm.pkg.github.com/:_authToken=" $2 }' >> ~/.npmrc
 RUN npm install -g pnpm@11.10.0 && \
     pnpm install --frozen-lockfile --filter @hominem/api...
 
