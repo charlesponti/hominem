@@ -61,11 +61,16 @@ jobs:
         env:
           APP_ENV: production
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: >-
-          pnpm dlx eas-cli@21.2.0 update
-          --platform ios
-          --channel production
-          --environment production
-          --rollout-percentage ${{ inputs.rollout_percentage }}
-          --message "Production OTA from ${{ inputs.ref }}"
-          --non-interactive
+          ROLLOUT_PERCENTAGE: ${{ inputs.rollout_percentage }}
+        run: |
+          rollout_flag=()
+          if [ "$ROLLOUT_PERCENTAGE" != "100" ]; then
+            rollout_flag=(--rollout-percentage "$ROLLOUT_PERCENTAGE")
+          fi
+          pnpm dlx eas-cli@21.2.0 update \
+            --platform ios \
+            --channel production \
+            --environment production \
+            "${rollout_flag[@]}" \
+            --message "Production OTA from ${{ inputs.ref }}" \
+            --non-interactive
