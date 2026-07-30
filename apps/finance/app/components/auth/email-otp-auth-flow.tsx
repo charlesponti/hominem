@@ -88,7 +88,7 @@ function OtpInput({
           key={index}
           autoFocus={index === 0}
           className={cn(
-            'border-subtle bg-panel text-foreground h-12 w-10 rounded-md border text-center text-base font-semibold',
+            'border-subtle bg-panel text-foreground h-12 w-10 rounded-md border text-center font-semibold',
             error && 'border-destructive',
           )}
           aria-label={`Character ${index + 1} of ${OTP_LENGTH}`}
