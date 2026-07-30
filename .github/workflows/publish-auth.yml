@@ -5,7 +5,7 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  id-token: write
 
 jobs:
   publish-auth:
@@ -31,13 +31,6 @@ jobs:
       - name: build-auth-package
         run: pnpm --filter @ponti-studios/auth build
 
-      - name: write-npmrc
-        run: |
-          echo "@ponti-studios:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: publish-to-github-packages
+      - name: publish-to-npm
         working-directory: packages/auth
-        run: pnpm publish --no-git-checks
+        run: npm publish --provenance --access public

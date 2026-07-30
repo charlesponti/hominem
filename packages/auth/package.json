@@ -54,6 +54,8 @@
     }
   },
   "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org",
     "exports": {
       ".": {
         "types": "./build/index.d.ts",
@@ -95,8 +97,7 @@
         "types": "./build/server.d.ts",
         "default": "./build/server.js"
       }
-    },
-    "registry": "https://npm.pkg.github.com"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
