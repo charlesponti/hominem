@@ -1,4 +1,3 @@
-import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
@@ -7,6 +6,7 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createAccount, createTransaction, getMonthlySummary } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 const nextUserId = createDeterministicIdFactory('finance.monthly-summary.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
@@ -16,9 +16,7 @@ describeIntegration('finance monthly summary integration', () => {
 
   afterEach(async () => {
     for (const userId of userIds.splice(0)) {
-      await sql`delete from app.finance_transactions where user_id = ${userId}`.execute(db);
-      await sql`delete from app.finance_accounts where user_id = ${userId}`.execute(db);
-      await sql`delete from users where id = ${userId}`.execute(db);
+      await cleanupIntegrationFinanceUser(userId);
     }
   });
 

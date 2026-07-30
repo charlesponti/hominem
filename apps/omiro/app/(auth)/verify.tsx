@@ -4,10 +4,9 @@ import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
-  Easing,
   FadeIn,
+  FadeInDown,
   useAnimatedStyle,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -21,7 +20,7 @@ import { FeatureErrorBoundary } from '../../components/error-boundary/FeatureErr
 import { Button } from '../../components/ui/button';
 import AppIcon from '../../components/ui/icon';
 import { IconChip } from '../../components/ui/icon-chip';
-import { TextField } from '../../components/ui/text-field';
+import { OtpInput } from '../../components/ui/otp-input';
 import { useAuth } from '../../services/auth/auth-provider';
 import { useEmailAuth } from '../../services/auth/use-email-auth';
 import { normalizeOtp } from '../../services/auth/validation';
@@ -108,33 +107,27 @@ const useStyles = makeStyles(() => ({
     fontWeight: '500',
   },
   formSection: {
-    gap: 12,
+    gap: 16,
+    alignItems: 'center',
   },
-  inputRow: {
+  countdownPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  input: {
-    borderRadius: 0,
-    borderWidth: 0,
-    flex: 1,
-    fontSize: 16,
-    minHeight: 0,
-    padding: 0,
+    alignSelf: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   countdown: {
-    fontSize: 13,
+    fontSize: 12,
     fontVariant: ['tabular-nums'],
-    marginLeft: 8,
+    fontWeight: '600',
   },
   errorText: {
     fontSize: 13,
     lineHeight: 18,
+    textAlign: 'center',
   },
   verifyButtonWrap: {
     overflow: 'hidden',
@@ -227,24 +220,6 @@ function VerifyScreen() {
   }, [verifySucceeded, router]);
 
   // Animations
-  const shakeStyle = useAnimatedStyle(
-    () => ({
-      transform: [
-        {
-          translateX: authError
-            ? withSequence(
-                withTiming(10, { duration: 50, easing: Easing.linear }),
-                withTiming(-10, { duration: 50, easing: Easing.linear }),
-                withTiming(7, { duration: 50, easing: Easing.linear }),
-                withTiming(-7, { duration: 50, easing: Easing.linear }),
-                withTiming(0, { duration: 50, easing: Easing.linear }),
-              )
-            : 0,
-        },
-      ],
-    }),
-    [authError],
-  );
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
       opacity: withTiming(normalizedOtp.length === 6 ? 1 : 0, { duration: 36 }),
@@ -330,9 +305,14 @@ function VerifyScreen() {
       >
         <View style={styles.contentShell}>
           <View style={styles.card}>
-            <IconChip icon="lock.shield" />
+            <Animated.View entering={FadeInDown.duration(400).springify().damping(16)}>
+              <IconChip icon="lock.shield" />
+            </Animated.View>
 
-            <View style={styles.copyBlock}>
+            <Animated.View
+              entering={FadeInDown.duration(400).delay(60).springify().damping(16)}
+              style={styles.copyBlock}
+            >
               <Text style={[styles.title, { color: themeColors['text-primary'] }]}>
                 {t.auth.verify.title}
               </Text>
@@ -354,64 +334,28 @@ function VerifyScreen() {
                   <AppIcon name="pencil" size={11} tintColor={themeColors['text-secondary']} />
                 </Pressable>
               </View>
-            </View>
+            </Animated.View>
 
-            <View style={styles.formSection}>
-              <Animated.View style={shakeStyle}>
-                <View
-                  style={[
-                    styles.inputRow,
-                    {
-                      backgroundColor: themeColors['card'],
-                      borderColor: authError
-                        ? themeColors.destructive
-                        : themeColors['border-default'],
-                      opacity: isBusy ? 0.6 : 1,
-                    },
-                  ]}
-                >
-                  <TextField
-                    testID="auth-otp-input"
-                    value={normalizedOtp}
-                    placeholder={t.auth.verify.codePlaceholder}
-                    placeholderTextColor={themeColors['tertiary']}
-                    keyboardType="number-pad"
-                    textContentType="oneTimeCode"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus
-                    returnKeyType="done"
-                    editable={!isBusy}
-                    cursorColor={themeColors['text-primary']}
-                    selectionColor={themeColors['text-primary']}
-                    style={[styles.input, { borderWidth: 0, color: themeColors['text-primary'] }]}
-                    onChangeText={(value) => {
-                      setOtp(normalizeOtp(value));
-                    }}
-                    onSubmitEditing={() => {
-                      if (normalizedOtp.length === 6) {
-                        void handleVerifyPress();
-                      }
-                    }}
-                    accessibilityLabel={t.auth.verify.oneTimeVerificationCodeA11y}
-                  />
-                  {secondsLeft === 0 ? (
-                    <Text style={[styles.countdown, { color: themeColors.destructive }]}>
-                      {t.auth.verify.expired}
-                    </Text>
-                  ) : (
-                    <Text
-                      style={[
-                        styles.countdown,
-                        { color: countdownColor(secondsLeft, themeColors) },
-                      ]}
-                      accessibilityLabel={t.auth.verify.timeRemainingA11y(secondsLeft)}
-                    >
-                      {formatCountdown(secondsLeft)}
-                    </Text>
-                  )}
-                </View>
-              </Animated.View>
+            <Animated.View
+              entering={FadeInDown.duration(400).delay(120).springify().damping(16)}
+              style={styles.formSection}
+            >
+              <View style={{ opacity: isBusy ? 0.6 : 1 }}>
+                <OtpInput
+                  testID="auth-otp-input"
+                  value={normalizedOtp}
+                  onChangeText={(value) => setOtp(normalizeOtp(value))}
+                  onSubmitEditing={() => {
+                    if (normalizedOtp.length === 6) {
+                      void handleVerifyPress();
+                    }
+                  }}
+                  editable={!isBusy}
+                  error={Boolean(authError)}
+                  autoFocus
+                  accessibilityLabel={t.auth.verify.oneTimeVerificationCodeA11y}
+                />
+              </View>
 
               {authError ? (
                 <Text
@@ -425,46 +369,58 @@ function VerifyScreen() {
 
               {/* Verify / resend primary button — animates in once 6 digits are entered */}
               <Animated.View
-                style={[styles.verifyButtonWrap, verifyButtonStyle]}
+                style={[styles.verifyButtonWrap, verifyButtonStyle, { width: '100%' }]}
                 pointerEvents={normalizedOtp.length === 6 ? 'auto' : 'none'}
               >
-                {secondsLeft === 0 ? (
-                  <Button
-                    testID="auth-resend-otp-primary"
-                    label={t.auth.verify.resendButton}
-                    onPress={() => void handleResendPress()}
-                    disabled={isBusy}
-                    variant="primary"
-                  />
-                ) : (
-                  <Button
-                    testID="auth-verify-otp"
-                    label={t.auth.verify.verifyButton}
-                    onPress={() => void handleVerifyPress()}
-                    disabled={isSubmitting || normalizedOtp.length !== 6}
-                    variant="primary"
-                  />
-                )}
+                <Button
+                  testID="auth-verify-otp"
+                  label={t.auth.verify.verifyButton}
+                  onPress={() => void handleVerifyPress()}
+                  disabled={isSubmitting || normalizedOtp.length !== 6}
+                  variant="primary"
+                />
               </Animated.View>
 
-              <View style={styles.tertiaryRow}>
-                <Button
-                  testID="auth-resend-otp"
-                  label={t.auth.verify.resendButton}
-                  onPress={() => void handleResendPress()}
-                  disabled={isBusy}
-                  variant="ghost"
-                  size="sm"
+              <Pressable
+                testID="auth-resend-otp"
+                onPress={() => void handleResendPress()}
+                disabled={isBusy || secondsLeft > 0}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.countdownPill,
+                  {
+                    backgroundColor: themeColors['card'],
+                    opacity: pressed && secondsLeft === 0 ? 0.65 : 1,
+                  },
+                ]}
+              >
+                <AppIcon
+                  name={secondsLeft === 0 ? 'arrow.clockwise' : 'clock'}
+                  size={11}
+                  tintColor={
+                    secondsLeft === 0
+                      ? themeColors.primary
+                      : countdownColor(secondsLeft, themeColors)
+                  }
                 />
-                <Button
-                  label={t.auth.verify.changeEmailLink}
-                  onPress={handleChangeEmail}
-                  disabled={isBusy}
-                  variant="ghost"
-                  size="sm"
-                />
-              </View>
-            </View>
+                <Text
+                  style={[
+                    styles.countdown,
+                    {
+                      color:
+                        secondsLeft === 0 ? themeColors.primary : countdownColor(secondsLeft, themeColors),
+                    },
+                  ]}
+                  accessibilityLabel={
+                    secondsLeft === 0
+                      ? t.auth.verify.resendButton
+                      : t.auth.verify.timeRemainingA11y(secondsLeft)
+                  }
+                >
+                  {secondsLeft === 0 ? t.auth.verify.resendButton : formatCountdown(secondsLeft)}
+                </Text>
+              </Pressable>
+            </Animated.View>
           </View>
         </View>
       </ScrollView>

@@ -346,7 +346,6 @@ const t = {
       codePlaceholder: '123456',
       verifyButton: 'Verify',
       resendButton: 'Resend code',
-      changeEmailLink: 'Use a different email',
       expired: 'Expired',
       oneTimeVerificationCodeA11y: 'One-time verification code',
       timeRemainingA11y: (secondsLeft: number) =>
