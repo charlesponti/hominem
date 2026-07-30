@@ -30,6 +30,14 @@ runs:
     - name: setup-just
       uses: taiki-e/install-action@just
 
+    # @ponti-studios/auth and @ponti-studios/ui live in GitHub Packages, which
+    # requires a token even for public packages. pnpm won't expand env vars in
+    # the committed project .npmrc, so the credential goes in the runner's
+    # user-level one.
+    - name: authenticate-to-github-packages
+      shell: bash
+      run: echo "//npm.pkg.github.com/:_authToken=${{ github.token }}" >> ~/.npmrc
+
     - name: get-pnpm-store-directory
       id: pnpm-cache
       shell: bash
