@@ -11,17 +11,17 @@ import { AUTH_CONFIG } from './config';
 const authCopy = {
   changeEmail: 'Use a different email',
   codeLabel: 'Verification code',
-  emailHelper: 'Enter your email and we’ll send a one-time verification code.',
+  emailHelper: 'Enter your email to receive the one-time code.',
   emailLabel: 'Email address',
   emailPlaceholder: 'you@example.com',
-  emailTitle: 'Career | Auth',
+  emailTitle: 'Auth',
   otpTitle: 'Check your email',
   resend: 'Resend code',
   resendLoading: 'Sending code',
   submitEmail: 'Continue',
   submitEmailLoading: 'Sending code',
-  verify: 'Verify and continue',
-  verifyLoading: 'Verifying code',
+  verify: 'Verify',
+  verifyLoading: 'Verifying',
 } satisfies EmailOtpAuthCopy;
 
 export const meta: Route.MetaFunction = () => [
