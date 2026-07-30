@@ -31,8 +31,8 @@
   },
   "dependencies": {
     "@better-auth/expo": "1.6.23",
-    "@expo/metro-runtime": "~57.0.7",
-    "@expo/ui": "~57.0.7",
+    "@expo/metro-runtime": "~57.0.8",
+    "@expo/ui": "~57.0.8",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
@@ -72,7 +72,7 @@
     "expo-localization": "~57.0.1",
     "expo-media-library": "~57.0.3",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.8",
+    "expo-router": "~57.0.9",
     "expo-screen-capture": "^57.0.1",
     "expo-secure-store": "~57.0.1",
     "expo-sharing": "^57.0.7",
@@ -103,7 +103,8 @@
     "@expo/plist": "^0.8.1",
     "@sentry/cli": "3.6.1",
     "babel-preset-expo": "^57.0.4",
-    "oxlint-config-universe": "^0.0.3"
+    "oxlint-config-universe": "^0.0.3",
+    "typescript": "6.0.3"
   },
   "expo": {
     "install": {
