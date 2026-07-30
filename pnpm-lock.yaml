@@ -3091,11 +3091,16 @@ packages:
     hasBin: true
 
   '@ponti-studios/ui@0.6.0':
-    resolution: {integrity: sha512-N5iEiZiIfvASBq/n1VdwO84cl1cFJVkXFp1wOKvt5d7sUUL+I/5armCktHbccACH0MQWucG3RtTTjTc6KADzpw==, tarball: https://npm.pkg.github.com/download/@ponti-studios/ui/0.6.0/cfbbec82cc0f562172b52dbe74f016cc5e31d655}
+    resolution: {integrity: sha512-OwRXwCDkA+NwhjD3cFcKz5//Bht4KgAaAYHO7+xljymhaRrP23zhssftR5zZ7VhzNBk9SzX7nZmy91xmd+6PFQ==}
     peerDependencies:
       react: 19.2.8
       react-dom: 19.2.8
       react-native: '>=0.74'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
 
   '@posthog/core@1.44.0':
     resolution: {integrity: sha512-uE+mdKvetxNQC6gWQf4MHIH8bGt+JN6z7ho0A4G3t9G1VGQTx9wHYHNwkKf3gzi+1oAXS9ej2VVY4pjWUU2PWg==}
@@ -11659,9 +11664,10 @@ snapshots:
       lucide-react: 0.576.0(react@19.2.8)
       react: 19.2.8
       react-day-picker: 10.0.1(@types/react@19.2.17)(react@19.2.8)
+      tailwind-merge: 3.6.0
+    optionalDependencies:
       react-dom: 19.2.8(react@19.2.8)
       react-native: 0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)
-      tailwind-merge: 3.6.0
     transitivePeerDependencies:
       - '@date-fns/tz'
       - '@types/react'

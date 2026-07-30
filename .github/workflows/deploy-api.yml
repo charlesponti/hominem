@@ -22,7 +22,6 @@ jobs:
     secrets:
       service_target: ${{ secrets.RAILWAY_SERVICE_API }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      github_packages_token: ${{ secrets.GITHUB_TOKEN }}
     with:
       service_name: api
       checkout_ref: ${{ github.event.workflow_run.head_sha || github.sha }}
