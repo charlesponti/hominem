@@ -8,7 +8,8 @@
     "directory": "packages/auth"
   },
   "files": [
-    "build"
+    "build",
+    "src"
   ],
   "type": "module",
   "exports": {
