@@ -2,7 +2,7 @@ import type { careerRoutes } from '@hominem/api/career';
 import type { PortfolioRecord } from '@hominem/db';
 import { hc } from 'hono/client';
 
-import { serverEnv } from './env';
+import { serverEnv } from './env.server';
 
 const customFetch =
   (request?: Request): typeof fetch =>
@@ -21,7 +21,7 @@ const customFetch =
 // tsgo's type inference tractable — see https://github.com/orgs/honojs/discussions/2380
 function createServerHonoClient(request?: Request) {
   const career = hc<typeof careerRoutes>(
-    new URL('/api/career', serverEnv().VITE_PUBLIC_API_URL).toString(),
+    new URL('/api/career', serverEnv.VITE_PUBLIC_API_URL).toString(),
     { fetch: customFetch(request) },
   );
 

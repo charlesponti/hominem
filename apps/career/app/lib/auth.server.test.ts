@@ -2,8 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('./env', () => ({
-  serverEnv: () => ({ VITE_PUBLIC_API_URL: 'http://localhost:3000' }),
+vi.mock('./env.server', () => ({
+  serverEnv: { VITE_PUBLIC_API_URL: 'http://localhost:3000' },
 }));
 
 import { getServerSession } from './auth.server';

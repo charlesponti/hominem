@@ -1,14 +1,10 @@
 import { emailOTPClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
 
-const apiBaseUrl = import.meta.env.VITE_PUBLIC_API_URL;
-
-if (!apiBaseUrl) {
-  throw new Error('VITE_PUBLIC_API_URL is required');
-}
+import { clientEnv } from './env.client';
 
 export const authClient = createAuthClient({
-  baseURL: apiBaseUrl,
+  baseURL: clientEnv.VITE_PUBLIC_API_URL,
   plugins: [emailOTPClient()],
 });
 

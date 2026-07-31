@@ -17,7 +17,7 @@ import Navigation from './components/Navigation';
 
 import './app.css';
 import { NavigationProgress } from './components/NavigationProgress';
-import { serverEnv } from './lib/env';
+import { serverEnv } from './lib/env.server';
 import { sessionMiddleware, userContext } from './lib/middleware';
 import { ensureUserPortfolio } from './lib/portfolio.server';
 
@@ -106,7 +106,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return data({
     user,
     hasPortfolio: Boolean(user),
-    apiBaseUrl: serverEnv().VITE_PUBLIC_API_URL,
+    apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
   });
 }
 

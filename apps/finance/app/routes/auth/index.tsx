@@ -43,7 +43,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const email = String((await request.formData()).get('email') ?? '');
-  const apiBaseUrl = serverEnv.VITE_AUTH_API_URL ?? serverEnv.VITE_PUBLIC_API_URL;
+  const apiBaseUrl = serverEnv.VITE_PUBLIC_API_URL;
   const response = await fetch(new URL('/api/auth/email-otp/send-verification-otp', apiBaseUrl), {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: apiBaseUrl },
