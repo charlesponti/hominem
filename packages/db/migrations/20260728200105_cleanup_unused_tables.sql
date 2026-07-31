@@ -79,7 +79,10 @@ DROP TABLE IF EXISTS app.bookmarks CASCADE;
 DROP TABLE IF EXISTS app.key_results CASCADE;
 DROP TABLE IF EXISTS app.goals CASCADE;
 
--- Career (tables with no code consumer)
+-- Career (application_files, certifications: no code consumer.
+-- career_events and job_application_status_history were mislabeled here —
+-- portfolio.repository.ts still queried both directly via raw SQL, so
+-- 20260731170000_restore_career_events_and_status_history.sql recreates them.)
 DROP TABLE IF EXISTS app.application_files CASCADE;
 DROP TABLE IF EXISTS app.career_events CASCADE;
 DROP TABLE IF EXISTS app.certifications CASCADE;
