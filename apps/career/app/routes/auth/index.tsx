@@ -10,7 +10,6 @@ import { AUTH_CONFIG } from './config';
 
 const authCopy = {
   changeEmail: 'Use a different email',
-  codeLabel: 'Verification code',
   emailHelper: 'Enter your email to receive the one-time code.',
   emailLabel: 'Email address',
   emailPlaceholder: 'you@example.com',

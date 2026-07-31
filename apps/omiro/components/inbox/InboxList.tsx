@@ -94,7 +94,7 @@ export function InboxList({
 
   if (error && items.length === 0) {
     return (
-      <View style={[styles.emptyWrap, styles.debugBorder]}>
+      <View style={[styles.emptyWrap]}>
         <EmptyState
           action={
             refreshControl?.props.onRefresh
@@ -113,7 +113,7 @@ export function InboxList({
 
   if (!isLoading && items.length === 0) {
     return (
-      <View style={[styles.emptyWrap, styles.debugBorder]}>
+      <View style={[styles.emptyWrap]}>
         <EmptyState
           imageSource={EMPTY_STATE_ASSETS[tab]}
           title={tab === 'notes' ? t.inbox.screen.emptyNotesTitle : t.inbox.empty.title}

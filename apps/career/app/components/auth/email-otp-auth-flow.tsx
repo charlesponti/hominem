@@ -8,7 +8,6 @@ const OTP_LENGTH = 6;
 
 export interface EmailOtpAuthCopy {
   changeEmail: string;
-  codeLabel: string;
   emailHelper: string;
   emailLabel: string;
   emailPlaceholder: string;
