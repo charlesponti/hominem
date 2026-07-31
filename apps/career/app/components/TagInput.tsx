@@ -139,7 +139,7 @@ export function TagInput({
   return (
     <div className="relative">
       <div
-        className="void-focus flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-border bg-base px-2 py-1.5 text-sm transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-50"
+        className="void-focus flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-border bg-surface-base px-2 py-1.5 text-sm transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-50"
         onClick={() => inputRef.current?.focus()}
       >
         {tagList.map((tag) => (
