@@ -78,33 +78,13 @@ export interface AppApplicationNotes {
 
 export interface AppCareerEvents {
   achievements: Generated<Json>;
-  bonusAmount: number | null;
-  bonusType: string | null;
-  careerGoals: Json | null;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   description: string | null;
-  equityGranted: number | null;
-  equityVesting: string | null;
+  details: Generated<Json>;
   eventDate: ColumnType<string, Date | string, Date | string>;
   eventType: string;
   id: Generated<string>;
-  increasePercentage: string | null;
-  managerFeedback: string | null;
-  marketSalaryRange: Json | null;
-  newLevel: string | null;
-  newSalary: number | null;
-  newTitle: string | null;
-  newTotalComp: number | null;
   ownerUserid: string;
-  performanceRating: string | null;
-  previousLevel: string | null;
-  previousSalary: number | null;
-  previousTitle: string | null;
-  previousTotalComp: number | null;
-  salaryIncrease: number | null;
-  selfAssessment: string | null;
-  skillsGained: Generated<Json>;
-  totalCompIncrease: number | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
   workExperienceId: string | null;
 }
@@ -380,6 +360,15 @@ export interface AppSkills {
   yearsOfExperience: number | null;
 }
 
+export interface AppSkillSources {
+  careerEventId: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  projectId: string | null;
+  skillId: string;
+  workExperienceId: string | null;
+}
+
 export interface AppTagAssignments {
   assignedByUserid: string | null;
   assignmentPeriod: Generated<string | null>;
@@ -647,6 +636,7 @@ export interface DB {
   'app.portfolios': AppPortfolios;
   'app.projects': AppProjects;
   'app.skills': AppSkills;
+  'app.skillSources': AppSkillSources;
   'app.tagAssignments': AppTagAssignments;
   'app.tags': AppTags;
   'app.taskParticipants': AppTaskParticipants;
