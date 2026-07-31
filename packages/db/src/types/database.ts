@@ -76,6 +76,39 @@ export interface AppApplicationNotes {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppCareerEvents {
+  achievements: Generated<Json>;
+  bonusAmount: number | null;
+  bonusType: string | null;
+  careerGoals: Json | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  description: string | null;
+  equityGranted: number | null;
+  equityVesting: string | null;
+  eventDate: ColumnType<string, Date | string, Date | string>;
+  eventType: string;
+  id: Generated<string>;
+  increasePercentage: string | null;
+  managerFeedback: string | null;
+  marketSalaryRange: Json | null;
+  newLevel: string | null;
+  newSalary: number | null;
+  newTitle: string | null;
+  newTotalComp: number | null;
+  ownerUserid: string;
+  performanceRating: string | null;
+  previousLevel: string | null;
+  previousSalary: number | null;
+  previousTitle: string | null;
+  previousTotalComp: number | null;
+  salaryIncrease: number | null;
+  selfAssessment: string | null;
+  skillsGained: Generated<Json>;
+  totalCompIncrease: number | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  workExperienceId: string | null;
+}
+
 export interface AppChatMessages {
   authorUserid: string | null;
   chatId: string;
@@ -237,6 +270,15 @@ export interface AppJobApplications {
   totalCompOffered: number | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
   withdrawalReason: string | null;
+}
+
+export interface AppJobApplicationStatusHistory {
+  applicationId: string;
+  changedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  newStatus: string;
+  previousStatus: string | null;
 }
 
 export interface AppNoteFiles {
@@ -589,6 +631,7 @@ export interface DB {
   account: Account;
   'app.aiUsageEvents': AppAiUsageEvents;
   'app.applicationNotes': AppApplicationNotes;
+  'app.careerEvents': AppCareerEvents;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;
   'app.companies': AppCompanies;
@@ -597,6 +640,7 @@ export interface DB {
   'app.financeInstitutions': AppFinanceInstitutions;
   'app.financeTransactions': AppFinanceTransactions;
   'app.jobApplications': AppJobApplications;
+  'app.jobApplicationStatusHistory': AppJobApplicationStatusHistory;
   'app.noteFiles': AppNoteFiles;
   'app.notes': AppNotes;
   'app.plaidItems': AppPlaidItems;
