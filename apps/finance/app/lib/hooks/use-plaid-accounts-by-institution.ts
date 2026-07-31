@@ -1,7 +1,7 @@
 import { useApiClient } from '@ponti-studios/ui/hooks';
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuthContext } from '~/lib/auth-client';
+import { authClient } from '~/lib/auth-client';
 
 // Define query keys
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = (institutionId: string) => [
@@ -28,7 +28,8 @@ interface PlaidAccountByInstitution {
  * Hook for fetching Plaid accounts for a specific institution
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
-  const { userId } = useAuthContext();
+  const { data: sessionData } = authClient.useSession();
+  const userId = sessionData?.user?.id ?? null;
   const apiClient = useApiClient();
 
   const defaultOptions = {

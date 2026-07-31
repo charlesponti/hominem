@@ -200,9 +200,6 @@ function ToolbarIconButton({
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
-    backgroundColor: theme.colors.background,
-    borderBottomColor: theme.colors['border-default'],
-    borderBottomWidth: 1,
     paddingBottom: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
   },

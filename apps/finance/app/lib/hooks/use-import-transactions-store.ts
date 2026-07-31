@@ -2,7 +2,7 @@ import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useAuthContext } from '~/lib/auth-client';
+import { authClient } from '~/lib/auth-client';
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store';
 
 // Define constants for channel names and message types
@@ -16,7 +16,8 @@ const PROGRESS_UPDATE_THROTTLE = 100;
 
 export function useImportTransactionsStore() {
   const queryClient = useQueryClient();
-  const { session } = useAuthContext();
+  const { data: sessionData } = authClient.useSession();
+  const session = sessionData?.session ?? null;
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);

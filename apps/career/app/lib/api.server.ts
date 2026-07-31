@@ -2,7 +2,7 @@ import type { careerRoutes } from '@hominem/api/career';
 import type { PortfolioRecord } from '@hominem/db';
 import { hc } from 'hono/client';
 
-import { serverEnv } from './env.server';
+import { serverEnv } from './env';
 
 const customFetch =
   (request?: Request): typeof fetch =>

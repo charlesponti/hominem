@@ -11,7 +11,7 @@ import { AlertCircle, Building2, Link } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link';
 
-import { useAuthContext } from '~/lib/auth-client';
+import { authClient } from '~/lib/auth-client';
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid';
 import { toast } from '~/lib/toast';
 import { cn } from '~/lib/utils';
@@ -31,7 +31,8 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { user } = useAuthContext();
+  const { data: session } = authClient.useSession();
+  const user = session?.user ?? null;
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false);
 

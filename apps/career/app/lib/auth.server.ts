@@ -1,7 +1,7 @@
 import { getServerAuth as sharedGetServerAuth } from '@ponti-studios/auth/server';
 import type { AuthUser as User } from '@ponti-studios/auth/types';
 
-import { serverEnv } from './env.server';
+import { serverEnv } from './env';
 
 export type { User };
 
