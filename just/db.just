@@ -25,6 +25,9 @@ validate profile='':
     just db migrate "{{ profile }}"
     ! just db status "{{ profile }}" | grep -Eiq pending
 
+lint *refs:
+    "{{ justfile_directory() }}/packages/db/scripts/check-schema-qualified-drops.sh" {{ refs }}
+
 codegen:
     #!/usr/bin/env bash
     [[ -n "${DATABASE_URL:-}" ]] || { echo 'error: DATABASE_URL must be set' >&2; exit 1; }

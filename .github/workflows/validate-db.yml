@@ -59,6 +59,8 @@ jobs:
     steps:
       - name: checkout-repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: setup-pnpm-workspace
         uses: ./.github/actions/setup-pnpm-workspace
@@ -69,6 +71,19 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go-version }}
+
+      - name: lint-migrations
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "No usable base ref (first push to branch) -- skipping changed-file lint."
+            exit 0
+          fi
+          just db lint --since "$base"
 
       - name: validate-migrations
         run: just db validate test
