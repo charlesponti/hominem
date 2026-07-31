@@ -12,7 +12,7 @@ import type { AuthContext } from './auth/types';
 import { API_BRAND } from './brand';
 import { env } from './env';
 import { isServiceError } from './errors';
-import { oauthDiscoveryRoutes } from './mcp/routes';
+import { mcpRoutes, oauthDiscoveryRoutes } from './mcp/routes';
 import { authMiddleware } from './middleware/auth';
 import { authRateLimitMiddleware } from './middleware/auth-rate-limit';
 import { blockMaliciousProbes } from './middleware/block-probes';
@@ -94,6 +94,9 @@ function registerApiRoutes(app: Hono<AppEnv>) {
   const authHandler = createAuthHandler();
 
   app.route('/', rpcApp);
+  // Keep MCP outside the client-facing RPC contract. MCP is server-only and
+  // its Redis-backed implementation must not enter mobile typechecking.
+  app.route('/api/mcp', mcpRoutes);
   // OAuth discovery for MCP clients — must be at root per RFC 8414 / RFC 9728
   app.route('/', oauthDiscoveryRoutes);
   app.route('/', loginRoutes);
