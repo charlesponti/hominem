@@ -104,7 +104,6 @@
   "devDependencies": {
     "@expo/plist": "^0.8.1",
     "@sentry/cli": "3.6.1",
-    "babel-preset-expo": "^57.0.4",
     "oxlint-config-universe": "^0.0.3",
     "typescript": "6.0.3"
   },
