@@ -8,9 +8,9 @@ DROP POLICY IF EXISTS app_portfolio_stats_select_policy ON app.portfolio_stats;
 DROP TRIGGER IF EXISTS app_portfolio_stats_set_updated_at ON app.portfolio_stats;
 
 -- Drop indexes
-DROP INDEX IF EXISTS app_portfolio_stats_portfolio_sort_idx;
-DROP INDEX IF EXISTS app_portfolio_stats_sort_order_idx;
-DROP INDEX IF EXISTS app_portfolio_stats_portfolio_id_idx;
+DROP INDEX IF EXISTS app.app_portfolio_stats_portfolio_sort_idx;
+DROP INDEX IF EXISTS app.app_portfolio_stats_sort_order_idx;
+DROP INDEX IF EXISTS app.app_portfolio_stats_portfolio_id_idx;
 
 -- Drop constraints
 ALTER TABLE app.portfolio_stats

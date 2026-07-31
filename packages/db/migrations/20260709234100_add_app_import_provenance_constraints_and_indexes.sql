@@ -115,17 +115,17 @@ DROP TRIGGER IF EXISTS app_entity_source_records_set_updated_at ON app.entity_so
 DROP TRIGGER IF EXISTS app_import_runs_set_updated_at ON app.import_runs;
 DROP TRIGGER IF EXISTS app_import_sources_set_updated_at ON app.import_sources;
 
-DROP INDEX IF EXISTS app_import_review_items_source_record_idx;
-DROP INDEX IF EXISTS app_import_review_items_pending_idx;
-DROP INDEX IF EXISTS app_entity_source_records_entity_idx;
-DROP INDEX IF EXISTS app_entity_source_records_source_entity_key;
-DROP INDEX IF EXISTS app_import_records_run_idx;
-DROP INDEX IF EXISTS app_import_records_source_occurred_idx;
-DROP INDEX IF EXISTS app_import_records_source_external_content_key;
-DROP INDEX IF EXISTS app_import_runs_active_idx;
-DROP INDEX IF EXISTS app_import_runs_source_created_idx;
-DROP INDEX IF EXISTS app_import_sources_owner_status_idx;
-DROP INDEX IF EXISTS app_import_sources_owner_provider_account_key;
+DROP INDEX IF EXISTS app.app_import_review_items_source_record_idx;
+DROP INDEX IF EXISTS app.app_import_review_items_pending_idx;
+DROP INDEX IF EXISTS app.app_entity_source_records_entity_idx;
+DROP INDEX IF EXISTS app.app_entity_source_records_source_entity_key;
+DROP INDEX IF EXISTS app.app_import_records_run_idx;
+DROP INDEX IF EXISTS app.app_import_records_source_occurred_idx;
+DROP INDEX IF EXISTS app.app_import_records_source_external_content_key;
+DROP INDEX IF EXISTS app.app_import_runs_active_idx;
+DROP INDEX IF EXISTS app.app_import_runs_source_created_idx;
+DROP INDEX IF EXISTS app.app_import_sources_owner_status_idx;
+DROP INDEX IF EXISTS app.app_import_sources_owner_provider_account_key;
 
 ALTER TABLE app.import_review_items
   DROP CONSTRAINT IF EXISTS app_import_review_items_reviewed_at_check,

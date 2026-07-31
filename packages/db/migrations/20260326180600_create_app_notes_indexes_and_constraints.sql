@@ -184,26 +184,26 @@ DROP TRIGGER IF EXISTS app_notes_set_updated_at ON app.notes;
 
 DROP FUNCTION IF EXISTS app.sync_chat_last_message_at();
 
-DROP INDEX IF EXISTS app_chat_messages_parent_message_id_idx;
-DROP INDEX IF EXISTS app_chat_messages_author_userId_idx;
-DROP INDEX IF EXISTS app_chat_messages_chat_id_createdAt_idx;
-DROP INDEX IF EXISTS app_chats_last_message_at_idx;
-DROP INDEX IF EXISTS app_chats_note_id_idx;
-DROP INDEX IF EXISTS app_chats_owner_userId_idx;
-DROP INDEX IF EXISTS app_note_versions_created_by_userId_idx;
-DROP INDEX IF EXISTS app_tag_assignments_assigned_by_userId_idx;
-DROP INDEX IF EXISTS app_tag_assignments_entity_idx;
-DROP INDEX IF EXISTS app_tag_assignments_tag_id_idx;
-DROP INDEX IF EXISTS app_tags_owner_userId_idx;
-DROP INDEX IF EXISTS app_note_shares_shared_with_userId_idx;
-DROP INDEX IF EXISTS app_note_versions_search_idx;
-DROP INDEX IF EXISTS app_note_versions_published_at_idx;
-DROP INDEX IF EXISTS app_note_versions_note_type_idx;
-DROP INDEX IF EXISTS app_note_versions_status_idx;
-DROP INDEX IF EXISTS app_note_versions_note_id_createdAt_idx;
-DROP INDEX IF EXISTS app_notes_parent_note_id_idx;
-DROP INDEX IF EXISTS app_notes_owner_userId_idx;
-DROP INDEX IF EXISTS app_tags_owner_name_key;
+DROP INDEX IF EXISTS app.app_chat_messages_parent_message_id_idx;
+DROP INDEX IF EXISTS app.app_chat_messages_author_userId_idx;
+DROP INDEX IF EXISTS app.app_chat_messages_chat_id_createdAt_idx;
+DROP INDEX IF EXISTS app.app_chats_last_message_at_idx;
+DROP INDEX IF EXISTS app.app_chats_note_id_idx;
+DROP INDEX IF EXISTS app.app_chats_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_note_versions_created_by_userId_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_assigned_by_userId_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_entity_idx;
+DROP INDEX IF EXISTS app.app_tag_assignments_tag_id_idx;
+DROP INDEX IF EXISTS app.app_tags_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_note_shares_shared_with_userId_idx;
+DROP INDEX IF EXISTS app.app_note_versions_search_idx;
+DROP INDEX IF EXISTS app.app_note_versions_published_at_idx;
+DROP INDEX IF EXISTS app.app_note_versions_note_type_idx;
+DROP INDEX IF EXISTS app.app_note_versions_status_idx;
+DROP INDEX IF EXISTS app.app_note_versions_note_id_createdAt_idx;
+DROP INDEX IF EXISTS app.app_notes_parent_note_id_idx;
+DROP INDEX IF EXISTS app.app_notes_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_tags_owner_name_key;
 
 ALTER TABLE app.note_shares
   DROP CONSTRAINT IF EXISTS app_note_shares_note_id_shared_with_userId_key,

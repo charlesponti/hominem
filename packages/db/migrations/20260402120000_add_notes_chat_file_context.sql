@@ -56,10 +56,10 @@ CREATE TRIGGER app_files_set_updated_at
 
 -- +goose Down
 DROP TRIGGER IF EXISTS app_files_set_updated_at ON app.files;
-DROP INDEX IF EXISTS app_notes_title_idx;
-DROP INDEX IF EXISTS app_note_files_file_id_idx;
-DROP INDEX IF EXISTS app_note_files_note_id_idx;
-DROP INDEX IF EXISTS app_files_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_notes_title_idx;
+DROP INDEX IF EXISTS app.app_note_files_file_id_idx;
+DROP INDEX IF EXISTS app.app_note_files_note_id_idx;
+DROP INDEX IF EXISTS app.app_files_owner_userId_idx;
 ALTER TABLE app.chat_messages DROP COLUMN IF EXISTS referenced_note_ids;
 DROP TABLE IF EXISTS app.note_files;
 DROP TABLE IF EXISTS app.files;

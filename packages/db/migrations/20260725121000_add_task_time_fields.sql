@@ -45,8 +45,8 @@ CREATE INDEX app_tasks_owner_scheduling_window_idx
 -- +goose Down
 -- +goose StatementBegin
 
-DROP INDEX IF EXISTS app_tasks_owner_scheduling_window_idx;
-DROP INDEX IF EXISTS app_tasks_owner_scheduled_start_idx;
+DROP INDEX IF EXISTS app.app_tasks_owner_scheduling_window_idx;
+DROP INDEX IF EXISTS app.app_tasks_owner_scheduled_start_idx;
 
 ALTER TABLE app.tasks
   DROP CONSTRAINT IF EXISTS app_tasks_location_not_blank,

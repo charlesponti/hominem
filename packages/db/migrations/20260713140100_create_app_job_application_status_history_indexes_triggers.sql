@@ -55,8 +55,8 @@ CREATE TRIGGER app_job_applications_log_status_change
 DROP TRIGGER IF EXISTS app_job_applications_log_status_change ON app.job_applications;
 DROP FUNCTION IF EXISTS app.log_job_application_status_change();
 
-DROP INDEX IF EXISTS app_job_application_status_history_application_changed_idx;
-DROP INDEX IF EXISTS app_job_application_status_history_application_id_idx;
+DROP INDEX IF EXISTS app.app_job_application_status_history_application_changed_idx;
+DROP INDEX IF EXISTS app.app_job_application_status_history_application_id_idx;
 
 ALTER TABLE app.job_application_status_history
   DROP CONSTRAINT IF EXISTS app_job_application_status_history_previous_status_check,

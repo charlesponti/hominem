@@ -190,27 +190,27 @@ DROP TRIGGER IF EXISTS app_music_tracks_set_updated_at ON app.music_tracks;
 DROP TRIGGER IF EXISTS app_music_albums_set_updated_at ON app.music_albums;
 DROP TRIGGER IF EXISTS app_music_artists_set_updated_at ON app.music_artists;
 
-DROP INDEX IF EXISTS app_video_views_owner_content_type_idx;
-DROP INDEX IF EXISTS app_video_views_channel_id_idx;
-DROP INDEX IF EXISTS app_video_views_owner_watched_at_idx;
-DROP INDEX IF EXISTS app_video_channels_owner_name_idx;
-DROP INDEX IF EXISTS app_video_channels_owner_source_external_key;
-DROP INDEX IF EXISTS app_music_listens_track_id_idx;
-DROP INDEX IF EXISTS app_music_listens_owner_started_at_idx;
-DROP INDEX IF EXISTS app_music_playlist_tracks_track_id_idx;
-DROP INDEX IF EXISTS app_music_playlist_tracks_playlist_position_key;
-DROP INDEX IF EXISTS app_music_playlists_owner_createdAt_idx;
-DROP INDEX IF EXISTS app_music_playlists_owner_source_external_key;
-DROP INDEX IF EXISTS app_music_tracks_search_idx;
-DROP INDEX IF EXISTS app_music_tracks_album_id_idx;
-DROP INDEX IF EXISTS app_music_tracks_artist_id_idx;
-DROP INDEX IF EXISTS app_music_tracks_owner_title_idx;
-DROP INDEX IF EXISTS app_music_tracks_owner_source_external_key;
-DROP INDEX IF EXISTS app_music_albums_artist_id_idx;
-DROP INDEX IF EXISTS app_music_albums_owner_title_idx;
-DROP INDEX IF EXISTS app_music_albums_owner_source_external_key;
-DROP INDEX IF EXISTS app_music_artists_owner_name_idx;
-DROP INDEX IF EXISTS app_music_artists_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_video_views_owner_content_type_idx;
+DROP INDEX IF EXISTS app.app_video_views_channel_id_idx;
+DROP INDEX IF EXISTS app.app_video_views_owner_watched_at_idx;
+DROP INDEX IF EXISTS app.app_video_channels_owner_name_idx;
+DROP INDEX IF EXISTS app.app_video_channels_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_music_listens_track_id_idx;
+DROP INDEX IF EXISTS app.app_music_listens_owner_started_at_idx;
+DROP INDEX IF EXISTS app.app_music_playlist_tracks_track_id_idx;
+DROP INDEX IF EXISTS app.app_music_playlist_tracks_playlist_position_key;
+DROP INDEX IF EXISTS app.app_music_playlists_owner_createdAt_idx;
+DROP INDEX IF EXISTS app.app_music_playlists_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_music_tracks_search_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_album_id_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_artist_id_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_owner_title_idx;
+DROP INDEX IF EXISTS app.app_music_tracks_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_music_albums_artist_id_idx;
+DROP INDEX IF EXISTS app.app_music_albums_owner_title_idx;
+DROP INDEX IF EXISTS app.app_music_albums_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_music_artists_owner_name_idx;
+DROP INDEX IF EXISTS app.app_music_artists_owner_source_external_key;
 
 ALTER TABLE app.video_views
   DROP CONSTRAINT IF EXISTS app_video_views_episode_number_check,

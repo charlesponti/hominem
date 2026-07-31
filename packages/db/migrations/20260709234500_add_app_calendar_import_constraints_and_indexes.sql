@@ -51,11 +51,11 @@ CREATE TRIGGER app_event_occurrences_set_updated_at
 DROP TRIGGER IF EXISTS app_event_occurrences_set_updated_at ON app.event_occurrences;
 DROP TRIGGER IF EXISTS app_calendar_event_sources_set_updated_at ON app.calendar_event_sources;
 
-DROP INDEX IF EXISTS app_event_occurrences_starts_at_idx;
-DROP INDEX IF EXISTS app_event_occurrences_event_starts_at_idx;
-DROP INDEX IF EXISTS app_event_occurrences_event_key;
-DROP INDEX IF EXISTS app_calendar_event_sources_event_id_idx;
-DROP INDEX IF EXISTS app_calendar_event_sources_source_uid_key;
+DROP INDEX IF EXISTS app.app_event_occurrences_starts_at_idx;
+DROP INDEX IF EXISTS app.app_event_occurrences_event_starts_at_idx;
+DROP INDEX IF EXISTS app.app_event_occurrences_event_key;
+DROP INDEX IF EXISTS app.app_calendar_event_sources_event_id_idx;
+DROP INDEX IF EXISTS app.app_calendar_event_sources_source_uid_key;
 
 ALTER TABLE app.event_occurrences
   DROP CONSTRAINT IF EXISTS app_event_occurrences_status_check,

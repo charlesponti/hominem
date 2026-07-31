@@ -126,24 +126,24 @@ DROP TRIGGER IF EXISTS app_space_invites_set_updated_at ON app.space_invites;
 DROP TRIGGER IF EXISTS app_spaces_set_updated_at ON app.spaces;
 DROP TRIGGER IF EXISTS app_people_set_updated_at ON app.people;
 
-DROP INDEX IF EXISTS app_key_results_goal_id_idx;
-DROP INDEX IF EXISTS app_goals_owner_status_idx;
-DROP INDEX IF EXISTS app_tasks_parent_task_id_idx;
-DROP INDEX IF EXISTS app_chats_space_id_idx;
-DROP INDEX IF EXISTS app_tasks_space_id_idx;
-DROP INDEX IF EXISTS app_tasks_open_idx;
-DROP INDEX IF EXISTS app_tasks_owner_status_idx;
-DROP INDEX IF EXISTS app_tasks_owner_due_idx;
-DROP INDEX IF EXISTS app_space_invites_email_lower_idx;
-DROP INDEX IF EXISTS app_space_invites_invited_userId_idx;
-DROP INDEX IF EXISTS app_space_invites_inviter_userId_idx;
-DROP INDEX IF EXISTS app_space_invites_space_id_idx;
-DROP INDEX IF EXISTS app_space_invites_token_key;
-DROP INDEX IF EXISTS app_space_members_userId_idx;
-DROP INDEX IF EXISTS app_spaces_owner_userId_idx;
-DROP INDEX IF EXISTS app_people_email_idx;
-DROP INDEX IF EXISTS app_people_search_idx;
-DROP INDEX IF EXISTS app_people_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_key_results_goal_id_idx;
+DROP INDEX IF EXISTS app.app_goals_owner_status_idx;
+DROP INDEX IF EXISTS app.app_tasks_parent_task_id_idx;
+DROP INDEX IF EXISTS app.app_chats_space_id_idx;
+DROP INDEX IF EXISTS app.app_tasks_space_id_idx;
+DROP INDEX IF EXISTS app.app_tasks_open_idx;
+DROP INDEX IF EXISTS app.app_tasks_owner_status_idx;
+DROP INDEX IF EXISTS app.app_tasks_owner_due_idx;
+DROP INDEX IF EXISTS app.app_space_invites_email_lower_idx;
+DROP INDEX IF EXISTS app.app_space_invites_invited_userId_idx;
+DROP INDEX IF EXISTS app.app_space_invites_inviter_userId_idx;
+DROP INDEX IF EXISTS app.app_space_invites_space_id_idx;
+DROP INDEX IF EXISTS app.app_space_invites_token_key;
+DROP INDEX IF EXISTS app.app_space_members_userId_idx;
+DROP INDEX IF EXISTS app.app_spaces_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_people_email_idx;
+DROP INDEX IF EXISTS app.app_people_search_idx;
+DROP INDEX IF EXISTS app.app_people_owner_userId_idx;
 
 ALTER TABLE app.key_results
   DROP CONSTRAINT IF EXISTS app_key_results_value_check,

@@ -16,5 +16,5 @@ CREATE INDEX IF NOT EXISTS app_notes_archived_at_idx
   WHERE archived_at IS NOT NULL;
 
 -- +goose Down
-DROP INDEX IF EXISTS app_notes_archived_at_idx;
+DROP INDEX IF EXISTS app.app_notes_archived_at_idx;
 ALTER TABLE app.notes DROP COLUMN IF EXISTS archived_at;

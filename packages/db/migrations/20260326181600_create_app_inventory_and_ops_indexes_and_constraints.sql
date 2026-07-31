@@ -117,19 +117,19 @@ DROP TRIGGER IF EXISTS app_possession_events_set_updated_at ON app.possession_ev
 DROP TRIGGER IF EXISTS app_possessions_set_updated_at ON app.possessions;
 DROP TRIGGER IF EXISTS app_possession_containers_set_updated_at ON app.possession_containers;
 
-DROP INDEX IF EXISTS ops_search_logs_query_idx;
-DROP INDEX IF EXISTS ops_search_logs_actor_createdAt_idx;
-DROP INDEX IF EXISTS ops_search_logs_createdAt_idx;
-DROP INDEX IF EXISTS ops_audit_logs_entity_idx;
-DROP INDEX IF EXISTS ops_audit_logs_actor_createdAt_idx;
-DROP INDEX IF EXISTS ops_audit_logs_createdAt_idx;
-DROP INDEX IF EXISTS app_possession_events_container_id_idx;
-DROP INDEX IF EXISTS app_possession_events_possessionId_idx;
-DROP INDEX IF EXISTS app_possession_events_owner_occurred_at_idx;
-DROP INDEX IF EXISTS app_possessions_owner_serial_number_key;
-DROP INDEX IF EXISTS app_possessions_container_id_idx;
-DROP INDEX IF EXISTS app_possessions_owner_userId_idx;
-DROP INDEX IF EXISTS app_possession_containers_owner_userId_idx;
+DROP INDEX IF EXISTS ops.ops_search_logs_query_idx;
+DROP INDEX IF EXISTS ops.ops_search_logs_actor_createdAt_idx;
+DROP INDEX IF EXISTS ops.ops_search_logs_createdAt_idx;
+DROP INDEX IF EXISTS ops.ops_audit_logs_entity_idx;
+DROP INDEX IF EXISTS ops.ops_audit_logs_actor_createdAt_idx;
+DROP INDEX IF EXISTS ops.ops_audit_logs_createdAt_idx;
+DROP INDEX IF EXISTS app.app_possession_events_container_id_idx;
+DROP INDEX IF EXISTS app.app_possession_events_possessionId_idx;
+DROP INDEX IF EXISTS app.app_possession_events_owner_occurred_at_idx;
+DROP INDEX IF EXISTS app.app_possessions_owner_serial_number_key;
+DROP INDEX IF EXISTS app.app_possessions_container_id_idx;
+DROP INDEX IF EXISTS app.app_possessions_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_possession_containers_owner_userId_idx;
 
 ALTER TABLE ops.search_logs
   DROP CONSTRAINT IF EXISTS ops_search_logs_clicked_entity_type_not_blank,

@@ -133,19 +133,19 @@ DROP TRIGGER IF EXISTS app_finance_accounts_set_updated_at ON app.finance_accoun
 DROP TRIGGER IF EXISTS app_plaid_items_set_updated_at ON app.plaid_items;
 DROP TRIGGER IF EXISTS app_finance_institutions_set_updated_at ON app.finance_institutions;
 
-DROP INDEX IF EXISTS app_finance_transactions_owner_pending_idx;
-DROP INDEX IF EXISTS app_finance_transactions_owner_posted_on_idx;
-DROP INDEX IF EXISTS app_finance_transactions_account_posted_on_idx;
-DROP INDEX IF EXISTS app_finance_transactions_owner_source_external_key;
-DROP INDEX IF EXISTS app_finance_accounts_institution_id_idx;
-DROP INDEX IF EXISTS app_finance_accounts_plaid_item_id_idx;
-DROP INDEX IF EXISTS app_finance_accounts_owner_active_idx;
-DROP INDEX IF EXISTS app_finance_accounts_owner_provider_account_key;
-DROP INDEX IF EXISTS app_plaid_items_owner_status_idx;
-DROP INDEX IF EXISTS app_plaid_items_institution_id_idx;
-DROP INDEX IF EXISTS app_plaid_items_owner_provider_item_key;
-DROP INDEX IF EXISTS app_finance_institutions_name_idx;
-DROP INDEX IF EXISTS app_finance_institutions_provider_key;
+DROP INDEX IF EXISTS app.app_finance_transactions_owner_pending_idx;
+DROP INDEX IF EXISTS app.app_finance_transactions_owner_posted_on_idx;
+DROP INDEX IF EXISTS app.app_finance_transactions_account_posted_on_idx;
+DROP INDEX IF EXISTS app.app_finance_transactions_owner_source_external_key;
+DROP INDEX IF EXISTS app.app_finance_accounts_institution_id_idx;
+DROP INDEX IF EXISTS app.app_finance_accounts_plaid_item_id_idx;
+DROP INDEX IF EXISTS app.app_finance_accounts_owner_active_idx;
+DROP INDEX IF EXISTS app.app_finance_accounts_owner_provider_account_key;
+DROP INDEX IF EXISTS app.app_plaid_items_owner_status_idx;
+DROP INDEX IF EXISTS app.app_plaid_items_institution_id_idx;
+DROP INDEX IF EXISTS app.app_plaid_items_owner_provider_item_key;
+DROP INDEX IF EXISTS app.app_finance_institutions_name_idx;
+DROP INDEX IF EXISTS app.app_finance_institutions_provider_key;
 
 ALTER TABLE app.finance_transactions
   DROP CONSTRAINT IF EXISTS app_finance_transactions_occurred_at_check,

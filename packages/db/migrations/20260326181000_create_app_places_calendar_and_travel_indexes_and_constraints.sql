@@ -125,24 +125,24 @@ DROP TRIGGER IF EXISTS app_events_set_updated_at ON app.events;
 DROP TRIGGER IF EXISTS app_bookmarks_set_updated_at ON app.bookmarks;
 DROP TRIGGER IF EXISTS app_places_set_updated_at ON app.places;
 
-DROP INDEX IF EXISTS app_travel_trips_owner_status_idx;
-DROP INDEX IF EXISTS app_travel_trips_owner_start_date_idx;
-DROP INDEX IF EXISTS app_event_attendees_event_email_key;
-DROP INDEX IF EXISTS app_event_attendees_event_person_key;
-DROP INDEX IF EXISTS app_event_attendees_email_idx;
-DROP INDEX IF EXISTS app_event_attendees_person_id_idx;
-DROP INDEX IF EXISTS app_event_attendees_event_id_idx;
-DROP INDEX IF EXISTS app_events_external_id_idx;
-DROP INDEX IF EXISTS app_events_search_idx;
-DROP INDEX IF EXISTS app_events_place_id_idx;
-DROP INDEX IF EXISTS app_events_owner_type_idx;
-DROP INDEX IF EXISTS app_events_owner_starts_at_idx;
-DROP INDEX IF EXISTS app_bookmarks_search_idx;
-DROP INDEX IF EXISTS app_bookmarks_place_id_idx;
-DROP INDEX IF EXISTS app_bookmarks_owner_userId_idx;
-DROP INDEX IF EXISTS app_places_external_id_idx;
-DROP INDEX IF EXISTS app_places_search_idx;
-DROP INDEX IF EXISTS app_places_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_travel_trips_owner_status_idx;
+DROP INDEX IF EXISTS app.app_travel_trips_owner_start_date_idx;
+DROP INDEX IF EXISTS app.app_event_attendees_event_email_key;
+DROP INDEX IF EXISTS app.app_event_attendees_event_person_key;
+DROP INDEX IF EXISTS app.app_event_attendees_email_idx;
+DROP INDEX IF EXISTS app.app_event_attendees_person_id_idx;
+DROP INDEX IF EXISTS app.app_event_attendees_event_id_idx;
+DROP INDEX IF EXISTS app.app_events_external_id_idx;
+DROP INDEX IF EXISTS app.app_events_search_idx;
+DROP INDEX IF EXISTS app.app_events_place_id_idx;
+DROP INDEX IF EXISTS app.app_events_owner_type_idx;
+DROP INDEX IF EXISTS app.app_events_owner_starts_at_idx;
+DROP INDEX IF EXISTS app.app_bookmarks_search_idx;
+DROP INDEX IF EXISTS app.app_bookmarks_place_id_idx;
+DROP INDEX IF EXISTS app.app_bookmarks_owner_userId_idx;
+DROP INDEX IF EXISTS app.app_places_external_id_idx;
+DROP INDEX IF EXISTS app.app_places_search_idx;
+DROP INDEX IF EXISTS app.app_places_owner_userId_idx;
 
 ALTER TABLE app.travel_trips
   DROP CONSTRAINT IF EXISTS app_travel_trips_date_order_check,
