@@ -103,5 +103,3 @@ minimumReleaseAgeExclude:
   - '@sentry/expo-upload-sourcemaps@8.20.0'
   - '@sentry/react-native@8.20.0'
   - '@expo/ui@57.0.8'
-patchedDependencies:
-  babel-preset-expo@57.0.4: patches/babel-preset-expo@57.0.4.patch
