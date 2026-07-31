@@ -52,6 +52,9 @@ overrides:
   react-syntax-highlighter: ^16.1.0
   tailwind-merge: ^3.2.0
 
+patchedDependencies:
+  babel-preset-expo@57.0.4: d17b0fe355aff6e70ca6ee726fd51cf2c8723d80c865d1726cac272d4e2b2830
+
 importers:
 
   .:
@@ -13527,7 +13530,7 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
 
-  babel-preset-expo@57.0.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(expo@57.0.8)(react-refresh@0.14.2):
+  babel-preset-expo@57.0.4(patch_hash=d17b0fe355aff6e70ca6ee726fd51cf2c8723d80c865d1726cac272d4e2b2830)(@babel/core@7.29.7)(@babel/runtime@7.29.7)(expo@57.0.8)(react-refresh@0.14.2):
     dependencies:
       '@babel/generator': 7.29.7
       '@babel/helper-module-imports': 7.29.7
@@ -14685,7 +14688,7 @@ snapshots:
       '@expo/metro': 56.0.0
       '@expo/metro-config': 57.0.7(expo@57.0.8)(typescript@6.0.3)
       '@ungap/structured-clone': 1.3.3
-      babel-preset-expo: 57.0.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(expo@57.0.8)(react-refresh@0.14.2)
+      babel-preset-expo: 57.0.4(patch_hash=d17b0fe355aff6e70ca6ee726fd51cf2c8723d80c865d1726cac272d4e2b2830)(@babel/core@7.29.7)(@babel/runtime@7.29.7)(expo@57.0.8)(react-refresh@0.14.2)
       expo-asset: 57.0.7(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
       expo-constants: 57.0.7(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))
       expo-file-system: 57.0.1(expo@57.0.8)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))
