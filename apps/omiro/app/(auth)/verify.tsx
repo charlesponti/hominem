@@ -408,7 +408,9 @@ function VerifyScreen() {
                     styles.countdown,
                     {
                       color:
-                        secondsLeft === 0 ? themeColors.primary : countdownColor(secondsLeft, themeColors),
+                        secondsLeft === 0
+                          ? themeColors.primary
+                          : countdownColor(secondsLeft, themeColors),
                     },
                   ]}
                   accessibilityLabel={

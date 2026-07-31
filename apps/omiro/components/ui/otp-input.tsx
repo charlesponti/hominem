@@ -125,9 +125,7 @@ function OtpCell({
       : borderColor;
 
   return (
-    <Animated.View
-      style={[styles.cell, { borderColor: resolvedBorderColor }, animatedStyle]}
-    >
+    <Animated.View style={[styles.cell, { borderColor: resolvedBorderColor }, animatedStyle]}>
       {digit ? (
         <Text style={[styles.cellText, { color: textColor }]}>{digit}</Text>
       ) : isActive ? (
