@@ -1,13 +1,12 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 const routes = [
-  layout('routes/auth/layout.tsx', [
+  layout('routes/layout.tsx', [
+    index('routes/home.tsx'),
+
     route('/auth', 'routes/auth/index.tsx'),
     route('/auth/verify', 'routes/auth/verify.tsx'),
     route('/auth/logout', 'routes/auth/logout.tsx'),
-  ]),
-  layout('routes/layout.tsx', [
-    index('routes/home.tsx'),
 
     route('finance', 'routes/finance.tsx'),
     route('import', 'routes/import.tsx'),
