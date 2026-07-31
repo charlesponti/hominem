@@ -3,7 +3,7 @@ import { getServerAuth as sharedGetServerAuth } from '@ponti-studios/auth/server
 import { serverEnv } from './env';
 
 export const authConfig = {
-  apiBaseUrl: serverEnv.VITE_AUTH_API_URL ?? serverEnv.VITE_PUBLIC_API_URL,
+  apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
 };
 
 export const getServerAuth = (request: Request) => sharedGetServerAuth(request, authConfig);

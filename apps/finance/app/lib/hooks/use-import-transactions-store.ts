@@ -1,8 +1,8 @@
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/queues';
-import { useAuthContext } from '@ponti-studios/auth/client/provider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useAuthContext } from '~/lib/auth-client';
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store';
 
 // Define constants for channel names and message types

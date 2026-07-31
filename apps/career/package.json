@@ -21,6 +21,7 @@
     "gallery:login": "tsx scripts/gallery-login.ts"
   },
   "dependencies": {
+    "better-auth": "1.6.23",
     "@base-ui/react": "^1.6.0",
     "@hominem/ai": "workspace:*",
     "@hominem/db": "workspace:*",

@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 
-import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
@@ -21,6 +20,7 @@ import {
   updatePlaidItemStatusByItemId,
   updatePlaidItemSyncStatus,
 } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 const nextUserId = createDeterministicIdFactory('finance.plaid.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
@@ -33,19 +33,14 @@ describeIntegration('finance plaid integration', () => {
   let ownerId: string;
   let otherUserId: string;
 
-  const cleanupUser = async (userId: string): Promise<void> => {
-    await sql`delete from app.plaid_items where user_id = ${userId}`.execute(db).catch(() => {});
-    await sql`delete from users where id = ${userId}`.execute(db).catch(() => {});
-  };
-
   beforeEach(async () => {
     expect(await hasPlaidItemsTable()).toBe(true);
 
     ownerId = nextUserId();
     otherUserId = nextUserId();
 
-    await cleanupUser(ownerId);
-    await cleanupUser(otherUserId);
+    await cleanupIntegrationFinanceUser(ownerId);
+    await cleanupIntegrationFinanceUser(otherUserId);
     await ensureIntegrationUsers([
       { id: ownerId, name: 'Finance Plaid User' },
       { id: otherUserId, name: 'Finance Plaid User' },

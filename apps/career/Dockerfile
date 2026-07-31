@@ -19,6 +19,7 @@ RUN npm install -g pnpm@11.10.0 && \
     pnpm install --frozen-lockfile --filter @hominem/career...
 
 # react-router build bundles all @hominem/* packages into build/server and build/client
+RUN pnpm --filter @ponti-studios/auth build
 RUN pnpm --filter @hominem/career run build
 RUN pnpm --filter @hominem/career --prod deploy /app/deploy
 

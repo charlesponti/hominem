@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { maskEmail } from './mask-email';
+import { maskEmail } from './mask-email.js';
 
 describe('maskEmail', () => {
   it('masks long local parts after the first two characters', () => {

@@ -14,6 +14,7 @@ import {
   queryTransactionsByContract,
   replaceTransactionTags,
 } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 async function _hasTaggingTables(): Promise<boolean> {
   const hasTagsTable = await tableExists('app.tags');
@@ -35,24 +36,6 @@ describeIntegration('finance tags integration', () => {
   let ownerTravelTagId: string;
   let otherTagId: string;
 
-  const cleanupUser = async (userId: string): Promise<void> => {
-    await sql`
-      delete from app.tag_assignments
-      where entity_table = ${'app.financeTransactions'}
-        and entity_id in (select id from app.finance_transactions where user_id = ${userId})
-    `
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.finance_transactions where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.finance_accounts where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.tags where owner_userid = ${userId}`.execute(db).catch(() => {});
-    await sql`delete from users where id = ${userId}`.execute(db).catch(() => {});
-  };
-
   beforeEach(async () => {
     ownerId = nextUserId();
     otherUserId = nextUserId();
@@ -60,8 +43,8 @@ describeIntegration('finance tags integration', () => {
     ownerTravelTagId = nextTagId();
     otherTagId = nextTagId();
 
-    await cleanupUser(ownerId);
-    await cleanupUser(otherUserId);
+    await cleanupIntegrationFinanceUser(ownerId);
+    await cleanupIntegrationFinanceUser(otherUserId);
     await ensureIntegrationUsers([
       { id: ownerId, name: 'Finance Tags User' },
       { id: otherUserId, name: 'Finance Tags User' },
@@ -78,8 +61,8 @@ describeIntegration('finance tags integration', () => {
     const account = await createAccount({
       userId: ownerId,
       name: 'Tag Checking',
-      type: 'depository',
-      balance: 1000,
+      accountType: 'depository',
+      currentBalance: 1000,
     });
     ownerAccountId = account.id;
 
@@ -88,14 +71,14 @@ describeIntegration('finance tags integration', () => {
       accountId: ownerAccountId,
       amount: -25,
       description: 'Lunch',
-      date: '2026-03-01',
+      postedOn: '2026-03-01',
     });
     const txTwo = await createTransaction({
       userId: ownerId,
       accountId: ownerAccountId,
       amount: -60,
       description: 'Flight',
-      date: '2026-03-02',
+      postedOn: '2026-03-02',
     });
     txOneId = txOne.id;
     txTwoId = txTwo.id;

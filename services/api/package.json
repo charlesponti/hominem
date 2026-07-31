@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "dev": "SERVICE_NAME=api node --watch --import tsx src/index.ts",
+    "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",

@@ -1,4 +1,3 @@
-import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
@@ -22,6 +21,7 @@ import {
   replaceTransactionTags,
   updateBudgetCategory,
 } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 const nextUserId = createDeterministicIdFactory('finance.budget.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
@@ -31,31 +31,12 @@ describeIntegration('finance budget integration', () => {
   let otherUserId: string;
   let ownerAccountId: string;
 
-  const cleanupUser = async (userId: string): Promise<void> => {
-    await sql`
-      delete from app.tag_assignments
-      where entity_table = ${'app.finance_transactions'}::regclass
-        and entity_id in (select id from app.finance_transactions where user_id = ${userId})
-    `
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.plaid_items where user_id = ${userId}`.execute(db).catch(() => {});
-    await sql`delete from app.finance_transactions where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.tags where owner_userid = ${userId}`.execute(db).catch(() => {});
-    await sql`delete from app.finance_accounts where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from users where id = ${userId}`.execute(db).catch(() => {});
-  };
-
   beforeEach(async () => {
     ownerId = nextUserId();
     otherUserId = nextUserId();
 
-    await cleanupUser(ownerId);
-    await cleanupUser(otherUserId);
+    await cleanupIntegrationFinanceUser(ownerId);
+    await cleanupIntegrationFinanceUser(otherUserId);
     await ensureIntegrationUsers([
       { id: ownerId, name: 'Finance Budget User' },
       { id: otherUserId, name: 'Finance Budget User' },

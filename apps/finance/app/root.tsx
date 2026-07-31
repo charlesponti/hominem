@@ -1,4 +1,3 @@
-import { AuthProvider } from '@ponti-studios/auth/client/provider';
 import { Button, buttonVariants, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { colorThemes } from '@ponti-studios/ui/tokens';
 import type React from 'react';
@@ -82,16 +81,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { authEnv, apiBaseUrl } = loaderData;
+  const { apiBaseUrl } = loaderData;
 
   return (
-    <AuthProvider config={authEnv}>
-      <HonoProvider baseUrl={apiBaseUrl}>
-        <UpdateGuard>
-          <Outlet />
-        </UpdateGuard>
-      </HonoProvider>
-    </AuthProvider>
+    <HonoProvider baseUrl={apiBaseUrl}>
+      <UpdateGuard>
+        <Outlet />
+      </UpdateGuard>
+    </HonoProvider>
   );
 }
 

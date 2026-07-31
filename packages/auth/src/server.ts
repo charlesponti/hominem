@@ -1,4 +1,4 @@
-import type { User } from './types';
+import type { AuthUser } from './types.js';
 
 interface AuthConfig {
   apiBaseUrl: string;
@@ -6,7 +6,7 @@ interface AuthConfig {
 
 interface BetterAuthGetSessionPayload {
   session: { id: string } | null;
-  user: User | null;
+  user: AuthUser | null;
 }
 
 export async function getServerAuth(request: Request, config: AuthConfig) {

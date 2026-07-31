@@ -178,9 +178,4 @@ export { UserRepository } from './services/users/user.repository';
 export type { FindUserInput, UserRecord } from './services/users/user.repository';
 
 export { FinanceQueryRepository } from './services/finance/finance-query.repository';
-export type {
-  FinanceMerchantSpendRecord,
-  FinanceMonthlySummaryInput,
-  FinanceMonthlySummaryRecord,
-  FinanceTransactionSummaryRecord,
-} from './services/finance/finance-query.repository';
+export type { FinanceMonthlyTransactionRecord } from './services/finance/finance-query.repository';

@@ -17,6 +17,7 @@ import {
   queryTransactions,
   updateTransaction,
 } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 const nextUserId = createDeterministicIdFactory('finance.transactions.integration');
 const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
@@ -26,22 +27,12 @@ describeIntegration('finance transactions integration', () => {
   let otherUserId: string;
   let ownerAccountId: string;
 
-  const cleanupUser = async (userId: string): Promise<void> => {
-    await sql`delete from app.finance_transactions where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.finance_accounts where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from users where id = ${userId}`.execute(db).catch(() => {});
-  };
-
   beforeEach(async () => {
     ownerId = nextUserId();
     otherUserId = nextUserId();
 
-    await cleanupUser(ownerId);
-    await cleanupUser(otherUserId);
+    await cleanupIntegrationFinanceUser(ownerId);
+    await cleanupIntegrationFinanceUser(otherUserId);
     await ensureIntegrationUsers([
       { id: ownerId, name: 'Finance Tx User' },
       { id: otherUserId, name: 'Finance Tx User' },

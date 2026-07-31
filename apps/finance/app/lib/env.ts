@@ -3,7 +3,6 @@ import * as z from 'zod';
 
 const serverSchema = z.object({
   VITE_PUBLIC_API_URL: z.string().url(),
-  VITE_AUTH_API_URL: z.string().url().optional(),
   VITE_R2_DOMAIN: z.string().optional(),
   PLAID_CLIENT_ID: z.string().optional(),
   PLAID_API_KEY: z.string().optional(),

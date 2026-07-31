@@ -6,7 +6,7 @@ The system is only real when a clean checkout, a deployment, and a production fa
 
 - `just` and root `pnpm` scripts are the repository-level command interface. Package scripts are Turbo primitives, not contributor instructions.
 - Run the smallest relevant validation lane first: `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `pnpm test`, each scoped with `--filter=@hominem/<package>...` (e.g. `--filter=@hominem/api...`, `--filter=@hominem/omiro...`, `--filter=@hominem/career...`, `--filter=@hominem/finance...`).
-- Source-first workspace exports are the local-development model. Production deployables build explicit artifacts; stale `build/` directories are never a second source of truth.
+- Published shared packages expose compiled artifacts. Local development may alias a package's source for hot reload, but CI, deployables, EAS, and external consumers resolve the same compiled public exports.
 - One Node and pnpm line governs local development, CI, Docker, Railway, and EAS. Version drift is a defect.
 - `@hominem/env` owns shared environment semantics. Framework prefixes adapt a variable for a runtime; they do not invent a second meaning.
 

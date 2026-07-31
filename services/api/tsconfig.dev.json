@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"],
+      "@ponti-studios/auth": ["../../packages/auth/src/index.ts"],
+      "@ponti-studios/auth/*": ["../../packages/auth/src/*"]
+    }
+  }
+}

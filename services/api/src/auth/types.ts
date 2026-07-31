@@ -1,7 +1,7 @@
-import type { User } from '@ponti-studios/auth/types';
+import type { AuthUser as AuthIdentity } from '@ponti-studios/auth/types';
 
 export type AuthCredential = 'session' | 'mcp-oauth';
-export type AuthUser = User & { isAdmin?: boolean };
+export type AuthUser = AuthIdentity & { isAdmin?: boolean };
 
 export interface AuthContext {
   user: AuthUser;

@@ -2,7 +2,7 @@ import { createAuthLogoutRoute } from '~/lib/auth-server-routes';
 import { serverEnv } from '~/lib/env';
 
 const authLogoutRoute = createAuthLogoutRoute({
-  getApiBaseUrl: () => serverEnv.VITE_AUTH_API_URL ?? serverEnv.VITE_PUBLIC_API_URL,
+  getApiBaseUrl: () => serverEnv.VITE_PUBLIC_API_URL,
 });
 
 export const action = authLogoutRoute.action;

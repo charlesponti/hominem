@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { betterAuthServer, TEST_OTP } from '../auth/better-auth';
 import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { env } from '../env';
+import { getRedis } from '../redis';
 import type { AppEnv } from '../server';
 
 export const authRoutes = new Hono<AppEnv>();
@@ -59,11 +60,6 @@ function isTestOtpRetrievalEnabled() {
   return isTestOtpStoreEnabled();
 }
 
-async function getRedis() {
-  const { redis: redisClient } = await import('@hominem/services/redis');
-  return redisClient;
-}
-
 function getClientIp(c: Context<AppEnv>) {
   const forwarded = c.req.header('x-forwarded-for');
   if (forwarded && forwarded.length > 0) {
@@ -79,11 +75,11 @@ function hashRateLimitIdentifier(value: string) {
 
 async function enforceAuthRateLimit(c: Context<AppEnv>, input: AuthRateLimitInput) {
   try {
-    const redisClient = await getRedis();
+    const redis = await getRedis();
     const key = `ratelimit:auth:${input.bucket}:${hashRateLimitIdentifier(input.identifier)}`;
-    const count = await redisClient.incr(key);
+    const count = await redis.incr(key);
     if (count === 1) {
-      await redisClient.expire(key, input.windowSec);
+      await redis.expire(key, input.windowSec);
     }
 
     c.header('X-RateLimit-Limit', String(input.max));

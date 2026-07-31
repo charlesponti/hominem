@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { createMiddleware } from 'hono/factory';
 
+import { getRedis } from '../../redis';
 import type { AppContext } from './auth';
 
 interface RateLimitInput {
@@ -9,11 +10,6 @@ interface RateLimitInput {
   // Number of seconds the value will remain cached in Redis.
   windowSec: number;
   max: number;
-}
-
-async function getRedis() {
-  const { redis } = await import('@hominem/services/redis');
-  return redis;
 }
 
 function hashRateLimitIdentifier(value: string) {

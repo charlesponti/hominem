@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import type { PortfolioRecord } from '@hominem/db';
-import type { User } from '@ponti-studios/auth/types';
+import type { AuthUser as User } from '@ponti-studios/auth/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ensureUserPortfolio = vi.fn();

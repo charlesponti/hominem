@@ -1,0 +1,46 @@
+name: validate-auth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/auth/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig*.json'
+      - 'tsconfig.profiles/**'
+      - '.github/actions/setup-pnpm-workspace/**'
+      - '.github/workflows/validate-auth.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/auth/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig*.json'
+      - 'tsconfig.profiles/**'
+      - '.github/actions/setup-pnpm-workspace/**'
+      - '.github/workflows/validate-auth.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-pnpm-workspace
+        with:
+          node-version: 24.18.0
+
+      - name: validate-source
+        run: |
+          pnpm --filter @ponti-studios/auth lint
+          pnpm --filter @ponti-studios/auth typecheck
+          pnpm --filter @ponti-studios/auth test

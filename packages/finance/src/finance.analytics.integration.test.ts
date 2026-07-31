@@ -16,6 +16,7 @@ import {
   getTopMerchantsByContract,
   replaceTransactionTags,
 } from './index';
+import { cleanupIntegrationFinanceUser } from './test-utils';
 
 async function _hasTaggingTables(): Promise<boolean> {
   const hasTagsTable = await tableExists('app.tags');
@@ -33,31 +34,13 @@ describeIntegration('finance analytics integration', () => {
   let foodTagId: string;
   let travelTagId: string;
 
-  const cleanupUser = async (userId: string): Promise<void> => {
-    await sql`
-      delete from app.tag_assignments
-      where entity_table = ${'app.finance_transactions'}::regclass
-        and entity_id in (select id from app.finance_transactions where user_id = ${userId})
-    `
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.finance_transactions where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.finance_accounts where user_id = ${userId}`
-      .execute(db)
-      .catch(() => {});
-    await sql`delete from app.tags where owner_userid = ${userId}`.execute(db).catch(() => {});
-    await sql`delete from users where id = ${userId}`.execute(db).catch(() => {});
-  };
-
   beforeEach(async () => {
     ownerId = nextUserId();
     accountId = '';
     foodTagId = nextTagId();
     travelTagId = nextTagId();
 
-    await cleanupUser(ownerId);
+    await cleanupIntegrationFinanceUser(ownerId);
     await ensureIntegrationUsers([{ id: ownerId, name: 'Finance Analytics User' }]);
 
     await sql`

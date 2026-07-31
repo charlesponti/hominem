@@ -8,31 +8,22 @@ export * from './types';
 export * from './service';
 export * from './consts';
 
-/**
- * Initialize BullMQ queues using consistent queue names.
- * These are singleton instances used throughout the application.
- */
 export const importTransactionsQueue: Queue = new BullQueue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connection: redis as any,
+  connection: redis,
 });
 
 export const plaidSyncQueue: Queue = new BullQueue(QUEUE_NAMES.PLAID_SYNC, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connection: redis as any,
+  connection: redis,
 });
 
 export const placePhotoEnrichQueue: Queue = new BullQueue(QUEUE_NAMES.PLACE_PHOTO_ENRICH, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connection: redis as any,
+  connection: redis,
 });
 
 export const fileProcessingQueue: Queue = new BullQueue(QUEUE_NAMES.FILE_PROCESSING, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connection: redis as any,
+  connection: redis,
 });
 
 export const embeddingQueue: Queue = new BullQueue(QUEUE_NAMES.EMBEDDING_GENERATION, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  connection: redis as any,
+  connection: redis,
 });

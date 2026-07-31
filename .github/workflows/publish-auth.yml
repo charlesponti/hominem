@@ -28,8 +28,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: build-auth-package
-        run: pnpm --filter @ponti-studios/auth build
+      - name: validate-auth-package
+        run: |
+          pnpm --filter @ponti-studios/auth lint
+          pnpm --filter @ponti-studios/auth typecheck
+          pnpm --filter @ponti-studios/auth test
 
       - name: publish-to-npm
         working-directory: packages/auth

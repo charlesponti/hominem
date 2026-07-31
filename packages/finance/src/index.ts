@@ -6,5 +6,6 @@ export * from './categories';
 export * from './transactions';
 export * from './plaid';
 export * from './institutions';
+export * from './monthly-summary';
 export * from './analytics';
 export * from './data-ops';

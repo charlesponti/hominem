@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.profiles/react-package.json",
   "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "rootDir": "src",
     "outDir": "./build",
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo"

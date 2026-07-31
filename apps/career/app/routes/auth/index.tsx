@@ -1,27 +1,26 @@
-import { useEmailOtpAuthRoute } from '@ponti-studios/auth/client/email-otp-route';
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
 import { redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';
 import { userContext } from '~/lib/middleware';
+import { useEmailOtpAuthRoute } from '~/lib/use-email-otp-auth-route';
 
 import { Route } from './+types/index';
 import { AUTH_CONFIG } from './config';
 
 const authCopy = {
   changeEmail: 'Use a different email',
-  codeLabel: 'Verification code',
-  emailHelper: 'Enter your email and we’ll send a one-time verification code.',
+  emailHelper: 'Enter your email to receive the one-time code.',
   emailLabel: 'Email address',
   emailPlaceholder: 'you@example.com',
-  emailTitle: 'Career | Auth',
+  emailTitle: 'Auth',
   otpTitle: 'Check your email',
   resend: 'Resend code',
   resendLoading: 'Sending code',
   submitEmail: 'Continue',
   submitEmailLoading: 'Sending code',
-  verify: 'Verify and continue',
-  verifyLoading: 'Verifying code',
+  verify: 'Verify',
+  verifyLoading: 'Verifying',
 } satisfies EmailOtpAuthCopy;
 
 export const meta: Route.MetaFunction = () => [
@@ -62,10 +61,10 @@ export default function AuthEntryPage() {
       step={auth.step}
       onChangeEmail={auth.changeEmail}
       onEmailChange={auth.handleEmailChange}
-      onEmailSubmit={() => auth.handleSendOtp(auth.email)}
+      onEmailSubmit={() => auth.handleSendOtp()}
       onOtpChange={auth.handleOtpChange}
-      onOtpSubmit={() => auth.handleVerifyOtp(auth.email, auth.otp)}
-      onResendOtp={() => auth.handleResendOtp(auth.email)}
+      onOtpSubmit={() => auth.handleVerifyOtp()}
+      onResendOtp={() => auth.handleResendOtp()}
     />
   );
 }

@@ -1,1 +1,1 @@
-export * from './client/provider';
+export type { AuthUser } from './types.js';

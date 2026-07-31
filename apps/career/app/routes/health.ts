@@ -1,12 +1,11 @@
-import { serverEnv } from '~/lib/env';
+import { serverEnv } from '~/lib/env.server';
 
 export async function loader() {
   const start = Date.now();
   const checks: Record<string, boolean | string> = {};
 
   try {
-    const env = serverEnv();
-    void new URL(env.DATABASE_URL);
+    void new URL(serverEnv.DATABASE_URL);
     checks.database = 'connected';
 
     const responseTime = Date.now() - start;

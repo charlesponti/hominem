@@ -1,4 +1,3 @@
-import { AuthProvider } from '@ponti-studios/auth/client/provider';
 import { Button, buttonVariants, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { colorThemes } from '@ponti-studios/ui/tokens';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +17,7 @@ import Navigation from './components/Navigation';
 
 import './app.css';
 import { NavigationProgress } from './components/NavigationProgress';
-import { serverEnv } from './lib/env';
+import { serverEnv } from './lib/env.server';
 import { sessionMiddleware, userContext } from './lib/middleware';
 import { ensureUserPortfolio } from './lib/portfolio.server';
 
@@ -107,7 +106,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return data({
     user,
     hasPortfolio: Boolean(user),
-    apiBaseUrl: serverEnv().VITE_PUBLIC_API_URL,
+    apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
   });
 }
 
@@ -163,18 +162,16 @@ export default function App({
 }) {
   const { apiBaseUrl } = loaderData;
   return (
-    <AuthProvider config={{ apiBaseUrl }}>
-      <QueryClientProvider client={queryClient}>
-        <NavigationProgress />
-        <div className="flex min-h-screen flex-col bg-background text-foreground">
-          <Navigation />
-          {/* Single page frame: all routes inherit this width + padding. Do not re-add container/px/py shells in routes. */}
-          <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6">
-            <Outlet />
-          </main>
-        </div>
-      </QueryClientProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <NavigationProgress />
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <Navigation />
+        {/* Single page frame: all routes inherit this width + padding. Do not re-add container/px/py shells in routes. */}
+        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6">
+          <Outlet />
+        </main>
+      </div>
+    </QueryClientProvider>
   );
 }
 

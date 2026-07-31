@@ -7,10 +7,10 @@ import {
   SplashScreen,
   Stack,
   ThemeProvider,
-  type RelativePathString,
   usePathname,
   useRouter,
   useSegments,
+  type RelativePathString,
 } from 'expo-router';
 import { PostHogProvider, type PostHog } from 'posthog-react-native';
 import React, { useEffect } from 'react';
