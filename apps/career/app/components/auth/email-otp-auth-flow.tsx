@@ -48,7 +48,7 @@ function AuthScaffold({
   title: string;
 }) {
   return (
-    <div className="bg-base flex items-center justify-center py-16 px-4 md:px-12 border max-w-lg rounded-lg mx-auto shadow">
+    <div className="bg-surface-base flex items-center justify-center py-16 px-4 md:px-12 border max-w-lg rounded-lg mx-auto shadow">
       <div className="mx-auto flex w-full max-w-sm flex-col items-center text-center gap-20">
         <div className="space-y-2 text-left">
           <h1 className="text-3xl text-foreground">{title}</h1>

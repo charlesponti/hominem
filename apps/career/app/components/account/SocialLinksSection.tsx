@@ -60,7 +60,7 @@ export function SocialLinksSection({
       <h2 className="heading-3 text-foreground">Social</h2>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <FormErrorAlert title="Social links weren't saved" message={submissionError} />
 
@@ -75,7 +75,7 @@ export function SocialLinksSection({
                   GitHub
                 </Label>
                 <div className="flex">
-                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-base">
+                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                     github.com/
                   </span>
                   <Input
@@ -107,7 +107,7 @@ export function SocialLinksSection({
                   LinkedIn
                 </Label>
                 <div className="flex">
-                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-base">
+                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                     linkedin.com/in/
                   </span>
                   <Input
@@ -139,7 +139,7 @@ export function SocialLinksSection({
                   Twitter / X
                 </Label>
                 <div className="flex">
-                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-base">
+                  <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                     x.com/
                   </span>
                   <Input

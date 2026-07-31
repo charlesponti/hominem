@@ -1,6 +1,7 @@
-import { FilterChip } from '@ponti-studios/ui/data-display';
+import { ActiveFiltersBar, SortControls } from '@ponti-studios/ui/data-display';
 import { DatePicker, Input } from '@ponti-studios/ui/forms';
 import { type SortOption } from '@ponti-studios/ui/hooks';
+import type { SortField } from '@ponti-studios/ui/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +14,10 @@ import { ListFilter, RefreshCcw } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { AccountSelect } from '~/components/account-select';
-import { SortControls } from '~/components/finance/sort-controls';
 import type { FilterArgs, useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
+
+const sortableFields: SortField[] = ['amount', 'date', 'description', 'category'];
 
 interface ActiveSortOption extends SortOption {
   onRemove: () => void;
@@ -178,7 +180,6 @@ export function TransactionFilters({
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search transactions..."
-          className="w-full sm:max-w-md"
           aria-label="Search transactions"
         />
 
@@ -190,7 +191,7 @@ export function TransactionFilters({
                 Filters
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 space-y-3 p-3">
+            <DropdownMenuContent>
               <DropdownMenuLabel>Apply filters</DropdownMenuLabel>
               <DropdownMenuSeparator />
 
@@ -223,6 +224,7 @@ export function TransactionFilters({
           </DropdownMenu>
 
           <SortControls
+            sortableFields={sortableFields}
             sortOptions={sortOptions || []}
             addSortOption={addSortOption}
             updateSortOption={updateSortOption}
@@ -239,27 +241,17 @@ export function TransactionFilters({
         </div>
       </div>
 
-      {(activeFilters.length > 0 || activeSortOptions.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="body-3 text-muted-foreground">Active:</span>
-          {activeFilters.map((filter) => (
-            <FilterChip
-              key={filter.id}
-              label={filter.label}
-              onRemove={filter.onRemove}
-              onClick={filter.onClick}
-            />
-          ))}
-          {activeSortOptions.map((sort: ActiveSortOption) => (
-            <FilterChip
-              key={`sort-${sort.field}-${sort.direction}`}
-              label={`Sort: ${sort.field} (${sort.direction})`}
-              onRemove={sort.onRemove}
-              onClick={sort.onClick}
-            />
-          ))}
-        </div>
-      )}
+      <ActiveFiltersBar
+        filters={[
+          ...activeFilters,
+          ...activeSortOptions.map((s) => ({
+            id: `sort-${s.field}-${s.direction}`,
+            label: `Sort: ${s.field} (${s.direction})`,
+            onRemove: s.onRemove,
+            onClick: s.onClick,
+          })),
+        ]}
+      />
     </div>
   );
 }

@@ -121,7 +121,6 @@ export function WorkExperienceDetail({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground"
                   onClick={() => submitDelete(deleteFetcher, clearSubmissionError, workExperience)}
                 >
                   Delete

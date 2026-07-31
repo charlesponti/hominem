@@ -86,7 +86,7 @@ export default function Demo() {
       </div>
 
       <Card>
-        <CardContent className="space-y-8 p-6 sm:p-8">
+        <CardContent>
           <header className="space-y-6">
             <div className="space-y-3">
               <h1 className="heading-1 text-foreground">{demoPortfolio.personalInfo.name}</h1>
@@ -166,11 +166,7 @@ function TagList({ tags }: { tags: string[] }) {
   return (
     <div className="mt-3 flex flex-wrap gap-2">
       {tags.map((tag) => (
-        <Badge
-          key={tag}
-          variant="outline"
-          className="border-border bg-muted/40 text-muted-foreground"
-        >
+        <Badge key={tag} variant="outline">
           {tag}
         </Badge>
       ))}

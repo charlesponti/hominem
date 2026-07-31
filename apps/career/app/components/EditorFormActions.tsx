@@ -88,12 +88,7 @@ export function EditorFormActions({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground"
-                onClick={onDelete}
-              >
-                Delete
-              </AlertDialogAction>
+              <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

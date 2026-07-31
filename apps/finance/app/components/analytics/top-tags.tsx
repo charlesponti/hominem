@@ -1,7 +1,7 @@
+import { Skeleton } from '@ponti-studios/ui/feedback';
 import { Badge } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 
-import { Skeleton } from '~/components/skeleton';
 import { useTagBreakdown } from '~/lib/hooks/use-analytics';
 import { formatCurrency } from '~/lib/number.utils';
 
@@ -27,8 +27,8 @@ export function TopTags({ dateFrom, dateTo, selectedAccount }: TopTagsProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Top Tags</CardTitle>
+      <CardHeader>
+        <CardTitle>Top Tags</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -57,9 +57,7 @@ export function TopTags({ dateFrom, dateTo, selectedAccount }: TopTagsProps) {
                 const tagLabel = cat.tag;
                 return (
                   <div key={tagLabel} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
-                    <Badge variant="secondary" className="w-12 justify-center">
-                      {cat.transactionCount}x
-                    </Badge>
+                    <Badge variant="secondary">{cat.transactionCount}x</Badge>
                     <span className="text-sm">{tagLabel}</span>
                     <span className="text-sm font-mono text-right">
                       {formatCurrency(cat.amount)}

@@ -22,7 +22,7 @@ export function ApplicationFilesTab({ application }: FilesTabProps) {
         {application.resume && (
           <Card>
             <CardHeader>
-              <CardTitle className="heading-4">Resume</CardTitle>
+              <CardTitle>Resume</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-muted p-3 rounded caption1 font-mono max-h-40 overflow-y-auto">
@@ -35,7 +35,7 @@ export function ApplicationFilesTab({ application }: FilesTabProps) {
         {application.coverLetter && (
           <Card>
             <CardHeader>
-              <CardTitle className="heading-4">Cover Letter</CardTitle>
+              <CardTitle>Cover Letter</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-muted p-3 rounded caption1 font-mono max-h-40 overflow-y-auto">

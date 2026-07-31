@@ -112,10 +112,7 @@ export function PlaidAccountStatus({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleRemoveConnection}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleRemoveConnection}>
                 Remove Connection
               </AlertDialogAction>
             </AlertDialogFooter>

@@ -165,7 +165,7 @@ export function PlaidLink({
   if (variant === 'card') {
     return (
       <Card className={cn('w-full max-w-md', className)}>
-        <CardHeader className="text-center">
+        <CardHeader>
           <div className="mx-auto mb-4 flex size-12 items-center justify-center border border-border">
             <Building2 className="size-6 text-primary" />
           </div>
@@ -174,7 +174,7 @@ export function PlaidLink({
             Securely connect your bank account to import transactions and track your finances.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           {hasError && (
             <Alert variant="destructive">
               <AlertCircle className="size-4" />
@@ -190,7 +190,6 @@ export function PlaidLink({
           <Button
             onClick={handleClick}
             disabled={!isReady && !(!linkToken && !isLoading)}
-            className="w-full"
             size="lg"
           >
             {isLoading ? (

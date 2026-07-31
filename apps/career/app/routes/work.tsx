@@ -1,5 +1,7 @@
 import type { WorkExperienceRecord as WorkExperience } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
+import { Input } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon, UploadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -8,7 +10,6 @@ import { Link, useFetcher, useNavigate, useRevalidator } from 'react-router';
 import {
   EntityListCards,
   EntityListTable,
-  PageHeader,
   SearchFilterBar,
   type EntityListColumn,
 } from '~/components/patterns';
@@ -152,18 +153,21 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader title="Work Experience">
-        <Button
-          type="button"
-          onClick={handleAddNew}
-          variant="default"
-          size="icon"
-          disabled={draftFetcher.state === 'submitting'}
-          aria-label="Add new experience"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-      </PageHeader>
+      <SectionIntro
+        title="Work Experience"
+        actions={
+          <Button
+            type="button"
+            onClick={handleAddNew}
+            variant="default"
+            size="icon"
+            disabled={draftFetcher.state === 'submitting'}
+            aria-label="Add new experience"
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        }
+      />
 
       <FormErrorAlert title="Work experience wasn’t created" message={submissionError} />
 
@@ -182,16 +186,18 @@ export default function Work({ loaderData }: Route.ComponentProps) {
                     ]
                   : []
               }
-              onClear={() => setSearchValue('')}
-            >
-              <SearchFilterBar.Search
-                id="work-search"
-                value={searchValue}
-                onChange={setSearchValue}
-                placeholder="Search by company or role..."
-                ariaLabel="Search work experience"
-              />
-            </SearchFilterBar>
+              onClearAll={() => setSearchValue('')}
+              search={
+                <Input
+                  id="work-search"
+                  type="search"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder="Search by company or role..."
+                  aria-label="Search work experience"
+                />
+              }
+            />
 
             {filteredExperiences.length === 0 ? (
               <EmptyState

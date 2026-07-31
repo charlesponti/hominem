@@ -29,6 +29,12 @@ function getSnapshot() {
   return toasts;
 }
 
+const EMPTY_TOASTS: ToastItem[] = [];
+
+function getServerSnapshot() {
+  return EMPTY_TOASTS;
+}
+
 function dismiss(id: string) {
   toasts = toasts.filter((t) => t.id !== id);
   emit();
@@ -54,7 +60,7 @@ export function toast(options: ToastOptions | string) {
 }
 
 export function Toaster() {
-  const items = useSyncExternalStore(subscribe, getSnapshot, () => [] as ToastItem[]);
+  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   if (items.length === 0) return null;
 

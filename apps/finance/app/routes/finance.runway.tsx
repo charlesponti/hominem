@@ -153,7 +153,7 @@ export default function RunwayPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Financial Runway Calculator</h1>
         {runwayMetrics.isRunwayDangerous && (
-          <Badge variant="destructive" className="flex items-center gap-1">
+          <Badge variant="destructive">
             <AlertTriangle className="size-4" />
             Short Runway
           </Badge>
@@ -164,8 +164,8 @@ export default function RunwayPage() {
       {chartData.length > 0 && (
         <div className="grid gap-6 md:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+            <CardHeader>
+              <CardTitle>Current Balance</CardTitle>
               <DollarSign className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -174,8 +174,8 @@ export default function RunwayPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Burn Rate</CardTitle>
+            <CardHeader>
+              <CardTitle>Monthly Burn Rate</CardTitle>
               <TrendingDown className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -184,8 +184,8 @@ export default function RunwayPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Runway (Months)</CardTitle>
+            <CardHeader>
+              <CardTitle>Runway (Months)</CardTitle>
               <Calendar className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -205,8 +205,8 @@ export default function RunwayPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Minimum Balance</CardTitle>
+            <CardHeader>
+              <CardTitle>Minimum Balance</CardTitle>
               <TrendingDown className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -226,7 +226,7 @@ export default function RunwayPage() {
           <CardHeader>
             <CardTitle>Financial Parameters</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div>
               <Label htmlFor={initialBalanceId}>Initial Balance ($)</Label>
               <Input
@@ -248,7 +248,6 @@ export default function RunwayPage() {
             <Button
               onClick={handleCalculateRunway}
               disabled={initialBalance <= 0 || monthlyExpenses <= 0 || runwayMutation.isPending}
-              className="w-full"
             >
               {runwayMutation.isPending ? 'Calculating...' : 'Calculate Runway'}
             </Button>
@@ -295,7 +294,6 @@ export default function RunwayPage() {
               </div>
               <Button
                 onClick={handleAddPurchase}
-                className="w-full"
                 disabled={!newPurchase.description || newPurchase.amount <= 0 || !newPurchase.date}
               >
                 Add Purchase

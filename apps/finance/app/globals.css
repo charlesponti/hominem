@@ -1,3 +1,4 @@
+@import 'tailwindcss';
 @import '@ponti-studios/ui/styles.css';
 @import '@ponti-studios/ui/animations.css';
 
@@ -7,7 +8,7 @@
  * missing semantic states from the 0.4.1 base palette without extending the
  * shared package's public token contract. */
 @theme inline {
-  --color-base: var(--background);
+  --color-surface-base: var(--background);
   --color-panel: var(--card);
   --color-surface: var(--card);
   --color-surface-raised: var(--popover);

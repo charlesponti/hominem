@@ -1,10 +1,3 @@
-export interface ApplicationsResultsSummaryProps {
-  page: number;
-  totalPages: number;
-  onPrevPage: () => void;
-  onNextPage: () => void;
-}
-
 export interface ApplicationsFiltersProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
@@ -15,7 +8,11 @@ export interface ApplicationsFiltersProps {
   selectedSource: string;
   onSourceChange: (source: string) => void;
   onClearFilters: () => void;
-  pagination: ApplicationsResultsSummaryProps;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  };
 }
 
 export interface ApplicationsEmptyStateProps {

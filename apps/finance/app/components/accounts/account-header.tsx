@@ -40,28 +40,13 @@ export function AccountHeader({
     }
   };
 
-  const getAccountTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'credit':
-        return 'text-foreground border-2 border-emphasis-lower';
-      case 'depository':
-        return 'text-foreground border-2 border-emphasis-lower';
-      case 'investment':
-        return 'text-foreground border-2 border-emphasis-subtle';
-      case 'loan':
-        return 'text-foreground border-2 border-emphasis-minimal';
-      default:
-        return 'text-foreground border-2 border-border';
-    }
-  };
-
   const isPlaidAccount = ('isPlaidConnected' in account && account.isPlaidConnected) || false;
 
   return (
     <>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button variant="outline" className="flex items-center gap-1" asChild>
+        <Button variant="outline" asChild>
           <RouteLink to="/accounts">
             <ArrowLeft className="size-4 mr-2" />
             Back to Accounts
@@ -75,14 +60,14 @@ export function AccountHeader({
 
       {/* Account Summary Card */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-muted">{getAccountTypeIcon(account.accountType)}</div>
               <div>
                 <CardTitle className="text-xl">{account.name}</CardTitle>
                 <CardDescription className="flex items-center space-x-2">
-                  <Badge variant="outline" className={getAccountTypeColor(account.accountType)}>
+                  <Badge variant="outline">
                     {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}
                   </Badge>
                   {isPlaidAccount && <Badge variant="secondary">Connected via Plaid</Badge>}
@@ -92,7 +77,7 @@ export function AccountHeader({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent>
           {/* Balance for Plaid accounts */}
           {isPlaidAccount && account.currentBalance && (
             <div className="flex items-center justify-between p-4 bg-muted/50 ">

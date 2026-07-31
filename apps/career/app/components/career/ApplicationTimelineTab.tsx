@@ -49,7 +49,7 @@ export function ApplicationTimelineTab({ application }: TimelineTabProps) {
       {showAddInterview && (
         <Card>
           <CardHeader>
-            <CardTitle className="heading-4">Add Interview</CardTitle>
+            <CardTitle>Add Interview</CardTitle>
           </CardHeader>
           <CardContent>
             <Form method="post" onSubmit={() => setShowAddInterview(false)} className="space-y-4">
@@ -120,7 +120,7 @@ export function ApplicationTimelineTab({ application }: TimelineTabProps) {
       <div className="space-y-4">
         {/* Application Date */}
         <Card>
-          <CardContent className="flex items-start gap-4 p-4">
+          <CardContent>
             <div className="mt-1 size-3 shrink-0 rounded-full bg-primary" />
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between gap-3">
@@ -137,7 +137,7 @@ export function ApplicationTimelineTab({ application }: TimelineTabProps) {
         {/* Interviews */}
         {jsonArray<InterviewEntry>(application.interviewDates).map((interview) => (
           <Card key={interview.date}>
-            <CardContent className="flex items-start gap-4 p-4">
+            <CardContent>
               <div className="mt-1 size-3 shrink-0 rounded-full bg-accent" />
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between gap-3">
@@ -145,12 +145,7 @@ export function ApplicationTimelineTab({ application }: TimelineTabProps) {
                     <h4 className="subheading-4 text-foreground">
                       {interview.type.replace(/(\b\w)/g, (l) => l.toUpperCase())} Interview
                     </h4>
-                    <Badge
-                      variant="outline"
-                      className="border-accent/30 bg-accent/10 text-foreground"
-                    >
-                      {replaceUnderscores(interview.type)}
-                    </Badge>
+                    <Badge variant="outline">{replaceUnderscores(interview.type)}</Badge>
                   </div>
                   <span className="body-3 text-muted-foreground">
                     {new Date(interview.date).toLocaleDateString()}

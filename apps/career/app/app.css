@@ -8,7 +8,7 @@
  * missing semantic states from the 0.4.1 base palette without extending the
  * shared package's public token contract. */
 @theme inline {
-  --color-base: var(--background);
+  --color-surface-base: var(--background);
   --color-panel: var(--card);
   --color-surface: var(--card);
   --color-surface-raised: var(--popover);

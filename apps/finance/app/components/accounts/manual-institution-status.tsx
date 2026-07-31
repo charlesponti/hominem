@@ -20,7 +20,7 @@ export function ManualInstitutionStatus({
     : undefined;
   return (
     <div className="flex items-center space-x-2">
-      <Badge variant="secondary" className="border border-border text-foreground">
+      <Badge variant="secondary">
         <CheckCircleIcon className="size-3 mr-1" />
         Connected
       </Badge>
@@ -29,7 +29,7 @@ export function ManualInstitutionStatus({
         <AccountConnectionDialog
           account={account}
           trigger={
-            <Button variant="ghost" size="sm" className="h-6 px-2">
+            <Button variant="ghost" size="sm">
               Manage
             </Button>
           }

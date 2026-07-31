@@ -6,6 +6,7 @@ import {
   EmptyState,
   Spinner,
 } from '@ponti-studios/ui/feedback';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import {
   Badge,
   Button,
@@ -27,7 +28,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { SectionIntro } from '~/components/patterns';
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
 import { RouteLink } from '~/components/route-link';
 import { createServerHonoClient } from '~/lib/api.server';
@@ -99,13 +99,13 @@ function AccountCard({
     );
 
   return (
-    <Card className="flex flex-col overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card>
+      <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="rounded-lg bg-muted p-1.5 text-foreground">{typeIcon}</div>
             <div className="min-w-0">
-              <CardTitle className="truncate text-lg">{account.name}</CardTitle>
+              <CardTitle>{account.name}</CardTitle>
               <CardDescription>
                 {account.institutionName && isPlaidAccount
                   ? account.institutionName
@@ -117,7 +117,7 @@ function AccountCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1">
+      <CardContent>
         {account.currentBalance != null ? (
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-0.5">
@@ -144,7 +144,7 @@ function AccountCard({
         )}
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between bg-muted/40 p-3">
+      <CardFooter>
         <span className="body-3 text-muted-foreground">
           {isPlaidAccount ? 'Plaid connected' : 'Manual account'}
         </span>

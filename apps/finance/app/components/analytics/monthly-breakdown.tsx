@@ -1,8 +1,8 @@
 import type { TimeSeriesDataPoint } from '@hominem/rpc/finance';
+import { Skeleton } from '@ponti-studios/ui/feedback';
 import { Card, CardContent } from '@ponti-studios/ui/primitives';
 import { Link, useNavigate } from 'react-router';
 
-import { Skeleton } from '~/components/skeleton';
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 import { cn } from '~/lib/utils';
@@ -236,7 +236,7 @@ export function MonthlyBreakdown({
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent>
           <div className="space-y-4">
             <Skeleton className="h-6 w-48" />
             <div className="space-y-2">
@@ -253,7 +253,7 @@ export function MonthlyBreakdown({
   if (error || !Array.isArray(data?.data) || data.data.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent>
           <div className="text-center text-muted-foreground">
             {error ? 'Error loading data' : 'No data available for the selected period'}
           </div>

@@ -1,5 +1,6 @@
 import { db, JobApplicationRepository } from '@hominem/db';
 import { useDebouncedValue } from '@ponti-studios/ui/hooks';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
 import { PlusIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -8,7 +9,6 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { ApplicationsEmptyState } from '~/components/career/applications/ApplicationsEmptyState';
 import { ApplicationsFilters } from '~/components/career/applications/ApplicationsFilters';
 import { ApplicationsList } from '~/components/career/applications/ApplicationsList';
-import { PageHeader } from '~/components/patterns';
 import {
   filterJobApplications,
   getApplicationCards,
@@ -208,17 +208,20 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader title="Job Applications">
-        <Button
-          type="button"
-          onClick={() => navigate('/applications/new')}
-          variant="default"
-          size="icon"
-          aria-label="Add application"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-      </PageHeader>
+      <SectionIntro
+        title="Job Applications"
+        actions={
+          <Button
+            type="button"
+            onClick={() => navigate('/applications/new')}
+            variant="default"
+            size="icon"
+            aria-label="Add application"
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-6">
         <ApplicationsFilters
@@ -232,10 +235,9 @@ export default function Applications({ loaderData }: Route.ComponentProps) {
           onSourceChange={handleSourceChange}
           onClearFilters={clearFilters}
           pagination={{
-            page: pagination.page,
+            currentPage: pagination.page - 1,
             totalPages: pagination.totalPages,
-            onPrevPage: () => updateSearchParams({ page: String(pagination.page - 1) }),
-            onNextPage: () => updateSearchParams({ page: String(pagination.page + 1) }),
+            onPageChange: (newPage: number) => updateSearchParams({ page: String(newPage + 1) }),
           }}
         />
 

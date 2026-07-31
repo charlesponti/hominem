@@ -5,7 +5,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
   switch (status) {
     case 'active':
       return (
-        <Badge variant="default" className="bg-muted text-foreground border-border">
+        <Badge variant="default">
           <CheckCircle className="size-3 mr-1" />
           Active
         </Badge>
@@ -34,7 +34,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
       );
     case 'pending_expiration':
       return (
-        <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning-subtle">
+        <Badge variant="secondary">
           <svg
             className="size-3 mr-1"
             viewBox="0 0 24 24"
@@ -54,11 +54,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
         </Badge>
       );
     case 'revoked':
-      return (
-        <Badge variant="outline" className="text-muted-foreground">
-          Revoked
-        </Badge>
-      );
+      return <Badge variant="outline">Revoked</Badge>;
     default:
       return <Badge variant="outline">Unknown</Badge>;
   }

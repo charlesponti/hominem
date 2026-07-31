@@ -55,7 +55,7 @@ export function ApplicationNotesTab({ notes }: NotesTabProps) {
       {showAddNote && (
         <Card>
           <CardHeader>
-            <CardTitle className="heading-4">Add Note</CardTitle>
+            <CardTitle>Add Note</CardTitle>
           </CardHeader>
           <CardContent>
             <Form method="post" onSubmit={() => setShowAddNote(false)} className="space-y-4">
@@ -123,7 +123,7 @@ export function ApplicationNotesTab({ notes }: NotesTabProps) {
         ) : (
           notes.map((note) => (
             <Card key={note.id}>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <div className="space-y-2">
                     {note.title ? (
@@ -155,7 +155,6 @@ export function ApplicationNotesTab({ notes }: NotesTabProps) {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground"
                             onClick={() => {
                               const formData = new FormData();
                               formData.append('operation', 'delete_note');

@@ -1,8 +1,9 @@
+import { MetricCard } from '@ponti-studios/ui/data-display';
 import { EmptyState } from '@ponti-studios/ui/feedback';
+import { Skeleton } from '@ponti-studios/ui/feedback';
+import { SurfacePanel } from '@ponti-studios/ui/layout';
 import type { ReactNode } from 'react';
 
-import { MetricCard, SurfacePanel } from '~/components/patterns';
-import { Skeleton } from '~/components/skeleton';
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 

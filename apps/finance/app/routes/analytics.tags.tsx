@@ -235,16 +235,12 @@ export default function TagsAnalyticsPage() {
       {(activeFilters.length > 0 || searchValue.trim()) && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
           {activeFilters.map((filter) => (
-            <Badge
-              key={filter.id}
-              className="flex items-center gap-1 border border-border pr-1 text-xs text-foreground"
-            >
+            <Badge key={filter.id}>
               <span>{filter.label}</span>
               <Button
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="size-4 p-0 ml-1 shrink-0"
                 aria-label={`Remove ${filter.label}`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -256,13 +252,12 @@ export default function TagsAnalyticsPage() {
             </Badge>
           ))}
           {searchValue.trim() && (
-            <Badge className="flex items-center gap-1 border border-border pr-1 text-xs text-foreground">
+            <Badge>
               <span>Search: {searchValue}</span>
               <Button
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="size-4 p-0 ml-1 shrink-0"
                 aria-label="Clear search"
                 onClick={() => setSearchValue('')}
               >
@@ -271,13 +266,7 @@ export default function TagsAnalyticsPage() {
             </Badge>
           )}
           {(activeFilters.length > 0 || searchValue.trim()) && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs"
-              onClick={handleClearFilters}
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={handleClearFilters}>
               Clear all
             </Button>
           )}
@@ -396,9 +385,7 @@ export default function TagsAnalyticsPage() {
                   >
                     <td className="py-3">
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="w-12 justify-center">
-                          {item.transactionCount}x
-                        </Badge>
+                        <Badge variant="secondary">{item.transactionCount}x</Badge>
                         <span className="font-medium">{item.tag}</span>
                       </div>
                     </td>

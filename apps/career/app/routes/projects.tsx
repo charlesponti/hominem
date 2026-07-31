@@ -1,6 +1,8 @@
 import type { ProjectRecord as Project, WorkExperienceRecord as WorkExperience } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import { EmptyState } from '@ponti-studios/ui/feedback';
+import { Input } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -10,7 +12,6 @@ import {
   EntityListCards,
   EntityListTable,
   FilterSelect,
-  PageHeader,
   SearchFilterBar,
   StatusBadge,
   type EntityListColumn,
@@ -222,29 +223,39 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader title="Projects">
-        <Button
-          type="button"
-          onClick={() => navigate(newProjectHref)}
-          variant="default"
-          size="icon"
-          aria-label="Add project"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-      </PageHeader>
+      <SectionIntro
+        title="Projects"
+        actions={
+          <Button
+            type="button"
+            onClick={() => navigate(newProjectHref)}
+            variant="default"
+            size="icon"
+            aria-label="Add project"
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-6">
-        <SearchFilterBar activeFilters={activeFilters} onClear={clearFilters}>
-          <SearchFilterBar.Search
-            id="project-search"
-            value={searchValue}
-            onChange={setSearchValue}
-            placeholder="Search by project or client..."
-            ariaLabel="Search projects"
-          />
-          <SearchFilterBar.Filters>
+        <SearchFilterBar
+          activeFilters={activeFilters}
+          onClearAll={clearFilters}
+          search={
+            <Input
+              id="project-search"
+              type="search"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search by project or client..."
+              aria-label="Search projects"
+            />
+          }
+          filters={[
             <FilterSelect
+              key="client"
+              label="Client"
               value={selectedClientId}
               options={clientOptions.map((option) => ({
                 value: option.id,
@@ -253,9 +264,9 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
               onChange={handleClientChange}
               placeholder="All clients"
               id="project-client-filter"
-            />
-          </SearchFilterBar.Filters>
-        </SearchFilterBar>
+            />,
+          ]}
+        />
 
         {filteredProjects.length === 0 ? (
           <EmptyState

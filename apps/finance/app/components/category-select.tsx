@@ -40,7 +40,8 @@ export function TagSelect({
       <Label htmlFor={id}>{label}</Label>
       <Select
         name="tag"
-        value={selectedTag}
+        disabled={isLoading}
+        value={isLoading ? 'loading' : selectedTag}
         onValueChange={(v: string | null) => v != null && onTagChange(v)}
       >
         <SelectTrigger id={id}>

@@ -23,7 +23,7 @@ export function TimelineEntryCard({ entry }: { entry: TimelineEntry }) {
     <div className="relative pb-4 pl-7">
       <div className="absolute top-2 left-0 h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
       <Card>
-        <CardContent className="flex flex-col gap-1 p-4">
+        <CardContent>
           <div className="flex items-baseline justify-between gap-3">
             <p className="body-2 font-medium text-foreground">{entry.title}</p>
             <span className="footnote shrink-0 whitespace-nowrap text-muted-foreground">

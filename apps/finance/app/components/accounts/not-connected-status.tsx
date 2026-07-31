@@ -15,7 +15,7 @@ export function NotConnectedStatus({
 }) {
   return (
     <div className="flex items-center space-x-2">
-      <Badge variant="outline" className="text-muted-foreground">
+      <Badge variant="outline">
         <AlertCircleIcon className="size-3 mr-1" />
         Not Connected
       </Badge>
@@ -23,7 +23,7 @@ export function NotConnectedStatus({
         <AccountConnectionDialog
           account={account}
           trigger={
-            <Button variant="ghost" size="sm" className="h-6 px-2">
+            <Button variant="ghost" size="sm">
               <LinkIcon className="size-3 mr-1" />
               Connect
             </Button>

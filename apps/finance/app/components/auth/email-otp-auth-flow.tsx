@@ -49,13 +49,13 @@ function AuthScaffold({
   title: string;
 }) {
   return (
-    <div className="bg-base flex items-center justify-center px-4 py-10">
-      <div className="mx-auto flex w-full max-w-sm flex-col items-center text-center">
-        <div className="space-y-2">
-          <h1 className="heading-2 text-foreground">{title}</h1>
+    <div className="bg-surface-base flex items-center justify-center py-16 px-4 md:px-12 border max-w-lg rounded-lg mx-auto shadow">
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center text-center gap-20">
+        <div className="space-y-2 text-left">
+          <h1 className="text-3xl text-foreground">{title}</h1>
           <p className="text-muted-foreground">{helperText}</p>
         </div>
-        <div className="mt-6 w-full text-left">{children}</div>
+        <div className="w-full text-left">{children}</div>
       </div>
     </div>
   );
@@ -128,7 +128,7 @@ export function EmailOtpAuthFlow({
             event.preventDefault();
             void onEmailSubmit();
           }}
-          className="space-y-3"
+          className="space-y-3 w-full"
         >
           <TextField
             label={copy.emailLabel}
@@ -168,8 +168,11 @@ export function EmailOtpAuthFlow({
         className="space-y-3"
       >
         <input type="hidden" name="email" value={email} />
-        <div className="flex flex-col gap-1.5">
-          <label className="body-3 text-foreground font-medium" htmlFor="otp-verification-code">
+        <div className="flex flex-col items-center gap-1.5">
+          <label
+            className="body-3 text-foreground self-start font-medium"
+            htmlFor="otp-verification-code"
+          >
             {copy.codeLabel}
           </label>
           <OtpInput

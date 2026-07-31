@@ -1,3 +1,4 @@
+import { UpdateGuard } from '@ponti-studios/ui/feedback';
 import { Button, buttonVariants, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { colorThemes } from '@ponti-studios/ui/tokens';
 import type React from 'react';
@@ -11,8 +12,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
-
-import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '~/components/patterns';
 
 import type { Route } from './+types/root';
 import { HonoProvider } from './lib/api';
@@ -44,7 +43,9 @@ export const meta: Route.MetaFunction = () => {
   ];
 };
 
-export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...COMMON_ICON_LINKS];
+export const links: Route.LinksFunction = () => [
+  { rel: 'icon', type: 'image/x-icon', href: '/icons/favicon.ico' },
+];
 
 const themeBootScript = `
 (() => {
@@ -97,8 +98,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     if (error.status === 404) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-          <Card className="w-full max-w-md border-border bg-card text-center">
-            <CardContent className="space-y-4 p-6">
+          <Card>
+            <CardContent>
               <h1 className="display-2 text-foreground">404</h1>
               <p className="heading-3 text-muted-foreground">Page Not Found</p>
               <Link to="/" className={buttonVariants({ size: 'lg' })}>
@@ -111,8 +112,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     }
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-        <Card className="w-full max-w-md border-border bg-card text-center">
-          <CardContent className="space-y-4 p-6">
+        <Card>
+          <CardContent>
             <h1 className="display-2 text-destructive">{error.status}</h1>
             <p className="heading-3 text-muted-foreground">{error.statusText}</p>
             <Link to="/" className={buttonVariants({ variant: 'destructive', size: 'lg' })}>
@@ -130,8 +131,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-      <Card className="w-full max-w-2xl border-border bg-card">
-        <CardContent className="space-y-4 p-6 text-center">
+      <Card>
+        <CardContent>
           <h1 className="heading-1 text-foreground">Oops!</h1>
           <p className="body-3 text-muted-foreground">{message}</p>
           {stack && (

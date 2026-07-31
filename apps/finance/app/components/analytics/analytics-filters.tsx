@@ -1,17 +1,12 @@
-import { DatePicker } from '@ponti-studios/ui/forms';
-import { Switch } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
-import { Badge } from '@ponti-studios/ui/primitives';
-import { Button } from '@ponti-studios/ui/primitives';
-import { Card } from '@ponti-studios/ui/primitives';
+import { Skeleton } from '@ponti-studios/ui/feedback';
+import { DatePicker, GroupBySelect, Switch } from '@ponti-studios/ui/forms';
+import { Badge, Button, Card, Label } from '@ponti-studios/ui/primitives';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Filter, X } from 'lucide-react';
 import { type Dispatch, type SetStateAction, useId, useState } from 'react';
 
 import { AccountSelect } from '~/components/account-select';
 import { TagSelect } from '~/components/category-select';
-import { GroupBySelect } from '~/components/group-by-select';
-import { Skeleton } from '~/components/skeleton';
 import { useFinanceTags } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 
@@ -135,16 +130,12 @@ function FilterChips({
   return (
     <div className="flex flex-wrap gap-1.5 max-w-full">
       {chips.map((chip) => (
-        <Badge
-          key={chip.key}
-          className="flex max-w-full items-center gap-1 border border-border pr-1 text-xs text-foreground"
-        >
+        <Badge key={chip.key}>
           <span className="truncate">{chip.label}</span>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="size-4 p-0 ml-1 shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -202,13 +193,13 @@ export function AnalyticsFilters({
   const [open, setOpen] = useState(false);
 
   return (
-    <Card className="border-none ">
+    <Card>
       <div className="px-4 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* Filter Dialog Trigger */}
           <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm">
                 <Filter className="size-4" />
                 Filters
               </Button>
