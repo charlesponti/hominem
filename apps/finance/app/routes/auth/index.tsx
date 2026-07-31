@@ -1,9 +1,8 @@
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
-import { data, redirect, useLocation, useNavigate } from 'react-router';
+import { redirect, useLocation, useNavigate } from 'react-router';
 
 import { EmailOtpAuthFlow, type EmailOtpAuthCopy } from '~/components/auth/email-otp-auth-flow';
 import { getServerAuth } from '~/lib/auth.server';
-import { serverEnv } from '~/lib/env';
 import { useEmailOtpAuthRoute } from '~/lib/use-email-otp-auth-route';
 
 import type { Route } from './+types/index';
@@ -39,20 +38,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw redirect(AUTH_CONFIG.defaultRedirect, { headers });
   }
   return null;
-}
-
-export async function action({ request }: Route.ActionArgs) {
-  const email = String((await request.formData()).get('email') ?? '');
-  const apiBaseUrl = serverEnv.VITE_PUBLIC_API_URL;
-  const response = await fetch(new URL('/api/auth/email-otp/send-verification-otp', apiBaseUrl), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', origin: apiBaseUrl },
-    body: JSON.stringify({ email, type: 'sign-in' }),
-  });
-  if (!response.ok) {
-    return data({ error: 'Failed to send verification code' }, { status: 400 });
-  }
-  throw redirect(`/auth?email=${encodeURIComponent(email)}&step=otp`);
 }
 
 export default function AuthEntryPage() {
