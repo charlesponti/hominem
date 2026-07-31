@@ -12,7 +12,7 @@ catalog:
   react-router: 8.3.0
   '@types/react': 19.2.17
   '@types/react-dom': 19.1.7
-  '@ponti-studios/ui': 0.6.0
+  '@ponti-studios/ui': 0.7.0
   zod: 4.4.3
 
 overrides:
@@ -79,7 +79,7 @@ minimumReleaseAgeExclude:
   - '@expo/prebuild-config@57.0.9'
   - '@expo/require-utils@57.0.4'
   - '@expo/router-server@57.0.4'
-  - '@ponti-studios/ui@0.4.1 || 0.4.2 || 0.6.0'
+  - '@ponti-studios/ui@0.4.1 || 0.4.2 || 0.6.0 || 0.7.0'
   - babel-preset-expo@57.0.4
   - expo-asset@57.0.7
   - expo-audio@57.0.3
