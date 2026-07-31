@@ -101,7 +101,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {isLinked ? 'Manage Account Connection' : 'Connect Account to Institution'}
@@ -151,7 +151,6 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                   size="sm"
                   onClick={handleUnlink}
                   disabled={unlinkMutation.isLoading}
-                  className="w-full"
                 >
                   {unlinkMutation.isLoading ? 'Disconnecting...' : 'Disconnect'}
                 </Button>

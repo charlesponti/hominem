@@ -50,7 +50,7 @@ function SectionHeader({
   return (
     <div className="w-full flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
-        <CardTitle className="heading-4">{title}</CardTitle>
+        <CardTitle>{title}</CardTitle>
         {extra}
       </div>
       <Button

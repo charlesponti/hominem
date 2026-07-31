@@ -1,8 +1,8 @@
 import type { Merchant } from '@hominem/rpc/finance';
+import { Skeleton } from '@ponti-studios/ui/feedback';
 import { Badge } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 
-import { Skeleton } from '~/components/skeleton';
 import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants';
 import { formatCurrency } from '~/lib/number.utils';
 
@@ -35,8 +35,8 @@ export function TopMerchants({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Top Merchants</CardTitle>
+      <CardHeader>
+        <CardTitle>Top Merchants</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -63,9 +63,7 @@ export function TopMerchants({
           <div className="space-y-3">
             {topMerchants.merchants.map((m: Merchant) => (
               <div key={m.name} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
-                <Badge variant="secondary" className="w-12 text-center">
-                  {m.transactionCount}x
-                </Badge>
+                <Badge variant="secondary">{m.transactionCount}x</Badge>
                 <span className="text-sm">{m.name}</span>
                 <span className="text-sm font-mono text-right">{formatCurrency(m.totalSpent)}</span>
               </div>

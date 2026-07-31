@@ -1,5 +1,7 @@
 import type { TestimonialRecord as Testimonial } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
+import { Input } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Badge, Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon, PlusIcon, StarIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -8,7 +10,6 @@ import { Link, useNavigate } from 'react-router';
 import {
   EntityListCards,
   EntityListTable,
-  PageHeader,
   SearchFilterBar,
   type EntityListColumn,
 } from '~/components/patterns';
@@ -44,7 +45,7 @@ function RatingBadge({ testimonial }: { testimonial: Testimonial }) {
     return null;
   }
   return (
-    <Badge variant="outline" className="gap-1">
+    <Badge variant="outline">
       <StarIcon className="size-3" />
       {testimonial.rating}
     </Badge>
@@ -113,17 +114,20 @@ export default function Testimonials({ loaderData }: Route.ComponentProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader title="Testimonials">
-        <Button
-          type="button"
-          onClick={() => navigate('/testimonials/new')}
-          variant="default"
-          size="icon"
-          aria-label="Add testimonial"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-      </PageHeader>
+      <SectionIntro
+        title="Testimonials"
+        actions={
+          <Button
+            type="button"
+            onClick={() => navigate('/testimonials/new')}
+            variant="default"
+            size="icon"
+            aria-label="Add testimonial"
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-6">
         <SearchFilterBar
@@ -138,16 +142,18 @@ export default function Testimonials({ loaderData }: Route.ComponentProps) {
                 ]
               : []
           }
-          onClear={clearFilters}
-        >
-          <SearchFilterBar.Search
-            id="testimonial-search"
-            value={searchValue}
-            onChange={setSearchValue}
-            placeholder="Search by name or company..."
-            ariaLabel="Search testimonials"
-          />
-        </SearchFilterBar>
+          onClearAll={clearFilters}
+          search={
+            <Input
+              id="testimonial-search"
+              type="search"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search by name or company..."
+              aria-label="Search testimonials"
+            />
+          }
+        />
 
         {filteredTestimonials.length === 0 ? (
           <EmptyState

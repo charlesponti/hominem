@@ -181,8 +181,8 @@ export function ErrorBoundary({ error }: { error: unknown }) {
     if (err.status === 404) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-          <Card className="w-full max-w-md border-border bg-card text-center">
-            <CardContent className="space-y-4 p-6">
+          <Card>
+            <CardContent>
               <h1 className="display-2 text-foreground">404</h1>
               <p className="heading-3 text-muted-foreground">Page Not Found</p>
               <Link to="/" className={buttonVariants({ size: 'lg' })}>
@@ -195,8 +195,8 @@ export function ErrorBoundary({ error }: { error: unknown }) {
     }
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-        <Card className="w-full max-w-md border-border bg-card text-center">
-          <CardContent className="space-y-4 p-6">
+        <Card>
+          <CardContent>
             <h1 className="display-2 text-destructive">{err.status}</h1>
             <p className="heading-3 text-muted-foreground">{err.statusText}</p>
             <Link to="/" className={buttonVariants({ variant: 'destructive', size: 'lg' })}>
@@ -212,8 +212,8 @@ export function ErrorBoundary({ error }: { error: unknown }) {
   const stack = isDev && error instanceof Error ? error.stack : null;
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground">
-      <Card className="w-full max-w-2xl border-border bg-card">
-        <CardContent className="space-y-4 p-6 text-center">
+      <Card>
+        <CardContent>
           <h1 className="heading-1 text-foreground">Oops!</h1>
           <p className="body-3 text-muted-foreground">{message}</p>
           {stack && (

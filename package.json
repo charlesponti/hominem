@@ -20,7 +20,7 @@
   "scripts": {
     "build": "turbo run build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test",
-    "dev": "turbo run dev --ui stream",
+    "dev": "turbo run dev --ui stream --filter='!@hominem/omiro'",
     "dev:api": "turbo run dev --filter @hominem/api",
     "dev:career": "turbo run dev --filter @hominem/career",
     "dev:finance": "turbo run dev --filter @hominem/finance",

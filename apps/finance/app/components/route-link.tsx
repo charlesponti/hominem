@@ -1,29 +1,10 @@
-import type { ReactNode } from 'react';
-import { type MouseEvent, useCallback } from 'react';
-import { Link, type LinkProps } from 'react-router';
+import { RouteLink as DsRouteLink } from '@ponti-studios/ui/navigation';
+import { Link } from 'react-router';
 
 import { useRouteLoadingStore } from '../store/route-loading-store';
 
-interface RouteLinkProps extends LinkProps {
-  children: ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-export function RouteLink({ children, className, onClick, ...props }: RouteLinkProps) {
+export function RouteLink(props: React.ComponentProps<typeof DsRouteLink>) {
   const setIsRouteLoading = useRouteLoadingStore((state) => state.setIsRouteLoading);
 
-  const handleClick = useCallback(
-    (e: MouseEvent<HTMLAnchorElement>) => {
-      setIsRouteLoading(true);
-      if (onClick) onClick(e);
-    },
-    [setIsRouteLoading, onClick],
-  );
-
-  return (
-    <Link {...props} className={className} style={props.style} onClick={handleClick}>
-      {children}
-    </Link>
-  );
+  return <DsRouteLink as={Link} onNavigate={() => setIsRouteLoading(true)} {...props} />;
 }

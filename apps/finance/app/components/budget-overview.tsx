@@ -53,7 +53,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   if (isLoadingCategories || isLoadingStats) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-8">
+        <CardContent>
           <div className="text-center">
             <div className="mx-auto">
               <Spinner size="sm" />
@@ -104,13 +104,13 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader>
+        <CardTitle>
           <Target className="size-4" />
           Budget Performance
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">Budgeted</div>

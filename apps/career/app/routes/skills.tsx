@@ -10,12 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { LoaderPinwheel, PlusIcon, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFetcher } from 'react-router';
-
-import { PageHeader } from '~/components/patterns';
 
 import { FormErrorAlert } from '../components/FormErrorAlert';
 import { useCareerEditorSubmission } from '../hooks/useCareerEditorSubmission';
@@ -138,39 +137,44 @@ function SkillsEditorSection({ skills: initialSkills, portfolioId }: SkillsEdito
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader title="Skills">
-        <Button
-          type="button"
-          variant="default"
-          size="icon"
-          onClick={() => setShowAddForm((v) => !v)}
-          aria-label="Add skill"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-        <deriveFetcher.Form method="POST" action="/api/skills/derive">
-          <Button
-            type="submit"
-            variant="outline"
-            size="icon"
-            disabled={isDeriving}
-            aria-label={isDeriving ? 'Deriving skills' : 'Derive skills from work history'}
-          >
-            {isDeriving ? (
-              <LoaderPinwheel className="size-4 animate-spin" />
-            ) : (
-              <Sparkles className="size-4" />
-            )}
-          </Button>
-        </deriveFetcher.Form>
-      </PageHeader>
+      <SectionIntro
+        title="Skills"
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="default"
+              size="icon"
+              onClick={() => setShowAddForm((v) => !v)}
+              aria-label="Add skill"
+            >
+              <PlusIcon className="size-4" />
+            </Button>
+            <deriveFetcher.Form method="POST" action="/api/skills/derive">
+              <Button
+                type="submit"
+                variant="outline"
+                size="icon"
+                disabled={isDeriving}
+                aria-label={isDeriving ? 'Deriving skills' : 'Derive skills from work history'}
+              >
+                {isDeriving ? (
+                  <LoaderPinwheel className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
+              </Button>
+            </deriveFetcher.Form>
+          </>
+        }
+      />
 
       <FormErrorAlert title="Skills weren't saved" message={submissionError} />
       <FormErrorAlert title="Couldn't derive skills" message={deriveError} />
 
       {showAddForm && (
         <Card>
-          <CardContent className="p-4">
+          <CardContent>
             <div className="flex flex-col sm:flex-row items-end gap-3">
               <Field label="Skill">
                 <Input
@@ -183,7 +187,7 @@ function SkillsEditorSection({ skills: initialSkills, portfolioId }: SkillsEdito
               </Field>
               <Field label="Category">
                 <Select value={newSkillCategory} onValueChange={(v) => v && setNewSkillCategory(v)}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

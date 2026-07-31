@@ -73,7 +73,7 @@ export default function AccountPage() {
               Export your transaction data or import new transactions.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <ExportTransactions />
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border">
               <div>
@@ -92,9 +92,9 @@ export default function AccountPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardTitle>Danger Zone</CardTitle>
             <CardDescription>These actions are permanent and cannot be undone.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -109,7 +109,6 @@ export default function AccountPage() {
                 variant="destructive"
                 onClick={() => setShowConfirmDelete(true)}
                 disabled={deleteAllFinanceData.isPending}
-                className="mt-2 sm:mt-0"
               >
                 {deleteAllFinanceData.isPending ? 'Deleting...' : 'Delete All Data'}
               </Button>
@@ -118,7 +117,7 @@ export default function AccountPage() {
         </Card>
 
         <div className="flex justify-end">
-          <Button variant="destructive" className="px-4" onClick={() => logout()}>
+          <Button variant="destructive" onClick={() => logout()}>
             Sign Out
           </Button>
         </div>
@@ -138,7 +137,6 @@ export default function AccountPage() {
             <AlertDialogAction
               onClick={() => deleteAllFinanceData.mutate()}
               disabled={deleteAllFinanceData.isPending}
-              className="bg-destructive hover:bg-destructive/90"
             >
               {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
             </AlertDialogAction>

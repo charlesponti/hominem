@@ -121,7 +121,7 @@ export function OverviewSection({
                     value={field.value ?? ''}
                     onValueChange={(value) => field.onChange(value === '__none' ? '' : value)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select one" />
                     </SelectTrigger>
                     <SelectContent>
@@ -145,7 +145,7 @@ export function OverviewSection({
                     value={field.value ?? ''}
                     onValueChange={(value) => field.onChange(value === '__none' ? '' : value)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select one" />
                     </SelectTrigger>
                     <SelectContent>

@@ -60,7 +60,7 @@ export function SocialLinksSection({
       <h2 className="heading-3 text-foreground">Social</h2>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <FormErrorAlert title="Social links weren't saved" message={submissionError} />
 

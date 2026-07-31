@@ -25,13 +25,13 @@ export default function NotFoundPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Button asChild size="lg" className="flex items-center gap-2">
+          <Button asChild size="lg">
             <Link to="/">
               <Home className="size-4" />
               Go Home
             </Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="flex items-center gap-2">
+          <Button asChild variant="outline" size="lg">
             <Link to="/finance">
               <Wallet className="size-4" />
               Finance

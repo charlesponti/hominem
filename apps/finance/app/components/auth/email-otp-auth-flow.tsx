@@ -145,7 +145,6 @@ export function EmailOtpAuthFlow({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full"
             isLoading={isSubmitting}
             loadingLabel={copy.submitEmailLoading}
           >
@@ -187,7 +186,6 @@ export function EmailOtpAuthFlow({
         <Button
           type="submit"
           disabled={!canSubmit}
-          className="w-full"
           isLoading={isSubmitting}
           loadingLabel={copy.verifyLoading}
         >
@@ -197,7 +195,6 @@ export function EmailOtpAuthFlow({
           <Button
             type="button"
             variant="link"
-            className="px-0"
             onClick={() => void onResendOtp()}
             disabled={isResending || isSubmitting}
             isLoading={isResending}
@@ -205,13 +202,7 @@ export function EmailOtpAuthFlow({
           >
             {copy.resend}
           </Button>
-          <Button
-            type="button"
-            variant="link"
-            className="px-0"
-            onClick={onChangeEmail}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="link" onClick={onChangeEmail} disabled={isSubmitting}>
             {copy.changeEmail}
           </Button>
         </div>

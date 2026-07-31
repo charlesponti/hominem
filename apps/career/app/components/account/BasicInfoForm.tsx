@@ -245,7 +245,6 @@ export function BasicInfoForm({
         type="submit"
         disabled={isSubmitting || isTogglingFlag || !isDirty}
         variant="default"
-        className="w-full rounded-full sm:w-auto sm:px-6"
         isLoading={isSubmitting}
         loadingLabel="Saving..."
       >

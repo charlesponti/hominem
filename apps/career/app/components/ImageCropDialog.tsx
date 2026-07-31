@@ -86,7 +86,7 @@ export function ImageCropDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden border-border bg-card">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

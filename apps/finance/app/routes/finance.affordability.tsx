@@ -63,7 +63,7 @@ export default function AffordabilityPage() {
         <CardHeader>
           <CardTitle>Your numbers</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor={purchaseAmountId}>Purchase amount ($)</Label>
@@ -116,11 +116,7 @@ export default function AffordabilityPage() {
               />
             </div>
           </div>
-          <Button
-            onClick={handleCheck}
-            disabled={!canCheck || affordabilityMutation.isPending}
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={handleCheck} disabled={!canCheck || affordabilityMutation.isPending}>
             {affordabilityMutation.isPending ? 'Checking...' : 'Check affordability'}
           </Button>
         </CardContent>
@@ -130,12 +126,12 @@ export default function AffordabilityPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>Verdict</CardTitle>
-            <Badge variant={verdict.variant} className="flex items-center gap-1">
+            <Badge variant={verdict.variant}>
               <verdict.icon className="size-4" />
               {verdict.label}
             </Badge>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-sm text-muted-foreground">Balance after purchase</p>

@@ -61,7 +61,7 @@ export function ExportTransactions() {
           Download all your transactions as a CSV file.
         </p>
       </div>
-      <Button variant="outline" onClick={handleExport} className="mt-2 sm:mt-0">
+      <Button variant="outline" onClick={handleExport}>
         Export CSV
       </Button>
     </div>

@@ -1,8 +1,8 @@
 import { EmptyState } from '@ponti-studios/ui/feedback';
+import { Skeleton } from '@ponti-studios/ui/feedback';
 import { Badge } from '@ponti-studios/ui/primitives';
 import { CreditCard, Receipt } from 'lucide-react';
 
-import { Skeleton } from '~/components/skeleton';
 import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 import { cn } from '~/lib/utils';
 
@@ -60,9 +60,7 @@ function TransactionListItem({
           <h3 className="heading-4 truncate text-foreground">
             {transaction.description || 'Transaction'}
           </h3>
-          <Badge variant="secondary" className="shrink-0">
-            {isExpense ? 'Expense' : 'Income'}
-          </Badge>
+          <Badge variant="secondary">{isExpense ? 'Expense' : 'Income'}</Badge>
         </div>
         <div className="body-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
           {postedOn ? <span>{postedOn}</span> : null}

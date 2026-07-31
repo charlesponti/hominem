@@ -165,7 +165,7 @@ export function ApplicationResumeTab({
       {/* Job posting summary */}
       {hasStructuredPosting && parsedJobPosting && (
         <Card>
-          <CardContent className="p-4">
+          <CardContent>
             <div className="flex flex-wrap items-center gap-2">
               <span className="subheading-4 text-foreground">
                 {parsedJobPosting.job_title || application.position}
@@ -196,9 +196,9 @@ export function ApplicationResumeTab({
       {/* Saved resume preview */}
       {application.resume && !showRegenerate && !generatedResume && (
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="heading-4">Saved Resume</CardTitle>
+              <CardTitle>Saved Resume</CardTitle>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => handleCopy(application.resume!)}>
                   <Copy className="size-4 mr-1" />
@@ -231,13 +231,13 @@ export function ApplicationResumeTab({
       {/* Generate form */}
       {showGenerateForm && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="heading-4 flex items-center gap-2">
+          <CardHeader>
+            <CardTitle>
               <Sparkles className="size-4" />
               {application.resume ? 'Regenerate Resume' : 'Generate Tailored Resume'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="resume-format" className="subheading-4 text-muted-foreground">
@@ -325,9 +325,9 @@ export function ApplicationResumeTab({
       {/* Generated resume result */}
       {generatedResume && (
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <CardTitle className="heading-4">Generated Resume</CardTitle>
+              <CardTitle>Generated Resume</CardTitle>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => handleCopy(generatedResume)}>
                   <Copy className="size-4 mr-1" />
@@ -356,7 +356,7 @@ export function ApplicationResumeTab({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {jobAnalysis && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg body-3">
                 {jobAnalysis.requiredSkills.length > 0 && (

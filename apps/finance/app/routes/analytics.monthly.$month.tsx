@@ -1,7 +1,7 @@
+import { Skeleton } from '@ponti-studios/ui/feedback';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 import { redirect, useParams } from 'react-router';
 
-import { Skeleton } from '~/components/skeleton';
 import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
@@ -61,7 +61,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
               </CardContent>
             </Card>
           ))}
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
               <Skeleton className="h-6 w-40" />
             </CardHeader>
@@ -88,7 +88,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
       {stats && !isLoading && !error && (
         <div className="flex flex-col gap-4">
           {/* Combined Summary Card */}
-          <Card className="lg:col-span-1 md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>Summary</CardTitle>
             </CardHeader>
@@ -117,7 +117,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
           </Card>
 
           {/* Tag Spending */}
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>Spending by Tag</CardTitle>
             </CardHeader>

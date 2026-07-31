@@ -2,8 +2,6 @@ import { Button } from '@ponti-studios/ui/primitives';
 import { Download, Edit, LogOut, Trash2 } from 'lucide-react';
 import { useRevalidator } from 'react-router';
 
-import { cn } from '~/lib/utils';
-
 import { UploadResumeForm } from '../UploadResumeForm';
 
 export function AccountActions({
@@ -91,12 +89,8 @@ function ActionButtonRow({
       <Button
         type="button"
         onClick={() => onClick()}
-        variant={variant}
+        variant={destructive ? 'destructive' : variant}
         disabled={disabled}
-        className={cn(
-          'w-full justify-start rounded-full',
-          destructive && 'border-destructive/30 text-destructive',
-        )}
         isLoading={isLoading}
         loadingLabel={loadingLabel}
       >

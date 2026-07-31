@@ -185,8 +185,8 @@ export default function CreateJobApplication() {
   return (
     <div className="flex flex-col gap-6">
       {/* Input Method */}
-      <Card className="border-0 bg-background/80 backdrop-blur-sm">
-        <CardContent className="p-4">
+      <Card>
+        <CardContent>
           {/* URL input — default / primary path */}
           {inputMethod === 'url' && (
             <>
@@ -271,8 +271,8 @@ export default function CreateJobApplication() {
 
       {/* Manual Form — shown after URL scrape or when entering manually */}
       {(inputMethod === 'manual' || scrapedData) && (
-        <Card className=" border-0 bg-background/80 backdrop-blur-sm">
-          <CardContent className="p-4">
+        <Card>
+          <CardContent>
             {/* Scraped Data Preview */}
             {scrapedData && (
               <div className="mb-6 rounded-lg border border-border bg-muted/40 p-4">

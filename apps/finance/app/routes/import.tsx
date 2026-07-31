@@ -1,12 +1,12 @@
 import type { FileStatus, ImportRequestResponse } from '@hominem/queues';
 import { Alert, AlertDescription } from '@ponti-studios/ui/feedback';
+import { FileUploadStatus } from '@ponti-studios/ui/feedback';
+import { FileUploadStatusBadge } from '@ponti-studios/ui/feedback';
+import { DropZone } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Badge, Button } from '@ponti-studios/ui/primitives';
 import { memo, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 
-import { DropZone } from '~/components/drop-zone';
-import { FileUploadStatus } from '~/components/file-upload-status';
-import { FileUploadStatusBadge } from '~/components/file-upload-status-badge';
-import { SectionIntro } from '~/components/patterns';
 import { useFileInput } from '~/lib/hooks/use-file-input';
 import { useImportTransactionsStore } from '~/lib/hooks/use-import-transactions-store';
 import { useToast } from '~/lib/hooks/use-toast';
@@ -358,22 +358,12 @@ const FileImport = memo(function FileImport({
           <div className="flex items-center gap-2">
             <FileUploadStatusBadge status={status?.status} />
             {buttonStates.canStart && (
-              <Button
-                size="sm"
-                onClick={handleStart}
-                disabled={!isConnected}
-                className="h-8 border-border px-3 text-xs font-medium"
-              >
+              <Button size="sm" onClick={handleStart} disabled={!isConnected}>
                 Start
               </Button>
             )}
             {buttonStates.canRemove && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRemove}
-                className="h-8 px-3 text-xs border-destructive/50 text-destructive hover:border-destructive"
-              >
+              <Button size="sm" variant="outline" onClick={handleRemove}>
                 Remove
               </Button>
             )}
