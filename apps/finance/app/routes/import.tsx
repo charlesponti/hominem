@@ -1,7 +1,5 @@
 import type { FileStatus, ImportRequestResponse } from '@hominem/queues';
-import { Alert, AlertDescription } from '@ponti-studios/ui/feedback';
-import { FileUploadStatus } from '@ponti-studios/ui/feedback';
-import { FileUploadStatusBadge } from '@ponti-studios/ui/feedback';
+import { Alert, AlertDescription, FileUploadStatus } from '@ponti-studios/ui/feedback';
 import { DropZone } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Badge, Button } from '@ponti-studios/ui/primitives';
@@ -11,6 +9,36 @@ import { useFileInput } from '~/lib/hooks/use-file-input';
 import { useImportTransactionsStore } from '~/lib/hooks/use-import-transactions-store';
 import { useToast } from '~/lib/hooks/use-toast';
 import { cn } from '~/lib/utils';
+
+export type FileUploadStatusValue = 'uploading' | 'processing' | 'queued' | 'done' | 'error';
+
+const STATUS_CONFIG: Record<FileUploadStatusValue, { bg: string; text: string; label: string }> = {
+  uploading: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Uploading' },
+  processing: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Processing' },
+  queued: { bg: 'bg-secondary', text: 'text-secondary-foreground', label: 'Queued' },
+  done: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Complete' },
+  error: { bg: 'bg-destructive/10', text: 'text-destructive-text', label: 'Error' },
+};
+
+export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
+  status,
+}: {
+  status?: string | undefined;
+}) {
+  if (!status) return null;
+
+  const config = STATUS_CONFIG[status as FileUploadStatusValue] ?? {
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
+    label: status,
+  };
+
+  return (
+    <span className={cn('px-2 py-1 text-xs font-medium', config.bg, config.text)}>
+      {config.label}
+    </span>
+  );
+});
 
 export default function TransactionImportPage() {
   const {
