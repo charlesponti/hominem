@@ -35,6 +35,6 @@ local development client -> production TestFlight candidate -> phased App Store 
 
 TestFlight candidates and App Store releases use the same production bundle, backend, update channel, and native binary. There is no separate staging binary. Production releases are manual GitHub workflow dispatches protected by the `omiro-testflight` and `omiro-production` environments. The old automatic `main`-to-store path is prohibited.
 
-The marketing version is committed in app config and is the EAS Update runtime version. EAS remotely increments only the iOS build number. A native compatibility fingerprint is recorded in the release manifest and must match before an OTA update can be published.
+The marketing version is committed in app config and EAS remotely increments only the iOS build number. Expo Updates derives its runtime version from the native fingerprint, so an update that changes native code cannot be delivered to an incompatible binary.
 
-Production OTA updates are manually rolled out at 10%, 50%, and 100%, with rollback available at every stage. Native changes require a new TestFlight candidate and App Store release.
+Production OTA updates are manually rolled out at 10%, 50%, and 100%, with rollback available at every stage. Native changes require a new TestFlight candidate and App Store release. Only the protected GitHub deployment workflow produces or submits production archives; local builds are for simulator testing and debugging.

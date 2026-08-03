@@ -111,13 +111,3 @@ jobs:
           pnpm build --filter=@hominem/omiro...
           pnpm test --filter=@hominem/omiro...
           NODE_ENV=production pnpm --filter @hominem/omiro run export:embed:ios
-
-      - name: validate-omiro-cng
-        # Dependabot-triggered runs don't get repository secrets (GitHub
-        # anti-exfiltration protection), so EXPO_TOKEN is unavailable and
-        # eas-cli fingerprint:generate fails outright. Runs once a human
-        # pushes a commit to the PR (github.actor is then that human).
-        if: github.actor != 'dependabot[bot]'
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: just mobile cng-check

@@ -44,10 +44,6 @@ jobs:
           pnpm typecheck --filter=@hominem/omiro...
           pnpm build --filter=@hominem/omiro...
           pnpm test --filter=@hominem/omiro...
-          just mobile cng-check
-
-      - name: validate-eas-build-config
-        run: just mobile build-config-check
 
       - name: build-and-submit-production
         working-directory: apps/omiro

@@ -62,7 +62,7 @@ function getRuntimeVersion(appEnvironment: AppEnvironment): ExpoConfig['runtimeV
     return undefined;
   }
 
-  return { policy: 'appVersion' };
+  return { policy: 'fingerprint' };
 }
 
 function getUpdatesConfig(
@@ -163,7 +163,7 @@ export default ({ config }: ConfigContext) => {
     ...config,
     name: appEnvironmentConfig.displayName,
     slug: 'hakumi',
-    version: '1.0.0',
+    version: '1.0.1',
     scheme: appEnvironmentConfig.scheme,
     owner: EXPO_OWNER,
     platforms: ['ios'],
