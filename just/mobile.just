@@ -15,9 +15,3 @@ test:
 
 test-watch:
     pnpm --filter @hominem/omiro test:watch
-
-update environment='':
-    pnpm --filter @hominem/omiro update
-
-release:
-    pnpm --filter @hominem/omiro release

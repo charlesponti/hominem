@@ -53,8 +53,7 @@
       "autoIncrement": true,
       "env": {
         "APP_ENV": "production"
-      },
-      "channel": "production"
+      }
     }
   },
   "submit": {

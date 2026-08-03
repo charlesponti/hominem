@@ -4,7 +4,6 @@ import { z } from 'zod';
 const EXPO_OWNER = 'pontistudios';
 const EXPO_PROJECT_ID = '4dfac82b-644f-4ff3-be42-e8f941287aa1';
 const APPLE_TEAM_ID = '3QHJ2KN8AL';
-const RELEASE_CHANNELS = ['production'] as const;
 const DEVELOPMENT_APP_CONFIG = Object.freeze({
   bundleIdentifier: 'com.pontistudios.hakumi.dev',
   displayName: 'Omiro Dev',
@@ -26,7 +25,6 @@ const ROOT_ASSETS_DIR = './assets';
 
 type AppEnvironment = keyof typeof APP_ENVIRONMENTS;
 type AppEnvironmentConfig = (typeof APP_ENVIRONMENTS)[AppEnvironment];
-type ReleaseChannel = (typeof RELEASE_CHANNELS)[number];
 const appEnvironmentSchema = z.enum(['development', 'e2e', 'production', 'screenshots']);
 
 function getBrandAssetPaths(appEnvironment: AppEnvironment): { icon: string; splash: string } {
@@ -47,42 +45,8 @@ function getAppEnvironmentConfig(
   return APP_ENVIRONMENTS[getAppEnvironment(rawEnvironment)];
 }
 
-function getReleaseChannel(appEnvironment: AppEnvironment): ReleaseChannel | null {
-  return RELEASE_CHANNELS.includes(appEnvironment as ReleaseChannel)
-    ? (appEnvironment as ReleaseChannel)
-    : null;
-}
-
 function usesDevelopmentClient(appEnvironment: AppEnvironment) {
   return appEnvironment === 'development';
-}
-
-function getRuntimeVersion(appEnvironment: AppEnvironment): ExpoConfig['runtimeVersion'] {
-  if (!RELEASE_CHANNELS.includes(appEnvironment as ReleaseChannel)) {
-    return undefined;
-  }
-
-  return { policy: 'fingerprint' };
-}
-
-function getUpdatesConfig(
-  appEnvironment: AppEnvironment,
-  releaseChannel: ReleaseChannel | null,
-): ExpoConfig['updates'] {
-  if (appEnvironment !== 'production') {
-    return {
-      enabled: false,
-      checkAutomatically: 'NEVER',
-      fallbackToCacheTimeout: 0,
-    };
-  }
-
-  return {
-    url: `https://u.expo.dev/${EXPO_PROJECT_ID}`,
-    requestHeaders: {
-      'expo-channel-name': releaseChannel,
-    },
-  };
 }
 
 function allowsLocalNetworking(appEnvironment: AppEnvironment) {
@@ -93,8 +57,6 @@ export default ({ config }: ConfigContext) => {
   const appEnvironment = getAppEnvironment();
   const appEnvironmentConfig = getAppEnvironmentConfig(appEnvironment);
   const brandAssets = getBrandAssetPaths(appEnvironment);
-  const releaseChannel = getReleaseChannel(appEnvironment);
-  const runtimeVersion = getRuntimeVersion(appEnvironment);
   const hasDevelopmentClient = usesDevelopmentClient(appEnvironment);
   const plugins: ExpoConfig['plugins'] = [
     'expo-router',
@@ -208,8 +170,6 @@ export default ({ config }: ConfigContext) => {
         projectId: EXPO_PROJECT_ID,
       },
     },
-    ...(runtimeVersion ? { runtimeVersion } : {}),
-    updates: getUpdatesConfig(appEnvironment, releaseChannel),
   };
 };
 

@@ -13,22 +13,18 @@ just mobile prebuild development
 just mobile dev
 ```
 
-For production release work, use the production native identity with Expo's app-version runtime policy:
+For production release work, use the production native identity:
 
 ```bash
 just mobile prebuild production
-just mobile build production
-just mobile update production
 ```
-
-The runtime version is the committed app version. Native compatibility is checked separately from an immutable release manifest before publishing an EAS Update.
 
 ## API configuration
 
 `EXPO_PUBLIC_API_BASE_URL` is the sole API address used by the app. Set it in
 `.env.development.local`: use `http://localhost:4040` for the iOS Simulator,
-or a reachable LAN/tunnel URL for a physical device. Production builds and OTA
-updates receive the value from the EAS production environment.
+or a reachable LAN/tunnel URL for a physical device. Production builds receive
+the value from the EAS production environment.
 
 ## Working In Zed
 
@@ -53,7 +49,7 @@ That error usually means the iOS workspace has not been generated yet, or CocoaP
 ### `No such module 'ExpoModulesCore'`
 
 - Make sure you have generated the iOS project locally with `just mobile prebuild development`.
-- For production build or update work, regenerate with `just mobile prebuild production` before publishing.
+- For production build work, regenerate with `just mobile prebuild production` before testing.
 - Make sure Xcode command line tools are installed and selected.
 - Re-run `just mobile dev` so Expo can refresh the iOS workspace and Pods.
 
@@ -66,7 +62,6 @@ If the error still appears, the local generated `apps/omiro/ios` directory is li
 | Generate the dev iOS project        | `just mobile prebuild development`            | First-time setup or after native config changes during development |
 | Generate the production iOS project | `just mobile prebuild production`             | Local CNG verification before a native release                     |
 | Launch the iOS app                  | `just mobile dev`                             | Daily mobile development                                           |
-| Create a production iOS build       | `just mobile build production`                | App Store/TestFlight release builds                                |
-| Publish a production OTA update     | `just mobile update production`               | Ship a production-compatible OTA update                            |
+| Create and submit a production build | GitHub `deploy-mobile` workflow               | App Store/TestFlight release builds                                |
 | Start Metro / Expo                  | `just mobile start`                           | When you want to attach to an existing native build                |
 | Read Omiro's governing decisions    | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |
