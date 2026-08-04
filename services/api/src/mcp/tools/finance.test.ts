@@ -1,12 +1,44 @@
+import type {
+  AppFinanceAccounts,
+  AppFinanceCategories,
+  AppFinanceStatementPeriods,
+  AppFinanceTransactions,
+} from '@hominem/db';
 import { db, pool } from '@hominem/db';
+import type { Insertable } from 'kysely';
 import { beforeAll, describe, expect, it } from 'vitest';
+
+import type { McpToolResult } from '../tools';
+
+type NetWorthAccount = { name: string; balanceSource: string };
+type NetWorthResult = { warnings: unknown[]; accounts: NetWorthAccount[]; totals: unknown[] };
+
+type TransactionRow = {
+  description: string;
+  categoryName?: string;
+  amountCents?: number;
+  excluded?: boolean;
+};
+type RecentTransactionsResult = { count: number; transactions: TransactionRow[] };
+
+type CategorySpend = {
+  categoryId: string;
+  categoryName: string;
+  spentCents: number;
+  transactionCount: number;
+};
+type SpendingByCategoryResult = {
+  currencyCode: string;
+  warnings: unknown[];
+  categories: CategorySpend[];
+};
 
 const userId = 'cf8f3ada-d5ed-45c8-b044-0ca80f60611f';
 
 const checkingId = 'f1000003-0000-4000-8000-000000000001';
 
-function resultContent(res: any): any {
-  return res.structuredContent as any;
+function resultContent<T = Record<string, unknown>>(res: McpToolResult): T {
+  return res.structuredContent as T;
 }
 const savingsId = 'f1000003-0000-4000-8000-000000000002';
 const excludedCardId = 'f1000003-0000-4000-8000-000000000003';
@@ -56,7 +88,7 @@ beforeAll(async () => {
         isActive: true,
         metadata: {},
       },
-    ] as any)
+    ] satisfies Insertable<AppFinanceAccounts>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -65,7 +97,7 @@ beforeAll(async () => {
     .values([
       { id: foodId, userId, name: 'Food & Drink' },
       { id: transportId, userId, name: 'Transport' },
-    ] as any)
+    ] satisfies Insertable<AppFinanceCategories>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -82,11 +114,13 @@ beforeAll(async () => {
         closingBalance: 1000.0,
         certificationStatus: 'uncertified',
       },
-    ] as any)
+    ] satisfies Insertable<AppFinanceStatementPeriods>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
-  const entries = [
+  const entries: Array<
+    [string, string, string, number, string, string, string | null, boolean]
+  > = [
     [checkingId, '2026-07-01', 'Grocery Store', -50.0, 'debit', 'fp-1', foodId, false],
     [checkingId, '2026-07-05', 'Gas Station', -25.0, 'debit', 'fp-2', transportId, false],
     [checkingId, '2026-07-10', 'Paycheck', 2000.0, 'credit', 'fp-3', null, false],
@@ -114,7 +148,7 @@ beforeAll(async () => {
         categoryAssignmentSource: 'source',
         excluded: excl,
         providerPayload: {},
-      } as any)
+      } satisfies Insertable<AppFinanceTransactions>)
       .onConflict((oc) => oc.column('id').doNothing())
       .execute();
   }
@@ -130,7 +164,7 @@ describe('finance_net_worth', () => {
     });
 
     expect(result.structuredContent).toBeTruthy();
-    const data = resultContent(result);
+    const data = resultContent<NetWorthResult>(result);
 
     expect(data.warnings).toEqual([]);
     expect(data.accounts).toHaveLength(1);
@@ -149,13 +183,15 @@ describe('finance_net_worth', () => {
     const withoutClosed = await callTool(userId, 'finance_net_worth', {
       includeClosed: false,
     });
-    expect(resultContent(withoutClosed).accounts.map((a: any) => a.name)).toEqual(['Checking']);
+    expect(resultContent<NetWorthResult>(withoutClosed).accounts.map((a) => a.name)).toEqual([
+      'Checking',
+    ]);
 
     const withClosed = await callTool(userId, 'finance_net_worth', {
       includeClosed: true,
     });
-    const names = resultContent(withClosed)
-      .accounts.map((a: any) => a.name)
+    const names = resultContent<NetWorthResult>(withClosed)
+      .accounts.map((a) => a.name)
       .sort();
     expect(names).toEqual(['Checking', 'Old Savings']);
   });
@@ -169,8 +205,10 @@ describe('finance_recent_transactions', () => {
       limit: 20,
     });
 
-    expect(resultContent(result).count).toBe(5);
-    const descriptions = resultContent(result).transactions.map((t: any) => t.description);
+    expect(resultContent<RecentTransactionsResult>(result).count).toBe(5);
+    const descriptions = resultContent<RecentTransactionsResult>(result).transactions.map(
+      (t) => t.description,
+    );
     expect(descriptions).toEqual([
       'Excluded Reimbursement',
       'Transfer to Savings',
@@ -179,8 +217,8 @@ describe('finance_recent_transactions', () => {
       'Grocery Store',
     ]);
 
-    const grocery = resultContent(result).transactions.find(
-      (t: any) => t.description === 'Grocery Store',
+    const grocery = resultContent<RecentTransactionsResult>(result).transactions.find(
+      (t) => t.description === 'Grocery Store',
     );
     expect(grocery).toMatchObject({
       categoryName: 'Food & Drink',
@@ -188,8 +226,8 @@ describe('finance_recent_transactions', () => {
       excluded: false,
     });
 
-    const pending = resultContent(result).transactions.find(
-      (t: any) => t.description === 'Pending Coffee',
+    const pending = resultContent<RecentTransactionsResult>(result).transactions.find(
+      (t) => t.description === 'Pending Coffee',
     );
     expect(pending).toBeUndefined();
   });
@@ -204,16 +242,16 @@ describe('finance_spending_by_category', () => {
       to: '2026-07-20',
     });
 
-    expect(resultContent(result).currencyCode).toBe('USD');
-    expect(resultContent(result).warnings).toEqual([]);
-    expect(resultContent(result).categories).toHaveLength(2);
-    expect(resultContent(result).categories[0]).toEqual({
+    expect(resultContent<SpendingByCategoryResult>(result).currencyCode).toBe('USD');
+    expect(resultContent<SpendingByCategoryResult>(result).warnings).toEqual([]);
+    expect(resultContent<SpendingByCategoryResult>(result).categories).toHaveLength(2);
+    expect(resultContent<SpendingByCategoryResult>(result).categories[0]).toEqual({
       categoryId: foodId,
       categoryName: 'Food & Drink',
       spentCents: 5000,
       transactionCount: 1,
     });
-    expect(resultContent(result).categories[1]).toEqual({
+    expect(resultContent<SpendingByCategoryResult>(result).categories[1]).toEqual({
       categoryId: transportId,
       categoryName: 'Transport',
       spentCents: 2500,
