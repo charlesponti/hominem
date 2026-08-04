@@ -19,7 +19,7 @@ Refreshes must restore the user’s jobs, and cancellation must affect BullMQ or
 ## Requirements
 
 - Add `GET /api/finance/import/jobs` returning only the authenticated user’s jobs.
-- Add `POST /api/finance/import/:jobId/cancel`.
+- Add `POST /api/finance/import/jobs/:jobId/cancel`.
 - Remove queued jobs from BullMQ when possible.
 - Set a cancellation flag for active jobs.
 - Validate job ownership before every operation.

@@ -48,15 +48,17 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function TransactionsPage({ loaderData }: Route.ComponentProps) {
   const { accounts: initialAccounts, transactions: initialTransactions } = loaderData;
-  const { selectedAccount } = useSelectedAccount();
+  const { selectedAccounts } = useSelectedAccount();
   const [currentFilters, setCurrentFilters] = useState<FilterArgs>({});
   const [searchValue, setSearchValue] = useState('');
   const [page, setPage] = useState(0);
   const [limit] = useState(25);
 
-  const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort({
-    initialSortOptions: [{ field: 'date', direction: 'desc' }],
-  });
+  const { sortOptions, isDefaultSort, addSortOption, updateSortOption, removeSortOption } = useSort(
+    {
+      initialSortOptions: [{ field: 'date', direction: 'desc' }],
+    },
+  );
 
   useEffect(() => {
     setCurrentFilters((prev: FilterArgs) => ({
@@ -76,7 +78,7 @@ export default function TransactionsPage({ loaderData }: Route.ComponentProps) {
 
   const filters = {
     ...currentFilters,
-    accountId: selectedAccount === 'all' ? undefined : selectedAccount,
+    accountIds: selectedAccounts.length > 0 ? selectedAccounts : undefined,
   };
 
   const {
@@ -132,6 +134,7 @@ export default function TransactionsPage({ loaderData }: Route.ComponentProps) {
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         sortOptions={sortOptions || []}
+        isDefaultSort={isDefaultSort}
         addSortOption={addSortOption}
         updateSortOption={updateSortOption}
         removeSortOption={removeSortOption}

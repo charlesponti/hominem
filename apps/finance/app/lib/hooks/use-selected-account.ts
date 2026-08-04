@@ -1,15 +1,24 @@
 import { create } from 'zustand';
 
 interface SelectedAccountState {
-  selectedAccount: string;
-  setSelectedAccount: (accountId: string) => void;
+  selectedAccounts: string[];
+  setSelectedAccounts: (accountIds: string[]) => void;
 }
 
 const useSelectedAccountStore = create<SelectedAccountState>((set) => ({
-  selectedAccount: 'all',
-  setSelectedAccount: (accountId: string) => set({ selectedAccount: accountId }),
+  selectedAccounts: [],
+  setSelectedAccounts: (accountIds: string[]) => set({ selectedAccounts: accountIds }),
 }));
 
 export function useSelectedAccount() {
-  return useSelectedAccountStore();
+  const { selectedAccounts, setSelectedAccounts } = useSelectedAccountStore();
+
+  return {
+    selectedAccounts,
+    setSelectedAccounts,
+    // Back-compat single-account view for pages that only filter by one account.
+    selectedAccount: selectedAccounts[0] ?? 'all',
+    setSelectedAccount: (accountId: string) =>
+      setSelectedAccounts(accountId === 'all' ? [] : [accountId]),
+  };
 }
