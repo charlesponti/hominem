@@ -118,9 +118,7 @@ beforeAll(async () => {
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
-  const entries: Array<
-    [string, string, string, number, string, string, string | null, boolean]
-  > = [
+  const entries: Array<[string, string, string, number, string, string, string | null, boolean]> = [
     [checkingId, '2026-07-01', 'Grocery Store', -50.0, 'debit', 'fp-1', foodId, false],
     [checkingId, '2026-07-05', 'Gas Station', -25.0, 'debit', 'fp-2', transportId, false],
     [checkingId, '2026-07-10', 'Paycheck', 2000.0, 'credit', 'fp-3', null, false],
