@@ -7,6 +7,7 @@ import { analyzeRoutes } from './finance.analyze';
 import { budgetRoutes } from './finance.budget';
 import { dataRoutes } from './finance.data';
 import { exportRoutes } from './finance.export';
+import { importRoutes } from './finance.import';
 import { institutionsRoutes } from './finance.institutions';
 import { runwayRoutes } from './finance.runway';
 import { tagsRoutes } from './finance.tags';
@@ -44,6 +45,7 @@ export const financeRoutes = new Hono<AppContext>()
   .route('/tags', tagsRoutes)
   .route('/budget', budgetRoutes)
   .route('/institutions', institutionsRoutes)
+  .route('/import', importRoutes)
   .route('/runway', runwayRoutes)
   .route('/affordability', affordabilityRoutes)
   .route('/export', exportRoutes)

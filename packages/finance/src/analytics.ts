@@ -23,6 +23,7 @@ export async function getTagBreakdown(
       sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
     ])
     .where('t.userId', '=', ownerId)
+    .where('t.excluded', '=', false)
     .where('t.transactionType', '=', 'debit')
     .groupBy('tg.name')
     .orderBy(sql`total`, 'desc')
@@ -47,6 +48,7 @@ export async function getTopMerchants(
       sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
     ])
     .where('userId', '=', ownerId)
+    .where('excluded', '=', false)
     .where('transactionType', '=', 'debit')
     .where('merchantName', 'is not', null)
     .where(sql<boolean>`merchant_name <> ''`)

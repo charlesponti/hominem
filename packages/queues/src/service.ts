@@ -6,6 +6,8 @@ import type { BaseJob } from './types';
 export const IMPORT_JOBS_LIST_KEY = 'import:active-jobs';
 export const IMPORT_JOB_PREFIX = 'import:job:';
 export const USER_JOBS_PREFIX = 'import:user:';
+export const IMPORT_PREFLIGHT_PREFIX = 'import:preflight:';
+export const IMPORT_PREFLIGHT_TTL = 7 * 24 * 60 * 60;
 export const JOB_EXPIRATION_TIME = 60 * 60; // 1 hour expiration time for jobs
 
 /**
@@ -102,6 +104,120 @@ export async function getImportFileContent(jobId: string): Promise<string | null
   return redis.get(`${IMPORT_JOB_PREFIX}${jobId}:csv`);
 }
 
+export async function setImportFileContent(jobId: string, content: string): Promise<void> {
+  await redis.set(`${IMPORT_JOB_PREFIX}${jobId}:csv`, content, 'EX', JOB_EXPIRATION_TIME);
+}
+
+export async function setImportPlanContent(planId: string, content: string): Promise<void> {
+  await redis.set(`${IMPORT_JOB_PREFIX}${planId}:plan`, content, 'EX', JOB_EXPIRATION_TIME);
+}
+
+export async function getImportPlanContent(planId: string): Promise<string | null> {
+  return redis.get(`${IMPORT_JOB_PREFIX}${planId}:plan`);
+}
+
+export async function createPreflight(
+  preflight: import('./types').ImportPreflight,
+  fileContent: string,
+  planContent: string,
+): Promise<void> {
+  const key = `${IMPORT_PREFLIGHT_PREFIX}${preflight.preflightId}`;
+  const ttl = Math.max(1, Math.floor((preflight.expiresAt - Date.now()) / 1000));
+  const pipeline = redis.pipeline();
+  pipeline.set(key, JSON.stringify(preflight), 'EX', ttl);
+  pipeline.set(`${key}:csv`, fileContent, 'EX', ttl);
+  pipeline.set(`${key}:plan`, planContent, 'EX', ttl);
+  await pipeline.exec();
+}
+
+export async function getPreflight(
+  preflightId: string,
+  userId: string,
+): Promise<import('./types').ImportPreflight | null> {
+  const value = await redis.get(`${IMPORT_PREFLIGHT_PREFIX}${preflightId}`);
+  if (!value) return null;
+  const preflight = JSON.parse(value) as import('./types').ImportPreflight;
+  return preflight.userId === userId ? preflight : null;
+}
+
+export async function getPreflightPlanContent(
+  preflightId: string,
+  userId: string,
+): Promise<string | null> {
+  const preflight = await getPreflight(preflightId, userId);
+  if (!preflight) return null;
+  return redis.get(`${IMPORT_PREFLIGHT_PREFIX}${preflightId}:plan`);
+}
+
+export async function deletePreflight(preflightId: string, userId: string): Promise<boolean> {
+  const preflight = await getPreflight(preflightId, userId);
+  if (!preflight) return false;
+  await redis.del(
+    `${IMPORT_PREFLIGHT_PREFIX}${preflightId}`,
+    `${IMPORT_PREFLIGHT_PREFIX}${preflightId}:csv`,
+    `${IMPORT_PREFLIGHT_PREFIX}${preflightId}:plan`,
+  );
+  return true;
+}
+
+export async function updateImportJob<T extends BaseJob>(jobId: string, job: T): Promise<void> {
+  await redis.set(`${IMPORT_JOB_PREFIX}${jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME);
+}
+
+export async function createImportJob<T extends BaseJob>(job: T): Promise<void> {
+  const pipeline = redis.pipeline();
+  pipeline.set(`${IMPORT_JOB_PREFIX}${job.jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME);
+  pipeline.zadd(`${USER_JOBS_PREFIX}${job.userId}`, Date.now(), job.jobId);
+  pipeline.sadd(IMPORT_JOBS_LIST_KEY, job.jobId);
+  await pipeline.exec();
+}
+
+export async function updatePreflightStatus(
+  preflightId: string,
+  userId: string,
+  status: import('./types').PreflightStatus,
+): Promise<boolean> {
+  const preflight = await getPreflight(preflightId, userId);
+  if (!preflight) return false;
+  await redis.set(
+    `${IMPORT_PREFLIGHT_PREFIX}${preflightId}`,
+    JSON.stringify({ ...preflight, status }),
+    'EX',
+    Math.max(1, Math.floor((preflight.expiresAt - Date.now()) / 1000)),
+  );
+  return true;
+}
+
+export async function claimPreflight(preflightId: string, userId: string): Promise<boolean> {
+  const preflight = await getPreflight(preflightId, userId);
+  if (!preflight || preflight.status !== 'ready') return false;
+  const claimed = await redis.set(
+    `${IMPORT_PREFLIGHT_PREFIX}${preflightId}:claim`,
+    userId,
+    'EX',
+    Math.max(1, Math.floor((preflight.expiresAt - Date.now()) / 1000)),
+    'NX',
+  );
+  return claimed === 'OK';
+}
+
+export async function requestImportCancellation(jobId: string, userId: string): Promise<boolean> {
+  const job = await getJobStatus<BaseJob>(jobId);
+  if (!job || job.userId !== userId || ['done', 'error', 'cancelled'].includes(job.status)) {
+    return false;
+  }
+  await redis.set(`${IMPORT_JOB_PREFIX}${jobId}:cancel`, '1', 'EX', JOB_EXPIRATION_TIME);
+  return true;
+}
+
+export async function isImportCancellationRequested(jobId: string): Promise<boolean> {
+  return (await redis.get(`${IMPORT_JOB_PREFIX}${jobId}:cancel`)) === '1';
+}
+
+export async function publishImportProgress<T>(data: T): Promise<void> {
+  await redis.publish('import:progress', JSON.stringify({ type: 'import:progress', data }));
+}
+
 /**
  * Get all active import jobs
  */
@@ -116,7 +232,7 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
 
     const now = Date.now();
     const jobsToRemove = jobs.filter((job) => {
-      const isDone = job.status === 'done' || job.status === 'error';
+      const isDone = job.status === 'done' || job.status === 'error' || job.status === 'cancelled';
       const isOld = job.endTime && now - job.endTime > 10 * 60 * 1000; // 10 minutes
       return isDone && isOld;
     });

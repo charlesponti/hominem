@@ -1,0 +1,8 @@
+date,name,amount,status,category,parent category,excluded,tags,type,account,account mask,note,recurring
+2026-01-02,Coffee,4.50,posted,Food,Daily,false,"coffee;work",regular,Checking,1234,Morning,weekly
+2026-01-02,Coffee,4.50,posted,Food,Daily,false,"coffee;work",regular,Checking,1234,Morning,weekly
+2026-01-03,Paycheck,-2500.00,posted,Income,,false,payday,income,Checking,1234,,biweekly
+2026-01-04,Transfer to savings,-100.00,posted,Transfers,,false,,internal transfer,Checking,1234,,
+2026-01-04,Transfer from checking,100.00,posted,Transfers,,false,,internal transfer,Savings,5678,,
+2026-01-05,Groceries,85.20,pending,Food,Daily,true,"food;excluded",regular,Savings,5678,Keep for records,
+2026-01-06,Subscription,12.00,posted,Subscriptions,Bills,false,streaming,regular,Card,9999,,monthly

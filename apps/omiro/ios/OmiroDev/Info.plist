@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Omiro</string>
+	<string>Omiro Dev</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,8 +27,8 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>hakumi</string>
-				<string>com.pontistudios.hakumi</string>
+				<string>hakumi-dev</string>
+				<string>com.pontistudios.hakumi.dev</string>
 			</array>
 		</dict>
 		<dict>

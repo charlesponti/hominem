@@ -2,7 +2,6 @@ import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { authClient } from '~/lib/auth-client';
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store';
 
 // Define constants for channel names and message types
@@ -10,17 +9,51 @@ const IMPORT_PROGRESS_CHANNEL = 'import:progress';
 const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = 'subscribed';
 const IMPORT_PROGRESS_CHANNEL_TYPE = 'subscribe';
 const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const;
+const PREFLIGHT_STORAGE_KEY = 'finance:copilot-import:preflight-id';
 
 // Throttle delay for progress updates (in milliseconds)
 const PROGRESS_UPDATE_THROTTLE = 100;
 
+export type ImportPreflightPreview = {
+  preflight: { preflightId: string; fileName: string; expiresAt: number };
+  plan: {
+    accountGroups: Array<{
+      groupKey: string;
+      account: string;
+      accountMask: string | null;
+      matchedAccountId: string | null;
+      unresolved: boolean;
+    }>;
+    unresolvedGroups: Array<{ groupKey: string }>;
+    duplicateCandidateRowIds: string[];
+    transactions: Array<{
+      rowId: string;
+      groupKey: string;
+      selected: boolean;
+      amount: string;
+      postedOn: string;
+      description: string;
+      transactionType: string;
+      pending: boolean;
+      excluded: boolean;
+    }>;
+    stats: {
+      total: number;
+      selected: number;
+      skipped: number;
+      invalid: number;
+      unresolved: number;
+    };
+  };
+  accounts: Array<{ id: string; name: string; mask: string | null }>;
+};
+
 export function useImportTransactionsStore() {
   const queryClient = useQueryClient();
-  const { data: sessionData } = authClient.useSession();
-  const session = sessionData?.session ?? null;
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  const [preflight, setPreflight] = useState<ImportPreflightPreview | null>(null);
   // Throttling refs for progress updates
   const progressUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingUpdatesRef = useRef<ImportTransactionsJob[]>([]);
@@ -46,6 +79,7 @@ export function useImportTransactionsStore() {
       jobs.map((job) => {
         const status: FileStatus = {
           file: getStableFile(job.fileName),
+          jobId: job.jobId,
           status: job.status,
           stats: job.stats,
           ...(job.error && { error: job.error }),
@@ -58,8 +92,20 @@ export function useImportTransactionsStore() {
 
   // Connect on initialization
   useEffect(() => {
-    connect(() => Promise.resolve(session?.token || null));
-  }, [connect, session]);
+    connect();
+  }, [connect]);
+
+  useEffect(() => {
+    const preflightId = window.localStorage.getItem(PREFLIGHT_STORAGE_KEY);
+    if (!preflightId) return;
+    void fetch(`/api/finance/import/preflight/${preflightId}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Preflight expired');
+        return (await response.json()) as ImportPreflightPreview;
+      })
+      .then(setPreflight)
+      .catch(() => window.localStorage.removeItem(PREFLIGHT_STORAGE_KEY));
+  }, []);
 
   // Throttled update function to reduce re-render frequency
   const throttledUpdateProgress = useCallback(
@@ -179,64 +225,25 @@ export function useImportTransactionsStore() {
 
   // Mutation for importing files
   const importMutation = useMutation({
-    mutationFn: async (files: File[]): Promise<ImportRequestResponse[]> => {
+    mutationFn: async (files: File[]): Promise<ImportPreflightPreview[]> => {
       try {
         setError(null);
 
         // Initialize optimistic statuses
-        const optimisticStatuses = files.map((f) => ({
-          file: f,
-          status: 'uploading' as const,
-          stats: {
-            progress: 0,
-            processingTime: 0,
-          },
-        }));
-        setStatuses(optimisticStatuses);
-
         const results = await Promise.all(
           files.map(async (file) => {
-            try {
-              const formData = new FormData();
-              formData.append('file', file);
-              formData.append('fileName', file.name);
-              formData.append('deduplicateThreshold', '60');
+            const formData = new FormData();
+            formData.append('file', file);
 
-              // Post form data using fetch
-              const res = await fetch('/api/finance/import', {
-                method: 'POST',
-                body: formData,
-              });
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              const result: ImportRequestResponse = await res.json();
-
-              if (!result.success) {
-                throw new Error('Import failed');
-              }
-
-              // Update status after successful upload
-              setStatuses((prev) =>
-                prev.map((status) =>
-                  status.file.name === file.name ? { ...status, status: result.status } : status,
-                ),
-              );
-
-              return result;
-            } catch (error) {
-              // Update status to error on failure
-              setStatuses((prev) =>
-                prev.map((status) =>
-                  status.file.name === file.name
-                    ? {
-                        ...status,
-                        status: 'error' as const,
-                        error: error instanceof Error ? error.message : "Couldn't import file",
-                      }
-                    : status,
-                ),
-              );
-              throw error;
-            }
+            const res = await fetch('/api/finance/import/preflight', {
+              method: 'POST',
+              body: formData,
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const result = (await res.json()) as ImportPreflightPreview;
+            setPreflight(result);
+            window.localStorage.setItem(PREFLIGHT_STORAGE_KEY, result.preflight.preflightId);
+            return result;
           }),
         );
 
@@ -247,11 +254,7 @@ export function useImportTransactionsStore() {
         throw error;
       }
     },
-    onSuccess: (results) => {
-      // Update active job IDs
-      const jobIds = results.map((job) => job.jobId);
-      setActiveJobIds(jobIds);
-
+    onSuccess: () => {
       // Invalidate any related queries
       queryClient.invalidateQueries({ queryKey: IMPORT_TRANSACTIONS_KEY });
     },
@@ -259,6 +262,36 @@ export function useImportTransactionsStore() {
       setError(err instanceof Error ? err : new Error('Failed to import transactions'));
     },
   });
+
+  const confirmPreflight = useCallback(
+    async (input: {
+      mappings: Array<{ groupKey: string; accountId?: string; createNew?: boolean }>;
+      selectedRowIds: string[];
+    }) => {
+      if (!preflight) throw new Error('No preflight is ready to confirm');
+      const response = await fetch(
+        `/api/finance/import/preflight/${preflight.preflight.preflightId}/confirm`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(input),
+        },
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = (await response.json()) as ImportRequestResponse;
+      setPreflight(null);
+      window.localStorage.removeItem(PREFLIGHT_STORAGE_KEY);
+      setActiveJobIds((current) => [...new Set([...current, result.jobId])]);
+      queryClient.invalidateQueries({ queryKey: IMPORT_TRANSACTIONS_KEY });
+      return result;
+    },
+    [preflight, queryClient],
+  );
+
+  const cancelJob = useCallback(async (jobId: string) => {
+    const response = await fetch(`/api/finance/import/${jobId}/cancel`, { method: 'POST' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  }, []);
 
   // Subscribe to WebSocket messages when connected
   useEffect(() => {
@@ -305,6 +338,9 @@ export function useImportTransactionsStore() {
     statuses,
     startImport: importMutation.mutateAsync,
     startSingleFile: (file: File) => importMutation.mutateAsync([file]),
+    preflight,
+    confirmPreflight,
+    cancelJob,
     removeFileStatus,
     activeJobIds,
     isImporting: importMutation.isPending,

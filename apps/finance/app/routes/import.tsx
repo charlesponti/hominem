@@ -1,44 +1,16 @@
-import type { FileStatus, ImportRequestResponse } from '@hominem/queues';
-import { Alert, AlertDescription, FileUploadStatus } from '@ponti-studios/ui/feedback';
+import type { FileStatus } from '@hominem/queues';
+import { Alert, AlertDescription } from '@ponti-studios/ui/feedback';
 import { DropZone } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Badge, Button } from '@ponti-studios/ui/primitives';
-import { memo, useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { Badge } from '@ponti-studios/ui/primitives';
+import { useCallback, useEffect, useMemo } from 'react';
 
+import { FileImport } from '~/components/import/file-import';
+import { PreflightReview } from '~/components/import/preflight-review';
 import { useFileInput } from '~/lib/hooks/use-file-input';
 import { useImportTransactionsStore } from '~/lib/hooks/use-import-transactions-store';
 import { useToast } from '~/lib/hooks/use-toast';
 import { cn } from '~/lib/utils';
-
-export type FileUploadStatusValue = 'uploading' | 'processing' | 'queued' | 'done' | 'error';
-
-const STATUS_CONFIG: Record<FileUploadStatusValue, { bg: string; text: string; label: string }> = {
-  uploading: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Uploading' },
-  processing: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Processing' },
-  queued: { bg: 'bg-secondary', text: 'text-secondary-foreground', label: 'Queued' },
-  done: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Complete' },
-  error: { bg: 'bg-destructive/10', text: 'text-destructive-text', label: 'Error' },
-};
-
-export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
-  status,
-}: {
-  status?: string | undefined;
-}) {
-  if (!status) return null;
-
-  const config = STATUS_CONFIG[status as FileUploadStatusValue] ?? {
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-    label: status,
-  };
-
-  return (
-    <span className={cn('px-2 py-1 text-xs font-medium', config.bg, config.text)}>
-      {config.label}
-    </span>
-  );
-});
 
 export default function TransactionImportPage() {
   const {
@@ -59,6 +31,9 @@ export default function TransactionImportPage() {
     isImporting: isImportInProgress,
     isError,
     error,
+    preflight,
+    confirmPreflight,
+    cancelJob,
   } = useImportTransactionsStore();
   const { toast } = useToast();
 
@@ -97,6 +72,7 @@ export default function TransactionImportPage() {
           queued: 2,
           done: 3,
           error: 4,
+          cancelled: 5,
         }[status.status] || 5;
 
       if (existing) {
@@ -138,6 +114,7 @@ export default function TransactionImportPage() {
       queued: 0,
       processing: 0,
       completed: 0,
+      cancelled: 0,
     };
 
     for (const { status } of allFiles) {
@@ -149,6 +126,8 @@ export default function TransactionImportPage() {
         counts.processing++;
       } else if (status.status === 'done' || status.status === 'error') {
         counts.completed++;
+      } else if (status.status === 'cancelled') {
+        counts.cancelled++;
       }
     }
 
@@ -217,6 +196,8 @@ export default function TransactionImportPage() {
         </Alert>
       ) : null}
 
+      {preflight ? <PreflightReview preflight={preflight} onConfirm={confirmPreflight} /> : null}
+
       <div className="flex w-full justify-center">
         <DropZone
           isImporting={isImportInProgress}
@@ -269,11 +250,11 @@ export default function TransactionImportPage() {
                 key={file.id}
                 fileName={file.fileName}
                 status={file.status}
-                id={file.id}
                 file={file.file}
                 isConnected={isConnected}
                 onStart={memoizedStartSingleFile}
                 onRemove={memoizedHandleRemoveFile}
+                onCancel={cancelJob}
               />
             ))}
           </ul>
@@ -282,123 +263,3 @@ export default function TransactionImportPage() {
     </div>
   );
 }
-
-type FileImportProps = {
-  fileName: string;
-  status?: FileStatus | undefined;
-  id: string;
-  file: File;
-  isConnected: boolean;
-  onStart: (file: File) => Promise<ImportRequestResponse[]>;
-  onRemove: (fileName: string) => void;
-};
-
-// Memoized FileImport component to prevent unnecessary re-renders
-const FileImport = memo(function FileImport({
-  fileName,
-  status,
-  id,
-  file,
-  isConnected,
-  onStart,
-  onRemove,
-}: FileImportProps) {
-  void id;
-  const { toast } = useToast();
-
-  const handleStart = useCallback(async () => {
-    if (!isConnected) {
-      toast({
-        title: 'Connection required',
-        description: 'Wait for connection to establish',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      await onStart(file);
-      toast({
-        title: 'Import started',
-        description: `Processing ${fileName}`,
-      });
-    } catch (err) {
-      toast({
-        title: 'Import failed',
-        description: err instanceof Error ? err.message : 'An error occurred',
-        variant: 'destructive',
-      });
-    }
-  }, [isConnected, onStart, file, fileName, toast]);
-
-  const handleRemove = useCallback(() => {
-    onRemove(fileName);
-  }, [onRemove, fileName]);
-
-  // Memoize status indicator to prevent recreation
-  const statusIndicator = useMemo(() => {
-    if (!status) {
-      return <div className="size-3 bg-muted-foreground " />;
-    }
-
-    const indicators: Record<string, ReactNode> = {
-      uploading: <div className="size-3 bg-emphasis-high " />,
-      processing: <div className="size-3 bg-emphasis-medium " />,
-      queued: <div className="size-3 bg-warning " />,
-      done: <div className="size-3 bg-emphasis-highest " />,
-      error: <div className="size-3 bg-destructive " />,
-    };
-
-    return indicators[status.status] || <div className="size-3 bg-muted-foreground " />;
-  }, [status]);
-
-  // Memoize button states
-  const buttonStates = useMemo(
-    () => ({
-      canStart: !status && isConnected,
-      canRemove: !status || status.status === 'done' || status.status === 'error',
-    }),
-    [status, isConnected],
-  );
-
-  // Memoize className computation
-  const itemClassName = useMemo(
-    () =>
-      cn(
-        'border border-border p-4',
-        // Status accent on the left edge only
-        !status && 'border-l-4 border-l-border',
-        status?.status === 'processing' && 'border-l-4 border-l-border',
-        status?.status === 'uploading' && 'border-l-4 border-l-border',
-        status?.status === 'queued' && 'border-l-4 border-l-warning',
-        status?.status === 'done' && 'border-l-4 border-l-success',
-        status?.status === 'error' && 'border-l-4 border-l-destructive',
-      ),
-    [status],
-  );
-
-  return (
-    <li className={itemClassName}>
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          {statusIndicator}
-          <span className="font-medium truncate flex-1">{fileName}</span>
-          <div className="flex items-center gap-2">
-            <FileUploadStatusBadge status={status?.status} />
-            {buttonStates.canStart && (
-              <Button size="sm" onClick={handleStart} disabled={!isConnected}>
-                Start
-              </Button>
-            )}
-            {buttonStates.canRemove && (
-              <Button size="sm" variant="outline" onClick={handleRemove}>
-                Remove
-              </Button>
-            )}
-          </div>
-        </div>
-        {status ? <FileUploadStatus uploadStatus={status} /> : null}
-      </div>
-    </li>
-  );
-});

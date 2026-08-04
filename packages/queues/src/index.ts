@@ -7,6 +7,7 @@ import { redis } from './redis';
 export * from './types';
 export * from './service';
 export * from './consts';
+export { redis } from './redis';
 
 export const importTransactionsQueue: Queue = new BullQueue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
   connection: redis,

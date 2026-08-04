@@ -46,6 +46,7 @@ export const FinanceQueryRepository = {
       ])
       .where('transaction.userId', '=', ownerUserId)
       .where('account.userId', '=', ownerUserId)
+      .where('transaction.excluded', '=', false)
       .where('transaction.postedOn', '>=', range.startsOn)
       .where('transaction.postedOn', '<', range.endsBefore)
       .orderBy('transaction.postedOn', 'asc')

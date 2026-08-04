@@ -1,5 +1,13 @@
 import { Skeleton } from '@ponti-studios/ui/feedback';
-import { DatePicker, GroupBySelect, Switch } from '@ponti-studios/ui/forms';
+import {
+  DatePicker,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+} from '@ponti-studios/ui/forms';
 import { Badge, Button, Card, Label } from '@ponti-studios/ui/primitives';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Filter, X } from 'lucide-react';
@@ -247,8 +255,27 @@ export function AnalyticsFilters({
                       />
                     </div>
 
-                    {/* Group By Filter */}
-                    <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
+                    <div className="space-y-2">
+                      <Label htmlFor="groupBy">Group By</Label>
+                      <Select
+                        name="groupBy"
+                        value={groupBy}
+                        onValueChange={(value) => {
+                          if (value === 'month' || value === 'week' || value === 'day') {
+                            setGroupBy(value);
+                          }
+                        }}
+                      >
+                        <SelectTrigger id="groupBy">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="month">Month</SelectItem>
+                          <SelectItem value="week">Week</SelectItem>
+                          <SelectItem value="day">Day</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
                     {/* Toggle Filters */}
                     <div className="space-y-4">

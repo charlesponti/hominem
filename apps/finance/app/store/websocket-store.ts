@@ -125,14 +125,10 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
           wsBaseUrl = `${protocol}//${apiUrlDomain}`;
         }
 
-        // Get authentication token if provider exists
-        let wsUrl = wsBaseUrl;
-        if (tokenProvider) {
-          const token = await tokenProvider();
-          if (token) {
-            wsUrl = `${wsBaseUrl}?token=${token}`;
-          }
-        }
+        // Better Auth authenticates the upgrade with the browser session cookie.
+        // Keep tokenProvider for API compatibility, but never put credentials in the URL.
+        if (tokenProvider) await tokenProvider();
+        const wsUrl = `${wsBaseUrl}/api/finance/import/ws`;
 
         // Create new WebSocket connection
         socket = new WebSocket(wsUrl);
