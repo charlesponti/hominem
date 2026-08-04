@@ -85,7 +85,7 @@ const verificationOtpSubjectByType = {
 } as const satisfies Record<string, string>;
 
 export const TEST_OTP = '000000';
-export const MCP_SCOPES = ['career:read'] as const;
+export const MCP_SCOPES = ['career:read', 'finance:read'] as const;
 
 function generateNumericOtp({ length, isTest }: { length: number; isTest?: boolean }): string {
   if (isTest) return TEST_OTP;

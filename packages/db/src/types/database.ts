@@ -145,23 +145,55 @@ export interface AppFiles {
   url: string;
 }
 
+export interface AppFinanceAccountLabels {
+  accountId: string;
+  confidence: Generated<number>;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  effectiveFrom: ColumnType<string, Date | string, Date | string> | null;
+  effectiveTo: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  institution: string | null;
+  isGeneric: Generated<boolean>;
+  label: string;
+  labelKind: string;
+  note: string | null;
+  resolvesToAccount: Generated<boolean>;
+  source: Generated<string>;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userId: string;
+}
+
 export interface AppFinanceAccounts {
   accountSubtype: string | null;
   accountType: string;
   availableBalance: Numeric | null;
+  closedOn: ColumnType<string, Date | string, Date | string> | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
   csvImportKey: string | null;
   currencyCode: Generated<string>;
   currentBalance: Numeric | null;
   id: Generated<string>;
+  includeInNetWorth: Generated<boolean>;
+  institution: string | null;
   institutionId: string | null;
   isActive: Generated<boolean>;
+  lifecycleStatus: Generated<string>;
   mask: string | null;
   metadata: Generated<Json>;
   name: string;
+  openedOn: ColumnType<string, Date | string, Date | string> | null;
   plaidAccountId: string | null;
   plaidItemId: string | null;
   provider: string | null;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userId: string;
+}
+
+export interface AppFinanceCategories {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  name: string;
+  parentId: string | null;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   userId: string;
 }
@@ -178,10 +210,57 @@ export interface AppFinanceInstitutions {
   websiteUrl: string | null;
 }
 
+export interface AppFinanceStatementPeriods {
+  accountId: string;
+  certificationStatus: Generated<string>;
+  closingBalance: Generated<Numeric>;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  currencyCode: Generated<string>;
+  evidencePath: string | null;
+  id: Generated<string>;
+  note: string | null;
+  openingBalance: Generated<Numeric>;
+  periodEndOn: ColumnType<string, Date | string, Date | string>;
+  periodStartOn: ColumnType<string, Date | string, Date | string>;
+  source: Generated<string>;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userId: string;
+}
+
+export interface AppFinanceTaxFilings {
+  appName: string | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  externalFilingId: string;
+  filingTypeRaw: string;
+  id: Generated<string>;
+  jurisdiction: string;
+  postmarkAt: ColumnType<string, Date | string, Date | string> | null;
+  receivedAt: ColumnType<string, Date | string, Date | string> | null;
+  returnType: string;
+  taxYear: number;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userId: string;
+}
+
+export interface AppFinanceTaxFilingStatusEvents {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  filingId: string;
+  filingTypeRaw: string | null;
+  id: Generated<string>;
+  message: string | null;
+  occurredAt: ColumnType<string, Date | string, Date | string>;
+  statusCode: number;
+  userId: string;
+}
+
 export interface AppFinanceTransactions {
   accountId: string;
+  accountMask: string | null;
   amount: Numeric;
+  categoryAssignmentSource: Generated<string>;
+  categoryId: string | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  currencyCode: Generated<string>;
   description: string | null;
   excluded: Generated<boolean>;
   externalId: string | null;
@@ -192,6 +271,7 @@ export interface AppFinanceTransactions {
   pending: Generated<boolean>;
   postedOn: ColumnType<string, Date | string, Date | string>;
   providerPayload: Generated<Json>;
+  recurring: Generated<boolean>;
   source: string | null;
   transactionType: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -728,8 +808,13 @@ export interface DB {
   'app.chats': AppChats;
   'app.companies': AppCompanies;
   'app.files': AppFiles;
+  'app.financeAccountLabels': AppFinanceAccountLabels;
   'app.financeAccounts': AppFinanceAccounts;
+  'app.financeCategories': AppFinanceCategories;
   'app.financeInstitutions': AppFinanceInstitutions;
+  'app.financeStatementPeriods': AppFinanceStatementPeriods;
+  'app.financeTaxFilings': AppFinanceTaxFilings;
+  'app.financeTaxFilingStatusEvents': AppFinanceTaxFilingStatusEvents;
   'app.financeTransactions': AppFinanceTransactions;
   'app.jobApplications': AppJobApplications;
   'app.jobApplicationStatusHistory': AppJobApplicationStatusHistory;

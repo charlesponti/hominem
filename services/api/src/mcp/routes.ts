@@ -18,6 +18,9 @@ const requiredScope = MCP_SCOPES.join(' ');
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
 }
+if (enabledScopes.size === 0 || enabledScopes.has('finance:read')) {
+  await import('./tools/finance');
+}
 
 async function addMcpScopes(response: Response): Promise<Response> {
   const metadata = (await response.json()) as { scopes_supported?: string[] } & Record<
