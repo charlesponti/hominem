@@ -289,7 +289,7 @@ export function useImportTransactionsStore() {
   );
 
   const cancelJob = useCallback(async (jobId: string) => {
-    const response = await fetch(`/api/finance/import/${jobId}/cancel`, { method: 'POST' });
+    const response = await fetch(`/api/finance/import/jobs/${jobId}/cancel`, { method: 'POST' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
   }, []);
 

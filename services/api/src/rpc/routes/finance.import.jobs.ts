@@ -13,7 +13,7 @@ import { UnauthorizedError, ValidationError } from '../errors';
 import type { AppContext } from '../middleware/auth';
 
 export const importJobRoutes = new Hono<AppContext>()
-  .get('/jobs', async (c) => {
+  .get('/', async (c) => {
     const userId = c.get('auth')?.userId;
     if (!userId) throw new UnauthorizedError('Authentication required');
     return c.json(await getUserJobs<ImportTransactionsJob>(userId));

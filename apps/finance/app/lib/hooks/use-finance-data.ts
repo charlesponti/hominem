@@ -51,6 +51,7 @@ function normalizeAccountWithTransactions(
 
 export interface FilterArgs {
   accountId?: string | undefined;
+  accountIds?: string[] | undefined;
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   description?: string | undefined;
@@ -170,7 +171,17 @@ export function useFinanceTransactions({
     staleTime: 1 * 60 * 1000,
   };
 
-  if (initialData) {
+  const isInitialQuery =
+    offset === 0 &&
+    !filters.accountId &&
+    !filters.accountIds?.length &&
+    !filters.dateFrom &&
+    !filters.dateTo &&
+    !filters.description &&
+    sortBy === 'date' &&
+    sortOrder === 'desc';
+
+  if (initialData && isInitialQuery) {
     queryOptions.initialData = initialData;
   }
 
@@ -193,9 +204,11 @@ export function useFinanceTransactions({
           query: {
             ...(filters.dateFrom ? { dateFrom: format(filters.dateFrom, 'yyyy-MM-dd') } : {}),
             ...(filters.dateTo ? { dateTo: format(filters.dateTo, 'yyyy-MM-dd') } : {}),
-            ...(filters.accountId && filters.accountId !== 'all'
-              ? { account: filters.accountId }
-              : {}),
+            ...(filters.accountIds && filters.accountIds.length > 0
+              ? { accountIds: filters.accountIds }
+              : filters.accountId && filters.accountId !== 'all'
+                ? { account: filters.accountId }
+                : {}),
             ...(filters.description ? { description: filters.description } : {}),
             limit: String(limit),
             offset: String(offset),

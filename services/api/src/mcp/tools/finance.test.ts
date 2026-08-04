@@ -1,12 +1,25 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import type { McpToolResult } from '../tools';
+
 const userId = 'cf8f3ada-d5ed-45c8-b044-0ca80f60611f';
 
 const checkingId = 'f1000003-0000-4000-8000-000000000001';
 
-function resultContent(res: any): any {
-  return res.structuredContent as any;
+type TestResultRow = Record<string, unknown>;
+type TestResultContent = {
+  warnings?: unknown[];
+  accounts?: TestResultRow[];
+  totals?: unknown[];
+  count?: number;
+  transactions?: TestResultRow[];
+  currencyCode?: string;
+  categories?: TestResultRow[];
+};
+
+function resultContent(res: McpToolResult): TestResultContent {
+  return res.structuredContent as TestResultContent;
 }
 const savingsId = 'f1000003-0000-4000-8000-000000000002';
 const excludedCardId = 'f1000003-0000-4000-8000-000000000003';
@@ -134,7 +147,7 @@ describe('finance_net_worth', () => {
 
     expect(data.warnings).toEqual([]);
     expect(data.accounts).toHaveLength(1);
-    expect(data.accounts[0]).toMatchObject({
+    expect(data.accounts?.[0]).toMatchObject({
       name: 'Checking',
       balanceSource: 'statement+ledger',
     });
@@ -149,13 +162,13 @@ describe('finance_net_worth', () => {
     const withoutClosed = await callTool(userId, 'finance_net_worth', {
       includeClosed: false,
     });
-    expect(resultContent(withoutClosed).accounts.map((a: any) => a.name)).toEqual(['Checking']);
+    expect(resultContent(withoutClosed).accounts?.map((a) => a.name)).toEqual(['Checking']);
 
     const withClosed = await callTool(userId, 'finance_net_worth', {
       includeClosed: true,
     });
     const names = resultContent(withClosed)
-      .accounts.map((a: any) => a.name)
+      .accounts?.map((a) => a.name)
       .sort();
     expect(names).toEqual(['Checking', 'Old Savings']);
   });
@@ -170,7 +183,7 @@ describe('finance_recent_transactions', () => {
     });
 
     expect(resultContent(result).count).toBe(5);
-    const descriptions = resultContent(result).transactions.map((t: any) => t.description);
+    const descriptions = resultContent(result).transactions?.map((t) => t.description);
     expect(descriptions).toEqual([
       'Excluded Reimbursement',
       'Transfer to Savings',
@@ -179,8 +192,8 @@ describe('finance_recent_transactions', () => {
       'Grocery Store',
     ]);
 
-    const grocery = resultContent(result).transactions.find(
-      (t: any) => t.description === 'Grocery Store',
+    const grocery = resultContent(result).transactions?.find(
+      (t) => t.description === 'Grocery Store',
     );
     expect(grocery).toMatchObject({
       categoryName: 'Food & Drink',
@@ -188,8 +201,8 @@ describe('finance_recent_transactions', () => {
       excluded: false,
     });
 
-    const pending = resultContent(result).transactions.find(
-      (t: any) => t.description === 'Pending Coffee',
+    const pending = resultContent(result).transactions?.find(
+      (t) => t.description === 'Pending Coffee',
     );
     expect(pending).toBeUndefined();
   });
@@ -207,13 +220,13 @@ describe('finance_spending_by_category', () => {
     expect(resultContent(result).currencyCode).toBe('USD');
     expect(resultContent(result).warnings).toEqual([]);
     expect(resultContent(result).categories).toHaveLength(2);
-    expect(resultContent(result).categories[0]).toEqual({
+    expect(resultContent(result).categories?.[0]).toEqual({
       categoryId: foodId,
       categoryName: 'Food & Drink',
       spentCents: 5000,
       transactionCount: 1,
     });
-    expect(resultContent(result).categories[1]).toEqual({
+    expect(resultContent(result).categories?.[1]).toEqual({
       categoryId: transportId,
       categoryName: 'Transport',
       spentCents: 2500,
