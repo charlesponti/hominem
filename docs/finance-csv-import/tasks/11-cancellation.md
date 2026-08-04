@@ -16,7 +16,7 @@ Today `removeFileStatus(fileName)` only hides a row from local UI state — it n
 
 ## Work
 
-1. **Backend**: `POST /api/finance/import/:jobId/cancel` —
+1. **Backend**: `POST /api/finance/import/jobs/:jobId/cancel` —
    - Queued job: remove it from the queue outright.
    - In-progress job: set a "cancel requested" flag in Redis that the worker (task `07`) checks between batches, stopping cleanly.
    - Add an explicit `'cancelled'` `JobStatus` so cancellation is not presented as an error. Persist the terminal state after queued removal or the worker's between-batch stop.

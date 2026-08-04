@@ -11,6 +11,10 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 const transactionListSchema = z
   .object({
     accountId: z.string().uuid().optional(),
+    accountIds: z
+      .union([z.string().uuid(), z.array(z.string().uuid())])
+      .transform((v) => (Array.isArray(v) ? v : [v]))
+      .optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
     limit: z.coerce.number().int().min(1).max(200).default(50),
@@ -133,6 +137,7 @@ export const transactionsRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const input = c.req.valid('query');
     const accountId = input.accountId ?? input.account;
+    const accountIds = input.accountIds ?? [];
     const tagIds = input.tagIds ?? [];
     const tagNames = input.tagNames ?? [];
     const limit = input.limit ?? 50;
@@ -151,9 +156,35 @@ export const transactionsRoutes = new Hono<AppContext>()
       .limit(limit)
       .offset(offset);
 
-    if (accountId) query = query.where('accountId', '=', accountId);
-    if (dateFrom) query = query.where('postedOn', '>=', dateFrom);
-    if (dateTo) query = query.where('postedOn', '<=', dateTo);
+    let countQuery = db
+      .selectFrom('app.financeTransactions')
+      .select(db.fn.countAll<number>().as('count'))
+      .where('userId', '=', userId);
+
+    if (accountIds.length > 0) {
+      query = query.where('accountId', 'in', accountIds);
+      countQuery = countQuery.where('accountId', 'in', accountIds);
+    } else if (accountId) {
+      query = query.where('accountId', '=', accountId);
+      countQuery = countQuery.where('accountId', '=', accountId);
+    }
+    if (dateFrom) {
+      query = query.where('postedOn', '>=', dateFrom);
+      countQuery = countQuery.where('postedOn', '>=', dateFrom);
+    }
+    if (dateTo) {
+      query = query.where('postedOn', '<=', dateTo);
+      countQuery = countQuery.where('postedOn', '<=', dateTo);
+    }
+    if (input.description) {
+      const term = `%${input.description}%`;
+      query = query.where((eb) =>
+        eb.or([eb('description', 'ilike', term), eb('merchantName', 'ilike', term)]),
+      );
+      countQuery = countQuery.where((eb) =>
+        eb.or([eb('description', 'ilike', term), eb('merchantName', 'ilike', term)]),
+      );
+    }
 
     if (hasTagFilters) {
       const taggedIds = await getTaggedTransactionIds(userId, tagIds, tagNames);
@@ -161,10 +192,12 @@ export const transactionsRoutes = new Hono<AppContext>()
         return c.json({ data: [], filteredCount: 0, totalUserCount: 0 }, 200);
       }
       query = query.where('id', 'in', taggedIds);
+      countQuery = countQuery.where('id', 'in', taggedIds);
     }
 
-    const [data, totalRow] = await Promise.all([
+    const [data, filteredRow, totalRow] = await Promise.all([
       query.execute(),
+      countQuery.executeTakeFirst(),
       db
         .selectFrom('app.financeTransactions')
         .select(db.fn.countAll<number>().as('count'))
@@ -184,7 +217,7 @@ export const transactionsRoutes = new Hono<AppContext>()
     return c.json(
       {
         data: responseData,
-        filteredCount: responseData.length,
+        filteredCount: Number(filteredRow?.count ?? 0),
         totalUserCount: Number(totalRow?.count ?? 0),
       },
       200,

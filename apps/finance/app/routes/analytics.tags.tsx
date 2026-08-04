@@ -33,9 +33,11 @@ export default function TagsAnalyticsPage() {
   const [debouncedFilters, setDebouncedFilters] = useState<FilterArgs>(filters);
 
   const [searchValue, setSearchValue] = useState('');
-  const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort({
-    initialSortOptions: [],
-  });
+  const { sortOptions, isDefaultSort, addSortOption, updateSortOption, removeSortOption } = useSort(
+    {
+      initialSortOptions: [],
+    },
+  );
 
   const {
     accountsMap,
@@ -224,6 +226,7 @@ export default function TagsAnalyticsPage() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOptions={sortOptions}
+        isDefaultSort={isDefaultSort}
         addSortOption={addSortOption}
         updateSortOption={updateSortOption}
         removeSortOption={removeSortOption}
