@@ -18,7 +18,7 @@ export const importJobRoutes = new Hono<AppContext>()
     if (!userId) throw new UnauthorizedError('Authentication required');
     return c.json(await getUserJobs<ImportTransactionsJob>(userId));
   })
-  .post('/:jobId/cancel', async (c) => {
+  .post('/jobs/:jobId/cancel', async (c) => {
     const userId = c.get('auth')?.userId;
     if (!userId) throw new UnauthorizedError('Authentication required');
     const jobId = c.req.param('jobId');

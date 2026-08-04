@@ -46,7 +46,7 @@ const mcpAuthContext = {
   user: testUser,
   userId: testUser.id,
   credential: 'mcp-oauth',
-  scopes: ['career:read'],
+  scopes: ['career:read', 'finance:read'],
 } satisfies AuthContext;
 
 async function createClient(app: Hono<AppContext>) {
@@ -84,7 +84,7 @@ describe('mcp server transport', () => {
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
 
     expect(response.status).toBe(401);
-    expect(response.headers.get('www-authenticate')).toContain('scope="career:read"');
+    expect(response.headers.get('www-authenticate')).toContain('scope="career:read finance:read"');
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
       code: 'UNAUTHORIZED',
@@ -97,7 +97,7 @@ describe('mcp server transport', () => {
 
     expect(response.status).toBe(403);
     expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
-    expect(response.headers.get('www-authenticate')).toContain('scope="career:read"');
+    expect(response.headers.get('www-authenticate')).toContain('scope="career:read finance:read"');
     await expect(response.json()).resolves.toMatchObject({ code: 'INSUFFICIENT_SCOPE' });
   });
 
