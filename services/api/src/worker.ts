@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 
+import { QUEUE_NAMES } from '@hominem/queues';
 import { logger } from '@hominem/telemetry';
 
 import { env } from './env';
@@ -36,4 +37,4 @@ initRuntime('worker').installSignalHandlers(
 
 logger.info('worker_started', { queue: 'file-processing' });
 logger.info('worker_started', { queue: 'embedding-generation' });
-logger.info('worker_started', { queue: 'import-transaction' });
+logger.info('worker_started', { queue: QUEUE_NAMES.IMPORT_TRANSACTIONS });

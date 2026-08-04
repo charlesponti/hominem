@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 
 import { runInTransaction, type JsonObject, type TransactionHandle } from '@hominem/db';
 
+import { accountTempKey } from './resolve-copilot-accounts';
 import { COPILOT_PROVIDER, type ImportPlan, type PlannedTransaction } from './types';
 
 function tagSlug(value: string): string {
@@ -156,7 +157,7 @@ export async function applyCopilotImportBatch(
         (transaction.accountTempKey
           ? accountIds[
               input.plan.accountsToCreate.find(
-                (draft) => `new:${draft.importKey}` === transaction.accountTempKey,
+                (draft) => accountTempKey(draft.importKey) === transaction.accountTempKey,
               )?.importKey ?? ''
             ]
           : undefined);

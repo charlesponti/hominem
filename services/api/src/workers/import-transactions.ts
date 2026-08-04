@@ -44,9 +44,10 @@ async function processImportJob(job: Job<ImportTransactionsQueuePayload>): Promi
 
   for (let offset = 0; offset < selectedTransactions.length; offset += BATCH_SIZE) {
     if (await isImportCancellationRequested(jobId)) {
+      const latest = await getJobStatus<ImportTransactionsJob>(jobId);
       await updateStatus(jobId, 'cancelled', {
         endTime: Date.now(),
-        stats: { ...current.stats, total: plan.stats.total, created, skipped },
+        stats: { ...(latest?.stats ?? current.stats), total: plan.stats.total, created, skipped },
       });
       return;
     }
