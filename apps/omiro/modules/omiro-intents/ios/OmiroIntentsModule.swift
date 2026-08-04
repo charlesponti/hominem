@@ -1,44 +1,5 @@
 import AppIntents
 import ExpoModulesCore
-import Foundation
-
-private enum OmiroIntentName: String {
-  case addNote = "AddNoteIntent"
-  case startChat = "StartChatIntent"
-}
-
-private enum OmiroRoute: String {
-  case addNote = "note/add"
-  case startChat = "chat"
-}
-
-private enum OmiroIntentError: Error {
-  case invalidURL
-}
-
-private func appScheme() -> String? {
-  guard
-    let urlTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]]
-  else {
-    return nil
-  }
-
-  for urlType in urlTypes {
-    if let schemes = urlType["CFBundleURLSchemes"] as? [String], let scheme = schemes.first, !scheme.isEmpty {
-      return scheme
-    }
-  }
-
-  return nil
-}
-
-private func appURL(for route: OmiroRoute) -> URL? {
-  guard let scheme = appScheme() else {
-    return nil
-  }
-
-  return URL(string: "\(scheme)://\(route.rawValue)")
-}
 
 @available(iOS 18.0, *)
 public struct AddNoteIntent: AppIntent {
