@@ -1,8 +1,6 @@
 .env.local
 
 # expo managed workflow
-ios/
-!modules/**/ios
 .expo/
 expo-env.d.ts
 
