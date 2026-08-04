@@ -1,8 +1,6 @@
 import { buttonVariants } from '@ponti-studios/ui/primitives';
 import { Link } from 'react-router';
 
-import { TimelineSpine } from '~/components/career/timeline/TimelineSpine';
-import { getCareerStoryTimeline } from '~/lib/career/queries/career-timeline';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { cn } from '~/lib/utils';
@@ -31,12 +29,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!user) return { authenticated: false as const };
 
   try {
-    const timeline = await getCareerStoryTimeline(user.id);
-
-    return {
-      authenticated: true as const,
-      timeline,
-    };
+    return { authenticated: true as const };
   } catch (error) {
     logger.error('Error loading career data', error, { owner_userid: user.id });
     throw new Response('Failed to load career data', { status: 500 });
@@ -52,39 +45,55 @@ const searchProblems = [
     label: 'Find your best proof',
     copy: 'Your best projects, wins, links, and resume bullets are spread across too many places.',
   },
-  {
-    label: 'Tailor without burning out',
-    copy: 'The roles worth chasing deserve sharper context, but rewriting everything by hand does not scale.',
-  },
-  {
-    label: 'Know what needs attention',
-    copy: 'When weeks blur together, it gets hard to see what you sent, what worked, and what needs attention.',
-  },
 ];
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   if (loaderData.authenticated) {
-    return <Dashboard loaderData={loaderData} />;
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="heading-2">Your career workspace</h1>
+          <p className="body-2 mt-2 text-muted-foreground">
+            Manage your positions, applications, and education history.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Link
+            to="/work"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'lg' }),
+              'h-24 flex-col items-start justify-center gap-1',
+            )}
+          >
+            <span className="heading-4">Positions</span>
+            <span className="body-3 text-muted-foreground">Work history & target roles</span>
+          </Link>
+          <Link
+            to="/applications"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'lg' }),
+              'h-24 flex-col items-start justify-center gap-1',
+            )}
+          >
+            <span className="heading-4">Applications</span>
+            <span className="body-3 text-muted-foreground">Track your pipeline</span>
+          </Link>
+          <Link
+            to="/account"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'lg' }),
+              'h-24 flex-col items-start justify-center gap-1',
+            )}
+          >
+            <span className="heading-4">Profile</span>
+            <span className="body-3 text-muted-foreground">Your career profile</span>
+          </Link>
+        </div>
+      </div>
+    );
   }
   return <LandingPage />;
-}
-
-function Dashboard({
-  loaderData,
-}: {
-  loaderData: Extract<Route.ComponentProps['loaderData'], { authenticated: true }>;
-}) {
-  const { timeline } = loaderData;
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="heading-2">Your career story</h1>
-      </div>
-
-      <TimelineSpine timeline={timeline} />
-    </div>
-  );
 }
 
 function LandingPage() {
@@ -102,19 +111,10 @@ function LandingPage() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  to="/onboarding"
+                  to="/login"
                   className={cn(buttonVariants({ size: 'lg' }), 'h-11 rounded-full px-6 text-sm')}
                 >
-                  Get organized
-                </Link>
-                <Link
-                  to="/demo"
-                  className={cn(
-                    buttonVariants({ variant: 'outline', size: 'lg' }),
-                    'h-11 rounded-full px-5 text-sm',
-                  )}
-                >
-                  See the difference
+                  Get started
                 </Link>
               </div>
             </div>

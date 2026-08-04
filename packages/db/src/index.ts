@@ -96,83 +96,49 @@ export type {
   CreateAIUsageEventInput,
 } from './services/ai/ai-usage.repository';
 
-export { PortfolioRepository } from './services/career/portfolio.repository';
+export { CareerRepository } from './services/career/career.repository';
 export type {
-  ChapterWithEntries,
-  CreateDefaultPortfolioInput,
-  FullPortfolioRecord,
-  PublicPortfolioProfileRecord,
-  PortfolioRecord,
-  PortfolioTimeline,
-  ResumePortfolioRecord,
-  SavePortfolioBasicsInput,
-  TimelineEntryKind,
-  TimelineEntryRecord,
-} from './services/career/portfolio.repository';
+  CareerApplicationRecord,
+  CareerApplicationStageRecord,
+  CareerApplicationWithRelations,
+  CareerEducationRecord,
+  CareerOfferRecord,
+  CareerPositionRecord,
+  CareerProfileRecord,
+} from './services/career/career.repository';
 
-export { WorkExperienceRepository } from './services/career/work-experience.repository';
+export { ApplicationFilesRepository } from './services/career/application-files.repository';
 export type {
-  CreateWorkExperienceCommand,
-  CreateWorkExperienceInput,
-  DeleteWorkExperienceCommand,
-  UpdateWorkExperienceCommand,
-  UpdateWorkExperienceInput,
-  PublicWorkExperienceRecord,
-  WorkExperienceRecord,
-} from './services/career/work-experience.repository';
-export { redactWorkExperienceForPublic } from './services/career/work-experience.repository';
+  CareerApplicationFileInput,
+  CareerApplicationFileRecord,
+} from './services/career/application-files.repository';
 
-export { SkillRepository } from './services/career/skill.repository';
+export { ApplicationNotesRepository } from './services/career/application-notes.repository';
+export type { CareerApplicationNoteRecord } from './services/career/application-notes.repository';
+
+export { CertificationRepository } from './services/career/certification.repository';
 export type {
-  ReplaceSkillInput,
-  ReplaceSkillsCommand,
-  SkillRecord,
-} from './services/career/skill.repository';
+  CareerCertificationInput,
+  CareerCertificationRecord,
+} from './services/career/certification.repository';
 
 export { ProjectRepository } from './services/career/project.repository';
-export type {
-  CreateProjectCommand,
-  CreateProjectInput,
-  DeleteProjectCommand,
-  ProjectRecord,
-  UpdateProjectCommand,
-  UpdateProjectInput,
-} from './services/career/project.repository';
+export type { CareerProjectInput, CareerProjectRecord } from './services/career/project.repository';
 
-export { TestimonialRepository } from './services/career/testimonial.repository';
-export type {
-  CreateTestimonialCommand,
-  CreateTestimonialInput,
-  DeleteTestimonialCommand,
-  TestimonialRecord,
-  UpdateTestimonialCommand,
-  UpdateTestimonialInput,
-} from './services/career/testimonial.repository';
-
-export { CompanyRepository } from './services/career/company.repository';
-export type {
-  CompanyRecord,
-  FindOrCreateCompanyInput,
-  UpdateCompanyInput,
-} from './services/career/company.repository';
-
-export { JobApplicationRepository } from './services/career/job-application.repository';
-export type {
-  CareerApplicationStage,
-  CareerInterviewEntry,
-  CreateJobApplicationInput,
-  CreateJobApplicationCommand,
-  DeleteJobApplicationCommand,
-  JobApplicationRecord,
-  UpdateJobApplicationStatusCommand,
-  UpdateJobApplicationInput,
-} from './services/career/job-application.repository';
+export { SkillRepository } from './services/career/skill.repository';
+export type { CareerSkillInput, CareerSkillRecord } from './services/career/skill.repository';
 
 export { SocialLinksRepository } from './services/career/social-links.repository';
 export type {
-  SaveUserSocialLinksInput,
-  UserSocialLinksRecord,
+  CareerSocialLinksInput,
+  CareerSocialLinksRecord,
 } from './services/career/social-links.repository';
+
+export { TestimonialRepository } from './services/career/testimonial.repository';
+export type {
+  CareerTestimonialInput,
+  CareerTestimonialRecord,
+} from './services/career/testimonial.repository';
 
 export { UserRepository } from './services/users/user.repository';
 export type { FindUserInput, UserRecord } from './services/users/user.repository';

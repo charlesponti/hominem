@@ -1,82 +1,106 @@
+import { ProjectRepository, db } from '@hominem/db';
+import { TextField, Textarea } from '@ponti-studios/ui/forms';
+import { Button } from '@ponti-studios/ui/primitives';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Form, redirect, useNavigate } from 'react-router';
 
-import { ProjectEditorForm } from '~/components/career/ProjectEditorForm';
-import { handleProjectMutationAction } from '~/lib/career/project-actions';
-import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
-import { getProjectById } from '~/lib/career/queries/projects';
 import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/projects.$id';
 
-export const meta: Route.MetaFunction = () => [{ title: 'Edit Project | career' }];
+export const meta: Route.MetaFunction = ({ loaderData }) => [
+  { title: loaderData ? `${loaderData.project.title} | career` : 'Project | career' },
+];
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(userContext)!;
-  const { id } = params;
-  if (!id) {
-    throw new Response('Project ID is required', { status: 400 });
-  }
-
-  const [project, workExperiences] = await Promise.all([
-    getProjectById(user.id, id),
-    getUserWorkExperiencesDesc(user.id),
-  ]);
-
-  if (!project) {
-    throw new Response('Project not found', { status: 404 });
-  }
-
-  return {
-    project,
-    workExperiences,
-    portfolioId: project.portfolioId,
-  };
+  const projects = await ProjectRepository.list(db, user.id);
+  const project = projects.find((p) => p.id === params.id);
+  if (!project) throw new Response('Project not found', { status: 404 });
+  return { project };
 }
 
-export async function action({ context, request }: Route.ActionArgs) {
-  const user = context.get(userContext);
-  if (!user) {
-    return { success: false, error: 'Sign in again before saving your projects.' };
+export async function action({ context, params, request }: Route.ActionArgs) {
+  const user = context.get(userContext)!;
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'delete') {
+    await ProjectRepository.remove(db, user.id, params.id);
+    return redirect('/projects');
   }
 
-  return handleProjectMutationAction(request, user.id);
+  const title = (formData.get('title') as string)?.trim();
+  if (!title) return { error: 'Title is required' };
+
+  const technologiesRaw = (formData.get('technologies') as string) ?? '';
+  const technologies = technologiesRaw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  await ProjectRepository.update(db, user.id, params.id, {
+    title,
+    description: (formData.get('description') as string) || null,
+    shortDescription: (formData.get('shortDescription') as string) || null,
+    liveUrl: (formData.get('liveUrl') as string) || null,
+    githubUrl: (formData.get('githubUrl') as string) || null,
+    technologies,
+  });
+
+  return { ok: true };
 }
 
-export default function EditProject({ loaderData }: Route.ComponentProps) {
+export default function ProjectDetailRoute({ loaderData }: Route.ComponentProps) {
+  const { project } = loaderData;
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const currentSearch = searchParams.toString();
-  const backHref = currentSearch ? `/projects?${currentSearch}` : '/projects';
 
   return (
-    <section className="flex flex-col gap-6">
+    <div className="max-w-2xl">
       <button
         type="button"
-        onClick={() => navigate(backHref)}
-        data-testid="back-button"
-        className="body-3 inline-flex items-center gap-2 self-start text-muted-foreground transition-colors"
+        onClick={() => navigate('/projects')}
+        className="body-3 inline-flex items-center gap-2 text-muted-foreground transition-colors"
       >
         <ArrowLeftIcon className="size-4" />
         Back to projects
       </button>
 
-      <div className="space-y-1">
-        <h1 className="heading-2 text-foreground">
-          {loaderData.project.title?.trim() || 'Untitled project'}
-        </h1>
-        <p className="body-3 text-muted-foreground">
-          Update the project details, visibility, and linked work experience.
-        </p>
-      </div>
-
-      <ProjectEditorForm
-        action={`/projects/${loaderData.project.id}`}
-        project={loaderData.project}
-        portfolioId={loaderData.portfolioId}
-        workExperiences={loaderData.workExperiences}
-        onDeleteSuccess={() => navigate(backHref)}
-      />
-    </section>
+      <Form method="post" className="mt-6 flex flex-col gap-4">
+        <TextField label="Title" name="title" required defaultValue={project.title} />
+        <TextField
+          label="Short description"
+          name="shortDescription"
+          defaultValue={project.shortDescription ?? ''}
+        />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="description" className="text-foreground text-sm font-medium">
+            Description
+          </label>
+          <Textarea
+            id="description"
+            name="description"
+            rows={4}
+            defaultValue={project.description ?? ''}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <TextField label="Live URL" name="liveUrl" defaultValue={project.liveUrl ?? ''} />
+          <TextField label="GitHub URL" name="githubUrl" defaultValue={project.githubUrl ?? ''} />
+        </div>
+        <TextField
+          label="Technologies"
+          name="technologies"
+          helpText="Comma-separated"
+          defaultValue={Array.isArray(project.technologies) ? project.technologies.join(', ') : ''}
+        />
+        <div className="flex justify-between">
+          <Button type="submit" name="intent" value="delete" variant="ghost">
+            Delete
+          </Button>
+          <Button type="submit">Save changes</Button>
+        </div>
+      </Form>
+    </div>
   );
 }

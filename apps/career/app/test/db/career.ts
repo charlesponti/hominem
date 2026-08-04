@@ -13,13 +13,6 @@ type CreateUserOptions = {
   email?: string;
 };
 
-type CreatePortfolioOptions = {
-  user?: CareerTestUser;
-  slug?: string;
-  title?: string;
-  jobTitle?: string;
-};
-
 export function createCareerTestDb() {
   const userIds: string[] = [];
 
@@ -37,27 +30,22 @@ export function createCareerTestDb() {
     return user;
   }
 
-  async function createPortfolio(options: CreatePortfolioOptions = {}) {
-    const user = options.user ?? (await createUser({ name: options.slug ?? 'Portfolio User' }));
-    const slug = options.slug ?? `existing-${randomUUID()}`;
+  async function createProfile(options: { user?: CareerTestUser } = {}) {
+    const user = options.user ?? (await createUser({ name: 'Profile User' }));
 
-    const portfolio = await db
-      .insertInto('app.portfolios')
+    await db
+      .insertInto('app.careerProfile')
       .values({
+        id: randomUUID(),
         ownerUserid: user.id,
-        slug,
-        title: options.title ?? `${user.name} Portfolio`,
-        name: user.name,
-        jobTitle: options.jobTitle ?? 'Engineer',
-        bio: 'Bio',
-        tagline: 'Tagline',
-        currentLocation: 'Los Angeles',
+        firstName: user.name,
         email: user.email,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
-      .returning(['id', 'slug', 'title'])
-      .executeTakeFirstOrThrow();
+      .execute();
 
-    return { portfolio, user };
+    return { profile: { id: user.id }, user };
   }
 
   async function cleanup() {
@@ -69,7 +57,7 @@ export function createCareerTestDb() {
 
   return {
     cleanup,
-    createPortfolio,
+    createProfile,
     createUser,
   };
 }
