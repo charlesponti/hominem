@@ -1,4 +1,4 @@
-import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
+import { db, SocialLinksRepository } from '@hominem/db';
 import type { CareerProfileRecord } from '@hominem/db';
 
 import { listUserDocuments } from './documents.server';

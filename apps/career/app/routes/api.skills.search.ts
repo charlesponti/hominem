@@ -1,4 +1,4 @@
-import { CareerRepository, db, SkillRepository, sql } from '@hominem/db';
+import { CareerRepository, db, SkillRepository } from '@hominem/db';
 import { data } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 

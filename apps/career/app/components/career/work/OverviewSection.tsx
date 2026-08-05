@@ -41,7 +41,6 @@ export function OverviewSection({
       errorMessage: 'We couldn’t save the overview. Try again.',
     });
   const {
-    control,
     register,
     handleSubmit,
     reset,

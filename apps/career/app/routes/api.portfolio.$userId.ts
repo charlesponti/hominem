@@ -1,5 +1,3 @@
-import { CareerRepository, db } from '@hominem/db';
-
 import { getFullCareerContext } from '../lib/portfolio.server';
 import { Route } from './+types/api.portfolio.$userId';
 

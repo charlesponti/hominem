@@ -38,7 +38,7 @@
 
   "ignoreBinaries": [],
 
-  "ignoreUnresolved": ["^vite/client$"],
+  "ignoreUnresolved": ["^vite/client$", "^\\.\\/\\+types\\/"],
 
   "ignore": [
     "packages/ui/src/components/**",

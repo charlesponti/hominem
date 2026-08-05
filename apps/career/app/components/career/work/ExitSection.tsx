@@ -24,11 +24,10 @@ import {
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
 export function ExitSection({ workExperience }: { workExperience: CareerPositionRecord }) {
-  const we = workExperience as Record<string, any>;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      reasonForLeaving: we.projectStatus ?? '',
+      reasonForLeaving: workExperience.projectStatus ?? '',
     }),
     [workExperience],
   );
@@ -98,11 +97,11 @@ export function ExitSection({ workExperience }: { workExperience: CareerPosition
             }}
           />
         </form>
-      ) : hasExitDetails(we as CareerPositionRecord) ? (
+      ) : hasExitDetails(workExperience) ? (
         <div className="space-y-4">
           <DetailRow
             label="Reason for leaving"
-            value={formatOptionalLabel(we.projectStatus) ?? 'Not set'}
+            value={formatOptionalLabel(workExperience.projectStatus) ?? 'Not set'}
           />
         </div>
       ) : (
