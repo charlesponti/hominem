@@ -2,7 +2,6 @@ import type { CareerPositionRecord } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronRightIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';

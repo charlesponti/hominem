@@ -1,14 +1,9 @@
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
-import { PlusIcon, ChevronRightIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ChevronRightIcon } from 'lucide-react';
+import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
-import {
-  filterJobApplications,
-  getApplicationCards,
-  sortAndPaginateJobApplications,
-} from '~/lib/career/queries/job-applications';
+import { filterJobApplications, getApplicationCards } from '~/lib/career/queries/job-applications';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 

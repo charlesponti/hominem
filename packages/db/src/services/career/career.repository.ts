@@ -172,7 +172,7 @@ export const CareerRepository = {
   async createPosition(
     handle: DbHandle,
     ownerUserId: string,
-    data: Partial<Omit<AppCareerPositions, 'id' | 'ownerUserid' | 'createdAt' | 'updatedAt'>> & {
+    data: Record<string, unknown> & {
       company: string;
       title: string;
     },

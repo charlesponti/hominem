@@ -7,7 +7,7 @@ import {
 
 import { makeStyles, SCREEN_MARGIN_HORIZONTAL } from '~/components/theme';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   container: {
     marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
   },

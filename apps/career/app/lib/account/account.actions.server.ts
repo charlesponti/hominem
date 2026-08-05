@@ -3,7 +3,6 @@ import { imageStorageService, isStorageServiceError, validateFile } from '@homin
 
 import { logger } from '~/lib/logger';
 import { parseFormData } from '~/lib/route-utils';
-import { normalizePortfolioSlug } from '~/types/resume';
 
 import { deleteUserDocument } from './documents.server';
 import type {
