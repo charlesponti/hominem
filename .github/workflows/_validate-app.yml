@@ -1,0 +1,86 @@
+name: _validate-app
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: '24.18.0'
+      go-version:
+        type: string
+        default: '1.25'
+      package-filter:
+        description: 'Turbo package filter, e.g. @hominem/api'
+        type: string
+        required: true
+      extra-run:
+        description: 'Extra shell command appended after the standard validate steps'
+        type: string
+        default: ''
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TELEMETRY_DISABLED: '1'
+      NODE_ENV: test
+      OPENROUTER_API_KEY: 'some-random-key'
+      REDIS_URL: redis://localhost:6379
+      RESEND_API_KEY: 'some-resend-api-key'
+      RESEND_FROM_EMAIL: 'test@example.com'
+      RESEND_FROM_NAME: 'Test Sender'
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5434/app-test
+      BETTER_AUTH_SECRET: 'ci-test-better-auth-secret'
+      VITE_PUBLIC_API_URL: http://localhost:3000
+
+    services:
+      postgres:
+        image: ghcr.io/ponti-studios/foundation/postgres:1.0.5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app-test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5434:5432
+      redis:
+        image: redis:latest
+        options: >-
+          --health-cmd "redis-cli ping || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: checkout-repository
+        uses: actions/checkout@v7
+
+      - name: setup-pnpm-workspace
+        uses: ./.github/actions/setup-pnpm-workspace
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: setup-go-for-migrations
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: run-database-migrations
+        run: just db migrate test
+
+      - name: validate
+        run: |
+          pnpm format:check
+          pnpm lint --filter=${{ inputs.package-filter }}...
+          pnpm typecheck --filter=${{ inputs.package-filter }}...
+          pnpm build --filter=${{ inputs.package-filter }}...
+          pnpm test --filter=${{ inputs.package-filter }}...
+          ${{ inputs.extra-run }}

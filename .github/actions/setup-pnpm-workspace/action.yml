@@ -5,43 +5,19 @@ inputs:
   node-version:
     description: Node.js version to install.
     required: true
-  install-command:
-    description: Dependency install command to run.
-    required: false
-    default: pnpm install --frozen-lockfile
 
 runs:
   using: composite
   steps:
-    - name: setup-node-js
-      uses: actions/setup-node@v6
-      with:
-        node-version: ${{ inputs.node-version }}
-
     - name: setup-pnpm
-      shell: bash
-      # pnpm/action-setup is a JS action that runs in the runner's bundled Node (v20),
-      # which cannot install pnpm 11 (requires >=22.13). A run: step inherits $GITHUB_PATH
-      # from the previous step and therefore uses the Node installed above.
-      run: |
-        PNPM_VERSION=$(node -p "require('./package.json').packageManager.split('@')[1]")
-        npm install -g "pnpm@${PNPM_VERSION}"
+      uses: pnpm/setup@v2
+      with:
+        runtime: node@${{ inputs.node-version }}
+        cache: true
+        cache-dependency-path: pnpm-lock.yaml
 
     - name: setup-just
       uses: taiki-e/install-action@just
-
-    - name: get-pnpm-store-directory
-      id: pnpm-cache
-      shell: bash
-      run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_OUTPUT"
-
-    - name: setup-pnpm-cache
-      uses: actions/cache@v5
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
 
     # Turbo's own cache entries are content-hash keyed (per task, independent
     # of which workflow ran it), so one shared cache namespace here lets
@@ -59,7 +35,3 @@ runs:
         key: turbo-${{ runner.os }}-${{ github.sha }}
         restore-keys: |
           turbo-${{ runner.os }}-
-
-    - name: install-dependencies
-      shell: bash
-      run: ${{ inputs.install-command }}

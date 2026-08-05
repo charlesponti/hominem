@@ -43,7 +43,7 @@ jobs:
 
     services:
       postgres:
-        image: ghcr.io/${{ github.repository }}/postgres:latest
+        image: ghcr.io/ponti-studios/foundation/postgres:1.0.5
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

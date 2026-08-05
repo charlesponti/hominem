@@ -1,6 +1,7 @@
 {
   "camelCase": true,
   "dateParser": "string",
+  "includePattern": "{app,auth,ops,public}.*",
   "outFile": "./src/types/database.ts",
   "typeMapping": {
     "timestamp": "ColumnType<string, Date | string, Date | string>",

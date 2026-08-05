@@ -18,6 +18,7 @@ on:
       - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
       - '.github/workflows/validate-api.yml'
+      - '.github/workflows/_validate-app.yml'
   pull_request:
     branches: [main]
     paths:
@@ -35,6 +36,7 @@ on:
       - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
       - '.github/workflows/validate-api.yml'
+      - '.github/workflows/_validate-app.yml'
 
 concurrency:
   group: validate-api-${{ github.head_ref || github.ref }}
@@ -46,69 +48,7 @@ permissions:
 
 jobs:
   validate-api:
-    runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      TURBO_TELEMETRY_DISABLED: '1'
-      OPENROUTER_API_KEY: 'some-random-key'
-      REDIS_URL: redis://localhost:6379
-      RESEND_API_KEY: 'some-resend-api-key'
-      RESEND_FROM_EMAIL: 'test@example.com'
-      RESEND_FROM_NAME: 'Test Sender'
-      NODE_ENV: test
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5434/app-test
-      BETTER_AUTH_SECRET: 'ci-test-better-auth-secret'
-
-    strategy:
-      matrix:
-        node-version: [24.18.0]
-
-    services:
-      postgres:
-        image: ghcr.io/${{ github.repository }}/postgres:latest
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: app-test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5434:5432
-      redis:
-        image: redis:latest
-        options: >-
-          --health-cmd "redis-cli ping || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-    steps:
-      - name: checkout-repository
-        uses: actions/checkout@v7
-
-      - name: setup-pnpm-workspace
-        uses: ./.github/actions/setup-pnpm-workspace
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: setup-go-for-migrations
-        uses: actions/setup-go@v7
-        with:
-          go-version: '1.25'
-
-      - name: run-database-migrations
-        run: just db migrate test
-
-      - name: validate-api
-        run: |
-          pnpm format:check
-          pnpm lint --filter=@hominem/api...
-          pnpm typecheck --filter=@hominem/api...
-          pnpm build --filter=@hominem/api...
-          pnpm test --filter=@hominem/api...
+    uses: ./.github/workflows/_validate-app.yml
+    with:
+      package-filter: '@hominem/api'
+    secrets: inherit

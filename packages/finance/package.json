@@ -23,7 +23,7 @@
     "@hominem/utils": "workspace:*",
     "csv-parse": "^5.6.0",
     "effect": "^3.16.10",
-    "kysely": "0.28.17",
+    "kysely": "^0.29.4",
     "zod": "catalog:"
   },
   "devDependencies": {
