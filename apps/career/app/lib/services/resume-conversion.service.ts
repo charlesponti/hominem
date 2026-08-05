@@ -79,8 +79,8 @@ export async function saveResumeToDatabase(
         company: workExperience.company,
         title: workExperience.role,
         description: workExperience.description,
-        startDate: (workExperience.start_date ?? null) as any,
-        endDate: (workExperience.end_date ?? null) as any,
+        startDate: workExperience.start_date ?? null,
+        endDate: workExperience.end_date ?? null,
       });
     }
 

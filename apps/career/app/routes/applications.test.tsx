@@ -30,7 +30,7 @@ describe('Applications route', () => {
                 firstInterviewDate: new Date('2024-01-25T00:00:00.000Z').toISOString(),
                 company: 'Example Co',
               }),
-            ] as any,
+            ],
           }}
         />
       </MemoryRouter>,

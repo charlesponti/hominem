@@ -18,11 +18,10 @@ import {
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
 export function CompensationSection({ workExperience }: { workExperience: CareerPositionRecord }) {
-  const we = workExperience as Record<string, any>;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      baseSalary: formatCurrencyInput(we.salaryLow),
+      baseSalary: formatCurrencyInput(workExperience.salaryLow),
     }),
     [workExperience],
   );
@@ -74,9 +73,9 @@ export function CompensationSection({ workExperience }: { workExperience: Career
             }}
           />
         </form>
-      ) : hasCompensation(we as CareerPositionRecord) ? (
+      ) : hasCompensation(workExperience) ? (
         <div className="grid gap-3 md:grid-cols-2">
-          <DetailRow label="Base salary" value={formatCurrency(we.salaryLow) ?? 'Not set'} />
+          <DetailRow label="Base salary" value={formatCurrency(workExperience.salaryLow) ?? 'Not set'} />
         </div>
       ) : (
         <SectionEmptyState copy="Add compensation details if you want this role to be part of your private history." />

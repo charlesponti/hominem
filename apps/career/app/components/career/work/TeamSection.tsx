@@ -25,16 +25,24 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
+type TeamWorkExperience = CareerPositionRecord & {
+  department?: string | null;
+  directReports?: number | null;
+  reportsTo?: string | null;
+  seniorityLevel?: string | null;
+  teamSize?: number | null;
+};
+
 export function TeamSection({ workExperience }: { workExperience: CareerPositionRecord }) {
-  const we = workExperience as Record<string, any>;
+  const teamWorkExperience = workExperience as TeamWorkExperience;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      seniorityLevel: we.seniorityLevel ?? '',
-      department: we.department ?? '',
-      teamSize: we.teamSize?.toString() ?? '',
-      directReports: we.directReports?.toString() ?? '',
-      reportsTo: we.reportsTo ?? '',
+      seniorityLevel: teamWorkExperience.seniorityLevel ?? '',
+      department: teamWorkExperience.department ?? '',
+      teamSize: teamWorkExperience.teamSize?.toString() ?? '',
+      directReports: teamWorkExperience.directReports?.toString() ?? '',
+      reportsTo: teamWorkExperience.reportsTo ?? '',
     }),
     [workExperience],
   );
@@ -127,19 +135,26 @@ export function TeamSection({ workExperience }: { workExperience: CareerPosition
             }}
           />
         </form>
-      ) : hasTeamDetails(we as CareerPositionRecord) ? (
+      ) : hasTeamDetails(teamWorkExperience) ? (
         <div className="grid gap-3 md:grid-cols-2">
           <DetailRow
             label="Seniority"
-            value={formatOptionalLabel(we.seniorityLevel) ?? 'Not set'}
+            value={formatOptionalLabel(teamWorkExperience.seniorityLevel) ?? 'Not set'}
           />
-          <DetailRow label="Department" value={we.department ?? 'Not set'} />
-          <DetailRow label="Team size" value={we.teamSize != null ? `${we.teamSize}` : 'Not set'} />
+          <DetailRow label="Department" value={teamWorkExperience.department ?? 'Not set'} />
+          <DetailRow
+            label="Team size"
+            value={teamWorkExperience.teamSize != null ? `${teamWorkExperience.teamSize}` : 'Not set'}
+          />
           <DetailRow
             label="Direct reports"
-            value={we.directReports != null ? `${we.directReports}` : 'Not set'}
+            value={
+              teamWorkExperience.directReports != null
+                ? `${teamWorkExperience.directReports}`
+                : 'Not set'
+            }
           />
-          <DetailRow label="Reports to" value={we.reportsTo ?? 'Not set'} />
+          <DetailRow label="Reports to" value={teamWorkExperience.reportsTo ?? 'Not set'} />
         </div>
       ) : (
         <SectionEmptyState copy="Add team context if this role included leadership, scope, or reporting details." />
