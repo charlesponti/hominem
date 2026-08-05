@@ -1,4 +1,4 @@
-import type { Insertable, Selectable } from 'kysely';
+import type { Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type {
@@ -172,9 +172,7 @@ export const CareerRepository = {
   async createPosition(
     handle: DbHandle,
     ownerUserId: string,
-    data: Partial<
-      Omit<Insertable<AppCareerPositions>, 'id' | 'ownerUserid' | 'createdAt' | 'updatedAt'>
-    > & {
+    data: Record<string, unknown> & {
       company: string;
       title: string;
     },

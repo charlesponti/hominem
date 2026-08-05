@@ -29,6 +29,8 @@ describe('Applications route', () => {
                 responseDate: new Date('2024-01-20T00:00:00.000Z').toISOString(),
                 firstInterviewDate: new Date('2024-01-25T00:00:00.000Z').toISOString(),
                 company: 'Example Co',
+                stageCount: 0,
+                hasOffer: false,
               }),
             ],
           }}
