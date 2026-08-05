@@ -689,12 +689,6 @@ export interface DeviceCode {
   userId: string | null;
 }
 
-export interface DrizzleDrizzleMigrations {
-  createdAt: Int8 | null;
-  hash: string;
-  id: Generated<number>;
-}
-
 export interface GooseDbVersion {
   id: Generated<number>;
   isApplied: boolean;
@@ -708,101 +702,6 @@ export interface Jwks {
   id: string;
   privateKey: string;
   publicKey: string;
-}
-
-export interface LabsArticles {
-  description: string | null;
-  feedId: number;
-  fetchedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: Generated<number>;
-  imageUrl: string | null;
-  publishedAt: ColumnType<string, Date | string, Date | string> | null;
-  rejectionCount: Generated<number>;
-  rejectionReason: string | null;
-  status: Generated<string>;
-  title: string;
-  url: string;
-}
-
-export interface LabsDailyPuzzles {
-  answer: string;
-  answerType: string;
-  articleId: number;
-  clue: string;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  dateUtc: ColumnType<string, Date | string, Date | string>;
-  detail: string;
-  gameId: number;
-  id: Generated<number>;
-  normalizedAnswer: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface LabsDrizzleMigrations {
-  createdAt: Int8 | null;
-  hash: string;
-  id: Generated<number>;
-}
-
-export interface LabsFeedGames {
-  feedId: number;
-  gameId: number;
-}
-
-export interface LabsFeeds {
-  active: Generated<boolean>;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: Generated<number>;
-  kind: Generated<string>;
-  label: string;
-  url: string;
-}
-
-export interface LabsGames {
-  active: Generated<boolean>;
-  answerLength: Generated<number>;
-  articleExpiryDays: Generated<number>;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: Generated<number>;
-  name: string;
-  repeatWindowDays: Generated<number>;
-  slug: string;
-  systemPromptPath: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface LabsRealiteaAttempts {
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  dateUtc: ColumnType<string, Date | string, Date | string>;
-  gameId: number;
-  guessedAt: Generated<Json>;
-  guesses: Generated<Json>;
-  hominemUserId: string;
-  id: Generated<number>;
-  status: Generated<string>;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface LabsSearchDocuments {
-  body: string;
-  category: string;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  embedding: string;
-  featured: Generated<boolean>;
-  id: Generated<number>;
-  kind: string;
-  location: string;
-  popularity: Generated<number>;
-  publishedAt: ColumnType<string, Date | string, Date | string>;
-  searchText: string;
-  searchVector: Generated<string>;
-  sourceUrl: string;
-  subtitle: string;
-  summary: string;
-  tags: Json;
-  title: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  year: number;
 }
 
 export interface OauthAccessToken {
@@ -931,17 +830,8 @@ export interface DB {
   'app.tasks': AppTasks;
   'app.vectorDocuments': AppVectorDocuments;
   deviceCode: DeviceCode;
-  'drizzle.DrizzleMigrations': DrizzleDrizzleMigrations;
   gooseDbVersion: GooseDbVersion;
   jwks: Jwks;
-  'labs.articles': LabsArticles;
-  'labs.dailyPuzzles': LabsDailyPuzzles;
-  'labs.DrizzleMigrations': LabsDrizzleMigrations;
-  'labs.feedGames': LabsFeedGames;
-  'labs.feeds': LabsFeeds;
-  'labs.games': LabsGames;
-  'labs.realiteaAttempts': LabsRealiteaAttempts;
-  'labs.searchDocuments': LabsSearchDocuments;
   oauthAccessToken: OauthAccessToken;
   oauthApplication: OauthApplication;
   oauthConsent: OauthConsent;
