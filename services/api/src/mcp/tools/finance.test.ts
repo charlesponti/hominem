@@ -1,11 +1,4 @@
 import { db, pool } from '@hominem/db';
-import type {
-  AppFinanceAccounts,
-  AppFinanceCategories,
-  AppFinanceStatementPeriods,
-  AppFinanceTransactions,
-} from '@hominem/db';
-import type { Insertable } from 'kysely';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { McpToolResult } from '../tools';
@@ -24,6 +17,63 @@ type TestResultContent = {
   currencyCode?: string;
   categories?: TestResultRow[];
 };
+
+type FinanceAccountInsert = {
+  id: string;
+  userId: string;
+  name: string;
+  accountType: string;
+  currencyCode: string;
+  lifecycleStatus: string;
+  includeInNetWorth: boolean;
+  isActive: boolean;
+  metadata: Record<string, never>;
+};
+
+type FinanceCategoryInsert = {
+  id: string;
+  userId: string;
+  name: string;
+};
+
+type FinanceStatementPeriodInsert = {
+  id: string;
+  userId: string;
+  accountId: string;
+  periodStartOn: string;
+  periodEndOn: string;
+  openingBalance: number;
+  closingBalance: number;
+  certificationStatus: string;
+};
+
+type FinanceTransactionInsert = {
+  id: string;
+  userId: string;
+  accountId: string;
+  postedOn: string;
+  description: string;
+  amount: number;
+  currencyCode: string;
+  transactionType: string;
+  pending: boolean;
+  externalId: string;
+  categoryId: string | null;
+  categoryAssignmentSource: string;
+  excluded: boolean;
+  providerPayload: Record<string, never>;
+};
+
+type FinanceTransactionEntry = [
+  accountId: string,
+  postedOn: string,
+  description: string,
+  amount: number,
+  transactionType: string,
+  externalId: string,
+  categoryId: string | null,
+  excluded: boolean,
+];
 
 function resultContent(res: McpToolResult): TestResultContent {
   return res.structuredContent as TestResultContent;
@@ -76,7 +126,7 @@ beforeAll(async () => {
         isActive: true,
         metadata: {},
       },
-    ] satisfies Insertable<AppFinanceAccounts>[])
+    ] satisfies FinanceAccountInsert[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -85,7 +135,7 @@ beforeAll(async () => {
     .values([
       { id: foodId, userId, name: 'Food & Drink' },
       { id: transportId, userId, name: 'Transport' },
-    ] satisfies Insertable<AppFinanceCategories>[])
+    ] satisfies FinanceCategoryInsert[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -102,11 +152,11 @@ beforeAll(async () => {
         closingBalance: 1000.0,
         certificationStatus: 'uncertified',
       },
-    ] satisfies Insertable<AppFinanceStatementPeriods>[])
+    ] satisfies FinanceStatementPeriodInsert[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
-  const entries = [
+  const entries: FinanceTransactionEntry[] = [
     [checkingId, '2026-07-01', 'Grocery Store', -50.0, 'debit', 'fp-1', foodId, false],
     [checkingId, '2026-07-05', 'Gas Station', -25.0, 'debit', 'fp-2', transportId, false],
     [checkingId, '2026-07-10', 'Paycheck', 2000.0, 'credit', 'fp-3', null, false],
@@ -134,7 +184,7 @@ beforeAll(async () => {
         categoryAssignmentSource: 'source',
         excluded: excl,
         providerPayload: {},
-      } satisfies Insertable<AppFinanceTransactions>)
+      } satisfies FinanceTransactionInsert)
       .onConflict((oc) => oc.column('id').doNothing())
       .execute();
   }
