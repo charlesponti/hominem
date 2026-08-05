@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import {
   resolveAppRedirectUrl,
   resolveOAuthResumeUrl,
-} from '@ponti-studios/auth/shared/redirect-policy';
+} from '../test-helpers/redirect-policy';
 import { Hono } from 'hono';
 import { z } from 'zod';
 

@@ -59,7 +59,7 @@ function createApp() {
     });
     await next();
   });
-  return app.route('/api/finance/import', importJobRoutes);
+  return app.route('/api/finance/import/jobs', importJobRoutes);
 }
 
 describe('finance import job routes', () => {
