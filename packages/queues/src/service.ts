@@ -109,7 +109,7 @@ export async function setImportFileContent(jobId: string, content: string): Prom
 }
 
 export async function setImportPlanContent(planId: string, content: string): Promise<void> {
-  await redis.set(`${IMPORT_JOB_PREFIX}${planId}:plan`, content, 'EX', JOB_EXPIRATION_TIME);
+  await redis.set(`${IMPORT_JOB_PREFIX}${planId}:plan`, content, 'EX', IMPORT_PREFLIGHT_TTL);
 }
 
 export async function getImportPlanContent(planId: string): Promise<string | null> {
