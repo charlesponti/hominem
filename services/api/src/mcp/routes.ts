@@ -13,7 +13,7 @@ const enabledScopes = new Set(
     .map((scope: string) => scope.trim())
     .filter(Boolean),
 );
-const requiredScope = MCP_SCOPES[0];
+const requiredScope = MCP_SCOPES.join(' ');
 
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
