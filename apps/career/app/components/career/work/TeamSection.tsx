@@ -144,7 +144,9 @@ export function TeamSection({ workExperience }: { workExperience: CareerPosition
           <DetailRow label="Department" value={teamWorkExperience.department ?? 'Not set'} />
           <DetailRow
             label="Team size"
-            value={teamWorkExperience.teamSize != null ? `${teamWorkExperience.teamSize}` : 'Not set'}
+            value={
+              teamWorkExperience.teamSize != null ? `${teamWorkExperience.teamSize}` : 'Not set'
+            }
           />
           <DetailRow
             label="Direct reports"

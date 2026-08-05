@@ -75,7 +75,10 @@ export function CompensationSection({ workExperience }: { workExperience: Career
         </form>
       ) : hasCompensation(workExperience) ? (
         <div className="grid gap-3 md:grid-cols-2">
-          <DetailRow label="Base salary" value={formatCurrency(workExperience.salaryLow) ?? 'Not set'} />
+          <DetailRow
+            label="Base salary"
+            value={formatCurrency(workExperience.salaryLow) ?? 'Not set'}
+          />
         </div>
       ) : (
         <SectionEmptyState copy="Add compensation details if you want this role to be part of your private history." />
