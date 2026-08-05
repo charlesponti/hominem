@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX idx_career_profile_slug ON app.career_profile(owner_userId, 
 
 -- +goose Down
 
-DROP INDEX IF EXISTS idx_career_profile_slug;
+DROP INDEX IF EXISTS app.idx_career_profile_slug;
 
 ALTER TABLE app.career_profile
   DROP COLUMN IF EXISTS slug,
