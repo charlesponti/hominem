@@ -87,6 +87,7 @@ For Omiro work, use the app bootstrap loop in `apps/omiro/README.md`:
 - `pnpm dev` / `pnpm typecheck` / `pnpm build` / `pnpm test`: run for every package, or scope with `--filter=@hominem/<pkg>...` (e.g. `--filter=@hominem/api...`)
 - `pnpm format`: apply formatting across the repo
 - `pnpm lint` / `pnpm lint:fix`: lint the repo, or lint and apply fixes
+- `just db backup`: create a timestamped SQL backup of the dev database in `~/.hominem/`
 - `just db migrate [test]`: apply database migrations
 - `just db codegen`: regenerate database types against the caller's `DATABASE_URL`
 - `just mobile <action>`: iOS development, test, build, update, and release commands

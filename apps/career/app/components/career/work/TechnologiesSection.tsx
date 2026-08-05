@@ -1,5 +1,5 @@
-import { Field, Textarea } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import { Textarea } from '@ponti-studios/ui/forms';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -53,12 +53,13 @@ export function TechnologiesSection({ technologies }: { technologies: string[] }
       {isEditing ? (
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormErrorAlert title="Technologies weren’t saved" message={submissionError} />
-          <Field
-            label="Technologies"
-            helpText="Use a comma-separated list, like React, TypeScript, GraphQL."
-          >
+          <div className="space-y-1.5">
+            <Label className="subheading-4 text-muted-foreground">Technologies</Label>
+            <p className="body-4 text-muted-foreground">
+              Use a comma-separated list, like React, TypeScript, GraphQL.
+            </p>
             <Textarea rows={4} {...register('technologies')} />
-          </Field>
+          </div>
 
           <SectionFormActions
             isSubmitting={isSubmitting}

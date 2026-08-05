@@ -92,7 +92,7 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
                   <p className="heading-4 truncate">{pos.title}</p>
                   <p className="body-3 text-muted-foreground">{pos.company}</p>
                   <p className="footnote text-muted-foreground mt-1">
-                    {formatDateRange(pos.startDate, pos.endDate, pos.isCurrent ?? false)}
+                    {formatDateRange(pos.startDate, pos.endDate)}
                     {pos.location && ` • ${pos.location}`}
                   </p>
                 </div>

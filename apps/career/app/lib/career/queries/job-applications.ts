@@ -1,11 +1,5 @@
-import type {
-  CareerApplicationRecord,
-  CareerApplicationStageRecord,
-  CareerOfferRecord,
-} from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db';
 import { CareerRepository, db } from '@hominem/db';
-
-import { JobApplicationStage, JobApplicationStatus } from '~/types/career';
 
 export type JobApplicationCard = {
   id: string;

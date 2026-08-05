@@ -1,6 +1,6 @@
-import type { WorkExperienceRecord } from '@hominem/db';
-import { Field, Input } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import type { CareerPositionRecord } from '@hominem/db';
+import { Input } from '@ponti-studios/ui/forms';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -17,13 +17,12 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function CompensationSection({ workExperience }: { workExperience: WorkExperienceRecord }) {
+export function CompensationSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+  const we = workExperience as Record<string, any>;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      baseSalary: formatCurrencyInput(workExperience.baseSalary),
-      signingBonus: formatCurrencyInput(workExperience.signingBonus),
-      annualBonus: formatCurrencyInput(workExperience.annualBonus),
+      baseSalary: formatCurrencyInput(we.salaryLow),
     }),
     [workExperience],
   );
@@ -40,8 +39,6 @@ export function CompensationSection({ workExperience }: { workExperience: WorkEx
   const onSubmit: SubmitHandler<CompensationFormValues> = (values) =>
     submitUpdates({
       baseSalary: normalizeCurrencyInput(values.baseSalary),
-      signingBonus: normalizeCurrencyInput(values.signingBonus),
-      annualBonus: normalizeCurrencyInput(values.annualBonus),
     });
 
   return (
@@ -61,15 +58,11 @@ export function CompensationSection({ workExperience }: { workExperience: WorkEx
           <FormErrorAlert title="Compensation wasn’t saved" message={submissionError} />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Base salary" helpText="Enter the annual amount in dollars.">
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Base salary</Label>
+              <p className="body-4 text-muted-foreground">Enter the annual amount in dollars.</p>
               <Input inputMode="decimal" placeholder="180000" {...register('baseSalary')} />
-            </Field>
-            <Field label="Signing bonus">
-              <Input inputMode="decimal" placeholder="25000" {...register('signingBonus')} />
-            </Field>
-            <Field label="Annual bonus">
-              <Input inputMode="decimal" placeholder="30000" {...register('annualBonus')} />
-            </Field>
+            </div>
           </div>
 
           <SectionFormActions
@@ -81,20 +74,9 @@ export function CompensationSection({ workExperience }: { workExperience: WorkEx
             }}
           />
         </form>
-      ) : hasCompensation(workExperience) ? (
+      ) : hasCompensation(we as CareerPositionRecord) ? (
         <div className="grid gap-3 md:grid-cols-2">
-          <DetailRow
-            label="Base salary"
-            value={formatCurrency(workExperience.baseSalary) ?? 'Not set'}
-          />
-          <DetailRow
-            label="Signing bonus"
-            value={formatCurrency(workExperience.signingBonus) ?? 'Not set'}
-          />
-          <DetailRow
-            label="Annual bonus"
-            value={formatCurrency(workExperience.annualBonus) ?? 'Not set'}
-          />
+          <DetailRow label="Base salary" value={formatCurrency(we.salaryLow) ?? 'Not set'} />
         </div>
       ) : (
         <SectionEmptyState copy="Add compensation details if you want this role to be part of your private history." />

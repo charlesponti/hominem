@@ -1,4 +1,4 @@
-import type { JobApplicationRecord as ApplicationWithCompany } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db';
 import {
   Input,
   Select,
@@ -28,7 +28,7 @@ import type { JobPosting } from '~/lib/services/job-scraping.service';
 import { getCompanyName } from '~/lib/utils/applicationUtils';
 
 interface ApplicationResumeTabProps {
-  application: ApplicationWithCompany;
+  application: CareerApplicationRecord;
   applicationId: string;
 }
 
@@ -58,6 +58,7 @@ export function ApplicationResumeTab({
   application,
   applicationId: _applicationId,
 }: ApplicationResumeTabProps) {
+  const app = application as unknown as Record<string, unknown>;
   const fetcher = useFetcher();
 
   const [resumeFormat, setResumeFormat] = useState<
@@ -73,19 +74,19 @@ export function ApplicationResumeTab({
   const [showRegenerate, setShowRegenerate] = useState(false);
 
   const parsedJobPosting = useMemo<JobPosting | null>(() => {
-    if (!application.jobPosting) return null;
+    if (!app.jobPosting) return null;
     try {
-      return JSON.parse(application.jobPosting) as JobPosting;
+      return JSON.parse(app.jobPosting as string) as JobPosting;
     } catch {
       return null;
     }
-  }, [application.jobPosting]);
+  }, [app.jobPosting]);
 
   const hasStructuredPosting = parsedJobPosting !== null;
-  const hasRawPosting = !hasStructuredPosting && Boolean(application.jobPosting);
+  const hasRawPosting = !hasStructuredPosting && Boolean(app.jobPosting);
   const hasAnyPosting = hasStructuredPosting || hasRawPosting;
   const resumeFilename = `${toFilenamePart(getCompanyName(application.company))}-${toFilenamePart(
-    application.position,
+    application.title,
   )}-resume.md`;
 
   const isSaving = fetcher.state !== 'idle';
@@ -105,7 +106,7 @@ export function ApplicationResumeTab({
           .filter(Boolean),
         ...(hasStructuredPosting
           ? { jobPostingData: parsedJobPosting! }
-          : { jobPosting: application.jobPosting ?? undefined }),
+          : { jobPosting: app.jobPosting ?? undefined }),
       };
       const response = await fetch('/api/resume/customize', {
         method: 'POST',
@@ -158,7 +159,7 @@ export function ApplicationResumeTab({
     );
   }
 
-  const showGenerateForm = !application.resume || showRegenerate || generatedResume;
+  const showGenerateForm = !application.resumeUrl || showRegenerate || generatedResume;
 
   return (
     <div className="space-y-4">
@@ -168,7 +169,7 @@ export function ApplicationResumeTab({
           <CardContent>
             <div className="flex flex-wrap items-center gap-2">
               <span className="subheading-4 text-foreground">
-                {parsedJobPosting.job_title || application.position}
+                {parsedJobPosting.job_title || application.title}
               </span>
               {parsedJobPosting.companyName && (
                 <span className="body-3 text-muted-foreground">
@@ -194,20 +195,24 @@ export function ApplicationResumeTab({
       )}
 
       {/* Saved resume preview */}
-      {application.resume && !showRegenerate && !generatedResume && (
+      {application.resumeUrl && !showRegenerate && !generatedResume && (
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>Saved Resume</CardTitle>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleCopy(application.resume!)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleCopy(application.resumeUrl!)}
+                >
                   <Copy className="size-4 mr-1" />
                   Copy
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDownload(application.resume!)}
+                  onClick={() => handleDownload(application.resumeUrl!)}
                 >
                   <Download className="size-4 mr-1" />
                   Download
@@ -221,8 +226,8 @@ export function ApplicationResumeTab({
           </CardHeader>
           <CardContent>
             <pre className="body-4 text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
-              {application.resume.slice(0, 800)}
-              {application.resume.length > 800 ? '\n\n…' : ''}
+              {application.resumeUrl.slice(0, 800)}
+              {application.resumeUrl.length > 800 ? '\n\n…' : ''}
             </pre>
           </CardContent>
         </Card>
@@ -234,7 +239,7 @@ export function ApplicationResumeTab({
           <CardHeader>
             <CardTitle>
               <Sparkles className="size-4" />
-              {application.resume ? 'Regenerate Resume' : 'Generate Tailored Resume'}
+              {application.resumeUrl ? 'Regenerate Resume' : 'Generate Tailored Resume'}
             </CardTitle>
           </CardHeader>
           <CardContent>

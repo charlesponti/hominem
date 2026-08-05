@@ -30,22 +30,28 @@ export function createCareerTestDb() {
     return user;
   }
 
-  async function createProfile(options: { user?: CareerTestUser } = {}) {
+  async function createProfile(
+    options: { user?: CareerTestUser; slug?: string; title?: string } = {},
+  ) {
     const user = options.user ?? (await createUser({ name: 'Profile User' }));
+    const profileId = randomUUID();
 
-    await db
+    const profile = await db
       .insertInto('app.careerProfile')
       .values({
-        id: randomUUID(),
+        id: profileId,
         ownerUserid: user.id,
+        slug: options.slug,
+        title: options.title,
         firstName: user.name,
         email: user.email,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
-      .execute();
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
 
-    return { profile: { id: user.id }, user };
+    return { profile, user };
   }
 
   async function cleanup() {

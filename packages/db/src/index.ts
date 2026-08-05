@@ -105,6 +105,7 @@ export type {
   CareerOfferRecord,
   CareerPositionRecord,
   CareerProfileRecord,
+  CareerTimelineRecord,
 } from './services/career/career.repository';
 
 export { ApplicationFilesRepository } from './services/career/application-files.repository';

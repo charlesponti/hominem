@@ -1,4 +1,4 @@
-import type { UpdateWorkExperienceInput, WorkExperienceRecord } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 
 export const EMPLOYMENT_TYPE_OPTIONS = [
@@ -78,12 +78,14 @@ export interface ExitFormValues {
   exitNotes: string;
 }
 
-export function normalizeWorkExperienceUpdates(
-  updates: UpdateWorkExperienceInput,
-): UpdateWorkExperienceInput {
+export function normalizePositionUpdates(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updates: Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
   return {
     ...updates,
-    role: updates.role !== undefined ? updates.role.trim() : undefined,
+    title: updates.title !== undefined ? updates.title.trim() : undefined,
     company: updates.company !== undefined ? updates.company.trim() : undefined,
     description:
       updates.description !== undefined
@@ -93,41 +95,10 @@ export function normalizeWorkExperienceUpdates(
         : undefined,
     startDate: updates.startDate !== undefined ? normalizeDateInput(updates.startDate) : undefined,
     endDate: updates.endDate !== undefined ? normalizeDateInput(updates.endDate) : undefined,
-    baseSalary:
-      updates.baseSalary !== undefined ? normalizeCurrencyInput(updates.baseSalary) : undefined,
-    signingBonus:
-      updates.signingBonus !== undefined ? normalizeCurrencyInput(updates.signingBonus) : undefined,
-    annualBonus:
-      updates.annualBonus !== undefined ? normalizeCurrencyInput(updates.annualBonus) : undefined,
-    employmentType:
-      updates.employmentType !== undefined
-        ? normalizeOptionalText(updates.employmentType)
-        : undefined,
-    workArrangement:
-      updates.workArrangement !== undefined
-        ? normalizeOptionalText(updates.workArrangement)
-        : undefined,
-    seniorityLevel:
-      updates.seniorityLevel !== undefined
-        ? normalizeOptionalText(updates.seniorityLevel)
-        : undefined,
-    department:
-      updates.department !== undefined ? normalizeOptionalText(updates.department) : undefined,
-    teamSize:
-      updates.teamSize !== undefined ? normalizeOptionalNumber(updates.teamSize) : undefined,
-    directReports:
-      updates.directReports !== undefined
-        ? normalizeOptionalNumber(updates.directReports)
-        : undefined,
-    reportsTo:
-      updates.reportsTo !== undefined ? normalizeOptionalText(updates.reportsTo) : undefined,
-    reasonForLeaving:
-      updates.reasonForLeaving !== undefined
-        ? normalizeOptionalText(updates.reasonForLeaving)
-        : undefined,
-    exitNotes:
-      updates.exitNotes !== undefined ? normalizeOptionalText(updates.exitNotes) : undefined,
-    metadata: updates.metadata !== undefined ? normalizeMetadata(updates.metadata) : undefined,
+    salaryLow:
+      updates.salaryLow !== undefined ? normalizeCurrencyInput(updates.salaryLow) : undefined,
+    salaryHigh:
+      updates.salaryHigh !== undefined ? normalizeCurrencyInput(updates.salaryHigh) : undefined,
   };
 }
 
@@ -156,7 +127,8 @@ export function normalizeMetadata(metadata: Record<string, unknown> | null) {
   return normalized;
 }
 
-export function hasDefinedUpdates(updates: UpdateWorkExperienceInput) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function hasDefinedUpdates(updates: Record<string, any>) {
   return Object.values(updates).some((value) => value !== undefined);
 }
 
@@ -287,24 +259,22 @@ export function formatCurrencyInput(cents: number | null | undefined) {
   return `${cents / 100}`;
 }
 
-export function hasCompensation(workExperience: WorkExperienceRecord) {
-  return [workExperience.baseSalary, workExperience.signingBonus, workExperience.annualBonus].some(
+export function hasCompensation(workExperience: CareerPositionRecord) {
+  return [workExperience.salaryLow, workExperience.salaryHigh].some(
     (value) => value !== null && value !== undefined,
   );
 }
 
-export function hasTeamDetails(workExperience: WorkExperienceRecord) {
-  return [
-    workExperience.seniorityLevel,
-    workExperience.department,
-    workExperience.teamSize,
-    workExperience.directReports,
-    workExperience.reportsTo,
-  ].some((value) => value !== null && value !== undefined && value !== '');
+export function hasTeamDetails(workExperience: CareerPositionRecord) {
+  return [workExperience.contactName, workExperience.contactPhone].some(
+    (value) => value !== null && value !== undefined && value !== '',
+  );
 }
 
-export function hasExitDetails(workExperience: WorkExperienceRecord) {
-  return [workExperience.reasonForLeaving, workExperience.exitNotes].some(
-    (value) => value !== null && value !== undefined && value !== '',
+export function hasExitDetails(workExperience: CareerPositionRecord) {
+  return (
+    workExperience.projectStatus !== null &&
+    workExperience.projectStatus !== undefined &&
+    workExperience.projectStatus !== ''
   );
 }

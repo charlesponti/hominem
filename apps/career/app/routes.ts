@@ -6,6 +6,12 @@ export default [
   route('/login', 'routes/login.tsx'),
   route('health', 'routes/health.ts'),
   route('api/portfolio/:owner_userid', 'routes/api.portfolio.$userId.ts'),
+  route('api/resume/convert', 'routes/api.resume.convert.ts'),
+  route('api/resume/customize', 'routes/api.resume.customize.ts'),
+  route('api/skills/derive', 'routes/api.skills.derive.ts'),
+  route('api/skills/search', 'routes/api.skills.search.ts'),
+  route('api/validate-slug', 'routes/api.validate-slug.ts'),
+  route('api/job/scrape', 'routes/api.job.scrape.ts'),
   route('p/:slug', 'routes/p.$slug.tsx'),
   layout('routes/_authenticated.tsx', [
     layout('routes/_authenticated-pages.tsx', [

@@ -1,8 +1,9 @@
-import { db, PortfolioRepository, SocialLinksRepository } from '@hominem/db';
+import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
 import { imageStorageService, isStorageServiceError, validateFile } from '@hominem/storage';
 
 import { logger } from '~/lib/logger';
 import { parseFormData } from '~/lib/route-utils';
+import { normalizePortfolioSlug } from '~/types/resume';
 
 import { deleteUserDocument } from './documents.server';
 import type {
@@ -23,7 +24,7 @@ type AccountActionHandler = (args: {
 }) => Promise<AccountActionResult<unknown>>;
 
 const accountActionHandlers: Record<string, AccountActionHandler> = {
-  delete: handleDeletePortfolioAction,
+  delete: handleDeleteProfileAction,
   'upload-profile-image': handleUploadProfileImageAction,
   'update-slug': handleUpdateSlugAction,
   'update-basics': handleUpdateBasicsAction,
@@ -74,18 +75,18 @@ export async function handleAccountAction({
   return handler({ formData, user });
 }
 
-async function handleDeletePortfolioAction({
+async function handleDeleteProfileAction({
   user,
 }: {
   formData: FormData;
   user: AccountPageUser;
 }): Promise<AccountActionResult> {
   try {
-    await PortfolioRepository.deletePortfolioByUserId(db, user.id);
-    return { success: true, message: 'Portfolio deleted successfully' };
+    await CareerRepository.deleteProfile(db, user.id);
+    return { success: true, message: 'Profile deleted successfully' };
   } catch (error) {
-    logger.error('Failed to delete portfolio', error, { owner_userid: user.id });
-    throw new Response('Failed to delete portfolio', { status: 500 });
+    logger.error('Failed to delete profile', error, { owner_userid: user.id });
+    throw new Response('Failed to delete profile', { status: 500 });
   }
 }
 
@@ -121,11 +122,11 @@ async function handleUploadProfileImageAction({
     }
 
     try {
-      await PortfolioRepository.updatePortfolioProfileImage(db, user.id, uploadResult.url);
+      await CareerRepository.updateProfileImage(db, user.id, uploadResult.url);
     } catch (updateError) {
       logger.error('Database update error', updateError, { owner_userid: user.id });
       await imageStorageService.deleteFile(uploadResult.id, user.id);
-      throw new Response('Failed to update portfolio', { status: 500 });
+      throw new Response('Failed to update profile', { status: 500 });
     }
 
     return {
@@ -152,15 +153,10 @@ async function handleUpdateSlugAction({
 }): Promise<AccountActionResult<{ slug: string }>> {
   try {
     const newSlug = formData.get('slug');
-    const portfolioId = formData.get('portfolioId');
+    const profileId = formData.get('profileId');
 
-    if (
-      typeof newSlug !== 'string' ||
-      typeof portfolioId !== 'string' ||
-      !newSlug ||
-      !portfolioId
-    ) {
-      throw new Response('Slug and portfolio ID are required', { status: 400 });
+    if (typeof newSlug !== 'string' || typeof profileId !== 'string' || !newSlug || !profileId) {
+      throw new Response('Slug and profile ID are required', { status: 400 });
     }
 
     if (!/^[a-z0-9-]+$/.test(newSlug)) {
@@ -177,17 +173,17 @@ async function handleUpdateSlugAction({
       throw new Response('Slug must be less than 50 characters long', { status: 400 });
     }
 
-    const isAvailable = await PortfolioRepository.isSlugAvailable(db, newSlug, portfolioId);
+    const isAvailable = await CareerRepository.isSlugAvailable(db, newSlug, profileId);
 
     if (!isAvailable) {
       throw new Response('Slug is already taken', { status: 400 });
     }
 
-    await PortfolioRepository.updatePortfolioSlug(db, user.id, portfolioId, newSlug);
+    await CareerRepository.updateSlug(db, user.id, newSlug);
 
     return {
       success: true,
-      message: 'Portfolio URL updated successfully',
+      message: 'Profile URL updated successfully',
       data: { slug: newSlug },
     };
   } catch (error) {
@@ -195,8 +191,8 @@ async function handleUpdateSlugAction({
       throw error;
     }
 
-    logger.error('Failed to update portfolio URL', error, { owner_userid: user.id });
-    throw new Response('Failed to update portfolio URL', { status: 500 });
+    logger.error('Failed to update profile URL', error, { owner_userid: user.id });
+    throw new Response('Failed to update profile URL', { status: 500 });
   }
 }
 
@@ -237,19 +233,39 @@ async function handleUpdateBasicsAction({
   formData: FormData;
   user: AccountPageUser;
 }): Promise<AccountActionResult> {
-  const portfolioDataResult = parseFormData<BasicInfoFormValues>(formData, 'portfolioData');
+  const profileDataResult = parseFormData<BasicInfoFormValues>(formData, 'portfolioData');
 
-  if ('success' in portfolioDataResult && !portfolioDataResult.success) {
+  if ('success' in profileDataResult && !profileDataResult.success) {
     return { success: false, error: 'Your changes couldn’t be read. Refresh and try again.' };
   }
 
-  const portfolioData = portfolioDataResult as BasicInfoFormValues;
+  const profileData = profileDataResult as BasicInfoFormValues;
 
   try {
-    await PortfolioRepository.savePortfolioBasics(db, user.id, portfolioData);
-    return { success: true, message: 'Portfolio basics updated successfully' };
+    const name = profileData.name || '';
+    const [firstName, ...rest] = name.split(' ');
+    const lastName = rest.join(' ') || null;
+
+    await CareerRepository.saveProfile(db, user.id, {
+      firstName,
+      lastName,
+      headline: profileData.jobTitle,
+      summary: profileData.bio,
+      location: profileData.currentLocation,
+      email: profileData.email,
+      phone: profileData.phone ?? null,
+      initials: profileData.initials ?? null,
+      tagline: profileData.tagline,
+      title: profileData.title ?? null,
+      availabilityStatus: profileData.availabilityStatus ?? false,
+      openToRemote: profileData.openToRemote ?? false,
+      isPublic: profileData.isPublic ?? true,
+      isActive: profileData.isActive ?? true,
+    });
+
+    return { success: true, message: 'Profile basics updated successfully' };
   } catch (error) {
-    logger.error('Failed to update portfolio basics', error, { owner_userid: user.id });
+    logger.error('Failed to update profile basics', error, { owner_userid: user.id });
     return { success: false, error: 'We couldn’t save your basic info. Try again.' };
   }
 }

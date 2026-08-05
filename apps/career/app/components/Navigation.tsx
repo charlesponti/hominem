@@ -2,7 +2,7 @@ import { Navigation as UiNavigation } from '@ponti-studios/ui/navigation';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Link, useLocation } from 'react-router';
 
-import { useHasProfile, useUser } from '../hooks/useAuth';
+import { useHasPortfolio, useUser } from '../hooks/useAuth';
 
 interface NavLink {
   href: string;
@@ -30,12 +30,12 @@ function isActive(pathname: string, href: string) {
 
 export default function Navigation() {
   const user = useUser();
-  const hasProfile = useHasProfile();
+  const hasPortfolio = useHasPortfolio();
   const location = useLocation();
   const isAuthenticated = Boolean(user);
 
   const links: NavLink[] = isAuthenticated
-    ? hasProfile
+    ? hasPortfolio
       ? [...PORTFOLIO_LINKS, ...AUTHENTICATED_LINKS]
       : []
     : PUBLIC_LINKS;

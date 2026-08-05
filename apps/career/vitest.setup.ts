@@ -15,10 +15,6 @@ beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
 });
 
-beforeAll(async () => {
-  // No extra test setup needed for portfolios
-});
-
 afterEach(() => {
   server.resetHandlers();
 });
