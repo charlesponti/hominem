@@ -9,5 +9,5 @@ import { importWebSocketRoutes } from './finance.import.websocket';
 export const importRoutes: Hono<AppContext> = new Hono<AppContext>()
   .use('*', authMiddleware)
   .route('/', importWebSocketRoutes)
-  .route('/jobs', importJobRoutes)
-  .route('/', importPreflightRoutes);
+  .route('/', importPreflightRoutes)
+  .route('/jobs', importJobRoutes);

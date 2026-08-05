@@ -2,7 +2,6 @@ import crypto from 'node:crypto';
 
 import { runInTransaction, type JsonObject, type TransactionHandle } from '@hominem/db';
 
-import { accountTempKey } from './resolve-copilot-accounts';
 import { COPILOT_PROVIDER, type ImportPlan, type PlannedTransaction } from './types';
 
 function tagSlug(value: string): string {
@@ -142,8 +141,14 @@ export async function applyCopilotImportBatch(
 ): Promise<ApplyImportBatchResult> {
   return runInTransaction(async (trx) => {
     const accountIds: Record<string, string> = {};
+    const accountIdsByTempKey: Record<string, string> = {};
+    const tempKeyForImportKey = (importKey: string) =>
+      `new:${crypto.createHash('sha256').update(importKey).digest('hex').slice(0, 24)}`;
+
     for (const draft of input.plan.accountsToCreate) {
-      accountIds[draft.importKey] = await findOrCreateAccount(trx, input.userId, draft);
+      const accountId = await findOrCreateAccount(trx, input.userId, draft);
+      accountIds[draft.importKey] = accountId;
+      accountIdsByTempKey[tempKeyForImportKey(draft.importKey)] = accountId;
     }
 
     const explicitAccountIds = input.transactions.flatMap((transaction) =>
@@ -154,13 +159,7 @@ export async function applyCopilotImportBatch(
     const rows = input.transactions.map((transaction) => {
       const accountId =
         transaction.accountId ??
-        (transaction.accountTempKey
-          ? accountIds[
-              input.plan.accountsToCreate.find(
-                (draft) => accountTempKey(draft.importKey) === transaction.accountTempKey,
-              )?.importKey ?? ''
-            ]
-          : undefined);
+        (transaction.accountTempKey ? accountIdsByTempKey[transaction.accountTempKey] : undefined);
       if (!accountId) throw new Error(`No account resolved for row ${transaction.rowId}`);
 
       return {
