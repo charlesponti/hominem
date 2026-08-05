@@ -1,10 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import {
-  resolveAppRedirectUrl,
-  resolveOAuthResumeUrl,
-} from '../test-helpers/redirect-policy';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -14,6 +10,37 @@ import { env } from '../env';
 const emailSchema = z.string().email();
 const otpSchema = z.string().length(6);
 const logoPath = join(process.cwd(), 'public', 'logo.hominem.500x500.webp');
+
+function resolveOAuthResumeUrl(search: string, apiBaseUrl: string): string | null {
+  const params = new URLSearchParams(search);
+  const responseType = params.get('response_type');
+  const clientId = params.get('client_id');
+  const redirectUri = params.get('redirect_uri');
+
+  if (responseType !== 'code' || !clientId || !redirectUri) {
+    return null;
+  }
+
+  const url = new URL('/api/auth/mcp/authorize', apiBaseUrl);
+  url.search = search;
+  return url.toString();
+}
+
+function resolveAppRedirectUrl(next: string | null | undefined, allowedOrigins: readonly string[]) {
+  if (!next) return null;
+
+  let url: URL;
+  try {
+    url = new URL(next);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+  if (!allowedOrigins.includes(url.origin)) return null;
+
+  return url.toString();
+}
 
 // Two callers land on this one hosted login page:
 //  - 'oauth': Better Auth's MCP plugin resuming an authorize request
