@@ -1,6 +1,5 @@
-import type { WorkExperienceRecord } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import {
-  Field,
   Input,
   Select,
   SelectContent,
@@ -8,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -26,15 +25,16 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function TeamSection({ workExperience }: { workExperience: WorkExperienceRecord }) {
+export function TeamSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+  const we = workExperience as Record<string, any>;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      seniorityLevel: workExperience.seniorityLevel ?? '',
-      department: workExperience.department ?? '',
-      teamSize: workExperience.teamSize?.toString() ?? '',
-      directReports: workExperience.directReports?.toString() ?? '',
-      reportsTo: workExperience.reportsTo ?? '',
+      seniorityLevel: we.seniorityLevel ?? '',
+      department: we.department ?? '',
+      teamSize: we.teamSize?.toString() ?? '',
+      directReports: we.directReports?.toString() ?? '',
+      reportsTo: we.reportsTo ?? '',
     }),
     [workExperience],
   );
@@ -74,7 +74,8 @@ export function TeamSection({ workExperience }: { workExperience: WorkExperience
           <FormErrorAlert title="Team details weren’t saved" message={submissionError} />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Seniority level">
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Seniority level</Label>
               <Controller
                 control={control}
                 name="seniorityLevel"
@@ -97,21 +98,25 @@ export function TeamSection({ workExperience }: { workExperience: WorkExperience
                   </Select>
                 )}
               />
-            </Field>
-            <Field label="Department">
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Department</Label>
               <Input placeholder="Engineering" {...register('department')} />
-            </Field>
-            <Field label="Team size">
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Team size</Label>
               <Input inputMode="numeric" placeholder="12" {...register('teamSize')} />
-            </Field>
-            <Field label="Direct reports">
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Direct reports</Label>
               <Input inputMode="numeric" placeholder="4" {...register('directReports')} />
-            </Field>
+            </div>
           </div>
 
-          <Field label="Reports to">
+          <div className="space-y-1.5">
+            <Label className="subheading-4 text-muted-foreground">Reports to</Label>
             <Input placeholder="Director of Engineering" {...register('reportsTo')} />
-          </Field>
+          </div>
 
           <SectionFormActions
             isSubmitting={isSubmitting}
@@ -122,24 +127,19 @@ export function TeamSection({ workExperience }: { workExperience: WorkExperience
             }}
           />
         </form>
-      ) : hasTeamDetails(workExperience) ? (
+      ) : hasTeamDetails(we as CareerPositionRecord) ? (
         <div className="grid gap-3 md:grid-cols-2">
           <DetailRow
             label="Seniority"
-            value={formatOptionalLabel(workExperience.seniorityLevel) ?? 'Not set'}
+            value={formatOptionalLabel(we.seniorityLevel) ?? 'Not set'}
           />
-          <DetailRow label="Department" value={workExperience.department ?? 'Not set'} />
-          <DetailRow
-            label="Team size"
-            value={workExperience.teamSize != null ? `${workExperience.teamSize}` : 'Not set'}
-          />
+          <DetailRow label="Department" value={we.department ?? 'Not set'} />
+          <DetailRow label="Team size" value={we.teamSize != null ? `${we.teamSize}` : 'Not set'} />
           <DetailRow
             label="Direct reports"
-            value={
-              workExperience.directReports != null ? `${workExperience.directReports}` : 'Not set'
-            }
+            value={we.directReports != null ? `${we.directReports}` : 'Not set'}
           />
-          <DetailRow label="Reports to" value={workExperience.reportsTo ?? 'Not set'} />
+          <DetailRow label="Reports to" value={we.reportsTo ?? 'Not set'} />
         </div>
       ) : (
         <SectionEmptyState copy="Add team context if this role included leadership, scope, or reporting details." />

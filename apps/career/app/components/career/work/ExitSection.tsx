@@ -1,14 +1,12 @@
-import type { WorkExperienceRecord } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import {
-  Field,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
 } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -25,12 +23,12 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function ExitSection({ workExperience }: { workExperience: WorkExperienceRecord }) {
+export function ExitSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+  const we = workExperience as Record<string, any>;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      reasonForLeaving: workExperience.reasonForLeaving ?? '',
-      exitNotes: workExperience.exitNotes ?? '',
+      reasonForLeaving: we.projectStatus ?? '',
     }),
     [workExperience],
   );
@@ -38,7 +36,7 @@ export function ExitSection({ workExperience }: { workExperience: WorkExperience
     useWorkExperienceSection({
       errorMessage: 'We couldn’t save the exit details. Try again.',
     });
-  const { control, register, handleSubmit, reset } = useForm<ExitFormValues>({ defaultValues });
+  const { control, handleSubmit, reset } = useForm<ExitFormValues>({ defaultValues });
 
   useEffect(() => {
     reset(defaultValues);
@@ -47,7 +45,6 @@ export function ExitSection({ workExperience }: { workExperience: WorkExperience
   const onSubmit: SubmitHandler<ExitFormValues> = (values) =>
     submitUpdates({
       reasonForLeaving: normalizeOptionalText(values.reasonForLeaving),
-      exitNotes: normalizeOptionalText(values.exitNotes),
     });
 
   return (
@@ -66,7 +63,8 @@ export function ExitSection({ workExperience }: { workExperience: WorkExperience
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormErrorAlert title="Exit details weren’t saved" message={submissionError} />
 
-          <Field label="Reason for leaving">
+          <div className="space-y-1.5">
+            <Label className="subheading-4 text-muted-foreground">Reason for leaving</Label>
             <Controller
               control={control}
               name="reasonForLeaving"
@@ -89,15 +87,7 @@ export function ExitSection({ workExperience }: { workExperience: WorkExperience
                 </Select>
               )}
             />
-          </Field>
-
-          <Field label="Exit notes">
-            <Textarea
-              rows={4}
-              placeholder="Any nuance you want to remember about the transition."
-              {...register('exitNotes')}
-            />
-          </Field>
+          </div>
 
           <SectionFormActions
             isSubmitting={isSubmitting}
@@ -108,20 +98,12 @@ export function ExitSection({ workExperience }: { workExperience: WorkExperience
             }}
           />
         </form>
-      ) : hasExitDetails(workExperience) ? (
+      ) : hasExitDetails(we as CareerPositionRecord) ? (
         <div className="space-y-4">
           <DetailRow
             label="Reason for leaving"
-            value={formatOptionalLabel(workExperience.reasonForLeaving) ?? 'Not set'}
+            value={formatOptionalLabel(we.projectStatus) ?? 'Not set'}
           />
-          {workExperience.exitNotes ? (
-            <div className="space-y-2">
-              <p className="ui-eyebrow">Notes</p>
-              <p className="body-2 max-w-3xl whitespace-pre-wrap text-foreground/90">
-                {workExperience.exitNotes}
-              </p>
-            </div>
-          ) : null}
         </div>
       ) : (
         <SectionEmptyState copy="Leave this empty unless the reason for ending the role is important to keep." />

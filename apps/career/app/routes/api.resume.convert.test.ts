@@ -178,11 +178,11 @@ async function responseBody(response: Response) {
 }
 
 async function createExistingPortfolio() {
-  const { user, portfolio } = await testDb.createPortfolio({
+  const { user, profile } = await testDb.createProfile({
     slug: 'existing',
     title: 'Existing Portfolio',
   });
-  return { user, portfolio };
+  return { user, profile };
 }
 
 describe('resume convert action', () => {
@@ -217,8 +217,8 @@ describe('resume convert action', () => {
     mocks.documentStorageService.deleteFile.mockResolvedValue(true);
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
     mocks.saveResumeToDatabase.mockResolvedValue({
-      portfolioId: 'portfolio-id',
-      portfolioSlug: 'charles-ponti',
+      profileId: 'portfolio-id',
+      profileSlug: 'charles-ponti',
     });
   });
 
@@ -301,7 +301,7 @@ describe('resume convert action', () => {
     expect(body.stage).toBe('complete');
     expect(mocks.extractPdfText).toHaveBeenCalledTimes(1);
     expect(mocks.saveResumeToDatabase).toHaveBeenCalledWith(existing.user.id, expect.any(Object), {
-      replacePortfolioId: existing.portfolio.id,
+      replaceProfileId: existing.profile.id,
     });
   });
 

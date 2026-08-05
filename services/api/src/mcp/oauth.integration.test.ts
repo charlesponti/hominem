@@ -228,8 +228,8 @@ describe('MCP OAuth integration', () => {
     await expect(toolsResponse.json()).resolves.toMatchObject({
       result: {
         tools: expect.arrayContaining([
-          expect.objectContaining({ name: 'get_career_portfolio' }),
-          expect.objectContaining({ name: 'list_career_experiences' }),
+          expect.objectContaining({ name: 'career_profile' }),
+          expect.objectContaining({ name: 'career_positions' }),
         ]),
       },
     });
@@ -252,13 +252,13 @@ describe('MCP OAuth integration', () => {
       jsonrpc: '2.0',
       id: 3,
       method: 'tools/call',
-      params: { name: 'list_career_experiences', arguments: { limit: 1 } },
+      params: { name: 'career_positions', arguments: { limit: 1 } },
     });
     expect(refreshedToolResponse.status).toBe(200);
     const refreshedTool = await readJson<{
-      result?: { isError?: boolean; structuredContent?: { experiences?: unknown[] } };
+      result?: { isError?: boolean; structuredContent?: { positions?: unknown[] } };
     }>(refreshedToolResponse);
     expect(refreshedTool.result?.isError).not.toBe(true);
-    expect(refreshedTool.result?.structuredContent).toHaveProperty('experiences');
+    expect(refreshedTool.result?.structuredContent).toHaveProperty('positions');
   }, 30000);
 });

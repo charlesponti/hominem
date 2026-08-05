@@ -1,4 +1,4 @@
-import type { UserSocialLinksRecord } from '@hominem/db';
+import type { CareerSocialLinksRecord } from '@hominem/db';
 import { Input } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
 import { Github, Globe, Linkedin, SaveIcon, Twitter } from 'lucide-react';
@@ -12,7 +12,7 @@ export function SocialLinksSection({
   socialLinks,
   onSave,
 }: {
-  socialLinks: UserSocialLinksRecord | null;
+  socialLinks: CareerSocialLinksRecord | null;
   onSave: (values: SocialLinksFormValues) => Promise<AccountActionResult<unknown>>;
 }) {
   const [submissionError, setSubmissionError] = useState<string | null>(null);

@@ -1,20 +1,19 @@
-import { db, PortfolioRepository } from '@hominem/db';
+import { CareerRepository, db } from '@hominem/db';
 import { data } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
 
 import { logger } from '../lib/logger';
 import { createErrorResponse, createSuccessResponse } from '../lib/route-utils';
-import { Route } from './+types/api.validate-slug';
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const slug = url.searchParams.get('slug');
-  const currentPortfolioId = url.searchParams.get('currentId');
+  const currentProfileId = url.searchParams.get('currentId');
 
   if (!slug) {
     return data(createErrorResponse('Slug parameter is required'), { status: 400 });
   }
 
-  // Basic slug validation
   if (!/^[a-z0-9-]+$/.test(slug)) {
     return data(
       createErrorResponse('Slug can only contain lowercase letters, numbers, and hyphens'),
@@ -34,12 +33,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     });
   }
 
-  // Check if slug already exists (excluding current portfolio if editing)
   try {
-    const isAvailable = await PortfolioRepository.isSlugAvailable(
+    const isAvailable = await CareerRepository.isSlugAvailable(
       db,
       slug,
-      currentPortfolioId || undefined,
+      currentProfileId || undefined,
     );
 
     return createSuccessResponse({
@@ -48,7 +46,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       message: isAvailable ? 'Slug is available' : 'Slug is already taken',
     });
   } catch (error) {
-    logger.error('Error checking slug availability', error, { slug, currentPortfolioId });
+    logger.error('Error checking slug availability', error, { slug, currentProfileId });
     return data(createErrorResponse('Failed to check slug availability'), { status: 500 });
   }
 }

@@ -1,140 +1,85 @@
-import { db } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db';
+import { CareerRepository, db } from '@hominem/db';
 
 export type JobApplicationCard = {
   id: string;
-  position: string;
-  status: string;
+  company: string;
+  title: string;
+  location: string | null;
   source: string | null;
-  updatedat: string;
-  applicationDate: string | null;
-  company: { id: string; name: string } | null;
+  appliedAt: string | null;
+  currentStage: string | null;
+  status: string | null;
+  jobPostingUrl: string | null;
+  salaryExpectation: number | null;
+  notes: string | null;
+  stageCount: number;
+  hasOffer: boolean;
 };
 
 export type JobApplicationFilter = {
   status?: string;
-  statuses?: string[];
-  source?: string;
-  search?: string;
 };
 
 export type PaginationOptions = {
   limit?: number;
-  offset?: number;
-  orderBy?: 'applicationDate' | 'companyName' | 'position';
-  orderDirection?: 'asc' | 'desc';
 };
-
-export async function getApplicationCards(ownerUserid: string): Promise<JobApplicationCard[]> {
-  const results = await db
-    .selectFrom('app.jobApplications as ja')
-    .leftJoin('app.companies as c', 'c.id', 'ja.companyId')
-    .select([
-      'ja.id',
-      'ja.position',
-      'ja.status',
-      'ja.source',
-      'ja.updatedat',
-      'ja.applicationDate',
-      'c.id as company_id',
-      'c.name as company_name',
-    ])
-    .where('ja.ownerUserid', '=', ownerUserid)
-    .orderBy('ja.applicationDate', 'desc')
-    .execute();
-
-  type Row = {
-    id: string;
-    position: string;
-    status: string;
-    source: string | null;
-    updatedat: string;
-    applicationDate: string | null;
-    companyId: string | null;
-    companyName: string | null;
-  };
-  return (results as unknown as Row[]).map((row) => ({
-    id: row.id,
-    position: row.position,
-    status: row.status,
-    source: row.source,
-    updatedat: String(row.updatedat),
-    applicationDate: row.applicationDate ? String(row.applicationDate) : null,
-    company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
-  }));
-}
 
 export function filterJobApplications(
   applications: JobApplicationCard[],
   filter?: JobApplicationFilter,
 ): JobApplicationCard[] {
-  if (!filter) return applications;
-
-  let result = applications;
-
-  if (filter.status) {
-    result = result.filter((application) => application.status === filter.status);
-  }
-
-  if (filter.statuses?.length) {
-    result = result.filter((application) => filter.statuses!.includes(application.status));
-  }
-
-  if (filter.source) {
-    result = result.filter((application) => application.source === filter.source);
-  }
-
-  if (filter.search) {
-    const searchTerm = filter.search.toLowerCase();
-    result = result.filter((application) => {
-      const companyName = application.company?.name.toLowerCase() || '';
-      return (
-        application.position.toLowerCase().includes(searchTerm) || companyName.includes(searchTerm)
-      );
-    });
-  }
-
-  return result;
+  if (!filter?.status) return applications;
+  return applications.filter((a) => a.status === filter.status);
 }
 
 export function sortAndPaginateJobApplications(
   applications: JobApplicationCard[],
-  pagination?: PaginationOptions,
+  options?: PaginationOptions,
 ): JobApplicationCard[] {
-  const orderBy = pagination?.orderBy || 'applicationDate';
-  const direction = pagination?.orderDirection === 'asc' ? 1 : -1;
-
-  const sorted = [...applications].sort((left, right) => {
-    const leftValue = (() => {
-      switch (orderBy) {
-        case 'companyName':
-          return left.company?.name.toLowerCase() || '';
-        case 'position':
-          return left.position.toLowerCase();
-        case 'applicationDate':
-        default:
-          return left.applicationDate ? new Date(left.applicationDate).getTime() : 0;
-      }
-    })();
-
-    const rightValue = (() => {
-      switch (orderBy) {
-        case 'companyName':
-          return right.company?.name.toLowerCase() || '';
-        case 'position':
-          return right.position.toLowerCase();
-        case 'applicationDate':
-        default:
-          return right.applicationDate ? new Date(right.applicationDate).getTime() : 0;
-      }
-    })();
-
-    if (leftValue < rightValue) return -1 * direction;
-    if (leftValue > rightValue) return 1 * direction;
-    return 0;
+  const sorted = [...applications].sort((a, b) => {
+    const dateA = a.appliedAt ?? '';
+    const dateB = b.appliedAt ?? '';
+    return dateB.localeCompare(dateA);
   });
 
-  const offset = pagination?.offset || 0;
-  const limit = pagination?.limit || 1000;
+  if (options?.limit && options.limit > 0) {
+    return sorted.slice(0, options.limit);
+  }
+  return sorted;
+}
 
-  return sorted.slice(offset, offset + limit);
+function toApplicationCard(
+  app: CareerApplicationRecord,
+  stageCount: number,
+  hasOffer: boolean,
+): JobApplicationCard {
+  return {
+    id: app.id,
+    company: app.company,
+    title: app.title,
+    location: app.location ?? null,
+    source: app.source ?? null,
+    appliedAt: app.appliedAt ?? null,
+    currentStage: app.currentStage ?? null,
+    status: app.status ?? null,
+    jobPostingUrl: app.jobPostingUrl ?? null,
+    salaryExpectation: app.salaryExpectation ?? null,
+    notes: app.notes ?? null,
+    stageCount,
+    hasOffer,
+  };
+}
+
+export async function getApplicationCards(ownerUserId: string): Promise<JobApplicationCard[]> {
+  const applications = await CareerRepository.listApplications(db, ownerUserId);
+
+  const cards = await Promise.all(
+    applications.map(async (app) => {
+      const detail = await CareerRepository.getApplicationWithRelations(db, ownerUserId, app.id);
+      return toApplicationCard(app, detail?.stages.length ?? 0, detail?.offer !== null);
+    }),
+  );
+
+  return cards;
 }

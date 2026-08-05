@@ -1,4 +1,4 @@
-import type { WorkExperienceRecord } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { useCareerEditorSubmission } from '~/hooks/useCareerEditorSubmission';
 import { submitDelete } from '~/hooks/useWorkExperienceSection';
 import type { WorkExperienceMetadata } from '~/lib/career/queries/career-progression';
-import { formatDateRange, formatOptionalLabel } from '~/lib/career/work-experience-form';
+import { formatDateRange } from '~/lib/career/work-experience-form';
 import { jsonObject } from '~/lib/db-json';
 
 import { AchievementsSection } from './AchievementsSection';
@@ -34,13 +34,14 @@ export function WorkExperienceDetail({
   workExperience,
   linkedProjectCount,
 }: {
-  workExperience: WorkExperienceRecord;
+  workExperience: CareerPositionRecord;
   linkedProjectCount: number;
 }) {
   const navigate = useNavigate();
+  const we = workExperience as unknown as Record<string, unknown>;
   const metadata = useMemo(
-    () => jsonObject<WorkExperienceMetadata>(workExperience.metadata) ?? {},
-    [workExperience.metadata],
+    () => jsonObject<WorkExperienceMetadata>(we.metadata as string | null) ?? {},
+    [we.metadata],
   );
 
   const deleteFetcher = useFetcher();
@@ -73,7 +74,7 @@ export function WorkExperienceDetail({
           <div className="space-y-2">
             <div className="space-y-1">
               <h1 className="heading-2 text-foreground">
-                {workExperience.role || 'Untitled role'}
+                {workExperience.title || 'Untitled role'}
               </h1>
               <p className="body-2 text-muted-foreground">
                 {workExperience.company || 'Add the company name in Overview'}
@@ -82,18 +83,6 @@ export function WorkExperienceDetail({
 
             <div className="body-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
               <span>{formatDateRange(workExperience.startDate, workExperience.endDate)}</span>
-              {workExperience.employmentType ? (
-                <>
-                  <span className="text-border">·</span>
-                  <span>{formatOptionalLabel(workExperience.employmentType)}</span>
-                </>
-              ) : null}
-              {workExperience.workArrangement ? (
-                <>
-                  <span className="text-border">·</span>
-                  <span>{formatOptionalLabel(workExperience.workArrangement)}</span>
-                </>
-              ) : null}
             </div>
           </div>
 

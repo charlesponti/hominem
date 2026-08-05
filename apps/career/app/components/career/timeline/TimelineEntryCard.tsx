@@ -1,16 +1,21 @@
-import { replaceUnderscores } from '@hominem/utils/text';
 import { Badge, Card, CardContent } from '@ponti-studios/ui/primitives';
 
 import type { TimelineEntry } from '~/lib/career/queries/career-timeline';
 
-const STATUS_PILL_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  OFFER: 'default',
-  ACCEPTED: 'default',
-  REJECTED: 'destructive',
-  WITHDRAWN: 'outline',
+const TYPE_BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
+  position: 'default',
+  education: 'secondary',
+  application: 'outline',
 };
 
-function formatEntryDate(date: string): string {
+const TYPE_LABEL: Record<string, string> = {
+  position: 'Position',
+  education: 'Education',
+  application: 'Application',
+};
+
+function formatEntryDate(date: string | null): string {
+  if (!date) return 'Unknown date';
   return new Date(date).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -27,20 +32,15 @@ export function TimelineEntryCard({ entry }: { entry: TimelineEntry }) {
           <div className="flex items-baseline justify-between gap-3">
             <p className="body-2 font-medium text-foreground">{entry.title}</p>
             <span className="footnote shrink-0 whitespace-nowrap text-muted-foreground">
-              {formatEntryDate(entry.date)}
+              {formatEntryDate(entry.startDate)}
             </span>
           </div>
           {entry.subtitle && (
             <p className="body-3 text-muted-foreground leading-relaxed">{entry.subtitle}</p>
           )}
-          {entry.statusPill && (
-            <Badge
-              variant={STATUS_PILL_VARIANT[entry.statusPill] ?? 'secondary'}
-              className="mt-1 w-fit"
-            >
-              {replaceUnderscores(entry.statusPill)}
-            </Badge>
-          )}
+          <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'secondary'} className="mt-1 w-fit">
+            {TYPE_LABEL[entry.type] ?? entry.type}
+          </Badge>
         </CardContent>
       </Card>
     </div>

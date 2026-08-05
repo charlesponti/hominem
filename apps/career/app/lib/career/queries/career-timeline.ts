@@ -1,10 +1,10 @@
-import type { PortfolioTimeline } from '@hominem/db';
-import { db, PortfolioRepository } from '@hominem/db';
+import type { CareerTimelineRecord } from '@hominem/db';
+import { CareerRepository, db } from '@hominem/db';
 
-export type { TimelineEntryRecord as TimelineEntry } from '@hominem/db';
+export type { CareerTimelineRecord as TimelineEntry };
 
-export type CareerStoryTimeline = PortfolioTimeline;
+export type CareerStoryTimeline = CareerTimelineRecord[];
 
 export async function getCareerStoryTimeline(ownerUserid: string): Promise<CareerStoryTimeline> {
-  return PortfolioRepository.getTimeline(db, ownerUserid);
+  return CareerRepository.getTimeline(db, ownerUserid);
 }

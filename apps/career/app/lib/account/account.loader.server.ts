@@ -1,15 +1,15 @@
-import { db, SocialLinksRepository } from '@hominem/db';
-import type { PortfolioRecord } from '@hominem/db';
+import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
+import type { CareerProfileRecord } from '@hominem/db';
 
 import { listUserDocuments } from './documents.server';
 import type { AccountLoaderData, AccountPageUser } from './types';
 
 export async function loadAccountPageData({
   user,
-  currentPortfolio,
+  currentProfile,
 }: {
   user: AccountPageUser;
-  currentPortfolio: PortfolioRecord;
+  currentProfile: CareerProfileRecord;
 }): Promise<AccountLoaderData> {
   const [socialLinks, documents] = await Promise.all([
     SocialLinksRepository.get(db, user.id),
@@ -18,8 +18,8 @@ export async function loadAccountPageData({
 
   return {
     user,
-    currentPortfolio,
-    hasPortfolio: true,
+    currentProfile,
+    hasProfile: true,
     socialLinks,
     documents,
   };

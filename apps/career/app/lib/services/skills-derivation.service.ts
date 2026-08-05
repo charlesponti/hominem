@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { createChatCompletion, getChatCompletionText, getChatCompletionUsage } from '@hominem/ai';
-import { db, ProjectRepository, WorkExperienceRepository } from '@hominem/db';
+import { CareerRepository, db, ProjectRepository } from '@hominem/db';
 import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
 import { z } from 'zod';
 
@@ -33,11 +33,11 @@ Rules:
 
 export async function deriveSkillsFromCareerHistory(
   ownerUserid: string,
-  portfolioId: string,
+  profileId: string,
 ): Promise<DerivedSkill[]> {
   const [workExperiences, projects] = await Promise.all([
-    WorkExperienceRepository.listUserWorkExperiences(db, ownerUserid),
-    ProjectRepository.listProjectsByPortfolio(db, portfolioId),
+    CareerRepository.listPositions(db, ownerUserid, { type: 'employment' }),
+    ProjectRepository.list(db, ownerUserid),
   ]);
 
   if (workExperiences.length === 0 && projects.length === 0) {
@@ -49,7 +49,7 @@ export async function deriveSkillsFromCareerHistory(
       ? workExperiences
           .map((exp) => {
             const dates = [exp.startDate, exp.endDate ?? 'present'].filter(Boolean).join(' – ');
-            return `Role: ${exp.role} at ${exp.company} (${dates})\nDescription: ${exp.description ?? 'N/A'}`;
+            return `Role: ${exp.title} at ${exp.company} (${dates})\nDescription: ${exp.description ?? 'N/A'}`;
           })
           .join('\n\n')
       : 'No work experience provided.';
@@ -89,7 +89,7 @@ export async function deriveSkillsFromCareerHistory(
       error,
       durationMs: getDurationMs(),
       metadata: {
-        portfolioId,
+        profileId,
         workExperienceCount: workExperiences.length,
         projectCount: projects.length,
       },
@@ -106,7 +106,7 @@ export async function deriveSkillsFromCareerHistory(
     status: 'succeeded',
     durationMs: getDurationMs(),
     metadata: {
-      portfolioId,
+      profileId,
       workExperienceCount: workExperiences.length,
       projectCount: projects.length,
     },

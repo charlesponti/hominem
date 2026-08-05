@@ -21,79 +21,49 @@ describe('parseApplicationUpdateFormData', () => {
   it('maps core application fields and empties nullable strings to null', () => {
     const result = parseApplicationUpdateFormData(
       form({
-        position: '  Staff Engineer  ',
+        title: '  Staff Engineer  ',
         status: JobApplicationStatus.INTERVIEW,
         location: '',
-        salaryQuoted: ' $120k ',
         source: '  LinkedIn  ',
       }),
     );
 
     expect(result.application).toMatchObject({
-      position: 'Staff Engineer',
+      title: 'Staff Engineer',
       status: JobApplicationStatus.INTERVIEW,
       location: null,
-      salaryQuoted: '$120k',
       source: 'LinkedIn',
     });
-    expect(result.company).toBeUndefined();
   });
 
   it('converts dollar amounts to cents', () => {
     const result = parseApplicationUpdateFormData(
       form({
-        salaryExpected: '150000',
-        salaryOffered: '$175,000',
-        bonusOffered: '',
+        salaryExpectation: '150000',
       }),
     );
 
-    expect(result.application.salaryExpected).toBe(15_000_000);
-    expect(result.application.salaryOffered).toBe(17_500_000);
-    expect(result.application.bonusOffered).toBeNull();
+    expect(result.application.salaryExpectation).toBe(15_000_000);
   });
 
-  it('parses dates and company fields with prefixes', () => {
+  it('parses appliedAt date', () => {
     const result = parseApplicationUpdateFormData(
       form({
-        startDate: '2024-03-15',
-        applicationDate: '',
-        companyName: 'Acme Corp',
-        companyWebsite: 'https://acme.example',
-        companySize: '250',
-        companyLocation: '',
+        appliedAt: '2024-03-15',
       }),
     );
 
-    expect(result.application.startDate).toEqual(new Date('2024-03-15'));
-    expect(result.application.applicationDate).toBeNull();
-    expect(result.company).toEqual({
-      name: 'Acme Corp',
-      website: 'https://acme.example',
-      size: 250,
-      location: null,
-    });
-  });
-
-  it('parses reference checkbox', () => {
-    const result = parseApplicationUpdateFormData(form({ reference: 'on' }));
-    expect(result.application.reference).toBe(true);
-  });
-
-  it('rejects empty position when provided', () => {
-    expect(() => parseApplicationUpdateFormData(form({ position: '  ' }))).toThrow(
-      ApplicationFormError,
-    );
+    expect(result.application.appliedAt).toEqual(new Date('2024-03-15'));
   });
 
   it('rejects invalid status', () => {
-    expect(() => parseApplicationUpdateFormData(form({ status: 'NOPE' }))).toThrow(
-      ApplicationFormError,
-    );
+    expect(() =>
+      parseApplicationUpdateFormData(form({ status: 'NOPE', title: 'Engineer' })),
+    ).toThrow(ApplicationFormError);
   });
 
   it('rejects invalid cents amounts', () => {
-    expect(() => parseApplicationUpdateFormData(form({ salaryExpected: 'abc' }))).toThrow(
+    expect(() => parseApplicationUpdateFormData(form({ salaryExpectation: 'abc' }))).toThrow(
       ApplicationFormError,
     );
   });

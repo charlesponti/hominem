@@ -1,5 +1,5 @@
-import { Field, Textarea } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import { Textarea } from '@ponti-studios/ui/forms';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon, PlusIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm, type SubmitHandler } from 'react-hook-form';
@@ -64,9 +64,12 @@ export function AchievementsSection({ achievements }: { achievements: string[] }
               <div key={field.id} className="flex items-start gap-3">
                 <span className="body-3 mt-3 text-muted-foreground">•</span>
                 <div className="flex-1">
-                  <Field label={index === 0 ? 'Achievement' : undefined}>
+                  <div className="space-y-1.5">
+                    {index === 0 && (
+                      <Label className="subheading-4 text-muted-foreground">Achievement</Label>
+                    )}
                     <Textarea rows={3} {...register(`items.${index}.value` as const)} />
-                  </Field>
+                  </div>
                 </div>
                 <Button
                   type="button"
