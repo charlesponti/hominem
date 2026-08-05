@@ -1,12 +1,29 @@
 import type { CareerSocialLinksRecord } from '@hominem/db';
 import { Input } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
-import { Github, Globe, Linkedin, SaveIcon, Twitter } from 'lucide-react';
+import { Globe, SaveIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
+import { siGithub, siX } from 'simple-icons';
 
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import type { AccountActionResult, SocialLinksFormValues } from '~/lib/account/types';
+
+const linkedinPath =
+  'M416 32L31.9 32C14.3 32 0 46.5 0 64.3L0 447.7C0 465.5 14.3 480 31.9 480L416 480c17.6 0 32-14.5 32-32.3l0-383.4C448 46.5 433.6 32 416 32zM135.4 416l-66.4 0 0-213.8 66.5 0 0 213.8-.1 0zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77zM384.3 416l-66.4 0 0-104c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9l0 105.8-66.4 0 0-213.8 63.7 0 0 29.2 .9 0c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9l0 117.2z';
+
+function BrandIcon({ path, viewBox = '0 0 24 24' }: { path: string; viewBox?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-4 text-muted-foreground"
+      fill="currentColor"
+      viewBox={viewBox}
+    >
+      <path d={path} />
+    </svg>
+  );
+}
 
 export function SocialLinksSection({
   socialLinks,
@@ -71,7 +88,7 @@ export function SocialLinksSection({
                   htmlFor="github"
                   className="subheading-4 text-text-primary flex items-center gap-2"
                 >
-                  <Github className="size-4 text-muted-foreground" />
+                  <BrandIcon path={siGithub.path} />
                   GitHub
                 </Label>
                 <div className="flex">
@@ -103,7 +120,7 @@ export function SocialLinksSection({
                   htmlFor="linkedin"
                   className="subheading-4 text-text-primary flex items-center gap-2"
                 >
-                  <Linkedin className="size-4 text-muted-foreground" />
+                  <BrandIcon path={linkedinPath} viewBox="0 0 448 512" />
                   LinkedIn
                 </Label>
                 <div className="flex">
@@ -135,7 +152,7 @@ export function SocialLinksSection({
                   htmlFor="twitter"
                   className="subheading-4 text-text-primary flex items-center gap-2"
                 >
-                  <Twitter className="size-4 text-muted-foreground" />
+                  <BrandIcon path={siX.path} />
                   Twitter / X
                 </Label>
                 <div className="flex">

@@ -23,12 +23,12 @@
     "@hominem/utils": "workspace:*",
     "csv-parse": "^5.6.0",
     "effect": "^3.16.10",
-    "kysely": "^0.29.4",
+    "kysely": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^22.18.13",
-    "typescript": "6.0.3",
-    "vitest": "4.1.0"
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

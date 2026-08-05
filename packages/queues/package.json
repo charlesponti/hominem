@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@hominem/telemetry": "workspace:*",
-    "bullmq": "5.66.4",
-    "ioredis": "5.8.2"
+    "bullmq": "catalog:",
+    "ioredis": "catalog:"
   },
   "devDependencies": {}
 }

@@ -55,12 +55,12 @@
     "@hominem/env": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "bullmq": "5.66.4",
-    "dotenv": "17.2.3",
-    "ioredis": "5.8.2",
+    "bullmq": "catalog:",
+    "dotenv": "catalog:",
+    "ioredis": "catalog:",
     "mammoth": "^1.9.1",
-    "pdf2json": "^3.1.6",
-    "resend": "^6.12.4",
+    "pdf2json": "catalog:",
+    "resend": "catalog:",
     "zod": "catalog:"
   }
 }

@@ -36,13 +36,13 @@
   "dependencies": {
     "@hominem/env": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "kysely": "^0.29.4",
-    "pg": "^8.20.0",
+    "kysely": "catalog:",
+    "pg": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "dotenv": "17.2.3",
+    "dotenv": "catalog:",
     "kysely-codegen": "^0.20.0",
-    "vitest": "4.1.0"
+    "vitest": "catalog:"
   }
 }

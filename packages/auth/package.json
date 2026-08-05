@@ -56,6 +56,6 @@
     "lint:fix": "oxlint src --fix"
   },
   "devDependencies": {
-    "vitest": "4.1.0"
+    "vitest": "catalog:"
   }
 }

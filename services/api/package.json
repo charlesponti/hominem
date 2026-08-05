@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
+    "dev": "SERVICE_NAME=api node --watch --import jiti/register src/index.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
@@ -29,8 +29,8 @@
     "start:worker": "node dist/worker.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "e2e:setup": "tsx scripts/e2e-setup.ts",
-    "export-user": "tsx scripts/export-user.ts"
+    "e2e:setup": "jiti scripts/e2e-setup.ts",
+    "export-user": "jiti scripts/export-user.ts"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",
@@ -49,21 +49,21 @@
     "@ponti-studios/auth": "workspace:*",
     "@scalar/hono-api-reference": "^0.11.11",
     "@sentry/node": "^8.54.0",
-    "better-auth": "1.6.23",
-    "bullmq": "5.66.4",
-    "dotenv": "17.2.3",
-    "hono": "4.12.27",
+    "better-auth": "catalog:",
+    "bullmq": "catalog:",
+    "dotenv": "catalog:",
+    "hono": "catalog:",
     "hono-openapi": "^1.3.0",
-    "pg": "^8.20.0",
-    "resend": "^6.12.4",
+    "pg": "catalog:",
+    "resend": "catalog:",
     "ws": "^8.21.1",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^25.4.0",
+    "@types/node": "catalog:",
     "@types/ws": "^8.18.1",
     "goose-cli": "3.25.0-a",
-    "rolldown": "^1.0.0",
-    "tsx": "^4.10.0"
+    "jiti": "catalog:",
+    "rolldown": "^1.0.0"
   }
 }

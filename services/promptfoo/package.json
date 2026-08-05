@@ -2,16 +2,19 @@
   "name": "@hominem/promptfoo",
   "private": true,
   "scripts": {
-    "eval:chat-assistant": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c chat-assistant/config.yaml",
-    "eval:offer-extraction": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c offer-extraction/config.yaml",
-    "eval:task-extraction": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c task-extraction/config.yaml",
-    "eval:voice-cleanup": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c voice-cleanup/config.yaml",
-    "eval:voice-task-extraction": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c voice-task-extraction/config.yaml",
-    "eval:time-block-regression": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c time-block-extraction/regression.yaml",
-    "eval:time-block-holdout": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c time-block-extraction/holdout.yaml",
-    "eval:mcp-tool-selection": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c mcp-tool-selection/config.yaml",
-    "eval:all": "NODE_OPTIONS='--import tsx' npx promptfoo@latest eval -c chat-assistant/config.yaml -c task-extraction/config.yaml -c voice-task-extraction/config.yaml -c voice-cleanup/config.yaml",
+    "eval:chat-assistant": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c chat-assistant/config.yaml",
+    "eval:offer-extraction": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c offer-extraction/config.yaml",
+    "eval:task-extraction": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c task-extraction/config.yaml",
+    "eval:voice-cleanup": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c voice-cleanup/config.yaml",
+    "eval:voice-task-extraction": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c voice-task-extraction/config.yaml",
+    "eval:time-block-regression": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c time-block-extraction/regression.yaml",
+    "eval:time-block-holdout": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c time-block-extraction/holdout.yaml",
+    "eval:mcp-tool-selection": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c mcp-tool-selection/config.yaml",
+    "eval:all": "NODE_OPTIONS='--import jiti/register' npx promptfoo@latest eval -c chat-assistant/config.yaml -c task-extraction/config.yaml -c voice-task-extraction/config.yaml -c voice-cleanup/config.yaml",
     "typecheck": "tsc",
     "view": "npx promptfoo@latest view"
+  },
+  "devDependencies": {
+    "jiti": "catalog:"
   }
 }

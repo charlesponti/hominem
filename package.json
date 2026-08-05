@@ -36,7 +36,7 @@
     "@expo/image-utils": "^0.11.4",
     "@expo/prebuild-config": "~56.0.16",
     "@railway/cli": "5.25.1",
-    "@types/node": "^25.4.0",
+    "@types/node": "catalog:",
     "@types/pg": "^8.18.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -44,10 +44,9 @@
     "knip": "^6.4.1",
     "oxfmt": "0.56.0",
     "oxlint": "^1.71.0",
-    "tsx": "^4.10.0",
     "turbo": "^2.10.0",
-    "typescript": "6.0.3",
-    "vitest": "4.1.0"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24.18.0"
