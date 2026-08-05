@@ -13,7 +13,7 @@ const enabledScopes = new Set(
     .map((scope: string) => scope.trim())
     .filter(Boolean),
 );
-const requiredScope = MCP_SCOPES[0];
+const requiredScopes = MCP_SCOPES.join(' ');
 
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
@@ -49,7 +49,7 @@ function createMcpAuthChallenge(error?: 'insufficient_scope') {
       ? ', error="insufficient_scope", error_description="Missing required MCP scope"'
       : '';
 
-  return `Bearer realm="Hominem", scope="${requiredScope}"${errorParameters}, resource_metadata="${resourceMetadataUrl}"`;
+  return `Bearer realm="Hominem", scope="${requiredScopes}"${errorParameters}, resource_metadata="${resourceMetadataUrl}"`;
 }
 
 async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
