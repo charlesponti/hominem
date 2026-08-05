@@ -1,6 +1,6 @@
 ---
 title: "Add authenticated import progress WebSocket"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, websocket, realtime, auth]
 depends_on: ["006-add-import-state-and-queue-contract.md", "012-build-import-worker.md"]

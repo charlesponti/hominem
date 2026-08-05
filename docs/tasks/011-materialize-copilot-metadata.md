@@ -1,6 +1,6 @@
 ---
 title: "Materialize Copilot metadata and exclusion behavior"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, tags, analytics]
 depends_on: ["002-add-finance-import-columns.md", "009-confirm-frozen-import-plan-api.md", "010-implement-import-plan-persistence.md"]

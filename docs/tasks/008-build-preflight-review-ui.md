@@ -1,6 +1,6 @@
 ---
 title: "Build the Copilot preflight review UI"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, frontend, preflight]
 depends_on: ["007-build-preflight-api.md"]

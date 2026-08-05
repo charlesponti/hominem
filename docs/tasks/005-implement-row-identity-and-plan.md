@@ -1,6 +1,6 @@
 ---
 title: "Implement frozen row identity and import planning"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, deduplication]
 depends_on: ["003-implement-copilot-csv-parser.md", "004-implement-account-group-resolution.md"]

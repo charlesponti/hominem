@@ -1,6 +1,6 @@
 ---
 title: "Add preflight and import job state contracts"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, redis, bullmq, contracts]
 depends_on: ["005-implement-row-identity-and-plan.md"]

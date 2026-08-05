@@ -1,6 +1,6 @@
 ---
 title: "Add sanitized Copilot fixture and import contract"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, test-fixture]
 depends_on: []
