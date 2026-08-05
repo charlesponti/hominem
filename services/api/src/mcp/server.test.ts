@@ -84,7 +84,9 @@ describe('mcp server transport', () => {
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
 
     expect(response.status).toBe(401);
-    expect(response.headers.get('www-authenticate')).toContain('scope="career:read finance:read"');
+    expect(response.headers.get('www-authenticate')).toContain(
+      'scope="career:read finance:read people:read places:read"',
+    );
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
       code: 'UNAUTHORIZED',
@@ -97,12 +99,20 @@ describe('mcp server transport', () => {
 
     expect(response.status).toBe(403);
     expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
-    expect(response.headers.get('www-authenticate')).toContain('scope="career:read finance:read"');
-    await expect(response.json()).resolves.toMatchObject({ code: 'INSUFFICIENT_SCOPE' });
+    expect(response.headers.get('www-authenticate')).toContain(
+      'scope="career:read finance:read people:read places:read"',
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'INSUFFICIENT_SCOPE',
+    });
   });
 
   it('does not authorize a Better Auth cookie session as MCP', async () => {
-    const app = createApp({ ...mcpAuthContext, credential: 'session', sessionId: 'session-123' });
+    const app = createApp({
+      ...mcpAuthContext,
+      credential: 'session',
+      sessionId: 'session-123',
+    });
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
 
     expect(response.status).toBe(401);
@@ -111,7 +121,10 @@ describe('mcp server transport', () => {
   it('connects and initializes over streamable HTTP', async () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
-      expect(client.getServerVersion()).toMatchObject({ name: 'Hominem MCP', version: '1.0.0' });
+      expect(client.getServerVersion()).toMatchObject({
+        name: 'Hominem MCP',
+        version: '1.0.0',
+      });
     } finally {
       await client.close();
     }
@@ -170,7 +183,9 @@ describe('mcp server transport', () => {
       expect(result.isError).toBe(true);
       expect(result.content).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ text: expect.stringMatching(/-32602|validation|expected/i) }),
+          expect.objectContaining({
+            text: expect.stringMatching(/-32602|validation|expected/i),
+          }),
         ]),
       );
     } finally {
@@ -180,7 +195,6 @@ describe('mcp server transport', () => {
 
   it('does not return internal tool errors to the client', async () => {
     registerTool(
-      'failing_tool',
       {
         name: 'failing_tool',
         title: 'Failing test tool',
@@ -199,7 +213,10 @@ describe('mcp server transport', () => {
 
     const client = await createClient(createApp(mcpAuthContext));
     try {
-      const result = await client.callTool({ name: 'failing_tool', arguments: {} });
+      const result = await client.callTool({
+        name: 'failing_tool',
+        arguments: {},
+      });
 
       expect(result.isError).toBe(true);
       expect(result.content).toEqual([

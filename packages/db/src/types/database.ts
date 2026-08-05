@@ -476,6 +476,118 @@ export interface AppNotes {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppOrganizationMemberships {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  isPrimary: Generated<boolean>;
+  organizationId: string;
+  ownerUserid: string;
+  personId: string;
+  source: string | null;
+}
+
+export interface AppOrganizations {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  name: string;
+  ownerUserid: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPeople {
+  aliases: Generated<Json>;
+  birthdate: ColumnType<string, Date | string, Date | string> | null;
+  birthplace: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  diet: string | null;
+  displayName: string | null;
+  education: string | null;
+  firstName: string | null;
+  id: Generated<string>;
+  lastName: string | null;
+  location: string | null;
+  metadata: Generated<Json>;
+  middleName: string | null;
+  notes: string | null;
+  ownerUserid: string;
+  personType: string | null;
+  profession: string | null;
+  sourceRowId: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPersonAddressRentHistory {
+  contactMethodId: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  effectiveDate: ColumnType<string, Date | string, Date | string>;
+  id: Generated<string>;
+  ownerUserid: string;
+  rentCents: number;
+}
+
+export interface AppPersonContactMethods {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  endDate: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  isPrimary: Generated<boolean>;
+  kind: string;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  personId: string;
+  placeId: string | null;
+  source: string | null;
+  startDate: ColumnType<string, Date | string, Date | string> | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  value: string;
+}
+
+export interface AppPersonRelationships {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  endedAt: ColumnType<string, Date | string, Date | string> | null;
+  fromPersonId: string;
+  id: Generated<string>;
+  notes: string | null;
+  ownerUserid: string;
+  relationshipType: string;
+  startedAt: ColumnType<string, Date | string, Date | string> | null;
+  toPersonId: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPlaces {
+  city: string | null;
+  country: string | null;
+  countryCode: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  formattedAddress: string | null;
+  geocodedAt: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  latitude: Numeric | null;
+  longitude: Numeric | null;
+  metadata: Generated<Json>;
+  name: string;
+  ownerUserid: string;
+  placeType: string | null;
+  postalCode: string | null;
+  sourceRowId: number | null;
+  state: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  url: string | null;
+}
+
+export interface AppPlaceVisits {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  notes: string | null;
+  ownerUserid: string;
+  placeId: string | null;
+  purpose: string | null;
+  source: string | null;
+  visitedAt: ColumnType<string, Date | string, Date | string> | null;
+}
+
 export interface AppPlaidItems {
   accessToken: string | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -577,6 +689,12 @@ export interface DeviceCode {
   userId: string | null;
 }
 
+export interface DrizzleDrizzleMigrations {
+  createdAt: Int8 | null;
+  hash: string;
+  id: Generated<number>;
+}
+
 export interface GooseDbVersion {
   id: Generated<number>;
   isApplied: boolean;
@@ -590,6 +708,101 @@ export interface Jwks {
   id: string;
   privateKey: string;
   publicKey: string;
+}
+
+export interface LabsArticles {
+  description: string | null;
+  feedId: number;
+  fetchedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<number>;
+  imageUrl: string | null;
+  publishedAt: ColumnType<string, Date | string, Date | string> | null;
+  rejectionCount: Generated<number>;
+  rejectionReason: string | null;
+  status: Generated<string>;
+  title: string;
+  url: string;
+}
+
+export interface LabsDailyPuzzles {
+  answer: string;
+  answerType: string;
+  articleId: number;
+  clue: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  dateUtc: ColumnType<string, Date | string, Date | string>;
+  detail: string;
+  gameId: number;
+  id: Generated<number>;
+  normalizedAnswer: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface LabsDrizzleMigrations {
+  createdAt: Int8 | null;
+  hash: string;
+  id: Generated<number>;
+}
+
+export interface LabsFeedGames {
+  feedId: number;
+  gameId: number;
+}
+
+export interface LabsFeeds {
+  active: Generated<boolean>;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<number>;
+  kind: Generated<string>;
+  label: string;
+  url: string;
+}
+
+export interface LabsGames {
+  active: Generated<boolean>;
+  answerLength: Generated<number>;
+  articleExpiryDays: Generated<number>;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<number>;
+  name: string;
+  repeatWindowDays: Generated<number>;
+  slug: string;
+  systemPromptPath: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface LabsRealiteaAttempts {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  dateUtc: ColumnType<string, Date | string, Date | string>;
+  gameId: number;
+  guessedAt: Generated<Json>;
+  guesses: Generated<Json>;
+  hominemUserId: string;
+  id: Generated<number>;
+  status: Generated<string>;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface LabsSearchDocuments {
+  body: string;
+  category: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  embedding: string;
+  featured: Generated<boolean>;
+  id: Generated<number>;
+  kind: string;
+  location: string;
+  popularity: Generated<number>;
+  publishedAt: ColumnType<string, Date | string, Date | string>;
+  searchText: string;
+  searchVector: Generated<string>;
+  sourceUrl: string;
+  subtitle: string;
+  summary: string;
+  tags: Json;
+  title: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  year: number;
 }
 
 export interface OauthAccessToken {
@@ -703,6 +916,14 @@ export interface DB {
   'app.financeTransactions': AppFinanceTransactions;
   'app.noteFiles': AppNoteFiles;
   'app.notes': AppNotes;
+  'app.organizationMemberships': AppOrganizationMemberships;
+  'app.organizations': AppOrganizations;
+  'app.people': AppPeople;
+  'app.personAddressRentHistory': AppPersonAddressRentHistory;
+  'app.personContactMethods': AppPersonContactMethods;
+  'app.personRelationships': AppPersonRelationships;
+  'app.places': AppPlaces;
+  'app.placeVisits': AppPlaceVisits;
   'app.plaidItems': AppPlaidItems;
   'app.tagAssignments': AppTagAssignments;
   'app.tags': AppTags;
@@ -710,8 +931,17 @@ export interface DB {
   'app.tasks': AppTasks;
   'app.vectorDocuments': AppVectorDocuments;
   deviceCode: DeviceCode;
+  'drizzle.DrizzleMigrations': DrizzleDrizzleMigrations;
   gooseDbVersion: GooseDbVersion;
   jwks: Jwks;
+  'labs.articles': LabsArticles;
+  'labs.dailyPuzzles': LabsDailyPuzzles;
+  'labs.DrizzleMigrations': LabsDrizzleMigrations;
+  'labs.feedGames': LabsFeedGames;
+  'labs.feeds': LabsFeeds;
+  'labs.games': LabsGames;
+  'labs.realiteaAttempts': LabsRealiteaAttempts;
+  'labs.searchDocuments': LabsSearchDocuments;
   oauthAccessToken: OauthAccessToken;
   oauthApplication: OauthApplication;
   oauthConsent: OauthConsent;

@@ -21,6 +21,12 @@ if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
 if (enabledScopes.size === 0 || enabledScopes.has('finance:read')) {
   await import('./tools/finance');
 }
+if (enabledScopes.size === 0 || enabledScopes.has('people:read')) {
+  await import('./tools/people');
+}
+if (enabledScopes.size === 0 || enabledScopes.has('places:read')) {
+  await import('./tools/places');
+}
 
 async function addMcpScopes(response: Response): Promise<Response> {
   const metadata = (await response.json()) as { scopes_supported?: string[] } & Record<

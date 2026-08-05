@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { McpToolResult } from '../tools';
 
-const userId = 'cf8f3ada-d5ed-45c8-b044-0ca80f60611f';
+const userId = 'f1000000-0000-4000-8000-000000000001';
 
 const checkingId = 'f1000003-0000-4000-8000-000000000001';
 
@@ -85,9 +85,17 @@ const transportId = 'f1000002-0000-4000-8000-000000000102';
 const statementId = 'f1000006-0000-4000-8000-000000000001';
 
 beforeAll(async () => {
+  // finance_statement_periods.account_id -> finance_accounts.id has no ON DELETE
+  // CASCADE, so a plain `DELETE FROM "user"` fails mid-cascade. Delete the finance
+  // tables explicitly (children first) before the user row, so each run starts
+  // from a clean slate regardless of what a previous run left behind.
+  await pool.query(`DELETE FROM app.finance_transactions WHERE user_id = $1`, [userId]);
+  await pool.query(`DELETE FROM app.finance_statement_periods WHERE user_id = $1`, [userId]);
+  await pool.query(`DELETE FROM app.finance_accounts WHERE user_id = $1`, [userId]);
+  await pool.query(`DELETE FROM "user" WHERE id = $1`, [userId]);
   await pool.query(
-    `INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING`,
-    [userId, 'Test User', 'test@hominem.dev', true],
+    `INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, $4)`,
+    [userId, 'Test User', `${userId}@test.hominem.dev`, true],
   );
 
   await db

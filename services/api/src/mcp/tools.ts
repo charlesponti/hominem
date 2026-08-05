@@ -4,12 +4,15 @@ import * as z from 'zod';
 
 import type { CapabilityDefinition } from '../application/capability';
 
-export interface McpToolDefinition {
+export interface McpToolDefinition<
+  TInputSchema extends z.ZodType = z.ZodType,
+  TOutputSchema extends z.ZodType = z.ZodType,
+> {
   name: string;
   title: string;
   description: string;
-  inputSchema: z.ZodType;
-  outputSchema: z.ZodType;
+  inputSchema: TInputSchema;
+  outputSchema: TOutputSchema;
   readOnly: true;
   scopes: readonly string[];
   sensitivity: CapabilityDefinition['sensitivity'];
@@ -21,7 +24,7 @@ export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
   structuredContent: Record<string, unknown> | null;
 };
 
-type ToolImplementation = {
+type RegisteredTool = {
   definition: McpToolDefinition;
   invoke: (ownerUserId: string, input: unknown) => Promise<unknown>;
 };
@@ -31,6 +34,10 @@ function toolResult(structuredContent: Record<string, unknown> | null): McpToolR
     content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
     structuredContent,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function enforceResultCap(
@@ -49,18 +56,20 @@ function enforceResultCap(
   }
 }
 
-const tools = new Map<string, ToolImplementation>();
+const tools = new Map<string, RegisteredTool>();
 
 export function listTools(): McpToolDefinition[] {
   return [...tools.values()].map((t) => t.definition);
 }
 
-export function registerTool(
-  name: string,
-  definition: McpToolDefinition,
-  invoke: (ownerUserId: string, input: unknown) => Promise<unknown>,
+export function registerTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodType>(
+  definition: McpToolDefinition<TInputSchema, TOutputSchema>,
+  invoke: (ownerUserId: string, input: z.output<TInputSchema>) => Promise<z.output<TOutputSchema>>,
 ): void {
-  tools.set(name, { definition, invoke });
+  tools.set(definition.name, {
+    definition,
+    invoke: (ownerUserId, input) => invoke(ownerUserId, definition.inputSchema.parse(input)),
+  });
 }
 
 export async function callTool(
@@ -73,23 +82,18 @@ export async function callTool(
     throw new ValidationError(`Unknown MCP tool: ${name}`);
   }
 
-  const parsedInput = implementation.definition.inputSchema.parse(input);
-  const structuredContent = await implementation.invoke(ownerUserId, parsedInput);
+  const structuredContent = await implementation.invoke(ownerUserId, input);
   const parsedOutput = implementation.definition.outputSchema.parse(structuredContent);
 
   if (parsedOutput === null) {
     return toolResult(null);
   }
 
-  if (
-    parsedOutput === undefined ||
-    typeof parsedOutput !== 'object' ||
-    Array.isArray(parsedOutput)
-  ) {
+  if (!isRecord(parsedOutput)) {
     throw new ValidationError(`MCP tool returned invalid structured content: ${name}`);
   }
 
-  const result = parsedOutput as Record<string, unknown>;
+  const result = parsedOutput;
   enforceResultCap(result, name, implementation.definition.resultCap);
   return toolResult(result);
 }

@@ -37,7 +37,13 @@ results.json
 credentials.json
 token.json
 credentials/
+
+# db schema snapshots (scratch, regenerated on demand)
+.agents/skills/db-schema-diff/snapshots/
 .auth/
+
+# user data exports (scratch, contains real PII when run against production)
+.exports/
 
 # debug logs
 npm-debug.log*

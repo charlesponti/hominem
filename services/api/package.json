@@ -29,7 +29,8 @@
     "start:worker": "node dist/worker.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "e2e:setup": "tsx scripts/e2e-setup.ts"
+    "e2e:setup": "tsx scripts/e2e-setup.ts",
+    "export-user": "tsx scripts/export-user.ts"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",

@@ -20,7 +20,6 @@ describe('MCP tool registry', () => {
 
   it('preserves null structured content for no-data responses', async () => {
     registerTool(
-      'nullable_test_tool',
       {
         name: 'nullable_test_tool',
         title: 'Nullable test tool',
@@ -43,19 +42,18 @@ describe('MCP tool registry', () => {
 
   it('validates tool output against its declared schema', async () => {
     registerTool(
-      'invalid_output_tool',
       {
         name: 'invalid_output_tool',
         title: 'Invalid output tool',
         description: 'Returns output that violates its schema.',
         inputSchema: z.object({}),
-        outputSchema: z.object({ value: z.string() }),
+        outputSchema: z.object({ value: z.string().refine(() => false) }),
         readOnly: true,
         scopes: ['career:read'],
         sensitivity: 'standard',
         resultCap: 1,
       },
-      async () => ({ value: 123 }),
+      async () => ({ value: 'valid before output validation' }),
     );
 
     await expect(callTool(userId, 'invalid_output_tool', {})).rejects.toThrow();
@@ -63,7 +61,6 @@ describe('MCP tool registry', () => {
 
   it('enforces the declared result cap', async () => {
     registerTool(
-      'oversized_output_tool',
       {
         name: 'oversized_output_tool',
         title: 'Oversized output tool',
