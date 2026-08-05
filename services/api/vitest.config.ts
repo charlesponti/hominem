@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { defineConfig } from 'vitest/config';
 
-const testDatabaseUrl = '******127.0.0.1:5434/app-test';
+const testDatabaseUrl = 'postgresql://postgres:postgres@127.0.0.1:5434/app-test';
 
 export default defineConfig({
   test: {
