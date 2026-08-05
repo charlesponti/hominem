@@ -1,9 +1,4 @@
-import {
-  CareerRepository,
-  db,
-  type CareerPositionRecord,
-  type CareerEducationRecord,
-} from '@hominem/db';
+import { CareerRepository, db, type CareerPositionRecord } from '@hominem/db';
 
 export type TimelineEntry = {
   id: string;

@@ -1,10 +1,4 @@
-import {
-  CareerRepository,
-  ProjectRepository,
-  SkillRepository,
-  SocialLinksRepository,
-  db,
-} from '@hominem/db';
+import { CareerRepository, ProjectRepository, SkillRepository, db } from '@hominem/db';
 
 import { fetchCareerProfile } from './api.server';
 import { jsonArray } from './db-json';

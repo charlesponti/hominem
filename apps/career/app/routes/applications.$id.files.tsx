@@ -82,7 +82,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
 export default function ApplicationFilesRoute({ loaderData }: Route.ComponentProps) {
   const { files } = loaderData;
   const [status, setStatus] = useState<DropZoneStatus>('empty');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 

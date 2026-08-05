@@ -96,7 +96,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   (args, next) => sessionMiddleware(args, next),
 ];
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
 
   return data({
@@ -148,15 +148,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // Instantiate a single QueryClient for the app
 const queryClient = new QueryClient();
 
-export default function App({
-  loaderData,
-}: {
-  loaderData: {
-    apiBaseUrl: string;
-    user: unknown;
-  };
-}) {
-  const { apiBaseUrl } = loaderData;
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NavigationProgress />

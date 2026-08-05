@@ -47,7 +47,7 @@ const ACTIONS_LAYOUT = LinearTransition.duration(200);
 function ActionIconButton({
   disabled = false,
   icon,
-  isDestructive = false,
+  isDestructive: _isDestructive = false,
   onPress,
 }: {
   disabled?: boolean;
@@ -55,8 +55,6 @@ function ActionIconButton({
   isDestructive?: boolean;
   onPress: () => void;
 }) {
-  const themeColors = useThemeColors();
-
   return <IconButton accessibilityLabel={icon} disabled={disabled} icon={icon} onPress={onPress} />;
 }
 
