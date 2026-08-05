@@ -1,6 +1,6 @@
 ---
 title: "Add finance import identity and exclusion columns"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, database, migration]
 depends_on: []

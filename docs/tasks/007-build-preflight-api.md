@@ -1,6 +1,6 @@
 ---
 title: "Build the Copilot preflight API"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, api, preflight]
 depends_on: ["004-implement-account-group-resolution.md", "005-implement-row-identity-and-plan.md", "006-add-import-state-and-queue-contract.md"]

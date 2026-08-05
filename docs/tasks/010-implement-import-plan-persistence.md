@@ -1,6 +1,6 @@
 ---
 title: "Persist frozen accounts and transactions"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, database, transactions]
 depends_on: ["002-add-finance-import-columns.md", "005-implement-row-identity-and-plan.md", "009-confirm-frozen-import-plan-api.md"]

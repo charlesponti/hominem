@@ -1,6 +1,6 @@
 ---
 title: "Wire preflight and import job frontend state"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, frontend, copilot, websocket]
 depends_on: ["008-build-preflight-review-ui.md", "009-confirm-frozen-import-plan-api.md", "013-add-job-list-and-cancellation-api.md", "014-add-import-websocket-server.md"]

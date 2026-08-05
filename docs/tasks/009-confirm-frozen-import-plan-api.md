@@ -1,6 +1,6 @@
 ---
 title: "Confirm and enqueue the frozen import plan"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, api, bullmq]
 depends_on: ["005-implement-row-identity-and-plan.md", "006-add-import-state-and-queue-contract.md", "007-build-preflight-api.md", "008-build-preflight-review-ui.md"]

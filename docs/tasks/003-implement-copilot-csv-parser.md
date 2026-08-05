@@ -1,6 +1,6 @@
 ---
 title: "Implement the Copilot CSV parser"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, parser]
 depends_on: ["001-add-copilot-fixture-and-contract.md"]

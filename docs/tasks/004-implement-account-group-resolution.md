@@ -1,6 +1,6 @@
 ---
 title: "Implement Copilot account group resolution"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, accounts]
 depends_on: ["002-add-finance-import-columns.md", "003-implement-copilot-csv-parser.md"]

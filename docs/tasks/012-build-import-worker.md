@@ -1,6 +1,6 @@
 ---
 title: "Build the frozen Copilot import worker"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, copilot, bullmq, worker]
 depends_on: ["006-add-import-state-and-queue-contract.md", "009-confirm-frozen-import-plan-api.md", "010-implement-import-plan-persistence.md", "011-materialize-copilot-metadata.md"]

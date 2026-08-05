@@ -1,6 +1,6 @@
 ---
 title: "Add import job listing and cancellation APIs"
-status: "todo"
+status: "done"
 priority: "high"
 labels: [finance, api, cancellation]
 depends_on: ["006-add-import-state-and-queue-contract.md", "012-build-import-worker.md"]
