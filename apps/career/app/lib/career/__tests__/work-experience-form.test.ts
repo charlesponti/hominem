@@ -9,7 +9,7 @@ import {
   normalizeMetadata,
   normalizeOptionalNumber,
   normalizeOptionalText,
-  normalizeWorkExperienceUpdates,
+  normalizePositionUpdates,
   toMonthInputValue,
 } from '../work-experience-form';
 
@@ -68,16 +68,12 @@ describe('work-experience-form', () => {
   });
 
   it('normalizes work experience update payloads', () => {
-    const result = normalizeWorkExperienceUpdates({
-      role: '  Staff Engineer  ',
+    const result = normalizePositionUpdates({
+      title: '  Staff Engineer  ',
       baseSalary: 20_000_000,
-      employmentType: ' full-time ',
-      metadata: { location: ' NYC ' },
     });
 
-    expect(result.role).toBe('Staff Engineer');
+    expect(result.title).toBe('Staff Engineer');
     expect(result.baseSalary).toBe(20_000_000);
-    expect(result.employmentType).toBe('full-time');
-    expect(result.metadata).toEqual({ location: 'NYC' });
   });
 });

@@ -1,31 +1,11 @@
 import type { Selectable } from 'kysely';
 
-import { NotFoundError } from '../../errors';
 import type { DbHandle } from '../../transaction';
-import type { AppTestimonials } from '../../types/database';
-import { verifyPortfolioOwnership } from './ownership';
+import type { AppCareerTestimonials } from '../../types/database';
 
-type TestimonialRow = Selectable<AppTestimonials>;
+export type CareerTestimonialRecord = Selectable<AppCareerTestimonials>;
 
-export interface TestimonialRecord {
-  id: string;
-  portfolioId: string;
-  name: string;
-  title: string | null;
-  company: string | null;
-  content: string;
-  avatarUrl: string | null;
-  linkedinUrl: string | null;
-  rating: number | null;
-  isVerified: boolean;
-  isVisible: boolean;
-  sortOrder: number;
-  createdat: string;
-  updatedat: string;
-}
-
-export interface CreateTestimonialInput {
-  portfolioId: string;
+export type CareerTestimonialInput = {
   name: string;
   title?: string | null;
   company?: string | null;
@@ -33,140 +13,54 @@ export interface CreateTestimonialInput {
   avatarUrl?: string | null;
   linkedinUrl?: string | null;
   rating?: number | null;
-}
-
-export interface UpdateTestimonialInput {
-  name: string;
-  title?: string | null;
-  company?: string | null;
-  content: string;
-  avatarUrl?: string | null;
-  linkedinUrl?: string | null;
-  rating?: number | null;
-}
-
-export interface CreateTestimonialCommand extends CreateTestimonialInput {
-  ownerUserid: string;
-}
-
-export interface UpdateTestimonialCommand {
-  ownerUserid: string;
-  testimonialId: string;
-  portfolioId: string;
-  input: UpdateTestimonialInput;
-}
-
-export interface DeleteTestimonialCommand {
-  ownerUserid: string;
-  testimonialId: string;
-  portfolioId: string;
-}
-
-function toTestimonialRecord(row: TestimonialRow): TestimonialRecord {
-  return {
-    id: row.id,
-    portfolioId: row.portfolioId,
-    name: row.name,
-    title: row.title,
-    company: row.company,
-    content: row.content,
-    avatarUrl: row.avatarUrl,
-    linkedinUrl: row.linkedinUrl,
-    rating: row.rating,
-    isVerified: row.isVerified,
-    isVisible: row.isVisible,
-    sortOrder: row.sortOrder,
-    createdat: String(row.createdat),
-    updatedat: String(row.updatedat),
-  };
-}
+  isVerified?: boolean;
+  isVisible?: boolean;
+  sortOrder?: number;
+};
 
 export const TestimonialRepository = {
-  /** Ordered for full-portfolio composition — see PortfolioRepository.loadFullPortfolio. */
-  async listByPortfolioId(handle: DbHandle, portfolioId: string): Promise<TestimonialRecord[]> {
-    const rows = await handle
-      .selectFrom('app.testimonials')
+  async list(handle: DbHandle, ownerUserId: string): Promise<CareerTestimonialRecord[]> {
+    return handle
+      .selectFrom('app.careerTestimonials')
       .selectAll()
-      .where('portfolioId', '=', portfolioId)
+      .where('ownerUserid', '=', ownerUserId)
       .orderBy('sortOrder', 'asc')
-      .execute();
-
-    return (rows as TestimonialRow[]).map(toTestimonialRecord);
+      .execute() as Promise<CareerTestimonialRecord[]>;
   },
 
-  async getTestimonialById(
+  async create(
     handle: DbHandle,
-    ownerUserid: string,
-    testimonialId: string,
-  ): Promise<TestimonialRecord | null> {
-    const row = await handle
-      .selectFrom('app.testimonials as testimonial')
-      .innerJoin('app.portfolios as portfolio', 'portfolio.id', 'testimonial.portfolioId')
-      .selectAll('testimonial')
-      .where('portfolio.ownerUserid', '=', ownerUserid)
-      .where('testimonial.id', '=', testimonialId)
-      .executeTakeFirst();
-
-    return row ? toTestimonialRecord(row as TestimonialRow) : null;
-  },
-
-  async createTestimonial(
-    handle: DbHandle,
-    command: CreateTestimonialCommand,
-  ): Promise<TestimonialRecord> {
-    await verifyPortfolioOwnership(handle, command.ownerUserid, command.portfolioId);
-
-    const created = await handle
-      .insertInto('app.testimonials')
-      .values({
-        portfolioId: command.portfolioId,
-        name: command.name,
-        title: command.title ?? null,
-        company: command.company ?? null,
-        content: command.content,
-        avatarUrl: command.avatarUrl ?? null,
-        linkedinUrl: command.linkedinUrl ?? null,
-        rating: command.rating ?? null,
-      })
+    ownerUserId: string,
+    input: CareerTestimonialInput,
+  ): Promise<CareerTestimonialRecord> {
+    return handle
+      .insertInto('app.careerTestimonials')
+      .values({ ownerUserid: ownerUserId, ...input })
       .returningAll()
-      .executeTakeFirstOrThrow();
-
-    return toTestimonialRecord(created as TestimonialRow);
+      .executeTakeFirstOrThrow() as Promise<CareerTestimonialRecord>;
   },
 
-  async updateTestimonial(handle: DbHandle, command: UpdateTestimonialCommand): Promise<void> {
-    await verifyPortfolioOwnership(handle, command.ownerUserid, command.portfolioId);
-    const input = command.input;
-
-    const updated = await handle
-      .updateTable('app.testimonials')
-      .set({
-        name: input.name,
-        title: input.title ?? null,
-        company: input.company ?? null,
-        content: input.content,
-        avatarUrl: input.avatarUrl ?? null,
-        linkedinUrl: input.linkedinUrl ?? null,
-        rating: input.rating ?? null,
-      })
-      .where('id', '=', command.testimonialId)
-      .where('portfolioId', '=', command.portfolioId)
-      .returning('id')
+  async update(
+    handle: DbHandle,
+    ownerUserId: string,
+    id: string,
+    input: Partial<CareerTestimonialInput>,
+  ): Promise<CareerTestimonialRecord | null> {
+    const result = await handle
+      .updateTable('app.careerTestimonials')
+      .set(input)
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserId)
+      .returningAll()
       .executeTakeFirst();
-
-    if (!updated) throw new NotFoundError('Testimonial', { testimonialId: command.testimonialId });
+    return (result ?? null) as CareerTestimonialRecord | null;
   },
 
-  async deleteTestimonial(handle: DbHandle, command: DeleteTestimonialCommand): Promise<void> {
-    await verifyPortfolioOwnership(handle, command.ownerUserid, command.portfolioId);
-
-    const deleted = await handle
-      .deleteFrom('app.testimonials')
-      .where('id', '=', command.testimonialId)
-      .where('portfolioId', '=', command.portfolioId)
-      .returning('id')
-      .executeTakeFirst();
-
-    if (!deleted) throw new NotFoundError('Testimonial', { testimonialId: command.testimonialId });
+  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<void> {
+    await handle
+      .deleteFrom('app.careerTestimonials')
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserId)
+      .execute();
   },
 };

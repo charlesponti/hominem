@@ -122,8 +122,8 @@ describe('mcp server transport', () => {
     try {
       const tools = await client.listTools();
       const toolNames = tools.tools.map((t) => t.name);
-      expect(toolNames).toContain('get_career_portfolio');
-      expect(toolNames).toContain('list_career_experiences');
+      expect(toolNames).toContain('career_profile');
+      expect(toolNames).toContain('career_positions');
     } finally {
       await client.close();
     }
@@ -133,27 +133,27 @@ describe('mcp server transport', () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
-        name: 'list_career_experiences',
+        name: 'career_positions',
         arguments: { limit: 1 },
       });
 
       expect(result.isError).not.toBe(true);
-      expect(result.structuredContent).toMatchObject({ experiences: [] });
+      expect(result.structuredContent).toMatchObject({ positions: [] });
     } finally {
       await client.close();
     }
   });
 
-  it('invokes the portfolio tool with an object-shaped result', async () => {
+  it('invokes the profile tool with an object-shaped result', async () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
-        name: 'get_career_portfolio',
+        name: 'career_profile',
         arguments: {},
       });
 
       expect(result.isError).not.toBe(true);
-      expect(result.structuredContent).toMatchObject({ portfolio: null });
+      expect(result.structuredContent).toMatchObject({ profile: null });
     } finally {
       await client.close();
     }
@@ -163,7 +163,7 @@ describe('mcp server transport', () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
-        name: 'list_career_experiences',
+        name: 'career_positions',
         arguments: { limit: 'not-a-number' },
       });
 

@@ -10,6 +10,7 @@ import {
 } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Form, Link, redirect } from 'react-router';
 
 import type { JobScrapeApiRequest, JobScrapeApiResponse } from '~/lib/api-contracts';
@@ -19,25 +20,17 @@ import { JobApplicationsService } from '~/lib/services/job-applications.service'
 import type { JobPosting } from '~/lib/services/job-scraping.service';
 import { JobApplicationStatus } from '~/types/career';
 
-import { Route } from './+types/applications.new';
-
-export const meta: Route.MetaFunction = () => [
+export const meta: MetaFunction = () => [
   { title: 'New Application | career' },
   { name: 'description', content: 'Add a new job application to track your search progress.' },
 ];
 
-function toStringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
-    : [];
-}
-
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context }: LoaderFunctionArgs) {
   const user = context.get(userContext);
   return { user };
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const user = context.get(userContext);
   if (!user) {
     throw new Response('User not found', { status: 401 });
@@ -45,57 +38,30 @@ export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const position = formData.get('position') as string;
   const companyName = formData.get('company') as string;
-  const startDate = formData.get('startDate') as string;
   const status = formData.get('status') as JobApplicationStatus;
   const location = formData.get('location') as string;
-  const jobPosting = String(formData.get('jobPosting') ?? '');
-  const jobPostingData = String(formData.get('jobPostingData') ?? '');
   const salaryQuoted = formData.get('salaryQuoted') as string;
-  const recruiterName = formData.get('recruiterName') as string;
-  const recruiterEmail = formData.get('recruiterEmail') as string;
-  const recruiterLinkedin = formData.get('recruiterLinkedin') as string;
 
   if (!position || !companyName) {
     throw new Response('Position and company are required', { status: 400 });
   }
 
-  let requirements: string[] = [];
-  let skills: string[] = [];
-  let jobPostingUrl: string | null = null;
-  let jobPostingWordCount: number | null = null;
-  let parsedJobPosting: JobPosting | null = null;
-
-  if (jobPostingData) {
-    try {
-      parsedJobPosting = JSON.parse(jobPostingData) as JobPosting;
-      requirements = toStringArray(parsedJobPosting.requirements);
-      skills = toStringArray(parsedJobPosting.skills);
-      jobPostingUrl = parsedJobPosting.url || null;
-      jobPostingWordCount = parsedJobPosting.wordCount || null;
-    } catch {
-      // fall through with defaults
+  let salaryExpectation: number | null = null;
+  if (salaryQuoted) {
+    const cleaned = salaryQuoted.replace(/[$,\s]/g, '');
+    const dollars = Number(cleaned);
+    if (Number.isFinite(dollars)) {
+      salaryExpectation = dollars * 100;
     }
   }
 
   try {
-    const normalizedJobPosting = jobPosting.trim() || parsedJobPosting?.jobDescription || null;
     const application = await JobApplicationsService.createApplication(user.id, {
       companyName,
-      companyDescription: parsedJobPosting?.companyDescription || null,
       position,
       status,
-      startDate: new Date(startDate),
       location: location || null,
-      jobPosting: normalizedJobPosting,
-      requirements,
-      skills,
-      jobPostingUrl,
-      jobPostingWordCount:
-        jobPostingWordCount ?? normalizedJobPosting?.split(/\s+/).filter(Boolean).length ?? null,
-      salaryQuoted: salaryQuoted || null,
-      recruiterName: recruiterName || null,
-      recruiterEmail: recruiterEmail || null,
-      recruiterLinkedin: recruiterLinkedin || null,
+      salaryExpectation,
     });
 
     return redirect(`/applications/${application.id}`);

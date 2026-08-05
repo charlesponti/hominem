@@ -1,124 +1,62 @@
-import { jsonArray } from '../lib/db-json';
-import { getPublicPortfolioProfile } from '../lib/portfolio.server';
+import { CareerRepository, ProjectRepository, SkillRepository, db } from '@hominem/db';
+
 import { Route } from './+types/p.$slug';
 
-export const meta: Route.MetaFunction = ({ loaderData }) => {
-  if (!loaderData) {
-    return [
-      { title: 'Portfolio Not Found | career' },
-      { name: 'description', content: 'The requested portfolio could not be found.' },
-    ];
-  }
-
-  return [
-    { title: `${loaderData.portfolio.name} - ${loaderData.portfolio.jobTitle}` },
-    { name: 'description', content: loaderData.portfolio.bio },
-    {
-      property: 'og:title',
-      content: `${loaderData.portfolio.name} - ${loaderData.portfolio.jobTitle}`,
-    },
-    { property: 'og:description', content: loaderData.portfolio.bio },
-    { property: 'og:type', content: 'profile' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    {
-      name: 'twitter:title',
-      content: `${loaderData.portfolio.name} - ${loaderData.portfolio.jobTitle}`,
-    },
-    { name: 'twitter:description', content: loaderData.portfolio.bio },
-  ];
-};
-
 export async function loader({ params }: Route.LoaderArgs) {
-  const { slug } = params;
+  const profile = await CareerRepository.getProfileBySlug(db, params.slug);
 
-  if (!slug) {
-    throw new Response('Portfolio not found', { status: 404 });
+  if (!profile) {
+    throw new Response('Profile not found', { status: 404 });
   }
 
-  const portfolio = await getPublicPortfolioProfile(slug);
-  if (!portfolio) {
-    throw new Response('Portfolio not found', { status: 404 });
-  }
-  return { portfolio };
+  const [positions, projects, skills] = await Promise.all([
+    CareerRepository.listPositions(db, profile.ownerUserid, { type: 'employment' }),
+    ProjectRepository.list(db, profile.ownerUserid),
+    SkillRepository.list(db, profile.ownerUserid),
+  ]);
+
+  return { profile, positions, projects, skills };
 }
 
-export default function Portfolio({
-  loaderData,
-}: {
-  loaderData: Awaited<ReturnType<typeof loader>>;
-}) {
-  const { portfolio } = loaderData;
+export const meta: Route.MetaFunction = ({ params }) => [{ title: `${params.slug} | career` }];
+
+export default function PublicProfilePage({ loaderData }: Route.ComponentProps) {
+  const { profile, positions, projects, skills } = loaderData;
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex flex-col gap-6">
-      {/* Header */}
-      <header className="mb-16">
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h1 className="font-sans text-4xl font-light text-foreground mb-2">{portfolio.name}</h1>
-            {/* Contact */}
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span>{portfolio.currentLocation}</span>
-              {portfolio.openToRemote ? (
-                <>
-                  <span>•</span>
-                  <span className="text-success font-medium">Open to remote</span>
-                </>
-              ) : null}
-              {portfolio.availabilityStatus ? (
-                <>
-                  <span>•</span>
-                  <span className="text-success font-medium">Open to opportunities</span>
-                </>
-              ) : null}
-              <span>•</span>
-              <span>{portfolio.email}</span>
-            </div>
-            <p className="text-xl text-muted-foreground my-4">{portfolio.jobTitle}</p>
-          </div>
-        </div>
-
-        {/* Bio */}
-        <section className="mb-16">
-          <h2 className="font-sans text-2xl font-light text-foreground">About</h2>
-          <p className="text-muted-foreground leading-relaxed">{portfolio.bio}</p>
-        </section>
+    <div className="mx-auto max-w-3xl px-4 py-12">
+      <header className="mb-12">
+        <h1 className="heading-1">
+          {profile.firstName} {profile.lastName}
+        </h1>
+        {profile.headline && (
+          <p className="heading-3 text-muted-foreground mt-1">{profile.headline}</p>
+        )}
+        {profile.location && (
+          <p className="body-2 text-muted-foreground mt-2">{profile.location}</p>
+        )}
+        {profile.summary && (
+          <p className="body-1 mt-6 max-w-prose whitespace-pre-wrap">{profile.summary}</p>
+        )}
       </header>
 
-      {/* Work Experience */}
-      {portfolio.work_experiences && portfolio.work_experiences.length > 0 && (
-        <section className="mb-16">
-          <h2 className="font-sans text-2xl font-light text-foreground mb-4">Experience</h2>
-          <div className="space-y-12">
-            {portfolio.work_experiences.map((job) => (
-              <div key={job.id} className="border-l-2 border-border pl-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-medium text-foreground">{job.role}</h3>
-                    <p className="text-muted-foreground">{job.company}</p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {job.startDate ? new Date(job.startDate).getFullYear() : 'Unknown'} -{' '}
-                    {job.endDate ? new Date(job.endDate).getFullYear() : 'Present'}
-                  </div>
-                </div>
-                <p className="text-muted-foreground mb-3 whitespace-pre-line leading-relaxed">
-                  {job.description}
+      {positions.length > 0 && (
+        <section className="mb-12">
+          <h2 className="heading-2 mb-6">Experience</h2>
+          <div className="space-y-8">
+            {positions.map((pos) => (
+              <div key={pos.id}>
+                <h3 className="heading-3">{pos.title}</h3>
+                <p className="body-2 text-muted-foreground">
+                  {pos.company}
+                  {pos.location ? ` — ${pos.location}` : ''}
                 </p>
-                {job.metrics && (
-                  <p className="text-sm text-muted-foreground mb-4 italic">{job.metrics}</p>
-                )}
-                {jsonArray<string>(job.tags).length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {jsonArray<string>(job.tags).map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 bg-muted text-muted-foreground text-xs rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                <p className="caption1 text-muted-foreground mt-0.5">
+                  {pos.startDate ? formatDate(pos.startDate) : '?'} —{' '}
+                  {pos.isCurrent ? 'Present' : pos.endDate ? formatDate(pos.endDate) : '?'}
+                </p>
+                {pos.description && (
+                  <p className="body-2 mt-3 whitespace-pre-wrap">{pos.description}</p>
                 )}
               </div>
             ))}
@@ -126,53 +64,55 @@ export default function Portfolio({
         </section>
       )}
 
-      {/* Skills */}
-      {portfolio.skills && portfolio.skills.length > 0 && (
-        <section className="mb-16">
-          <h2 className="font-sans text-2xl font-light text-foreground mb-8">Skills</h2>
+      {projects.length > 0 && (
+        <section className="mb-12">
+          <h2 className="heading-2 mb-6">Projects</h2>
+          <div className="grid gap-6 sm:grid-cols-2">
+            {projects.map((p) => (
+              <div key={p.id} className="rounded-lg border p-4">
+                <h3 className="heading-3">{p.title}</h3>
+                {p.description && (
+                  <p className="body-2 text-muted-foreground mt-2">{p.description}</p>
+                )}
+                {p.liveUrl && (
+                  <a
+                    href={p.liveUrl}
+                    className="body-2 mt-2 inline-block underline"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    View project
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {skills.length > 0 && (
+        <section className="mb-12">
+          <h2 className="heading-2 mb-6">Skills</h2>
           <div className="flex flex-wrap gap-2">
-            {portfolio.skills.map((skill) => (
-              <span
-                key={skill.id}
-                className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full"
-              >
-                {skill.name}
+            {skills.map((s) => (
+              <span key={s.id} className="rounded-full bg-muted px-3 py-1 caption1">
+                {s.name}
               </span>
             ))}
           </div>
         </section>
       )}
 
-      {/* Featured Projects */}
-      {portfolio.projects && portfolio.projects.length > 0 && (
-        <section>
-          <h2 className="font-sans text-2xl font-light text-foreground mb-8">Featured Projects</h2>
-          <div className="space-y-8">
-            {portfolio.projects
-              // .filter((project) => project.isFeatured)
-              .map((project) => (
-                <div key={project.id} className="border border-border rounded-lg p-6">
-                  <h3 className="font-medium text-foreground mb-2">{project.title}</h3>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    {project.description}
-                  </p>
-                  {jsonArray<string>(project.technologies).length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {jsonArray<string>(project.technologies).map((tech) => (
-                        <span
-                          key={tech}
-                          className="px-3 py-1 bg-muted text-muted-foreground text-xs rounded-full"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
-        </section>
+      {profile.copyright && (
+        <footer className="mt-16 border-t pt-6">
+          <p className="caption1 text-muted-foreground">{profile.copyright}</p>
+        </footer>
       )}
     </div>
   );
+}
+
+function formatDate(date: string): string {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 }

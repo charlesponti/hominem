@@ -1,4 +1,4 @@
-import type { UpdateWorkExperienceInput, WorkExperienceRecord } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import { useFetcher } from 'react-router';
 
 import { useCareerEditorSubmission } from './useCareerEditorSubmission';
@@ -26,27 +26,29 @@ export function useWorkExperienceSection({
     isSubmitting: fetcher.state !== 'idle',
     submissionError,
     clearSubmissionError,
-    submitUpdates: (updates: UpdateWorkExperienceInput) =>
-      submitWorkExperienceUpdates(fetcher, clearSubmissionError, updates),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    submitUpdates: (updates: Record<string, any>) =>
+      submitPositionUpdates(fetcher, clearSubmissionError, updates),
   };
 }
 
 export function submitDelete(
   fetcher: ReturnType<typeof useFetcher>,
   clearSubmissionError: () => void,
-  workExperience: WorkExperienceRecord,
+  position: CareerPositionRecord,
 ) {
   const formData = new FormData();
   formData.append('operation', 'delete');
-  formData.append('portfolioId', workExperience.portfolioId);
+  formData.append('positionId', position.id);
   clearSubmissionError();
   fetcher.submit(formData, { method: 'POST' });
 }
 
-function submitWorkExperienceUpdates(
+function submitPositionUpdates(
   fetcher: ReturnType<typeof useFetcher>,
   clearSubmissionError: () => void,
-  updates: UpdateWorkExperienceInput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updates: Record<string, any>,
 ) {
   const formData = new FormData();
   formData.append('operation', 'update');

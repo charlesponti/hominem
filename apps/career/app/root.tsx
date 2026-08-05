@@ -19,7 +19,6 @@ import './app.css';
 import { NavigationProgress } from './components/NavigationProgress';
 import { serverEnv } from './lib/env.server';
 import { sessionMiddleware, userContext } from './lib/middleware';
-import { ensureUserPortfolio } from './lib/portfolio.server';
 
 export const links = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -99,13 +98,10 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const user = context.get(userContext);
-  if (user) {
-    await ensureUserPortfolio(request, user);
-  }
 
   return data({
     user,
-    hasPortfolio: Boolean(user),
+    hasProfile: Boolean(user),
     apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
   });
 }

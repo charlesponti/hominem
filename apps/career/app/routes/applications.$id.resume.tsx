@@ -1,13 +1,12 @@
-import type { JobApplicationRecord as ApplicationWithCompany } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db';
+import type { ActionFunctionArgs } from 'react-router';
 import { useOutletContext } from 'react-router';
 
 import { ApplicationResumeTab } from '~/components/career';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
 
-import { Route } from './+types/applications.$id.resume';
-
-export async function action({ context, request, params }: Route.ActionArgs) {
+export async function action({ context, request, params }: ActionFunctionArgs) {
   const user = context.get(userContext)!;
   const { id } = params;
 
@@ -26,11 +25,11 @@ export async function action({ context, request, params }: Route.ActionArgs) {
     throw new Response('Resume content is required', { status: 400 });
   }
 
-  await JobApplicationsService.updateApplication(id, { resume });
+  await JobApplicationsService.updateApplication(id, { resumeUrl: resume });
   return { message: 'Resume saved successfully' };
 }
 
-export default function ApplicationResumeRoute({ params }: Route.ComponentProps) {
-  const application = useOutletContext<ApplicationWithCompany>();
+export default function ApplicationResumeRoute({ params }: { params: { id?: string } }) {
+  const application = useOutletContext<CareerApplicationRecord>();
   return <ApplicationResumeTab application={application} applicationId={params.id || ''} />;
 }

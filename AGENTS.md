@@ -44,6 +44,7 @@ pnpm --filter @hominem/api dev
 pnpm test --filter=@hominem/api...
 pnpm test --filter=@hominem/omiro...
 pnpm format
+just db backup
 just db migrate
 ```
 

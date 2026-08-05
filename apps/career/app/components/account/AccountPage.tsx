@@ -20,7 +20,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  const { user, currentPortfolio, socialLinks, documents } = loaderData;
+  const { user, currentProfile, socialLinks, documents } = loaderData;
 
   const submitAccountAction = async <TData,>(
     formData: FormData,
@@ -58,7 +58,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
   };
 
   const handleDeletePortfolio = async () => {
-    if (!currentPortfolio) {
+    if (!currentProfile) {
       return;
     }
 
@@ -68,7 +68,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
 
     const formData = new FormData();
     formData.append('action', 'delete');
-    formData.append('portfolioId', currentPortfolio.id);
+    formData.append('portfolioId', currentProfile.id);
 
     await submitAccountAction(formData);
     navigate('/work');
@@ -115,14 +115,14 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
   };
 
   const handleUpdateSlug = async (slug: string) => {
-    if (!currentPortfolio) {
+    if (!currentProfile) {
       return;
     }
 
     const formData = new FormData();
     formData.append('action', 'update-slug');
     formData.append('slug', slug);
-    formData.append('portfolioId', currentPortfolio.id);
+    formData.append('portfolioId', currentProfile.id);
 
     await submitAccountAction<{ slug: string }>(formData);
     revalidator.revalidate();
@@ -149,7 +149,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
   };
 
   const handleDownloadPdf = async () => {
-    if (!currentPortfolio?.slug || !currentPortfolio.isPublic) {
+    if (!currentProfile?.slug || !currentProfile.isPublic) {
       setPdfError('Portfolio must be public to generate PDF');
       return;
     }
@@ -158,7 +158,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
       setPdfGenerating(true);
       setPdfError(null);
 
-      const portfolioUrl = `${window.location.origin}/p/${currentPortfolio.slug}`;
+      const portfolioUrl = `${window.location.origin}/p/${currentProfile.slug}`;
 
       const response = await fetch('https://career-worker.fly.dev/trigger-task', {
         method: 'POST',
@@ -198,7 +198,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
         <section className="space-y-6">
           <section className="space-y-4">
             <BasicInfoForm
-              portfolio={currentPortfolio}
+              portfolio={currentProfile}
               accountEmail={user.email}
               onSave={handleSaveBasics}
               onImageUpload={handleImageUpload}
@@ -217,7 +217,7 @@ export function AccountPage({ loaderData }: { loaderData: AccountLoaderData }) {
 
         <aside className="space-y-8">
           <AccountActions
-            canDownloadPdf={currentPortfolio.isPublic}
+            canDownloadPdf={currentProfile.isPublic}
             isGeneratingPdf={pdfGenerating}
             isSigningOut={isSigningOut}
             onDeletePortfolio={handleDeletePortfolio}

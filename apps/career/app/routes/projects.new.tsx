@@ -1,79 +1,73 @@
-import { ArrowLeftIcon } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { ProjectRepository, db } from '@hominem/db';
+import { TextField, Textarea } from '@ponti-studios/ui/forms';
+import { SectionIntro } from '@ponti-studios/ui/layout';
+import { Button } from '@ponti-studios/ui/primitives';
+import { redirect } from 'react-router';
+import { Form } from 'react-router';
 
-import { ProjectEditorForm } from '~/components/career/ProjectEditorForm';
-import { handleProjectMutationAction } from '~/lib/career/project-actions';
-import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
-import { portfolioContext, userContext } from '~/lib/middleware';
+import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/projects.new';
 
-export const meta: Route.MetaFunction = () => [{ title: 'New Project | career' }];
-
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const user = context.get(userContext)!;
-  const portfolio = context.get(portfolioContext)!;
-  const initialWorkExperienceId = new URL(request.url).searchParams.get('client');
-  const workExperiences = await getUserWorkExperiencesDesc(user.id);
-
-  return {
-    portfolioId: portfolio.id,
-    workExperiences,
-    initialWorkExperienceId,
-  };
-}
+export const meta: Route.MetaFunction = () => [{ title: 'Add project | career' }];
 
 export async function action({ context, request }: Route.ActionArgs) {
-  const user = context.get(userContext);
-  if (!user) {
-    return { success: false, error: 'Sign in again before saving your projects.' };
-  }
+  const user = context.get(userContext)!;
+  const formData = await request.formData();
+  const title = (formData.get('title') as string)?.trim();
+  if (!title) return { error: 'Title is required' };
 
-  return handleProjectMutationAction(request, user.id);
+  const technologiesRaw = (formData.get('technologies') as string) ?? '';
+  const technologies = technologiesRaw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  await ProjectRepository.create(db, user.id, {
+    title,
+    description: (formData.get('description') as string) || null,
+    shortDescription: (formData.get('shortDescription') as string) || null,
+    liveUrl: (formData.get('liveUrl') as string) || null,
+    githubUrl: (formData.get('githubUrl') as string) || null,
+    technologies,
+  });
+
+  return redirect('/projects');
 }
 
-export default function NewProject({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const currentSearch = searchParams.toString();
-  const backHref = currentSearch ? `/projects?${currentSearch}` : '/projects';
-
+export default function NewProjectRoute({ actionData }: Route.ComponentProps) {
   return (
-    <section className="flex flex-col gap-6">
-      <button
-        type="button"
-        onClick={() => navigate(backHref)}
-        data-testid="back-button"
-        className="body-3 inline-flex items-center gap-2 self-start text-muted-foreground transition-colors"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to projects
-      </button>
+    <div className="max-w-2xl">
+      <SectionIntro title="Add project" description="Add a side project or portfolio piece." />
 
-      <div className="space-y-1">
-        <h1 className="heading-2 text-foreground">New Project</h1>
-        <p className="body-3 text-muted-foreground">
-          Create a project and optionally link it to one of your work experiences.
-        </p>
-      </div>
-
-      <ProjectEditorForm
-        action="/projects/new"
-        portfolioId={loaderData.portfolioId}
-        workExperiences={loaderData.workExperiences}
-        initialWorkExperienceId={loaderData.initialWorkExperienceId}
-        onSuccess={(result) => {
-          if (!result.data) {
-            return;
-          }
-
-          navigate(
-            currentSearch
-              ? `/projects/${result.data.id}?${currentSearch}`
-              : `/projects/${result.data.id}`,
-          );
-        }}
-      />
-    </section>
+      <Form method="post" className="mt-6 flex flex-col gap-4">
+        <TextField label="Title" name="title" required placeholder="Project name" />
+        <TextField
+          label="Short description"
+          name="shortDescription"
+          placeholder="One-line summary"
+        />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="description" className="text-foreground text-sm font-medium">
+            Description
+          </label>
+          <Textarea id="description" name="description" rows={4} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <TextField label="Live URL" name="liveUrl" placeholder="https://" />
+          <TextField label="GitHub URL" name="githubUrl" placeholder="https://" />
+        </div>
+        <TextField
+          label="Technologies"
+          name="technologies"
+          placeholder="TypeScript, React, PostgreSQL"
+          helpText="Comma-separated"
+        />
+        {actionData?.error && <p className="body-3 text-destructive-text">{actionData.error}</p>}
+        <div className="flex justify-end">
+          <Button type="submit">Add project</Button>
+        </div>
+      </Form>
+    </div>
   );
 }

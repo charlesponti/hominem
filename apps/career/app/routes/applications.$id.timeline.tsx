@@ -1,50 +1,41 @@
-import type {
-  CareerInterviewEntry as InterviewEntry,
-  JobApplicationRecord as ApplicationWithCompany,
-} from '@hominem/db';
+import type { CareerApplicationWithRelations } from '@hominem/db';
 import { useOutletContext } from 'react-router';
 
-import { ApplicationTimelineTab } from '~/components/career';
-import { userContext } from '~/lib/middleware';
-import { JobApplicationsService } from '~/lib/services/job-applications.service';
+export default function ApplicationTimelineRoute() {
+  const application = useOutletContext<CareerApplicationWithRelations>();
 
-import { Route } from './+types/applications.$id.timeline';
-
-export async function action({ context, request, params }: Route.ActionArgs) {
-  const user = context.get(userContext)!;
-  const { id } = params;
-
-  if (!id) {
-    throw new Response('Application ID is required', { status: 400 });
+  if (!application.stages?.length) {
+    return (
+      <div className="py-10 text-center text-muted-foreground">
+        <p className="body-2">No pipeline stages recorded.</p>
+      </div>
+    );
   }
 
-  const hasOwnership = await JobApplicationsService.verifyOwnership(id, user.id);
-  if (!hasOwnership) {
-    throw new Response('Application not found or access denied', { status: 403 });
-  }
+  const sortedStages = [...application.stages].sort((a, b) => {
+    const dateA = a.enteredAt ?? '';
+    const dateB = b.enteredAt ?? '';
+    return dateB.localeCompare(dateA);
+  });
 
-  const formData = await request.formData();
-  const interviewType = formData.get('interviewType') as InterviewEntry['type'];
-  const interviewDate = formData.get('interviewDate') as string;
-  const interviewer = formData.get('interviewer') as string;
-  const notes = formData.get('interviewNotes') as string;
-
-  if (!interviewDate) {
-    throw new Response('Interview date is required', { status: 400 });
-  }
-
-  const newInterview: InterviewEntry = {
-    type: interviewType,
-    date: interviewDate,
-    interviewer: interviewer || undefined,
-    notes: notes || undefined,
-  };
-
-  await JobApplicationsService.addInterview(id, newInterview);
-  return { message: 'Interview added successfully' };
-}
-
-export default function ApplicationTimelineRoute({ params }: Route.ComponentProps) {
-  const application = useOutletContext<ApplicationWithCompany>();
-  return <ApplicationTimelineTab application={application} applicationId={params.id || ''} />;
+  return (
+    <div className="space-y-4">
+      {sortedStages.map((stage) => (
+        <div key={stage.id} className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="h-3 w-3 rounded-full bg-blue-500 mt-1.5" />
+            <div className="w-px flex-1 bg-border" />
+          </div>
+          <div className="pb-6 flex-1">
+            <p className="heading-4">{stage.stage}</p>
+            <div className="body-3 text-muted-foreground mt-1 space-y-0.5">
+              {stage.enteredAt && <p>Entered: {stage.enteredAt}</p>}
+              {stage.exitedAt && <p>Exited: {stage.exitedAt}</p>}
+            </div>
+            {stage.notes && <p className="body-3 mt-2 text-muted-foreground">{stage.notes}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }

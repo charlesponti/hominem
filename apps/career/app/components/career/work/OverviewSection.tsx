@@ -1,29 +1,17 @@
-import type { WorkExperienceRecord } from '@hominem/db';
-import {
-  Field,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import type { CareerPositionRecord } from '@hominem/db';
+import { Input, Textarea } from '@ponti-studios/ui/forms';
+import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { useWorkExperienceSection } from '~/hooks/useWorkExperienceSection';
 import type { WorkExperienceMetadata } from '~/lib/career/queries/career-progression';
 import {
-  EMPLOYMENT_TYPE_OPTIONS,
   formatDateRange,
-  formatOptionalLabel,
   normalizeOptionalText,
   toMonthInputValue,
-  WORK_ARRANGEMENT_OPTIONS,
   type OverviewFormValues,
 } from '~/lib/career/work-experience-form';
 
@@ -33,18 +21,16 @@ export function OverviewSection({
   workExperience,
   metadata,
 }: {
-  workExperience: WorkExperienceRecord;
+  workExperience: CareerPositionRecord;
   metadata: WorkExperienceMetadata;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      role: workExperience.role ?? '',
+      role: workExperience.title ?? '',
       company: workExperience.company ?? '',
       startDate: toMonthInputValue(workExperience.startDate),
       endDate: toMonthInputValue(workExperience.endDate),
-      employmentType: workExperience.employmentType ?? '',
-      workArrangement: workExperience.workArrangement ?? '',
       description: workExperience.description ?? '',
       location: metadata.location ?? '',
     }),
@@ -72,8 +58,6 @@ export function OverviewSection({
       company: values.company.trim(),
       startDate: values.startDate || null,
       endDate: values.endDate || null,
-      employmentType: normalizeOptionalText(values.employmentType),
-      workArrangement: normalizeOptionalText(values.workArrangement),
       description: values.description.trim(),
       metadata: {
         location: normalizeOptionalText(values.location),
@@ -97,82 +81,47 @@ export function OverviewSection({
           <FormErrorAlert title="Overview wasn’t saved" message={submissionError} />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Role" error={errors.role?.message}>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Role</Label>
               <Input {...register('role', { required: 'Add the role title.' })} />
-            </Field>
-            <Field label="Company" error={errors.company?.message}>
+              {errors.role?.message && (
+                <p className="body-4 text-destructive">{errors.role.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Company</Label>
               <Input {...register('company', { required: 'Add the company name.' })} />
-            </Field>
-            <Field label="Start month" error={errors.startDate?.message}>
+              {errors.company?.message && (
+                <p className="body-4 text-destructive">{errors.company.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Start month</Label>
               <Input type="month" {...register('startDate')} />
-            </Field>
-            <Field label="End month" helpText="Leave blank for a current role.">
+              {errors.startDate?.message && (
+                <p className="body-4 text-destructive">{errors.startDate.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">End month</Label>
+              <p className="body-4 text-muted-foreground">Leave blank for a current role.</p>
               <Input type="month" {...register('endDate')} />
-            </Field>
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Employment type">
-              <Controller
-                control={control}
-                name="employmentType"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(value) => field.onChange(value === '__none' ? '' : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select one" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none">Select one</SelectItem>
-                      {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {formatOptionalLabel(option)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </Field>
-            <Field label="Work arrangement">
-              <Controller
-                control={control}
-                name="workArrangement"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(value) => field.onChange(value === '__none' ? '' : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select one" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none">Select one</SelectItem>
-                      {WORK_ARRANGEMENT_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {formatOptionalLabel(option)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </Field>
-          </div>
-
-          <Field
-            label="Description"
-            helpText="Focus on scope, responsibilities, and the shape of the role."
-          >
+          <div className="space-y-1.5">
+            <Label className="subheading-4 text-muted-foreground">Description</Label>
+            <p className="body-4 text-muted-foreground">
+              Focus on scope, responsibilities, and the shape of the role.
+            </p>
             <Textarea rows={5} {...register('description')} />
-          </Field>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Location">
+            <div className="space-y-1.5">
+              <Label className="subheading-4 text-muted-foreground">Location</Label>
               <Input placeholder="San Francisco, CA" {...register('location')} />
-            </Field>
+            </div>
           </div>
 
           <SectionFormActions
@@ -187,19 +136,11 @@ export function OverviewSection({
       ) : (
         <div className="space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <DetailRow label="Role" value={workExperience.role || 'Not set'} />
+            <DetailRow label="Role" value={workExperience.title || 'Not set'} />
             <DetailRow label="Company" value={workExperience.company || 'Not set'} />
             <DetailRow
               label="Timeline"
               value={formatDateRange(workExperience.startDate, workExperience.endDate)}
-            />
-            <DetailRow
-              label="Employment"
-              value={formatOptionalLabel(workExperience.employmentType) ?? 'Not set'}
-            />
-            <DetailRow
-              label="Arrangement"
-              value={formatOptionalLabel(workExperience.workArrangement) ?? 'Not set'}
             />
             <DetailRow label="Location" value={metadata.location ?? 'Not set'} />
           </div>
