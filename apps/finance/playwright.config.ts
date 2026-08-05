@@ -33,7 +33,7 @@ export default defineConfig({
         FINANCE_URL: financeBaseUrl,
         NOTES_URL: 'http://notes.lvh.me:4445',
         ROCCO_URL: 'http://rocco.lvh.me:4446',
-        DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5434/app-test',
+        DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test',
         BETTER_AUTH_SECRET: 'e2e-better-auth-secret',
         AUTH_E2E_SECRET: 'otp-secret',
         AUTH_E2E_ENABLED: 'true',

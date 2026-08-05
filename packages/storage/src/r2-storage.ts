@@ -119,7 +119,7 @@ function getBucketAccessError(bucketName: string, error: unknown): StorageServic
 }
 
 class InMemoryStorageBackend {
-  bucketName = 'app-test';
+  bucketName = 'hominem-test';
   isPublic = false;
   userScoped = true;
   files: Map<string, Buffer> = new Map();

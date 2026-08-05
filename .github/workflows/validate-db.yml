@@ -47,14 +47,14 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: app-test
+          POSTGRES_DB: hominem-test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5434:5432
+          - 4433:5432
 
     steps:
       - name: checkout-repository
@@ -90,5 +90,5 @@ jobs:
 
       - name: validate-generated-types
         run: |
-          DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5434/app-test" just db codegen
+          DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:4433/hominem-test" just db codegen
           git diff --exit-code packages/db/src/types/database.ts

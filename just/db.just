@@ -1,4 +1,4 @@
-test_db_url := 'postgresql://postgres:postgres@127.0.0.1:5434/app-test'
+test_db_url := 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test'
 
 migrate profile='':
     #!/usr/bin/env bash

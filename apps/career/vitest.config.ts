@@ -1,8 +1,7 @@
 import 'dotenv/config'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-
-const testDatabaseUrl = 'postgresql://postgres:postgres@127.0.0.1:5434/app-test'
+import { TEST_DATABASE_URL } from '@hominem/db/test/database-url'
 
 export default defineConfig({
   resolve: {
@@ -10,7 +9,7 @@ export default defineConfig({
   },
   test: {
     env: {
-      DATABASE_URL: testDatabaseUrl,
+      DATABASE_URL: TEST_DATABASE_URL,
       NODE_ENV: 'test',
     },
     globals: true,
