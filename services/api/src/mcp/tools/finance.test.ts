@@ -1,4 +1,11 @@
 import { db, pool } from '@hominem/db';
+import type {
+  AppFinanceAccounts,
+  AppFinanceCategories,
+  AppFinanceStatementPeriods,
+  AppFinanceTransactions,
+} from '@hominem/db';
+import type { Insertable } from 'kysely';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { McpToolResult } from '../tools';
@@ -69,7 +76,7 @@ beforeAll(async () => {
         isActive: true,
         metadata: {},
       },
-    ] as any)
+    ] satisfies Insertable<AppFinanceAccounts>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -78,7 +85,7 @@ beforeAll(async () => {
     .values([
       { id: foodId, userId, name: 'Food & Drink' },
       { id: transportId, userId, name: 'Transport' },
-    ] as any)
+    ] satisfies Insertable<AppFinanceCategories>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -95,7 +102,7 @@ beforeAll(async () => {
         closingBalance: 1000.0,
         certificationStatus: 'uncertified',
       },
-    ] as any)
+    ] satisfies Insertable<AppFinanceStatementPeriods>[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -127,7 +134,7 @@ beforeAll(async () => {
         categoryAssignmentSource: 'source',
         excluded: excl,
         providerPayload: {},
-      } as any)
+      } satisfies Insertable<AppFinanceTransactions>)
       .onConflict((oc) => oc.column('id').doNothing())
       .execute();
   }
