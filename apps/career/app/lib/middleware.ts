@@ -1,11 +1,8 @@
-import type { PortfolioRecord } from '@hominem/db';
 import { createContext, redirect, type RouterContext } from 'react-router';
 
 import { getServerSession, type User } from './auth.server';
-import { ensureUserPortfolio } from './portfolio.server';
 
 export const userContext = createContext<User | null>(null);
-export const portfolioContext = createContext<PortfolioRecord | null>(null);
 
 type MiddlewareContext = {
   get: <T>(key: RouterContext<T>) => T;
@@ -58,41 +55,6 @@ export async function requireAuthMiddleware(
 
   if (!user) {
     return unauthorizedResponse(request);
-  }
-
-  return next();
-}
-
-export async function loadPortfolioMiddleware(
-  { request, context }: SharedMiddlewareArgs,
-  next: SharedMiddlewareNext,
-): Promise<Response | void> {
-  const user = context.get(userContext);
-  if (!user) {
-    return next();
-  }
-
-  // Ensure a single portfolio exists for every signed-in user (created on first access).
-  const currentPortfolio = await ensureUserPortfolio(request, user);
-  context.set(portfolioContext, currentPortfolio);
-
-  return next();
-}
-
-export async function requirePortfolioMiddleware(
-  { request, context }: SharedMiddlewareArgs,
-  next: SharedMiddlewareNext,
-): Promise<Response | void> {
-  const user = context.get(userContext);
-  if (!user) {
-    const url = new URL(request.url);
-    return redirect(`/auth?next=${encodeURIComponent(url.pathname + url.search)}`);
-  }
-
-  const currentPortfolio = context.get(portfolioContext);
-  if (!currentPortfolio) {
-    // Should not happen after ensureUserPortfolio; keep a hard fail-safe.
-    return redirect('/work');
   }
 
   return next();

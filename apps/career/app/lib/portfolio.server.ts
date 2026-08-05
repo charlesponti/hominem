@@ -1,62 +1,122 @@
-import type {
-  FullPortfolioRecord,
-  PortfolioRecord,
-  PublicPortfolioProfileRecord,
-  ResumePortfolioRecord,
-} from '@hominem/db';
-import { db, PortfolioRepository } from '@hominem/db';
+import { CareerRepository, ProjectRepository, SkillRepository, db } from '@hominem/db';
 
-import { fetchCurrentPortfolio } from './api.server';
-import type { User } from './auth.server';
+import { fetchCareerProfile } from './api.server';
+import { jsonArray } from './db-json';
 
-export interface FullPortfolio extends FullPortfolioRecord {}
-export interface ResumePortfolio extends ResumePortfolioRecord {}
-export interface PublicPortfolioProfile extends PublicPortfolioProfileRecord {}
-
-/** Full record including testimonials — for the generic portfolio JSON API, which returns everything to the caller. */
-export async function getFullUserPortfolio(owner_userid: string): Promise<FullPortfolio | null> {
-  return PortfolioRepository.loadFullPortfolioByUserId(db, owner_userid);
-}
-
-/** Work experiences, skills, and projects only — for LLM prompt context, which never reads testimonials. */
-export async function getResumePortfolioContext(
-  owner_userid: string,
-): Promise<ResumePortfolio | null> {
-  return PortfolioRepository.loadResumeContextByUserId(db, owner_userid);
-}
-
-/** Work experiences, skills, and projects only — for the public profile page, which doesn't render testimonials. */
-export async function getPublicPortfolioProfile(
-  slug: string,
-): Promise<PublicPortfolioProfile | null> {
-  return PortfolioRepository.loadPublicProfileBySlug(db, slug);
-}
-
-function portfolioDisplayName(user: { name?: string | null; email?: string | null }): string {
-  const name = user.name?.trim();
-  if (name) return name;
-  const local = user.email?.split('@')[0]?.trim();
-  return local || 'You';
+export interface ResumePortfolio {
+  name: string;
+  jobTitle: string;
+  currentLocation: string;
+  email: string;
+  phone: string | null;
+  bio: string;
+  workExperiences: Array<{
+    role: string;
+    company: string;
+    startDate: string | null;
+    endDate: string | null;
+    description: string | null;
+  }>;
+  skills: Array<{
+    name: string;
+    level: number | null;
+    category: string | null;
+    yearsOfExperience: number | null;
+    description: string | null;
+  }>;
+  projects: Array<{
+    title: string;
+    status: string | null;
+    description: string | null;
+    technologies: string[];
+    liveUrl: string | null;
+    githubUrl: string | null;
+  }>;
 }
 
 /**
- * Every signed-in career user gets exactly one portfolio.
- * Creates a private empty shell on first access if missing.
+ * Every signed-in career user has one career profile.
+ * If none exists, return null (profile is created via data migration, not on-the-fly like the old portfolio).
  */
-export async function ensureUserPortfolio(request: Request, user: User): Promise<PortfolioRecord> {
-  const existing = await fetchCurrentPortfolio(request);
-  if (existing) return existing;
+export async function ensureUserHasProfile(request: Request): Promise<boolean> {
+  const profile = await fetchCareerProfile(request);
+  return profile !== null;
+}
 
-  try {
-    return await PortfolioRepository.createDefaultPortfolio(db, {
-      ownerUserid: user.id,
-      email: user.email ?? '',
-      name: portfolioDisplayName(user),
-    });
-  } catch {
-    // Concurrent first request may have created it; re-fetch.
-    const raced = await fetchCurrentPortfolio(request);
-    if (raced) return raced;
-    throw new Error('Could not create portfolio for user');
-  }
+/**
+ * Full profile context — profile + positions + education — for AI prompts and public display.
+ */
+export async function getFullCareerContext(ownerUserId: string) {
+  const [profile, positions, education] = await Promise.all([
+    CareerRepository.getProfile(db, ownerUserId),
+    CareerRepository.listPositions(db, ownerUserId),
+    CareerRepository.listEducation(db, ownerUserId, 50),
+  ]);
+
+  return {
+    profile,
+    positions,
+    education,
+  };
+}
+
+/**
+ * Public career profile for sharing.
+ */
+export async function getPublicCareerProfile(ownerUserId: string) {
+  const [profile, positions] = await Promise.all([
+    CareerRepository.getProfile(db, ownerUserId),
+    CareerRepository.listPositions(db, ownerUserId, { type: 'employment' }),
+  ]);
+
+  return { profile, positions };
+}
+
+/**
+ * Resume portfolio context for AI prompts — profile + positions + skills + projects.
+ */
+export async function getResumePortfolioContext(
+  ownerUserId: string,
+): Promise<ResumePortfolio | null> {
+  const [profile, positions, skills, projects] = await Promise.all([
+    CareerRepository.getProfile(db, ownerUserId),
+    CareerRepository.listPositions(db, ownerUserId),
+    SkillRepository.list(db, ownerUserId),
+    ProjectRepository.list(db, ownerUserId),
+  ]);
+
+  if (!profile) return null;
+
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
+
+  return {
+    name,
+    jobTitle: profile.headline ?? '',
+    currentLocation: profile.location ?? '',
+    email: profile.email ?? '',
+    phone: profile.phone ?? null,
+    bio: profile.summary ?? '',
+    workExperiences: positions.map((p) => ({
+      role: p.title,
+      company: p.company,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      description: p.description,
+    })),
+    skills: skills.map((s) => ({
+      name: s.name,
+      level: s.level,
+      category: s.category,
+      yearsOfExperience: s.yearsOfExperience,
+      description: s.description,
+    })),
+    projects: projects.map((p) => ({
+      title: p.title,
+      status: p.status,
+      description: p.description,
+      technologies: jsonArray<string>(p.technologies),
+      liveUrl: p.liveUrl,
+      githubUrl: p.githubUrl,
+    })),
+  };
 }

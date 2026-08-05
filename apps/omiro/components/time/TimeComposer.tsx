@@ -184,7 +184,7 @@ function ResultSurface({
   state,
   testID,
 }: ResultSurfaceProps) {
-  const theme = useTheme();
+  const _theme = useTheme();
   const surfaceStyles = useComposerSurfaceStyles();
   const styles = useResultStyles();
   const reducedMotion = useReducedMotion();

@@ -13,7 +13,7 @@ const enabledScopes = new Set(
     .map((scope: string) => scope.trim())
     .filter(Boolean),
 );
-const requiredScope = MCP_SCOPES.join(' ');
+const requiredScope = MCP_SCOPES[0];
 
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
@@ -71,7 +71,7 @@ async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
     );
   }
 
-  if (!MCP_SCOPES.every((scope) => auth.scopes.includes(scope))) {
+  if (!MCP_SCOPES.some((scope) => auth.scopes.includes(scope))) {
     return new Response(
       JSON.stringify({
         error: 'insufficient_scope',

@@ -7,7 +7,7 @@ import {
   getChatCompletionUsage,
   OpenRouterRequestError,
 } from '@hominem/ai';
-import { db, PortfolioRepository } from '@hominem/db';
+import { db, CareerRepository } from '@hominem/db';
 import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
 import {
   documentStorageService,
@@ -206,7 +206,7 @@ export const action: ActionFunction = async ({ request, context }) => {
     let existingPortfolio: { id: string } | null = null;
 
     // One portfolio per user: create only when none exists; otherwise require replace.
-    existingPortfolio = await PortfolioRepository.getPortfolioByUserId(db, user.id);
+    existingPortfolio = await CareerRepository.getProfile(db, user.id);
     if (existingPortfolio && !replaceExisting) {
       return errorResponse(
         'You already have a portfolio. Replace it from your account or work page instead of creating another.',
@@ -453,10 +453,10 @@ export const action: ActionFunction = async ({ request, context }) => {
     let portfolioSlug: string;
     try {
       const saveResult = await saveResumeToDatabase(user.id, data, {
-        replacePortfolioId: replaceExisting ? (existingPortfolio?.id ?? undefined) : undefined,
+        replaceProfileId: replaceExisting ? (existingPortfolio?.id ?? undefined) : undefined,
       });
-      portfolioId = saveResult.portfolioId;
-      portfolioSlug = saveResult.portfolioSlug;
+      portfolioId = saveResult.profileId;
+      portfolioSlug = saveResult.profileSlug;
     } catch (error) {
       logRouteError('Resume database save failed', error, {
         ownerUserid: user.id,

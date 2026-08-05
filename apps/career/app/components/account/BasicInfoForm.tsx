@@ -1,4 +1,4 @@
-import type { PortfolioRecord } from '@hominem/db';
+import type { CareerProfileRecord } from '@hominem/db';
 import { Input, Switch, Textarea } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { useEffect, useState } from 'react';
@@ -16,7 +16,7 @@ export function BasicInfoForm({
   onImageUpload,
   onUpdateSlug,
 }: {
-  portfolio: PortfolioRecord;
+  portfolio: CareerProfileRecord;
   accountEmail?: string | null;
   onSave: (values: BasicInfoFormValues) => Promise<AccountActionResult<unknown>>;
   onImageUpload: (croppedImageBlob: Blob) => Promise<string | undefined>;
@@ -26,6 +26,8 @@ export function BasicInfoForm({
   const [isTogglingFlag, setIsTogglingFlag] = useState(false);
 
   const lockedEmail = accountEmail || portfolio.email || '';
+
+  const fullName = [portfolio.firstName, portfolio.lastName].filter(Boolean).join(' ') || '';
 
   const {
     register,
@@ -40,7 +42,7 @@ export function BasicInfoForm({
     defaultValues: portfolioToFormValues(portfolio, lockedEmail),
   });
 
-  const displayName = watch('name') || portfolio.name || lockedEmail || 'Profile';
+  const displayName = watch('name') || fullName || lockedEmail || 'Profile';
 
   useEffect(() => {
     reset(portfolioToFormValues(portfolio, lockedEmail));
@@ -102,7 +104,7 @@ export function BasicInfoForm({
           <div className="min-w-0 space-y-1">
             <p className="subheading-3 truncate">{displayName}</p>
             <p className="body-4 text-muted-foreground">
-              Updated {new Date(portfolio.updatedat).toLocaleDateString()}
+              Updated {new Date(portfolio.updatedAt).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -114,7 +116,7 @@ export function BasicInfoForm({
             </Label>
             <SlugEditor
               portfolioId={portfolio.id}
-              initialSlug={portfolio.slug}
+              initialSlug={portfolio.slug || ''}
               liveUrl={portfolio.isPublic ? `/p/${portfolio.slug}` : null}
               onSave={(slug) => onUpdateSlug(slug)}
             />
@@ -254,15 +256,16 @@ export function BasicInfoForm({
   );
 }
 
-function portfolioToFormValues(portfolio: PortfolioRecord, email: string): BasicInfoFormValues {
+function portfolioToFormValues(portfolio: CareerProfileRecord, email: string): BasicInfoFormValues {
+  const name = [portfolio.firstName, portfolio.lastName].filter(Boolean).join(' ') || '';
   return {
-    name: portfolio.name || '',
+    name,
     initials: portfolio.initials || '',
     title: portfolio.title || '',
-    jobTitle: portfolio.jobTitle || '',
-    bio: portfolio.bio || '',
+    jobTitle: portfolio.headline || '',
+    bio: portfolio.summary || '',
     tagline: portfolio.tagline || '',
-    currentLocation: portfolio.currentLocation || '',
+    currentLocation: portfolio.location || '',
     email,
     phone: portfolio.phone || '',
     availabilityStatus: portfolio.availabilityStatus || false,

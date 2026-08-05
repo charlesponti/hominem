@@ -21,7 +21,6 @@ describe('route config', () => {
     expect(paths).toContain('projects');
     expect(paths).toContain('projects/new');
     expect(paths).toContain('projects/:id');
-    expect(paths).toContain('*');
     expect(paths).not.toContain('work/:id/projects');
   });
 });

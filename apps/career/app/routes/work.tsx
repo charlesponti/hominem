@@ -1,294 +1,127 @@
-import type { WorkExperienceRecord as WorkExperience } from '@hominem/db';
+import type { CareerPositionRecord } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
-import { ChevronRightIcon, PlusIcon, UploadIcon } from 'lucide-react';
+import { ChevronRightIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, useFetcher, useNavigate, useRevalidator } from 'react-router';
+import { Link } from 'react-router';
 
-import {
-  EntityListCards,
-  EntityListTable,
-  SearchFilterBar,
-  type EntityListColumn,
-} from '~/components/patterns';
-import { UploadResumeForm } from '~/components/UploadResumeForm';
-import { getUserWorkExperiencesDesc } from '~/lib/career/queries/base';
-import {
-  handleWorkExperienceCreateAction,
-  type WorkExperienceCreateValues,
-} from '~/lib/career/work-actions';
+import { getUserPositions } from '~/lib/career/queries/career-queries';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
-import { FormErrorAlert } from '../components/FormErrorAlert';
-import { useCareerEditorSubmission } from '../hooks/useCareerEditorSubmission';
-import { portfolioContext, userContext } from '../lib/middleware';
+import { logger } from '../lib/logger';
+import { userContext } from '../lib/middleware';
 import { Route } from './+types/work';
 
 export const meta: Route.MetaFunction = () => [
-  { title: 'Work Experience | career' },
-  { name: 'description', content: 'Manage your work history and professional experience.' },
+  { title: 'Positions | career' },
+  { name: 'description', content: 'Manage your work history and target positions.' },
 ];
-
-export function filterWorkExperiencesBySearch(experiences: WorkExperience[], search: string) {
-  const query = search.trim().toLowerCase();
-  if (!query) {
-    return experiences;
-  }
-
-  return experiences.filter((experience) => {
-    const company = experience.company?.trim().toLowerCase() || '';
-    const role = experience.role?.trim().toLowerCase() || '';
-    return company.includes(query) || role.includes(query);
-  });
-}
-
-const WORK_COLUMNS: EntityListColumn<WorkExperience>[] = [
-  {
-    key: 'company',
-    header: 'Company',
-    width: 'minmax(0,1.1fr)',
-    render: (experience) => (
-      <p className="body-2 truncate text-text-primary">
-        {experience.company?.trim() || 'Untitled client'}
-      </p>
-    ),
-  },
-  {
-    key: 'role',
-    header: 'Role',
-    width: 'minmax(0,1fr)',
-    render: (experience) => (
-      <p className="body-2 truncate text-text-secondary">
-        {experience.role?.trim() || 'Untitled role'}
-      </p>
-    ),
-  },
-  {
-    key: 'timeline',
-    header: 'Timeline',
-    width: 'minmax(0,0.9fr)',
-    render: (experience) => (
-      <p className="body-4 whitespace-nowrap text-text-tertiary">
-        {formatDateRange(experience.startDate, experience.endDate)}
-      </p>
-    ),
-  },
-];
-
-function renderWorkCard(experience: WorkExperience) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="body-2 truncate text-text-primary">
-          {experience.company?.trim() || 'Untitled client'}
-        </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="body-4 truncate text-text-secondary">
-            {experience.role?.trim() || 'Untitled role'}
-          </p>
-          <span className="body-4 text-text-tertiary">·</span>
-          <p className="body-4 text-text-tertiary">
-            {formatDateRange(experience.startDate, experience.endDate)}
-          </p>
-        </div>
-      </div>
-      <ChevronRightIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-    </div>
-  );
-}
-
-export default function Work({ loaderData }: Route.ComponentProps) {
-  const draftFetcher = useFetcher();
-  const navigate = useNavigate();
-  const revalidator = useRevalidator();
-  const { work_experiences, portfolioId } = loaderData;
-  const experiences = work_experiences || [];
-  const [showResumeUpload, setShowResumeUpload] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-
-  const filteredExperiences = useMemo(
-    () => filterWorkExperiencesBySearch(experiences, searchValue),
-    [experiences, searchValue],
-  );
-
-  const { submissionError, clearSubmissionError } = useCareerEditorSubmission<WorkExperience>({
-    fetcher: draftFetcher,
-    errorMessage: 'We couldn’t create a new work experience. Try again.',
-    onSuccess: (result) => {
-      if (!result.data) {
-        return;
-      }
-
-      navigate(`/work/${result.data.id}`);
-    },
-  });
-
-  const handleAddNew = () => {
-    const formData = new FormData();
-    formData.append('operation', 'create');
-    formData.append(
-      'workExperienceData',
-      JSON.stringify({
-        role: '',
-        company: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        achievements: [],
-        metadata: {},
-        sortOrder: experiences.length,
-        isVisible: true,
-        portfolioId,
-      } satisfies WorkExperienceCreateValues),
-    );
-
-    clearSubmissionError();
-    draftFetcher.submit(formData, {
-      method: 'POST',
-      action: '/work',
-    });
-  };
-
-  return (
-    <section className="flex flex-col gap-6">
-      <SectionIntro
-        title="Work Experience"
-        actions={
-          <Button
-            type="button"
-            onClick={handleAddNew}
-            variant="default"
-            size="icon"
-            disabled={draftFetcher.state === 'submitting'}
-            aria-label="Add new experience"
-          >
-            <PlusIcon className="size-4" />
-          </Button>
-        }
-      />
-
-      <FormErrorAlert title="Work experience wasn’t created" message={submissionError} />
-
-      <div className="flex flex-col gap-6">
-        {experiences.length > 0 ? (
-          <>
-            <SearchFilterBar
-              activeFilters={
-                searchValue.trim()
-                  ? [
-                      {
-                        id: 'search',
-                        label: `Search: ${searchValue.trim()}`,
-                        onRemove: () => setSearchValue(''),
-                      },
-                    ]
-                  : []
-              }
-              onClearAll={() => setSearchValue('')}
-              search={
-                <Input
-                  id="work-search"
-                  type="search"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Search by company or role..."
-                  aria-label="Search work experience"
-                />
-              }
-            />
-
-            {filteredExperiences.length === 0 ? (
-              <EmptyState
-                title="No experience matches your search"
-                description="Try adjusting your search"
-                variant="search"
-                size="md"
-              />
-            ) : (
-              <>
-                <EntityListTable
-                  items={filteredExperiences}
-                  columns={WORK_COLUMNS}
-                  keyFor={(experience) => experience.id}
-                  hrefFor={(experience) => `/work/${experience.id}`}
-                  linkComponent={Link}
-                />
-                <EntityListCards
-                  items={filteredExperiences}
-                  keyFor={(experience) => experience.id}
-                  hrefFor={(experience) => `/work/${experience.id}`}
-                  linkComponent={Link}
-                  renderCard={renderWorkCard}
-                />
-              </>
-            )}
-          </>
-        ) : showResumeUpload ? (
-          <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-            <UploadResumeForm
-              mode="replace"
-              showHeading
-              onUploadStart={() => undefined}
-              onUploadComplete={() => {
-                setShowResumeUpload(false);
-                revalidator.revalidate();
-              }}
-              onUploadError={() => undefined}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setShowResumeUpload(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          <EmptyState
-            title="Build your foundation"
-            description="Upload a resume to extract roles automatically, or add your first role by hand."
-            variant="dashed"
-            action={
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                <Button type="button" onClick={() => setShowResumeUpload(true)}>
-                  <UploadIcon className="size-4" />
-                  Upload resume
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddNew}
-                  disabled={draftFetcher.state === 'submitting'}
-                  isLoading={draftFetcher.state === 'submitting'}
-                  loadingLabel="Creating…"
-                >
-                  <PlusIcon className="size-4" />
-                  Add a role
-                </Button>
-              </div>
-            }
-          />
-        )}
-      </div>
-    </section>
-  );
-}
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const user = context.get(userContext)!;
-  const portfolio = context.get(portfolioContext)!;
-  const work_experiences = await getUserWorkExperiencesDesc(user.id);
-  return { work_experiences, portfolioId: portfolio.id };
+  const user = context.get(userContext);
+  if (!user) throw new Response('Unauthorized', { status: 401 });
+
+  try {
+    const positions = await getUserPositions(user.id);
+    return { positions };
+  } catch (error) {
+    logger.error('Error loading positions', error, { owner_userid: user.id });
+    throw new Response('Failed to load positions', { status: 500 });
+  }
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const user = context.get(userContext);
-  if (!user) {
-    return { success: false, error: 'Sign in again before saving your work experience.' };
+function filterPositions(positions: CareerPositionRecord[], search: string) {
+  const query = search.trim().toLowerCase();
+  if (!query) return positions;
+  return positions.filter((p) => {
+    const company = (p.company ?? '').toLowerCase();
+    const title = (p.title ?? '').toLowerCase();
+    return company.includes(query) || title.includes(query);
+  });
+}
+
+export default function WorkPage({ loaderData }: Route.ComponentProps) {
+  const { positions } = loaderData;
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(() => filterPositions(positions, search), [positions, search]);
+
+  const grouped = useMemo(() => {
+    const employment = filtered.filter((p) => !(p.isTarget ?? false));
+    const targets = filtered.filter((p) => p.isTarget ?? false);
+    return { employment, targets };
+  }, [filtered]);
+
+  if (positions.length === 0) {
+    return (
+      <div>
+        <SectionIntro title="Positions" description="Your work history and target roles." />
+        <EmptyState
+          icon="briefcase"
+          title="No positions yet"
+          description="Positions will appear here once data is migrated from your warehouse."
+        />
+      </div>
+    );
   }
 
-  return handleWorkExperienceCreateAction(request, user.id);
+  return (
+    <div>
+      <SectionIntro title="Positions" description="Your work history and target roles." />
+      <div className="mt-4">
+        <Input
+          placeholder="Search positions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {grouped.employment.length > 0 && (
+        <div className="mt-6">
+          <h2 className="heading-3 mb-4">Work History</h2>
+          <div className="divide-y divide-border rounded-lg border border-border">
+            {grouped.employment.map((pos) => (
+              <Link
+                key={pos.id}
+                to={`/work/${pos.id}`}
+                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="heading-4 truncate">{pos.title}</p>
+                  <p className="body-3 text-muted-foreground">{pos.company}</p>
+                  <p className="footnote text-muted-foreground mt-1">
+                    {formatDateRange(pos.startDate, pos.endDate)}
+                    {pos.location && ` • ${pos.location}`}
+                  </p>
+                </div>
+                <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {grouped.targets.length > 0 && (
+        <div className="mt-8">
+          <h2 className="heading-3 mb-4">Target Companies</h2>
+          <div className="divide-y divide-border rounded-lg border border-border">
+            {grouped.targets.map((pos) => (
+              <Link
+                key={pos.id}
+                to={`/work/${pos.id}`}
+                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="heading-4 truncate">{pos.company}</p>
+                  {pos.url && <p className="body-3 text-muted-foreground truncate">{pos.url}</p>}
+                </div>
+                <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

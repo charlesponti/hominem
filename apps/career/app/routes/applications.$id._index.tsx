@@ -1,50 +1,87 @@
-import type { JobApplicationRecord as ApplicationWithCompany } from '@hominem/db';
+import type { CareerApplicationWithRelations } from '@hominem/db';
 import { useOutletContext } from 'react-router';
 
-import { ApplicationOverviewTab } from '~/components/career';
-import { logger } from '~/lib/logger';
-import { userContext } from '~/lib/middleware';
-import { JobApplicationsService } from '~/lib/services/job-applications.service';
-import { ApplicationFormError, parseApplicationUpdateFormData } from '~/lib/utils/applicationForm';
-
-import { Route } from './+types/applications.$id._index';
-
-export async function action({ context, request, params }: Route.ActionArgs) {
-  const user = context.get(userContext)!;
-  const { id } = params;
-
-  if (!id) {
-    throw new Response('Application ID is required', { status: 400 });
-  }
-
-  const hasOwnership = await JobApplicationsService.verifyOwnership(id, user.id);
-  if (!hasOwnership) {
-    throw new Response('Application not found or access denied', { status: 403 });
-  }
-
-  try {
-    const formData = await request.formData();
-    const { application, company } = parseApplicationUpdateFormData(formData);
-
-    if (Object.keys(application).length > 0) {
-      await JobApplicationsService.updateApplication(id, application, user.id);
-    }
-
-    if (company) {
-      await JobApplicationsService.updateLinkedCompany(id, user.id, company);
-    }
-
-    return { success: true, message: 'Application updated successfully' };
-  } catch (error) {
-    if (error instanceof ApplicationFormError) {
-      throw new Response(error.message, { status: 400 });
-    }
-    logger.error('Error updating application', error, { applicationId: id, owner_userid: user.id });
-    throw new Response('Failed to update application', { status: 500 });
-  }
-}
-
 export default function ApplicationOverviewRoute() {
-  const application = useOutletContext<ApplicationWithCompany>();
-  return <ApplicationOverviewTab application={application} company={application.company} />;
+  const application = useOutletContext<CareerApplicationWithRelations>();
+
+  return (
+    <div className="space-y-6">
+      <section>
+        <h2 className="heading-4 mb-3">Details</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {application.source && (
+            <div>
+              <p className="footnote text-muted-foreground">Source</p>
+              <p className="body-3">{application.source}</p>
+            </div>
+          )}
+          {application.appliedAt && (
+            <div>
+              <p className="footnote text-muted-foreground">Applied</p>
+              <p className="body-3">{application.appliedAt}</p>
+            </div>
+          )}
+          {application.salaryExpectation != null && (
+            <div>
+              <p className="footnote text-muted-foreground">Salary Expectation</p>
+              <p className="body-3">${(application.salaryExpectation / 100).toLocaleString()}</p>
+            </div>
+          )}
+          {application.jobPostingUrl && (
+            <div>
+              <p className="footnote text-muted-foreground">Job Posting</p>
+              <a
+                href={application.jobPostingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="body-3 text-blue-600 hover:underline"
+              >
+                View posting
+              </a>
+            </div>
+          )}
+          {application.location && (
+            <div>
+              <p className="footnote text-muted-foreground">Location</p>
+              <p className="body-3">{application.location}</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {application.notes && (
+        <section>
+          <h2 className="heading-4 mb-3">Notes</h2>
+          <p className="body-2 text-muted-foreground whitespace-pre-wrap">{application.notes}</p>
+        </section>
+      )}
+
+      {application.offer && (
+        <section>
+          <h2 className="heading-4 mb-3">Offer</h2>
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            {application.offer.baseSalary != null && (
+              <p className="body-3">
+                Base: ${(application.offer.baseSalary / 100).toLocaleString()}
+              </p>
+            )}
+            {application.offer.equity && (
+              <p className="body-3">Equity: {application.offer.equity}</p>
+            )}
+            {application.offer.bonus != null && (
+              <p className="body-3">Bonus: ${(application.offer.bonus / 100).toLocaleString()}</p>
+            )}
+            {application.offer.totalComp != null && (
+              <p className="body-3">
+                Total: ${(application.offer.totalComp / 100).toLocaleString()}
+              </p>
+            )}
+            {application.offer.decision && (
+              <p className="body-3">Decision: {application.offer.decision}</p>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
 }

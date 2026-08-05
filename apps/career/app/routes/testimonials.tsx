@@ -1,197 +1,114 @@
-import type { TestimonialRecord as Testimonial } from '@hominem/db';
+import { TestimonialRepository, db, type CareerTestimonialRecord } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
-import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Badge, Button } from '@ponti-studios/ui/primitives';
-import { ChevronRightIcon, PlusIcon, StarIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Button } from '@ponti-studios/ui/primitives';
+import { ChevronRightIcon, PlusIcon, QuoteIcon } from 'lucide-react';
+import { Form, Link } from 'react-router';
 
-import {
-  EntityListCards,
-  EntityListTable,
-  SearchFilterBar,
-  type EntityListColumn,
-} from '~/components/patterns';
-import { getTestimonialsByPortfolio } from '~/lib/career/queries/testimonials';
-import { portfolioContext } from '~/lib/middleware';
+import { logger } from '~/lib/logger';
+import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/testimonials';
 
-export const meta: Route.MetaFunction = () => [{ title: 'Testimonials | career' }];
-
-export function filterTestimonialsBySearch(testimonials: Testimonial[], search: string) {
-  const query = search.trim().toLowerCase();
-  if (!query) {
-    return testimonials;
-  }
-
-  return testimonials.filter((testimonial) => {
-    const name = testimonial.name?.trim().toLowerCase() || '';
-    const company = testimonial.company?.trim().toLowerCase() || '';
-    return name.includes(query) || company.includes(query);
-  });
-}
-
-function formatCompanyLabel(testimonial: Testimonial) {
-  if (testimonial.company && testimonial.title) {
-    return `${testimonial.company} · ${testimonial.title}`;
-  }
-  return testimonial.company || testimonial.title || '—';
-}
-
-function RatingBadge({ testimonial }: { testimonial: Testimonial }) {
-  if (!testimonial.rating) {
-    return null;
-  }
-  return (
-    <Badge variant="outline">
-      <StarIcon className="size-3" />
-      {testimonial.rating}
-    </Badge>
-  );
-}
-
-const TESTIMONIAL_COLUMNS: EntityListColumn<Testimonial>[] = [
-  {
-    key: 'name',
-    header: 'Name',
-    width: 'minmax(0,1.5fr)',
-    render: (testimonial) => (
-      <p className="body-2 truncate text-text-primary">{testimonial.name}</p>
-    ),
-  },
-  {
-    key: 'company',
-    header: 'Company',
-    width: 'minmax(0,1fr)',
-    render: (testimonial) => (
-      <p className="body-2 truncate text-text-secondary">{formatCompanyLabel(testimonial)}</p>
-    ),
-  },
-  {
-    key: 'rating',
-    header: 'Rating',
-    width: 'minmax(0,0.7fr)',
-    render: (testimonial) =>
-      testimonial.rating ? (
-        <RatingBadge testimonial={testimonial} />
-      ) : (
-        <span className="body-4 text-text-tertiary">—</span>
-      ),
-  },
+export const meta: Route.MetaFunction = () => [
+  { title: 'Testimonials | career' },
+  { name: 'description', content: 'Testimonials from colleagues, managers, and clients.' },
 ];
 
-function renderTestimonialCard(testimonial: Testimonial) {
+export async function loader({ context }: Route.LoaderArgs) {
+  const user = context.get(userContext)!;
+
+  try {
+    const testimonials = await TestimonialRepository.list(db, user.id);
+    return { testimonials };
+  } catch (error) {
+    logger.error('Error loading testimonials', error, { owner_userid: user.id });
+    return { testimonials: [] as CareerTestimonialRecord[] };
+  }
+}
+
+export async function action({ context, request }: Route.ActionArgs) {
+  const user = context.get(userContext)!;
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'delete') {
+    const id = formData.get('id');
+    if (typeof id === 'string') {
+      await TestimonialRepository.remove(db, user.id, id);
+    }
+  }
+
+  return { ok: true };
+}
+
+export default function TestimonialsRoute({ loaderData }: Route.ComponentProps) {
+  const { testimonials } = loaderData;
+
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="body-2 truncate text-text-primary">{testimonial.name}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="body-4 truncate text-text-secondary">{formatCompanyLabel(testimonial)}</p>
+    <div>
+      <div className="flex items-center justify-between gap-4">
+        <SectionIntro
+          title="Testimonials"
+          description="Testimonials from colleagues, managers, and clients."
+        />
+        <Button asChild variant="outline">
+          <Link to="/testimonials/new">
+            <PlusIcon className="mr-2 size-4" />
+            Add testimonial
+          </Link>
+        </Button>
+      </div>
+
+      {testimonials.length === 0 ? (
+        <EmptyState
+          icon={<QuoteIcon className="size-6" />}
+          title="No testimonials yet"
+          description="Add a testimonial to showcase your work."
+          className="mt-6"
+        />
+      ) : (
+        <div className="mt-6 divide-y divide-border rounded-lg border border-border">
+          {testimonials.map((testimonial) => (
+            <Link
+              key={testimonial.id}
+              to={`/testimonials/${testimonial.id}`}
+              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="heading-4 truncate">{testimonial.name}</p>
+                <p className="body-3 text-muted-foreground truncate">
+                  {[testimonial.title, testimonial.company].filter(Boolean).join(' at ')}
+                </p>
+                <p className="footnote text-muted-foreground mt-1 truncate">
+                  {testimonial.content}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Form
+                  method="post"
+                  navigate={false}
+                  onClick={(e) => e.stopPropagation()}
+                  onSubmit={(e) => {
+                    if (!confirm(`Delete testimonial from "${testimonial.name}"?`))
+                      e.preventDefault();
+                  }}
+                >
+                  <input type="hidden" name="intent" value="delete" />
+                  <input type="hidden" name="id" value={testimonial.id} />
+                  <button
+                    type="submit"
+                    className="footnote text-muted-foreground hover:text-destructive-text"
+                  >
+                    Delete
+                  </button>
+                </Form>
+                <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </div>
+            </Link>
+          ))}
         </div>
-      </div>
-      <div className="ml-4 flex items-center gap-3">
-        <RatingBadge testimonial={testimonial} />
-        <ChevronRightIcon className="size-5 text-muted-foreground" aria-hidden="true" />
-      </div>
+      )}
     </div>
   );
-}
-
-export default function Testimonials({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState('');
-
-  const filteredTestimonials = useMemo(
-    () => filterTestimonialsBySearch(loaderData.testimonials, searchValue),
-    [loaderData.testimonials, searchValue],
-  );
-
-  const hasFilters = Boolean(searchValue.trim());
-
-  const clearFilters = () => setSearchValue('');
-
-  return (
-    <section className="flex flex-col gap-6">
-      <SectionIntro
-        title="Testimonials"
-        actions={
-          <Button
-            type="button"
-            onClick={() => navigate('/testimonials/new')}
-            variant="default"
-            size="icon"
-            aria-label="Add testimonial"
-          >
-            <PlusIcon className="size-4" />
-          </Button>
-        }
-      />
-
-      <div className="flex flex-col gap-6">
-        <SearchFilterBar
-          activeFilters={
-            searchValue.trim()
-              ? [
-                  {
-                    id: 'search',
-                    label: `Search: ${searchValue.trim()}`,
-                    onRemove: () => setSearchValue(''),
-                  },
-                ]
-              : []
-          }
-          onClearAll={clearFilters}
-          search={
-            <Input
-              id="testimonial-search"
-              type="search"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search by name or company..."
-              aria-label="Search testimonials"
-            />
-          }
-        />
-
-        {filteredTestimonials.length === 0 ? (
-          <EmptyState
-            title={hasFilters ? 'No testimonials match your search' : 'No testimonials yet'}
-            description={
-              hasFilters
-                ? 'Try adjusting your search'
-                : 'Add client quotes to showcase on your portfolio'
-            }
-            variant={hasFilters ? 'search' : 'dashed'}
-            size={hasFilters ? 'md' : undefined}
-          />
-        ) : (
-          <>
-            <EntityListTable
-              items={filteredTestimonials}
-              columns={TESTIMONIAL_COLUMNS}
-              keyFor={(testimonial) => testimonial.id}
-              hrefFor={(testimonial) => `/testimonials/${testimonial.id}`}
-              linkComponent={Link}
-            />
-            <EntityListCards
-              items={filteredTestimonials}
-              keyFor={(testimonial) => testimonial.id}
-              hrefFor={(testimonial) => `/testimonials/${testimonial.id}`}
-              linkComponent={Link}
-              renderCard={renderTestimonialCard}
-            />
-          </>
-        )}
-      </div>
-    </section>
-  );
-}
-
-export async function loader({ context }: Route.LoaderArgs) {
-  const portfolio = context.get(portfolioContext)!;
-  const testimonials = await getTestimonialsByPortfolio(portfolio.id);
-
-  return { testimonials, portfolioId: portfolio.id };
 }

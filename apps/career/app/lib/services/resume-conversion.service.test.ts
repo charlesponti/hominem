@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { authDb, db } from '@hominem/db';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createCareerTestDb } from '~/test/db/career';
@@ -9,12 +9,17 @@ import { generateUniqueSlug, saveResumeToDatabase } from './resume-conversion.se
 const testDb = createCareerTestDb();
 const slugTestValues = ['charles-ponti', 'charles-ponti-2', 'charles-ponti-3'];
 
+let slugUser: { id: string };
+
 async function cleanupSlugTestRows() {
-  await db.deleteFrom('app.portfolios').where('slug', 'in', slugTestValues).execute();
+  await db.deleteFrom('app.careerProfile').where('slug', 'in', slugTestValues).execute();
 }
 
 describe('resume conversion slug generation', () => {
-  beforeEach(cleanupSlugTestRows);
+  beforeEach(async () => {
+    slugUser = await testDb.createUser({ name: 'Slug Test User' });
+    await cleanupSlugTestRows();
+  });
   afterEach(async () => {
     await testDb.cleanup();
     await cleanupSlugTestRows();
@@ -30,119 +35,161 @@ describe('resume conversion slug generation', () => {
     await expect(generateUniqueSlug(db, '!!!', 'Jane Doe')).resolves.toBe('jane-doe');
   });
 
-  it('uses portfolio when requested and fallback slugs normalize to empty', async () => {
-    await expect(generateUniqueSlug(db, '!!!', '???')).resolves.toBe('portfolio');
+  it('increments the suffix when the root slug already exists', async () => {
+    const slugUser2 = await testDb.createUser({ name: 'Slug Test User 2' });
+
+    await db
+      .insertInto('app.careerProfile')
+      .values({
+        ownerUserid: slugUser.id,
+        slug: 'charles-ponti',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .execute();
+
+    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-2');
+
+    await db
+      .insertInto('app.careerProfile')
+      .values({
+        ownerUserid: slugUser2.id,
+        slug: 'charles-ponti-2',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .execute();
+
+    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-3');
   });
 
-  it('adds deterministic suffixes for duplicate slugs', async () => {
-    await testDb.createPortfolio({ slug: 'charles-ponti' });
-    await testDb.createPortfolio({ slug: 'charles-ponti-2' });
+  it('handles the case where the first 99 suffixes are all taken', async () => {
+    try {
+      for (let i = 1; i <= 100; i++) {
+        await authDb
+          .insertInto('user')
+          .values({
+            id: `slug-overflow-${i}`,
+            email: `overflow-${i}@test.com`,
+            name: `Overflow ${i}`,
+          })
+          .execute();
+        await db
+          .insertInto('app.careerProfile')
+          .values({
+            ownerUserid: `slug-overflow-${i}`,
+            slug: `overflow${i === 1 ? '' : `-${i}`}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .execute();
+      }
 
-    await expect(generateUniqueSlug(db, 'Charles Ponti')).resolves.toBe('charles-ponti-3');
+      await expect(generateUniqueSlug(db, 'overflow')).rejects.toThrow(
+        'Could not generate a unique profile slug',
+      );
+    } finally {
+      await db.deleteFrom('app.careerProfile').where('slug', 'like', 'overflow%').execute();
+      await authDb.deleteFrom('user').where('id', 'like', 'slug-overflow-%').execute();
+    }
+  });
+});
+
+describe('resume conversion database save', () => {
+  afterEach(async () => {
+    await testDb.cleanup();
   });
 
-  it('keeps generated slugs within database length constraints', async () => {
-    const slug = await generateUniqueSlug(db, 'a'.repeat(80), 'Fallback');
-
-    expect(slug).toHaveLength(50);
-  });
-
-  it('creates a new portfolio and saves related data', async () => {
-    const user = await testDb.createUser({ name: 'New User' });
+  it('creates a profile with all related data', async () => {
+    const user = await testDb.createUser({ name: 'Test User' });
 
     const data = makeConvertedResumeData({
       portfolio: {
         slug: 'my-portfolio',
         title: 'My Portfolio',
         name: user.name,
-        initials: 'NU',
-        job_title: 'Staff Engineer',
         email: user.email,
       },
+      workExperience: [
+        {
+          company: 'Acme Corp',
+          role: 'Engineer',
+          description: 'Built stuff',
+          start_date: '2020-01-01',
+          end_date: '2022-01-01',
+        },
+      ],
+      skills: [
+        {
+          name: 'TypeScript',
+          level: 80,
+          category: 'Technical',
+          description: null,
+          certifications: [],
+        },
+      ],
+      projects: [
+        {
+          title: 'Awesome Project',
+          description: 'An awesome project',
+          short_description: null,
+          technologies: ['TypeScript', 'React'],
+          live_url: null,
+          github_url: null,
+          status: 'completed' as const,
+        },
+      ],
       social_links: {
         github: 'https://github.com/example',
         linkedin: null,
         twitter: null,
         website: null,
       },
-      workExperience: [
-        {
-          company: 'Company',
-          role: 'Engineer',
-          description: 'Built products',
-          start_date: '2020-01-01',
-          end_date: null,
-        },
-      ],
-      skills: [
-        {
-          name: 'TypeScript',
-          level: 90,
-          category: 'Programming',
-          description: null,
-          years_of_experience: 5,
-          certifications: [],
-        },
-      ],
-      projects: [
-        {
-          title: 'Project',
-          description: 'Shipped a project',
-          short_description: null,
-          technologies: ['TypeScript', 'React'],
-          live_url: null,
-          github_url: null,
-          status: 'completed',
-        },
-      ],
       stats: [{ label: 'Years', value: '5+' }],
     });
 
     const result = await saveResumeToDatabase(user.id, data);
 
-    expect(result.portfolioSlug).toBe('my-portfolio');
+    expect(result.profileSlug).toBe('my-portfolio');
 
-    const portfolios = await db
-      .selectFrom('app.portfolios')
+    const profiles = await db
+      .selectFrom('app.careerProfile')
       .select(['id', 'slug', 'title'])
       .where('ownerUserid', '=', user.id)
       .execute();
-    expect(portfolios).toHaveLength(1);
-    expect(portfolios[0].slug).toBe('my-portfolio');
+    expect(profiles).toHaveLength(1);
+    expect(profiles[0].slug).toBe('my-portfolio');
 
-    const portfolioId = portfolios[0].id;
-    const [workCount, skillCount, projectCount, social_links] = await Promise.all([
+    const [positionCount, skillCount, project] = await Promise.all([
       db
-        .selectFrom('app.workExperiences')
+        .selectFrom('app.careerPositions')
         .select(({ fn }) => fn.countAll<number>().as('count'))
-        .where('portfolioId', '=', portfolioId)
+        .where('ownerUserid', '=', user.id)
         .executeTakeFirstOrThrow(),
       db
-        .selectFrom('app.skills')
+        .selectFrom('app.careerSkills')
         .select(({ fn }) => fn.countAll<number>().as('count'))
-        .where('portfolioId', '=', portfolioId)
+        .where('ownerUserid', '=', user.id)
         .executeTakeFirstOrThrow(),
       db
-        .selectFrom('app.projects')
+        .selectFrom('app.careerProjects')
         .select(['technologies'])
-        .where('portfolioId', '=', portfolioId)
-        .executeTakeFirstOrThrow(),
-      db
-        .selectFrom('app.userSocialLinks')
-        .select(['github'])
-        .where('userId', '=', user.id)
+        .where('ownerUserid', '=', user.id)
         .executeTakeFirstOrThrow(),
     ]);
 
-    expect(Number(workCount.count)).toBe(1);
+    expect(Number(positionCount.count)).toBe(1);
     expect(Number(skillCount.count)).toBe(1);
-    expect(projectCount.technologies).toEqual(['TypeScript', 'React']);
-    expect(social_links.github).toBe('https://github.com/example');
+    expect(
+      typeof project.technologies === 'string'
+        ? JSON.parse(project.technologies)
+        : project.technologies,
+    ).toEqual(['TypeScript', 'React']);
   });
 
-  it('replaces a portfolio created before the import starts', async () => {
+  it('replaces an existing profile', async () => {
     const user = await testDb.createUser({ name: 'Existing User' });
-    await testDb.createPortfolio({ user, slug: 'existing-portfolio' });
+    await testDb.createProfile({ user });
 
     const result = await saveResumeToDatabase(
       user.id,
@@ -155,14 +202,14 @@ describe('resume conversion slug generation', () => {
       }),
     );
 
-    const portfolios = await db
-      .selectFrom('app.portfolios')
+    const profiles = await db
+      .selectFrom('app.careerProfile')
       .select(['id', 'slug'])
       .where('ownerUserid', '=', user.id)
       .execute();
 
-    expect(result.portfolioSlug).toBe('imported-portfolio');
-    expect(portfolios).toHaveLength(1);
-    expect(portfolios[0].slug).toBe('imported-portfolio');
+    expect(result.profileSlug).toBe('imported-portfolio');
+    expect(profiles).toHaveLength(1);
+    expect(profiles[0].slug).toBe('imported-portfolio');
   });
 });

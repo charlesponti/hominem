@@ -1,89 +1,37 @@
 import type { Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
-import type { AppUserSocialLinks } from '../../types/database';
+import type { AppCareerSocialLinks } from '../../types/database';
 
-type UserSocialLinksRow = Selectable<AppUserSocialLinks>;
+export type CareerSocialLinksRecord = Selectable<AppCareerSocialLinks>;
 
-export interface UserSocialLinksRecord {
-  userId: string;
-  github: string | null;
-  linkedin: string | null;
-  twitter: string | null;
-  website: string | null;
-  createdat: string;
-  updatedat: string;
-}
-
-export interface SaveUserSocialLinksInput {
+export type CareerSocialLinksInput = {
   github?: string | null;
   linkedin?: string | null;
   twitter?: string | null;
   website?: string | null;
-}
-
-function toUserSocialLinksRecord(row: UserSocialLinksRow): UserSocialLinksRecord {
-  return {
-    userId: row.userId,
-    github: row.github,
-    linkedin: row.linkedin,
-    twitter: row.twitter,
-    website: row.website,
-    createdat: String(row.createdat),
-    updatedat: String(row.updatedat),
-  };
-}
+};
 
 export const SocialLinksRepository = {
-  async get(handle: DbHandle, ownerUserid: string): Promise<UserSocialLinksRecord | null> {
-    const row = await handle
-      .selectFrom('app.userSocialLinks')
+  async get(handle: DbHandle, ownerUserId: string): Promise<CareerSocialLinksRecord | null> {
+    const result = await handle
+      .selectFrom('app.careerSocialLinks')
       .selectAll()
-      .where('userId', '=', ownerUserid)
+      .where('ownerUserid', '=', ownerUserId)
       .executeTakeFirst();
-
-    return row ? toUserSocialLinksRecord(row as UserSocialLinksRow) : null;
+    return (result ?? null) as CareerSocialLinksRecord | null;
   },
 
   async save(
     handle: DbHandle,
-    ownerUserid: string,
-    input: SaveUserSocialLinksInput,
-  ): Promise<UserSocialLinksRecord> {
-    const existing = await handle
-      .selectFrom('app.userSocialLinks')
-      .selectAll()
-      .where('userId', '=', ownerUserid)
-      .executeTakeFirst();
-
-    if (existing) {
-      const updated = await handle
-        .updateTable('app.userSocialLinks')
-        .set({
-          github: input.github ?? null,
-          linkedin: input.linkedin ?? null,
-          twitter: input.twitter ?? null,
-          website: input.website ?? null,
-        })
-        .where('userId', '=', ownerUserid)
-        .returningAll()
-        .executeTakeFirstOrThrow();
-
-      return toUserSocialLinksRecord(updated as UserSocialLinksRow);
-    }
-
-    const created = await handle
-      .insertInto('app.userSocialLinks')
-      .values({
-        userId: ownerUserid,
-        github: input.github ?? null,
-        linkedin: input.linkedin ?? null,
-        twitter: input.twitter ?? null,
-        website: input.website ?? null,
-      })
+    ownerUserId: string,
+    links: CareerSocialLinksInput,
+  ): Promise<CareerSocialLinksRecord> {
+    return handle
+      .insertInto('app.careerSocialLinks')
+      .values({ ownerUserid: ownerUserId, ...links })
+      .onConflict((oc) => oc.column('ownerUserid').doUpdateSet(links))
       .returningAll()
-      .executeTakeFirstOrThrow();
-
-    return toUserSocialLinksRecord(created as UserSocialLinksRow);
+      .executeTakeFirstOrThrow() as Promise<CareerSocialLinksRecord>;
   },
 };

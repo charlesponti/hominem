@@ -1,6 +1,5 @@
-import type { UserSocialLinksRecord } from '@hominem/db';
+import type { CareerSocialLinksRecord } from '@hominem/db';
 
-import { jsonArray } from '../db-json';
 import type { ResumePortfolio } from '../portfolio.server';
 
 /**
@@ -9,7 +8,7 @@ import type { ResumePortfolio } from '../portfolio.server';
  */
 export function formatPortfolioForLLM(
   portfolioData: ResumePortfolio,
-  socialLinks: UserSocialLinksRecord | null,
+  socialLinks: CareerSocialLinksRecord | null,
 ): string {
   let formatted = 'CANDIDATE PROFILE:\n';
   formatted += `Name: ${portfolioData.name}\n`;
@@ -30,8 +29,8 @@ export function formatPortfolioForLLM(
   }
 
   formatted += '\n\nWORK EXPERIENCE:';
-  for (let i = 0; i < portfolioData.work_experiences.length; i++) {
-    const exp = portfolioData.work_experiences[i];
+  for (let i = 0; i < portfolioData.workExperiences.length; i++) {
+    const exp = portfolioData.workExperiences[i];
     const startDate = exp.startDate
       ? new Date(exp.startDate).toLocaleDateString('en-US', {
           month: 'short',
@@ -49,10 +48,6 @@ export function formatPortfolioForLLM(
 
     formatted += `\n\n${i + 1}. ${exp.role} at ${exp.company} (${startDate} - ${endDate})\n`;
     formatted += `   Description: ${exp.description}`;
-
-    if (exp.metrics) formatted += `\n   Key Metrics: ${exp.metrics}`;
-    const tags = jsonArray<string>(exp.tags);
-    if (tags.length > 0) formatted += `\n   Technologies: ${tags.join(', ')}`;
   }
 
   formatted += '\n\nSKILLS:';
@@ -78,9 +73,8 @@ export function formatPortfolioForLLM(
     formatted += `\n\n${i + 1}. ${project.title} (${project.status})\n`;
     formatted += `   Description: ${project.description}`;
 
-    const technologies = jsonArray<string>(project.technologies);
-    if (technologies.length > 0) {
-      formatted += `\n   Technologies: ${technologies.join(', ')}`;
+    if (project.technologies.length > 0) {
+      formatted += `\n   Technologies: ${project.technologies.join(', ')}`;
     }
     if (project.liveUrl) formatted += `\n   Live URL: ${project.liveUrl}`;
     if (project.githubUrl) formatted += `\n   GitHub: ${project.githubUrl}`;

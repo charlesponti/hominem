@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { makeApplicationWithCompany } from '~/test/factories/applications';
+import { makeApplication } from '~/test/factories/applications';
 import { JobApplicationStatus } from '~/types/career';
 
 import type { Route } from './+types/applications';
@@ -19,46 +19,27 @@ describe('Applications route', () => {
             matches: [],
           } as unknown as Route.ComponentProps)}
           loaderData={{
-            user: {} as Route.ComponentProps['loaderData']['user'],
-            allApplications: [
-              makeApplicationWithCompany({
+            applications: [
+              makeApplication({
                 id: 'application-1',
-                position: 'Staff Engineer',
+                title: 'Staff Engineer',
                 status: JobApplicationStatus.INTERVIEW,
                 source: 'linkedin',
                 applicationDate: new Date('2024-01-15T00:00:00.000Z').toISOString(),
                 responseDate: new Date('2024-01-20T00:00:00.000Z').toISOString(),
                 firstInterviewDate: new Date('2024-01-25T00:00:00.000Z').toISOString(),
-                company: { name: 'Example Co' },
+                company: 'Example Co',
+                stageCount: 0,
+                hasOffer: false,
               }),
             ],
-            applications: [
-              makeApplicationWithCompany({
-                id: 'application-1',
-                position: 'Staff Engineer',
-                status: JobApplicationStatus.INTERVIEW,
-                source: 'linkedin',
-                company: { name: 'Example Co' },
-              }),
-            ],
-            pagination: {
-              page: 1,
-              limit: 10,
-              total: 1,
-              totalPages: 1,
-            },
-            filters: {
-              search: undefined,
-              status: undefined,
-              source: undefined,
-            },
           }}
         />
       </MemoryRouter>,
     );
 
     expect(screen.getAllByText('Staff Engineer').length).toBeGreaterThan(0);
-    expect(screen.getByText('Job Applications')).toBeInTheDocument();
+    expect(screen.getByText('Applications')).toBeInTheDocument();
   });
 
   it('shows empty state when there are no applications', () => {
@@ -70,25 +51,12 @@ describe('Applications route', () => {
             matches: [],
           } as unknown as Route.ComponentProps)}
           loaderData={{
-            user: {} as Route.ComponentProps['loaderData']['user'],
-            allApplications: [],
             applications: [],
-            pagination: {
-              page: 1,
-              limit: 10,
-              total: 0,
-              totalPages: 0,
-            },
-            filters: {
-              search: undefined,
-              status: undefined,
-              source: undefined,
-            },
           }}
         />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('No applications found')).toBeInTheDocument();
+    expect(screen.getByText('No applications yet')).toBeInTheDocument();
   });
 });

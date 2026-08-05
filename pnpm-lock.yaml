@@ -861,9 +861,6 @@ importers:
       goose-cli:
         specifier: 3.25.0-a
         version: 3.25.0-a
-      kysely:
-        specifier: 0.28.17
-        version: 0.28.17
       rolldown:
         specifier: ^1.0.0
         version: 1.2.0

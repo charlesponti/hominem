@@ -14,6 +14,12 @@ vi.mock('../auth/better-auth', () => ({
   getTrustedOrigins: () => ['https://labs.ponti.io'],
 }));
 
+vi.mock('../env', () => ({
+  env: {
+    API_URL: 'http://localhost:4040',
+  },
+}));
+
 import { loginRoutes } from './login';
 
 const oauthQuery = new URLSearchParams({

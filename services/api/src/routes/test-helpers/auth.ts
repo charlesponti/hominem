@@ -7,6 +7,13 @@ import { vi } from 'vitest';
  */
 export async function importServerWithEnv(envOverrides: Record<string, string>) {
   vi.resetModules();
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5434/app-test';
+  process.env.BETTER_AUTH_SECRET = 'ci-test-better-auth-secret';
+  process.env.OPENROUTER_API_KEY = 'some-random-key';
+  process.env.REDIS_URL = 'redis://localhost:6379';
+  process.env.RESEND_API_KEY = 'some-resend-api-key';
+  process.env.RESEND_FROM_EMAIL = 'test@example.com';
+  process.env.RESEND_FROM_NAME = 'Test Sender';
   vi.doMock('../../env', async () => {
     const actual = await vi.importActual<typeof import('../../env')>('../../env');
     return {
