@@ -107,7 +107,7 @@ export async function getPersonTimeline({
     return { person: null, calendarEvents: [], trips: [], relations: [], socialContacts: [] };
   }
 
-  const [person, calendarEvents, trips, relations, relationsBackward] = await Promise.all([
+  const [person, calendarEvents, trips, relations, relationsBackward, socialContacts] = await Promise.all([
     loadPersonSummary(personId),
     db
       .selectFrom('app.eventAttendees as a')
@@ -165,6 +165,13 @@ export async function getPersonTimeline({
       .orderBy('r.startedAt', 'desc')
       .limit(25)
       .execute(),
+    db
+      .selectFrom('app.socialContacts')
+      .select(['platform', 'displayName', 'kind', 'isMutual'])
+      .where('personId', '=', personId)
+      .where('ownerUserid', '=', ownerUserId)
+      .orderBy('platform')
+      .execute(),
   ]);
 
   return {
@@ -172,7 +179,12 @@ export async function getPersonTimeline({
     calendarEvents,
     trips,
     relations: [...relations, ...relationsBackward],
-    socialContacts: [],
+    socialContacts: socialContacts.map((row) => ({
+      platform: row.platform,
+      displayName: row.displayName,
+      kind: row.kind,
+      isMutual: row.isMutual,
+    })),
   };
 }
 

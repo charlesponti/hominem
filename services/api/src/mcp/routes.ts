@@ -22,8 +22,21 @@ if (
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
 }
+if (
+  enabledScopes.size === 0 ||
+  enabledScopes.has('collections:read') ||
+  enabledScopes.has('collections:write')
+) {
+  await import('./tools/collections');
+}
 if (enabledScopes.size === 0 || enabledScopes.has('finance:read')) {
   await import('./tools/finance');
+}
+if (enabledScopes.size === 0 || enabledScopes.has('health:read')) {
+  await import('./tools/health');
+}
+if (enabledScopes.size === 0 || enabledScopes.has('media:read')) {
+  await import('./tools/media');
 }
 if (enabledScopes.size === 0 || enabledScopes.has('people:read')) {
   await import('./tools/people');
@@ -33,6 +46,12 @@ if (enabledScopes.size === 0 || enabledScopes.has('places:read')) {
 }
 if (enabledScopes.size === 0 || enabledScopes.has('tags:read') || enabledScopes.has('tags:write')) {
   await import('./tools/tags');
+}
+if (enabledScopes.size === 0 || enabledScopes.has('services:read')) {
+  // services:read is gated for person_services table (no tools yet, but schema must be present)
+}
+if (enabledScopes.size === 0 || enabledScopes.has('social:read')) {
+  await import('./tools/social');
 }
 
 async function addMcpScopes(response: Response): Promise<Response> {

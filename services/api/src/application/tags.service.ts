@@ -9,9 +9,10 @@ export type EntityType = z.output<typeof entityTypeSchema>;
 // allow-list, not a passthrough, since entity_table casts straight to a
 // Postgres regclass and must never be built from unvalidated input. Extend as
 // later migration phases land more taggable domains.
-const ENTITY_TABLE_MAP: Record<EntityType, string> = {
+export const ENTITY_TABLE_MAP: Record<EntityType, string> = {
   people: 'app.people',
   places: 'app.places',
+  possessions: 'app.possessions',
 };
 
 function slugify(name: string): string {

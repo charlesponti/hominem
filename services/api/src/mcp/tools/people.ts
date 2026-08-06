@@ -33,7 +33,7 @@ registerTool(
     inputSchema: personTimelineInputSchema,
     outputSchema: personTimelineOutputSchema,
     readOnly: true,
-    scopes: ['people:read', 'calendar:read', 'travel:read'],
+    scopes: ['people:read', 'calendar:read', 'travel:read', 'social:read'],
     sensitivity: 'sensitive',
     resultCap: 50,
   },

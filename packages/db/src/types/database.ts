@@ -3,12 +3,11 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from 'kysely';
+import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
@@ -314,6 +313,37 @@ export interface AppChats {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppCollectionItems {
+  collectionId: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  entityId: string;
+  entityTable: string;
+  id: Generated<string>;
+  note: string | null;
+  ownerUserid: string;
+  sortOrder: number | null;
+}
+
+export interface AppCollectionMembers {
+  acceptedAt: ColumnType<string, Date | string, Date | string> | null;
+  collectionId: string;
+  id: Generated<string>;
+  invitedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  ownerUserid: string;
+  personId: string;
+  role: Generated<string>;
+}
+
+export interface AppCollections {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  description: string | null;
+  id: Generated<string>;
+  name: string;
+  ownerUserid: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  visibility: Generated<string>;
+}
+
 export interface AppEventAttendees {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   eventId: string;
@@ -494,6 +524,154 @@ export interface AppFinanceTransactions {
   userId: string;
 }
 
+export interface AppHealthActivities {
+  activityType: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  endsAt: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  metrics: Generated<Json>;
+  ownerUserid: string;
+  personId: string | null;
+  source: string | null;
+  startsAt: ColumnType<string, Date | string, Date | string>;
+}
+
+export interface AppHealthObservations {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  observationType: string;
+  observedAt: ColumnType<string, Date | string, Date | string>;
+  ownerUserid: string;
+  personId: string | null;
+  source: string | null;
+  unit: string | null;
+  value: Numeric | null;
+}
+
+export interface AppHealthProfiles {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  heightCm: Numeric | null;
+  id: Generated<string>;
+  ownerUserid: string;
+  personId: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppHealthSupplements {
+  category: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  dose: string | null;
+  id: Generated<string>;
+  notes: string | null;
+  ownerUserid: string;
+  personId: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppMediaCollectionItems {
+  addedAt: ColumnType<string, Date | string, Date | string> | null;
+  collectionId: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  mediaItemId: string | null;
+  metadata: Generated<Json>;
+  position: number | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppMediaCollections {
+  collectionType: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  description: string | null;
+  externalId: string | null;
+  id: Generated<string>;
+  name: string | null;
+  ownerUserid: string;
+  personId: string | null;
+  platform: string | null;
+  sortOrder: number | null;
+  source: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  visibility: string | null;
+}
+
+export interface AppMediaItemActivities {
+  activityType: string;
+  confidence: Numeric | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  episode: number | null;
+  id: Generated<string>;
+  mediaItemId: string | null;
+  metadata: Generated<Json>;
+  occurredAt: ColumnType<string, Date | string, Date | string>;
+  ownerUserid: string;
+  personId: string | null;
+  provider: string | null;
+  rating: Numeric | null;
+  rewatchCount: Generated<number>;
+  season: number | null;
+  starred: Generated<boolean>;
+}
+
+export interface AppMediaItemIdentifiers {
+  id: Generated<string>;
+  identifierType: string;
+  identifierValue: string;
+  isPrimary: Generated<boolean>;
+  mediaItemId: string;
+  metadata: Generated<Json>;
+  provider: string;
+}
+
+export interface AppMediaItems {
+  albumId: string | null;
+  artistId: string | null;
+  author: string | null;
+  canonicalTitle: string;
+  composer: string | null;
+  coverImageUrl: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  dateAddedToLibrary: ColumnType<string, Date | string, Date | string> | null;
+  description: string | null;
+  discNumber: number | null;
+  durationMs: number | null;
+  enrichedAt: ColumnType<string, Date | string, Date | string> | null;
+  genre: string | null;
+  genres: string | null;
+  id: Generated<string>;
+  lastPlayedAt: ColumnType<string, Date | string, Date | string> | null;
+  likeRating: string | null;
+  mediaKind: string;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  playCount: Generated<number>;
+  popularity: number | null;
+  previewUrl: string | null;
+  publicationDate: ColumnType<string, Date | string, Date | string> | null;
+  publisher: string | null;
+  releaseDate: ColumnType<string, Date | string, Date | string> | null;
+  releaseYear: number | null;
+  runtimeSeconds: number | null;
+  skipCount: Generated<number>;
+  source: string | null;
+  spotifyId: string | null;
+  trackNumber: number | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppMusicAlbums {
+  artistId: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  genre: string | null;
+  id: Generated<string>;
+  ownerUserid: string;
+  releaseDate: ColumnType<string, Date | string, Date | string> | null;
+  spotifyId: string | null;
+  title: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppNoteFiles {
   attachedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   fileId: string;
@@ -565,6 +743,25 @@ export interface AppPersonAddressRentHistory {
   rentCents: number;
 }
 
+export interface AppPersonArtists {
+  activeFrom: number | null;
+  activeTo: number | null;
+  birthPlace: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  discipline: string | null;
+  id: Generated<string>;
+  movement: string | null;
+  name: string;
+  nationality: string | null;
+  notes: string | null;
+  ownerUserid: string;
+  personId: string | null;
+  sortName: string | null;
+  source: Generated<string>;
+  spotifyId: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppPersonContactMethods {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   endDate: ColumnType<string, Date | string, Date | string> | null;
@@ -592,6 +789,18 @@ export interface AppPersonRelationships {
   startedAt: ColumnType<string, Date | string, Date | string> | null;
   toPersonId: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPersonServices {
+  category: string;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  displayName: string | null;
+  handle: string | null;
+  id: Generated<string>;
+  ownerUserid: string;
+  personId: string | null;
+  platform: string;
+  profile: Generated<Json>;
 }
 
 export interface AppPlaces {
@@ -641,6 +850,167 @@ export interface AppPlaidItems {
   status: Generated<string>;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   userId: string;
+}
+
+export interface AppPossessionImages {
+  altText: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  displayOrder: Generated<number>;
+  id: Generated<string>;
+  originalFilename: string | null;
+  ownerUserid: string;
+  path: string;
+  possessionId: string;
+}
+
+export interface AppPossessions {
+  acquiredDate: ColumnType<string, Date | string, Date | string> | null;
+  artDimensions: string | null;
+  artistPersonId: string | null;
+  artMedium: string | null;
+  artMovement: string | null;
+  artPeriod: string | null;
+  brand: string | null;
+  color: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  isArchived: Generated<boolean>;
+  metadata: Generated<Json>;
+  model: string | null;
+  name: string;
+  netValueCents: number | null;
+  notes: string | null;
+  ownerUserid: string;
+  placement: string | null;
+  possessionType: string | null;
+  priceCents: number | null;
+  retiredDate: ColumnType<string, Date | string, Date | string> | null;
+  sellPriceCents: number | null;
+  serialNumber: string | null;
+  size: string | null;
+  status: string | null;
+  subCategory: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+  url: string | null;
+}
+
+export interface AppPurchaseLineItems {
+  category: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  possessionId: string | null;
+  purchaseOrderId: string;
+  quantity: Generated<Numeric>;
+  serialNumber: string | null;
+  title: string;
+  unitAmount: Numeric | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPurchaseOrders {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  currencyCode: Generated<string>;
+  externalOrderId: string | null;
+  id: Generated<string>;
+  merchant: string;
+  metadata: Generated<Json>;
+  orderedAt: ColumnType<string, Date | string, Date | string> | null;
+  ownerUserid: string;
+  status: string | null;
+  totalAmount: Numeric | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppPurchaseReturns {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  currencyCode: Generated<string>;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  purchaseOrderId: string;
+  reason: string | null;
+  resolution: string | null;
+  returnAmount: Numeric | null;
+  returnDate: ColumnType<string, Date | string, Date | string> | null;
+}
+
+export interface AppSocialContacts {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  displayName: string | null;
+  externalContactId: string | null;
+  id: Generated<string>;
+  isMutual: Generated<boolean>;
+  kind: string | null;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  personId: string | null;
+  phoneNumber: string | null;
+  platform: string;
+}
+
+export interface AppSocialEngagements {
+  actorId: string | null;
+  body: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  engagementType: string;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  occurredAt: ColumnType<string, Date | string, Date | string>;
+  ownerUserid: string;
+  platform: string;
+  postId: string | null;
+  reaction: string | null;
+}
+
+export interface AppSocialMessages {
+  body: string | null;
+  callDurationS: number | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  isCall: Generated<boolean>;
+  mediaUrl: string | null;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  senderId: string | null;
+  senderName: string | null;
+  sentAt: ColumnType<string, Date | string, Date | string>;
+  threadId: string;
+}
+
+export interface AppSocialPosts {
+  caption: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  externalId: string | null;
+  id: Generated<string>;
+  location: string | null;
+  mediaUrl: string | null;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  platform: string;
+  postedAt: ColumnType<string, Date | string, Date | string>;
+  postType: string | null;
+}
+
+export interface AppSocialThreadParticipants {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  joinedAt: ColumnType<string, Date | string, Date | string>;
+  ownerUserid: string;
+  personId: string;
+  threadId: string;
+}
+
+export interface AppSocialThreads {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  externalId: string | null;
+  id: Generated<string>;
+  isGroup: Generated<boolean>;
+  metadata: Generated<Json>;
+  ownerUserid: string;
+  platform: string | null;
+  title: string | null;
 }
 
 export interface AppTagAssignments {
@@ -871,53 +1241,79 @@ export interface Verification {
 
 export interface DB {
   account: Account;
-  'app.aiUsageEvents': AppAiUsageEvents;
-  'app.calendars': AppCalendars;
-  'app.careerApplicationFiles': AppCareerApplicationFiles;
-  'app.careerApplicationNotes': AppCareerApplicationNotes;
-  'app.careerApplications': AppCareerApplications;
-  'app.careerApplicationStages': AppCareerApplicationStages;
-  'app.careerCertifications': AppCareerCertifications;
-  'app.careerEducation': AppCareerEducation;
-  'app.careerOffers': AppCareerOffers;
-  'app.careerPositions': AppCareerPositions;
-  'app.careerProfile': AppCareerProfile;
-  'app.careerProjects': AppCareerProjects;
-  'app.careerSkills': AppCareerSkills;
-  'app.careerSocialLinks': AppCareerSocialLinks;
-  'app.careerTestimonials': AppCareerTestimonials;
-  'app.chatMessages': AppChatMessages;
-  'app.chats': AppChats;
-  'app.eventAttendees': AppEventAttendees;
-  'app.events': AppEvents;
-  'app.files': AppFiles;
-  'app.financeAccountLabels': AppFinanceAccountLabels;
-  'app.financeAccounts': AppFinanceAccounts;
-  'app.financeCategories': AppFinanceCategories;
-  'app.financeInstitutions': AppFinanceInstitutions;
-  'app.financeStatementPeriods': AppFinanceStatementPeriods;
-  'app.financeTaxFilings': AppFinanceTaxFilings;
-  'app.financeTaxFilingStatusEvents': AppFinanceTaxFilingStatusEvents;
-  'app.financeTransactions': AppFinanceTransactions;
-  'app.noteFiles': AppNoteFiles;
-  'app.notes': AppNotes;
-  'app.organizationMemberships': AppOrganizationMemberships;
-  'app.organizations': AppOrganizations;
-  'app.people': AppPeople;
-  'app.personAddressRentHistory': AppPersonAddressRentHistory;
-  'app.personContactMethods': AppPersonContactMethods;
-  'app.personRelationships': AppPersonRelationships;
-  'app.places': AppPlaces;
-  'app.placeVisits': AppPlaceVisits;
-  'app.plaidItems': AppPlaidItems;
-  'app.tagAssignments': AppTagAssignments;
-  'app.tags': AppTags;
-  'app.taskParticipants': AppTaskParticipants;
-  'app.tasks': AppTasks;
-  'app.travelSegments': AppTravelSegments;
-  'app.travelTripAttendees': AppTravelTripAttendees;
-  'app.travelTrips': AppTravelTrips;
-  'app.vectorDocuments': AppVectorDocuments;
+  "app.aiUsageEvents": AppAiUsageEvents;
+  "app.calendars": AppCalendars;
+  "app.careerApplicationFiles": AppCareerApplicationFiles;
+  "app.careerApplicationNotes": AppCareerApplicationNotes;
+  "app.careerApplications": AppCareerApplications;
+  "app.careerApplicationStages": AppCareerApplicationStages;
+  "app.careerCertifications": AppCareerCertifications;
+  "app.careerEducation": AppCareerEducation;
+  "app.careerOffers": AppCareerOffers;
+  "app.careerPositions": AppCareerPositions;
+  "app.careerProfile": AppCareerProfile;
+  "app.careerProjects": AppCareerProjects;
+  "app.careerSkills": AppCareerSkills;
+  "app.careerSocialLinks": AppCareerSocialLinks;
+  "app.careerTestimonials": AppCareerTestimonials;
+  "app.chatMessages": AppChatMessages;
+  "app.chats": AppChats;
+  "app.collectionItems": AppCollectionItems;
+  "app.collectionMembers": AppCollectionMembers;
+  "app.collections": AppCollections;
+  "app.eventAttendees": AppEventAttendees;
+  "app.events": AppEvents;
+  "app.files": AppFiles;
+  "app.financeAccountLabels": AppFinanceAccountLabels;
+  "app.financeAccounts": AppFinanceAccounts;
+  "app.financeCategories": AppFinanceCategories;
+  "app.financeInstitutions": AppFinanceInstitutions;
+  "app.financeStatementPeriods": AppFinanceStatementPeriods;
+  "app.financeTaxFilings": AppFinanceTaxFilings;
+  "app.financeTaxFilingStatusEvents": AppFinanceTaxFilingStatusEvents;
+  "app.financeTransactions": AppFinanceTransactions;
+  "app.healthActivities": AppHealthActivities;
+  "app.healthObservations": AppHealthObservations;
+  "app.healthProfiles": AppHealthProfiles;
+  "app.healthSupplements": AppHealthSupplements;
+  "app.mediaCollectionItems": AppMediaCollectionItems;
+  "app.mediaCollections": AppMediaCollections;
+  "app.mediaItemActivities": AppMediaItemActivities;
+  "app.mediaItemIdentifiers": AppMediaItemIdentifiers;
+  "app.mediaItems": AppMediaItems;
+  "app.musicAlbums": AppMusicAlbums;
+  "app.noteFiles": AppNoteFiles;
+  "app.notes": AppNotes;
+  "app.organizationMemberships": AppOrganizationMemberships;
+  "app.organizations": AppOrganizations;
+  "app.people": AppPeople;
+  "app.personAddressRentHistory": AppPersonAddressRentHistory;
+  "app.personArtists": AppPersonArtists;
+  "app.personContactMethods": AppPersonContactMethods;
+  "app.personRelationships": AppPersonRelationships;
+  "app.personServices": AppPersonServices;
+  "app.places": AppPlaces;
+  "app.placeVisits": AppPlaceVisits;
+  "app.plaidItems": AppPlaidItems;
+  "app.possessionImages": AppPossessionImages;
+  "app.possessions": AppPossessions;
+  "app.purchaseLineItems": AppPurchaseLineItems;
+  "app.purchaseOrders": AppPurchaseOrders;
+  "app.purchaseReturns": AppPurchaseReturns;
+  "app.socialContacts": AppSocialContacts;
+  "app.socialEngagements": AppSocialEngagements;
+  "app.socialMessages": AppSocialMessages;
+  "app.socialPosts": AppSocialPosts;
+  "app.socialThreadParticipants": AppSocialThreadParticipants;
+  "app.socialThreads": AppSocialThreads;
+  "app.tagAssignments": AppTagAssignments;
+  "app.tags": AppTags;
+  "app.taskParticipants": AppTaskParticipants;
+  "app.tasks": AppTasks;
+  "app.travelSegments": AppTravelSegments;
+  "app.travelTripAttendees": AppTravelTripAttendees;
+  "app.travelTrips": AppTravelTrips;
+  "app.vectorDocuments": AppVectorDocuments;
   deviceCode: DeviceCode;
   gooseDbVersion: GooseDbVersion;
   jwks: Jwks;
