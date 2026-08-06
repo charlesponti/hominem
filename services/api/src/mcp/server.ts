@@ -121,9 +121,5 @@ export async function handleMcpRequestWithSession(c: Context<McpHonoEnv>): Promi
   const mcpServer = createMcpServer();
   await mcpServer.connect(transport);
 
-  try {
-    return await transport.handleRequest(c.req.raw, { authInfo });
-  } finally {
-    await mcpServer.close();
-  }
+  return transport.handleRequest(c.req.raw, { authInfo });
 }

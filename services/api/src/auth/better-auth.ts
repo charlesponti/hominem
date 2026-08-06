@@ -9,6 +9,7 @@ import { emailOTP, mcp, multiSession, openAPI } from 'better-auth/plugins';
 
 import { API_BRAND } from '../brand';
 import { env } from '../env';
+import { MCP_SCOPES } from '../scopes';
 import { enableTestOtpStore, recordTestOtp } from './test-otp-store';
 
 // Enable the test OTP store in non-production environments
@@ -85,7 +86,6 @@ const verificationOtpSubjectByType = {
 } as const satisfies Record<string, string>;
 
 export const TEST_OTP = '000000';
-export const MCP_SCOPES = ['career:read', 'finance:read', 'people:read', 'places:read'] as const;
 
 function generateNumericOtp({ length, isTest }: { length: number; isTest?: boolean }): string {
   if (isTest) return TEST_OTP;

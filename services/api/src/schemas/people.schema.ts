@@ -43,3 +43,49 @@ export const peopleLookupOutputSchema = z.object({
   people: z.array(personSummarySchema),
   count: z.number().int().min(0),
 });
+
+// ── person_timeline ──────────────────────────────────────────────────
+
+export const personTimelineInputSchema = z.object({
+  personId: z.string(),
+});
+
+export const personTimelineCalendarEventSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  startsAt: z.string(),
+  role: z.string().nullable(),
+});
+
+export const personTimelineTripSchema = z.object({
+  id: z.string(),
+  city: z.string().nullable(),
+  state: z.string().nullable(),
+  country: z.string().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  role: z.string().nullable(),
+});
+
+export const personTimelineRelationSchema = z.object({
+  relatedPersonId: z.string(),
+  relatedDisplayName: z.string().nullable(),
+  relation: z.string(),
+  startedAt: z.string().nullable(),
+  endedAt: z.string().nullable(),
+});
+
+export const personTimelineSocialContactSchema = z.object({
+  platform: z.string(),
+  displayName: z.string().nullable(),
+  kind: z.string().nullable(),
+  isMutual: z.boolean(),
+});
+
+export const personTimelineOutputSchema = z.object({
+  person: personSummarySchema.nullable(),
+  calendarEvents: z.array(personTimelineCalendarEventSchema),
+  trips: z.array(personTimelineTripSchema),
+  relations: z.array(personTimelineRelationSchema),
+  socialContacts: z.array(personTimelineSocialContactSchema),
+});

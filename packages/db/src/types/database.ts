@@ -65,6 +65,13 @@ export interface AppAiUsageEvents {
   usageAvailable: Generated<boolean>;
 }
 
+export interface AppCalendars {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  name: string;
+  ownerUserid: string;
+}
+
 export interface AppCareerApplicationFiles {
   applicationId: string;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -304,6 +311,38 @@ export interface AppChats {
   primarySpaceId: string | null;
   source: string | null;
   title: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppEventAttendees {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  eventId: string;
+  id: Generated<string>;
+  personId: string | null;
+  role: Generated<string>;
+  source: string | null;
+}
+
+export interface AppEvents {
+  calendarId: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  description: string | null;
+  endsAt: ColumnType<string, Date | string, Date | string> | null;
+  eventType: string | null;
+  externalUid: string | null;
+  id: Generated<string>;
+  isAllDay: Generated<boolean>;
+  metadata: Generated<Json>;
+  organizer: string | null;
+  ownerUserid: string;
+  placeId: string | null;
+  recurrenceRule: string | null;
+  source: string | null;
+  sourceRowId: string | null;
+  startsAt: ColumnType<string, Date | string, Date | string>;
+  status: string | null;
+  title: string;
+  tripId: string | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
@@ -664,6 +703,50 @@ export interface AppTasks {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppTravelSegments {
+  arrivesAt: ColumnType<string, Date | string, Date | string> | null;
+  confirmationCode: string | null;
+  cost: Numeric | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  departsAt: ColumnType<string, Date | string, Date | string> | null;
+  destinationCode: string | null;
+  destinationPlaceId: string | null;
+  id: Generated<string>;
+  metadata: Generated<Json>;
+  notes: string | null;
+  originCode: string | null;
+  originPlaceId: string | null;
+  ownerUserid: string;
+  provider: string | null;
+  segmentType: string;
+  tripId: string;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppTravelTripAttendees {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  personId: string;
+  role: string | null;
+  tripId: string;
+}
+
+export interface AppTravelTrips {
+  city: string | null;
+  country: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  endDate: ColumnType<string, Date | string, Date | string> | null;
+  id: Generated<string>;
+  name: string | null;
+  notes: string | null;
+  ownerUserid: string;
+  price: Numeric | null;
+  sourceRowId: number | null;
+  startDate: ColumnType<string, Date | string, Date | string> | null;
+  state: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppVectorDocuments {
   content: string;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -789,6 +872,7 @@ export interface Verification {
 export interface DB {
   account: Account;
   'app.aiUsageEvents': AppAiUsageEvents;
+  'app.calendars': AppCalendars;
   'app.careerApplicationFiles': AppCareerApplicationFiles;
   'app.careerApplicationNotes': AppCareerApplicationNotes;
   'app.careerApplications': AppCareerApplications;
@@ -804,6 +888,8 @@ export interface DB {
   'app.careerTestimonials': AppCareerTestimonials;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;
+  'app.eventAttendees': AppEventAttendees;
+  'app.events': AppEvents;
   'app.files': AppFiles;
   'app.financeAccountLabels': AppFinanceAccountLabels;
   'app.financeAccounts': AppFinanceAccounts;
@@ -828,6 +914,9 @@ export interface DB {
   'app.tags': AppTags;
   'app.taskParticipants': AppTaskParticipants;
   'app.tasks': AppTasks;
+  'app.travelSegments': AppTravelSegments;
+  'app.travelTripAttendees': AppTravelTripAttendees;
+  'app.travelTrips': AppTravelTrips;
   'app.vectorDocuments': AppVectorDocuments;
   deviceCode: DeviceCode;
   gooseDbVersion: GooseDbVersion;

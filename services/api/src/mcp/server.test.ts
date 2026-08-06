@@ -85,7 +85,7 @@ describe('mcp server transport', () => {
 
     expect(response.status).toBe(401);
     expect(response.headers.get('www-authenticate')).toContain(
-      'scope="career:read finance:read people:read places:read"',
+      'scope="calendar:read career:read finance:read people:read places:read tags:read tags:write travel:read"',
     );
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
@@ -100,7 +100,7 @@ describe('mcp server transport', () => {
     expect(response.status).toBe(403);
     expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
     expect(response.headers.get('www-authenticate')).toContain(
-      'scope="career:read finance:read people:read places:read"',
+      'scope="calendar:read career:read finance:read people:read places:read tags:read tags:write travel:read"',
     );
     await expect(response.json()).resolves.toMatchObject({
       code: 'INSUFFICIENT_SCOPE',

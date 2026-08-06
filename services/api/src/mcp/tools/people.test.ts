@@ -9,11 +9,19 @@ const adaId = 'b1000001-0000-4000-8000-000000000001';
 const graceId = 'b1000001-0000-4000-8000-000000000002';
 const orgId = 'b1000003-0000-4000-8000-000000000001';
 const tagId = 'b1000004-0000-4000-8000-000000000001';
+const calendarId = 'b1000008-0000-4000-8000-000000000001';
+const eventId = 'b1000009-0000-4000-8000-000000000001';
+const tripId = 'b1000010-0000-4000-8000-000000000001';
 
 type TestPerson = Record<string, unknown>;
 type TestResultContent = {
   people?: TestPerson[];
   count?: number;
+  person?: TestPerson | null;
+  calendarEvents?: Array<Record<string, unknown>>;
+  trips?: Array<Record<string, unknown>>;
+  relations?: Array<Record<string, unknown>>;
+  socialContacts?: Array<Record<string, unknown>>;
 };
 
 function resultContent(res: McpToolResult): TestResultContent {
@@ -120,6 +128,84 @@ beforeAll(async () => {
     ])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
+
+  await db
+    .insertInto('app.personRelationships')
+    .values([
+      {
+        id: 'b1000007-0000-4000-8000-000000000002',
+        ownerUserid: userId,
+        fromPersonId: adaId,
+        toPersonId: graceId,
+        relationshipType: 'sister',
+        startedAt: '2015-01-01',
+      },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
+
+  await db
+    .insertInto('app.calendars')
+    .values([{ id: calendarId, ownerUserid: userId, name: 'Work' }])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
+
+  await db
+    .insertInto('app.events')
+    .values([
+      {
+        id: eventId,
+        ownerUserid: userId,
+        calendarId,
+        title: 'Analytical Engine Demo',
+        startsAt: '2026-07-10T09:00:00.000Z',
+        status: 'confirmed',
+      },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
+
+  await db
+    .insertInto('app.eventAttendees')
+    .values([
+      {
+        id: 'b1000008-0000-4000-8000-000000000001',
+        eventId,
+        personId: adaId,
+        role: 'organizer',
+      },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
+
+  await db
+    .insertInto('app.travelTrips')
+    .values([
+      {
+        id: tripId,
+        ownerUserid: userId,
+        name: 'Denver',
+        city: 'Denver',
+        country: 'USA',
+        startDate: '2026-08-01',
+        endDate: '2026-08-05',
+      },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
+
+  await db
+    .insertInto('app.travelTripAttendees')
+    .values([
+      {
+        id: 'b1000011-0000-4000-8000-000000000001',
+        tripId,
+        personId: adaId,
+        role: 'attendee',
+      },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
 });
 
 describe('people_lookup', () => {
@@ -163,5 +249,61 @@ describe('people_lookup', () => {
 
     const result = await callTool(userId, 'people_lookup', { query: 'nonexistent-xyz', limit: 10 });
     expect(resultContent(result).count).toBe(0);
+  });
+});
+
+describe('person_timeline', () => {
+  it('returns the person summary with calendar events, trips, and relations', async () => {
+    await import('./people');
+    const { callTool } = await import('../tools');
+
+    const result = await callTool(userId, 'person_timeline', { personId: adaId });
+    const data = resultContent(result);
+
+    expect(data.person).toMatchObject({ displayName: 'Ada Lovelace', personType: 'friend' });
+    expect(data.calendarEvents).toEqual([
+      {
+        id: eventId,
+        title: 'Analytical Engine Demo',
+        startsAt: '2026-07-10 09:00:00+00',
+        role: 'organizer',
+      },
+    ]);
+    expect(data.trips).toEqual([
+      {
+        id: tripId,
+        city: 'Denver',
+        state: null,
+        country: 'USA',
+        startDate: '2026-08-01',
+        endDate: '2026-08-05',
+        role: 'attendee',
+      },
+    ]);
+    expect(data.relations).toEqual([
+      {
+        relatedPersonId: graceId,
+        relatedDisplayName: 'Grace Hopper',
+        relation: 'sister',
+        startedAt: '2015-01-01 00:00:00+00',
+        endedAt: null,
+      },
+    ]);
+    expect(data.socialContacts).toEqual([]);
+  });
+
+  it('returns an empty timeline for a person not owned by the caller', async () => {
+    const { callTool } = await import('../tools');
+
+    const result = await callTool(userId, 'person_timeline', {
+      personId: '99999999-9999-4999-8999-999999999999',
+    });
+    const data = resultContent(result);
+
+    expect(data.person).toBeNull();
+    expect(data.calendarEvents).toEqual([]);
+    expect(data.trips).toEqual([]);
+    expect(data.relations).toEqual([]);
+    expect(data.socialContacts).toEqual([]);
   });
 });

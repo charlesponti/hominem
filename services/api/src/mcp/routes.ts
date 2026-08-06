@@ -1,20 +1,24 @@
 import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
 import { Hono, type Context, type Next } from 'hono';
 
-import { betterAuthMcpServer, MCP_SCOPES } from '../auth/better-auth';
+import { betterAuthMcpServer } from '../auth/better-auth';
 import { env } from '../env';
+import { MCP_ENABLED_SCOPES, MCP_SCOPES } from '../scopes';
 import { isRateLimited } from './rate-limiter';
 import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
 
 // Conditional imports — only register tools whose scope is in MCP_ENABLED_SCOPES
 // Use top-level await via ESM (services/api is ESM)
-const enabledScopes = new Set(
-  env.MCP_ENABLED_SCOPES.split(',')
-    .map((scope: string) => scope.trim())
-    .filter(Boolean),
-);
+const enabledScopes = new Set<string>(MCP_ENABLED_SCOPES);
 const requiredScopes = MCP_SCOPES.join(' ');
 
+if (
+  enabledScopes.size === 0 ||
+  enabledScopes.has('calendar:read') ||
+  enabledScopes.has('travel:read')
+) {
+  await import('./tools/calendar');
+}
 if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
   await import('./tools/career');
 }
@@ -26,6 +30,9 @@ if (enabledScopes.size === 0 || enabledScopes.has('people:read')) {
 }
 if (enabledScopes.size === 0 || enabledScopes.has('places:read')) {
   await import('./tools/places');
+}
+if (enabledScopes.size === 0 || enabledScopes.has('tags:read') || enabledScopes.has('tags:write')) {
+  await import('./tools/tags');
 }
 
 async function addMcpScopes(response: Response): Promise<Response> {

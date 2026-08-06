@@ -3,7 +3,7 @@ import {
   getFinanceRecentTransactions,
   getFinanceSpendingByCategory,
 } from '../../application/finance-mcp.service';
-import { MCP_SCOPES } from '../../auth/better-auth';
+import { MCP_SCOPES } from '../../scopes';
 import {
   financeNetWorthInputSchema,
   financeNetWorthOutputSchema,

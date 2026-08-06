@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "dev": "SERVICE_NAME=api node --watch --import jiti/register src/index.ts",
+    "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
@@ -29,8 +29,8 @@
     "start:worker": "node dist/worker.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "e2e:setup": "jiti scripts/e2e-setup.ts",
-    "export-user": "jiti scripts/export-user.ts"
+    "e2e:setup": "tsx scripts/e2e-setup.ts",
+    "export-user": "tsx scripts/export-user.ts"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",
@@ -63,7 +63,7 @@
     "@types/node": "catalog:",
     "@types/ws": "^8.18.1",
     "goose-cli": "3.25.0-a",
-    "jiti": "catalog:",
+    "tsx": "^4.10.0",
     "rolldown": "^1.0.0"
   }
 }

@@ -39,8 +39,6 @@ export const apiSchema = baseSchema.extend({
   OPENROUTER_VOICE_CLEANUP_MODEL: z.string().default('qwen/qwen3.5-flash-02-23'),
   SENTRY_DSN: z.string().optional(),
   SAVE_VOICE_AUDIO: z.stringbool().default(false),
-  // Comma-separated MCP tool scopes to register (see services/api/src/mcp/routes.ts).
-  MCP_ENABLED_SCOPES: z.string().default('career:read,finance:read'),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
   OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),

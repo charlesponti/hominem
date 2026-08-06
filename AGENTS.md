@@ -1,7 +1,7 @@
 ## Rules
 
 - Follow YAGNI (You Aren't Gonna Need It) principle and one-liner solutions whenever possible.
-- Never commit code. The user must review and commit the changes themselves.
+- Agents may commit code, but every commit must follow the Conventional Commits standard. Load [.agents/skills/conventional-commit/SKILL.md](.agents/skills/conventional-commit/SKILL.md) before staging, committing, or pushing.
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 
 ## Decision authority
@@ -59,7 +59,7 @@ just db migrate
 
 - Branch naming: `feature/<name>`
 - PR merge: squash commit
-- Never commit on the user's behalf — always leave commits for the user to review and push
+- Every commit must follow the Conventional Commits standard. Load [.agents/skills/conventional-commit/SKILL.md](.agents/skills/conventional-commit/SKILL.md) before staging, committing, or pushing, and follow its workflow exactly.
 
 ## Documentation
 

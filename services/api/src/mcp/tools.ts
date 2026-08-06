@@ -13,7 +13,7 @@ export interface McpToolDefinition<
   description: string;
   inputSchema: TInputSchema;
   outputSchema: TOutputSchema;
-  readOnly: true;
+  readOnly: boolean;
   scopes: readonly string[];
   sensitivity: CapabilityDefinition['sensitivity'];
   resultCap: number;

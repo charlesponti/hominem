@@ -89,6 +89,93 @@ export async function getPersonPeople({
   return { people, count: people.length };
 }
 
+export async function getPersonTimeline({
+  ownerUserId,
+  personId,
+}: {
+  ownerUserId: string;
+  personId: string;
+}) {
+  const ownedPerson = await db
+    .selectFrom('app.people')
+    .select('id')
+    .where('id', '=', personId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+
+  if (!ownedPerson) {
+    return { person: null, calendarEvents: [], trips: [], relations: [], socialContacts: [] };
+  }
+
+  const [person, calendarEvents, trips, relations, relationsBackward] = await Promise.all([
+    loadPersonSummary(personId),
+    db
+      .selectFrom('app.eventAttendees as a')
+      .innerJoin('app.events as e', 'e.id', 'a.eventId')
+      .select(['e.id as id', 'e.title as title', 'e.startsAt as startsAt', 'a.role as role'])
+      .where('a.personId', '=', personId)
+      .where('e.ownerUserid', '=', ownerUserId)
+      .orderBy('e.startsAt', 'desc')
+      .limit(20)
+      .execute(),
+    db
+      .selectFrom('app.travelTripAttendees as a')
+      .innerJoin('app.travelTrips as t', 't.id', 'a.tripId')
+      .select([
+        't.id as id',
+        't.city as city',
+        't.state as state',
+        't.country as country',
+        't.startDate as startDate',
+        't.endDate as endDate',
+        'a.role as role',
+      ])
+      .where('a.personId', '=', personId)
+      .where('t.ownerUserid', '=', ownerUserId)
+      .orderBy('t.startDate', 'desc')
+      .limit(20)
+      .execute(),
+    db
+      .selectFrom('app.personRelationships as r')
+      .innerJoin('app.people as p', 'p.id', 'r.toPersonId')
+      .select([
+        'r.toPersonId as relatedPersonId',
+        'p.displayName as relatedDisplayName',
+        'r.relationshipType as relation',
+        'r.startedAt as startedAt',
+        'r.endedAt as endedAt',
+      ])
+      .where('r.fromPersonId', '=', personId)
+      .where('r.ownerUserid', '=', ownerUserId)
+      .orderBy('r.startedAt', 'desc')
+      .limit(25)
+      .execute(),
+    db
+      .selectFrom('app.personRelationships as r')
+      .innerJoin('app.people as p', 'p.id', 'r.fromPersonId')
+      .select([
+        'r.fromPersonId as relatedPersonId',
+        'p.displayName as relatedDisplayName',
+        'r.relationshipType as relation',
+        'r.startedAt as startedAt',
+        'r.endedAt as endedAt',
+      ])
+      .where('r.toPersonId', '=', personId)
+      .where('r.ownerUserid', '=', ownerUserId)
+      .orderBy('r.startedAt', 'desc')
+      .limit(25)
+      .execute(),
+  ]);
+
+  return {
+    person,
+    calendarEvents,
+    trips,
+    relations: [...relations, ...relationsBackward],
+    socialContacts: [],
+  };
+}
+
 async function loadPersonSummary(personId: string): Promise<PersonSummary | null> {
   const person = await getPersonById(personId);
   if (!person) {
