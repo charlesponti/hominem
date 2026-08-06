@@ -3,7 +3,6 @@ import {
   getFinanceRecentTransactions,
   getFinanceSpendingByCategory,
 } from '../../application/finance-mcp.service';
-import { MCP_SCOPES } from '../../scopes';
 import {
   financeNetWorthInputSchema,
   financeNetWorthOutputSchema,
@@ -12,6 +11,7 @@ import {
   financeSpendingByCategoryInputSchema,
   financeSpendingByCategoryOutputSchema,
 } from '../../schemas/finance.schema';
+import { MCP_SCOPES } from '../../scopes';
 import { registerTool } from '../tools';
 
 // ── finance_net_worth ───────────────────────────────────────────────
