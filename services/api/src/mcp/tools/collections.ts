@@ -31,8 +31,7 @@ registerTool(
   {
     name: 'create_collection',
     title: 'Create a collection',
-    description:
-      'Create a new collection for grouping entities (places, people, possessions).',
+    description: 'Create a new collection for grouping entities (places, people, possessions).',
     inputSchema: createCollectionInputSchema,
     outputSchema: createCollectionOutputSchema,
     readOnly: false,
@@ -40,15 +39,15 @@ registerTool(
     sensitivity: 'standard',
     resultCap: 1,
   },
-  async (ownerUserId, input) => createCollection(ownerUserId, input) as Promise<z.output<typeof createCollectionOutputSchema>>,
+  async (ownerUserId, input) =>
+    createCollection(ownerUserId, input) as Promise<z.output<typeof createCollectionOutputSchema>>,
 );
 
 registerTool(
   {
     name: 'add_collection_item',
     title: 'Add item to collection',
-    description:
-      'Add an entity (person, place, possession) to a collection with an optional note.',
+    description: 'Add an entity (person, place, possession) to a collection with an optional note.',
     inputSchema: addCollectionItemInputSchema,
     outputSchema: addCollectionItemOutputSchema,
     readOnly: false,
@@ -78,8 +77,7 @@ registerTool(
   {
     name: 'invite_member',
     title: 'Invite member to collection',
-    description:
-      'Invite a person to collaborate on a collection as an editor or viewer.',
+    description: 'Invite a person to collaborate on a collection as an editor or viewer.',
     inputSchema: inviteMemberInputSchema,
     outputSchema: inviteMemberOutputSchema,
     readOnly: false,

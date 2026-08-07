@@ -1,4 +1,5 @@
 import { db, sql } from '@hominem/db';
+
 import type {
   HealthDailySummaryOutput,
   HealthRecentWorkoutsOutput,
@@ -21,11 +22,7 @@ export async function listHealthDailySummary(
     .selectFrom('app.healthActivities as ha')
     .select(['ha.startsAt', 'ha.metrics', 'ha.source'])
     .where('ha.ownerUserid', '=', ownerUserId)
-    .where('ha.activityType', 'in', [
-      'tracker_sample',
-      'daily_summary',
-      'hourly_summary',
-    ]);
+    .where('ha.activityType', 'in', ['tracker_sample', 'daily_summary', 'hourly_summary']);
 
   if (from) {
     query = query.where(sql`ha.starts_at::date`, '>=', from);
@@ -34,7 +31,10 @@ export async function listHealthDailySummary(
     query = query.where(sql`ha.starts_at::date`, '<=', to);
   }
 
-  const rows = await query.orderBy(sql`ha.starts_at::date desc`).limit(limit).execute();
+  const rows = await query
+    .orderBy(sql`ha.starts_at::date desc`)
+    .limit(limit)
+    .execute();
 
   const grouped = new Map<
     string,
@@ -83,14 +83,7 @@ export async function listHealthRecentWorkouts(
 
   let query = db
     .selectFrom('app.healthActivities as ha')
-    .select([
-      'ha.id',
-      'ha.activityType',
-      'ha.startsAt',
-      'ha.endsAt',
-      'ha.metrics',
-      'ha.source',
-    ])
+    .select(['ha.id', 'ha.activityType', 'ha.startsAt', 'ha.endsAt', 'ha.metrics', 'ha.source'])
     .where('ha.ownerUserid', '=', ownerUserId)
     .where('ha.activityType', 'not in', [
       'tracker_sample',
@@ -139,13 +132,7 @@ export async function listHealthSleepSummary(
 
   let query = db
     .selectFrom('app.healthActivities as ha')
-    .select([
-      'ha.id',
-      'ha.startsAt',
-      'ha.endsAt',
-      'ha.metrics',
-      'ha.source',
-    ])
+    .select(['ha.id', 'ha.startsAt', 'ha.endsAt', 'ha.metrics', 'ha.source'])
     .where('ha.ownerUserid', '=', ownerUserId)
     .where('ha.activityType', '=', 'sleep');
 

@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { registerTool } from '../tools';
+
 import {
   mediaItemHistoryInputSchema,
   mediaItemHistoryOutputSchema,
@@ -12,6 +12,7 @@ import {
   musicRecentPlaysInputSchema,
   musicRecentPlaysOutputSchema,
 } from '../../schemas/media.schema';
+import { registerTool } from '../tools';
 
 function toIso(value: unknown): string | null {
   if (value === null || value === undefined) return null;
@@ -30,7 +31,7 @@ registerTool(
     name: 'media_recent_activity',
     title: 'Media recent activity',
     description:
-      "Lists recent media activity (watches, listens, reads, purchases) across all media types, newest first.",
+      'Lists recent media activity (watches, listens, reads, purchases) across all media types, newest first.',
     inputSchema: mediaRecentActivityInputSchema,
     outputSchema: mediaRecentActivityOutputSchema,
     readOnly: true,
@@ -79,7 +80,7 @@ registerTool(
     name: 'music_recent_plays',
     title: 'Music recent plays',
     description:
-      "Lists recent music plays (listen activity), newest first, with track and artist names.",
+      'Lists recent music plays (listen activity), newest first, with track and artist names.',
     inputSchema: musicRecentPlaysInputSchema,
     outputSchema: musicRecentPlaysOutputSchema,
     readOnly: true,
@@ -132,7 +133,7 @@ registerTool(
   {
     name: 'media_want_to_watch',
     title: 'Media want to watch',
-    description: "Lists media items marked as want-to-watch, newest first.",
+    description: 'Lists media items marked as want-to-watch, newest first.',
     inputSchema: mediaWantToWatchInputSchema,
     outputSchema: mediaWantToWatchOutputSchema,
     readOnly: true,
@@ -175,8 +176,7 @@ registerTool(
   {
     name: 'music_purchase_history',
     title: 'Music purchase history',
-    description:
-      "Lists music purchases (iTunes, Amazon Music, etc.), newest first.",
+    description: 'Lists music purchases (iTunes, Amazon Music, etc.), newest first.',
     inputSchema: musicPurchaseHistoryInputSchema,
     outputSchema: musicPurchaseHistoryOutputSchema,
     readOnly: true,

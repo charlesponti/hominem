@@ -262,10 +262,7 @@ export function ChatDetailScreen() {
       </Stack.Toolbar>
 
       <View style={styles.container}>
-        <ChatSettingsSheet
-          visible={showChatSettings}
-          onClose={() => setShowChatSettings(false)}
-        />
+        <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
         <ChatSearchModal
           visible={controller.showSearch}
           searchQuery={controller.searchQuery}
