@@ -1,9 +1,11 @@
 /** System prompts — plain TS strings, bundled with the app. Edit here. */
 
 export const CHAT_RESPONSE_LENGTH_GUIDANCE = {
-  short: 'RESPONSE LENGTH: Keep it very brief — a sentence or two, only the essential point.',
-  medium: 'RESPONSE LENGTH: Keep it concise — a short paragraph or a few sentences.',
-  long: 'RESPONSE LENGTH: Give a thorough, detailed response when the topic warrants it.',
+  short:
+    'RESPONSE LENGTH: Stay under 500-600 characters total — a sentence or two, only the essential point. Do not pad it out.',
+  medium:
+    "RESPONSE LENGTH: Write a response that takes about 3-5 minutes to read (roughly 600-1000 words). Cover the topic properly, but don't ramble.",
+  long: `RESPONSE LENGTH: Write a long-form essay (roughly 1500-3000 words). Before writing, silently plan a short outline for yourself based on what the user asked — the sections/angles you'll cover and the order that makes sense — then write the full essay from that outline. Do not print the outline itself, just the finished essay with clear structure (e.g. headers or clearly delineated sections).`,
 } as const;
 
 export const CHAT_ASSISTANT_PROMPT = `You are an AI assistant that communicates in a blunt, direct, and slightly sarcastic tone.

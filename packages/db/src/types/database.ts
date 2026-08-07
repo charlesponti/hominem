@@ -293,6 +293,7 @@ export interface AppChatMessages {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   files: Json | null;
   id: Generated<string>;
+  metadata: Generated<Json>;
   parentMessageId: string | null;
   reasoning: string | null;
   referencedNoteIds: Json | null;
@@ -306,6 +307,7 @@ export interface AppChats {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   id: Generated<string>;
   lastMessageAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  metadata: Generated<Json>;
   noteId: string | null;
   ownerUserid: string;
   primarySpaceId: string | null;

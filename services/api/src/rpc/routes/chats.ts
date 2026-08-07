@@ -90,10 +90,13 @@ async function synthesizeReplyAudioFile(
   }
 }
 
+// Rough chars/words-per-token headroom for each target: short caps at ~500-600
+// characters, medium at a 3-5 minute read (~600-1000 words), long at a full
+// essay (~1500-3000 words) with room for the model's outline-then-write pass.
 const RESPONSE_LENGTH_MAX_TOKENS = {
-  short: 200,
-  medium: 600,
-  long: 1600,
+  short: 250,
+  medium: 1600,
+  long: 6000,
 } as const satisfies Record<'short' | 'medium' | 'long', number>;
 
 function getSystemPrompt(responseLength?: 'short' | 'medium' | 'long'): string {
@@ -102,6 +105,12 @@ function getSystemPrompt(responseLength?: 'short' | 'medium' | 'long'): string {
   }
 
   return `${CHAT_ASSISTANT_PROMPT}\n\n${CHAT_RESPONSE_LENGTH_GUIDANCE[responseLength]}`;
+}
+
+// The "long" essay option plans an outline before writing, so give it room to
+// reason through structure before committing to prose.
+function getReasoningConfig(responseLength?: 'short' | 'medium' | 'long') {
+  return responseLength === 'long' ? { effort: 'medium' as const } : undefined;
 }
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
@@ -282,6 +291,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         { role: 'user', content: prompt },
       ],
       maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+      reasoning: getReasoningConfig(responseLength),
     });
 
     return streamSSE(c, async (stream) => {
