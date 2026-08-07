@@ -1,8 +1,6 @@
 import * as z from 'zod';
 
-const isoDateSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected an ISO date (YYYY-MM-DD).');
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected an ISO date (YYYY-MM-DD).');
 
 const limitSchema = z.number().int().min(1).max(50);
 const fromToSchema = z

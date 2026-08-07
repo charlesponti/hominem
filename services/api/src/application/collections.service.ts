@@ -49,10 +49,7 @@ async function loadCollectionSummary(
   };
 }
 
-export async function createCollection(
-  ownerUserId: string,
-  input: CreateCollectionInput,
-) {
+export async function createCollection(ownerUserId: string, input: CreateCollectionInput) {
   const row = await db
     .insertInto('app.collections')
     .values({
@@ -80,10 +77,7 @@ export async function createCollection(
   return { collection };
 }
 
-export async function addCollectionItem(
-  ownerUserId: string,
-  input: AddCollectionItemInput,
-) {
+export async function addCollectionItem(ownerUserId: string, input: AddCollectionItemInput) {
   const entityTable = ENTITY_TABLE_MAP[input.entityType as EntityType];
   if (!entityTable) {
     throw new Error(`Unknown entity type: ${input.entityType}`);
@@ -132,10 +126,7 @@ export async function addCollectionItem(
   return { item: mapped };
 }
 
-export async function removeCollectionItem(
-  ownerUserId: string,
-  input: RemoveCollectionItemInput,
-) {
+export async function removeCollectionItem(ownerUserId: string, input: RemoveCollectionItemInput) {
   const entityTable = ENTITY_TABLE_MAP[input.entityType as EntityType];
   if (!entityTable) {
     throw new Error(`Unknown entity type: ${input.entityType}`);
@@ -152,10 +143,7 @@ export async function removeCollectionItem(
   return { removed: result.numDeletedRows > 0n };
 }
 
-export async function inviteMember(
-  ownerUserId: string,
-  input: InviteMemberInput,
-) {
+export async function inviteMember(ownerUserId: string, input: InviteMemberInput) {
   await db
     .selectFrom('app.collections')
     .select('id')
@@ -171,9 +159,7 @@ export async function inviteMember(
       personId: input.personId,
       role: input.role,
     })
-    .onConflict((oc) =>
-      oc.columns(['collectionId', 'personId']).doUpdateSet({ role: input.role }),
-    )
+    .onConflict((oc) => oc.columns(['collectionId', 'personId']).doUpdateSet({ role: input.role }))
     .execute();
 
   const row = await db
@@ -193,10 +179,7 @@ export async function inviteMember(
   return { member };
 }
 
-export async function acceptMemberInvite(
-  _ownerUserId: string,
-  input: AcceptMemberInviteInput,
-) {
+export async function acceptMemberInvite(_ownerUserId: string, input: AcceptMemberInviteInput) {
   const existing = await db
     .selectFrom('app.collectionMembers')
     .selectAll()
@@ -229,10 +212,7 @@ export async function acceptMemberInvite(
   return { member };
 }
 
-export async function listCollections(
-  ownerUserId: string,
-  input: ListCollectionsInput,
-) {
+export async function listCollections(ownerUserId: string, input: ListCollectionsInput) {
   const rows = await db
     .selectFrom('app.collections')
     .select('id')
