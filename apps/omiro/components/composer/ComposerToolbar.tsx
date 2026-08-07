@@ -1,17 +1,13 @@
-import { useCallback, useState } from 'react';
-import { ActionSheetIOS, View } from 'react-native';
+import { IconButton } from '@ponti-studios/ui/native';
+import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
-import { useComposerContext } from '~/components/composer/ComposerContext';
-import { CameraModal } from '~/components/media/camera-modal';
-import { useThemeColors } from '~/components/theme';
-import { IconButton } from '~/components/ui/icon-button';
+import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
+import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
-
-import { useComposerSurfaceStyles } from './composer.styles';
 
 interface ComposerToolbarProps {
   canEnhance: boolean;
-  canPickMedia: boolean;
   canSubmit: boolean;
   canToggleVoice: boolean;
   hasContent: boolean;
@@ -29,93 +25,61 @@ interface ComposerToolbarProps {
 }
 
 export function ComposerToolbar(props: ComposerToolbarProps) {
-  const { pickAttachment, handleCameraCapture } = useComposerContext();
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const styles = useComposerSurfaceStyles();
-  const themeColors = useThemeColors();
-
-  const showMenu = useCallback(() => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: [
-          t.chat.input.actionSheet.cancel,
-          t.chat.input.actionSheet.takePhoto,
-          t.chat.input.actionSheet.chooseFromLibrary,
-        ],
-        cancelButtonIndex: 0,
-      },
-      (i) => {
-        if (i === 1) setIsCameraOpen(true);
-        else if (i === 2) void pickAttachment();
-      },
-    );
-  }, [pickAttachment]);
+  const [primary] = useCSSVariable(['--color-primary']) as string[];
 
   return (
-    <>
-      <View style={styles.row}>
+    <View className="flex-row items-center gap-1">
+      {props.hasContent ? (
         <IconButton
-          accessibilityLabel={t.inboxComposer.composer.addAttachmentA11y}
-          disabled={!props.canPickMedia}
-          icon="paperclip"
-          testID="composer-attach-button"
-          onPress={showMenu}
-        />
-        {props.hasContent ? (
-          <IconButton
-            accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
-            disabled={!props.canEnhance}
-            icon="wand.and.sparkles"
-            onPress={props.onEnhancePress}
+          accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
+          disabled={!props.canEnhance}
+          variant="plain"
+          onPress={props.onEnhancePress}
+        >
+          <AppIcon name="wand.and.sparkles" size={20} />
+        </IconButton>
+      ) : null}
+      {props.onToggleWalkieTalkie ? (
+        <IconButton
+          accessibilityLabel={
+            props.isWalkieTalkie
+              ? t.inboxComposer.composer.disableWalkieTalkieA11y
+              : t.inboxComposer.composer.enableWalkieTalkieA11y
+          }
+          testID="composer-walkie-talkie-toggle"
+          variant="plain"
+          onPress={props.onToggleWalkieTalkie}
+        >
+          <AppIcon
+            name="antenna.radiowaves.left.and.right"
+            size={20}
+            tintColor={props.isWalkieTalkie ? primary : undefined}
           />
-        ) : null}
-        {props.hasContent ? (
-          <IconButton
-            accessibilityLabel={
-              props.submitAccessibilityLabel ??
-              (props.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
-            }
-            disabled={!props.canSubmit}
-            icon="arrow.up"
-            testID={props.submitTestID}
-            onPress={props.onSubmit}
-          />
-        ) : (
-          <>
-            {props.onToggleWalkieTalkie ? (
-              <IconButton
-                accessibilityLabel={
-                  props.isWalkieTalkie
-                    ? t.inboxComposer.composer.disableWalkieTalkieA11y
-                    : t.inboxComposer.composer.enableWalkieTalkieA11y
-                }
-                icon="antenna.radiowaves.left.and.right"
-                testID="composer-walkie-talkie-toggle"
-                tintColor={props.isWalkieTalkie ? themeColors.primary : undefined}
-                onPress={props.onToggleWalkieTalkie}
-              />
-            ) : null}
-            <IconButton
-              accessibilityLabel={
-                props.isRecordingElsewhere
-                  ? t.inboxComposer.composer.recordingElsewhereA11y
-                  : t.inboxComposer.composer.startVoiceInputA11y
-              }
-              disabled={!props.canToggleVoice}
-              icon="mic.fill"
-              testID="composer-mic-button"
-              onPress={props.onVoicePress}
-            />
-          </>
-        )}
-      </View>
-      <CameraModal
-        visible={isCameraOpen}
-        onCapture={(photo) => {
-          void handleCameraCapture(photo).finally(() => setIsCameraOpen(false));
-        }}
-        onClose={() => setIsCameraOpen(false)}
+        </IconButton>
+      ) : null}
+      <IconButton
+        accessibilityLabel={
+          props.isRecordingElsewhere
+            ? t.inboxComposer.composer.recordingElsewhereA11y
+            : t.inboxComposer.composer.startVoiceInputA11y
+        }
+        disabled={!props.canToggleVoice}
+        testID="composer-mic-button"
+        variant="plain"
+        onPress={props.onVoicePress}
+      >
+        <AppIcon name="mic.fill" size={20} />
+      </IconButton>
+      <ComposerSendButton
+        accessibilityLabel={
+          props.submitAccessibilityLabel ??
+          (props.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
+        }
+        disabled={!props.canSubmit}
+        icon="arrow.up"
+        testID={props.submitTestID}
+        onPress={props.onSubmit}
       />
-    </>
+    </View>
   );
 }

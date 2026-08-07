@@ -1,5 +1,4 @@
 export { EmptyState } from './EmptyState';
-export { IconButton } from './icon-button';
-export { TextField } from './text-field';
+export { IconButton, TextField } from '@ponti-studios/ui/native';
 export { KeyboardStickyView } from './keyboard-sticky-view';
 export { SwipeAction } from './swipe-action';

@@ -1,21 +1,15 @@
+import { TextField } from '@ponti-studios/ui/native';
+import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { useRef, useState } from 'react';
 import { Pressable, View, type TextInput } from 'react-native';
+import { Text } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCSSVariable } from 'uniwind';
 
-import {
-  Text,
-  transitionDurations,
-  fontSizes,
-  makeStyles,
-  radii,
-  spacing,
-  useThemeColors,
-} from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
-import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
@@ -78,8 +72,7 @@ export function TaskEditorSheet({
   onClose,
   onSubmit,
 }: TaskEditorSheetProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [primary, tertiary] = useCSSVariable(['--color-primary', '--color-tertiary']) as string[];
   const insets = useSafeAreaInsets();
   const titleInputRef = useRef<TextInput>(null);
 
@@ -134,45 +127,61 @@ export function TaskEditorSheet({
       <KeyboardAvoidingView behavior="padding">
         <Animated.View
           entering={FadeInUp.duration(transitionDurations[150])}
-          style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
+          className="bg-card border-border rounded-t-md border-t gap-4 p-5"
+          style={{ paddingBottom: insets.bottom + 16 }}
         >
-          <View style={styles.handle} />
+          <View className="self-center bg-border rounded-sm h-1 mb-1 w-9" />
 
-          <View style={styles.form}>
+          <View className="gap-3">
             <TextField
               ref={titleInputRef}
               autoFocus
               value={title}
               onChangeText={setTitle}
               placeholder={t.tasks.editor.titlePlaceholder}
-              placeholderTextColor={themeColors['tertiary']}
-              cursorColor={themeColors.primary}
-              selectionColor={themeColors.primary}
-              style={styles.titleInput}
+              placeholderTextColor={tertiary}
+              cursorColor={primary}
+              selectionColor={primary}
+              style={{
+                borderRadius: 0,
+                borderWidth: 0,
+                fontSize: 16,
+                minHeight: 0,
+                paddingHorizontal: 0,
+                paddingVertical: 8,
+              }}
               testID="task-editor-title-input"
             />
 
-            <View style={styles.divider} />
+            <View className="bg-border h-px" />
 
             <TextField
               multiline
               value={description ?? ''}
               onChangeText={setDescription}
               placeholder={t.tasks.editor.descriptionPlaceholder}
-              placeholderTextColor={themeColors['tertiary']}
-              cursorColor={themeColors.primary}
-              selectionColor={themeColors.primary}
-              style={styles.descriptionInput}
+              placeholderTextColor={tertiary}
+              cursorColor={primary}
+              selectionColor={primary}
+              style={{
+                borderRadius: 0,
+                borderWidth: 0,
+                fontSize: 14,
+                maxHeight: 96,
+                minHeight: 44,
+                paddingHorizontal: 0,
+                paddingVertical: 8,
+              }}
               testID="task-editor-description-input"
             />
 
-            <View style={styles.divider} />
+            <View className="bg-border h-px" />
 
-            <View style={styles.priorityRow}>
-              <Text color="text-secondary" style={styles.fieldLabel}>
+            <View className="items-center flex-row justify-between">
+              <Text className="text-muted-foreground text-footnote font-medium uppercase tracking-[0.5]">
                 {t.tasks.editor.priorityLabel}
               </Text>
-              <View style={styles.priorityEmojiRow}>
+              <View className="flex-row gap-1">
                 {PRIORITIES.map((option) => {
                   const selected = priority === option;
                   return (
@@ -181,61 +190,61 @@ export function TaskEditorSheet({
                       accessibilityRole="button"
                       accessibilityLabel={t.tasks.editor.priority[option]}
                       accessibilityState={{ selected }}
-                      hitSlop={spacing[2]}
+                      hitSlop={8}
                       onPress={() => setPriority(option)}
-                      testID={`task-editor-priority-${option}`}
-                      style={[
-                        styles.priorityEmojiButton,
-                        selected && styles.priorityEmojiButtonSelected,
-                      ]}
+                      testID={'task-editor-priority-' + option}
+                      className={
+                        'items-center rounded-sm justify-center px-2 py-1 ' +
+                        (selected ? 'bg-popover opacity-100' : 'opacity-35')
+                      }
                     >
-                      <Text style={styles.priorityEmoji}>{PRIORITY_EMOJI[option]}</Text>
+                      <Text className="text-base">{PRIORITY_EMOJI[option]}</Text>
                     </Pressable>
                   );
                 })}
               </View>
             </View>
 
-            <View style={styles.divider} />
+            <View className="bg-border h-px" />
 
             <View>
-              <View style={styles.fieldLabelRow}>
-                <Text color="text-secondary" style={styles.fieldLabel}>
+              <View className="items-center flex-row justify-between mb-2">
+                <Text className="text-muted-foreground text-footnote font-medium uppercase tracking-[0.5]">
                   {t.tasks.editor.dueDateLabel}
                 </Text>
                 {dueAt ? (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t.tasks.editor.clearDueDate}
-                    hitSlop={spacing[2]}
+                    hitSlop={8}
                     onPress={() => setDueAt(null)}
                     testID="task-editor-due-clear"
                   >
-                    <Text color="destructive" style={styles.dueDateValue}>
+                    <Text className="text-destructive text-footnote font-semibold">
                       {formatDueDate(dueAt)} ✕
                     </Text>
                   </Pressable>
                 ) : null}
               </View>
-              <View style={styles.chipRow}>
+              <View className="flex-row flex-wrap gap-2 mt-2">
                 {dueDateOptions.map((option) => (
                   <Chip
                     key={option.label}
                     label={option.label}
                     selected={dueAt !== null && isSameDay(dueAt, option.value)}
                     onPress={() => setDueAt(option.value)}
-                    testID={`task-editor-due-${option.label}`}
+                    testID={'task-editor-due-' + option.label}
                   />
                 ))}
               </View>
             </View>
           </View>
 
-          <View style={styles.actionsRow}>
-            <View style={styles.actionSlot}>
+          <View className="flex-row gap-2">
+            <View className="flex-1">
               <Button label={t.tasks.editor.cancel} onPress={onClose} variant="secondary" />
             </View>
-            <View style={styles.actionSlot}>
+            <View className="flex-1">
               <Button
                 testID="task-editor-submit"
                 label={mode === 'edit' ? t.tasks.editor.save : t.tasks.editor.create}
@@ -260,8 +269,7 @@ interface ChipProps {
 }
 
 function Chip({ label, selected, onPress, testID }: ChipProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [primary] = useCSSVariable(['--color-primary']) as string[];
 
   return (
     <Pressable
@@ -269,128 +277,17 @@ function Chip({ label, selected, onPress, testID }: ChipProps) {
       accessibilityState={{ selected }}
       onPress={onPress}
       testID={testID}
+      className="border border-border rounded-lg px-3 py-2"
       style={({ pressed }) => [
-        styles.chip,
-        selected && { backgroundColor: themeColors.primary, borderColor: themeColors.primary },
-        pressed && styles.chipPressed,
+        selected && { backgroundColor: primary, borderColor: primary },
+        pressed && { opacity: 0.7 },
       ]}
     >
-      <Text color={selected ? 'primary-foreground' : 'text-secondary'} style={styles.chipText}>
+      <Text
+        className={`text-footnote font-medium ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`}
+      >
         {label}
       </Text>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  sheet: {
-    backgroundColor: theme.colors['card'],
-    borderColor: theme.colors['border-default'],
-    borderTopLeftRadius: radii.md,
-    borderTopRightRadius: radii.md,
-    borderTopWidth: 1,
-    gap: spacing[4],
-    padding: spacing[5],
-  },
-  handle: {
-    alignSelf: 'center',
-    backgroundColor: theme.colors['border-default'],
-    borderRadius: radii.sm,
-    height: 4,
-    marginBottom: spacing[1],
-    width: 36,
-  },
-  form: {
-    gap: spacing[3],
-  },
-  divider: {
-    backgroundColor: theme.colors['border-default'],
-    height: 1,
-  },
-  titleInput: {
-    borderRadius: 0,
-    borderWidth: 0,
-    color: theme.colors['text-primary'],
-    fontSize: fontSizes.md,
-    minHeight: 0,
-    paddingHorizontal: 0,
-    paddingVertical: spacing[2],
-  },
-  descriptionInput: {
-    borderRadius: 0,
-    borderWidth: 0,
-    color: theme.colors['text-secondary'],
-    fontSize: fontSizes.sm,
-    maxHeight: 96,
-    minHeight: 44,
-    paddingHorizontal: 0,
-    paddingVertical: spacing[2],
-  },
-  fieldLabel: {
-    fontSize: fontSizes.footnote,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  fieldLabelRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing[2],
-  },
-  priorityRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  priorityEmojiRow: {
-    flexDirection: 'row',
-    gap: spacing[1],
-  },
-  priorityEmojiButton: {
-    alignItems: 'center',
-    borderRadius: radii.sm,
-    justifyContent: 'center',
-    opacity: 0.35,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-  },
-  priorityEmojiButtonSelected: {
-    backgroundColor: theme.colors['popover'],
-    opacity: 1,
-  },
-  priorityEmoji: {
-    fontSize: fontSizes.md,
-  },
-  dueDateValue: {
-    fontSize: fontSizes.footnote,
-    fontWeight: '600',
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-    marginTop: spacing[2],
-  },
-  chip: {
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-  },
-  chipPressed: {
-    opacity: 0.7,
-  },
-  chipText: {
-    fontSize: fontSizes.footnote,
-    fontWeight: '500',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  actionSlot: {
-    flex: 1,
-  },
-}));

@@ -1,7 +1,8 @@
 import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/community/menu';
+import { IconButton } from '@ponti-studios/ui/native';
 import { useRouter, useSegments } from 'expo-router';
 
-import { IconButton } from '~/components/ui/icon-button';
+import AppIcon from '~/components/ui/icon';
 import { HOME_ROUTE, INBOX_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
 type Destination = 'home' | 'inbox' | 'time' | 'settings';
@@ -73,11 +74,9 @@ export function NavDrawerMenuButton() {
 
   return (
     <MenuView actions={actions} onPressAction={onPressAction} testID="nav-drawer-menu-button">
-      <IconButton
-        accessibilityLabel="Open navigation menu"
-        icon="line.3.horizontal"
-        variant="plain"
-      />
+      <IconButton accessibilityLabel="Open navigation menu" variant="plain">
+        <AppIcon name="line.3.horizontal" size={20} />
+      </IconButton>
     </MenuView>
   );
 }

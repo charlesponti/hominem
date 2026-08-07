@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@source "./node_modules/@ponti-studios/ui/src";
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #fcfcfd;
+      --color-card: #f9f9fb;
+      --color-card-foreground: #1c2024;
+      --color-popover: #f0f0f3;
+      --color-popover-foreground: #1c2024;
+      --color-muted: #f9f9fb;
+      --color-foreground: #1c2024;
+      --color-muted-foreground: #60646c;
+      --color-tertiary: #80838d;
+      --color-primary: #3e63dd;
+      --color-secondary: #f9f9fb;
+      --color-secondary-foreground: #1c2024;
+      --color-accent: #3e63dd;
+      --color-accent-foreground: #ffffff;
+      --color-destructive: #ce2c31;
+      --color-success: #30a46c;
+      --color-warning: #ffc53d;
+      --color-primary-foreground: #ffffff;
+      --color-destructive-foreground: #ffffff;
+      --color-destructive-text: #c82c31;
+      --color-border: #cdced6;
+      --color-input: #cdced6;
+      --color-ring: #3e63dd;
+      --color-chart-1: #3e63dd;
+      --color-chart-2: #6e56cf;
+      --color-chart-3: #12a594;
+      --color-chart-4: #f76b15;
+      --color-chart-5: #8b8d98;
+      --color-chart-positive: #1f7a50;
+      --color-chart-negative: #be2e33;
+      --color-chart-neutral: #626a73;
+      --color-overlay-scrim: #000000;
+    }
+    @variant dark {
+      --color-background: #111113;
+      --color-card: #18191b;
+      --color-card-foreground: #edeef0;
+      --color-popover: #212225;
+      --color-popover-foreground: #edeef0;
+      --color-muted: #18191b;
+      --color-foreground: #edeef0;
+      --color-muted-foreground: #b0b4ba;
+      --color-tertiary: #777b84;
+      --color-primary: #3e63dd;
+      --color-secondary: #18191b;
+      --color-secondary-foreground: #edeef0;
+      --color-accent: #3e63dd;
+      --color-accent-foreground: #ffffff;
+      --color-destructive: #ce2c31;
+      --color-success: #30a46c;
+      --color-warning: #ffc53d;
+      --color-primary-foreground: #ffffff;
+      --color-destructive-foreground: #ffffff;
+      --color-destructive-text: #ff9592;
+      --color-border: #43484e;
+      --color-input: #43484e;
+      --color-ring: #3e63dd;
+      --color-chart-1: #3e63dd;
+      --color-chart-2: #6e56cf;
+      --color-chart-3: #12a594;
+      --color-chart-4: #f76b15;
+      --color-chart-5: #696e77;
+      --color-chart-positive: #30a46c;
+      --color-chart-negative: #e5484d;
+      --color-chart-neutral: #5a6169;
+      --color-overlay-scrim: #000000;
+    }
+  }
+}
+
+@theme {
+  --font-size-display: 40px;
+  --font-size-display--line-height: 44px;
+  --font-size-display--font-weight: 700;
+  --font-size-display--letter-spacing: -1.2px;
+  --font-size-large-title: 34px;
+  --font-size-large-title--line-height: 41px;
+  --font-size-large-title--font-weight: 700;
+  --font-size-large-title--letter-spacing: -0.6px;
+  --font-size-title1: 28px;
+  --font-size-title1--line-height: 34px;
+  --font-size-title1--font-weight: 700;
+  --font-size-title1--letter-spacing: -0.4px;
+  --font-size-title2: 22px;
+  --font-size-title2--line-height: 28px;
+  --font-size-title2--font-weight: 600;
+  --font-size-title2--letter-spacing: -0.2px;
+  --font-size-headline: 17px;
+  --font-size-headline--line-height: 22px;
+  --font-size-headline--font-weight: 600;
+  --font-size-headline--letter-spacing: -0.1px;
+  --font-size-body: 17px;
+  --font-size-body--line-height: 24px;
+  --font-size-body--font-weight: 400;
+  --font-size-body--letter-spacing: 0px;
+  --font-size-callout: 16px;
+  --font-size-callout--line-height: 22px;
+  --font-size-callout--font-weight: 400;
+  --font-size-callout--letter-spacing: -0.1px;
+  --font-size-subhead: 15px;
+  --font-size-subhead--line-height: 20px;
+  --font-size-subhead--font-weight: 400;
+  --font-size-subhead--letter-spacing: 0px;
+  --font-size-footnote: 13px;
+  --font-size-footnote--line-height: 18px;
+  --font-size-footnote--font-weight: 400;
+  --font-size-footnote--letter-spacing: 0px;
+  --font-size-caption1: 12px;
+  --font-size-caption1--line-height: 16px;
+  --font-size-caption1--font-weight: 400;
+  --font-size-caption1--letter-spacing: 0px;
+  --font-size-caption2: 11px;
+  --font-size-caption2--line-height: 14px;
+  --font-size-caption2--font-weight: 500;
+  --font-size-caption2--letter-spacing: 0.2px;
+  --font-size-overline: 11px;
+  --font-size-overline--line-height: 16px;
+  --font-size-overline--font-weight: 500;
+  --font-size-overline--letter-spacing: 0.8px;
+  --font-size-mono: 12px;
+  --font-size-mono--line-height: 16px;
+  --font-size-mono--font-weight: 400;
+  --font-size-mono--letter-spacing: 0px;
+}

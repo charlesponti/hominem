@@ -36,24 +36,44 @@ export function dayLabel(item: TimeItem) {
   return date.toLocaleDateString(undefined, { weekday: 'long' });
 }
 
-export function formatEventTime(event: CalendarEvent) {
-  if (event.isAllDay) return 'All day';
-  return `${new Date(event.startDate).toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  })} – ${new Date(event.endDate).toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  })}`;
+export interface TimeColumnParts {
+  primary: string;
+  secondary?: string;
 }
 
-export function formatTaskTime(task: TaskListItem) {
+export function eventTimeParts(event: CalendarEvent): TimeColumnParts {
+  if (event.isAllDay) return { primary: 'All day' };
+  return {
+    primary: new Date(event.startDate).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    secondary: new Date(event.endDate).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+  };
+}
+
+export function taskTimeParts(task: TaskListItem): TimeColumnParts {
   const date = task.scheduledStartAt ?? task.dueAt;
-  if (!date) return 'Unscheduled';
-  return new Date(date).toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  if (!date) return { primary: '—' };
+  return {
+    primary: new Date(date).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+  };
+}
+
+const ACCENT_TOKEN_COUNT = 5;
+
+export function accentTokenIndex(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash % ACCENT_TOKEN_COUNT;
 }
 
 export function getScheduledTimeItems({

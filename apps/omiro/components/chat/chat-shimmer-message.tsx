@@ -1,3 +1,4 @@
+import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -6,8 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-
-import { makeStyles, radii, spacing, transitionDurations } from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 const SHIMMER_DURATION = transitionDurations[150] * 5;
 
@@ -32,53 +32,34 @@ interface ChatShimmerMessageProps {
 }
 
 export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
-  const styles = useShimmerStyles();
+  const cardBg = useCSSVariable('color-card') as string;
+  const popoverBg = useCSSVariable('color-popover') as string;
   const animatedStyle = usePulse();
 
   if (variant === 'user') {
     return (
-      <Animated.View style={[styles.row, styles.userRow, animatedStyle]}>
-        <View style={[styles.line, styles.lineFull]} />
-        <View style={[styles.line, styles.lineShort]} />
+      <Animated.View
+        className="px-4 py-3 w-full rounded-lg gap-2"
+        style={[{ borderCurve: 'continuous', backgroundColor: popoverBg }, animatedStyle]}
+      >
+        <View className="rounded-md h-4 w-full" style={{ backgroundColor: cardBg }} />
+        <View className="rounded-md h-4 w-2/3" style={{ backgroundColor: cardBg }} />
       </Animated.View>
     );
   }
 
   return (
-    <View style={styles.row}>
-      <View style={styles.lines}>
-        <Animated.View style={[styles.line, styles.lineFull, animatedStyle]} />
-        <Animated.View style={[styles.line, styles.lineShort, animatedStyle]} />
+    <View className="px-4 py-3 w-full">
+      <View className="flex-1 gap-2">
+        <Animated.View
+          className="rounded-md h-4 w-full"
+          style={[{ backgroundColor: cardBg }, animatedStyle]}
+        />
+        <Animated.View
+          className="rounded-md h-4 w-2/3"
+          style={[{ backgroundColor: cardBg }, animatedStyle]}
+        />
       </View>
     </View>
   );
 }
-
-const useShimmerStyles = makeStyles((theme) => ({
-  line: {
-    backgroundColor: theme.colors['card'],
-    borderRadius: radii.md,
-    height: 16,
-  },
-  lineFull: {
-    width: '100%',
-  },
-  lineShort: {
-    width: '66%',
-  },
-  lines: {
-    flex: 1,
-    gap: spacing[2],
-  },
-  row: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    width: '100%',
-  },
-  userRow: {
-    backgroundColor: theme.colors['popover'],
-    borderCurve: 'continuous',
-    borderRadius: radii.lg,
-    gap: spacing[2],
-  },
-}));

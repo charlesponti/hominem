@@ -1,15 +1,6 @@
 import { Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
-import {
-  componentSizes,
-  fontFamiliesNative,
-  fontSizes,
-  fontWeights,
-  lineHeights,
-  makeStyles,
-  themeSpacing,
-  useThemeColors,
-} from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 
@@ -23,36 +14,6 @@ interface ErrorFallbackProps {
   buttonVariant?: 'primary' | 'secondary';
 }
 
-const useStyles = makeStyles(() => ({
-  host: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 360,
-    alignItems: 'center',
-    gap: themeSpacing.md,
-  },
-  title: {
-    fontWeight: fontWeights.bold,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: fontSizes.md,
-    lineHeight: lineHeights.body,
-    textAlign: 'center',
-  },
-  debugMessage: {
-    fontSize: fontSizes.caption1,
-    lineHeight: lineHeights.footnote,
-    fontFamily: fontFamiliesNative.mono,
-    textAlign: 'center',
-  },
-}));
-
 export function ErrorFallback({
   title,
   titleSize = 'title1',
@@ -62,29 +23,23 @@ export function ErrorFallback({
   onAction,
   buttonVariant = 'primary',
 }: ErrorFallbackProps) {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
+  const [destructive] = useCSSVariable(['--color-destructive']) as string[];
 
   return (
-    <View style={styles.host}>
-      <View style={styles.content}>
-        <AppIcon
-          name="exclamationmark.triangle.fill"
-          size={componentSizes.lg}
-          tintColor={themeColors.destructive}
-        />
+    <View className="flex-1 items-center justify-center p-6">
+      <View className="w-full max-w-[360px] items-center gap-3">
+        <AppIcon name="exclamationmark.triangle.fill" size={32} tintColor={destructive} />
         <Text
-          style={[
-            styles.title,
-            { fontSize: fontSizes[titleSize], color: themeColors['text-primary'] },
-          ]}
+          className={`font-bold text-center ${titleSize === 'title1' ? 'text-title1' : 'text-title2'} text-foreground`}
         >
           {title}
         </Text>
-        <Text style={[styles.message, { color: themeColors['text-secondary'] }]}>{message}</Text>
+        <Text className="text-base leading-[22px] text-center text-muted-foreground">
+          {message}
+        </Text>
 
         {__DEV__ && debugMessage ? (
-          <Text style={[styles.debugMessage, { color: themeColors['tertiary'] }]}>
+          <Text className="font-mono text-caption1 leading-[18px] text-center text-tertiary">
             {debugMessage}
           </Text>
         ) : null}

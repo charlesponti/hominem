@@ -3,8 +3,8 @@ import { Alert, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type { SharedValue } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
-import { makeStyles, useThemeColors } from '~/components/theme';
 import { SwipeAction } from '~/components/ui';
 import t from '~/translations';
 
@@ -15,8 +15,7 @@ interface SwipeableTaskRowProps {
 }
 
 export function SwipeableTaskRow({ children, onDelete, isList = false }: SwipeableTaskRowProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [destructive] = useCSSVariable(['--color-destructive']) as string[];
   const swipeableRef = useRef<SwipeableMethods>(null);
 
   const handleDelete = useCallback(() => {
@@ -35,19 +34,18 @@ export function SwipeableTaskRow({ children, onDelete, isList = false }: Swipeab
         iconName="trash"
         onPress={handleDelete}
         accessibilityLabel={t.tasks.delete}
-        backgroundColor={themeColors.destructive}
-        style={styles.swipeAction}
+        backgroundColor={destructive}
       />
     ),
-    [handleDelete, styles, themeColors],
+    [handleDelete, destructive],
   );
 
   return (
-    <View style={styles.outer}>
+    <View className="px-4">
       <ReanimatedSwipeable
         ref={swipeableRef}
-        containerStyle={styles.swipeableContainer}
-        childrenContainerStyle={styles.swipeableChildrenContainer}
+        containerStyle={{ overflow: 'visible' }}
+        childrenContainerStyle={{ overflow: 'visible' }}
         renderRightActions={renderSwipeAction}
         rightThreshold={60}
         friction={2}
@@ -59,18 +57,3 @@ export function SwipeableTaskRow({ children, onDelete, isList = false }: Swipeab
     </View>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  outer: {
-    paddingHorizontal: 16,
-  },
-  swipeAction: {
-    height: '100%',
-  },
-  swipeableChildrenContainer: {
-    overflow: 'visible',
-  },
-  swipeableContainer: {
-    overflow: 'visible',
-  },
-}));

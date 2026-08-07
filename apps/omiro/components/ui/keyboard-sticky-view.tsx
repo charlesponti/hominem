@@ -5,19 +5,9 @@ import {
   type KeyboardStickyViewProps,
 } from 'react-native-keyboard-controller';
 
-import { makeStyles, SCREEN_MARGIN_HORIZONTAL } from '~/components/theme';
-
-const useStyles = makeStyles((_theme) => ({
-  container: {
-    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
-  },
-}));
-
 export const KeyboardStickyView = forwardRef<View, KeyboardStickyViewProps>(
   ({ style, ...props }, ref) => {
-    const styles = useStyles();
-
-    return <NativeKeyboardStickyView ref={ref} {...props} style={[styles.container, style]} />;
+    return <NativeKeyboardStickyView ref={ref} {...props} style={style} className="px-4" />;
   },
 );
 

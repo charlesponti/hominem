@@ -1,14 +1,14 @@
+import { Card, nativeShadows, TextField } from '@ponti-studios/ui/native';
 import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
-import { useTheme } from '~/components/theme';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
-import { TextField } from '~/components/ui/text-field';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 
-import { useComposerRootStyles, useComposerSurfaceStyles } from './composer.styles';
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
+import { ComposerAttachButton } from './ComposerAttachButton';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
@@ -28,12 +28,7 @@ export function Composer(props: ComposerProps) {
 }
 
 function ComposerContent(props: ComposerProps) {
-  const theme = useTheme();
   const submission = useComposerSubmission(props);
-  // useVoiceComposerInput's onWalkieTalkieSend fires from processStoppedRecording,
-  // which is defined before submission.submit's caller (controller) exists —
-  // route through a ref rather than restructuring the hook order, mirroring
-  // the onRecordingStoppedRef pattern already used in useVoiceRecorder.ts.
   const clearComposerRef = useRef<() => void>(() => {});
   const handleWalkieTalkieTranscript = useCallback(
     (rawText: string) => {
@@ -60,8 +55,6 @@ function ComposerContent(props: ComposerProps) {
   });
   clearComposerRef.current = controller.clearComposer;
   const presentation = getComposerSubmissionConfig(props);
-  const rootStyles = useComposerRootStyles();
-  const surfaceStyles = useComposerSurfaceStyles();
 
   const submit = useCallback(
     (kind: ComposerSubmitKind) => {
@@ -81,20 +74,18 @@ function ComposerContent(props: ComposerProps) {
     [controller, submission],
   );
 
+  const [primary, destructive, borderDefault] = useCSSVariable([
+    '--color-primary',
+    '--color-destructive',
+    '--color-border',
+  ]) as string[];
+
   const isRecording = controller.voice.isRecording;
-  // Bridges the gap between a walkie-talkie auto-send (recording already
-  // stopped) and the reply arriving — without this the panel would flash back
-  // to the idle TextField mid-send, since isRecording flips false immediately
-  // once stopRecording resolves, before the send has even started.
   const isWalkieTalkieSending =
     controller.voice.isWalkieTalkie && !isRecording && submission.isSubmitting;
   const showVoicePanel = isRecording || isWalkieTalkieSending;
   const focused = controller.isFocused;
-  const borderColor = focused
-    ? theme.colors.primary
-    : isRecording
-      ? theme.colors.destructive
-      : theme.colors['border-default'];
+  const borderColor = focused ? primary : isRecording ? destructive : borderDefault;
 
   const errorBanner =
     controller.voice.voiceState === 'failed' && controller.voice.error ? (
@@ -105,7 +96,7 @@ function ComposerContent(props: ComposerProps) {
     ) : undefined;
 
   return (
-    <View style={rootStyles.root} testID={presentation.shellTestID}>
+    <View className="w-full gap-3" testID={presentation.shellTestID}>
       {errorBanner}
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
       {!showVoicePanel ? (
@@ -115,18 +106,24 @@ function ComposerContent(props: ComposerProps) {
           onEnhanced={controller.setMessage}
         />
       ) : undefined}
-      <View
-        style={[surfaceStyles.surface, { borderColor }]}
-        testID={`${presentation.shellTestID ?? 'composer'}-surface`}
-      >
-        {showVoicePanel ? (
-          <VoiceRecordingPanel
-            startedAt={controller.voice.recordingStartedAt}
-            onCancel={() => void controller.voice.cancelVoiceRecording()}
-            onDone={() => void controller.voice.handleVoicePress()}
-            phase={isRecording ? 'recording' : 'sending'}
-          />
-        ) : (
+      {showVoicePanel ? (
+        <VoiceRecordingPanel
+          startedAt={controller.voice.recordingStartedAt}
+          onCancel={() => void controller.voice.cancelVoiceRecording()}
+          onDone={() => void controller.voice.handleVoicePress()}
+          phase={isRecording ? 'recording' : 'sending'}
+        />
+      ) : (
+        <Card
+          className="w-full gap-2 p-3"
+          style={{
+            borderColor,
+            borderCurve: 'continuous',
+            borderRadius: 24,
+            boxShadow: nativeShadows.sm,
+          }}
+          testID={`${presentation.shellTestID ?? 'composer'}-surface`}
+        >
           <TextField
             value={controller.message}
             onChangeText={controller.setMessage}
@@ -136,34 +133,40 @@ function ComposerContent(props: ComposerProps) {
             onBlur={controller.handleInputBlur}
             multiline
             numberOfLines={5}
-            style={surfaceStyles.input}
+            style={{
+              borderRadius: 0,
+              borderWidth: 0,
+              minHeight: 0,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            }}
           />
-        )}
-        {showVoicePanel ? null : (
-          <ComposerToolbar
-            canEnhance={controller.canOpenEnhance}
-            canPickMedia={controller.canPickMedia}
-            canSubmit={controller.canSubmit}
-            canToggleVoice={controller.canToggleVoice}
-            hasContent={controller.hasContent}
-            isEnhancing={controller.enhance.isEnhancing}
-            isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-            isSubmitting={submission.isSubmitting}
-            isVoiceBusy={controller.voice.isBusy}
-            isWalkieTalkie={controller.voice.isWalkieTalkie}
-            onEnhancePress={controller.enhance.toggleEnhance}
-            onSubmit={() => submit(presentation.primarySubmitKind)}
-            onVoicePress={() => void controller.voice.handleVoicePress()}
-            onToggleWalkieTalkie={
-              props.mode === 'chat'
-                ? () => controller.voice.setWalkieTalkie((prev) => !prev)
-                : undefined
-            }
-            submitAccessibilityLabel={presentation.submitAccessibilityLabel}
-            submitTestID={presentation.submitTestID}
-          />
-        )}
-      </View>
+          <View className="flex-row items-center justify-between">
+            <ComposerAttachButton disabled={!controller.canPickMedia} />
+            <ComposerToolbar
+              canEnhance={controller.canOpenEnhance}
+              canSubmit={controller.canSubmit}
+              canToggleVoice={controller.canToggleVoice}
+              hasContent={controller.hasContent}
+              isEnhancing={controller.enhance.isEnhancing}
+              isRecordingElsewhere={controller.voice.isRecordingElsewhere}
+              isSubmitting={submission.isSubmitting}
+              isVoiceBusy={controller.voice.isBusy}
+              isWalkieTalkie={controller.voice.isWalkieTalkie}
+              onEnhancePress={controller.enhance.toggleEnhance}
+              onSubmit={() => submit(presentation.primarySubmitKind)}
+              onVoicePress={() => void controller.voice.handleVoicePress()}
+              onToggleWalkieTalkie={
+                props.mode === 'chat'
+                  ? () => controller.voice.setWalkieTalkie((prev) => !prev)
+                  : undefined
+              }
+              submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+              submitTestID={presentation.submitTestID}
+            />
+          </View>
+        </Card>
+      )}
     </View>
   );
 }

@@ -1,3 +1,4 @@
+import { TextField } from '@ponti-studios/ui/native';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -8,12 +9,11 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
-import { TextField } from '~/components/ui/text-field';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { useAuth } from '~/services/auth/auth-provider';
 import { resolveAuthScreenState } from '~/services/auth/auth-screen-state';
@@ -21,63 +21,21 @@ import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
 import { posthog } from '~/services/posthog';
 import t from '~/translations';
 
-const useStyles = makeStyles(() => ({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-  },
-  contentShell: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    gap: 18,
-  },
-  copyBlock: {
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  helperText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  formSection: {
-    gap: 12,
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-}));
-
 function AuthScreen() {
   const { isPending, isSignedIn, requestEmailOtp } = useAuth();
   const router = useRouter();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const normalizedEmail = normalizeEmail(email);
   const emailIsValid = isValidEmail(normalizedEmail);
+
+  const [tertiary, destructive, borderDefault, textPrimary] = useCSSVariable([
+    '--color-tertiary',
+    '--color-destructive',
+    '--color-border',
+    '--color-foreground',
+  ]) as string[];
 
   // Animations
   const shakeStyle = useAnimatedStyle(
@@ -138,57 +96,51 @@ function AuthScreen() {
 
   return (
     <>
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: themeColors['background'] }]}
-        behavior="padding"
-      >
+      <KeyboardAvoidingView className="flex-1 bg-background" behavior="padding">
         <ScrollView
           testID="auth-screen"
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 24,
+            paddingVertical: 32,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.contentShell}>
-            <View style={styles.card}>
+          <View className="w-full items-center">
+            <View className="w-full max-w-[420px] gap-[18px]">
               <IconChip icon="envelope" />
 
-              <View style={styles.copyBlock}>
-                <Text style={[styles.title, { color: themeColors['text-primary'] }]}>
-                  {t.auth.emailEntry.title}
-                </Text>
-                <Text style={[styles.helperText, { color: themeColors['text-secondary'] }]}>
+              <View className="gap-2">
+                <Text className="text-title1 text-foreground">{t.auth.emailEntry.title}</Text>
+                <Text className="text-subhead text-muted-foreground">
                   {isProbing ? t.auth.restoringSignIn : t.auth.emailEntry.helper}
                 </Text>
               </View>
 
               {!isProbing ? (
-                <View style={styles.formSection}>
+                <View className="gap-3">
                   <Animated.View style={shakeStyle}>
                     <TextField
                       testID="auth-email-input"
                       value={email}
                       placeholder={t.auth.emailEntry.emailPlaceholder}
-                      placeholderTextColor={themeColors['tertiary']}
+                      placeholderTextColor={tertiary}
                       keyboardType="email-address"
                       textContentType="emailAddress"
                       autoCapitalize="none"
                       autoCorrect={false}
                       autoFocus
                       editable={!isSubmitting}
-                      cursorColor={themeColors['text-primary']}
-                      selectionColor={themeColors['text-primary']}
-                      style={[
-                        styles.input,
-                        {
-                          backgroundColor: themeColors['card'],
-                          borderColor: displayError
-                            ? themeColors.destructive
-                            : themeColors['border-default'],
-                          color: themeColors['text-primary'],
-                          opacity: isSubmitting ? 0.6 : 1,
-                        },
-                      ]}
+                      cursorColor={textPrimary}
+                      selectionColor={textPrimary}
+                      style={{
+                        borderColor: displayError ? destructive : borderDefault,
+                        opacity: isSubmitting ? 0.6 : 1,
+                      }}
+                      className="bg-card text-foreground text-body min-h-12 border rounded-xl px-3.5 py-3"
                       onChangeText={(text) => {
                         setEmail(text);
                         setAuthError(null);
@@ -208,7 +160,7 @@ function AuthScreen() {
                     <Text
                       testID="auth-email-message"
                       accessibilityLiveRegion="polite"
-                      style={[styles.errorText, { color: themeColors.destructive }]}
+                      className="text-footnote text-destructive"
                     >
                       {displayError}
                     </Text>

@@ -1,9 +1,9 @@
-import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { InboxStreamItem } from '~/components/inbox/InboxStreamItem';
-import { makeStyles, Text } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
   clearInboxDraft,
@@ -13,16 +13,21 @@ import {
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
 export function HomeScreen() {
-  const styles = useStyles();
+  const [composerHeight, setComposerHeight] = useState(0);
   const inbox = useInboxStreamItems();
   const { isFetching: isFetchingTasks, refetch: refetchTasks } = useTasksQuery();
   const recentItems = inbox.items.slice(0, 6);
 
   return (
-    <View style={styles.container} testID="home-screen">
+    <View className="flex-1 bg-background" testID="home-screen">
       <ScrollView
+        contentInset={Platform.OS === 'ios' ? { bottom: composerHeight } : undefined}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={
+          Platform.OS === 'android' ? { paddingBottom: composerHeight + 20 } : undefined
+        }
+        className="gap-4"
+        scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: composerHeight } : undefined}
         refreshControl={
           <RefreshControl
             refreshing={inbox.isRefreshing || isFetchingTasks}
@@ -39,13 +44,13 @@ export function HomeScreen() {
             <InboxStreamItem item={item} key={item.id} />
           ))}
           {!inbox.isInitialLoading && recentItems.length === 0 ? (
-            <Text color="text-secondary" style={styles.emptyCopy}>
+            <Text className="px-4 text-muted-foreground">
               Capture a thought to start your inbox.
             </Text>
           ) : null}
         </HomeSection>
       </ScrollView>
-      <ComposerDock testID="home-composer-dock">
+      <ComposerDock onHeightChange={setComposerHeight} testID="home-composer-dock">
         <Composer
           entryMode="mixed"
           initialMessage={readInboxDraft()}
@@ -69,17 +74,13 @@ function HomeSection({
   onActionPress?: () => void;
   title: string;
 }) {
-  const styles = useStyles();
-
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text variant="title2">{title}</Text>
+    <View className="gap-2">
+      <View className="flex-row items-center justify-between px-4">
+        <Text className="text-title2">{title}</Text>
         {actionLabel && onActionPress ? (
           <Pressable accessibilityRole="button" onPress={onActionPress}>
-            <Text color="primary" variant="subhead">
-              {actionLabel}
-            </Text>
+            <Text className="text-primary text-subhead">{actionLabel}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -87,16 +88,3 @@ function HomeSection({
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: { backgroundColor: theme.colors.background, flex: 1 },
-  content: { gap: theme.spacing.lg, paddingBottom: 128 },
-  emptyCopy: { paddingHorizontal: theme.spacing.lg },
-  section: { gap: theme.spacing.sm },
-  sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-  },
-}));

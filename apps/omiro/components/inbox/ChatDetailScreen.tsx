@@ -1,7 +1,7 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
 import {
@@ -15,7 +15,6 @@ import {
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import {
@@ -34,20 +33,6 @@ import { writeResumeTarget } from '~/services/navigation/launch-state';
 import { INBOX_ROUTE, getContentRoute } from '~/services/navigation/routes';
 import { chatKeys } from '~/services/notes/query-keys';
 import t from '~/translations';
-
-const useStyles = makeStyles(() => ({
-  container: {
-    flex: 1,
-  },
-  reviewOverlay: {
-    bottom: 0,
-    left: 0,
-    top: 0,
-    pointerEvents: 'box-none',
-    position: 'absolute',
-    right: 0,
-  },
-}));
 
 function getConversationActionIcon(kind: string, type?: string) {
   if (kind === 'search') return 'magnifyingglass';
@@ -74,9 +59,9 @@ export function ChatDetailScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: activeChat } = useActiveChat(id);
-  const styles = useStyles();
   const chatId = activeChat?.id ?? id;
   const canGoBack = navigation.canGoBack();
+  const [composerHeight, setComposerHeight] = useState(0);
 
   const services = useMemo<ChatServices>(
     () => ({
@@ -244,7 +229,7 @@ export function ChatDetailScreen() {
         />
       </Stack.Toolbar>
 
-      <View style={styles.container}>
+      <View className="flex-1">
         <ChatSearchModal
           visible={controller.showSearch}
           searchQuery={controller.searchQuery}
@@ -254,6 +239,7 @@ export function ChatDetailScreen() {
           onChangeSearchQuery={controller.handleSearchQueryChange}
         />
         <ChatMessageList
+          bottomInset={composerHeight}
           isMessagesLoading={controller.isMessagesLoading}
           displayMessages={controller.displayMessages}
           showSearch={controller.showSearch}
@@ -276,10 +262,10 @@ export function ChatDetailScreen() {
             />
           }
         />
-        <ComposerDock testID="chat-composer-dock">
+        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
           <Composer mode="chat" chatId={chatId} />
         </ComposerDock>
-        <View style={styles.reviewOverlay}>
+        <View className="absolute inset-0" pointerEvents="box-none">
           <ChatReviewOverlay
             pendingReview={controller.pendingReview}
             isVisible={controller.isReviewVisible}

@@ -1,23 +1,17 @@
 import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from '@hominem/chat';
 import { getReferencedNoteLabel } from '@hominem/chat';
+import { TextField } from '@ponti-studios/ui/native';
+import type { SFSymbol } from 'expo-symbols';
 import { memo, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
 import { useAudioPlayback } from '~/components/media/useAudioPlayback';
-import {
-  Text,
-  fontFamiliesNative,
-  fontSizes,
-  makeStyles,
-  radii,
-  spacing,
-  useThemeColors,
-} from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import { Button } from '~/components/ui/button';
+import AppIcon from '~/components/ui/icon';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
-import { TextField } from '~/components/ui/text-field';
 import t from '~/translations';
 
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
@@ -51,11 +45,15 @@ function ActionIconButton({
   onPress,
 }: {
   disabled?: boolean;
-  icon: Parameters<typeof IconButton>[0]['icon'];
+  icon: SFSymbol;
   isDestructive?: boolean;
   onPress: () => void;
 }) {
-  return <IconButton accessibilityLabel={icon} disabled={disabled} icon={icon} onPress={onPress} />;
+  return (
+    <IconButton accessibilityLabel={icon} disabled={disabled} onPress={onPress}>
+      <AppIcon name={icon} size={20} />
+    </IconButton>
+  );
 }
 
 export async function loadMarkdown() {
@@ -67,7 +65,6 @@ function MessageEditModal({
   visible,
   draftMessage,
   content,
-  styles,
   onChangeDraft,
   onCancel,
   onSave,
@@ -75,12 +72,16 @@ function MessageEditModal({
   visible: boolean;
   draftMessage: string;
   content: string;
-  styles: ReturnType<typeof useChatMessageStyles>;
   onChangeDraft: (value: string) => void;
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const themeColors = useThemeColors();
+  const [tertiary, textPrimary, card, borderDefault] = useCSSVariable([
+    '--color-tertiary',
+    '--color-foreground',
+    '--color-card',
+    '--color-border',
+  ]) as string[];
 
   return (
     <ModalOverlay
@@ -89,31 +90,35 @@ function MessageEditModal({
       dismissOnBackdropPress={false}
       position="center"
     >
-      <View style={styles.editBackdropInset}>
-        <View style={styles.editSheet}>
-          <Text style={styles.editTitle}>{t.chat.messageEdit.title}</Text>
+      <View className="px-5 w-full">
+        <View className="bg-background border border-border rounded-md gap-3 px-4 py-4 w-full">
+          <Text style={{ color: textPrimary, fontSize: 16 }}>{t.chat.messageEdit.title}</Text>
           <TextField
             multiline
             value={draftMessage}
             onChangeText={onChangeDraft}
             placeholder={t.chat.messageEdit.placeholder}
-            placeholderTextColor={themeColors['tertiary']}
-            selectionColor={themeColors['text-primary']}
-            cursorColor={themeColors['text-primary']}
-            style={[
-              styles.editInput,
-              {
-                backgroundColor: themeColors['card'],
-                borderColor: themeColors['border-default'],
-                color: themeColors['text-primary'],
-              },
-            ]}
+            placeholderTextColor={tertiary}
+            selectionColor={textPrimary}
+            cursorColor={textPrimary}
+            style={{
+              borderRadius: 6,
+              borderWidth: 1,
+              fontSize: 16,
+              minHeight: 90,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              textAlignVertical: 'top',
+              backgroundColor: card,
+              borderColor: borderDefault,
+              color: textPrimary,
+            }}
           />
-          <View style={styles.editActionsRow}>
-            <View style={styles.editActionSlot}>
+          <View className="flex-row gap-2">
+            <View className="flex-1">
               <Button label={t.chat.messageEdit.cancel} onPress={onCancel} variant="secondary" />
             </View>
-            <View style={styles.editActionSlot}>
+            <View className="flex-1">
               <Button
                 label={t.chat.messageEdit.save}
                 onPress={onSave}
@@ -128,23 +133,24 @@ function MessageEditModal({
   );
 }
 
-function MessageToolCalls({
-  toolCalls,
-  styles,
-}: {
-  toolCalls: ToolCall[];
-  styles: ReturnType<typeof useChatMessageStyles>;
-}) {
+function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
   if (toolCalls.length === 0) {
     return null;
   }
 
+  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
+
   return (
-    <View style={styles.toolCalls}>
+    <View className="gap-1">
       {toolCalls.map((toolCall: ToolCall, index: number) => (
-        <View key={toolCall.toolCallId || `tool-call-${index}`} style={styles.toolCall}>
-          <Text style={styles.toolCallName}>{toolCall.toolName}</Text>
-          <Text style={styles.toolCallArgs}>
+        <View
+          key={toolCall.toolCallId || `tool-call-${index}`}
+          className="bg-background border border-border rounded-md gap-1 p-3"
+        >
+          <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '600' }}>
+            {toolCall.toolName}
+          </Text>
+          <Text className="text-mono text-muted-foreground">
             {toolCall.args ? JSON.stringify(toolCall.args, null, 2) : ''}
           </Text>
         </View>
@@ -153,22 +159,21 @@ function MessageToolCalls({
   );
 }
 
-function ReferencedNotes({
-  message,
-  styles,
-}: {
-  message: ChatMessageItem;
-  styles: ReturnType<typeof useChatMessageStyles>;
-}) {
+function ReferencedNotes({ message }: { message: ChatMessageItem }) {
   if (!Array.isArray(message.referencedNotes) || message.referencedNotes.length === 0) {
     return null;
   }
 
+  const [textSecondary] = useCSSVariable(['--color-muted-foreground']) as string[];
+
   return (
-    <View style={styles.referencedNotes}>
+    <View className="flex-row flex-wrap gap-2">
       {message.referencedNotes.map((note) => (
-        <View key={note.id} style={styles.referencedNoteChip}>
-          <Text style={styles.referencedNoteText}>{getReferencedNoteLabel(note)}</Text>
+        <View
+          key={note.id}
+          className="items-center bg-popover border border-border rounded-sm flex-row gap-1 px-2 py-1"
+        >
+          <Text style={{ color: textSecondary, fontSize: 12 }}>{getReferencedNoteLabel(note)}</Text>
         </View>
       ))}
     </View>
@@ -180,7 +185,6 @@ function MessageContent({
   Markdown,
   markdownStyle,
   textStyle,
-  styles,
   children,
 }: {
   content: string;
@@ -188,11 +192,10 @@ function MessageContent({
   Markdown?: MarkdownComponent | null;
   markdownStyle: object;
   textStyle: object;
-  styles: ReturnType<typeof useChatMessageStyles>;
   children?: React.ReactNode;
 }) {
   return (
-    <View style={styles.transcriptBlock}>
+    <View className="gap-2 w-full">
       {Markdown ? (
         <Markdown style={markdownStyle}>{content}</Markdown>
       ) : (
@@ -206,38 +209,41 @@ function MessageContent({
 function MessageDebug({
   message,
   hasReasoning,
-  styles,
 }: {
   message: ChatMessageItem;
   hasReasoning: boolean;
-  styles: ReturnType<typeof useChatMessageStyles>;
 }) {
+  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
+
   return (
-    <View style={styles.transcriptSurface}>
-      <Text style={styles.reasoningText}>ID: {message.id}</Text>
-      <Text style={styles.reasoningText}>Role: {message.role}</Text>
-      <Text style={styles.reasoningText}>Created: {message.created_at || 'unknown'}</Text>
-      <Text style={styles.reasoningText}>Reasoning: {hasReasoning ? 'present' : 'none'}</Text>
-      <Text style={styles.reasoningText}>Tool calls: {message.toolCalls?.length ?? 0}</Text>
+    <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
+      <Text className="text-mono text-foreground opacity-80">ID: {message.id}</Text>
+      <Text className="text-mono text-foreground opacity-80">Role: {message.role}</Text>
+      <Text className="text-mono text-foreground opacity-80">
+        Created: {message.created_at || 'unknown'}
+      </Text>
+      <Text className="text-mono text-foreground opacity-80">
+        Reasoning: {hasReasoning ? 'present' : 'none'}
+      </Text>
+      <Text className="text-mono text-foreground opacity-80">
+        Tool calls: {message.toolCalls?.length ?? 0}
+      </Text>
     </View>
   );
 }
 
-function FocusItems({
-  message,
-  styles,
-}: {
-  message: ChatMessageItem;
-  styles: ReturnType<typeof useChatMessageStyles>;
-}) {
+function FocusItems({ message }: { message: ChatMessageItem }) {
   if (!message.focus_items?.length) {
     return null;
   }
 
   return (
-    <View style={styles.focusItems}>
+    <View className="flex-row flex-wrap gap-3">
       {message.focus_items.map((focusItem) => (
-        <View key={focusItem.id} style={styles.focusItem}>
+        <View
+          key={focusItem.id}
+          className="bg-background border border-border rounded-md px-3 py-2"
+        >
           <Text>{focusItem.text}</Text>
         </View>
       ))}
@@ -257,7 +263,6 @@ function ActiveMessageActions({
   canEdit,
   canRegenerate,
   canDelete,
-  styles,
   onCopy,
   onSpeak,
   onShare,
@@ -276,7 +281,6 @@ function ActiveMessageActions({
   canEdit: boolean;
   canRegenerate: boolean;
   canDelete: boolean;
-  styles: ReturnType<typeof useChatMessageStyles>;
   onCopy?: (message: ChatMessageItem) => void;
   onSpeak?: (message: ChatMessageItem) => void;
   onShare?: (message: ChatMessageItem) => void;
@@ -288,15 +292,17 @@ function ActiveMessageActions({
     return null;
   }
 
+  const [tertiary] = useCSSVariable(['--color-tertiary']) as string[];
+
   return (
     <Reanimated.View
       entering={ACTIONS_ENTERING}
       exiting={ACTIONS_EXITING}
       layout={ACTIONS_LAYOUT}
-      style={styles.actionsWrap}
+      className="mt-1"
     >
-      <View style={[styles.actionsRow, isUser ? styles.actionsRowUser : null]}>
-        {timestamp ? <Text style={styles.actionTimestamp}>{timestamp}</Text> : null}
+      <View className={`items-center flex-row gap-2 ${isUser ? 'justify-end' : ''}`}>
+        {timestamp ? <Text style={{ color: tertiary, fontSize: 12 }}>{timestamp}</Text> : null}
         <ActionIconButton disabled={!canCopy} icon="doc.on.doc" onPress={() => onCopy?.(message)} />
         {canSpeak ? (
           <ActionIconButton
@@ -334,19 +340,18 @@ const ChatMessage = memo(function ChatMessage({
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const styles = useChatMessageStyles();
+  const [textPrimary, popover] = useCSSVariable([
+    '--color-foreground',
+    '--color-popover',
+  ]) as string[];
+
   const { role, message: content, isStreaming } = message;
   const isUser = role.toLowerCase() === 'user';
-  const textStyle = isUser ? styles.userMessageText : styles.assistantMessageText;
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
   const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
   const canDelete = !isStreaming && onDelete !== undefined;
   const canCopy = !isStreaming && onCopy !== undefined;
-  // Playback for a generated walkie-talkie reply is intrinsic to the message
-  // (message.audio), not something callers wire up per-render — fall back to
-  // the shared audio-playback singleton when no explicit onSpeak override is
-  // passed in (chat-message-list.tsx doesn't pass one today).
   const audioUrl = message.audio?.url ?? null;
   const playback = useAudioPlayback(message.id, audioUrl);
   const effectiveIsSpeaking = onSpeak ? isSpeaking : playback.isSpeaking;
@@ -358,14 +363,42 @@ const ChatMessage = memo(function ChatMessage({
   const renderedToolCalls = message.toolCalls ?? [];
   const [isEditing, setIsEditing] = useState(false);
   const [draftMessage, setDraftMessage] = useState(content);
+
+  const textStyle = useMemo(
+    () => ({
+      color: textPrimary,
+      fontSize: 16,
+      lineHeight: isUser ? 24 : 25.6,
+    }),
+    [textPrimary, isUser],
+  );
+
   const markdownStyle = useMemo(
     () => ({
-      body: isUser ? styles.userMessageText : styles.assistantMessageText,
-      code_block: styles.codeBlock,
-      code_inline: styles.codeInline,
-      fence: styles.codeBlock,
+      body: textStyle,
+      code_block: {
+        backgroundColor: popover,
+        borderRadius: 8,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        padding: 12,
+      },
+      code_inline: {
+        backgroundColor: popover,
+        borderRadius: 4,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        paddingHorizontal: 4,
+      },
+      fence: {
+        backgroundColor: popover,
+        borderRadius: 8,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        padding: 12,
+      },
     }),
-    [isUser, styles],
+    [textPrimary, popover, textStyle],
   );
 
   const closeEdit = () => {
@@ -380,7 +413,6 @@ const ChatMessage = memo(function ChatMessage({
     setIsEditing(false);
   };
 
-  // Streaming placeholder with no content yet — show thinking indicator inline
   if (isStreaming && !content) {
     return <ChatThinkingIndicator />;
   }
@@ -388,7 +420,8 @@ const ChatMessage = memo(function ChatMessage({
   return (
     <Pressable
       onPress={isStreaming ? undefined : onActivate}
-      style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}
+      className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}
+      style={isUser ? { borderCurve: 'continuous' } : undefined}
     >
       <MessageEditModal
         content={content}
@@ -396,35 +429,33 @@ const ChatMessage = memo(function ChatMessage({
         onCancel={closeEdit}
         onChangeDraft={setDraftMessage}
         onSave={saveEdit}
-        styles={styles}
         visible={isEditing}
       />
 
-      <View style={styles.contentColumn}>
+      <View className="gap-2 w-full">
         {!isUser && hasReasoning ? (
-          <View style={styles.transcriptSurface}>
-            <Text style={styles.reasoningText}>{message.reasoning}</Text>
+          <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
+            <Text className="text-mono text-foreground opacity-80">{message.reasoning}</Text>
           </View>
         ) : null}
 
-        <MessageToolCalls styles={styles} toolCalls={renderedToolCalls} />
+        <MessageToolCalls toolCalls={renderedToolCalls} />
 
         <MessageContent
           Markdown={isStreaming ? null : Markdown}
           content={content}
           isUser={isUser}
           markdownStyle={markdownStyle}
-          styles={styles}
           textStyle={textStyle}
         >
-          {isUser ? <ReferencedNotes message={message} styles={styles} /> : null}
+          {isUser ? <ReferencedNotes message={message} /> : null}
         </MessageContent>
 
         {showDebug && !isStreaming ? (
-          <MessageDebug hasReasoning={hasReasoning} message={message} styles={styles} />
+          <MessageDebug hasReasoning={hasReasoning} message={message} />
         ) : null}
 
-        {!isStreaming ? <FocusItems message={message} styles={styles} /> : null}
+        {!isStreaming ? <FocusItems message={message} /> : null}
 
         <ActiveMessageActions
           canCopy={canCopy}
@@ -446,7 +477,6 @@ const ChatMessage = memo(function ChatMessage({
           onRegenerate={onRegenerate}
           onShare={onShare}
           onSpeak={effectiveOnSpeak}
-          styles={styles}
           timestamp={timestamp}
         />
       </View>
@@ -479,171 +509,3 @@ export function renderChatMessage(
     />
   );
 }
-
-const useChatMessageStyles = makeStyles((theme) => ({
-  actionTimestamp: {
-    color: theme.colors['tertiary'],
-    fontSize: 12,
-  },
-  actionsRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  actionsRowUser: {
-    justifyContent: 'flex-end',
-  },
-  actionsWrap: {
-    marginTop: spacing[1],
-  },
-  assistantMessageText: {
-    color: theme.colors['text-primary'],
-    fontSize: fontSizes.md,
-    lineHeight: fontSizes.md * 1.6,
-  },
-  codeBlock: {
-    backgroundColor: theme.colors['popover'],
-    borderRadius: 8,
-    color: theme.colors['text-primary'],
-    fontFamily: 'Menlo',
-    padding: 12,
-  },
-  codeInline: {
-    backgroundColor: theme.colors['popover'],
-    borderRadius: 4,
-    color: theme.colors['text-primary'],
-    fontFamily: 'Menlo',
-    paddingHorizontal: 4,
-  },
-  contentColumn: {
-    gap: spacing[2],
-    width: '100%',
-  },
-  editBackdropInset: {
-    paddingHorizontal: spacing[5],
-    width: '100%',
-  },
-  editActionSlot: {
-    flex: 1,
-  },
-  editActionsRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  editInput: {
-    borderRadius: radii.md,
-    borderWidth: 1,
-    fontSize: 16,
-    minHeight: 90,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    textAlignVertical: 'top',
-  },
-  editSheet: {
-    backgroundColor: theme.colors['background'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    width: '100%',
-  },
-  editTitle: {
-    color: theme.colors['text-primary'],
-    fontSize: 16,
-  },
-  focusItem: {
-    backgroundColor: theme.colors['background'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-  },
-  focusItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[3],
-  },
-  reasoningText: {
-    color: theme.colors['text-primary'],
-    fontFamily: fontFamiliesNative.mono,
-    fontSize: fontSizes.xs,
-    opacity: 0.8,
-  },
-  referencedNoteChip: {
-    alignItems: 'center',
-    backgroundColor: theme.colors['popover'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing[1],
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-  },
-  referencedNoteText: {
-    color: theme.colors['text-secondary'],
-    fontSize: fontSizes.xs,
-  },
-  referencedNotes: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-  },
-  row: {
-    paddingVertical: spacing[2],
-    width: '100%',
-  },
-  rowAssistant: {
-    // open, no background
-  },
-  rowUser: {
-    backgroundColor: theme.colors['popover'],
-    borderCurve: 'continuous',
-    borderRadius: radii.lg,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[2],
-  },
-  toolCall: {
-    backgroundColor: theme.colors['background'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    gap: spacing[1],
-    padding: spacing[3],
-  },
-  toolCallArgs: {
-    color: theme.colors['text-secondary'],
-    fontFamily: fontFamiliesNative.mono,
-    fontSize: fontSizes.xs,
-  },
-  toolCallName: {
-    color: theme.colors['text-primary'],
-    fontSize: fontSizes.xs,
-    fontWeight: '600',
-  },
-  toolCalls: {
-    gap: spacing[1],
-  },
-  transcriptBlock: {
-    gap: spacing[2],
-    width: '100%',
-  },
-  transcriptSurface: {
-    backgroundColor: theme.colors['background'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    gap: spacing[1],
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[3],
-    width: '100%',
-  },
-  userMessageText: {
-    color: theme.colors['text-primary'],
-    fontSize: fontSizes.md,
-    lineHeight: fontSizes.md * 1.5,
-  },
-}));

@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
+import { Text } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { Text, makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { APP_NAME } from '~/constants';
 import { useAppLock } from '~/hooks/use-app-lock';
@@ -13,24 +14,11 @@ import { useAuth } from '~/services/auth/auth-provider';
 import queryClient from '~/services/query-client';
 import t from '~/translations';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flex: 1,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.lg,
-  },
-  unlockButtonWrap: {
-    minWidth: 160,
-  },
-}));
-
 function ProtectedShell() {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
+  const [background, textPrimary] = useCSSVariable([
+    '--color-background',
+    '--color-foreground',
+  ]) as string[];
   const { isPending, isSignedIn } = useAuth();
   const { isUnlocked, authenticate } = useAppLock();
   const prefersReducedMotion = useReducedMotion();
@@ -64,19 +52,15 @@ function ProtectedShell() {
   }
 
   if (!isSignedIn) {
-    return <View testID="protected-bootstrap" style={styles.root} />;
+    return <View testID="protected-bootstrap" className="flex-1" />;
   }
 
   if (!isUnlocked) {
     return (
-      <View style={styles.centered}>
-        <Text variant="title1" color="text-primary">
-          {APP_NAME}
-        </Text>
-        <Text variant="body" color="text-secondary">
-          {t.auth.unlockMessage}
-        </Text>
-        <View style={styles.unlockButtonWrap}>
+      <View className="flex-1 items-center justify-center gap-4">
+        <Text className="text-title1 text-foreground">{APP_NAME}</Text>
+        <Text className="text-body text-muted-foreground">{t.auth.unlockMessage}</Text>
+        <View className="min-w-40">
           <Button
             label={t.auth.unlockButton}
             onPress={() => void authenticate()}
@@ -90,15 +74,15 @@ function ProtectedShell() {
   return (
     <FeatureErrorBoundary featureName="Protected">
       <ApiProvider queryClient={queryClient}>
-        <View style={styles.root}>
+        <View className="flex-1">
           <Stack
             initialRouteName="index"
             screenOptions={{
               ...screenOptions,
-              contentStyle: { backgroundColor: themeColors['background'] },
+              contentStyle: { backgroundColor: background },
               headerLargeTitle: false,
               headerShadowVisible: false,
-              headerTintColor: themeColors['text-primary'],
+              headerTintColor: textPrimary,
             }}
           >
             <Stack.Screen name="index" />

@@ -1,21 +1,13 @@
+import { TextField } from '@ponti-studios/ui/native';
 import { useRouter } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import React, { useEffect, useReducer, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import {
-  componentSizes,
-  fontSizes,
-  makeStyles,
-  radii,
-  SCREEN_MARGIN_HORIZONTAL,
-  spacing,
-  useThemeColors,
-} from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
-import { TextField } from '~/components/ui/text-field';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
 import { getPreventScreenshots, setPreventScreenshots } from '~/hooks/use-screen-capture';
 import { useAuth } from '~/services/auth/auth-provider';
@@ -58,127 +50,6 @@ function accountReducer(state: AccountState, action: AccountAction): AccountStat
   }
 }
 
-const useStyles = makeStyles(() => ({
-  avatar: {
-    alignItems: 'center',
-    borderRadius: radii.xl,
-    height: 52,
-    justifyContent: 'center',
-    width: 52,
-  },
-  avatarText: {
-    fontSize: 19,
-    fontWeight: '700',
-  },
-  identity: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-  },
-  identityCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  identityEmail: {
-    fontSize: 13,
-  },
-  identityNameInput: {
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-    padding: 0,
-  },
-  identityStatus: {
-    paddingHorizontal: 16,
-  },
-  removeText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  row: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 12,
-    justifyContent: 'space-between',
-    minHeight: componentSizes.xl,
-  },
-  rowCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  rowDescription: {
-    fontSize: 13,
-  },
-  rowLabel: {
-    fontSize: fontSizes.md,
-  },
-  rowLabelGroup: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    gap: 10,
-  },
-  rowPressed: {
-    opacity: 0.6,
-  },
-  rowTouchable: {
-    paddingHorizontal: 16,
-  },
-  saveRow: {
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-  },
-  scrollContent: {
-    gap: spacing[6],
-    paddingBottom: 24,
-    paddingTop: 12,
-  },
-  section: {
-    gap: spacing[2],
-  },
-  sectionLabel: {
-    fontSize: fontSizes.footnote,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-  },
-  statusText: {
-    fontSize: 13,
-  },
-  usageAmount: {
-    fontSize: 28,
-    fontVariant: ['tabular-nums'],
-    fontWeight: '700',
-    letterSpacing: -0.4,
-  },
-  usageAmountRow: {
-    alignItems: 'baseline',
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  usageCap: {
-    fontSize: 14,
-    fontVariant: ['tabular-nums'],
-  },
-  usageFill: {
-    borderRadius: 4,
-    height: 4,
-  },
-  usageNote: {
-    fontSize: 12,
-    paddingHorizontal: 16,
-  },
-  usageTrack: {
-    borderRadius: 4,
-    height: 4,
-    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
-    overflow: 'hidden',
-  },
-}));
-
-/** A List row (Primitives §2): icon + label on the left, one accessory on the
- * right. No background, no border — rows are separated by space alone. */
 function SettingsRow({
   icon,
   label,
@@ -196,23 +67,25 @@ function SettingsRow({
   destructive?: boolean;
   testID?: string;
 }) {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
-  const labelColor = destructive ? themeColors.destructive : themeColors['text-primary'];
+  const [destructiveColor, textPrimaryColor, textSecondaryColor, tertiaryColor] = useCSSVariable([
+    '--color-destructive',
+    '--color-foreground',
+    '--color-muted-foreground',
+    '--color-tertiary',
+  ]) as string[];
+
+  const labelColor = destructive ? destructiveColor : textPrimaryColor;
+
   const content = (
-    <View style={styles.row}>
-      <View style={styles.rowLabelGroup}>
-        <AppIcon
-          name={icon}
-          size={18}
-          tintColor={destructive ? themeColors.destructive : themeColors['tertiary']}
-        />
-        <View style={styles.rowCopy}>
-          <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
+    <View className="flex-row items-center justify-between gap-3" style={{ minHeight: 44 }}>
+      <View className="flex-1 flex-row items-center gap-2.5">
+        <AppIcon name={icon} size={18} tintColor={destructive ? destructiveColor : tertiaryColor} />
+        <View className="flex-1 gap-0.5">
+          <Text className="text-base" style={{ color: labelColor }}>
+            {label}
+          </Text>
           {description ? (
-            <Text style={[styles.rowDescription, { color: themeColors['text-secondary'] }]}>
-              {description}
-            </Text>
+            <Text className="text-[13px] text-muted-foreground">{description}</Text>
           ) : null}
         </View>
       </View>
@@ -222,7 +95,7 @@ function SettingsRow({
 
   if (!onPress) {
     return (
-      <View testID={testID} style={styles.rowTouchable}>
+      <View testID={testID} className="px-4">
         {content}
       </View>
     );
@@ -232,7 +105,8 @@ function SettingsRow({
     <Pressable
       testID={testID}
       onPress={onPress}
-      style={({ pressed }) => [styles.rowTouchable, pressed && styles.rowPressed]}
+      className="px-4"
+      style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
     >
       {content}
     </Pressable>
@@ -240,17 +114,11 @@ function SettingsRow({
 }
 
 function SectionLabel({ children }: { children: string }) {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
-  return (
-    <Text style={[styles.sectionLabel, { color: themeColors['text-secondary'] }]}>{children}</Text>
-  );
+  return <Text className="text-[13px] font-semibold text-muted-foreground px-4">{children}</Text>;
 }
 
 function Settings() {
   const router = useRouter();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
   const { isPending, isSignedIn, signOut, currentUser, updateProfile } = useAuth();
   const { data: monthlyUsage } = useMonthlyUsage();
   const initialName = currentUser?.name ?? '';
@@ -261,6 +129,22 @@ function Settings() {
   });
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [
+    popoverColor,
+    textPrimaryColor,
+    textSecondaryColor,
+    tertiaryColor,
+    borderDefaultColor,
+    destructiveColor,
+  ] = useCSSVariable([
+    '--color-popover',
+    '--color-foreground',
+    '--color-muted-foreground',
+    '--color-tertiary',
+    '--color-border',
+    '--color-destructive',
+  ]) as string[];
 
   const normalizedName = state.name.trim();
   const initialNormalizedName = initialName.trim();
@@ -332,29 +216,30 @@ function Settings() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={{ gap: 24, paddingBottom: 24, paddingTop: 12 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Identity */}
-      <View style={styles.identity}>
-        <View style={[styles.avatar, { backgroundColor: themeColors['popover'] }]}>
-          <Text style={[styles.avatarText, { color: themeColors['text-primary'] }]}>
+      <View className="flex-row items-center gap-3 px-4">
+        <View
+          className="items-center justify-center rounded-xl h-[52px] w-[52px]"
+          style={{ backgroundColor: popoverColor }}
+        >
+          <Text className="text-[19px] font-bold text-foreground">
             {getInitials(state.name, currentUser?.email ?? '?')}
           </Text>
         </View>
-        <View style={styles.identityCopy}>
+        <View className="flex-1 gap-0.5">
           <TextField
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
             placeholder={t.settings.name.placeholder}
-            placeholderTextColor={themeColors['tertiary']}
+            placeholderTextColor={tertiaryColor}
             returnKeyType="done"
-            selectionColor={themeColors['text-primary']}
-            cursorColor={themeColors['text-primary']}
-            style={[
-              styles.identityNameInput,
-              { borderWidth: 0, color: themeColors['text-primary'] },
-            ]}
+            selectionColor={textPrimaryColor}
+            cursorColor={textPrimaryColor}
+            className="text-[20px] font-bold tracking-[-0.2px] p-0"
+            style={{ borderWidth: 0, color: textPrimaryColor }}
             onChangeText={(text) => {
               dispatch({ type: 'set-name', name: text });
               setSaveError(null);
@@ -366,14 +251,14 @@ function Settings() {
               }
             }}
           />
-          <Text style={[styles.identityEmail, { color: themeColors['text-secondary'] }]}>
+          <Text className="text-[13px] text-muted-foreground">
             {currentUser?.email ?? t.settings.emailMissing}
           </Text>
         </View>
       </View>
 
       {nameChanged ? (
-        <View style={styles.saveRow}>
+        <View className="items-start px-4">
           <Button
             label={saveStatus === 'saving' ? t.settings.name.saving : t.settings.name.save}
             onPress={() => void onSavePress()}
@@ -384,50 +269,41 @@ function Settings() {
         </View>
       ) : null}
       {saveStatus === 'saved' ? (
-        <Text
-          style={[
-            styles.statusText,
-            styles.identityStatus,
-            { color: themeColors['text-secondary'] },
-          ]}
-        >
-          {t.settings.name.saved}
-        </Text>
+        <Text className="text-[13px] text-muted-foreground px-4">{t.settings.name.saved}</Text>
       ) : null}
-      {saveError ? (
-        <Text
-          style={[styles.statusText, styles.identityStatus, { color: themeColors.destructive }]}
-        >
-          {saveError}
-        </Text>
-      ) : null}
+      {saveError ? <Text className="text-[13px] text-destructive px-4">{saveError}</Text> : null}
 
       {/* Usage */}
       {monthlyUsage ? (
-        <View testID="settings-usage-section" style={styles.section}>
+        <View testID="settings-usage-section" className="gap-2">
           <SectionLabel>AI usage this month</SectionLabel>
-          <View style={styles.usageAmountRow}>
-            <Text style={[styles.usageAmount, { color: themeColors['text-primary'] }]}>
+          <View className="flex-row items-baseline gap-2 px-4">
+            <Text
+              className="text-[28px] font-bold tracking-[-0.4px] text-foreground"
+              style={{ fontVariant: ['tabular-nums'] }}
+            >
               {formatUsd(monthlyUsage.totalCostUsd)}
             </Text>
-            <Text style={[styles.usageCap, { color: themeColors['text-secondary'] }]}>
+            <Text
+              className="text-sm text-muted-foreground"
+              style={{ fontVariant: ['tabular-nums'] }}
+            >
               of {formatUsd(monthlyUsage.limitUsd)} · {usagePercent.toFixed(0)}%
             </Text>
           </View>
-          <View style={[styles.usageTrack, { backgroundColor: themeColors['border-default'] }]}>
+          <View
+            className="rounded h-1 mx-1 overflow-hidden"
+            style={{ backgroundColor: borderDefaultColor }}
+          >
             <View
-              style={[
-                styles.usageFill,
-                {
-                  width: `${usagePercent}%`,
-                  backgroundColor: monthlyUsage.isOverLimit
-                    ? themeColors.destructive
-                    : themeColors['text-primary'],
-                },
-              ]}
+              className="rounded h-1"
+              style={{
+                width: `${usagePercent}%`,
+                backgroundColor: monthlyUsage.isOverLimit ? destructiveColor : textPrimaryColor,
+              }}
             />
           </View>
-          <Text style={[styles.usageNote, { color: themeColors['tertiary'] }]}>
+          <Text className="text-xs text-tertiary px-4">
             {monthlyUsage.isOverLimit
               ? "You've reached this month's free AI usage limit. It resets at the start of next month."
               : 'Resets at the start of next month.'}
@@ -436,7 +312,7 @@ function Settings() {
       ) : null}
 
       {/* Privacy */}
-      <View style={styles.section}>
+      <View className="gap-2">
         <SectionLabel>{t.settings.sections.privacy}</SectionLabel>
         <SettingsRow
           icon="faceid"
@@ -467,18 +343,18 @@ function Settings() {
       </View>
 
       {/* Chats */}
-      <View style={styles.section}>
+      <View className="gap-2">
         <SectionLabel>{t.settings.sections.chats}</SectionLabel>
         <SettingsRow
           icon="archivebox"
           label={t.settings.archivedChats}
           onPress={onArchivedChatsPress}
-          accessory={<AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />}
+          accessory={<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />}
         />
       </View>
 
       {/* Danger zone */}
-      <View style={styles.section}>
+      <View className="gap-2">
         <SettingsRow
           icon="rectangle.portrait.and.arrow.right"
           label={t.settings.signOut.label}

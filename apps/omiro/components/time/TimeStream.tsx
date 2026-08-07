@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, spacing, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import type { CalendarPermissionStatus } from '~/modules/on-device-ai';
 
@@ -37,7 +36,6 @@ export function TimeStream({
   rows,
   unscheduledTaskCount,
 }: TimeStreamProps) {
-  const styles = useStyles();
   const renderItem = useCallback(
     ({ item, index }: { item: TimeStreamRow; index: number }) => {
       const previous = rows
@@ -65,13 +63,18 @@ export function TimeStream({
   const scheduledRows = rows.filter((row) => row.kind === 'task' || row.kind === 'event');
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {calendarPermission && calendarPermission !== 'authorized' ? (
-        <View style={styles.permissionNotice} testID="time-calendar-permission-notice">
-          <Text variant="subhead" color="text-primary">
+        <View
+          className="border border-border rounded-md gap-2 m-4 px-4 py-3"
+          testID="time-calendar-permission-notice"
+        >
+          <Text className="text-subhead text-foreground">
             Connect your iOS Calendar to include scheduled events.
           </Text>
-          <Text color="text-secondary">Tasks and flexible planning remain available in Time.</Text>
+          <Text className="text-muted-foreground">
+            Tasks and flexible planning remain available in Time.
+          </Text>
           <Button
             label={calendarPermission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
             onPress={onConnectCalendar}
@@ -82,26 +85,26 @@ export function TimeStream({
         </View>
       ) : null}
       <StreamList
-        contentPaddingTop={spacing[2]}
+        contentPaddingTop={8}
         data={rows}
         keyExtractor={(row) =>
           `${row.kind}:${row.value.id}:${row.kind === 'event' ? row.value.startDate : ''}`
         }
         ListEmptyComponent={
           !isLoadingEvents && scheduledRows.length === 0 ? (
-            <Text color="text-secondary" style={styles.emptyText}>
+            <Text className="text-muted-foreground px-4 pt-6">
               {unscheduledTaskCount > 0
-                ? 'Nothing scheduled yet. Tasks are waiting to be placed \u2014 check Unscheduled.'
+                ? 'Nothing scheduled yet. Tasks are waiting to be placed \u2014 check Tasks.'
                 : 'Nothing scheduled yet. Add a time block or plan one from your tasks.'}
             </Text>
           ) : null
         }
         ListFooterComponent={
           isLoadingEvents ? (
-            <View style={styles.skeletons} testID="time-loading-state">
-              <View style={styles.skeletonRow} />
-              <View style={styles.skeletonRow} />
-              <View style={styles.skeletonRow} />
+            <View className="gap-2 p-4" testID="time-loading-state">
+              <View className="bg-muted rounded-lg h-14" />
+              <View className="bg-muted rounded-lg h-14" />
+              <View className="bg-muted rounded-lg h-14" />
             </View>
           ) : null
         }
@@ -117,29 +120,3 @@ export function TimeStream({
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: { flex: 1 },
-  emptyText: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[6],
-  },
-  permissionNotice: {
-    borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.md,
-    borderWidth: 1,
-    gap: spacing[2],
-    margin: spacing[4],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  skeletonRow: {
-    backgroundColor: theme.colors['muted'],
-    borderRadius: 8,
-    height: 56,
-  },
-  skeletons: {
-    gap: spacing[2],
-    padding: spacing[4],
-  },
-}));

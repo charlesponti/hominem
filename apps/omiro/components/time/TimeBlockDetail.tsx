@@ -1,12 +1,12 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
+import { TextField } from '@ponti-studios/ui/native';
 import { Stack } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Text } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
-import { makeStyles, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
-import { TextField } from '~/components/ui/text-field';
 import type {
   CalendarEvent,
   CalendarEventPatch,
@@ -37,12 +37,9 @@ function DetailBlock({
   onPress?: () => void;
   testID?: string;
 }) {
-  const styles = useStyles();
   const content = (
     <>
-      <Text color="text-secondary" variant="overline">
-        {label}
-      </Text>
+      <Text className="text-muted-foreground text-overline">{label}</Text>
       {children}
     </>
   );
@@ -50,9 +47,10 @@ function DetailBlock({
   return (
     <Pressable
       accessibilityLabel={`Edit ${label}`}
+      className="gap-2 py-3"
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.detailBlock, pressed && styles.pressed]}
+      style={({ pressed }) => pressed && { opacity: 0.7 }}
       testID={testID}
     >
       {content}
@@ -71,7 +69,6 @@ export function TimeBlockDetail({
   source: TimeBlockDetailSource;
   onClose: () => void;
 }) {
-  const styles = useStyles();
   const taskQuery = useTaskQuery({ taskId: id, enabled: source === 'task' });
   const { mutateAsync: updateTask, isPending: isSavingTask } = useTaskUpdate();
   const { mutateAsync: deleteTask } = useTaskDelete();
@@ -321,16 +318,16 @@ export function TimeBlockDetail({
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <Text color="text-secondary">Loading time block…</Text>
+      <View className="flex-1 items-center justify-center gap-4 p-4">
+        <Text className="text-muted-foreground">Loading time block…</Text>
       </View>
     );
   }
 
   if (!block || error) {
     return (
-      <View style={styles.centered}>
-        <Text color="destructive">{error || 'This time block is unavailable.'}</Text>
+      <View className="flex-1 items-center justify-center gap-4 p-4">
+        <Text className="text-destructive">{error || 'This time block is unavailable.'}</Text>
         <Button label="Close" onPress={onClose} variant="secondary" />
       </View>
     );
@@ -350,14 +347,14 @@ export function TimeBlockDetail({
           </Stack.Toolbar.Menu>
         </Stack.Toolbar>
       ) : null}
-      <KeyboardAvoidingView behavior="padding" style={styles.screen} testID="time-block-editor">
+      <KeyboardAvoidingView behavior="padding" className="flex-1" testID="time-block-editor">
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={{ gap: 16, padding: 16 }}
           contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
-          style={styles.scroll}
+          className="flex-1"
         >
-          <View style={styles.header}>
+          <View className="gap-3">
             <DetailBlock
               label={isTask ? 'Task' : (event?.calendarTitle ?? 'Calendar')}
               onPress={() => setActiveField('title')}
@@ -371,18 +368,18 @@ export function TimeBlockDetail({
                   value={draftTitle}
                 />
               ) : (
-                <Text variant="display">{draftTitle}</Text>
+                <Text className="text-display">{draftTitle}</Text>
               )}
             </DetailBlock>
             {isTask && task?.status === 'completed' ? (
-              <Text color="text-secondary">Completed</Text>
+              <Text className="text-muted-foreground">Completed</Text>
             ) : null}
             {readOnlyEvent ? (
-              <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
+              <Text className="text-muted-foreground">This calendar is read-only in Omiro.</Text>
             ) : null}
           </View>
 
-          <View style={styles.section}>
+          <View className="gap-2">
             <DetailBlock
               label="When"
               onPress={
@@ -396,7 +393,7 @@ export function TimeBlockDetail({
               testID="time-block-edit-time"
             >
               {activeField === 'time' && draftStart && draftEnd ? (
-                <View style={styles.timeEditor}>
+                <View className="gap-2">
                   <DateTimePicker
                     display="compact"
                     mode="datetime"
@@ -421,9 +418,9 @@ export function TimeBlockDetail({
                   />
                 </View>
               ) : draftStart && draftEnd ? (
-                <Text variant="title2">{formatInterval(draftStart, draftEnd)}</Text>
+                <Text className="text-title2">{formatInterval(draftStart, draftEnd)}</Text>
               ) : (
-                <Text color="text-secondary">Set a time</Text>
+                <Text className="text-muted-foreground">Set a time</Text>
               )}
             </DetailBlock>
             <DetailBlock
@@ -440,7 +437,7 @@ export function TimeBlockDetail({
                   value={draftLocation}
                 />
               ) : (
-                <Text color={draftLocation ? 'text-primary' : 'text-secondary'}>
+                <Text className={draftLocation ? 'text-foreground' : 'text-muted-foreground'}>
                   {draftLocation || 'Add location'}
                 </Text>
               )}
@@ -460,7 +457,7 @@ export function TimeBlockDetail({
                   value={draftNotes}
                 />
               ) : (
-                <Text color={draftNotes ? 'text-primary' : 'text-secondary'}>
+                <Text className={draftNotes ? 'text-foreground' : 'text-muted-foreground'}>
                   {draftNotes || 'Add notes'}
                 </Text>
               )}
@@ -481,7 +478,7 @@ export function TimeBlockDetail({
                     value={draftPeople}
                   />
                 ) : (
-                  <Text color={draftPeople ? 'text-primary' : 'text-secondary'}>
+                  <Text className={draftPeople ? 'text-foreground' : 'text-muted-foreground'}>
                     {draftPeople || 'Add people'}
                   </Text>
                 )}
@@ -500,7 +497,7 @@ export function TimeBlockDetail({
           </View>
         </ScrollView>
         {!readOnlyEvent && (isDirty || isTask) ? (
-          <View style={styles.actions}>
+          <View className="border-t border-border bg-background px-4 pt-3 pb-4">
             {isTask ? (
               <Button
                 disabled={isTogglingTask}
@@ -524,45 +521,3 @@ export function TimeBlockDetail({
     </>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  actions: {
-    backgroundColor: theme.colors.background,
-    borderColor: theme.colors['border-default'],
-    borderTopWidth: 1,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
-  },
-  centered: {
-    alignItems: 'center',
-    flex: 1,
-    gap: theme.spacing.lg,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-  },
-  content: {
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-  },
-  detailBlock: {
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.md,
-  },
-  header: {
-    gap: theme.spacing.md,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  section: {
-    gap: theme.spacing.sm,
-  },
-  screen: {
-    flex: 1,
-  },
-  scroll: { flex: 1 },
-  timeEditor: {
-    gap: theme.spacing.sm,
-  },
-}));

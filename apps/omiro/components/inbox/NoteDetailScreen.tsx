@@ -1,5 +1,6 @@
 import { parseInboxTimestamp } from '@hominem/chat';
 import type { Note } from '@hominem/rpc/types';
+import { TextField } from '@ponti-studios/ui/native';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -12,14 +13,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { useCSSVariable } from 'uniwind';
 
 import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
-import { Text, makeStyles, useThemeColors } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
-import { TextField } from '~/components/ui/text-field';
 import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
@@ -56,23 +57,21 @@ function formatNoteDateline(
 }
 
 function NoteDetailPlaceholder() {
-  const styles = useNoteStyles();
-
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      className="flex-1"
+      contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
       keyboardDismissMode="interactive"
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.placeholderTitle} />
-      <View style={styles.placeholderDateline} />
-      <View style={styles.divider} />
-      <View style={styles.placeholderBody}>
+      <View className="self-stretch rounded-sm h-8 mb-3 w-[72%]" />
+      <View className="bg-border rounded-sm h-3 mb-3.5 w-[36%]" />
+      <View className="h-px bg-border mb-5" />
+      <View className="gap-3.5 pt-1">
         {Array.from({ length: 6 }, (_, index) => (
           <View
             key={`note-placeholder-line-${index.toString()}`}
-            style={[styles.placeholderLine, index === 5 ? styles.placeholderLineShort : null]}
+            className={`bg-border rounded-sm h-4 ${index === 5 ? 'w-[58%]' : 'w-full'}`}
           />
         ))}
       </View>
@@ -91,7 +90,6 @@ export function NoteDetailScreen() {
 }
 
 function NoteDetailEditor({ noteId }: { noteId: string }) {
-  const styles = useNoteStyles();
   const router = useRouter();
   const navigation = useNavigation();
   const homeRoute = INBOX_ROUTE;
@@ -156,8 +154,8 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
           </Stack.Toolbar>
         ) : null}
         <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -219,8 +217,6 @@ function NoteEditorBody({
   detachFile,
   onDeleteNote,
 }: NoteEditorBodyProps) {
-  const styles = useNoteStyles();
-  const themeColors = useThemeColors();
   const router = useRouter();
   const contentInputRef = useRef<TextInput>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -242,6 +238,24 @@ function NoteEditorBody({
   } = useInlineEnhance();
 
   const { startChat, isStartingChat } = useStartChatFromInbox();
+
+  const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
+    useCSSVariable([
+      '--color-tertiary',
+      '--color-primary',
+      '--color-foreground',
+      '--color-muted-foreground',
+      '--color-border',
+      '--color-popover',
+    ]) as string[];
+
+  const mdColors: Record<string, string> = {
+    primary: primaryColor,
+    foreground: textPrimary,
+    'muted-foreground': textSecondary,
+    border: borderDefault,
+    popover,
+  };
 
   useEffect(() => {
     writeResumeTarget({
@@ -359,8 +373,8 @@ function NoteEditorBody({
       </Stack.Toolbar>
 
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
         keyboardDismissMode="interactive"
         refreshControl={
           <RefreshControl
@@ -377,25 +391,35 @@ function NoteEditorBody({
           value={draft.title}
           onChangeText={handleTitleChange}
           placeholder={t.notes.editor.titlePlaceholder}
-          placeholderTextColor={themeColors['tertiary']}
+          placeholderTextColor={tertiary}
           scrollEnabled={false}
-          selectionColor={themeColors.primary}
-          style={styles.titleInput}
+          selectionColor={primaryColor}
+          style={{
+            alignSelf: 'stretch',
+            borderRadius: 0,
+            borderWidth: 0,
+            color: textPrimary,
+            fontSize: 28,
+            fontWeight: '700' as const,
+            lineHeight: 34,
+            marginBottom: 6,
+            minHeight: 36,
+            paddingHorizontal: 0,
+            paddingVertical: 0,
+          }}
           testID="note-title-input"
           textAlignVertical="top"
         />
 
-        <Text variant="overline" style={styles.dateline}>
-          {dateline}
-        </Text>
+        <Text className="text-overline text-tertiary mb-3.5">{dateline}</Text>
 
-        <View style={styles.divider} />
+        <View className="h-px bg-border mb-5" />
 
         {isPreviewing ? (
           draft.content.trim().length > 0 ? (
-            <Markdown style={markdownStyles(themeColors)}>{draft.content}</Markdown>
+            <Markdown style={markdownStyles(mdColors)}>{draft.content}</Markdown>
           ) : (
-            <Text style={styles.previewEmpty}>{t.notes.editor.previewEmpty}</Text>
+            <Text className="text-tertiary italic min-h-60">{t.notes.editor.previewEmpty}</Text>
           )
         ) : (
           <TextField
@@ -407,10 +431,20 @@ function NoteEditorBody({
             onSelectionChange={formatting.onSelectionChange}
             onFocus={() => formatting.onFocus(draft.content)}
             placeholder={t.notes.editor.contentPlaceholder}
-            placeholderTextColor={themeColors['tertiary']}
-            cursorColor={themeColors.primary}
-            selectionColor={themeColors.primary}
-            style={styles.contentInput}
+            placeholderTextColor={tertiary}
+            cursorColor={primaryColor}
+            selectionColor={primaryColor}
+            style={{
+              borderRadius: 0,
+              borderWidth: 0,
+              fontSize: 17,
+              lineHeight: 28,
+              letterSpacing: -0.1,
+              color: textPrimary,
+              paddingVertical: 0,
+              paddingHorizontal: 0,
+              minHeight: 240,
+            }}
             textAlignVertical="top"
             scrollEnabled={false}
             accessibilityLabel={t.notes.editor.contentA11yLabel}
@@ -419,18 +453,24 @@ function NoteEditorBody({
         )}
 
         {note.files.length > 0 ? (
-          <View style={styles.filesSection}>
-            <Text style={styles.filesLabel}>{t.notes.editor.attachments}</Text>
-            <View style={styles.filesList}>
+          <View className="mt-6 gap-2">
+            <Text className="text-xs font-medium tracking-[0.4px] text-tertiary uppercase">
+              {t.notes.editor.attachments}
+            </Text>
+            <View className="gap-1.5">
               {note.files.map((file) => (
-                <View key={file.id} style={styles.filePill}>
+                <View
+                  key={file.id}
+                  className="flex-row items-center gap-2 px-3 py-2 bg-popover rounded-[10px]"
+                  style={{ borderCurve: 'continuous' }}
+                >
                   <Image
                     source="sf:paperclip"
-                    style={styles.filePillIcon}
-                    tintColor={themeColors['text-secondary']}
+                    className="w-3.5 h-3.5 shrink-0"
+                    tintColor={textSecondary}
                     contentFit="contain"
                   />
-                  <Text style={styles.filePillName} numberOfLines={1}>
+                  <Text className="flex-1 text-[13px] text-muted-foreground" numberOfLines={1}>
                     {file.originalName}
                   </Text>
                   <Pressable
@@ -438,12 +478,9 @@ function NoteEditorBody({
                     accessibilityRole="button"
                     hitSlop={6}
                     onPress={() => void handleDetach(file.id)}
-                    style={({ pressed }) => [
-                      styles.filePillDetachButton,
-                      pressed ? styles.filePillDetachButtonPressed : null,
-                    ]}
+                    className="items-center justify-center w-6 h-6 active:opacity-65"
                   >
-                    <AppIcon name="xmark" size={12} tintColor={themeColors['tertiary']} />
+                    <AppIcon name="xmark" size={12} tintColor={tertiary} />
                   </Pressable>
                 </View>
               ))}
@@ -453,7 +490,7 @@ function NoteEditorBody({
       </ScrollView>
 
       {isEnhanceOpen ? (
-        <View style={styles.enhanceTray}>
+        <View className="bg-background px-4 pb-12">
           <InlineEnhancePanel
             enhance={{
               isEnhanceOpen,
@@ -481,184 +518,61 @@ function NoteEditorBody({
   );
 }
 
-const useNoteStyles = makeStyles((theme) => ({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  enhanceTray: {
-    backgroundColor: theme.colors['background'],
-    paddingHorizontal: 16,
-    paddingBottom: theme.spacing.xl * 2,
-  },
-  titleInput: {
-    alignSelf: 'stretch',
-    borderRadius: 0,
-    borderWidth: 0,
-    color: theme.colors['text-primary'],
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
-    marginBottom: 6,
-    minHeight: 36,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  placeholderTitle: {
-    alignSelf: 'stretch',
-    borderRadius: theme.borderRadii.sm,
-    height: 32,
-    marginBottom: 12,
-    width: '72%',
-  },
-  placeholderDateline: {
-    backgroundColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.sm,
-    height: 12,
-    marginBottom: 14,
-    width: '36%',
-  },
-  placeholderBody: {
-    gap: 14,
-    paddingTop: 4,
-  },
-  placeholderLine: {
-    backgroundColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.sm,
-    height: 16,
-    width: '100%',
-  },
-  placeholderLineShort: {
-    width: '58%',
-  },
-  dateline: {
-    color: theme.colors['tertiary'],
-    marginBottom: 14,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors['border-default'],
-    marginBottom: 20,
-  },
-  contentInput: {
-    borderRadius: 0,
-    borderWidth: 0,
-    fontSize: 17,
-    lineHeight: 28,
-    letterSpacing: -0.1,
-    color: theme.colors['text-primary'],
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    minHeight: 240,
-  },
-  previewEmpty: {
-    color: theme.colors['tertiary'],
-    fontStyle: 'italic',
-    minHeight: 240,
-  },
-  filesSection: {
-    marginTop: 24,
-    gap: 8,
-  },
-  filesLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    letterSpacing: 0.4,
-    color: theme.colors['tertiary'],
-    textTransform: 'uppercase',
-  },
-  filesList: {
-    gap: 6,
-  },
-  filePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: theme.colors['popover'],
-    borderRadius: 10,
-    borderCurve: 'continuous',
-  },
-  filePillIcon: {
-    width: 14,
-    height: 14,
-    flexShrink: 0,
-  },
-  filePillName: {
-    flex: 1,
-    fontSize: 13,
-    color: theme.colors['text-secondary'],
-  },
-  filePillDetachButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 24,
-    height: 24,
-  },
-  filePillDetachButtonPressed: {
-    opacity: 0.65,
-  },
-}));
-
-function markdownStyles(colors: ReturnType<typeof useThemeColors>) {
+function markdownStyles(mdColors: Record<string, string>) {
   return {
-    body: { color: colors['text-primary'], fontSize: 17, lineHeight: 28 },
+    body: { color: mdColors['foreground'], fontSize: 17, lineHeight: 28 },
     heading1: {
-      color: colors['text-primary'],
+      color: mdColors['foreground'],
       fontSize: 24,
       fontWeight: '700' as const,
       marginTop: 12,
     },
     heading2: {
-      color: colors['text-primary'],
+      color: mdColors['foreground'],
       fontSize: 20,
       fontWeight: '700' as const,
       marginTop: 10,
     },
     heading3: {
-      color: colors['text-primary'],
+      color: mdColors['foreground'],
       fontSize: 18,
       fontWeight: '600' as const,
       marginTop: 8,
     },
-    strong: { color: colors['text-primary'], fontWeight: '700' as const },
-    em: { color: colors['text-primary'], fontStyle: 'italic' as const },
-    link: { color: colors.primary, textDecorationLine: 'underline' as const },
+    strong: { color: mdColors['foreground'], fontWeight: '700' as const },
+    em: { color: mdColors['foreground'], fontStyle: 'italic' as const },
+    link: { color: mdColors.primary, textDecorationLine: 'underline' as const },
     bullet_list: { marginVertical: 6 },
     ordered_list: { marginVertical: 6 },
     code_inline: {
-      color: colors['text-primary'],
-      backgroundColor: colors['popover'],
+      color: mdColors['foreground'],
+      backgroundColor: mdColors['popover'],
       borderRadius: 4,
       fontFamily: 'Menlo',
       paddingHorizontal: 4,
     },
     code_block: {
-      color: colors['text-primary'],
-      backgroundColor: colors['popover'],
+      color: mdColors['foreground'],
+      backgroundColor: mdColors['popover'],
       borderRadius: 8,
       fontFamily: 'Menlo',
       padding: 12,
     },
     fence: {
-      color: colors['text-primary'],
-      backgroundColor: colors['popover'],
+      color: mdColors['foreground'],
+      backgroundColor: mdColors['popover'],
       borderRadius: 8,
       fontFamily: 'Menlo',
       padding: 12,
     },
     blockquote: {
-      color: colors['text-secondary'],
+      color: mdColors['muted-foreground'],
       backgroundColor: 'transparent',
-      borderColor: colors['border-default'],
+      borderColor: mdColors['border'],
       borderLeftWidth: 3,
       marginVertical: 6,
       paddingLeft: 12,
     },
-    hr: { backgroundColor: colors['border-default'], height: 1, marginVertical: 12 },
+    hr: { backgroundColor: mdColors['border'], height: 1, marginVertical: 12 },
   };
 }

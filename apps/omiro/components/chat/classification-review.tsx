@@ -1,17 +1,9 @@
 import type { ArtifactType } from '@hominem/rpc/types';
 import { ScrollView, View } from 'react-native';
+import { Text } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  Text,
-  transitionDurations,
-  fontFamiliesNative,
-  fontSizes,
-  makeStyles,
-  radii,
-  spacing,
-} from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';
@@ -35,7 +27,6 @@ export function ClassificationReview({
   onAccept,
   onReject,
 }: ClassificationReviewProps) {
-  const styles = useClassificationStyles();
   const insets = useSafeAreaInsets();
   const isEmptyExtraction = items !== undefined && items.length === 0;
   const acceptLabel =
@@ -54,43 +45,41 @@ export function ClassificationReview({
       statusBarTranslucent
     >
       <Animated.View
-        entering={FadeInUp.duration(transitionDurations[150])}
-        style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
+        entering={FadeInUp.duration(150)}
+        style={{ paddingBottom: insets.bottom + 16 }}
+        className="bg-background border-t border-border rounded-t-md gap-6 p-8"
       >
-        <View style={styles.handle} />
-        <View style={styles.header}>
-          <Text color="text-secondary" style={styles.typeLabel}>
+        <View className="self-center bg-border rounded-sm h-1 mb-2 w-9" />
+        <View className="gap-2">
+          <Text className="text-muted-foreground text-caption1 font-medium tracking-[1] uppercase">
             {t.chat.classification.saveAsPrefix} {t.chat.classification.typeLabel[proposedType]}
           </Text>
-          <Text style={styles.title}>{proposedTitle}</Text>
+          <Text className="text-base font-medium">{proposedTitle}</Text>
         </View>
 
         {proposedChanges.length > 0 ? (
-          <View style={styles.changesList}>
+          <View className="gap-2">
             {proposedChanges.map((change, index) => (
-              <View key={`${change}-${index}`} style={styles.changeRow}>
-                <Text color="text-secondary" style={styles.dash}>
-                  -
-                </Text>
-                <Text color="text-secondary" style={styles.changeText}>
-                  {change}
-                </Text>
+              <View key={`${change}-${index}`} className="flex-row items-start gap-3">
+                <Text className="text-muted-foreground mt-[1px] opacity-40">-</Text>
+                <Text className="text-muted-foreground flex-1">{change}</Text>
               </View>
             ))}
           </View>
         ) : null}
 
         {items === undefined ? (
-          <ScrollView nestedScrollEnabled style={styles.preview}>
-            <Text color="text-secondary" style={styles.previewText}>
-              {previewContent}
-            </Text>
+          <ScrollView
+            nestedScrollEnabled
+            className="bg-muted border border-border rounded-md max-h-[120px] p-4"
+          >
+            <Text className="text-muted-foreground font-mono">{previewContent}</Text>
           </ScrollView>
         ) : null}
 
-        <View style={styles.actionsRow}>
+        <View className="flex-row gap-3">
           {isEmptyExtraction ? null : (
-            <View style={styles.actionSlot}>
+            <View className="flex-1">
               <Button
                 testID="classification-review-accept"
                 label={acceptLabel}
@@ -99,7 +88,7 @@ export function ClassificationReview({
               />
             </View>
           )}
-          <View style={styles.actionSlot}>
+          <View className="flex-1">
             <Button
               testID="classification-review-reject"
               label={t.chat.classification.discard}
@@ -112,69 +101,3 @@ export function ClassificationReview({
     </ModalOverlay>
   );
 }
-
-const useClassificationStyles = makeStyles((theme) => ({
-  actionSlot: {
-    flex: 1,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  changeRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  changesList: {
-    gap: spacing[1],
-  },
-  changeText: {
-    flex: 1,
-  },
-  dash: {
-    marginTop: 1,
-    opacity: 0.4,
-  },
-  handle: {
-    alignSelf: 'center',
-    backgroundColor: theme.colors['border-default'],
-    borderRadius: radii.sm,
-    height: 4,
-    marginBottom: spacing[1],
-    width: 36,
-  },
-  header: {
-    gap: spacing[1],
-  },
-  preview: {
-    backgroundColor: theme.colors['muted'],
-    borderColor: theme.colors['border-default'],
-    borderRadius: radii.md,
-    borderWidth: 1,
-    maxHeight: 120,
-    padding: spacing[3],
-  },
-  previewText: {
-    fontFamily: fontFamiliesNative.mono,
-  },
-  sheet: {
-    backgroundColor: theme.colors['background'],
-    borderColor: theme.colors['border-default'],
-    borderTopLeftRadius: radii.md,
-    borderTopRightRadius: radii.md,
-    borderTopWidth: 1,
-    gap: spacing[4],
-    padding: spacing[5],
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  typeLabel: {
-    fontSize: fontSizes.xs,
-    fontWeight: '500',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-}));

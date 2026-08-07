@@ -2,46 +2,14 @@ import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from '@homine
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
-import { Pressable, type RefreshControlProps, View } from 'react-native';
-
-import { Text, fontFamiliesNative, fontSizes, makeStyles, spacing } from '~/components/theme';
+import { Platform, Pressable, type RefreshControlProps, View } from 'react-native';
+import { Text } from 'react-native';
 
 import { renderChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
-const CHAT_TURN_GAP = spacing[5];
-// Fraction of the viewport height counted as "near the bottom" for FlashList's
-// built-in auto-scroll-to-bottom behavior (see maintainVisibleContentPosition below).
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.25;
 const keyExtractor = (item: ChatMessageItem) => item.id;
-
-const useStyles = makeStyles(() => ({
-  list: {
-    flex: 1,
-  },
-  dismissArea: {
-    flexGrow: 1,
-    minHeight: spacing[8],
-  },
-  emptySearch: {
-    alignItems: 'center',
-    paddingTop: spacing[7],
-  },
-  emptySearchText: {
-    fontFamily: fontFamiliesNative.mono,
-    fontSize: fontSizes.sm,
-  },
-  messagesContainer: {
-    flexGrow: 1,
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[1],
-    rowGap: CHAT_TURN_GAP,
-  },
-  shimmerContainer: {
-    flex: 1,
-    paddingTop: spacing[3],
-  },
-}));
 
 interface ChatMessageListProps {
   isMessagesLoading: boolean;
@@ -59,6 +27,11 @@ interface ChatMessageListProps {
   formatTimestamp: (value: string) => string;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
+  /**
+   * Extra bottom space to reserve so the newest messages don't render
+   * underneath the floating, absolutely-positioned composer dock.
+   */
+  bottomInset?: number;
 }
 
 export function ChatMessageList({
@@ -77,8 +50,8 @@ export function ChatMessageList({
   formatTimestamp,
   emptyState,
   refreshControl,
+  bottomInset = 0,
 }: ChatMessageListProps) {
-  const styles = useStyles();
   const hasSearchQuery = showSearch && searchQuery.length > 0;
   const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null);
   const listRef = useRef<FlashListRef<ChatMessageItem> | null>(null);
@@ -141,8 +114,8 @@ export function ChatMessageList({
     if (!hasSearchQuery) return null;
 
     return (
-      <View style={styles.emptySearch}>
-        <Text color="tertiary" style={styles.emptySearchText}>
+      <View className="items-center pt-7">
+        <Text className="font-mono text-sm text-tertiary">
           No messages matching &ldquo;{searchQuery}&rdquo;
         </Text>
       </View>
@@ -152,7 +125,7 @@ export function ChatMessageList({
   const listEmptyComponent = hasSearchQuery ? emptySearch : (emptyState ?? null);
   if (isMessagesLoading && displayMessages.length === 0) {
     return (
-      <View style={styles.shimmerContainer}>
+      <View className="flex-1 pt-3">
         <ChatShimmerMessage />
         <ChatShimmerMessage variant="user" />
         <ChatShimmerMessage />
@@ -163,15 +136,25 @@ export function ChatMessageList({
   return (
     <FlashList
       ref={listRef}
-      style={styles.list}
+      className="flex-1"
       contentInsetAdjustmentBehavior="automatic"
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
         displayMessages.length > 0 ? (
-          <Pressable onPress={() => setActiveActionMessageId(null)} style={styles.dismissArea} />
+          <Pressable onPress={() => setActiveActionMessageId(null)} className="grow min-h-8" />
         ) : null
       }
-      contentContainerStyle={styles.messagesContainer}
+      contentContainerStyle={[
+        { flexGrow: 1, paddingHorizontal: 16, paddingTop: 4, rowGap: 20 },
+        Platform.OS === 'android' ? { paddingBottom: bottomInset } : undefined,
+      ]}
+      // Content flows full-bleed behind the glass composer on iOS so it can
+      // blur/refract it; contentInset just caps where scrolling rests, unlike
+      // contentContainerStyle padding which would carve out dead space with
+      // nothing behind the glass to blur (Android's composer is opaque, so it
+      // uses real padding instead since there's no glass to see through).
+      contentInset={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
+      scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
       data={displayMessages}
       keyExtractor={keyExtractor}
       maintainVisibleContentPosition={{

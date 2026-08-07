@@ -1,61 +1,24 @@
+import { TextField } from '@ponti-studios/ui/native';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
-import { makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
-import { TextField } from '~/components/ui/text-field';
 import { useAuth } from '~/services/auth/auth-provider';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
-const useStyles = makeStyles(() => ({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
-    gap: 24,
-  },
-  hero: {
-    gap: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
-  },
-  helperText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  formSection: {
-    gap: 12,
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-}));
-
 const Onboarding = () => {
   const { isSignedIn, currentUser, updateProfile, signOut } = useAuth();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
+  const [tertiary, destructive, textPrimary, textSecondary, borderDefault] = useCSSVariable([
+    '--color-tertiary',
+    '--color-destructive',
+    '--color-foreground',
+    '--color-muted-foreground',
+    '--color-border',
+  ]) as string[];
   const [name, setName] = useState('');
   const [hasError, setHasError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,37 +74,47 @@ const Onboarding = () => {
       <Stack.Screen options={{ headerShown: true, title: 'Welcome' }} />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
-          <View style={styles.hero}>
-            <Text style={[styles.title, { color: themeColors['text-primary'] }]}>
+        <View className="w-full max-w-[480px] self-center gap-6">
+          <View className="gap-2.5">
+            <Text className="text-[28px] font-bold leading-[34px] text-foreground">
               {t.onboarding.title}
             </Text>
-            <Text style={[styles.helperText, { color: themeColors['text-secondary'] }]}>
+            <Text className="text-base leading-[22px] text-muted-foreground">
               {t.onboarding.subtitle}
             </Text>
           </View>
 
-          <View style={styles.formSection}>
+          <View className="gap-3">
             <TextField
               value={name}
               placeholder={t.onboarding.namePlaceholder}
-              placeholderTextColor={themeColors['tertiary']}
+              placeholderTextColor={tertiary}
               autoCapitalize="words"
               autoCorrect={false}
               editable={!isSubmitting}
               returnKeyType="done"
-              cursorColor={themeColors['text-primary']}
-              selectionColor={themeColors['text-primary']}
+              cursorColor={textPrimary}
+              selectionColor={textPrimary}
+              className="bg-card text-foreground"
               style={[
-                styles.input,
                 {
-                  backgroundColor: themeColors['card'],
-                  borderColor: themeColors['border-default'],
-                  color: themeColors['text-primary'],
+                  minHeight: 48,
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  fontSize: 16,
+                  borderColor: hasError ? destructive : borderDefault,
+                  opacity: isSubmitting ? 0.6 : 1,
                 },
               ]}
               onChangeText={(text) => {
@@ -152,7 +125,7 @@ const Onboarding = () => {
             />
 
             {hasError ? (
-              <Text style={[styles.errorText, { color: themeColors.destructive }]}>
+              <Text className="text-[13px] leading-[18px] text-destructive">
                 {t.onboarding.nameError}
               </Text>
             ) : null}

@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { InboxList } from '~/components/inbox/InboxList';
-import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
   clearInboxDraft,
@@ -18,7 +17,7 @@ interface InboxScreenProps {
 }
 
 export function InboxScreen({ isFocused }: InboxScreenProps) {
-  const styles = useStyles();
+  const [composerHeight, setComposerHeight] = useState(0);
   const {
     error,
     items,
@@ -35,9 +34,10 @@ export function InboxScreen({ isFocused }: InboxScreenProps) {
   }, [isFocused]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.listWrap}>
+    <View className="flex-1 bg-background">
+      <View className="flex-1">
         <InboxList
+          contentPaddingBottom={composerHeight}
           emptyTitle="No recent work yet."
           error={error}
           isFetchingNextPage={isFetchingNextPage}
@@ -49,7 +49,7 @@ export function InboxScreen({ isFocused }: InboxScreenProps) {
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
         />
       </View>
-      <ComposerDock testID="workspace-composer-dock">
+      <ComposerDock onHeightChange={setComposerHeight} testID="workspace-composer-dock">
         <Composer
           mode="inbox"
           entryMode="mixed"
@@ -61,8 +61,3 @@ export function InboxScreen({ isFocused }: InboxScreenProps) {
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: { backgroundColor: theme.colors.background, flex: 1 },
-  listWrap: { flex: 1 },
-}));

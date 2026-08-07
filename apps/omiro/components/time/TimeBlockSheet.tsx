@@ -1,8 +1,6 @@
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { useEffect, useRef } from 'react';
 
-import { makeStyles } from '~/components/theme';
-
 import { TimeBlockDetail, type TimeBlockDetailSource } from './TimeBlockDetail';
 
 export interface TimeBlockSelection {
@@ -16,7 +14,6 @@ interface TimeBlockSheetProps {
 }
 
 export function TimeBlockSheet({ onDismiss, selection }: TimeBlockSheetProps) {
-  const styles = useStyles();
   const sheetRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
@@ -35,7 +32,7 @@ export function TimeBlockSheet({ onDismiss, selection }: TimeBlockSheetProps) {
       ref={sheetRef}
       snapPoints={['90%']}
     >
-      <BottomSheetView style={styles.content}>
+      <BottomSheetView style={{ flex: 1 }}>
         {selection ? (
           <TimeBlockDetail
             id={selection.id}
@@ -48,7 +45,3 @@ export function TimeBlockSheet({ onDismiss, selection }: TimeBlockSheetProps) {
     </BottomSheetModal>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  content: { flex: 1 },
-}));

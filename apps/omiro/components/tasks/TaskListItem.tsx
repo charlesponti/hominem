@@ -1,7 +1,8 @@
 import type { Task } from '@hominem/rpc/types';
 import { Pressable, View } from 'react-native';
+import { Text } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
-import { Text, fontSizes, makeStyles, themeSpacing, useThemeColors } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -24,27 +25,31 @@ function isOverdue(dueAt: string): boolean {
 }
 
 export function TaskListItem({ task, onPress, onToggleComplete }: TaskListItemProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [primary, tertiary, destructive, success] = useCSSVariable([
+    '--color-primary',
+    '--color-tertiary',
+    '--color-destructive',
+    '--color-success',
+  ]) as string[];
   const isCompleted = task.status === 'completed';
   const isList = (task.childCount ?? 0) > 0;
   const overdue = !isCompleted && task.dueAt !== null && isOverdue(task.dueAt);
 
   return (
-    <View style={styles.row}>
+    <View className="items-center border-b-border border-b flex-row gap-2 min-h-[52px] py-3">
       <Pressable
         accessibilityLabel={
           isCompleted ? `${task.title}, completed` : `${task.title}, mark complete`
         }
         accessibilityRole="checkbox"
-        hitSlop={themeSpacing.sm}
+        hitSlop={8}
         onPress={onToggleComplete}
         testID={`task-checkbox-${task.id}`}
       >
         <AppIcon
           name={isCompleted ? 'checkmark.circle.fill' : 'circle'}
           size={22}
-          tintColor={isCompleted ? themeColors.primary : themeColors['tertiary']}
+          tintColor={isCompleted ? primary : tertiary}
         />
       </Pressable>
 
@@ -53,90 +58,40 @@ export function TaskListItem({ task, onPress, onToggleComplete }: TaskListItemPr
         accessibilityRole="button"
         disabled={!onPress}
         onPress={onPress}
-        style={({ pressed }) => [styles.content, pressed && onPress && styles.pressed]}
+        className="flex-1 gap-0.5 min-w-0"
+        style={({ pressed }) => [pressed && onPress && { opacity: 0.6 }]}
         testID={`task-item-${task.id}`}
       >
-        <View style={styles.titleRow}>
+        <View className="items-center flex-row gap-1.5">
           {!isCompleted && task.priority !== 'medium' ? (
             <View
-              style={[
-                styles.priorityDot,
-                {
-                  backgroundColor:
-                    task.priority === 'high' ? themeColors.destructive : themeColors.success,
-                },
-              ]}
+              className="rounded h-1.5 w-1.5"
+              style={{
+                backgroundColor: task.priority === 'high' ? destructive : success,
+              }}
             />
           ) : null}
           <Text
             numberOfLines={1}
-            style={[
-              styles.title,
-              { color: isCompleted ? themeColors['tertiary'] : themeColors['text-primary'] },
-              isCompleted && styles.titleCompleted,
-            ]}
+            className={`text-base ${isCompleted ? 'line-through' : ''} ${isCompleted ? 'text-tertiary' : 'text-foreground'}`}
           >
             {task.title}
           </Text>
         </View>
         {isList ? (
-          <Text style={[styles.meta, { color: themeColors['text-secondary'] }]}>
+          <Text className="text-muted-foreground text-footnote">
             {t.tasks.tasksCount(task.childCount ?? 0)}
           </Text>
         ) : task.dueAt ? (
           <Text
-            style={[
-              styles.meta,
-              { color: overdue ? themeColors.destructive : themeColors['text-secondary'] },
-            ]}
+            className={`text-footnote ${overdue ? 'text-destructive' : 'text-muted-foreground'}`}
           >
             {formatDueDate(task.dueAt)}
           </Text>
         ) : null}
       </Pressable>
 
-      {isList ? (
-        <AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />
-      ) : null}
+      {isList ? <AppIcon name="chevron.right" size={12} tintColor={tertiary} /> : null}
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  content: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  meta: {
-    fontSize: fontSizes.footnote,
-  },
-  pressed: {
-    opacity: 0.6,
-  },
-  priorityDot: {
-    borderRadius: 4,
-    height: 6,
-    width: 6,
-  },
-  titleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 6,
-  },
-  row: {
-    alignItems: 'center',
-    borderBottomColor: theme.colors['border-default'],
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    gap: themeSpacing.sm,
-    minHeight: 52,
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: fontSizes.md,
-  },
-  titleCompleted: {
-    textDecorationLine: 'line-through',
-  },
-}));

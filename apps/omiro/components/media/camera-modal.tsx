@@ -2,7 +2,8 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
+import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Camera,
@@ -10,8 +11,8 @@ import {
   useCameraPermission,
   usePhotoOutput,
 } from 'react-native-vision-camera';
+import { useCSSVariable } from 'uniwind';
 
-import { Text, makeStyles, useThemeColors } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -26,85 +27,8 @@ type CameraModalProps = {
   onClose: () => void;
 };
 
-const useStyles = makeStyles((theme) => ({
-  sheetBackground: {
-    backgroundColor: theme.colors['background'],
-  },
-  dragHandle: {
-    backgroundColor: theme.colors['border-default'],
-    width: 40,
-    height: 4,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors['background'],
-  },
-  cameraContainer: {
-    flex: 1,
-  },
-  camera: {
-    ...StyleSheet.absoluteFill,
-  },
-  controls: {
-    alignItems: 'center',
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    left: 0,
-    paddingHorizontal: theme.spacing.xl,
-    position: 'absolute',
-    right: 0,
-  },
-  sideButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: theme.borderRadii.md,
-    backgroundColor: theme.colors['overlay-scrim'],
-  },
-  captureButton: {
-    width: 72,
-    height: 72,
-    borderRadius: theme.borderRadii.sm,
-    borderWidth: 4,
-    borderColor: theme.colors['primary-foreground'],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  captureButtonDisabled: {
-    opacity: 0.5,
-  },
-  captureInner: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.borderRadii.md,
-    backgroundColor: theme.colors['primary-foreground'],
-  },
-  permissionContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  permissionButton: {
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-  },
-  permissionCancel: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-  },
-}));
-
 export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const insets = useSafeAreaInsets();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
   const modalRef = useRef<BottomSheetModal>(null);
   const [facing, setFacing] = useState<'front' | 'back'>('back');
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
@@ -114,6 +38,12 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const device = useCameraDevice(facing);
   const photoOutput = usePhotoOutput();
   const snapPoints = useMemo(() => ['50%', '90%'], []);
+
+  const [borderDefault, background, primaryForeground] = useCSSVariable([
+    '--color-border',
+    '--color-background',
+    '--color-primary-foreground',
+  ]) as [string, string, string];
 
   const handleCapture = async () => {
     if (isTakingPhoto || !device) return;
@@ -177,67 +107,60 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
       ref={modalRef}
       snapPoints={snapPoints}
       enablePanDownToClose
-      handleIndicatorStyle={styles.dragHandle}
-      backgroundStyle={styles.sheetBackground}
+      handleIndicatorStyle={{ backgroundColor: borderDefault, width: 40, height: 4 }}
+      backgroundStyle={{ backgroundColor: background }}
       onDismiss={handleDismiss}
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView style={{ flex: 1, backgroundColor: background }}>
         {hasPermission && device ? (
-          <View style={styles.cameraContainer}>
+          <View className="flex-1">
             <Camera
-              style={styles.camera}
+              style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
               device={device}
               isActive={visible}
               outputs={[photoOutput]}
             />
-            <View style={[styles.controls, { paddingBottom: insets.bottom + 24 }]}>
+            <View
+              className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between px-6"
+              style={{ paddingBottom: insets.bottom + 24 }}
+            >
               <Pressable
                 onPress={handleDismiss}
-                style={styles.sideButton}
+                className="items-center justify-center w-12 h-12 rounded-md bg-overlay-scrim"
                 accessibilityLabel={t.camera.closeA11y}
               >
-                <AppIcon name="xmark" size={20} tintColor={themeColors['primary-foreground']} />
+                <AppIcon name="xmark" size={20} tintColor={primaryForeground} />
               </Pressable>
 
               <Pressable
                 onPress={() => void handleCapture()}
                 disabled={isTakingPhoto}
-                style={[styles.captureButton, isTakingPhoto && styles.captureButtonDisabled]}
+                className={`w-[72px] h-[72px] rounded-sm border-4 border-primary-foreground items-center justify-center ${isTakingPhoto ? 'opacity-50' : ''}`}
                 accessibilityLabel={t.camera.takePhotoA11y}
               >
-                <View style={styles.captureInner} />
+                <View className="w-14 h-14 rounded-md bg-primary-foreground" />
               </Pressable>
 
               <Pressable
                 onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-                style={styles.sideButton}
+                className="items-center justify-center w-12 h-12 rounded-md bg-overlay-scrim"
                 accessibilityLabel={t.camera.flipCameraA11y}
               >
-                <AppIcon
-                  name="camera.rotate"
-                  size={20}
-                  tintColor={themeColors['primary-foreground']}
-                />
+                <AppIcon name="camera.rotate" size={20} tintColor={primaryForeground} />
               </Pressable>
             </View>
           </View>
         ) : (
-          <View style={styles.permissionContainer}>
-            <Text variant="body" color="text-primary">
-              {t.camera.permission.message}
-            </Text>
+          <View className="flex-1 items-center justify-center gap-4 px-6">
+            <Text className="text-body text-foreground">{t.camera.permission.message}</Text>
             <Pressable
               onPress={() => void handleRequestPermissions()}
-              style={styles.permissionButton}
+              className="border border-border rounded-md px-4 py-2"
             >
-              <Text variant="body" color="text-primary">
-                {t.camera.permission.grant}
-              </Text>
+              <Text className="text-body text-foreground">{t.camera.permission.grant}</Text>
             </Pressable>
-            <Pressable onPress={handleDismiss} style={styles.permissionCancel}>
-              <Text variant="body" color="text-secondary">
-                {t.camera.permission.cancel}
-              </Text>
+            <Pressable onPress={handleDismiss} className="px-4 py-2">
+              <Text className="text-body text-muted-foreground">{t.camera.permission.cancel}</Text>
             </Pressable>
           </View>
         )}

@@ -1,10 +1,11 @@
+import { IconButton, nativeShadows } from '@ponti-studios/ui/native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
+import { Text } from 'react-native';
 
-import { makeStyles, spacing, Text } from '~/components/theme';
-import { IconButton } from '~/components/ui/icon-button';
+import AppIcon from '~/components/ui/icon';
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 import { getTimeBlockRoute } from '~/services/navigation/routes';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
@@ -13,6 +14,7 @@ import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 import { useTimeBlockParse } from '~/services/tasks/use-time-block-parse';
 
 import { timeEventGateway, type TimeEventGateway } from './time-event-gateway';
+import { useTimePreview } from './time-preview-context';
 import type {
   EditableTimeBlockField,
   TimeInteractionState,
@@ -43,7 +45,6 @@ export function TimeWorkspace({
   onOpenItem,
 }: TimeWorkspaceProps) {
   const router = useRouter();
-  const styles = useStyles();
   const [prompt, setPrompt] = useState('');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadedSince, setLoadedSince] = useState(() => startOfToday());
@@ -62,6 +63,7 @@ export function TimeWorkspace({
   const { mutate: toggleTask } = useTaskComplete();
   const { mutateAsync: createTask } = useTaskCreate();
   const parseTimeBlock = useTimeBlockParse();
+  const { scenario } = useTimePreview();
 
   useEffect(() => {
     void gateway.getPermission().then(setPermission);
@@ -332,18 +334,31 @@ export function TimeWorkspace({
     setHasLoadedEvents(false);
   }, []);
 
-  const rows = buildTimeStreamRows({
-    events,
-    loadedUntil,
-    tasks,
-  });
-  const unscheduledTaskCount = getUnscheduledTasks(tasks).length;
+  // __DEV__-only design preview: when a dev picks a scenario from the header
+  // menu (see TimeHeaderActions), the rendered stream reflects fixture data
+  // instead of the real gateway/query results. Everything else (ask/parse,
+  // task mutations) keeps using the real `events`/`tasks`/`permission`.
+  const previewRows = scenario
+    ? buildTimeStreamRows({
+        events: scenario.events,
+        loadedUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+        tasks: scenario.tasks,
+      })
+    : null;
+  const rows =
+    previewRows ??
+    buildTimeStreamRows({
+      events,
+      loadedUntil,
+      tasks,
+    });
+  const unscheduledTaskCount = getUnscheduledTasks(scenario ? scenario.tasks : tasks).length;
 
   return (
-    <View style={styles.container} testID="time-screen">
+    <View className="bg-background flex-1" testID="time-screen">
       <TimeStream
-        calendarPermission={permission}
-        isLoadingEvents={isLoadingEvents}
+        calendarPermission={scenario ? 'authorized' : permission}
+        isLoadingEvents={scenario ? false : isLoadingEvents}
         onConnectCalendar={() => void onConnectCalendar()}
         onEndReached={() => void loadNextPage()}
         onOpenItem={onOpenItem}
@@ -358,37 +373,41 @@ export function TimeWorkspace({
       />
       {hasLoadedEvents ? <View testID="time-events-ready" /> : null}
       {errorToast !== null ? (
-        <View key={toastKey} style={styles.toast}>
+        <View
+          key={toastKey}
+          className="flex-row items-start gap-1 mx-4 mb-1 p-2 border-destructive"
+          style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
+        >
           <Pressable
             accessibilityLabel={`Error: ${errorToast}`}
             accessibilityRole="button"
             onPress={() => {
               setToastExpanded((v) => !v);
             }}
-            style={styles.toastContent}
+            className="flex-1 flex-row items-center gap-1"
           >
             <Text
-              color="destructive"
+              className="text-destructive flex-1 text-footnote"
               numberOfLines={toastExpanded ? undefined : 1}
-              style={styles.toastMessage}
-              variant="footnote"
             >
               {errorToast}
             </Text>
             <IconButton
               accessibilityLabel="Copy error"
-              icon="doc.on.doc"
               onPress={() => void Clipboard.setStringAsync(errorToast)}
-            />
+            >
+              <AppIcon name="doc.on.doc" size={20} />
+            </IconButton>
           </Pressable>
           <IconButton
             accessibilityLabel="Dismiss error"
-            icon="xmark"
             onPress={() => {
               setErrorToast(null);
               setToastExpanded(false);
             }}
-          />
+          >
+            <AppIcon name="xmark" size={20} />
+          </IconButton>
         </View>
       ) : null}
       <TimeComposer
@@ -409,28 +428,3 @@ export function TimeWorkspace({
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: { backgroundColor: theme.colors.background, flex: 1 },
-  toast: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.destructive,
-    borderRadius: theme.borderRadii.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[1],
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[1],
-    padding: spacing[2],
-  },
-  toastContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1],
-  },
-  toastMessage: {
-    flex: 1,
-  },
-}));

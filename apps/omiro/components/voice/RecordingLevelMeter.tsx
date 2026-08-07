@@ -1,10 +1,9 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
-import { makeStyles, useThemeColors } from '~/components/theme';
-import { spacing } from '~/components/theme/tokens';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -28,7 +27,6 @@ interface LevelBarProps {
 }
 
 function LevelBar({ db, tintColor }: LevelBarProps) {
-  const styles = useStyles();
   const level = useSharedValue(0);
 
   useEffect(() => {
@@ -39,12 +37,16 @@ function LevelBar({ db, tintColor }: LevelBarProps) {
     height: BAR_MIN_HEIGHT + level.value * (BAR_MAX_HEIGHT - BAR_MIN_HEIGHT),
   }));
 
-  return <Animated.View style={[styles.bar, { backgroundColor: tintColor }, animatedStyle]} />;
+  return (
+    <Animated.View
+      className="flex-1 rounded-sm"
+      style={[{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]}
+    />
+  );
 }
 
 export function RecordingLevelMeter() {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const primaryColor = useCSSVariable('--color-primary') as string;
   const meterings = useSyncExternalStore(
     subscribeRecording,
     () => getRecordingSnapshot().meterings,
@@ -57,26 +59,13 @@ export function RecordingLevelMeter() {
   });
 
   return (
-    <View style={styles.row}>
+    <View
+      className="flex-row items-center justify-between gap-0.5 w-full"
+      style={{ height: BAR_MAX_HEIGHT }}
+    >
       {bars.map((db, index) => (
-        <LevelBar key={index} db={db} tintColor={themeColors.primary} />
+        <LevelBar key={index} db={db} tintColor={primaryColor} />
       ))}
     </View>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing[1] / 2,
-    height: BAR_MAX_HEIGHT,
-    width: '100%',
-  },
-  bar: {
-    flex: 1,
-    maxWidth: 3,
-    borderRadius: 2,
-  },
-}));
