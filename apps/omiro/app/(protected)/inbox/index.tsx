@@ -1,19 +1,20 @@
-import { Stack } from 'expo-router';
+import { Stack, useIsFocused } from 'expo-router';
 
-import { HomeScreen } from '~/components/home/HomeScreen';
+import { InboxScreen } from '~/components/inbox/InboxScreen';
 import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
 
-export default function HomeRoute() {
+export default function InboxRoute() {
   return (
     <>
       <Stack.Screen
         options={{
-          title: 'Omiro',
+          headerShown: true,
           headerLargeTitle: false,
           headerLeft: () => <NavDrawerMenuButton />,
+          title: 'Inbox',
         }}
       />
-      <HomeScreen />
+      <InboxScreen isFocused={useIsFocused()} />
     </>
   );
 }

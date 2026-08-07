@@ -92,10 +92,10 @@ const t = {
       sectionConversation: 'Conversation',
       sectionTransform: 'Transform',
       sectionDanger: 'Danger',
-      searchMessages: 'Search messages',
-      hideDebugMetadata: 'Hide debug metadata',
-      showDebugMetadata: 'Show debug metadata',
-      transformToNote: 'Transform to note',
+      searchMessages: 'Search',
+      hideDebugMetadata: 'Hide debug',
+      showDebugMetadata: 'Show debug',
+      transformToNote: 'Create note',
       createTasks: 'Create tasks',
       noTasksFoundTitle: 'No tasks found',
       noTasksFoundDescription: 'No actionable tasks found in this conversation.',
@@ -378,7 +378,7 @@ const t = {
   },
   inboxComposer: {
     composer: {
-      placeholder: 'Write a note, ask something…',
+      placeholder: "What's on your mind?",
       addAttachmentA11y: 'Add attachment',
       startVoiceInputA11y: 'Record voice note',
       stopVoiceInputA11y: 'Stop recording voice note',

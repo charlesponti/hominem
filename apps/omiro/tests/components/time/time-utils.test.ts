@@ -41,14 +41,13 @@ describe('Time stream rows', () => {
       events: [],
       loadedUntil: new Date('2026-08-01T00:00:00.000Z'),
       now: new Date('2026-07-27T09:00:00.000Z'),
-      section: 'now',
       tasks: [task()],
     });
 
     expect(rows.some((row) => row.kind === 'task')).toBe(true);
   });
 
-  it('sorts past items in reverse chronological order', () => {
+  it('keeps past items out of the scheduled stream', () => {
     const rows = buildTimeStreamRows({
       events: [
         event({
@@ -64,11 +63,10 @@ describe('Time stream rows', () => {
       ],
       loadedUntil: new Date('2026-07-27T00:00:00.000Z'),
       now: new Date('2026-07-27T09:00:00.000Z'),
-      section: 'past',
       tasks: [],
     });
 
-    expect(rows.map((row) => row.value.id)).toEqual(['newer-event', 'older-event']);
+    expect(rows).toEqual([]);
   });
 });
 

@@ -7,7 +7,7 @@ import { makeStyles, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { TextField } from '~/components/ui/text-field';
 import { useAuth } from '~/services/auth/auth-provider';
-import { INBOX_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
 const useStyles = makeStyles(() => ({
@@ -103,7 +103,7 @@ const Onboarding = () => {
   }
 
   if (currentUser?.name) {
-    return <Redirect href={INBOX_ROUTE} />;
+    return <Redirect href={HOME_ROUTE} />;
   }
 
   return (

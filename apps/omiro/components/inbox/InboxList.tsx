@@ -1,5 +1,5 @@
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
-import React, { memo, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native';
 import { View } from 'react-native';
 
@@ -31,7 +31,8 @@ export type InboxTab = 'chats' | 'notes';
 
 interface InboxListProps {
   error?: Error | null;
-  tab: InboxTab;
+  tab?: InboxTab;
+  emptyTitle?: string;
   items: InboxStreamItemData[];
   sectionTitle?: string;
   isLoading?: boolean;
@@ -43,9 +44,19 @@ interface InboxListProps {
   contentPaddingTop?: number;
 }
 
-const RenderInboxHomeItem = memo(({ item }: { item: InboxStreamItemData }) => (
-  <InboxStreamItem item={item} />
-));
+const RenderInboxHomeItem = memo(
+  ({
+    animateOnMount,
+    index,
+    isNew,
+    item,
+  }: {
+    animateOnMount: boolean;
+    index: number;
+    isNew: boolean;
+    item: InboxStreamItemData;
+  }) => <InboxStreamItem item={item} animateOnMount={animateOnMount} index={index} isNew={isNew} />,
+);
 
 RenderInboxHomeItem.displayName = 'RenderInboxHomeItem';
 
@@ -60,6 +71,7 @@ function buildRows({ items }: Pick<InboxListProps, 'items'>): InboxListRow[] {
 export function InboxList({
   error,
   tab,
+  emptyTitle,
   items,
   isLoading = false,
   isFetchingNextPage = false,
@@ -72,7 +84,41 @@ export function InboxList({
   const styles = useStyles();
   const listRef = useRef<FlashListRef<InboxListRow>>(null);
   const hasRestoredScrollRef = useRef(false);
+  const entranceDoneRef = useRef(false);
+  const sawLoadingRef = useRef(false);
+  const seenIdsRef = useRef(new Set<string>());
+  const [animateEntrance, setAnimateEntrance] = useState(false);
   const rows = buildRows({ items });
+
+  useEffect(() => {
+    if (isLoading) sawLoadingRef.current = true;
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (!sawLoadingRef.current || isLoading || items.length === 0 || entranceDoneRef.current) {
+      return;
+    }
+    entranceDoneRef.current = true;
+    setAnimateEntrance(true);
+    const timer = setTimeout(() => setAnimateEntrance(false), 600);
+    return () => clearTimeout(timer);
+  }, [isLoading, items.length]);
+
+  const freshIds = useMemo(
+    () =>
+      new Set(
+        seenIdsRef.current.size > 0
+          ? items.filter((item) => !seenIdsRef.current.has(item.id)).map((item) => item.id)
+          : [],
+      ),
+    [items],
+  );
+
+  useEffect(() => {
+    for (const item of items) {
+      seenIdsRef.current.add(item.id);
+    }
+  }, [items]);
 
   useEffect(() => {
     if (hasRestoredScrollRef.current || restoredScrollOffset == null || restoredScrollOffset <= 0) {
@@ -87,10 +133,21 @@ export function InboxList({
     return () => cancelAnimationFrame(frame);
   }, [restoredScrollOffset]);
 
-  const renderItem = useCallback<ListRenderItem<InboxListRow>>(({ item }) => {
-    if (item.type === 'section') return null;
-    return <RenderInboxHomeItem item={item.item} />;
-  }, []);
+  const renderItem = useCallback<ListRenderItem<InboxListRow>>(
+    ({ item, index }) => {
+      if (item.type === 'section') return null;
+      const rowIndex = index ?? 0;
+      return (
+        <RenderInboxHomeItem
+          animateOnMount={animateEntrance}
+          index={rowIndex}
+          isNew={!animateEntrance && rowIndex === 0 && freshIds.has(item.item.id)}
+          item={item.item}
+        />
+      );
+    },
+    [animateEntrance, freshIds],
+  );
 
   if (error && items.length === 0) {
     return (
@@ -115,8 +172,11 @@ export function InboxList({
     return (
       <View style={[styles.emptyWrap]}>
         <EmptyState
-          imageSource={EMPTY_STATE_ASSETS[tab]}
-          title={tab === 'notes' ? t.inbox.screen.emptyNotesTitle : t.inbox.empty.title}
+          imageSource={tab ? EMPTY_STATE_ASSETS[tab] : undefined}
+          sfSymbol={tab ? undefined : 'tray'}
+          title={
+            emptyTitle ?? (tab === 'notes' ? t.inbox.screen.emptyNotesTitle : t.inbox.empty.title)
+          }
         />
       </View>
     );

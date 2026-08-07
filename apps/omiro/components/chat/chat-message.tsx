@@ -361,6 +361,9 @@ const ChatMessage = memo(function ChatMessage({
   const markdownStyle = useMemo(
     () => ({
       body: isUser ? styles.userMessageText : styles.assistantMessageText,
+      code_block: styles.codeBlock,
+      code_inline: styles.codeInline,
+      fence: styles.codeBlock,
     }),
     [isUser, styles],
   );
@@ -497,6 +500,20 @@ const useChatMessageStyles = makeStyles((theme) => ({
     color: theme.colors['text-primary'],
     fontSize: fontSizes.md,
     lineHeight: fontSizes.md * 1.6,
+  },
+  codeBlock: {
+    backgroundColor: theme.colors['popover'],
+    borderRadius: 8,
+    color: theme.colors['text-primary'],
+    fontFamily: 'Menlo',
+    padding: 12,
+  },
+  codeInline: {
+    backgroundColor: theme.colors['popover'],
+    borderRadius: 4,
+    color: theme.colors['text-primary'],
+    fontFamily: 'Menlo',
+    paddingHorizontal: 4,
   },
   contentColumn: {
     gap: spacing[2],

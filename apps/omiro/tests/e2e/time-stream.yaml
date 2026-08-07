@@ -1,28 +1,23 @@
 appId: com.pontistudios.hakumi.dev
 ---
 - launchApp
+- assertVisible:
+    id: home-screen
 - tapOn:
-    id: workspace-context-time
+    id: home-time-button
 - assertVisible:
     id: time-screen
 - assertVisible:
     id: time-stream
+- tapOn:
+    id: time-unscheduled-button
+- waitForAnimationToEnd
 - assertVisible:
-    id: time-composer-input
-- tapOn:
-    id: time-section-past
-- waitForAnimationToEnd
-- takeScreenshot: /tmp/omiro-time-past-tab
-- tapOn:
-    id: time-section-unscheduled
-- waitForAnimationToEnd
+    id: unscheduled-tasks-screen
 - takeScreenshot: /tmp/omiro-time-unscheduled-tab
 - tapOn:
-    id: time-section-now
-- waitForAnimationToEnd
-- takeScreenshot: /tmp/omiro-time-now-tab
-- tapOn:
-    id: time-composer-input
-- inputText: Buy milk
+    id: unscheduled-task-.+-schedule
 - assertVisible:
-    id: time-composer-submit
+    id: time-block-editor
+- waitForAnimationToEnd
+- takeScreenshot: /tmp/omiro-time-unscheduled-schedule

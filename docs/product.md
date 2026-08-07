@@ -32,10 +32,10 @@ Do not use `workspace` as a product or module concept. Do not use `feed` as an a
 - A user never loses submitted meaning because a secondary automation fails. Raw text is preserved before optional cleanup; extracted task failures expose the transcript for recovery.
 - Setup, permissions, and operational machinery stay out of the task surface until the person actually needs them.
 - Tasks and calendar events share one time model. A fixed block has a scheduled interval; a flexible block has a duration and scheduling window until it is placed.
-- Time is the single task-and-calendar surface. The workspace switcher does not expose a separate Tasks view; task details remain available from a time block.
-- The workspace switcher names this surface `Time` and uses a clock, not a calendar destination. iOS Calendar is a source within Time, not the product information architecture.
+- Time is the single task-and-calendar surface. Home links to Time instead of exposing a separate Tasks view; task details remain available from a time block.
+- Time uses a clock, not a calendar destination. iOS Calendar is a source within Time, not the product information architecture.
 - `TimeStream` is the UI projection of source-backed task and calendar items. It orders them together without converting either source into the other.
-- Time keeps unscheduled tasks in a distinct Unscheduled section below the chronological schedule. They do not appear in the default scheduled list until they receive a due date or scheduled interval.
+- Time keeps unscheduled tasks in a distinct secondary Unscheduled screen. They do not appear in the chronological schedule until they receive a due date or scheduled interval.
 
 ## Product decision test
 

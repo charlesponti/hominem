@@ -8,6 +8,7 @@ interface StreamItemProps {
   accessibilityLabel: string;
   eyebrow?: string;
   leading?: ReactNode;
+  onLongPress?: () => void;
   onPress: () => void;
   supportingText?: string | null;
   testID?: string;
@@ -21,6 +22,7 @@ export function StreamItem({
   accessibilityLabel,
   eyebrow,
   leading,
+  onLongPress,
   onPress,
   supportingText,
   testID,
@@ -35,6 +37,7 @@ export function StreamItem({
       <Pressable
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
+        onLongPress={onLongPress}
         onPress={onPress}
         style={({ pressed }) => [styles.action, pressed && styles.pressed]}
         testID={actionTestID}
@@ -73,7 +76,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     borderColor: theme.colors['border-default'],
     borderRadius: theme.streamItem.borderRadius,
-    borderWidth: theme.streamItem.borderWidth,
+    borderBottomWidth: theme.streamItem.borderWidth,
     flexDirection: 'row',
     gap: theme.streamItem.gap,
     marginHorizontal: SCREEN_MARGIN_HORIZONTAL,

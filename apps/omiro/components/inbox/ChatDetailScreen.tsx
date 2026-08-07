@@ -113,7 +113,7 @@ export function ChatDetailScreen() {
 
   const controller = useChatController({
     chatId,
-    onChatArchive: () => router.replace(INBOX_ROUTE),
+    onChatArchive: () => router.dismissTo(INBOX_ROUTE),
     services,
     source,
   });
@@ -223,7 +223,6 @@ export function ChatDetailScreen() {
               return (
                 <Stack.Toolbar.MenuAction
                   key={item.kind}
-                  destructive={item.kind === 'archive'}
                   icon={getConversationActionIcon(item.kind)}
                   onPress={controller.handleArchiveChat}
                 >

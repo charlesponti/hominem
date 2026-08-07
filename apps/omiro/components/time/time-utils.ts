@@ -2,7 +2,7 @@ import type { TaskListItem } from '@hominem/rpc/types';
 
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
-import type { TimeBlock, TimeItem, TimeOpening, TimeSection, TimeStreamRow } from './time-types';
+import type { TimeBlock, TimeItem, TimeOpening, TimeStreamRow } from './time-types';
 
 export const PAGE_DAYS = 30;
 const DEFAULT_AVAILABILITY_DAYS = 7;
@@ -85,45 +85,35 @@ export function buildTimeStreamRows({
   events,
   loadedUntil,
   now = new Date(),
-  section,
   tasks,
 }: {
   events: CalendarEvent[];
   loadedUntil: Date;
   now?: Date;
-  section: TimeSection;
   tasks: TaskListItem[];
 }): TimeStreamRow[] {
   const scheduledItems = getScheduledTimeItems({ events, loadedUntil, tasks });
-  const unscheduledTasks = tasks.filter((value) => !value.scheduledStartAt && !value.dueAt);
   const isPast = (item: TimeItem) => {
     const date = itemDate(item);
     if (!date) return false;
     if (item.kind === 'event') return new Date(item.value.endDate) <= now;
     return item.value.status === 'completed' || new Date(date) < now;
   };
-  const pastItems = scheduledItems.filter(isPast).sort((left, right) => {
-    return new Date(itemDate(right) ?? 0).getTime() - new Date(itemDate(left) ?? 0).getTime();
-  });
   const visibleItems = scheduledItems.filter((item) => !isPast(item));
   const firstFutureIndex = visibleItems.findIndex((item) => {
     const date = itemDate(item);
     return date ? new Date(date) >= now : false;
   });
-  const scheduledRows: TimeStreamRow[] =
-    section === 'past'
-      ? pastItems
-      : section === 'unscheduled'
-        ? unscheduledTasks.map((value) => ({ kind: 'task' as const, value }))
-        : [
-            ...visibleItems.slice(
-              0,
-              firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex,
-            ),
-            ...visibleItems.slice(firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
-          ];
+  return [
+    ...visibleItems.slice(0, firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
+    ...visibleItems.slice(firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
+  ];
+}
 
-  return scheduledRows;
+export function getUnscheduledTasks(tasks: TaskListItem[]) {
+  return tasks.filter(
+    (task) => !task.scheduledStartAt && !task.dueAt && task.status !== 'completed',
+  );
 }
 
 export function getAvailabilityRange(block: TimeBlock, now = new Date()) {

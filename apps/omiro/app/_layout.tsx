@@ -38,6 +38,7 @@ SplashScreen.preventAutoHideAsync();
 
 const useInnerStyles = makeStyles((t) => ({
   safeArea: {
+    backgroundColor: t.colors.background,
     flex: 1,
   },
   e2eIndicator: {

@@ -51,7 +51,6 @@ export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowPro
           />
         }
         onPress={onOpen}
-        supportingText={supportingText}
         testID={`time-item-${item.kind}-${item.value.id}`}
         title={item.value.title}
         titleStyle={completed ? styles.completedTitle : undefined}
