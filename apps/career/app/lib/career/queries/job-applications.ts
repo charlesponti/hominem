@@ -73,13 +73,13 @@ function toApplicationCard(
 
 export async function getApplicationCards(ownerUserId: string): Promise<JobApplicationCard[]> {
   const applications = await CareerRepository.listApplications(db, ownerUserId);
-
-  const cards = await Promise.all(
-    applications.map(async (app) => {
-      const detail = await CareerRepository.getApplicationWithRelations(db, ownerUserId, app.id);
-      return toApplicationCard(app, detail?.stages.length ?? 0, detail?.offer !== null);
-    }),
+  const stats = await CareerRepository.getApplicationCardStats(
+    db,
+    applications.map((app) => app.id),
   );
 
-  return cards;
+  return applications.map((app) => {
+    const stat = stats.get(app.id);
+    return toApplicationCard(app, stat?.stageCount ?? 0, stat?.hasOffer ?? false);
+  });
 }

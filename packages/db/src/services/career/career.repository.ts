@@ -316,6 +316,44 @@ export const CareerRepository = {
     );
   },
 
+  async getApplicationCardStats(
+    handle: DbHandle,
+    applicationIds: string[],
+  ): Promise<Map<string, { stageCount: number; hasOffer: boolean }>> {
+    const stats = new Map<string, { stageCount: number; hasOffer: boolean }>();
+    if (applicationIds.length === 0) return stats;
+
+    for (const id of applicationIds) {
+      stats.set(id, { stageCount: 0, hasOffer: false });
+    }
+
+    const [stageCounts, offers] = await Promise.all([
+      handle
+        .selectFrom('app.careerApplicationStages')
+        .select(['applicationId', (eb) => eb.fn.countAll().as('count')])
+        .where('applicationId', 'in', applicationIds)
+        .groupBy('applicationId')
+        .execute(),
+      handle
+        .selectFrom('app.careerOffers')
+        .select('applicationId')
+        .where('applicationId', 'in', applicationIds)
+        .execute(),
+    ]);
+
+    for (const row of stageCounts) {
+      const entry = stats.get(row.applicationId);
+      if (entry) entry.stageCount = Number(row.count ?? 0);
+    }
+    for (const row of offers) {
+      if (!row.applicationId) continue;
+      const entry = stats.get(row.applicationId);
+      if (entry) entry.hasOffer = true;
+    }
+
+    return stats;
+  },
+
   async getApplicationWithRelations(
     handle: DbHandle,
     ownerUserId: string,
