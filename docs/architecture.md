@@ -22,3 +22,13 @@ API
 - A deployable service is not automatically a client contract package. Runtime handlers and public transport contracts are separate responsibilities.
 - Shared packages expose narrow, real boundaries. Root barrels stay small and must not become import-anything buckets.
 - Type-only imports do not create workspace dependency edges. Use a local TypeScript path alias to the source contract instead.
+
+## Omiro protected navigation
+
+Omiro has one Home-first protected stack, not a persistent tab bar:
+
+- **Home** is the signed-in entry point for current work, today's schedule, unscheduled-task access, and capture.
+- **Inbox** is a deeper all-recent destination for chats and notes.
+- **Time** owns the chronological schedule and time-block detail routes. Unscheduled tasks are a dedicated secondary route, not schedule rows.
+
+Inbox and Time own their nested detail routes. Deep links select the owning destination directly. Settings is a protected form sheet. Transient state stays inside the screen that owns it; route params are reserved for destinations and deep-linkable detail identity.

@@ -109,7 +109,7 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
         style: 'destructive',
         onPress: () => {
           deleteNote(undefined, {
-            onSuccess: () => router.replace(homeRoute),
+            onSuccess: () => router.dismissTo(homeRoute),
           });
         },
       },

@@ -1,19 +1,20 @@
 import { Stack } from 'expo-router';
 
-import { HomeScreen } from '~/components/home/HomeScreen';
 import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
+import { TimeHeaderActions, TimeScreen } from '~/components/time/TimeScreen';
 
-export default function HomeRoute() {
+export default function TimeRoute() {
   return (
     <>
       <Stack.Screen
         options={{
-          title: 'Omiro',
+          title: 'Time',
           headerLargeTitle: false,
           headerLeft: () => <NavDrawerMenuButton />,
+          headerRight: () => <TimeHeaderActions />,
         }}
       />
-      <HomeScreen />
+      <TimeScreen />
     </>
   );
 }

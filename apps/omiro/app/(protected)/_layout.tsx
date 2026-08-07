@@ -101,12 +101,18 @@ function ProtectedShell() {
               headerTintColor: themeColors['text-primary'],
             }}
           >
-            <Stack.Screen name="index" options={{ headerShown: true }} />
-            <Stack.Screen name="inbox/[kind]/[id]" options={{}} />
-            <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+            <Stack.Screen name="index" />
+            <Stack.Screen name="inbox" options={{ headerShown: false }} />
+            <Stack.Screen name="time" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="settings/index"
+              options={{
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+                title: 'Settings',
+              }}
+            />
             <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
-            <Stack.Screen name="tasks/[id]" options={{}} />
-            <Stack.Screen name="time/[source]/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: true }} />
           </Stack>
         </View>

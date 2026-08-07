@@ -12,6 +12,7 @@ interface IconButtonProps {
   onPress?: () => void;
   testID?: string;
   tintColor?: ColorValue;
+  variant?: 'bordered' | 'plain';
 }
 
 export function IconButton({
@@ -21,6 +22,7 @@ export function IconButton({
   onPress,
   testID,
   tintColor,
+  variant = 'bordered',
 }: IconButtonProps) {
   const themeColors = useThemeColors();
   const styles = useStyles();
@@ -35,6 +37,7 @@ export function IconButton({
       style={({ pressed }) => [
         styles.pill,
         { borderColor: themeColors['border-default'] },
+        variant === 'plain' && styles.plain,
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
@@ -52,6 +55,9 @@ const useStyles = makeStyles(() => ({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  plain: {
+    borderWidth: 0,
   },
   pressed: {
     opacity: 0.7,

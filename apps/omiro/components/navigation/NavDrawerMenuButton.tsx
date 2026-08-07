@@ -1,0 +1,83 @@
+import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/community/menu';
+import { useRouter, useSegments } from 'expo-router';
+
+import { IconButton } from '~/components/ui/icon-button';
+import { HOME_ROUTE, INBOX_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+
+type Destination = 'home' | 'inbox' | 'time' | 'settings';
+
+const destinations: {
+  key: Destination;
+  label: string;
+  icon: MenuAction['image'];
+  route: typeof HOME_ROUTE;
+}[] = [
+  { key: 'home', label: 'Home', icon: 'house.fill', route: HOME_ROUTE },
+  {
+    key: 'inbox',
+    label: 'Inbox',
+    icon: 'bubble.left.and.bubble.right.fill',
+    route: INBOX_ROUTE,
+  },
+  { key: 'time', label: 'Time', icon: 'clock.fill', route: TIME_ROUTE },
+];
+
+const settingsDestination: { key: Destination; label: string; icon: MenuAction['image'] } = {
+  key: 'settings',
+  label: 'Settings',
+  icon: 'person.crop.circle',
+};
+
+function getActiveDestination(segments: readonly string[]): Destination | null {
+  const [root, section] = segments;
+  if (root !== '(protected)') return null;
+  if (!section) return 'home';
+  if (section === 'inbox') return 'inbox';
+  if (section === 'time') return 'time';
+  if (section === 'settings') return 'settings';
+  return null;
+}
+
+export function NavDrawerMenuButton() {
+  const segments = useSegments();
+  const active = getActiveDestination(segments as string[]);
+  const router = useRouter();
+
+  const actions: MenuAction[] = [
+    ...destinations.map((destination) => ({
+      id: destination.key,
+      title: destination.label,
+      image: destination.icon,
+      state: destination.key === active ? ('on' as const) : undefined,
+    })),
+    {
+      id: settingsDestination.key,
+      title: settingsDestination.label,
+      image: settingsDestination.icon,
+      state: settingsDestination.key === active ? ('on' as const) : undefined,
+    },
+  ];
+
+  const onPressAction = (event: NativeActionEvent) => {
+    const destination = event.nativeEvent.event as Destination;
+    if (destination === 'settings') {
+      router.push(SETTINGS_ROUTE as never);
+      return;
+    }
+
+    const route = destinations.find((item) => item.key === destination)?.route;
+    if (route) {
+      router.replace(route as never);
+    }
+  };
+
+  return (
+    <MenuView actions={actions} onPressAction={onPressAction} testID="nav-drawer-menu-button">
+      <IconButton
+        accessibilityLabel="Open navigation menu"
+        icon="line.3.horizontal"
+        variant="plain"
+      />
+    </MenuView>
+  );
+}

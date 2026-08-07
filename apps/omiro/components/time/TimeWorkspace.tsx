@@ -18,64 +18,38 @@ import type {
   TimeInteractionState,
   TimeItem,
   TimeOpening,
-  TimeSection,
 } from './time-types';
 import {
   buildTimeStreamRows,
   findEventCandidates,
   findOpenings,
   getAvailabilityRange,
-  getScheduledTimeItems,
+  getUnscheduledTasks,
   PAGE_DAYS,
   startOfToday,
 } from './time-utils';
 import { TimeComposer } from './TimeComposer';
 import { TimeStream } from './TimeStream';
 
-export interface TimeWorkspaceSnapshot {
-  events: CalendarEvent[];
-  interaction: TimeInteractionState;
-  loadedSince: string;
-  loadedUntil: string;
-  prompt: string;
-  scrollOffset: number;
-  section: TimeSection;
-}
-
-export const initialTimeWorkspaceSnapshot = (): TimeWorkspaceSnapshot => ({
-  events: [],
-  interaction: { kind: 'idle' },
-  loadedSince: startOfToday().toISOString(),
-  loadedUntil: startOfToday().toISOString(),
-  prompt: '',
-  scrollOffset: 0,
-  section: 'now',
-});
-
 interface TimeWorkspaceProps {
   gateway?: TimeEventGateway;
   isFocused: boolean;
   onOpenItem: (item: TimeItem) => void;
-  onSnapshotChange: (snapshot: TimeWorkspaceSnapshot) => void;
-  snapshot: TimeWorkspaceSnapshot;
 }
 
 export function TimeWorkspace({
   gateway = timeEventGateway,
   isFocused,
   onOpenItem,
-  onSnapshotChange,
-  snapshot,
 }: TimeWorkspaceProps) {
   const router = useRouter();
   const styles = useStyles();
-  const [prompt, setPrompt] = useState(snapshot.prompt);
-  const [events, setEvents] = useState(snapshot.events);
-  const [loadedSince, setLoadedSince] = useState(() => new Date(snapshot.loadedSince));
-  const [loadedUntil, setLoadedUntil] = useState(() => new Date(snapshot.loadedUntil));
-  const [section, setSection] = useState<TimeSection>(snapshot.section);
-  const [scrollOffset, setScrollOffset] = useState(snapshot.scrollOffset);
-  const [interaction, setInteraction] = useState<TimeInteractionState>(snapshot.interaction);
+  const [prompt, setPrompt] = useState('');
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loadedSince, setLoadedSince] = useState(() => startOfToday());
+  const [loadedUntil, setLoadedUntil] = useState(() => startOfToday());
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [interaction, setInteraction] = useState<TimeInteractionState>({ kind: 'idle' });
   const [permission, setPermission] = useState<CalendarPermissionStatus | null>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [hasLoadedEvents, setHasLoadedEvents] = useState(events.length > 0);
@@ -88,27 +62,6 @@ export function TimeWorkspace({
   const { mutate: toggleTask } = useTaskComplete();
   const { mutateAsync: createTask } = useTaskCreate();
   const parseTimeBlock = useTimeBlockParse();
-
-  useEffect(() => {
-    onSnapshotChange({
-      events,
-      interaction,
-      loadedSince: loadedSince.toISOString(),
-      loadedUntil: loadedUntil.toISOString(),
-      prompt,
-      scrollOffset,
-      section,
-    });
-  }, [
-    events,
-    interaction,
-    loadedSince,
-    loadedUntil,
-    onSnapshotChange,
-    prompt,
-    scrollOffset,
-    section,
-  ]);
 
   useEffect(() => {
     void gateway.getPermission().then(setPermission);
@@ -146,34 +99,6 @@ export function TimeWorkspace({
       setIsLoadingEvents(false);
     }
   }, [gateway, hasLoadedEvents, loadedSince, loadedUntil, permission]);
-
-  const loadPreviousPage = useCallback(async () => {
-    if (permission !== 'authorized' || loadingRef.current) return;
-    loadingRef.current = true;
-    setIsLoadingEvents(true);
-    const end = loadedSince;
-    const start = new Date(end);
-    start.setDate(start.getDate() - PAGE_DAYS);
-    try {
-      const page = await gateway.listEvents(start.toISOString(), end.toISOString());
-      setEvents((current) => {
-        const existing = new Set(current.map((event) => `${event.id}:${event.startDate}`));
-        return [
-          ...page.filter((event) => !existing.has(`${event.id}:${event.startDate}`)),
-          ...current,
-        ];
-      });
-      setLoadedSince(start);
-      setHasLoadedEvents(true);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to load past events.';
-      setToastKey((k) => k + 1);
-      setErrorToast(message);
-    } finally {
-      loadingRef.current = false;
-      setIsLoadingEvents(false);
-    }
-  }, [gateway, loadedSince, permission]);
 
   useEffect(() => {
     if (permission !== 'authorized' || hasLoadedEvents || loadingRef.current) return;
@@ -407,37 +332,28 @@ export function TimeWorkspace({
     setHasLoadedEvents(false);
   }, []);
 
-  const scheduledItems = getScheduledTimeItems({ events, loadedUntil, tasks });
   const rows = buildTimeStreamRows({
     events,
     loadedUntil,
-    section,
     tasks,
   });
-  const unscheduledTaskCount = tasks.filter((task) => !task.scheduledStartAt && !task.dueAt).length;
+  const unscheduledTaskCount = getUnscheduledTasks(tasks).length;
 
   return (
     <View style={styles.container} testID="time-screen">
       <TimeStream
         calendarPermission={permission}
-        hasScheduledItems={scheduledItems.length > 0}
         isLoadingEvents={isLoadingEvents}
-        isWriting={isSaving}
         onConnectCalendar={() => void onConnectCalendar()}
-        onEndReached={() => void (section === 'past' ? loadPreviousPage() : loadNextPage())}
+        onEndReached={() => void loadNextPage()}
         onOpenItem={onOpenItem}
         onRefresh={resetStream}
         onScrollOffsetChange={setScrollOffset}
-        onSectionChange={(nextSection) => {
-          setSection(nextSection);
-          setScrollOffset(0);
-        }}
         onToggleTask={(item) =>
           toggleTask({ taskId: item.value.id, completed: item.value.status !== 'completed' })
         }
         restoredScrollOffset={scrollOffset}
         rows={rows}
-        section={section}
         unscheduledTaskCount={unscheduledTaskCount}
       />
       {hasLoadedEvents ? <View testID="time-events-ready" /> : null}

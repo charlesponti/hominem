@@ -1,3 +1,5 @@
+import { HOME_ROUTE } from '~/services/navigation/routes';
+
 interface ResolveAuthRedirectInput {
   isPending: boolean;
   isSignedIn: boolean;
@@ -5,7 +7,7 @@ interface ResolveAuthRedirectInput {
   segments: string[];
 }
 
-type AuthRedirectTarget = '/(auth)' | '/(protected)';
+type AuthRedirectTarget = '/(auth)' | typeof HOME_ROUTE;
 
 export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedirectTarget | null {
   if (input.isPending || input.isSigningOut) {
@@ -20,7 +22,7 @@ export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedire
   }
 
   if (input.isSignedIn && inAuthGroup) {
-    return '/(protected)';
+    return HOME_ROUTE;
   }
 
   return null;

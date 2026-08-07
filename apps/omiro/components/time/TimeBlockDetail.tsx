@@ -1,11 +1,11 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
+import { Stack } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActionSheetIOS, Alert, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { makeStyles, Text } from '~/components/theme';
 import { Button } from '~/components/ui/button';
-import { IconButton } from '~/components/ui/icon-button';
 import { TextField } from '~/components/ui/text-field';
 import type {
   CalendarEvent,
@@ -62,10 +62,12 @@ function DetailBlock({
 
 export function TimeBlockDetail({
   id,
+  initialActiveField = null,
   source,
   onClose,
 }: {
   id: string;
+  initialActiveField?: ActiveField;
   source: TimeBlockDetailSource;
   onClose: () => void;
 }) {
@@ -73,7 +75,7 @@ export function TimeBlockDetail({
   const taskQuery = useTaskQuery({ taskId: id, enabled: source === 'task' });
   const { mutateAsync: updateTask, isPending: isSavingTask } = useTaskUpdate();
   const { mutateAsync: deleteTask } = useTaskDelete();
-  const { mutate: toggleTask } = useTaskComplete();
+  const { mutate: toggleTask, isPending: isTogglingTask } = useTaskComplete();
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [eventError, setEventError] = useState('');
   const [isSavingEvent, setIsSavingEvent] = useState(false);
@@ -84,7 +86,7 @@ export function TimeBlockDetail({
   const [draftLocation, setDraftLocation] = useState('');
   const [draftNotes, setDraftNotes] = useState('');
   const [draftPeople, setDraftPeople] = useState('');
-  const [activeField, setActiveField] = useState<ActiveField>(null);
+  const [activeField, setActiveField] = useState<ActiveField>(initialActiveField);
   const [isScheduling, setIsScheduling] = useState(false);
 
   const task = taskQuery.data?.task;
@@ -140,7 +142,7 @@ export function TimeBlockDetail({
     );
     setDraftStart(start ? new Date(start) : defaultStart);
     setDraftTitle(title);
-    setIsScheduling(Boolean(start && end));
+    setIsScheduling(Boolean(start && end) || (isTask && initialActiveField === 'time'));
   }, [
     block,
     event?.endDate,
@@ -153,6 +155,7 @@ export function TimeBlockDetail({
     task?.scheduledStartAt,
     taskQuery.data?.participants,
     title,
+    initialActiveField,
   ]);
 
   const isDirty = useMemo(() => {
@@ -316,19 +319,6 @@ export function TimeBlockDetail({
     ]);
   }, [deleteTask, id, isTask, onClose, title, withRecurrenceScope]);
 
-  const showActions = useCallback(() => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        cancelButtonIndex: 0,
-        destructiveButtonIndex: 1,
-        options: ['Cancel', 'Delete'],
-      },
-      (index) => {
-        if (index === 1) remove();
-      },
-    );
-  }, [remove]);
-
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -350,181 +340,188 @@ export function TimeBlockDetail({
   const saving = isSavingTask || isSavingEvent;
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={styles.screen} testID="time-block-editor">
-      <ScrollView
-        contentContainerStyle={styles.content}
-        contentInsetAdjustmentBehavior="automatic"
-        keyboardShouldPersistTaps="handled"
-        style={styles.scroll}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerActions}>
+    <>
+      {!readOnlyEvent ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Menu accessibilityLabel="Time block actions" icon="ellipsis.circle">
+            <Stack.Toolbar.MenuAction destructive icon="trash" onPress={remove}>
+              Delete
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+        </Stack.Toolbar>
+      ) : null}
+      <KeyboardAvoidingView behavior="padding" style={styles.screen} testID="time-block-editor">
+        <ScrollView
+          contentContainerStyle={styles.content}
+          contentInsetAdjustmentBehavior="automatic"
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
+        >
+          <View style={styles.header}>
+            <DetailBlock
+              label={isTask ? 'Task' : (event?.calendarTitle ?? 'Calendar')}
+              onPress={() => setActiveField('title')}
+              testID="time-block-edit-title"
+            >
+              {activeField === 'title' ? (
+                <TextField
+                  autoFocus
+                  onChangeText={setDraftTitle}
+                  testID="time-block-title"
+                  value={draftTitle}
+                />
+              ) : (
+                <Text variant="display">{draftTitle}</Text>
+              )}
+            </DetailBlock>
+            {isTask && task?.status === 'completed' ? (
+              <Text color="text-secondary">Completed</Text>
+            ) : null}
+            {readOnlyEvent ? (
+              <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
+            ) : null}
+          </View>
+
+          <View style={styles.section}>
+            <DetailBlock
+              label="When"
+              onPress={
+                readOnlyEvent
+                  ? undefined
+                  : () => {
+                      if (isTask && !isScheduling) setIsScheduling(true);
+                      setActiveField('time');
+                    }
+              }
+              testID="time-block-edit-time"
+            >
+              {activeField === 'time' && draftStart && draftEnd ? (
+                <View style={styles.timeEditor}>
+                  <DateTimePicker
+                    display="compact"
+                    mode="datetime"
+                    onValueChange={(_, date) => setDraftStart(date)}
+                    testID="time-block-start-picker"
+                    value={draftStart}
+                  />
+                  <DateTimePicker
+                    display="compact"
+                    minimumDate={draftStart}
+                    mode="datetime"
+                    onValueChange={(_, date) => setDraftEnd(date)}
+                    testID="time-block-end-picker"
+                    value={draftEnd}
+                  />
+                  <TextField
+                    keyboardType="number-pad"
+                    onChangeText={setDraftDuration}
+                    placeholder="Duration in minutes"
+                    testID="time-block-duration"
+                    value={draftDuration}
+                  />
+                </View>
+              ) : draftStart && draftEnd ? (
+                <Text variant="title2">{formatInterval(draftStart, draftEnd)}</Text>
+              ) : (
+                <Text color="text-secondary">Set a time</Text>
+              )}
+            </DetailBlock>
+            <DetailBlock
+              label="Location"
+              onPress={readOnlyEvent ? undefined : () => setActiveField('location')}
+              testID="time-block-edit-location"
+            >
+              {activeField === 'location' ? (
+                <TextField
+                  autoFocus
+                  onChangeText={setDraftLocation}
+                  placeholder="Add location"
+                  testID="time-block-location"
+                  value={draftLocation}
+                />
+              ) : (
+                <Text color={draftLocation ? 'text-primary' : 'text-secondary'}>
+                  {draftLocation || 'Add location'}
+                </Text>
+              )}
+            </DetailBlock>
+            <DetailBlock
+              label="Notes"
+              onPress={readOnlyEvent ? undefined : () => setActiveField('notes')}
+              testID="time-block-edit-notes"
+            >
+              {activeField === 'notes' ? (
+                <TextField
+                  autoFocus
+                  multiline
+                  onChangeText={setDraftNotes}
+                  placeholder="Add notes"
+                  testID="time-block-notes"
+                  value={draftNotes}
+                />
+              ) : (
+                <Text color={draftNotes ? 'text-primary' : 'text-secondary'}>
+                  {draftNotes || 'Add notes'}
+                </Text>
+              )}
+            </DetailBlock>
+            {isTask ? (
+              <DetailBlock
+                label="People"
+                onPress={() => setActiveField('people')}
+                testID="time-block-edit-people"
+              >
+                {activeField === 'people' ? (
+                  <TextField
+                    autoFocus
+                    multiline
+                    onChangeText={setDraftPeople}
+                    placeholder="One person per line"
+                    testID="time-block-people"
+                    value={draftPeople}
+                  />
+                ) : (
+                  <Text color={draftPeople ? 'text-primary' : 'text-secondary'}>
+                    {draftPeople || 'Add people'}
+                  </Text>
+                )}
+              </DetailBlock>
+            ) : null}
+            {!isTask && event?.participants.length ? (
+              <DetailBlock label="People">
+                <Text>{event.participants.join(', ')}</Text>
+              </DetailBlock>
+            ) : null}
+            {!isTask && event?.recurrenceDescription ? (
+              <DetailBlock label="Repeats">
+                <Text>Recurring event</Text>
+              </DetailBlock>
+            ) : null}
+          </View>
+        </ScrollView>
+        {!readOnlyEvent && (isDirty || isTask) ? (
+          <View style={styles.actions}>
             {isTask ? (
               <Button
+                disabled={isTogglingTask}
                 label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
                 onPress={() =>
                   task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
                 }
-                size="sm"
-                variant="ghost"
+                testID="time-block-complete"
+                variant="secondary"
               />
             ) : null}
-            {!readOnlyEvent ? (
-              <IconButton accessibilityLabel="More actions" icon="ellipsis" onPress={showActions} />
-            ) : null}
+            <Button
+              label="Save changes"
+              loading={saving}
+              onPress={() => void saveChanges()}
+              testID="time-block-save"
+            />
           </View>
-          <DetailBlock
-            label={isTask ? 'Task' : (event?.calendarTitle ?? 'Calendar')}
-            onPress={() => setActiveField('title')}
-            testID="time-block-edit-title"
-          >
-            {activeField === 'title' ? (
-              <TextField
-                autoFocus
-                onChangeText={setDraftTitle}
-                testID="time-block-title"
-                value={draftTitle}
-              />
-            ) : (
-              <Text variant="display">{draftTitle}</Text>
-            )}
-          </DetailBlock>
-          {isTask && task?.status === 'completed' ? (
-            <Text color="text-secondary">Completed</Text>
-          ) : null}
-          {readOnlyEvent ? (
-            <Text color="text-secondary">This calendar is read-only in Omiro.</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.section}>
-          <DetailBlock
-            label="When"
-            onPress={
-              readOnlyEvent
-                ? undefined
-                : () => {
-                    if (isTask && !isScheduling) setIsScheduling(true);
-                    setActiveField('time');
-                  }
-            }
-            testID="time-block-edit-time"
-          >
-            {activeField === 'time' && draftStart && draftEnd ? (
-              <View style={styles.timeEditor}>
-                <DateTimePicker
-                  display="compact"
-                  mode="datetime"
-                  onValueChange={(_, date) => setDraftStart(date)}
-                  testID="time-block-start-picker"
-                  value={draftStart}
-                />
-                <DateTimePicker
-                  display="compact"
-                  minimumDate={draftStart}
-                  mode="datetime"
-                  onValueChange={(_, date) => setDraftEnd(date)}
-                  testID="time-block-end-picker"
-                  value={draftEnd}
-                />
-                <TextField
-                  keyboardType="number-pad"
-                  onChangeText={setDraftDuration}
-                  placeholder="Duration in minutes"
-                  testID="time-block-duration"
-                  value={draftDuration}
-                />
-              </View>
-            ) : draftStart && draftEnd ? (
-              <Text variant="title2">{formatInterval(draftStart, draftEnd)}</Text>
-            ) : (
-              <Text color="text-secondary">Set a time</Text>
-            )}
-          </DetailBlock>
-          <DetailBlock
-            label="Location"
-            onPress={readOnlyEvent ? undefined : () => setActiveField('location')}
-            testID="time-block-edit-location"
-          >
-            {activeField === 'location' ? (
-              <TextField
-                autoFocus
-                onChangeText={setDraftLocation}
-                placeholder="Add location"
-                testID="time-block-location"
-                value={draftLocation}
-              />
-            ) : (
-              <Text color={draftLocation ? 'text-primary' : 'text-secondary'}>
-                {draftLocation || 'Add location'}
-              </Text>
-            )}
-          </DetailBlock>
-          <DetailBlock
-            label="Notes"
-            onPress={readOnlyEvent ? undefined : () => setActiveField('notes')}
-            testID="time-block-edit-notes"
-          >
-            {activeField === 'notes' ? (
-              <TextField
-                autoFocus
-                multiline
-                onChangeText={setDraftNotes}
-                placeholder="Add notes"
-                testID="time-block-notes"
-                value={draftNotes}
-              />
-            ) : (
-              <Text color={draftNotes ? 'text-primary' : 'text-secondary'}>
-                {draftNotes || 'Add notes'}
-              </Text>
-            )}
-          </DetailBlock>
-          {isTask ? (
-            <DetailBlock
-              label="People"
-              onPress={() => setActiveField('people')}
-              testID="time-block-edit-people"
-            >
-              {activeField === 'people' ? (
-                <TextField
-                  autoFocus
-                  multiline
-                  onChangeText={setDraftPeople}
-                  placeholder="One person per line"
-                  testID="time-block-people"
-                  value={draftPeople}
-                />
-              ) : (
-                <Text color={draftPeople ? 'text-primary' : 'text-secondary'}>
-                  {draftPeople || 'Add people'}
-                </Text>
-              )}
-            </DetailBlock>
-          ) : null}
-          {!isTask && event?.participants.length ? (
-            <DetailBlock label="People">
-              <Text>{event.participants.join(', ')}</Text>
-            </DetailBlock>
-          ) : null}
-          {!isTask && event?.recurrenceDescription ? (
-            <DetailBlock label="Repeats">
-              <Text>Recurring event</Text>
-            </DetailBlock>
-          ) : null}
-        </View>
-      </ScrollView>
-      {!readOnlyEvent && isDirty ? (
-        <View style={styles.actions}>
-          <Button
-            label="Save changes"
-            loading={saving}
-            onPress={() => void saveChanges()}
-            testID="time-block-save"
-          />
-        </View>
-      ) : null}
-    </KeyboardAvoidingView>
+        ) : null}
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -554,12 +551,6 @@ const useStyles = makeStyles((theme) => ({
   },
   header: {
     gap: theme.spacing.md,
-  },
-  headerActions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 36,
   },
   pressed: {
     opacity: 0.7,

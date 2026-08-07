@@ -4,16 +4,12 @@ import { ChatDetailScreen } from '~/components/inbox/ChatDetailScreen';
 import { NoteDetailScreen } from '~/components/inbox/NoteDetailScreen';
 import { INBOX_ROUTE } from '~/services/navigation/routes';
 
-export default function InboxDetailScreen() {
-  const { kind } = useLocalSearchParams<{ kind?: string; id?: string }>();
+export default function InboxDetailRoute() {
+  const { kind } = useLocalSearchParams<{ kind?: string }>();
 
   if (kind !== 'chat' && kind !== 'note') {
     return <Redirect href={INBOX_ROUTE} />;
   }
 
-  if (kind === 'chat') {
-    return <ChatDetailScreen />;
-  }
-
-  return <NoteDetailScreen />;
+  return kind === 'chat' ? <ChatDetailScreen /> : <NoteDetailScreen />;
 }

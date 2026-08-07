@@ -6,8 +6,6 @@ export type TimeItem =
   | { kind: 'event'; value: CalendarEvent }
   | { kind: 'task'; value: TaskListItem };
 
-export type TimeSection = 'now' | 'past' | 'unscheduled';
-
 export type TimeStreamRow = TimeItem;
 
 export type TimeBlock = TasksParseOutput['block'];

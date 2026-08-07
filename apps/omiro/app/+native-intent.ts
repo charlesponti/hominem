@@ -15,15 +15,15 @@ import {
  * Supported deep link patterns:
  *   hakumi://verify?token=<otp>        -> /(auth)/verify?token=<otp>
  *   hakumi://chat/<id>                 -> /(protected)/inbox/chat/<id>
- *   hakumi://chat?seed=<text>          -> /(protected)?seed=<text>
- *   hakumi://notes                     -> /(protected)
+ *   hakumi://chat?seed=<text>          -> /(protected)/inbox?seed=<text>
+ *   hakumi://notes                     -> /(protected)/inbox
  *   hakumi://notes/<id>                -> /(protected)/inbox/note/<id>
- *   hakumi://focus                     -> /(protected)
+ *   hakumi://focus                     -> /(protected)/inbox
  *   hakumi://focus/<id>                -> /(protected)/inbox/note/<id>
  *   hakumi://account                   -> /(protected)/settings
- *   hakumi://note/add                  -> /(protected)
- *   hakumi://time/task/<id>             -> /(protected)?context=time&timeSource=task&timeId=<id>
- *   hakumi://time/event/<id>            -> /(protected)?context=time&timeSource=event&timeId=<id>
+ *   hakumi://note/add                  -> /(protected)/inbox
+ *   hakumi://time/task/<id>             -> /(protected)/time/task/<id>
+ *   hakumi://time/event/<id>            -> /(protected)/time/event/<id>
  */
 export function redirectSystemPath({
   path,

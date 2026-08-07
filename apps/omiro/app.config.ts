@@ -132,6 +132,7 @@ export default ({ config }: ConfigContext) => {
     orientation: 'portrait',
     icon: brandAssets.icon,
     userInterfaceStyle: 'automatic',
+    backgroundColor: '#111113',
     assetBundlePatterns: ['assets/**/*', 'api/**/*', 'app/**/*', 'constants/**/*', 'hooks/**/*', 'navigation/**/*', 'services/**/*'],
     plugins,
     experiments: {
@@ -148,10 +149,6 @@ export default ({ config }: ConfigContext) => {
       },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        // Opt out of iOS 26's Liquid Glass redesign for system chrome (nav
-        // bars, back buttons, toolbars) app-wide — restores the prior UIKit
-        // appearance instead of the translucent glass material.
-        UIDesignRequiresCompatibility: true,
         NSLocationWhenInUseUsageDescription:
           'Omiro may use your location only when you choose media that includes location details, so it can preserve context for your notes.',
         NSMicrophoneUsageDescription:
