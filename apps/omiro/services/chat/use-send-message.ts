@@ -6,6 +6,7 @@ import { useCallback, useRef } from 'react';
 
 import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
+import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 import { isTestMode, MOCK_AI_RESPONSE } from '~/services/testing/test-mode';
@@ -128,7 +129,13 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       await streamSSE<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
-        payload: { message: message.trim(), fileIds, noteIds, responseModality },
+        payload: {
+          message: message.trim(),
+          fileIds,
+          noteIds,
+          responseModality,
+          responseLength: getChatResponseLength(),
+        },
         getHeaders: getAuthHeaders,
         onEvent,
         onDone: flushNow,

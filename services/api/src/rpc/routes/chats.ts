@@ -24,7 +24,7 @@ import {
 import { ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
-import { CHAT_ASSISTANT_PROMPT } from '../prompts';
+import { CHAT_ASSISTANT_PROMPT, CHAT_RESPONSE_LENGTH_GUIDANCE } from '../prompts';
 import { synthesizeChatReplySpeech } from './chat-speech.service';
 import { toChatDto, toChatMessageDto, toStoredUserMessageContent } from './chats.mapper';
 
@@ -88,6 +88,20 @@ async function synthesizeReplyAudioFile(
     });
     return null;
   }
+}
+
+const RESPONSE_LENGTH_MAX_TOKENS = {
+  short: 200,
+  medium: 600,
+  long: 1600,
+} as const satisfies Record<'short' | 'medium' | 'long', number>;
+
+function getSystemPrompt(responseLength?: 'short' | 'medium' | 'long'): string {
+  if (!responseLength) {
+    return CHAT_ASSISTANT_PROMPT;
+  }
+
+  return `${CHAT_ASSISTANT_PROMPT}\n\n${CHAT_RESPONSE_LENGTH_GUIDANCE[responseLength]}`;
 }
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
@@ -231,7 +245,13 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     await assertUnderMonthlyUsageLimit(userId);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const { message, fileIds = [], noteIds = [], responseModality } = c.req.valid('json');
+    const {
+      message,
+      fileIds = [],
+      noteIds = [],
+      responseModality,
+      responseLength,
+    } = c.req.valid('json');
 
     const history = await ChatRepository.getMessages(db, chatId, 30, 0);
     const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
@@ -258,9 +278,10 @@ const chatByIdRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
     const completion = streamChatCompletion({
       messages: [
-        { role: 'system', content: CHAT_ASSISTANT_PROMPT },
+        { role: 'system', content: getSystemPrompt(responseLength) },
         { role: 'user', content: prompt },
       ],
+      maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
     });
 
     return streamSSE(c, async (stream) => {

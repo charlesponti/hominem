@@ -4,7 +4,7 @@ import t from '~/translations';
 
 export type ConversationActionType = ArtifactType;
 
-export type ConversationActionKind = 'search' | 'toggle-debug' | 'transform' | 'archive';
+export type ConversationActionKind = 'search' | 'toggle-debug' | 'settings' | 'transform' | 'archive';
 
 export interface ConversationActionItem {
   kind: ConversationActionKind;
@@ -42,6 +42,7 @@ export function buildConversationActionsModel(
             ? t.chat.actions.hideDebugMetadata
             : t.chat.actions.showDebugMetadata,
         },
+        { kind: 'settings', label: t.chat.actions.chatSettings },
       ],
     },
   ];

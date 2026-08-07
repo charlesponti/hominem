@@ -95,6 +95,7 @@ const t = {
       searchMessages: 'Search messages',
       hideDebugMetadata: 'Hide debug metadata',
       showDebugMetadata: 'Show debug metadata',
+      chatSettings: 'Chat settings',
       transformToNote: 'Transform to note',
       createTasks: 'Create tasks',
       noTasksFoundTitle: 'No tasks found',
@@ -103,6 +104,17 @@ const t = {
       createTasksLabel: (count: number) => `CREATE ${count} TASK${count === 1 ? '' : 'S'}`,
       archiving: 'Archiving…',
       archiveChat: 'Archive chat',
+    },
+    settings: {
+      title: 'Chat settings',
+      responseLengthLabel: 'Response length',
+      responseLengthDescription: 'Choose how long you want the assistant’s replies to be.',
+      responseLengthOptions: {
+        short: 'Short',
+        medium: 'Medium',
+        long: 'Long',
+      },
+      done: 'Done',
     },
     classification: {
       saveAsPrefix: 'SAVE AS',

@@ -1,7 +1,7 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
 import {
@@ -12,6 +12,7 @@ import {
   type ChatRenderIcon,
   type ChatServices,
 } from '~/components/chat';
+import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
@@ -52,6 +53,7 @@ const useStyles = makeStyles(() => ({
 function getConversationActionIcon(kind: string, type?: string) {
   if (kind === 'search') return 'magnifyingglass';
   if (kind === 'toggle-debug') return 'ladybug';
+  if (kind === 'settings') return 'slider.horizontal.3';
   if (kind === 'archive') return 'archivebox';
   if (type === 'note') return 'doc.text';
   if (type === 'task') return 'checkmark.circle';
@@ -130,6 +132,8 @@ export function ChatDetailScreen() {
     });
   }, [activeChat?.updatedAt, chatId, displayTitle]);
 
+  const [showChatSettings, setShowChatSettings] = useState(false);
+
   const conversationActions = useMemo(
     () =>
       buildConversationActionsModel({
@@ -202,6 +206,18 @@ export function ChatDetailScreen() {
                 );
               }
 
+              if (item.kind === 'settings') {
+                return (
+                  <Stack.Toolbar.MenuAction
+                    key={item.kind}
+                    icon={getConversationActionIcon(item.kind)}
+                    onPress={() => setShowChatSettings(true)}
+                  >
+                    {item.label}
+                  </Stack.Toolbar.MenuAction>
+                );
+              }
+
               if (item.kind === 'transform' && item.type) {
                 return (
                   <Stack.Toolbar.MenuAction
@@ -246,6 +262,10 @@ export function ChatDetailScreen() {
       </Stack.Toolbar>
 
       <View style={styles.container}>
+        <ChatSettingsSheet
+          visible={showChatSettings}
+          onClose={() => setShowChatSettings(false)}
+        />
         <ChatSearchModal
           visible={controller.showSearch}
           searchQuery={controller.searchQuery}
