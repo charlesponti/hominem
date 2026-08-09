@@ -268,8 +268,6 @@ function MessageDebug({
   message: ChatMessageItem;
   hasReasoning: boolean;
 }) {
-  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
-
   return (
     <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
       <Text className="text-mono text-foreground opacity-80">ID: {message.id}</Text>

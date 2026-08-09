@@ -30,6 +30,8 @@ Omiro uses Expo Continuous Native Generation. The checked-in source of truth is 
 
 Portable motion contracts live in `@ponti-studios/ui` as serializable tokens. Omiro owns the Reanimated adapter, Router gestures, reduced-motion integration, and product semantics; shared UI does not import Expo Router or Reanimated.
 
+Chat detail state is decomposed into focused hooks — `useChatData` (messages + archive), `useChatSearch` (search modal state + filtering), `useChatTransform` (chat-to-note/task lifecycle + review), and `useMessageActions` (copy/share) — instead of a monolithic `useChatController`. Pure logic that does not need React lives in `services/chat/` (e.g. `chat-search.ts` `filterMessagesByQuery`) and is unit-tested directly. `ChatDetailScreen` composes the hooks and owns only screen-local state (composer height, debug toggle).
+
 The release path is deliberately linear:
 
 ```text
