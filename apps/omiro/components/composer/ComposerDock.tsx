@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { KeyboardStickyView } from '~/components/ui/keyboard-sticky-view';
 
 interface ComposerDockProps {
   children: ReactNode;
@@ -30,6 +29,7 @@ export function ComposerDock({ children, testID, onHeightChange }: ComposerDockP
       pointerEvents="box-none"
       style={{ bottom: 0, left: 0, paddingBottom: insets.bottom, position: 'absolute', right: 0 }}
       testID={testID}
+      className="px-4"
     >
       <View>{children}</View>
     </KeyboardStickyView>

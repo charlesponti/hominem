@@ -12,8 +12,7 @@ import t from '~/translations';
 
 const Onboarding = () => {
   const { isSignedIn, currentUser, updateProfile, signOut } = useAuth();
-  const [tertiary, destructive, textPrimary, textSecondary, borderDefault] = useCSSVariable([
-    '--color-tertiary',
+  const [destructive, textPrimary, textSecondary, borderDefault] = useCSSVariable([
     '--color-destructive',
     '--color-foreground',
     '--color-muted-foreground',
@@ -97,7 +96,6 @@ const Onboarding = () => {
             <TextField
               value={name}
               placeholder={t.onboarding.namePlaceholder}
-              placeholderTextColor={tertiary}
               autoCapitalize="words"
               autoCorrect={false}
               editable={!isSubmitting}

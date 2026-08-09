@@ -10,14 +10,15 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Text,
   TextInput,
   View,
 } from 'react-native';
-import { Text } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Markdown from 'react-native-markdown-display';
 import { useCSSVariable } from 'uniwind';
 
-import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
+import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
@@ -301,6 +302,14 @@ function NoteEditorBody({
     toggleEnhance();
   }, [closeEnhance, isEnhanceOpen, toggleEnhance]);
 
+  const handleEnhanced = useCallback(
+    (enhanced: string) => {
+      commitDraft({ title: draft.title, content: enhanced });
+      requestAnimationFrame(() => contentInputRef.current?.focus());
+    },
+    [commitDraft, draft.title],
+  );
+
   const handleStartChat = useCallback(async () => {
     if (isStartingChat) return;
 
@@ -391,7 +400,6 @@ function NoteEditorBody({
           value={draft.title}
           onChangeText={handleTitleChange}
           placeholder={t.notes.editor.titlePlaceholder}
-          placeholderTextColor={tertiary}
           scrollEnabled={false}
           selectionColor={primaryColor}
           style={{
@@ -431,7 +439,6 @@ function NoteEditorBody({
             onSelectionChange={formatting.onSelectionChange}
             onFocus={() => formatting.onFocus(draft.content)}
             placeholder={t.notes.editor.contentPlaceholder}
-            placeholderTextColor={tertiary}
             cursorColor={primaryColor}
             selectionColor={primaryColor}
             style={{
@@ -490,25 +497,19 @@ function NoteEditorBody({
       </ScrollView>
 
       {isEnhanceOpen ? (
-        <View className="bg-background px-4 pb-12">
-          <InlineEnhancePanel
-            enhance={{
-              isEnhanceOpen,
-              enhanceInstruction,
-              setEnhanceInstruction,
-              closeEnhance,
-              isEnhancing,
-              enhanceError,
-              runEnhance,
-            }}
-            text={draft.content}
+        <KeyboardStickyView className="bg-background pt-4 pb-12 px-4 border-t border-muted-foreground/10">
+          <InlineEnhanceTray
+            instruction={enhanceInstruction}
+            onInstructionChange={setEnhanceInstruction}
+            onPresetSelect={(instruction) =>
+              void runEnhance({ instruction, text: draft.content, onEnhanced: handleEnhanced })
+            }
             onCancel={handleToggleEnhance}
-            onEnhanced={(enhanced) => {
-              commitDraft({ title: draft.title, content: enhanced });
-              requestAnimationFrame(() => contentInputRef.current?.focus());
-            }}
+            onConfirm={() => void runEnhance({ text: draft.content, onEnhanced: handleEnhanced })}
+            isEnhancing={isEnhancing}
+            error={enhanceError}
           />
-        </View>
+        </KeyboardStickyView>
       ) : null}
 
       <NoteToolbar

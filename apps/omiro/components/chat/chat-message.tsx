@@ -100,8 +100,7 @@ function MessageEditModal({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const [tertiary, textPrimary, card, borderDefault] = useCSSVariable([
-    '--color-tertiary',
+  const [textPrimary, card, borderDefault] = useCSSVariable([
     '--color-foreground',
     '--color-card',
     '--color-border',
@@ -122,7 +121,6 @@ function MessageEditModal({
             value={draftMessage}
             onChangeText={onChangeDraft}
             placeholder={t.chat.messageEdit.placeholder}
-            placeholderTextColor={tertiary}
             selectionColor={textPrimary}
             cursorColor={textPrimary}
             style={{

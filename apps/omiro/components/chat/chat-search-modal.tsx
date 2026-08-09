@@ -26,11 +26,10 @@ export function ChatSearchModal({
   onClose,
   onChangeSearchQuery,
 }: ChatSearchModalProps) {
-  const [card, textPrimary, textSecondary, tertiary] = useCSSVariable([
+  const [card, textPrimary, textSecondary] = useCSSVariable([
     '--color-card',
     '--color-foreground',
     '--color-muted-foreground',
-    '--color-tertiary',
   ]) as string[];
 
   return (
@@ -58,7 +57,6 @@ export function ChatSearchModal({
               autoFocus
               value={searchQuery}
               placeholder={t.chat.search.placeholder}
-              placeholderTextColor={tertiary}
               returnKeyType="search"
               selectionColor={textPrimary}
               cursorColor={textPrimary}

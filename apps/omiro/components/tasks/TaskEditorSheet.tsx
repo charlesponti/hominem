@@ -72,7 +72,7 @@ export function TaskEditorSheet({
   onClose,
   onSubmit,
 }: TaskEditorSheetProps) {
-  const [primary, tertiary] = useCSSVariable(['--color-primary', '--color-tertiary']) as string[];
+  const [primary] = useCSSVariable(['--color-primary']) as string[];
   const insets = useSafeAreaInsets();
   const titleInputRef = useRef<TextInput>(null);
 
@@ -139,7 +139,6 @@ export function TaskEditorSheet({
               value={title}
               onChangeText={setTitle}
               placeholder={t.tasks.editor.titlePlaceholder}
-              placeholderTextColor={tertiary}
               cursorColor={primary}
               selectionColor={primary}
               style={{
@@ -160,7 +159,6 @@ export function TaskEditorSheet({
               value={description ?? ''}
               onChangeText={setDescription}
               placeholder={t.tasks.editor.descriptionPlaceholder}
-              placeholderTextColor={tertiary}
               cursorColor={primary}
               selectionColor={primary}
               style={{

@@ -238,7 +238,6 @@ function Settings() {
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
             placeholder={t.settings.name.placeholder}
-            placeholderTextColor={tertiaryColor}
             returnKeyType="done"
             selectionColor={textPrimaryColor}
             cursorColor={textPrimaryColor}

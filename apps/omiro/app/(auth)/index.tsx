@@ -30,8 +30,7 @@ function AuthScreen() {
   const normalizedEmail = normalizeEmail(email);
   const emailIsValid = isValidEmail(normalizedEmail);
 
-  const [tertiary, destructive, borderDefault, textPrimary] = useCSSVariable([
-    '--color-tertiary',
+  const [destructive, borderDefault, textPrimary] = useCSSVariable([
     '--color-destructive',
     '--color-border',
     '--color-foreground',
@@ -127,7 +126,6 @@ function AuthScreen() {
                       testID="auth-email-input"
                       value={email}
                       placeholder={t.auth.emailEntry.emailPlaceholder}
-                      placeholderTextColor={tertiary}
                       keyboardType="email-address"
                       textContentType="emailAddress"
                       autoCapitalize="none"

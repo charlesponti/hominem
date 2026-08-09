@@ -1,12 +1,10 @@
 import { Host, Picker, Label as SwiftUILabel } from '@expo/ui/swift-ui';
 import { environment, labelStyle, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
-import { useColorMode } from '@ponti-studios/ui/native';
-import { TextField } from '@ponti-studios/ui/native';
+import { TextField, useColorMode } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
 import type { TextInput } from 'react-native';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
 import { Button } from '~/components/ui/button';
@@ -41,10 +39,9 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const [popover, textPrimary, tertiary] = useCSSVariable([
+  const [popover, textPrimary] = useCSSVariable([
     '--color-popover',
     '--color-foreground',
-    '--color-tertiary',
   ]) as string[];
   const colorScheme = useColorMode();
   const customInputRef = useRef<TextInput>(null);
@@ -71,8 +68,8 @@ export function InlineEnhanceTray({
   };
 
   return (
-    <View className="gap-3 pt-1">
-      <View className="flex-row items-center gap-2">
+    <View className="gap-2">
+      <View style={{ flex: 1 }}>
         <Host style={{ flex: 1, height: 44 }}>
           <Picker
             selection={isCustomOpen ? CUSTOM_SELECTION : instruction}
@@ -105,7 +102,6 @@ export function InlineEnhanceTray({
           value={instruction}
           onChangeText={onInstructionChange}
           placeholder={t.enhance.instructionPlaceholder}
-          placeholderTextColor={tertiary}
           style={{
             backgroundColor: popover,
             borderRadius: 12,
@@ -123,19 +119,15 @@ export function InlineEnhanceTray({
       ) : null}
 
       {isCustomOpen ? (
-        <View className="flex-row gap-2">
-          <View className="flex-1">
-            <Button label={t.enhance.cancel} onPress={onCancel} variant="outline" size="sm" />
-          </View>
-          <View className="flex-1">
-            <Button
-              label={t.enhance.confirm}
-              onPress={onConfirm}
-              variant="primary"
-              size="sm"
-              loading={isEnhancing}
-            />
-          </View>
+        <View className="flex-row justify-end gap-2">
+          <Button label={t.enhance.cancel} onPress={onCancel} variant="outline" size="sm" />
+          <Button
+            label={t.enhance.confirm}
+            onPress={onConfirm}
+            variant="primary"
+            size="sm"
+            loading={isEnhancing}
+          />
         </View>
       ) : null}
 

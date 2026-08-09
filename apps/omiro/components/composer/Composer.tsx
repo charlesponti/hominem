@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
-import { InlineEnhancePanel } from '~/components/ai/InlineEnhancePanel';
+import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 
@@ -126,76 +126,93 @@ function ComposerContent(props: ComposerProps) {
           ))}
         </View>
       ) : null}
-      {errorBanner}
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
-      {!showVoicePanel ? (
-        <InlineEnhancePanel
-          enhance={controller.enhance}
-          text={controller.message}
-          onEnhanced={controller.setMessage}
+      {!showVoicePanel && controller.enhance.isEnhanceOpen ? (
+        <InlineEnhanceTray
+          instruction={controller.enhance.enhanceInstruction}
+          onInstructionChange={controller.enhance.setEnhanceInstruction}
+          onPresetSelect={(instruction) =>
+            void controller.enhance.runEnhance({
+              instruction,
+              text: controller.message,
+              onEnhanced: controller.setMessage,
+            })
+          }
+          onCancel={controller.enhance.closeEnhance}
+          onConfirm={() =>
+            void controller.enhance.runEnhance({
+              text: controller.message,
+              onEnhanced: controller.setMessage,
+            })
+          }
+          isEnhancing={controller.enhance.isEnhancing}
+          error={controller.enhance.enhanceError}
         />
       ) : undefined}
-      {showVoicePanel ? (
-        <VoiceRecordingPanel
-          startedAt={controller.voice.recordingStartedAt}
-          onCancel={() => void controller.voice.cancelVoiceRecording()}
-          onDone={() => void controller.voice.handleVoicePress()}
-          phase={isRecording ? 'recording' : 'sending'}
-        />
-      ) : (
-        <Card
-          className="w-full gap-2 p-3"
-          style={{
-            borderColor,
-            borderCurve: 'continuous',
-            borderRadius: 24,
-            boxShadow: nativeShadows.sm,
-          }}
-          testID={`${presentation.shellTestID ?? 'composer'}-surface`}
-        >
-          <TextField
-            value={controller.message}
-            onChangeText={controller.setMessage}
-            placeholder={presentation.placeholder}
-            testID={presentation.inputTestID}
-            onFocus={controller.handleInputFocus}
-            onBlur={controller.handleInputBlur}
-            multiline
-            numberOfLines={5}
-            style={{
-              borderRadius: 0,
-              borderWidth: 0,
-              minHeight: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            }}
+      <Card
+        className="w-full gap-2 p-3"
+        style={{
+          borderColor,
+          borderCurve: 'continuous',
+          borderRadius: 24,
+          boxShadow: nativeShadows.sm,
+        }}
+        testID={`${presentation.shellTestID ?? 'composer'}-surface`}
+      >
+        {errorBanner}
+        {showVoicePanel ? (
+          <VoiceRecordingPanel
+            startedAt={controller.voice.recordingStartedAt}
+            onCancel={() => void controller.voice.cancelVoiceRecording()}
+            onDone={() => void controller.voice.handleVoicePress()}
+            phase={isRecording ? 'recording' : 'sending'}
           />
-          <View className="flex-row items-center justify-between">
-            <ComposerAttachButton disabled={!controller.canPickMedia} />
-            <ComposerToolbar
-              canEnhance={controller.canOpenEnhance}
-              canSubmit={controller.canSubmit}
-              canToggleVoice={controller.canToggleVoice}
-              hasContent={controller.hasContent}
-              isEnhancing={controller.enhance.isEnhancing}
-              isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-              isSubmitting={submission.isSubmitting}
-              isVoiceBusy={controller.voice.isBusy}
-              isWalkieTalkie={controller.voice.isWalkieTalkie}
-              onEnhancePress={controller.enhance.toggleEnhance}
-              onSubmit={() => submit(presentation.primarySubmitKind)}
-              onVoicePress={() => void controller.voice.handleVoicePress()}
-              onToggleWalkieTalkie={
-                props.mode === 'chat'
-                  ? () => controller.voice.setWalkieTalkie((prev) => !prev)
-                  : undefined
-              }
-              submitAccessibilityLabel={presentation.submitAccessibilityLabel}
-              submitTestID={presentation.submitTestID}
+        ) : (
+          <>
+            <TextField
+              value={controller.message}
+              onChangeText={controller.setMessage}
+              placeholder={presentation.placeholder}
+              testID={presentation.inputTestID}
+              onFocus={controller.handleInputFocus}
+              onBlur={controller.handleInputBlur}
+              multiline
+              numberOfLines={5}
+              style={{
+                borderRadius: 0,
+                borderWidth: 0,
+                minHeight: 0,
+                paddingHorizontal: 0,
+                paddingVertical: 0,
+              }}
             />
-          </View>
-        </Card>
-      )}
+            <View className="flex-row items-center justify-between">
+              <ComposerAttachButton disabled={!controller.canPickMedia} />
+              <ComposerToolbar
+                canEnhance={controller.canOpenEnhance}
+                canSubmit={controller.canSubmit}
+                canToggleVoice={controller.canToggleVoice}
+                hasContent={controller.hasContent}
+                isEnhancing={controller.enhance.isEnhancing}
+                isRecordingElsewhere={controller.voice.isRecordingElsewhere}
+                isSubmitting={submission.isSubmitting}
+                isVoiceBusy={controller.voice.isBusy}
+                isWalkieTalkie={controller.voice.isWalkieTalkie}
+                onEnhancePress={controller.enhance.toggleEnhance}
+                onSubmit={() => submit(presentation.primarySubmitKind)}
+                onVoicePress={() => void controller.voice.handleVoicePress()}
+                onToggleWalkieTalkie={
+                  props.mode === 'chat'
+                    ? () => controller.voice.setWalkieTalkie((prev) => !prev)
+                    : undefined
+                }
+                submitAccessibilityLabel={presentation.submitAccessibilityLabel}
+                submitTestID={presentation.submitTestID}
+              />
+            </View>
+          </>
+        )}
+      </Card>
     </View>
   );
 }
