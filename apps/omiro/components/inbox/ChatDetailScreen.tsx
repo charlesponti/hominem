@@ -244,7 +244,6 @@ export function ChatDetailScreen() {
           displayMessages={controller.displayMessages}
           showSearch={controller.showSearch}
           searchQuery={controller.searchQuery}
-          markdown={controller.Markdown}
           showDebug={controller.showDebug}
           onCopy={controller.handleCopyMessage}
           onShare={(message: Parameters<typeof controller.handleShareMessage>[0]) => {

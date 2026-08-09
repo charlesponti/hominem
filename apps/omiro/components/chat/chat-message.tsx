@@ -2,7 +2,7 @@ import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from '@homine
 import { getReferencedNoteLabel } from '@hominem/chat';
 import { TextField } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
@@ -20,7 +20,6 @@ type ToolCall = NonNullable<ChatMessageItem['toolCalls']>[number];
 
 type ChatMessageProps = {
   message: ChatMessageItem;
-  Markdown?: MarkdownComponent | null;
   showDebug?: boolean;
   onCopy?: (message: ChatMessageItem) => void;
   onEdit?: (messageId: string, content: string) => void;
@@ -56,9 +55,34 @@ function ActionIconButton({
   );
 }
 
-export async function loadMarkdown() {
+async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
   return mod.default as MarkdownComponent;
+}
+
+let markdownPromise: Promise<MarkdownComponent | null> | null = null;
+
+function getMarkdownComponent(): Promise<MarkdownComponent | null> {
+  if (!markdownPromise) {
+    markdownPromise = loadMarkdown().catch(() => null);
+  }
+  return markdownPromise;
+}
+
+function useMarkdownComponent(): MarkdownComponent | null {
+  const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void getMarkdownComponent().then((component) => {
+      if (active) setMarkdown(component);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return Markdown;
 }
 
 function MessageEditModal({
@@ -182,21 +206,52 @@ function ReferencedNotes({ message }: { message: ChatMessageItem }) {
 
 function MessageContent({
   content,
-  Markdown,
-  markdownStyle,
+  enableMarkdown,
   textStyle,
   children,
 }: {
   content: string;
-  isUser: boolean;
-  Markdown?: MarkdownComponent | null;
-  markdownStyle: object;
+  enableMarkdown: boolean;
   textStyle: object;
   children?: React.ReactNode;
 }) {
+  const Markdown = useMarkdownComponent();
+  const [textPrimary, popover] = useCSSVariable([
+    '--color-foreground',
+    '--color-popover',
+  ]) as string[];
+
+  const markdownStyle = useMemo(
+    () => ({
+      body: textStyle,
+      code_block: {
+        backgroundColor: popover,
+        borderRadius: 8,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        padding: 12,
+      },
+      code_inline: {
+        backgroundColor: popover,
+        borderRadius: 4,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        paddingHorizontal: 4,
+      },
+      fence: {
+        backgroundColor: popover,
+        borderRadius: 8,
+        color: textPrimary,
+        fontFamily: 'Menlo',
+        padding: 12,
+      },
+    }),
+    [textPrimary, popover, textStyle],
+  );
+
   return (
     <View className="gap-2 w-full">
-      {Markdown ? (
+      {Markdown && enableMarkdown ? (
         <Markdown style={markdownStyle}>{content}</Markdown>
       ) : (
         <Text style={textStyle}>{content}</Text>
@@ -327,7 +382,6 @@ function ActiveMessageActions({
 
 const ChatMessage = memo(function ChatMessage({
   message,
-  Markdown,
   showDebug = false,
   onCopy,
   onEdit,
@@ -340,10 +394,7 @@ const ChatMessage = memo(function ChatMessage({
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const [textPrimary, popover] = useCSSVariable([
-    '--color-foreground',
-    '--color-popover',
-  ]) as string[];
+  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
 
   const { role, message: content, isStreaming } = message;
   const isUser = role.toLowerCase() === 'user';
@@ -371,34 +422,6 @@ const ChatMessage = memo(function ChatMessage({
       lineHeight: isUser ? 24 : 25.6,
     }),
     [textPrimary, isUser],
-  );
-
-  const markdownStyle = useMemo(
-    () => ({
-      body: textStyle,
-      code_block: {
-        backgroundColor: popover,
-        borderRadius: 8,
-        color: textPrimary,
-        fontFamily: 'Menlo',
-        padding: 12,
-      },
-      code_inline: {
-        backgroundColor: popover,
-        borderRadius: 4,
-        color: textPrimary,
-        fontFamily: 'Menlo',
-        paddingHorizontal: 4,
-      },
-      fence: {
-        backgroundColor: popover,
-        borderRadius: 8,
-        color: textPrimary,
-        fontFamily: 'Menlo',
-        padding: 12,
-      },
-    }),
-    [textPrimary, popover, textStyle],
   );
 
   const closeEdit = () => {
@@ -441,13 +464,7 @@ const ChatMessage = memo(function ChatMessage({
 
         <MessageToolCalls toolCalls={renderedToolCalls} />
 
-        <MessageContent
-          Markdown={isStreaming ? null : Markdown}
-          content={content}
-          isUser={isUser}
-          markdownStyle={markdownStyle}
-          textStyle={textStyle}
-        >
+        <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
           {isUser ? <ReferencedNotes message={message} /> : null}
         </MessageContent>
 
@@ -486,7 +503,6 @@ const ChatMessage = memo(function ChatMessage({
 
 export function renderChatMessage(
   item: ChatMessageItem,
-  Markdown: MarkdownComponent | null | undefined,
   _renderIcon: ChatRenderIcon,
   formatTimestamp: (value: string) => string,
   actions?: {
@@ -500,12 +516,5 @@ export function renderChatMessage(
     onActivate?: () => void;
   },
 ) {
-  return (
-    <ChatMessage
-      Markdown={Markdown ?? null}
-      formatTimestamp={formatTimestamp}
-      message={item}
-      {...actions}
-    />
-  );
+  return <ChatMessage formatTimestamp={formatTimestamp} message={item} {...actions} />;
 }

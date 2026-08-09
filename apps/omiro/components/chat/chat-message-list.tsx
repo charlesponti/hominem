@@ -1,9 +1,8 @@
-import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from '@hominem/chat';
+import type { ChatMessageItem, ChatRenderIcon } from '@hominem/chat';
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
-import { Platform, Pressable, type RefreshControlProps, View } from 'react-native';
-import { Text } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
 import { renderChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
@@ -16,7 +15,6 @@ interface ChatMessageListProps {
   displayMessages: ChatMessageItem[];
   showSearch: boolean;
   searchQuery: string;
-  markdown: MarkdownComponent | null;
   showDebug: boolean;
   onCopy: (message: ChatMessageItem) => void;
   onEdit?: (messageId: string, content: string) => void;
@@ -39,7 +37,6 @@ export function ChatMessageList({
   displayMessages,
   showSearch,
   searchQuery,
-  markdown,
   showDebug,
   onCopy,
   onEdit,
@@ -81,7 +78,7 @@ export function ChatMessageList({
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
     ({ item }) =>
-      renderChatMessage(item, markdown, renderIcon, formatTimestamp, {
+      renderChatMessage(item, renderIcon, formatTimestamp, {
         isActive: !item.isStreaming && activeActionMessageId === item.id,
         onActivate: item.isStreaming
           ? undefined
@@ -99,7 +96,6 @@ export function ChatMessageList({
     [
       activeActionMessageId,
       formatTimestamp,
-      markdown,
       onCopy,
       onDelete,
       onEdit,

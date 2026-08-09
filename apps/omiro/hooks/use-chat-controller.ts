@@ -1,4 +1,4 @@
-import type { ChatMessageItem, MarkdownComponent } from '@hominem/chat';
+import type { ChatMessageItem } from '@hominem/chat';
 import type { PendingReview } from '@hominem/chat/react';
 import { useChatLifecycle } from '@hominem/chat/react';
 import { buildArtifactProposal } from '@hominem/chat/ui';
@@ -9,18 +9,9 @@ import * as Clipboard from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  type RefObject,
-} from 'react';
+import { useCallback, useMemo, useReducer, useRef, type RefObject } from 'react';
 import { Alert, Share, TextInput } from 'react-native';
 
-import { loadMarkdown } from '../components/chat/chat-message';
 import {
   hasNonEmptyListData,
   resolveRestoredQueryState,
@@ -94,7 +85,6 @@ interface UseChatControllerInput {
 }
 
 interface UseChatControllerResult {
-  Markdown: MarkdownComponent | null;
   displayMessages: ChatMessageItem[];
   handleAcceptReview: () => Promise<void>;
   handleArchiveChat: () => void;
@@ -148,7 +138,6 @@ export function useChatController({
       onChatArchive();
     },
   });
-  const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null);
   const [uiState, dispatch] = useReducer(mobileUiReducer, initialMobileUiState);
   const searchInputRef = useRef<TextInput | null>(null);
 
@@ -364,26 +353,6 @@ export function useChatController({
     },
   });
 
-  const markdownLoadedRef = useRef(false);
-  useEffect(() => {
-    if (markdownLoadedRef.current) return;
-    markdownLoadedRef.current = true;
-
-    const controller = new AbortController();
-
-    loadMarkdown()
-      .then((component) => {
-        if (!controller.signal.aborted) setMarkdown(() => component);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setMarkdown(null);
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   const handleArchiveChat = useCallback(() => {
     archiveChat();
   }, [archiveChat]);
@@ -443,7 +412,6 @@ export function useChatController({
   );
 
   return {
-    Markdown,
     displayMessages,
     handleAcceptReview,
     handleArchiveChat,
