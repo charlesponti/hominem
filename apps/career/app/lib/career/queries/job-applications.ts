@@ -1,6 +1,3 @@
-import type { CareerApplicationRecord } from '@hominem/db';
-import { CareerRepository, db } from '@hominem/db';
-
 export type JobApplicationCard = {
   id: string;
   company: string;
@@ -47,39 +44,4 @@ export function sortAndPaginateJobApplications(
     return sorted.slice(0, options.limit);
   }
   return sorted;
-}
-
-function toApplicationCard(
-  app: CareerApplicationRecord,
-  stageCount: number,
-  hasOffer: boolean,
-): JobApplicationCard {
-  return {
-    id: app.id,
-    company: app.company,
-    title: app.title,
-    location: app.location ?? null,
-    source: app.source ?? null,
-    appliedAt: app.appliedAt ?? null,
-    currentStage: app.currentStage ?? null,
-    status: app.status ?? null,
-    jobPostingUrl: app.jobPostingUrl ?? null,
-    salaryExpectation: app.salaryExpectation ?? null,
-    notes: app.notes ?? null,
-    stageCount,
-    hasOffer,
-  };
-}
-
-export async function getApplicationCards(ownerUserId: string): Promise<JobApplicationCard[]> {
-  const applications = await CareerRepository.listApplications(db, ownerUserId);
-  const stats = await CareerRepository.getApplicationCardStats(
-    db,
-    applications.map((app) => app.id),
-  );
-
-  return applications.map((app) => {
-    const stat = stats.get(app.id);
-    return toApplicationCard(app, stat?.stageCount ?? 0, stat?.hasOffer ?? false);
-  });
 }

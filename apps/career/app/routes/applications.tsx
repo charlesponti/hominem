@@ -3,7 +3,8 @@ import { ChevronRightIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
-import { filterJobApplications, getApplicationCards } from '~/lib/career/queries/job-applications';
+import { filterJobApplications } from '~/lib/career/queries/job-applications';
+import { getApplicationCards } from '~/lib/career/queries/job-applications.server';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 
