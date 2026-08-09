@@ -11,8 +11,8 @@ catalogs:
       specifier: 1.6.0
       version: 1.6.0
     '@ponti-studios/ui':
-      specifier: 1.1.0
-      version: 1.1.0
+      specifier: 1.2.0
+      version: 1.2.0
     '@react-router/dev':
       specifier: 8.3.0
       version: 8.3.0
@@ -111,7 +111,7 @@ importers:
     dependencies:
       '@ponti-studios/ui':
         specifier: 'catalog:'
-        version: 1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
+        version: 1.2.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
     devDependencies:
       '@expo/image-utils':
         specifier: ^0.11.4
@@ -184,7 +184,7 @@ importers:
         version: link:../../packages/auth
       '@ponti-studios/ui':
         specifier: 'catalog:'
-        version: 1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
+        version: 1.2.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
       '@react-router/node':
         specifier: 'catalog:'
         version: 8.3.0(react-router@8.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(typescript@7.0.2)
@@ -314,7 +314,7 @@ importers:
         version: link:../../packages/auth
       '@ponti-studios/ui':
         specifier: 'catalog:'
-        version: 1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
+        version: 1.2.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.20(@types/react-dom@19.1.7(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -450,7 +450,7 @@ importers:
         version: link:../../packages/auth
       '@ponti-studios/ui':
         specifier: 'catalog:'
-        version: 1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
+        version: 1.2.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
       '@react-native-community/netinfo':
         specifier: 12.0.1
         version: 12.0.1(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)
@@ -3177,8 +3177,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@ponti-studios/ui@1.1.0':
-    resolution: {integrity: sha512-eP3AcvDcbx6AU/lZSoR3vV/UQfBFvbbf894xkTLu67iL7KJA8FjALllPrGEw1j2anyW4cq+SW4iYW3bXGKx+Jg==}
+  '@ponti-studios/ui@1.2.0':
+    resolution: {integrity: sha512-5Y5rwn5ZPFB6wJrFRQ9lWtXZhG5rvo+/onKH+XJ3ZoC9onOKTiQediLPoVqQv60vR8QtjBTavQB49A6QgzG/WA==}
     peerDependencies:
       react: 19.2.8
       react-dom: 19.2.8
@@ -11964,7 +11964,7 @@ snapshots:
     dependencies:
       playwright: 1.61.1
 
-  '@ponti-studios/ui@1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))':
+  '@ponti-studios/ui@1.2.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))':
     dependencies:
       '@base-ui/react': 1.6.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@radix-ui/colors': 3.0.0
