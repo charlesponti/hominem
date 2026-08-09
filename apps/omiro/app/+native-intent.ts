@@ -35,7 +35,7 @@ export function redirectSystemPath({
   // Strip leading slash for matching
   const normalized = path.startsWith('/') ? path.slice(1) : path;
 
-  // App Intent / Siri: note/add -> inbox
+  // App Intent / Siri: note/add -> All
   if (normalized === 'note/add') {
     return INBOX_ROUTE;
   }

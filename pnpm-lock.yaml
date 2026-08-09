@@ -108,6 +108,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@ponti-studios/ui':
+        specifier: 'catalog:'
+        version: 1.1.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(uniwind@1.10.1(@expo/metro-config@57.0.7(expo@57.0.8)(typescript@7.0.2))(metro-cache@0.84.4)(metro-transform-worker@0.84.4)(metro@0.84.4)(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(tailwindcss@4.3.3))
     devDependencies:
       '@expo/image-utils':
         specifier: ^0.11.4

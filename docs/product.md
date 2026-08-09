@@ -13,7 +13,9 @@ Hominem is one product system. The API, Omiro, and every shared package exist to
 
 Words define product boundaries. Use them consistently.
 
-- **inbox** — Signed-in root surface and mixed recent list.
+- **All** — Signed-in root surface and mixed recent list of conversations and documents.
+- **Time** — The task-and-calendar surface.
+- **thread** — Presentation-only language for an existing chat or note; persisted kind never changes.
 - **chat** — A conversation.
 - **note** — A saved note.
 - **composer** — The input surface that creates notes or starts chats.
@@ -36,6 +38,7 @@ Do not use `workspace` as a product or module concept. Do not use `feed` as an a
 - Time uses a clock, not a calendar destination. iOS Calendar is a source within Time, not the product information architecture.
 - `TimeStream` is the UI projection of source-backed task and calendar items. It orders them together without converting either source into the other.
 - Time keeps unscheduled tasks in a distinct secondary Unscheduled screen. They do not appear in the chronological schedule until they receive a due date or scheduled interval.
+- The All composer infers Document for multiline or structured text and Conversation for ordinary single-paragraph text. A visible manual override is sticky for that draft and resets only after clear or successful submit.
 
 ## Product decision test
 

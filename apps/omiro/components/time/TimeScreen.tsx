@@ -6,7 +6,7 @@ import { Pressable } from 'react-native';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
 
 import AppIcon from '../ui/icon';
-import { TimePreviewProvider, useTimePreview } from './time-preview-context';
+import { useTimePreview } from './time-preview-context';
 import { TimeWorkspace } from './TimeWorkspace';
 
 export function TimeScreen() {
@@ -14,12 +14,10 @@ export function TimeScreen() {
   const router = useRouter();
 
   return (
-    <TimePreviewProvider>
-      <TimeWorkspace
-        isFocused={isFocused}
-        onOpenItem={(item) => router.push(getTimeBlockRoute(item.kind, item.value.id))}
-      />
-    </TimePreviewProvider>
+    <TimeWorkspace
+      isFocused={isFocused}
+      onOpenItem={(item) => router.push(getTimeBlockRoute(item.kind, item.value.id))}
+    />
   );
 }
 
@@ -66,12 +64,12 @@ function TimePreviewMenuButton() {
   };
 
   return (
-    <MenuView
-      actions={actions}
-      onPressAction={onPressAction}
-      testID="time-preview-menu-button"
-    >
-      <IconButton accessibilityLabel="Preview Time with fixture data" variant="plain">
+    <MenuView actions={actions} onPressAction={onPressAction} testID="time-preview-menu-button">
+      <IconButton
+        accessibilityLabel="Preview Time with fixture data"
+        testID="time-preview-menu-button"
+        variant="plain"
+      >
         <AppIcon name={scenario ? 'flask.fill' : 'flask'} size={22} />
       </IconButton>
     </MenuView>

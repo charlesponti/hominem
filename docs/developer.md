@@ -7,6 +7,7 @@ The system is only real when a clean checkout, a deployment, and a production fa
 - `just` and root `pnpm` scripts are the repository-level command interface. Package scripts are Turbo primitives, not contributor instructions.
 - Run the smallest relevant validation lane first: `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `pnpm test`, each scoped with `--filter=@hominem/<package>...` (e.g. `--filter=@hominem/api...`, `--filter=@hominem/omiro...`, `--filter=@hominem/career...`, `--filter=@hominem/finance...`).
 - Published shared packages expose compiled artifacts. Local development may alias a package's source for hot reload, but CI, deployables, EAS, and external consumers resolve the same compiled public exports.
+- The shared UI package stays registry-resolved in manifests and lockfiles. Use `just ui link [path]`, `just ui status`, and `just ui unlink` for a reversible sibling-source link; the commands must not commit local paths.
 - One Node and pnpm line governs local development, CI, Docker, Railway, and EAS. Version drift is a defect.
 - `@hominem/env` owns shared environment semantics. Framework prefixes adapt a variable for a runtime; they do not invent a second meaning.
 
@@ -26,6 +27,8 @@ Upload acceptance is not deployment success. Automation verifies the resolved ta
 ## Omiro mobile delivery
 
 Omiro uses Expo Continuous Native Generation. The checked-in source of truth is the app config, local Expo Modules, and config plugins; `apps/omiro/ios` is generated output and is excluded from Git and EAS uploads.
+
+Portable motion contracts live in `@ponti-studios/ui` as serializable tokens. Omiro owns the Reanimated adapter, Router gestures, reduced-motion integration, and product semantics; shared UI does not import Expo Router or Reanimated.
 
 The release path is deliberately linear:
 

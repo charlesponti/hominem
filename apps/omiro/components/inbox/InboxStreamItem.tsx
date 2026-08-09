@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import Reanimated, {
-  Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -14,6 +13,7 @@ import { useCSSVariable } from 'uniwind';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { useChatArchive } from '~/services/chat/use-chat-archive';
+import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import t from '~/translations';
 
@@ -61,14 +61,11 @@ export const InboxStreamItem = memo(
         return;
       }
       if (reducedMotion) {
-        entrance.value = withTiming(1, { duration: 150 });
+        entrance.value = withTiming(1, nativeMotionTiming.exit);
         return;
       }
       const delay = animateOnMount ? index * 40 : 0;
-      entrance.value = withDelay(
-        delay,
-        withTiming(1, { duration: animateOnMount ? 240 : 220, easing: Easing.out(Easing.quad) }),
-      );
+      entrance.value = withDelay(delay, withTiming(1, nativeMotionTiming.enter));
     }, [animateOnMount, entrance, index, isNew, reducedMotion, shouldAnimateIn]);
 
     const entranceStyle = useAnimatedStyle(() => ({

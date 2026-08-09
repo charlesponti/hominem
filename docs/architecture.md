@@ -25,10 +25,11 @@ API
 
 ## Omiro protected navigation
 
-Omiro has one Home-first protected stack, not a persistent tab bar:
+Omiro has one protected Expo Router stack with All and Time root scenes, not a persistent tab bar:
 
-- **Home** is the signed-in entry point for current work, today's schedule, unscheduled-task access, and capture.
-- **Inbox** is a deeper all-recent destination for chats and notes.
+- **All** (`/(protected)`) is the signed-in entry point and canonical mixed stream for chats and notes.
 - **Time** owns the chronological schedule and time-block detail routes. Unscheduled tasks are a dedicated secondary route, not schedule rows.
 
-Inbox and Time own their nested detail routes. Deep links select the owning destination directly. Settings is a protected form sheet. Transient state stays inside the screen that owns it; route params are reserved for destinations and deep-linkable detail identity.
+Legacy Inbox links translate to All. Chat and note detail remain owned by `/(protected)/inbox/[kind]/[id]`; `kind` is required and persisted. Deep links select the owning destination directly. Settings is a protected form sheet. Transient state stays inside the screen that owns it; route params are reserved for destinations and deep-linkable detail identity.
+
+Thread view models are presentation adapters over existing chat and note APIs. They do not introduce a kindless query key, persistence model, migration, or conversion path.

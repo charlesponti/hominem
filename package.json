@@ -33,6 +33,9 @@
     "typecheck": "turbo run typecheck",
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
   },
+  "dependencies": {
+    "@ponti-studios/ui": "catalog:"
+  },
   "devDependencies": {
     "@expo/image-utils": "^0.11.4",
     "@expo/prebuild-config": "~56.0.16",

@@ -3,23 +3,17 @@ import { IconButton } from '@ponti-studios/ui/native';
 import { useRouter, useSegments } from 'expo-router';
 
 import AppIcon from '~/components/ui/icon';
-import { HOME_ROUTE, INBOX_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { ALL_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
-type Destination = 'home' | 'inbox' | 'time' | 'settings';
+type Destination = 'all' | 'time' | 'settings';
 
 const destinations: {
   key: Destination;
   label: string;
   icon: MenuAction['image'];
-  route: typeof HOME_ROUTE;
+  route: typeof ALL_ROUTE;
 }[] = [
-  { key: 'home', label: 'Home', icon: 'house.fill', route: HOME_ROUTE },
-  {
-    key: 'inbox',
-    label: 'Inbox',
-    icon: 'bubble.left.and.bubble.right.fill',
-    route: INBOX_ROUTE,
-  },
+  { key: 'all', label: 'All', icon: 'tray.full.fill', route: ALL_ROUTE },
   { key: 'time', label: 'Time', icon: 'clock.fill', route: TIME_ROUTE },
 ];
 
@@ -32,8 +26,7 @@ const settingsDestination: { key: Destination; label: string; icon: MenuAction['
 function getActiveDestination(segments: readonly string[]): Destination | null {
   const [root, section] = segments;
   if (root !== '(protected)') return null;
-  if (!section) return 'home';
-  if (section === 'inbox') return 'inbox';
+  if (!section) return 'all';
   if (section === 'time') return 'time';
   if (section === 'settings') return 'settings';
   return null;

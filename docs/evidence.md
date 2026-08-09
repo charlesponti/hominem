@@ -8,6 +8,8 @@ Completion is conditional on evidence of the exact changed behavior in its real 
 - **External write or deployment** — Observation of the resulting external state and target identity.
 - **Framework/library capability** — Minimal working proof of the exact capability before feature work depends on it.
 
+Omiro UI changes require Maestro evidence on the booted iPhone simulator plus visual inspection of every changed state. Root scene gestures require exact interaction, interruption, accessibility, Reduce Motion, and smallest-viewport proofs; normal Expo Router Stack continuity remains the fallback for unsupported or failed enhancements.
+
 - A stateful interaction is not verified by its idle render. Evidence covers entry, active/focused/loading state, cancellation or failure when applicable, and return or recovery.
 - A failed, skipped, ambiguous, stale-build, or non-targeted validation leaves the change unverified. It is a blocker, not a warning to explain away.
 - Before composing controls in a bounded surface, prove the complete composition fits. If the approved behavior does not fit in the chosen primitive, report the constraint and stop; do not silently change product behavior.

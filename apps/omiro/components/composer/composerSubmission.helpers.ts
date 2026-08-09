@@ -25,9 +25,12 @@ export interface ComposerPresentation {
 // submit action is primary vs. secondary. Kept separate from the actual submit
 // logic in useComposerSubmission.ts so the two "submission" concerns — what the
 // button says versus what it does — can change independently.
-export function getComposerSubmissionConfig(props: ComposerProps): ComposerPresentation {
+export function getComposerSubmissionConfig(
+  props: ComposerProps,
+  selectedEntryKind?: 'chat' | 'note',
+): ComposerPresentation {
   const isInbox = props.mode === 'inbox';
-  const entryMode = isInbox ? (props.entryMode ?? 'mixed') : undefined;
+  const entryMode = isInbox ? (selectedEntryKind ?? props.entryMode ?? 'mixed') : undefined;
   const isChatEntryMode = isInbox && entryMode === 'chat';
   const isChatMode = props.mode === 'chat';
 

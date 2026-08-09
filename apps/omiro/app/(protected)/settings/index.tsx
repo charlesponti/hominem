@@ -203,6 +203,10 @@ function Settings() {
     router.push(ARCHIVED_CHATS_ROUTE);
   };
 
+  const onUiLabPress = () => {
+    router.push('/(protected)/dev/ui-lab' as never);
+  };
+
   const protectedRouteState = resolveProtectedRouteState({ isPending, isSignedIn });
 
   if (protectedRouteState.showFallback) {
@@ -352,6 +356,19 @@ function Settings() {
           accessory={<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />}
         />
       </View>
+
+      {__DEV__ ? (
+        <View className="gap-2">
+          <SectionLabel>Development</SectionLabel>
+          <SettingsRow
+            icon="rectangle.3.group"
+            label="UI Lab"
+            onPress={onUiLabPress}
+            testID="settings-ui-lab"
+            accessory={<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />}
+          />
+        </View>
+      ) : null}
 
       {/* Danger zone */}
       <View className="gap-2">

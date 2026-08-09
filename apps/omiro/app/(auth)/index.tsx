@@ -138,6 +138,7 @@ function AuthScreen() {
                       selectionColor={textPrimary}
                       style={{
                         borderColor: displayError ? destructive : borderDefault,
+                        height: 48,
                         opacity: isSubmitting ? 0.6 : 1,
                       }}
                       className="bg-card text-foreground text-body min-h-12 border rounded-xl px-3.5 py-3"

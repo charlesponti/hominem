@@ -1,5 +1,4 @@
-import { InboxStreamItem } from '@hominem/rpc/types';
+import type { ThreadViewModel } from './ThreadViewModel';
 
-export type InboxStreamItemData = InboxStreamItem & {
-  route: string;
-};
+export type ThreadStreamItemData = ThreadViewModel;
+export type InboxStreamItemData = ThreadStreamItemData;

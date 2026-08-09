@@ -5,8 +5,8 @@ import type { CalendarEvent } from '~/modules/on-device-ai';
 /**
  * Dev-only fixture scenarios for previewing the Time stream's design across
  * states that are awkward to reproduce with a real calendar/task backend
- * (multiple events per day, overlapping times, empty state, all-day-heavy
- * days). Picked from the header's dev menu (__DEV__ builds only) via
+ * (four weeks of overlapping events, tasks, and all-day entries, plus an
+ * empty state). Picked from the header's dev menu (__DEV__ builds only) via
  * `useTimePreview()`. Never referenced in production code paths.
  */
 
@@ -17,7 +17,9 @@ function at(hoursFromNow: number) {
   return new Date(NOW() + hoursFromNow * HOUR).toISOString();
 }
 
-function mockTask(overrides: Partial<TaskListItem> & Pick<TaskListItem, 'id' | 'title'>): TaskListItem {
+function mockTask(
+  overrides: Partial<TaskListItem> & Pick<TaskListItem, 'id' | 'title'>,
+): TaskListItem {
   return {
     artifactType: 'task',
     completedAt: null,
@@ -62,151 +64,107 @@ export interface TimePreviewScenario {
   tasks: TaskListItem[];
 }
 
-export const timePreviewScenarios: TimePreviewScenario[] = [
-  {
-    id: 'busy-day',
-    label: 'Busy day (overlaps + tasks)',
-    events: [
+export function createTimePreviewScenarios(): TimePreviewScenario[] {
+  const busyEvents = Array.from({ length: 28 }, (_, day) => {
+    const dayOffset = day * 24;
+    const events = [
       mockEvent({
-        calendarTitle: 'Work',
-        endDate: at(36),
-        id: 'preview-offsite',
-        isAllDay: true,
-        startDate: at(12),
-        title: 'Company Offsite',
+        calendarTitle: day % 2 === 0 ? 'Work' : 'Personal',
+        endDate: at(dayOffset + 10.25),
+        id: `preview-busy-focus-${day + 1}`,
+        location: day % 2 === 0 ? 'Room 4B' : 'Home office',
+        startDate: at(dayOffset + 9),
+        title: `Focus block · day ${day + 1}`,
       }),
       mockEvent({
         calendarTitle: 'Work',
-        endDate: at(0.75),
-        id: 'preview-standup',
+        endDate: at(dayOffset + 11.5),
+        id: `preview-busy-standup-${day + 1}`,
         location: 'Zoom',
         recurrenceDescription: 'Every weekday',
-        startDate: at(0.5),
-        title: 'Team Standup',
+        startDate: at(dayOffset + 10.5),
+        title: `Team standup · day ${day + 1}`,
       }),
       mockEvent({
         calendarTitle: 'Work',
-        endDate: at(1.5),
-        id: 'preview-design-review',
+        endDate: at(dayOffset + 12),
+        id: `preview-busy-review-${day + 1}`,
         location: 'Room 4B',
         participants: ['Priya', 'Jon'],
-        startDate: at(0.5),
-        title: 'Design Review',
-      }),
-      mockEvent({
-        calendarTitle: 'Work',
-        endDate: at(2.5),
-        id: 'preview-1-1',
-        participants: ['Sam'],
-        startDate: at(2),
-        title: '1:1 with Sam',
+        startDate: at(dayOffset + 10.5),
+        title: `Design review · day ${day + 1}`,
       }),
       mockEvent({
         calendarTitle: 'Personal',
-        endDate: at(4.5),
-        id: 'preview-lunch',
-        location: 'Tatel',
-        startDate: at(3.5),
-        title: 'Lunch with Maya',
+        endDate: at(dayOffset + 14),
+        id: `preview-busy-lunch-${day + 1}`,
+        location: day % 2 === 0 ? 'Tatel' : 'Home',
+        startDate: at(dayOffset + 13),
+        title: `Lunch · day ${day + 1}`,
       }),
-      mockEvent({
-        calendarTitle: 'Personal',
-        endDate: at(7),
-        id: 'preview-dentist',
-        location: 'Dr. Chen',
-        startDate: at(6),
-        title: 'Dentist Appointment',
-      }),
-      mockEvent({
-        calendarTitle: 'Travel',
-        endDate: at(27),
-        id: 'preview-flight',
-        isEditable: false,
-        location: 'SFO',
-        startDate: at(24),
-        title: 'Flight to SF',
-      }),
-      mockEvent({
-        calendarTitle: 'Work',
-        endDate: at(29),
-        id: 'preview-board',
-        location: 'HQ',
-        participants: ['Board'],
-        startDate: at(27),
-        title: 'Board Meeting',
-      }),
-      mockEvent({
-        calendarTitle: 'Birthdays',
-        endDate: at(48),
-        id: 'preview-birthday',
-        isAllDay: true,
-        isEditable: false,
-        recurrenceDescription: 'Yearly',
-        startDate: at(24),
-        title: "Anna's Birthday",
-      }),
-    ],
-    tasks: [
-      mockTask({
-        id: 'preview-task-email',
-        location: 'Inbox',
-        priority: 'high',
-        scheduledStartAt: at(0.6),
-        title: 'Reply to client email',
-      }),
-      mockTask({
-        dueAt: at(9),
-        id: 'preview-task-expense',
-        title: 'Submit expense report',
-      }),
-      mockTask({
-        durationMinutes: 45,
-        id: 'preview-task-slides',
-        priority: 'high',
-        scheduledStartAt: at(26),
-        title: 'Prepare slides for board meeting',
-      }),
-      mockTask({
-        id: 'preview-task-unscheduled',
-        priority: 'low',
-        title: 'Book dentist follow-up',
-      }),
-    ],
-  },
-  {
-    id: 'overlap-heavy',
-    label: 'Overlap-heavy (5 at once)',
-    events: [1, 2, 3, 4, 5].map((n) =>
-      mockEvent({
-        calendarTitle: ['Work', 'Personal', 'Travel', 'Birthdays', 'Work'][n - 1],
-        endDate: at(1 + n * 0.25),
-        id: `preview-overlap-${n}`,
-        participants: [],
-        startDate: at(1),
-        title: `Overlapping meeting ${n}`,
-      }),
-    ),
-    tasks: [],
-  },
-  {
-    id: 'all-day-heavy',
-    label: 'All-day heavy',
-    events: [0, 1, 2].map((n) =>
-      mockEvent({
-        calendarTitle: ['Work', 'Personal', 'Birthdays'][n],
-        endDate: at(24 * (n + 1) + 23),
-        id: `preview-allday-${n}`,
-        isAllDay: true,
-        startDate: at(24 * n),
-        title: ['Company Offsite', "Anna's Birthday", 'Yom Kippur'][n],
-      }),
-    ),
-    tasks: [],
-  },
-  {
-    id: 'empty',
-    label: 'Empty (nothing scheduled)',
-    events: [],
-    tasks: [],
-  },
-];
+    ];
+
+    if (day % 3 === 0) {
+      events.push(
+        mockEvent({
+          calendarTitle: 'Birthdays',
+          endDate: at(dayOffset + 24),
+          id: `preview-busy-allday-${day + 1}`,
+          isAllDay: true,
+          isEditable: false,
+          recurrenceDescription: 'Yearly',
+          startDate: at(dayOffset),
+          title: day % 2 === 0 ? 'Company offsite' : "Anna's birthday",
+        }),
+      );
+    }
+
+    return events;
+  }).flat();
+
+  const busyTasks = [
+    ...Array.from({ length: 28 }, (_, day) => {
+      const dayOffset = day * 24;
+      return [
+        mockTask({
+          durationMinutes: 45,
+          id: `preview-busy-task-plan-${day + 1}`,
+          priority: day % 4 === 0 ? 'high' : 'medium',
+          scheduledStartAt: at(dayOffset + 8),
+          title: `Plan the day · day ${day + 1}`,
+        }),
+        mockTask({
+          dueAt: at(dayOffset + 16),
+          id: `preview-busy-task-followup-${day + 1}`,
+          title: `Follow up on actions · day ${day + 1}`,
+        }),
+      ];
+    }).flat(),
+    mockTask({
+      id: 'preview-busy-task-unscheduled-1',
+      location: 'Inbox',
+      priority: 'high',
+      title: 'Book dentist follow-up',
+    }),
+    mockTask({
+      id: 'preview-busy-task-unscheduled-2',
+      priority: 'low',
+      title: 'Plan next month',
+    }),
+  ];
+
+  return [
+    {
+      id: 'busy',
+      label: 'Busy',
+      events: busyEvents,
+      tasks: busyTasks,
+    },
+    {
+      id: 'empty',
+      label: 'Empty (nothing scheduled)',
+      events: [],
+      tasks: [],
+    },
+  ];
+}
