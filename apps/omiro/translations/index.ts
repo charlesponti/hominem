@@ -427,6 +427,8 @@ const t = {
     permission: {
       message: 'Camera access is required to take photos.',
       grant: 'Grant permission',
+      deniedMessage: 'Camera access was denied. Enable it in Settings to take photos.',
+      openSettings: 'Open Settings',
       cancel: 'Cancel',
     },
     closeA11y: 'Close camera',

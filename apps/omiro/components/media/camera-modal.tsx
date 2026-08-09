@@ -2,7 +2,7 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Linking, Pressable, View } from 'react-native';
 import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -33,7 +33,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const [facing, setFacing] = useState<'front' | 'back'>('back');
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const { hasPermission, canRequestPermission, requestPermission } = useCameraPermission();
   const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
   const device = useCameraDevice(facing);
   const photoOutput = usePhotoOutput();
@@ -83,6 +83,10 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   };
 
   const handleRequestPermissions = async () => {
+    if (!canRequestPermission) {
+      await Linking.openSettings();
+      return;
+    }
     await requestPermission();
     if (mediaPermission?.status === 'undetermined') {
       await requestMediaPermission();
@@ -152,12 +156,20 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
           </View>
         ) : (
           <View className="flex-1 items-center justify-center gap-4 px-6">
-            <Text className="text-body text-foreground">{t.camera.permission.message}</Text>
+            <Text className="text-body text-foreground">
+              {canRequestPermission
+                ? t.camera.permission.message
+                : t.camera.permission.deniedMessage}
+            </Text>
             <Pressable
               onPress={() => void handleRequestPermissions()}
               className="border border-border rounded-md px-4 py-2"
             >
-              <Text className="text-body text-foreground">{t.camera.permission.grant}</Text>
+              <Text className="text-body text-foreground">
+                {canRequestPermission
+                  ? t.camera.permission.grant
+                  : t.camera.permission.openSettings}
+              </Text>
             </Pressable>
             <Pressable onPress={handleDismiss} className="px-4 py-2">
               <Text className="text-body text-muted-foreground">{t.camera.permission.cancel}</Text>
