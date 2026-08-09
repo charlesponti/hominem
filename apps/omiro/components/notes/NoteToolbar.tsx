@@ -1,11 +1,10 @@
-import { GlassView } from 'expo-glass-effect';
+import { IconButton, nativeShadows } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 import React from 'react';
 import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
-import { makeStyles, SCREEN_MARGIN_HORIZONTAL } from '~/components/theme';
-import { IconButton } from '~/components/ui/icon-button';
+import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
 export const NOTE_TOOLBAR_ID = 'note-editor-toolbar';
@@ -23,27 +22,27 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButtonProps) {
   return (
-    <IconButton accessibilityLabel={label} disabled={disabled} icon={icon} onPress={onPress} />
+    <IconButton accessibilityLabel={label} disabled={disabled} onPress={onPress}>
+      <AppIcon name={icon} size={20} />
+    </IconButton>
   );
 }
 
 function ToolbarDivider() {
-  const styles = useToolbarStyles();
-  return <View style={styles.divider} />;
+  return <View className="bg-border h-5 mx-4 w-px" />;
 }
 
 function ToolbarButtons({ onAction }: NoteToolbarProps) {
-  const styles = useToolbarStyles();
   return (
     <>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scroll}
+        contentContainerStyle={{ alignItems: 'center', flexDirection: 'row', gap: 8 }}
+        className="flex-1"
       >
-        <View style={styles.group}>
+        <View className="items-center flex-row gap-2">
           <ToolbarButton
             icon="bold"
             label={t.notes.toolbar.bold}
@@ -68,7 +67,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.group}>
+        <View className="items-center flex-row gap-2">
           <ToolbarButton
             icon="textformat.size.larger"
             label={t.notes.toolbar.heading}
@@ -83,7 +82,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.group}>
+        <View className="items-center flex-row gap-2">
           <ToolbarButton
             icon="checklist"
             label={t.notes.toolbar.checklist}
@@ -103,7 +102,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.group}>
+        <View className="items-center flex-row gap-2">
           <ToolbarButton
             icon="increase.indent"
             label={t.notes.toolbar.indent}
@@ -129,51 +128,16 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 }
 
 export function NoteToolbar(props: NoteToolbarProps) {
-  const styles = useToolbarStyles();
   return (
     <InputAccessoryView nativeID={NOTE_TOOLBAR_ID} backgroundColor="transparent">
-      <GlassView style={styles.glass}>
-        <View style={styles.container}>
+      <View
+        className="bg-card border border-border rounded-lg self-stretch flex-row h-12 mx-4"
+        style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
+      >
+        <View className="items-center flex-row flex-1 px-0 py-0">
           <ToolbarButtons {...props} />
         </View>
-      </GlassView>
+      </View>
     </InputAccessoryView>
   );
 }
-
-const useToolbarStyles = makeStyles((theme) => ({
-  container: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flex: 1,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  glass: {
-    alignSelf: 'stretch',
-    borderRadius: 12,
-    flexDirection: 'row',
-    height: 48,
-    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
-    overflow: 'hidden',
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  group: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  divider: {
-    backgroundColor: theme.colors['border-default'],
-    height: 20,
-    marginHorizontal: SCREEN_MARGIN_HORIZONTAL,
-    width: 1,
-  },
-}));

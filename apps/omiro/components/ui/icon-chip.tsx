@@ -2,8 +2,7 @@ import type { SFSymbol } from 'expo-symbols';
 import React from 'react';
 import type { ColorValue } from 'react-native';
 import { View } from 'react-native';
-
-import { useThemeColors } from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 import AppIcon from './icon';
 
@@ -16,16 +15,15 @@ interface IconChipProps {
 }
 
 export function IconChip({ icon, size = 36, radius = 10, iconSize, tintColor }: IconChipProps) {
-  const themeColors = useThemeColors();
+  const [cardColor] = useCSSVariable(['--color-card']) as string[];
 
   return (
     <View
+      className="items-center justify-center"
       style={{
-        alignItems: 'center',
-        backgroundColor: themeColors['card'],
+        backgroundColor: cardColor,
         borderRadius: radius,
         height: size,
-        justifyContent: 'center',
         width: size,
       }}
     >

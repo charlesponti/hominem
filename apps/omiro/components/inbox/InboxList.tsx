@@ -1,9 +1,8 @@
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native';
-import { View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
-import { Text, makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import t from '~/translations';
 
@@ -42,6 +41,7 @@ interface InboxListProps {
   refreshControl?: React.ReactElement<RefreshControlProps>;
   restoredScrollOffset?: number;
   contentPaddingTop?: number;
+  contentPaddingBottom?: number;
 }
 
 const RenderInboxHomeItem = memo(
@@ -80,8 +80,8 @@ export function InboxList({
   refreshControl,
   restoredScrollOffset,
   contentPaddingTop,
+  contentPaddingBottom,
 }: InboxListProps) {
-  const styles = useStyles();
   const listRef = useRef<FlashListRef<InboxListRow>>(null);
   const hasRestoredScrollRef = useRef(false);
   const entranceDoneRef = useRef(false);
@@ -151,7 +151,7 @@ export function InboxList({
 
   if (error && items.length === 0) {
     return (
-      <View style={[styles.emptyWrap]}>
+      <View className="flex-1">
         <EmptyState
           action={
             refreshControl?.props.onRefresh
@@ -170,7 +170,7 @@ export function InboxList({
 
   if (!isLoading && items.length === 0) {
     return (
-      <View style={[styles.emptyWrap]}>
+      <View className="flex-1">
         <EmptyState
           imageSource={tab ? EMPTY_STATE_ASSETS[tab] : undefined}
           sfSymbol={tab ? undefined : 'tray'}
@@ -183,21 +183,22 @@ export function InboxList({
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 rounded-xl px-0">
       <FlashList
         ref={listRef}
         contentContainerStyle={{
           paddingTop: contentPaddingTop,
+          paddingBottom: Platform.OS === 'android' ? contentPaddingBottom : undefined,
         }}
+        contentInset={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
         contentInsetAdjustmentBehavior="automatic"
+        scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
         data={[...rows]}
         keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.id}
         ListFooterComponent={
           isFetchingNextPage ? (
-            <Text variant="caption1" color="tertiary" style={styles.footerText}>
-              Loading more...
-            </Text>
+            <Text className="text-caption1 text-tertiary py-4 text-center">Loading more...</Text>
           ) : null
         }
         onEndReached={onEndReached}
@@ -214,22 +215,3 @@ export function InboxList({
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  emptyWrap: {
-    flex: 1,
-  },
-  debugBorder: {
-    borderColor: '#ff0000',
-    borderWidth: 1,
-  },
-  container: {
-    borderRadius: 12,
-    flex: 1,
-    paddingHorizontal: 0,
-  },
-  footerText: {
-    paddingVertical: theme.spacing.lg,
-    textAlign: 'center',
-  },
-}));

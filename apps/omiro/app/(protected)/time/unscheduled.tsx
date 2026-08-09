@@ -1,12 +1,12 @@
 import { Stack } from 'expo-router';
 
-import { UnscheduledTasksScreen } from '~/components/time/UnscheduledTasksScreen';
+import { TasksScreen } from '~/components/time/TasksScreen';
 
 export default function UnscheduledTasksRoute() {
   return (
     <>
       <Stack.Screen options={{ headerBackButtonDisplayMode: 'minimal' }} />
-      <UnscheduledTasksScreen />
+      <TasksScreen />
     </>
   );
 }

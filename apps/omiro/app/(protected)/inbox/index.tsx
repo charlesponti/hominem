@@ -1,20 +1,7 @@
-import { Stack, useIsFocused } from 'expo-router';
+import { Redirect } from 'expo-router';
 
-import { InboxScreen } from '~/components/inbox/InboxScreen';
-import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
+import { ALL_ROUTE } from '~/services/navigation/routes';
 
 export default function InboxRoute() {
-  return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerLargeTitle: false,
-          headerLeft: () => <NavDrawerMenuButton />,
-          title: 'Inbox',
-        }}
-      />
-      <InboxScreen isFocused={useIsFocused()} />
-    </>
-  );
+  return <Redirect href={ALL_ROUTE} />;
 }

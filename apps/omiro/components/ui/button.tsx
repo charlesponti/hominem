@@ -2,23 +2,13 @@ import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
   Text,
-  ViewStyle,
+  type ViewStyle,
   type PressableStateCallbackType,
 } from 'react-native';
-
-import {
-  componentSizes,
-  fontSizes,
-  fontWeights,
-  lineHeights,
-  makeStyles,
-  radii,
-  themeSpacing,
-  useThemeColors,
-} from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 /**
  * shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
@@ -39,28 +29,20 @@ interface ButtonProps {
   testID?: string;
 }
 
-const COMPACT_HEIGHT = 36;
+const PRESSED_OPACITY = 0.7;
+const LOADING_OPACITY = 0.7;
+const DISABLED_OPACITY = 0.5;
 
-const useStyles = makeStyles(() => ({
-  text: {
-    fontSize: fontSizes.md,
-    fontWeight: fontWeights.semibold,
-    lineHeight: lineHeights.bodySm,
+const sizeClasses: Record<'sm' | 'md', { container: string; text: string }> = {
+  sm: {
+    container: 'py-2 px-4 h-9',
+    text: 'text-footnote font-semibold',
   },
-  textSm: {
-    fontSize: fontSizes.footnote,
-    lineHeight: lineHeights.footnote,
+  md: {
+    container: 'py-3 px-4 h-11',
+    text: 'text-base font-semibold leading-5',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  loading: {
-    opacity: 0.7,
-  },
-}));
+};
 
 export function Button({
   label,
@@ -72,66 +54,85 @@ export function Button({
   variant = 'primary',
   testID,
 }: ButtonProps) {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
-  const resolvedStyles = useMemo(() => {
-    const baseStyle = {
-      // Vertical padding must leave room for the text's line height (not
-      // just its font size) or descenders clip against the button edge —
-      // sm's shorter box needs tighter padding than md to make room.
-      paddingVertical: size === 'sm' ? themeSpacing.sm : themeSpacing.md,
-      paddingHorizontal: themeSpacing.lg,
-      borderRadius: radii.md,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      alignSelf: 'stretch' as const,
-      height: size === 'sm' ? COMPACT_HEIGHT : componentSizes.xl,
-    };
+  const [primary, primaryForeground, muted, destructive, borderDefault, textPrimary] =
+    useCSSVariable([
+      '--color-primary',
+      '--color-primary-foreground',
+      '--color-muted',
+      '--color-destructive',
+      '--color-border',
+      '--color-foreground',
+    ]) as string[];
 
-    const variantStyles: Record<ButtonVariant, StyleProp<ViewStyle>> = {
-      primary: {
-        backgroundColor: themeColors.primary,
-      },
-      secondary: {
-        backgroundColor: themeColors['muted'],
-      },
-      destructive: {
-        backgroundColor: themeColors.destructive,
-      },
-      outline: {
-        backgroundColor: 'transparent',
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: themeColors['border-default'],
-      },
-      ghost: {
-        backgroundColor: 'transparent',
-      },
-    };
+  const colorTokens = useMemo(
+    () => ({
+      primary,
+      'primary-foreground': primaryForeground,
+      muted,
+      destructive,
+      border: borderDefault,
+      foreground: textPrimary,
+    }),
+    [primary, primaryForeground, muted, destructive, borderDefault, textPrimary],
+  );
 
-    const textColor: Record<ButtonVariant, string> = {
-      primary: themeColors['primary-foreground'],
-      secondary: themeColors['text-primary'],
-      destructive: themeColors['primary-foreground'],
-      outline: themeColors['text-primary'],
-      ghost: themeColors['text-primary'],
-    };
+  const variantStyles: Record<
+    ButtonVariant,
+    { backgroundColor?: string; borderWidth?: number; borderColor?: string }
+  > = {
+    primary: {
+      backgroundColor: colorTokens.primary,
+    },
+    secondary: {
+      backgroundColor: colorTokens['muted'],
+    },
+    destructive: {
+      backgroundColor: colorTokens.destructive,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colorTokens['border'],
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+  };
 
-    return {
-      container: [baseStyle, variantStyles[variant], disabled && styles.disabled],
-      text: textColor[variant],
-    };
-  }, [disabled, size, variant, themeColors, styles.disabled]);
+  const textColor: Record<ButtonVariant, string> = {
+    primary: colorTokens['primary-foreground'],
+    secondary: colorTokens['foreground'],
+    destructive: colorTokens['primary-foreground'],
+    outline: colorTokens['foreground'],
+    ghost: colorTokens['foreground'],
+  };
+
+  const resolvedContainerStyle = useMemo(
+    () => ({
+      ...variantStyles[variant],
+      ...(disabled ? { opacity: DISABLED_OPACITY } : {}),
+    }),
+    [variant, variantStyles, disabled],
+  );
+
+  const resolvedTextStyle = useMemo(
+    () => ({
+      color: textColor[variant],
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [variant, textColor, disabled],
+  );
 
   const isInteractionDisabled = disabled || loading;
 
   const pressableStyle = useCallback(
     ({ pressed }: PressableStateCallbackType) => [
-      resolvedStyles.container,
+      resolvedContainerStyle,
       style,
-      loading && styles.loading,
-      pressed && !isInteractionDisabled && styles.pressed,
+      loading && { opacity: LOADING_OPACITY },
+      pressed && !isInteractionDisabled && { opacity: PRESSED_OPACITY },
     ],
-    [isInteractionDisabled, loading, resolvedStyles.container, style],
+    [isInteractionDisabled, loading, resolvedContainerStyle, style],
   );
 
   return (
@@ -139,21 +140,13 @@ export function Button({
       testID={testID}
       onPress={onPress}
       disabled={isInteractionDisabled}
+      className={`items-center justify-center self-stretch rounded-md ${sizeClasses[size].container}`}
       style={pressableStyle}
     >
       {loading ? (
-        <ActivityIndicator color={resolvedStyles.text} size="small" />
+        <ActivityIndicator color={textColor[variant]} size="small" />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            size === 'sm' && styles.textSm,
-            {
-              color: resolvedStyles.text,
-              opacity: disabled ? 0.5 : 1,
-            },
-          ]}
-        >
+        <Text className={sizeClasses[size].text} style={resolvedTextStyle}>
           {label}
         </Text>
       )}

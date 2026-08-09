@@ -2,6 +2,7 @@ import type { InboxOutput, InboxStreamItem } from '@hominem/rpc/types';
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
+import { toThreadViewModel } from '~/components/inbox/ThreadViewModel';
 import { getContentRoute } from '~/services/navigation/routes';
 import { inboxKeys } from '~/services/notes/query-keys';
 
@@ -17,11 +18,7 @@ function getId(item: Pick<InboxStreamItem, 'kind' | 'id'>) {
 }
 
 function toEntity(item: InboxStreamItem): InboxStreamItemData {
-  return {
-    ...item,
-    id: getId(item),
-    route: getContentRoute(item.kind, item.entityId),
-  };
+  return toThreadViewModel(item, getContentRoute(item.kind, item.entityId));
 }
 
 export function indexInboxPage(queryClient: QueryClient, page: InboxOutput): InboxPageIndex {

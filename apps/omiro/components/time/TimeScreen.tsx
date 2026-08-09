@@ -1,11 +1,12 @@
+import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/community/menu';
+import { IconButton } from '@ponti-studios/ui/native';
 import { useIsFocused, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 
-import { Text } from '~/components/theme';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
-import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
-import { getUnscheduledTasks } from './time-utils';
+import AppIcon from '../ui/icon';
+import { useTimePreview } from './time-preview-context';
 import { TimeWorkspace } from './TimeWorkspace';
 
 export function TimeScreen() {
@@ -22,19 +23,55 @@ export function TimeScreen() {
 
 export function TimeHeaderActions() {
   const router = useRouter();
-  const { data: tasks = [] } = useTasksQuery();
-  const unscheduledCount = getUnscheduledTasks(tasks).length;
 
   return (
-    <Pressable
-      accessibilityLabel="Open unscheduled tasks"
-      accessibilityRole="button"
-      onPress={() => router.push(UNSCHEDULED_ROUTE)}
-      testID="time-unscheduled-button"
-    >
-      <Text color="primary" variant="subhead">
-        {unscheduledCount > 0 ? `Unscheduled ${unscheduledCount}` : 'Unscheduled'}
-      </Text>
-    </Pressable>
+    <>
+      {__DEV__ ? <TimePreviewMenuButton /> : null}
+      <Pressable
+        accessibilityLabel="Open unscheduled tasks"
+        accessibilityRole="button"
+        onPress={() => router.push(UNSCHEDULED_ROUTE)}
+        testID="time-unscheduled-button"
+      >
+        <AppIcon name="checkmark.circle.dotted" size={24} />
+      </Pressable>
+    </>
+  );
+}
+
+// __DEV__-only: lets a dev preview the Time stream's design with fixture data
+// (multiple events per day, overlapping times, empty state, etc.) without a
+// real calendar/task backend. See time-preview-scenarios.ts.
+function TimePreviewMenuButton() {
+  const { scenario, scenarios, setScenarioId } = useTimePreview();
+
+  const actions: MenuAction[] = [
+    ...scenarios.map((candidate) => ({
+      id: candidate.id,
+      title: candidate.label,
+      state: scenario?.id === candidate.id ? ('on' as const) : undefined,
+    })),
+    {
+      id: 'real-data',
+      title: 'Real data',
+      state: scenario == null ? ('on' as const) : undefined,
+    },
+  ];
+
+  const onPressAction = (event: NativeActionEvent) => {
+    const id = event.nativeEvent.event;
+    setScenarioId(id === 'real-data' ? null : id);
+  };
+
+  return (
+    <MenuView actions={actions} onPressAction={onPressAction} testID="time-preview-menu-button">
+      <IconButton
+        accessibilityLabel="Preview Time with fixture data"
+        testID="time-preview-menu-button"
+        variant="plain"
+      >
+        <AppIcon name={scenario ? 'flask.fill' : 'flask'} size={22} />
+      </IconButton>
+    </MenuView>
   );
 }

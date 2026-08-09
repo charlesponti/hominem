@@ -7,7 +7,6 @@ import Reanimated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-import { makeStyles } from '~/components/theme';
 import AppIcon, { type IconProps } from '~/components/ui/icon';
 
 interface SwipeActionProps {
@@ -23,17 +22,6 @@ interface SwipeActionProps {
   style?: ViewStyle;
 }
 
-const useStyles = makeStyles(() => ({
-  container: {
-    height: '100%',
-  },
-  pressable: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-}));
-
 export const SwipeAction = memo(
   ({
     progress,
@@ -47,7 +35,6 @@ export const SwipeAction = memo(
     translateOffset = 24,
     style,
   }: SwipeActionProps) => {
-    const styles = useStyles();
     const animatedStyle = useAnimatedStyle(() => {
       const clampedProgress = Math.min(progress.value, 1);
 
@@ -75,9 +62,12 @@ export const SwipeAction = memo(
     }, [progress, translateOffset]);
 
     return (
-      <Reanimated.View style={[styles.container, { backgroundColor, width }, style, animatedStyle]}>
+      <Reanimated.View
+        className="h-full"
+        style={[{ backgroundColor, width }, style, animatedStyle]}
+      >
         <Pressable
-          style={styles.pressable}
+          className="items-center flex-1 justify-center"
           onPress={onPress}
           accessibilityLabel={accessibilityLabel}
           accessibilityRole="button"

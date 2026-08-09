@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ARCHIVED_CHATS_ROUTE,
+  ALL_ROUTE,
   HOME_ROUTE,
   INBOX_ROUTE,
   SETTINGS_ROUTE,
@@ -11,9 +12,10 @@ import {
 } from '~/services/navigation/routes';
 
 describe('inbox routes', () => {
-  it('builds the canonical inbox routes', () => {
+  it('builds the canonical All and Time routes', () => {
     expect(HOME_ROUTE).toBe('/(protected)');
-    expect(INBOX_ROUTE).toBe('/(protected)/inbox');
+    expect(ALL_ROUTE).toBe(HOME_ROUTE);
+    expect(INBOX_ROUTE).toBe(ALL_ROUTE);
     expect(TIME_ROUTE).toBe('/(protected)/time');
     expect(SETTINGS_ROUTE).toBe('/(protected)/settings');
     expect(ARCHIVED_CHATS_ROUTE).toBe('/(protected)/settings/archived-chats');

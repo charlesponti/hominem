@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ModalProps } from 'react-native';
 import { Modal, Pressable, View } from 'react-native';
-
-import { makeStyles, useThemeColors } from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 export type ModalOverlayPosition = 'top' | 'center' | 'bottom';
 
@@ -27,9 +26,11 @@ export function ModalOverlay({
   animationType = 'fade',
   statusBarTranslucent = false,
 }: ModalOverlayProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const scrimColor = useCSSVariable(backdropToken) as string;
   const Backdrop = dismissOnBackdropPress ? Pressable : View;
+
+  const positionClass =
+    position === 'top' ? 'justify-start' : position === 'bottom' ? 'justify-end' : 'justify-center';
 
   return (
     <Modal
@@ -41,25 +42,11 @@ export function ModalOverlay({
     >
       <Backdrop
         onPress={dismissOnBackdropPress ? onClose : undefined}
-        style={[styles.backdrop, { backgroundColor: themeColors[backdropToken] }, styles[position]]}
+        className={`flex-1 ${positionClass}`}
+        style={{ backgroundColor: scrimColor }}
       >
         {children}
       </Backdrop>
     </Modal>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  backdrop: {
-    flex: 1,
-  },
-  top: {
-    justifyContent: 'flex-start',
-  },
-  center: {
-    justifyContent: 'center',
-  },
-  bottom: {
-    justifyContent: 'flex-end',
-  },
-}));

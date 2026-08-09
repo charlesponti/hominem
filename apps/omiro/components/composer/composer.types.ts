@@ -20,3 +20,4 @@ interface ComposerChatProps {
 export type ComposerProps = ComposerInboxProps | ComposerChatProps;
 
 export type ComposerSubmitKind = 'note' | 'start-chat' | 'message';
+export type ComposerEntryKind = 'chat' | 'note';

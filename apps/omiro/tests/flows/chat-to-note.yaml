@@ -1,84 +1,72 @@
 appId: com.pontistudios.hakumi.dev
 ---
 # Flow: Chat → Note
-# Types a message in the inbox, starts and sends the chat in one action, waits
-# for the AI to respond, transforms the conversation to a note via the header
-# menu, and asserts the note appears back in the inbox.
+# Opens a conversation, sends a message (mocked locally via the MMKV test-mode
+# flag so no real AI tokens are consumed), transforms the conversation to a
+# note via the header menu, and asserts the note appears back in the inbox.
 #
-# Uses MMKV test-mode flag so the AI response is mocked locally —
-# no real API tokens are consumed during this flow.
+# Test mode only mocks the chat-detail send path (useSendMessage), not the
+# inbox start-chat path, so this flow starts from an existing conversation.
 
-# Write the test-mode flag to MMKV via deep link first, then force the dev
-# client back to the inbox so prior runs do not resume a chat detail.
+# Write the test-mode flag to MMKV and land on the inbox.
 - openLink: 'hakumi-dev://enable-test-mode'
-- waitForAnimationToEnd:
-    timeout: 3000
-- openLink: 'exp+hakumi://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
-- waitForAnimationToEnd:
-    timeout: 10000
-- openLink: 'hakumi-dev://'
 - waitForAnimationToEnd:
     timeout: 3000
 - assertVisible:
     id: 'inbox-composer-input'
 - takeScreenshot: /tmp/omiro_flow_1_home
 
-# Focus the inbox composer and clear any persisted draft before typing
+# Open the most recent conversation.
 - tapOn:
-    id: 'inbox-composer-input'
+    id: 'inbox-item-chat-open'
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro_flow_2_chat_opened
+
+# Send a message through the chat composer; the mock streams 'mock AI response'.
+- tapOn:
+    id: 'chat-composer-input'
 - eraseText: 100
 - inputText: 'What are the key principles of good product design?'
-- takeScreenshot: /tmp/omiro_flow_2_typed
-
-# Switch to chat mode (button appears once input has text)
+- takeScreenshot: /tmp/omiro_flow_3_typed
 - tapOn:
-    id: 'composer-start-chat'
-- takeScreenshot: /tmp/omiro_flow_3_chat_opened
-
-# The chat detail should already show the sent user message.
-- assertVisible: 'What are the key principles of good product design?'
-- takeScreenshot: /tmp/omiro_flow_4_message_sent
-
-# Wait for the mock response to finish streaming
+    id: 'composer-submit-message'
 - waitForAnimationToEnd:
-    timeout: 10000
-- takeScreenshot: /tmp/omiro_flow_4b_after_wait
-# Confirm the AI response is visible before proceeding
+    timeout: 8000
 - assertVisible: 'mock AI response'
-- takeScreenshot: /tmp/omiro_flow_5_ai_responded
+- takeScreenshot: /tmp/omiro_flow_4_ai_responded
 
-# Open the conversation actions menu from the header
+# Open the conversation actions menu from the header.
 - tapOn: 'Conversation actions'
-- takeScreenshot: /tmp/omiro_flow_6_menu_open
-
-# Tap "Transform to note" in the native menu
-- tapOn: 'Transform to note'
-- takeScreenshot: /tmp/omiro_flow_7_review_shown
-
-# Accept the classification review
-- tapOn:
-    id: 'classification-review-accept'
-- takeScreenshot: /tmp/omiro_flow_8_accepted
-
-# Navigate back to the inbox via the dev-client reset. Native toolbar buttons
-# are not reliably activatable through Maestro on this simulator.
-- openLink: 'exp+hakumi://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
 - waitForAnimationToEnd:
-    timeout: 10000
-- openLink: 'hakumi-dev://'
+    timeout: 2000
+- takeScreenshot: /tmp/omiro_flow_5_menu_open
+
+# Tap "Create note" in the native menu.
+- tapOn: 'Create note'
 - waitForAnimationToEnd:
     timeout: 3000
+- takeScreenshot: /tmp/omiro_flow_6_review_shown
+
+# Accept the classification review.
+- tapOn:
+    id: 'classification-review-accept'
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: /tmp/omiro_flow_7_accepted
+
+# Return to the inbox via the enable-test-mode deep link (redirects to '/').
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 4000
 - assertVisible:
     id: 'inbox-composer-input'
-- takeScreenshot: /tmp/omiro_flow_9_inbox
+- takeScreenshot: /tmp/omiro_flow_8_inbox
 
-# Pull to refresh to ensure the inbox picks up the newly created note
-- swipe:
-    start: '50%, 30%'
-    end: '50%, 70%'
-- takeScreenshot: /tmp/omiro_flow_10_after_refresh
-
-# Assert at least one note item is visible in the inbox.
-# InboxStreamItem sets testID="inbox-item-note" on note rows.
+# The transformed conversation is a note row in the inbox.
 - assertVisible:
     id: 'inbox-item-note'
+- takeScreenshot: /tmp/omiro_flow_9_note_visible

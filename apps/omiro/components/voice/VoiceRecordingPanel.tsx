@@ -1,15 +1,16 @@
+import { IconButton } from '@ponti-studios/ui/native';
 import React from 'react';
 import { View } from 'react-native';
+import { Text } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
-import { Text, componentSizes, makeStyles } from '~/components/theme';
-import { spacing } from '~/components/theme/tokens';
-import { IconButton } from '~/components/ui/icon-button';
+import AppIcon from '~/components/ui/icon';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
 import { useElapsedTimer } from '~/components/voice/useElapsedTimer';
 import t from '~/translations';
@@ -32,7 +33,11 @@ export function VoiceRecordingPanel({
   doneAccessibilityLabel,
   phase = 'recording',
 }: VoiceRecordingPanelProps) {
-  const styles = useStyles();
+  const [cardColor, destructiveColor, textSecondaryColor] = useCSSVariable([
+    '--color-card',
+    '--color-destructive',
+    '--color-muted-foreground',
+  ]) as string[];
   const elapsed = useElapsedTimer(startedAt);
   const dotOpacity = useAnimatedStyle(() => ({
     opacity: withRepeat(
@@ -44,74 +49,82 @@ export function VoiceRecordingPanel({
 
   if (phase === 'sending') {
     return (
-      <View style={styles.container}>
-        <View style={styles.visualizer}>
-          <Animated.View style={[styles.dot, dotOpacity]} />
-          <Text style={styles.timer}>{t.inboxComposer.composer.sendingA11y}</Text>
+      <View className="flex-row items-center gap-2 w-full">
+        <View
+          className="flex-1 flex-row items-center gap-2"
+          style={{
+            height: 44,
+            paddingHorizontal: 16,
+            borderRadius: 22,
+            backgroundColor: cardColor,
+          }}
+        >
+          <Animated.View
+            className="w-2 h-2 rounded-full"
+            style={[{ backgroundColor: destructiveColor }, dotOpacity]}
+          />
+          <Text
+            style={{
+              color: textSecondaryColor,
+              fontSize: 13,
+              fontVariant: ['tabular-nums'],
+              minWidth: 34,
+            }}
+          >
+            {t.inboxComposer.composer.sendingA11y}
+          </Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row items-center gap-2 w-full">
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.cancelRecordingA11y}
-        icon="xmark"
         testID="composer-cancel-recording-button"
         onPress={onCancel}
-      />
+      >
+        <AppIcon name="xmark" size={20} />
+      </IconButton>
       {/* Fills the entire row between the cancel and stop buttons, mirroring the
           idle row's [attach] [text, flex-1] [mic] geometry. */}
-      <View style={styles.visualizer}>
-        <Animated.View style={[styles.dot, dotOpacity]} />
-        <Text style={styles.timer}>{elapsed}</Text>
-        <View style={styles.meter}>
+      <View
+        className="flex-1 flex-row items-center gap-2"
+        style={{
+          height: 44,
+          paddingHorizontal: 16,
+          borderRadius: 22,
+          backgroundColor: cardColor,
+        }}
+      >
+        <Animated.View
+          className="w-2 h-2 rounded-full"
+          style={[{ backgroundColor: destructiveColor }, dotOpacity]}
+        />
+        <Text
+          style={{
+            color: textSecondaryColor,
+            fontSize: 13,
+            fontVariant: ['tabular-nums'],
+            minWidth: 34,
+          }}
+        >
+          {elapsed}
+        </Text>
+        <View className="flex-1">
           <RecordingLevelMeter />
         </View>
       </View>
       {onDone ? (
         <IconButton
           accessibilityLabel={doneAccessibilityLabel ?? t.inboxComposer.composer.stopVoiceInputA11y}
-          icon="stop.fill"
           testID="composer-stop-recording-button"
           onPress={onDone}
-        />
+        >
+          <AppIcon name="stop.fill" size={20} />
+        </IconButton>
       ) : null}
     </View>
   );
 }
-
-const useStyles = makeStyles((theme) => ({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[2],
-    width: '100%',
-  },
-  visualizer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[2],
-    height: componentSizes.xl,
-    paddingHorizontal: spacing[3],
-    borderRadius: componentSizes.xl / 2,
-    backgroundColor: theme.colors['card'],
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.destructive,
-  },
-  timer: {
-    color: theme.colors['text-secondary'],
-    fontSize: 13,
-    fontVariant: ['tabular-nums'],
-    minWidth: 34,
-  },
-  meter: {
-    flex: 1,
-  },
-}));

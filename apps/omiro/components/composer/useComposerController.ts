@@ -6,12 +6,16 @@ import { useComposerDraft } from '~/components/composer/useComposerDraft';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { useInlineEnhance } from '~/services/ai';
 
+import type { ComposerEntryKind } from './composer.types';
+import { inferComposerEntryKind } from './composerInference';
+
 interface UseComposerControllerOptions {
   initialMessage?: string;
   isSubmitting?: boolean;
   onDraftChange?: (message: string) => void;
   onClearDraft?: () => void;
   onWalkieTalkieTranscript?: (rawText: string) => void;
+  entryMode?: 'mixed' | ComposerEntryKind;
 }
 
 // Composes the composer's independent concerns — draft text, attachments,
@@ -24,6 +28,7 @@ export function useComposerController({
   onDraftChange,
   onClearDraft,
   onWalkieTalkieTranscript,
+  entryMode = 'mixed',
 }: UseComposerControllerOptions) {
   const draft = useComposerDraft({ initialMessage, onDraftChange });
   const { attachments, errors, isUploading, clearAttachments, markAttachmentsSubmitted } =
@@ -36,6 +41,12 @@ export function useComposerController({
     [attachments],
   );
   const hasContent = draft.message.trim().length > 0 || uploadedAttachmentIds.length > 0;
+  const [manualEntryKind, setManualEntryKind] = useState<ComposerEntryKind | null>(
+    entryMode === 'mixed' ? null : entryMode,
+  );
+  const inferredEntryKind = inferComposerEntryKind(draft.message);
+  const selectedEntryKind =
+    manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
 
   const voice = useVoiceComposerInput({
     getMessage: draft.getMessage,
@@ -74,7 +85,8 @@ export function useComposerController({
     clearAttachments();
     enhance.closeEnhance();
     onClearDraft?.();
-  }, [clearAttachments, draft.clearDraft, enhance.closeEnhance, onClearDraft]);
+    setManualEntryKind(entryMode === 'mixed' ? null : entryMode);
+  }, [clearAttachments, draft.clearDraft, enhance.closeEnhance, entryMode, onClearDraft]);
 
   return useMemo(
     () => ({
@@ -94,6 +106,10 @@ export function useComposerController({
       voice,
       enhance,
       clearComposer,
+      inferredEntryKind,
+      manualEntryKind,
+      selectedEntryKind,
+      setManualEntryKind,
       markAttachmentsSubmitted,
     }),
     [
@@ -113,6 +129,9 @@ export function useComposerController({
       voice,
       enhance,
       clearComposer,
+      inferredEntryKind,
+      manualEntryKind,
+      selectedEntryKind,
       markAttachmentsSubmitted,
     ],
   );

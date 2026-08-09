@@ -9,8 +9,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
-import { makeStyles, useThemeColors } from '~/components/theme';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { OTP_EXPIRES_SECONDS } from '~/config/auth-protocol';
 import { readPendingAuthEmail } from '~/services/auth/pending-email';
@@ -26,10 +26,15 @@ import { useEmailAuth } from '../../services/auth/use-email-auth';
 import { normalizeOtp } from '../../services/auth/validation';
 import { posthog } from '../../services/posthog';
 
-function countdownColor(secondsLeft: number, themeColors: ReturnType<typeof useThemeColors>) {
-  if (secondsLeft === 0 || secondsLeft < 20) return themeColors.destructive;
-  if (secondsLeft < 60) return themeColors.warning;
-  return themeColors['text-secondary'];
+function countdownColor(
+  secondsLeft: number,
+  destructive: string,
+  warning: string,
+  textSecondary: string,
+) {
+  if (secondsLeft === 0 || secondsLeft < 20) return destructive;
+  if (secondsLeft < 60) return warning;
+  return textSecondary;
 }
 
 function formatCountdown(s: number) {
@@ -44,100 +49,6 @@ function resolveTokenSentAt(sentAt?: string) {
 function resolveSecondsLeft(tokenSentAt: number, now = Date.now()) {
   return Math.max(0, OTP_EXPIRES_SECONDS - Math.floor((now - tokenSentAt) / 1000));
 }
-
-const useStyles = makeStyles(() => ({
-  container: {
-    flex: 1,
-  },
-  successContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successContent: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  successText: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 80,
-  },
-  contentShell: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    gap: 18,
-  },
-  copyBlock: {
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  emailChipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  helperText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  emailChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  emailChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  formSection: {
-    gap: 16,
-    alignItems: 'center',
-  },
-  countdownPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  countdown: {
-    fontSize: 12,
-    fontVariant: ['tabular-nums'],
-    fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  verifyButtonWrap: {
-    overflow: 'hidden',
-  },
-  tertiaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
-}));
 
 function resolveAutoSubmitInput({
   resolvedEmail,
@@ -159,8 +70,6 @@ function resolveAutoSubmitInput({
 
 function VerifyScreen() {
   const router = useRouter();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
   const {
     email: emailParam,
@@ -219,6 +128,14 @@ function VerifyScreen() {
     return () => clearTimeout(id);
   }, [verifySucceeded, router]);
 
+  const [primary, destructive, warning, textSecondary, success] = useCSSVariable([
+    '--color-primary',
+    '--color-destructive',
+    '--color-warning',
+    '--color-muted-foreground',
+    '--color-success',
+  ]) as string[];
+
   // Animations
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
@@ -268,79 +185,70 @@ function VerifyScreen() {
 
   if (verifySucceeded) {
     return (
-      <View
-        style={[
-          styles.container,
-          styles.successContainer,
-          { backgroundColor: themeColors['background'] },
-        ]}
-      >
-        <Animated.View entering={FadeIn.duration(300)} style={styles.successContent}>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Animated.View entering={FadeIn.duration(300)} className="items-center gap-4">
           <IconChip
             icon="checkmark.circle.fill"
             size={72}
             radius={24}
             iconSize={32}
-            tintColor={themeColors.success}
+            tintColor={success}
           />
-          <Text style={[styles.successText, { color: themeColors['text-primary'] }]}>
-            {t.auth.verify.signedIn}
-          </Text>
+          <Text className="text-title2 text-foreground">{t.auth.verify.signedIn}</Text>
         </Animated.View>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors['background'] }]}
-      behavior="padding"
-    >
+    <KeyboardAvoidingView className="flex-1 bg-background" behavior="padding">
       <ScrollView
         testID="auth-verify-screen"
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          paddingTop: 32,
+          paddingBottom: 80,
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentShell}>
-          <View style={styles.card}>
+        <View className="w-full items-center">
+          <View className="w-full max-w-[420px] gap-[18px]">
             <Animated.View entering={FadeInDown.duration(400).springify().damping(16)}>
               <IconChip icon="lock.shield" />
             </Animated.View>
 
             <Animated.View
               entering={FadeInDown.duration(400).delay(60).springify().damping(16)}
-              style={styles.copyBlock}
+              className="gap-2"
             >
-              <Text style={[styles.title, { color: themeColors['text-primary'] }]}>
-                {t.auth.verify.title}
-              </Text>
-              <View style={styles.emailChipRow}>
-                <Text style={[styles.helperText, { color: themeColors['text-secondary'] }]}>
+              <Text className="text-title1 text-foreground">{t.auth.verify.title}</Text>
+              <View className="flex-row items-center flex-wrap gap-1.5">
+                <Text className="text-subhead text-muted-foreground">
                   {t.auth.verify.codeSentTo}
                 </Text>
                 <Pressable
                   hitSlop={8}
                   onPress={handleChangeEmail}
-                  style={({ pressed }) => [
-                    styles.emailChip,
-                    { backgroundColor: themeColors['card'], opacity: pressed ? 0.65 : 1 },
-                  ]}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}
+                  className="flex-row items-center gap-1 px-2 py-[3px] rounded-lg bg-card"
                 >
-                  <Text style={[styles.emailChipText, { color: themeColors['text-primary'] }]}>
+                  <Text className="text-body font-medium text-foreground">
                     {maskEmail(resolvedEmail)}
                   </Text>
-                  <AppIcon name="pencil" size={11} tintColor={themeColors['text-secondary']} />
+                  <AppIcon name="pencil" size={11} tintColor={textSecondary} />
                 </Pressable>
               </View>
             </Animated.View>
 
             <Animated.View
               entering={FadeInDown.duration(400).delay(120).springify().damping(16)}
-              style={styles.formSection}
+              className="gap-4 items-center"
             >
-              <View style={{ opacity: isBusy ? 0.6 : 1 }}>
+              <View className={isBusy ? 'opacity-60' : ''}>
                 <OtpInput
                   testID="auth-otp-input"
                   value={normalizedOtp}
@@ -361,7 +269,7 @@ function VerifyScreen() {
                 <Text
                   testID="auth-otp-message"
                   accessibilityLiveRegion="polite"
-                  style={[styles.errorText, { color: themeColors.destructive }]}
+                  className="text-footnote text-center text-destructive"
                 >
                   {authError}
                 </Text>
@@ -369,7 +277,8 @@ function VerifyScreen() {
 
               {/* Verify / resend primary button — animates in once 6 digits are entered */}
               <Animated.View
-                style={[styles.verifyButtonWrap, verifyButtonStyle, { width: '100%' }]}
+                style={[verifyButtonStyle]}
+                className="overflow-hidden w-full"
                 pointerEvents={normalizedOtp.length === 6 ? 'auto' : 'none'}
               >
                 <Button
@@ -386,33 +295,26 @@ function VerifyScreen() {
                 onPress={() => void handleResendPress()}
                 disabled={isBusy || secondsLeft > 0}
                 hitSlop={8}
-                style={({ pressed }) => [
-                  styles.countdownPill,
-                  {
-                    backgroundColor: themeColors['card'],
-                    opacity: pressed && secondsLeft === 0 ? 0.65 : 1,
-                  },
-                ]}
+                style={({ pressed }) => [{ opacity: pressed && secondsLeft === 0 ? 0.65 : 1 }]}
+                className="flex-row items-center self-center gap-[5px] px-2.5 py-1 rounded-full bg-card"
               >
                 <AppIcon
                   name={secondsLeft === 0 ? 'arrow.clockwise' : 'clock'}
                   size={11}
                   tintColor={
                     secondsLeft === 0
-                      ? themeColors.primary
-                      : countdownColor(secondsLeft, themeColors)
+                      ? primary
+                      : countdownColor(secondsLeft, destructive, warning, textSecondary)
                   }
                 />
                 <Text
-                  style={[
-                    styles.countdown,
-                    {
-                      color:
-                        secondsLeft === 0
-                          ? themeColors.primary
-                          : countdownColor(secondsLeft, themeColors),
-                    },
-                  ]}
+                  className="text-caption1 font-semibold tabular-nums"
+                  style={{
+                    color:
+                      secondsLeft === 0
+                        ? primary
+                        : countdownColor(secondsLeft, destructive, warning, textSecondary),
+                  }}
                   accessibilityLabel={
                     secondsLeft === 0
                       ? t.auth.verify.resendButton

@@ -1,54 +1,37 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
 import {
   ChatMessageList,
   ChatReviewOverlay,
   ChatSearchModal,
-  useChatController,
   type ChatRenderIcon,
-  type ChatServices,
 } from '~/components/chat';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
+import { useChatData } from '~/hooks/use-chat-data';
+import { useChatSearch } from '~/hooks/use-chat-search';
+import { useChatTransform, type ChatContentCreated } from '~/hooks/use-chat-transform';
+import { useCopyMessage, useShareMessage } from '~/hooks/use-message-actions';
 import {
   DEFAULT_CHAT_TITLE,
   getChatTitle,
   updateChatTitleCaches,
   useActiveChat,
-  useChatArchive,
-  useChatMessages,
-  useSendMessage,
 } from '~/services/chat';
 import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { writeResumeTarget } from '~/services/navigation/launch-state';
 import { INBOX_ROUTE, getContentRoute } from '~/services/navigation/routes';
-import { chatKeys } from '~/services/notes/query-keys';
 import t from '~/translations';
-
-const useStyles = makeStyles(() => ({
-  container: {
-    flex: 1,
-  },
-  reviewOverlay: {
-    bottom: 0,
-    left: 0,
-    top: 0,
-    pointerEvents: 'box-none',
-    position: 'absolute',
-    right: 0,
-  },
-}));
 
 function getConversationActionIcon(kind: string, type?: string) {
   if (kind === 'search') return 'magnifyingglass';
@@ -76,29 +59,10 @@ export function ChatDetailScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: activeChat } = useActiveChat(id);
-  const styles = useStyles();
   const chatId = activeChat?.id ?? id;
   const canGoBack = navigation.canGoBack();
-
-  const services = useMemo<ChatServices>(
-    () => ({
-      useArchiveChat: useChatArchive,
-      useChatMessages,
-      useSendMessage,
-      onContentCreated: async ({ source, updatedAt }) => {
-        updateChatTitleCaches(queryClient, {
-          chatId,
-          title: source.title,
-          updatedAt,
-        });
-        await invalidateInboxQueries(queryClient);
-      },
-      chatKeys: {
-        messages: chatKeys.messages,
-      },
-    }),
-    [chatId, queryClient],
-  );
+  const [composerHeight, setComposerHeight] = useState(0);
+  const [showDebug, setShowDebug] = useState(false);
 
   const source = useMemo<SessionSource>(() => {
     if (activeChat?.noteId) {
@@ -113,14 +77,43 @@ export function ChatDetailScreen() {
     return { kind: 'new' };
   }, [activeChat]);
 
-  const controller = useChatController({
-    chatId,
-    onChatArchive: () => router.dismissTo(INBOX_ROUTE),
-    services,
-    source,
-  });
+  const handleContentCreated = useCallback(
+    async (content: ChatContentCreated) => {
+      updateChatTitleCaches(queryClient, {
+        chatId,
+        title: content.source.title,
+        updatedAt: content.updatedAt,
+      });
+      await invalidateInboxQueries(queryClient);
+    },
+    [chatId, queryClient],
+  );
 
-  const displayTitle = getChatTitle(activeChat?.title, controller.resolvedSource);
+  const handleChatArchive = useCallback(() => {
+    router.dismissTo(INBOX_ROUTE);
+  }, [router]);
+
+  const {
+    messages,
+    messagesError,
+    isMessagesLoading,
+    isMessagesRefreshing,
+    refetchMessages,
+    handleArchiveChat,
+    isArchiving,
+  } = useChatData({ chatId, onChatArchive: handleChatArchive });
+  const search = useChatSearch(messages);
+  const transform = useChatTransform({
+    chatId,
+    source,
+    messages,
+    onContentCreated: handleContentCreated,
+  });
+  const handleCopyMessage = useCopyMessage();
+  const handleShareMessage = useShareMessage();
+  const handleToggleDebug = useCallback(() => setShowDebug((value) => !value), []);
+
+  const displayTitle = getChatTitle(activeChat?.title, transform.resolvedSource);
   const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
 
   useEffect(() => {
@@ -137,11 +130,11 @@ export function ChatDetailScreen() {
   const conversationActions = useMemo(
     () =>
       buildConversationActionsModel({
-        canTransform: controller.canTransform,
-        isArchiving: controller.isArchiving,
-        showDebug: controller.showDebug,
+        canTransform: transform.canTransform,
+        isArchiving,
+        showDebug,
       }),
-    [controller.canTransform, controller.isArchiving, controller.showDebug],
+    [transform.canTransform, isArchiving, showDebug],
   );
   const emptyState = useMemo(
     () => <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />,
@@ -150,12 +143,12 @@ export function ChatDetailScreen() {
   const errorState = useMemo(
     () => (
       <EmptyState
-        action={{ label: t.chat.loadErrorRetry, onPress: () => void controller.refetchMessages() }}
+        action={{ label: t.chat.loadErrorRetry, onPress: () => void refetchMessages() }}
         sfSymbol="arrow.clockwise.circle"
         title={t.chat.loadErrorTitle}
       />
     ),
-    [controller],
+    [refetchMessages],
   );
 
   return (
@@ -186,7 +179,7 @@ export function ChatDetailScreen() {
                   <Stack.Toolbar.MenuAction
                     key={item.kind}
                     icon={getConversationActionIcon(item.kind)}
-                    onPress={controller.handleOpenSearch}
+                    onPress={search.handleOpenSearch}
                   >
                     {item.label}
                   </Stack.Toolbar.MenuAction>
@@ -198,8 +191,8 @@ export function ChatDetailScreen() {
                   <Stack.Toolbar.MenuAction
                     key={item.kind}
                     icon={getConversationActionIcon(item.kind)}
-                    isOn={controller.showDebug}
-                    onPress={controller.handleToggleDebug}
+                    isOn={showDebug}
+                    onPress={handleToggleDebug}
                   >
                     {item.label}
                   </Stack.Toolbar.MenuAction>
@@ -228,7 +221,7 @@ export function ChatDetailScreen() {
                         return;
                       }
 
-                      controller.handleTransformFromMenu(item.type);
+                      void transform.handleTransform(item.type);
                     }}
                   >
                     {item.label}
@@ -240,7 +233,7 @@ export function ChatDetailScreen() {
                 <Stack.Toolbar.MenuAction
                   key={item.kind}
                   icon={getConversationActionIcon(item.kind)}
-                  onPress={controller.handleArchiveChat}
+                  onPress={handleArchiveChat}
                 >
                   {item.label}
                 </Stack.Toolbar.MenuAction>
@@ -260,51 +253,51 @@ export function ChatDetailScreen() {
         />
       </Stack.Toolbar>
 
-      <View style={styles.container}>
+      <View className="flex-1">
         <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
         <ChatSearchModal
-          visible={controller.showSearch}
-          searchQuery={controller.searchQuery}
-          resultCount={controller.displayMessages.length}
-          searchInputRef={controller.searchInputRef}
-          onClose={controller.handleCloseSearch}
-          onChangeSearchQuery={controller.handleSearchQueryChange}
+          visible={search.showSearch}
+          searchQuery={search.searchQuery}
+          resultCount={search.displayMessages.length}
+          searchInputRef={search.searchInputRef}
+          onClose={search.handleCloseSearch}
+          onChangeSearchQuery={search.handleSearchQueryChange}
         />
         <ChatMessageList
-          isMessagesLoading={controller.isMessagesLoading}
-          displayMessages={controller.displayMessages}
-          showSearch={controller.showSearch}
-          searchQuery={controller.searchQuery}
-          markdown={controller.Markdown}
-          showDebug={controller.showDebug}
-          onCopy={controller.handleCopyMessage}
-          onShare={(message: Parameters<typeof controller.handleShareMessage>[0]) => {
-            void controller.handleShareMessage(message);
+          bottomInset={composerHeight}
+          isMessagesLoading={isMessagesLoading}
+          displayMessages={search.displayMessages}
+          showSearch={search.showSearch}
+          searchQuery={search.searchQuery}
+          showDebug={showDebug}
+          onCopy={handleCopyMessage}
+          onShare={(message: Parameters<typeof handleShareMessage>[0]) => {
+            void handleShareMessage(message);
           }}
           renderIcon={renderChatIcon}
           formatTimestamp={formatRelativeAge}
-          emptyState={controller.messagesError ? errorState : emptyState}
+          emptyState={messagesError ? errorState : emptyState}
           refreshControl={
             <RefreshControl
-              refreshing={controller.isMessagesRefreshing}
+              refreshing={isMessagesRefreshing}
               onRefresh={() => {
-                void controller.refetchMessages();
+                void refetchMessages();
               }}
             />
           }
         />
-        <ComposerDock testID="chat-composer-dock">
+        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
           <Composer mode="chat" chatId={chatId} />
         </ComposerDock>
-        <View style={styles.reviewOverlay}>
+        <View className="absolute inset-0" pointerEvents="box-none">
           <ChatReviewOverlay
-            pendingReview={controller.pendingReview}
-            isVisible={controller.isReviewVisible}
+            pendingReview={transform.pendingReview}
+            isVisible={transform.isReviewVisible}
             onAccept={() => {
-              void controller.handleAcceptReview();
+              void transform.handleAcceptReview();
             }}
             onReject={() => {
-              void controller.handleRejectReview();
+              void transform.handleRejectReview();
             }}
           />
         </View>

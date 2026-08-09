@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { transitionDurations } from '@ponti-studios/ui/tokens';
+import { Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -7,15 +8,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
-import {
-  Text,
-  fontSizes,
-  makeStyles,
-  radii,
-  spacing,
-  transitionDurations,
-} from '~/components/theme';
 import t from '~/translations';
 
 const DOT_UP_DURATION = transitionDurations[150];
@@ -48,50 +42,30 @@ function useBounceDot(delayMs: number) {
 }
 
 export function ChatThinkingIndicator() {
-  const styles = useThinkingStyles();
+  const textPrimary = useCSSVariable('color-foreground') as string;
   const dot1Style = useBounceDot(0);
   const dot2Style = useBounceDot(STAGGER_OFFSET);
   const dot3Style = useBounceDot(STAGGER_OFFSET * 2);
 
   return (
-    <View style={styles.row}>
-      <View style={styles.content}>
-        <View style={styles.dotsRow}>
-          <Animated.View style={[styles.dot, dot1Style]} />
-          <Animated.View style={[styles.dot, dot2Style]} />
-          <Animated.View style={[styles.dot, dot3Style]} />
-          <Text color="tertiary" style={styles.thinkingText}>
-            {t.chat.thinkingIndicator}
-          </Text>
+    <View className="px-4 py-2">
+      <View className="gap-2 w-full">
+        <View className="flex-row items-center gap-2">
+          <Animated.View
+            className="rounded-md h-2 w-2 opacity-65"
+            style={[{ backgroundColor: textPrimary }, dot1Style]}
+          />
+          <Animated.View
+            className="rounded-md h-2 w-2 opacity-65"
+            style={[{ backgroundColor: textPrimary }, dot2Style]}
+          />
+          <Animated.View
+            className="rounded-md h-2 w-2 opacity-65"
+            style={[{ backgroundColor: textPrimary }, dot3Style]}
+          />
+          <Text className="text-xs ml-1 text-tertiary">{t.chat.thinkingIndicator}</Text>
         </View>
       </View>
     </View>
   );
 }
-
-const useThinkingStyles = makeStyles((theme) => ({
-  content: {
-    gap: spacing[2],
-    width: '100%',
-  },
-  dot: {
-    backgroundColor: theme.colors['text-primary'],
-    borderRadius: radii.md,
-    height: 8,
-    opacity: 0.65,
-    width: 8,
-  },
-  dotsRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  row: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-  },
-  thinkingText: {
-    fontSize: fontSizes.xs,
-    marginLeft: spacing[1],
-  },
-}));

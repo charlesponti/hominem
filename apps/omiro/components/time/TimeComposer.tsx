@@ -1,16 +1,16 @@
+import { Card, IconButton, nativeShadows, TextField } from '@ponti-studios/ui/native';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import type { TextInput as RNTextInput } from 'react-native';
+import { Text } from 'react-native';
 import Animated, { FadeInUp, useReducedMotion } from 'react-native-reanimated';
+import { useCSSVariable } from 'uniwind';
 
-import { useComposerSurfaceStyles } from '~/components/composer/composer.styles';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
-import { makeStyles, spacing, Text, useTheme } from '~/components/theme';
-import { IconButton } from '~/components/ui/icon-button';
+import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
-import { TextField } from '~/components/ui/text-field';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 import t from '~/translations';
 
@@ -44,10 +44,13 @@ export function TimeComposer({
   state,
   value,
 }: TimeComposerProps) {
-  const theme = useTheme();
+  const [primaryColor, destructiveColor, borderDefaultColor] = useCSSVariable([
+    '--color-primary',
+    '--color-destructive',
+    '--color-border',
+  ]) as [string, string, string];
   const inputRef = useRef<RNTextInput>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const surfaceStyles = useComposerSurfaceStyles();
 
   const valueRef = useRef(value);
   valueRef.current = value;
@@ -89,17 +92,17 @@ export function TimeComposer({
       ) : null}
 
       {isIdle ? (
-        <View
-          style={[
-            surfaceStyles.surface,
-            {
-              borderColor: isFocused
-                ? theme.colors.primary
-                : voice.isRecording
-                  ? theme.colors.destructive
-                  : theme.colors['border-default'],
-            },
-          ]}
+        <Card
+          className="w-full p-3 gap-3"
+          style={{
+            borderCurve: 'continuous',
+            boxShadow: nativeShadows.md,
+            borderColor: isFocused
+              ? primaryColor
+              : voice.isRecording
+                ? destructiveColor
+                : borderDefaultColor,
+          }}
           testID="time-composer"
         >
           {voiceErrorBanner}
@@ -124,34 +127,42 @@ export function TimeComposer({
               value={value}
               multiline
               numberOfLines={5}
-              style={surfaceStyles.input}
+              style={{
+                borderRadius: 0,
+                borderWidth: 0,
+                minHeight: 0,
+                paddingHorizontal: 0,
+                paddingVertical: 0,
+              }}
             />
           )}
           {voice.isRecording ? null : (
-            <View style={surfaceStyles.row}>
+            <View className="flex-row items-center justify-end gap-2">
               <IconButton
                 accessibilityLabel="Start voice input"
                 disabled={voice.isRecordingElsewhere}
-                icon="mic.fill"
                 testID="time-composer-mic-button"
                 onPress={() => void voice.handleVoicePress()}
-              />
+              >
+                <AppIcon name="mic.fill" size={20} />
+              </IconButton>
               <IconButton
                 accessibilityLabel={
                   isParsing ? 'Interpreting time request' : 'Interpret time request'
                 }
                 disabled={disabled || !canSubmit || voice.isBusy}
-                icon="arrow.up"
                 testID="time-composer-submit"
                 onPress={onSubmit}
-              />
+              >
+                <AppIcon name="arrow.up" size={20} />
+              </IconButton>
             </View>
           )}
-        </View>
+        </Card>
       ) : isParsing ? (
         <ResultSurface accessibilityLabel="Interpreting time request" testID="time-result-parsing">
-          <View style={{ alignItems: 'center', justifyContent: 'center', minHeight: 44 }}>
-            <ActivityIndicator color={theme.colors.primary} />
+          <View className="items-center justify-center min-h-11">
+            <ActivityIndicator color={primaryColor} />
           </View>
         </ResultSurface>
       ) : null}
@@ -184,31 +195,26 @@ function ResultSurface({
   state,
   testID,
 }: ResultSurfaceProps) {
-  const _theme = useTheme();
-  const surfaceStyles = useComposerSurfaceStyles();
-  const styles = useResultStyles();
   const reducedMotion = useReducedMotion();
   const isSimple = !state || state.kind === 'parsing';
 
   const inner = isSimple ? (
     children
   ) : state.kind === 'answer' ? (
-    <Text variant="body" color="text-primary">
-      {state.answer}
-    </Text>
+    <Text className="text-body text-foreground">{state.answer}</Text>
   ) : state.kind === 'event-choice' ? (
     <>
-      <Text variant="headline">Which event did you mean?</Text>
+      <Text className="text-headline">Which event did you mean?</Text>
       {state.candidates.map((event) => (
         <Pressable
           key={`${event.id}:${event.startDate}`}
           accessibilityLabel={`${event.title}, ${new Date(event.startDate).toLocaleString()}`}
           onPress={() => onChooseEvent?.(event.id)}
-          style={styles.choice}
+          className="gap-1 py-2 min-h-11"
           testID="time-event-choice"
         >
-          <Text variant="body">{event.title}</Text>
-          <Text color="text-secondary">
+          <Text className="text-body">{event.title}</Text>
+          <Text className="text-muted-foreground">
             {new Date(event.startDate).toLocaleString(undefined, {
               weekday: 'short',
               month: 'short',
@@ -219,27 +225,28 @@ function ResultSurface({
           </Text>
         </Pressable>
       ))}
-      <View style={styles.row}>
+      <View className="flex-row items-center justify-end gap-2">
         <IconButton
           accessibilityLabel="Cancel"
-          icon="xmark"
           testID="time-event-choice-cancel"
           onPress={onCancel}
-        />
+        >
+          <AppIcon name="xmark" size={20} />
+        </IconButton>
       </View>
     </>
   ) : state.kind === 'availability' ? (
     <>
-      <Text variant="headline">Possible times</Text>
+      <Text className="text-headline">Possible times</Text>
       {state.openings.map((opening) => (
         <Pressable
           key={opening.start}
           accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
           onPress={() => onChooseOpening?.(opening)}
-          style={styles.choice}
+          className="gap-1 py-2 min-h-11"
           testID="time-availability-opening"
         >
-          <Text variant="body">
+          <Text className="text-body">
             {new Date(opening.start).toLocaleString(undefined, {
               weekday: 'short',
               month: 'short',
@@ -248,7 +255,7 @@ function ResultSurface({
               minute: '2-digit',
             })}
           </Text>
-          <Text color="text-secondary">
+          <Text className="text-muted-foreground">
             until{' '}
             {new Date(opening.end).toLocaleTimeString(undefined, {
               hour: 'numeric',
@@ -257,13 +264,14 @@ function ResultSurface({
           </Text>
         </Pressable>
       ))}
-      <View style={styles.row}>
+      <View className="flex-row items-center justify-end gap-2">
         <IconButton
           accessibilityLabel="Cancel"
-          icon="xmark"
           testID="time-availability-cancel"
           onPress={onCancel}
-        />
+        >
+          <AppIcon name="xmark" size={20} />
+        </IconButton>
       </View>
     </>
   ) : (
@@ -288,9 +296,7 @@ function ResultSurface({
 
       return (
         <>
-          <Text color="text-secondary" variant="caption1">
-            {intentLabel}
-          </Text>
+          <Text className="text-muted-foreground text-caption1">{intentLabel}</Text>
           <TextField
             accessibilityLabel="Edit title"
             autoFocus
@@ -299,25 +305,19 @@ function ResultSurface({
             testID="time-draft-edit-title"
             value={block.title ?? ''}
           />
-          {details ? (
-            <Text color="text-secondary" variant="body">
-              {details}
-            </Text>
-          ) : null}
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
-            <IconButton
-              accessibilityLabel="Cancel"
-              icon="xmark"
-              testID="time-draft-cancel"
-              onPress={onCancel}
-            />
+          {details ? <Text className="text-muted-foreground text-body">{details}</Text> : null}
+          <View className="flex-row items-center justify-between gap-2">
+            <IconButton accessibilityLabel="Cancel" testID="time-draft-cancel" onPress={onCancel}>
+              <AppIcon name="xmark" size={20} />
+            </IconButton>
             <IconButton
               accessibilityLabel="Confirm"
               disabled={isSaving || !canSubmit}
-              icon="arrow.up"
               testID="time-draft-submit"
               onPress={onSubmitDraft}
-            />
+            >
+              <AppIcon name="arrow.up" size={20} />
+            </IconButton>
           </View>
         </>
       );
@@ -335,31 +335,11 @@ function ResultSurface({
           : undefined)
       }
       entering={reducedMotion ? undefined : FadeInUp.duration(220)}
-      style={[surfaceStyles.surface, styles.card]}
+      className="w-full p-3 gap-3 bg-card rounded border border-border"
+      style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
       testID={testID}
     >
       {inner}
     </Animated.View>
   );
 }
-
-const useResultStyles = makeStyles(() => ({
-  choice: {
-    gap: spacing[1],
-    minHeight: 44,
-    paddingVertical: spacing[2],
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  card: {
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { height: 8, width: 0 },
-  },
-}));

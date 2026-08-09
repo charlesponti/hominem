@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import { Pressable, Text, TextInput } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,8 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-
-import { fontSizes, makeStyles, radii, themeSpacing, useThemeColors } from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 interface OtpInputProps {
   length?: number;
@@ -23,47 +22,7 @@ interface OtpInputProps {
   accessibilityLabel?: string;
 }
 
-const CELL_SIZE = 46;
-const CELL_GAP = themeSpacing.sm;
-
-const useStyles = makeStyles(() => ({
-  wrap: {
-    alignSelf: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: CELL_GAP,
-  },
-  cell: {
-    alignItems: 'center',
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth * 2,
-    height: 56,
-    justifyContent: 'center',
-    width: CELL_SIZE,
-  },
-  cellText: {
-    fontSize: fontSizes.lg + 6,
-    fontVariant: ['tabular-nums'],
-    fontWeight: '700',
-  },
-  caret: {
-    borderRadius: 1,
-    height: 22,
-    width: 2,
-  },
-  hiddenInput: {
-    height: '100%',
-    left: 0,
-    opacity: 0,
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-  },
-}));
-
 function Caret({ color }: { color: string }) {
-  const styles = useStyles();
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -78,7 +37,12 @@ function Caret({ color }: { color: string }) {
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
-  return <Animated.View style={[styles.caret, { backgroundColor: color }, style]} />;
+  return (
+    <Animated.View
+      className="rounded-[1px] h-[22px] w-0.5"
+      style={[{ backgroundColor: color }, style]}
+    />
+  );
 }
 
 function OtpCell({
@@ -100,7 +64,6 @@ function OtpCell({
   errorBorderColor: string;
   textColor: string;
 }) {
-  const styles = useStyles();
   const scale = useSharedValue(1);
   const prevFilled = useRef(false);
 
@@ -125,9 +88,14 @@ function OtpCell({
       : borderColor;
 
   return (
-    <Animated.View style={[styles.cell, { borderColor: resolvedBorderColor }, animatedStyle]}>
+    <Animated.View
+      className="items-center rounded-md border h-14 justify-center w-[46px]"
+      style={[{ borderColor: resolvedBorderColor }, animatedStyle]}
+    >
       {digit ? (
-        <Text style={[styles.cellText, { color: textColor }]}>{digit}</Text>
+        <Text className="tabular-nums font-bold text-2xl" style={{ color: textColor }}>
+          {digit}
+        </Text>
       ) : isActive ? (
         <Caret color={activeBorderColor} />
       ) : null}
@@ -146,8 +114,12 @@ export function OtpInput({
   testID,
   accessibilityLabel,
 }: OtpInputProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [borderDefault, primary, destructive, textPrimary] = useCSSVariable([
+    '--color-border',
+    '--color-primary',
+    '--color-destructive',
+    '--color-foreground',
+  ]) as string[];
   const inputRef = useRef<TextInput>(null);
 
   const shakeX = useSharedValue(0);
@@ -170,11 +142,11 @@ export function OtpInput({
 
   return (
     <Pressable
-      style={styles.wrap}
+      className="self-center"
       onPress={() => inputRef.current?.focus()}
       accessibilityRole="none"
     >
-      <Animated.View style={[styles.row, shakeStyle]}>
+      <Animated.View className="flex-row gap-2" style={shakeStyle}>
         {cells.map((digit, index) => (
           <OtpCell
             // biome-ignore lint: stable fixed-length grid, index is the identity
@@ -183,10 +155,10 @@ export function OtpInput({
             isFilled={Boolean(digit)}
             isActive={editable && index === activeIndex}
             hasError={error}
-            borderColor={themeColors['border-default']}
-            activeBorderColor={themeColors.primary}
-            errorBorderColor={themeColors.destructive}
-            textColor={themeColors['text-primary']}
+            borderColor={borderDefault}
+            activeBorderColor={primary}
+            errorBorderColor={destructive}
+            textColor={textPrimary}
           />
         ))}
       </Animated.View>
@@ -206,7 +178,7 @@ export function OtpInput({
         returnKeyType="done"
         maxLength={length}
         caretHidden
-        style={styles.hiddenInput}
+        className="h-full left-0 opacity-0 absolute top-0 w-full"
       />
     </Pressable>
   );

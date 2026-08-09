@@ -3,63 +3,14 @@ import type { RelativePathString } from 'expo-router';
 import { Stack, useIsFocused, useRouter } from 'expo-router';
 import { memo, useCallback, useMemo } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
-import { makeStyles, useThemeColors } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useArchivedChats } from '~/hooks/useArchivedChats';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { getContentRoute } from '~/services/navigation/routes';
 import t from '~/translations';
-
-const useStyles = makeStyles(() => ({
-  chatCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  chatMeta: {
-    fontSize: 12,
-  },
-  chatRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 10,
-    minHeight: 52,
-    paddingVertical: 12,
-  },
-  chatRowPressed: {
-    opacity: 0.6,
-  },
-  chatTitle: {
-    fontSize: 15,
-  },
-  emptyWrap: {
-    paddingTop: 32,
-  },
-  emptyCopy: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  emptyState: {
-    gap: 2,
-    paddingVertical: 2,
-  },
-  emptyTitle: {
-    fontSize: 15,
-  },
-  header: {
-    paddingBottom: 8,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  helperText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  rowWrap: {
-    paddingHorizontal: 16,
-  },
-}));
 
 export default function ArchivedChatsScreen() {
   const router = useRouter();
@@ -105,21 +56,19 @@ function ArchivedChatsSwiftUI({
   onPressChat: (chatId: string) => void;
   onRefresh: () => void;
 }) {
-  const themeColors = useThemeColors();
-  const styles = useStyles();
   const header = useMemo(
     () => (
-      <View style={styles.header}>
-        <Text style={[styles.helperText, { color: themeColors['text-secondary'] }]}>
+      <View className="pb-2 px-4 pt-2">
+        <Text className="text-[15px] leading-[22px] text-muted-foreground">
           {t.settings.archivedChatsScreen.description}
         </Text>
       </View>
     ),
-    [themeColors],
+    [],
   );
   const empty = useMemo(
     () => (
-      <View style={styles.emptyWrap}>
+      <View className="pt-8">
         {error ? (
           <EmptyState
             action={{ label: t.settings.archivedChatsScreen.loadErrorRetry, onPress: onRefresh }}
@@ -127,18 +76,18 @@ function ArchivedChatsSwiftUI({
             title={t.settings.archivedChatsScreen.loadErrorTitle}
           />
         ) : (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: themeColors['text-primary'] }]}>
+          <View className="gap-0.5 py-0.5">
+            <Text className="text-[15px] text-foreground">
               {t.settings.archivedChatsScreen.emptyTitle}
             </Text>
-            <Text style={[styles.emptyCopy, { color: themeColors['text-secondary'] }]}>
+            <Text className="text-sm leading-5 text-muted-foreground">
               {t.settings.archivedChatsScreen.emptyCopy}
             </Text>
           </View>
         )}
       </View>
     ),
-    [error, onRefresh, themeColors],
+    [error, onRefresh],
   );
   const renderItem = useCallback<ListRenderItem<(typeof chats)[number]>>(
     ({ item }) => <ArchivedChatRow chat={item} onPressChat={onPressChat} />,
@@ -167,25 +116,28 @@ const ArchivedChatRow = memo(
     chat: NonNullable<ReturnType<typeof useArchivedChats>['data']>[number];
     onPressChat: (chatId: string) => void;
   }) => {
-    const themeColors = useThemeColors();
-    const styles = useStyles();
+    const [textSecondary, tertiary] = useCSSVariable([
+      '--color-muted-foreground',
+      '--color-tertiary',
+    ]) as string[];
 
     return (
-      <View style={styles.rowWrap}>
+      <View className="px-4">
         <Pressable
           onPress={() => onPressChat(chat.id)}
-          style={({ pressed }) => [styles.chatRow, pressed && styles.chatRowPressed]}
+          className="items-center flex-row gap-2.5 min-h-[52px] py-3"
+          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
         >
-          <AppIcon name="tray" size={14} tintColor={themeColors['text-secondary']} />
-          <View style={styles.chatCopy}>
-            <Text style={[styles.chatTitle, { color: themeColors['text-primary'] }]}>
+          <AppIcon name="tray" size={14} tintColor={textSecondary} />
+          <View className="flex-1 gap-0.5">
+            <Text className="text-[15px] text-foreground">
               {chat.title ?? t.inbox.item.untitledChat}
             </Text>
-            <Text style={[styles.chatMeta, { color: themeColors['text-secondary'] }]}>
+            <Text className="text-xs text-muted-foreground">
               Archived {formatRelativeAge(chat.archivedAt ?? chat.activityAt)}
             </Text>
           </View>
-          <AppIcon name="chevron.right" size={12} tintColor={themeColors['tertiary']} />
+          <AppIcon name="chevron.right" size={12} tintColor={tertiary} />
         </Pressable>
       </View>
     );
