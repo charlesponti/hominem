@@ -1,10 +1,10 @@
-import type { ChatMessageItem, ChatRenderIcon } from '@hominem/chat';
+import type { ChatMessageItem } from '@hominem/chat';
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
-import { renderChatMessage } from './chat-message';
+import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.25;
@@ -16,12 +16,9 @@ interface ChatMessageListProps {
   showSearch: boolean;
   searchQuery: string;
   showDebug: boolean;
-  onCopy: (message: ChatMessageItem) => void;
   onEdit?: (messageId: string, content: string) => void;
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
-  onShare: (message: ChatMessageItem) => void;
-  renderIcon: ChatRenderIcon;
   formatTimestamp: (value: string) => string;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
@@ -38,12 +35,9 @@ export function ChatMessageList({
   showSearch,
   searchQuery,
   showDebug,
-  onCopy,
   onEdit,
   onRegenerate,
   onDelete,
-  onShare,
-  renderIcon,
   formatTimestamp,
   emptyState,
   refreshControl,
@@ -77,33 +71,26 @@ export function ChatMessageList({
   }, [displayMessages, showSearch]);
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
-    ({ item }) =>
-      renderChatMessage(item, renderIcon, formatTimestamp, {
-        isActive: !item.isStreaming && activeActionMessageId === item.id,
-        onActivate: item.isStreaming
-          ? undefined
-          : () =>
-              setActiveActionMessageId((currentMessageId) =>
-                currentMessageId === item.id ? null : item.id,
-              ),
-        onCopy: item.isStreaming ? undefined : onCopy,
-        onDelete: item.isStreaming ? undefined : onDelete,
-        onEdit: item.isStreaming ? undefined : onEdit,
-        onRegenerate: item.isStreaming ? undefined : onRegenerate,
-        onShare: item.isStreaming ? undefined : onShare,
-        showDebug,
-      }),
-    [
-      activeActionMessageId,
-      formatTimestamp,
-      onCopy,
-      onDelete,
-      onEdit,
-      onRegenerate,
-      onShare,
-      renderIcon,
-      showDebug,
-    ],
+    ({ item }) => (
+      <ChatMessage
+        formatTimestamp={formatTimestamp}
+        message={item}
+        {...{
+          isActive: !item.isStreaming && activeActionMessageId === item.id,
+          onActivate: item.isStreaming
+            ? undefined
+            : () =>
+                setActiveActionMessageId((currentMessageId) =>
+                  currentMessageId === item.id ? null : item.id,
+                ),
+          onEdit: item.isStreaming ? undefined : onEdit,
+          onRegenerate: item.isStreaming ? undefined : onRegenerate,
+          onDelete: item.isStreaming ? undefined : onDelete,
+          showDebug,
+        }}
+      />
+    ),
+    [activeActionMessageId, formatTimestamp, onDelete, onEdit, onRegenerate, showDebug],
   );
 
   const emptySearch = useMemo(() => {

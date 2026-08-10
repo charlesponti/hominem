@@ -2,14 +2,18 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 
 import { ChatDetailScreen } from '~/components/inbox/ChatDetailScreen';
 import { NoteDetailScreen } from '~/components/inbox/NoteDetailScreen';
-import { INBOX_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE } from '~/services/navigation/routes';
 
 export default function InboxDetailRoute() {
-  const { kind } = useLocalSearchParams<{ kind?: string }>();
+  const { kind, id } = useLocalSearchParams<{ kind?: string; id?: string }>();
 
-  if (kind !== 'chat' && kind !== 'note') {
-    return <Redirect href={INBOX_ROUTE} />;
+  if (kind === 'chat') {
+    return id ? <ChatDetailScreen id={id} /> : <Redirect href={HOME_ROUTE} />;
   }
 
-  return kind === 'chat' ? <ChatDetailScreen /> : <NoteDetailScreen />;
+  if (kind !== 'note') {
+    return <Redirect href={HOME_ROUTE} />;
+  }
+
+  return <NoteDetailScreen />;
 }

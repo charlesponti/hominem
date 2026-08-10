@@ -4,9 +4,9 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build:dev": "pnpm exec eas-cli build --platform ios --profile development",
-    "build:e2e": "pnpm exec eas-cli build --platform ios --profile e2e",
-    "build:screenshots": "pnpm exec eas-cli build --platform ios --profile screenshots",
+    "build:dev": "pnpm exec eas build --platform ios --profile development",
+    "build:e2e": "pnpm exec eas build --platform ios --profile e2e",
+    "build:screenshots": "pnpm exec eas build --platform ios --profile screenshots",
     "dev": "APP_ENV=development expo start --clear",
     "eas-build-post-install": "pnpm --filter @ponti-studios/auth build",
     "export:embed:ios": "pnpm --filter @ponti-studios/auth build && APP_ENV=production expo export:embed --eager --platform ios --dev false",
@@ -24,7 +24,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "update": "APP_ENV=production pnpm exec eas-cli update --channel production"
+    "update": "APP_ENV=production pnpm exec eas update --channel production"
   },
   "dependencies": {
     "@better-auth/expo": "1.6.23",

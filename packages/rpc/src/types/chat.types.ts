@@ -3,7 +3,6 @@ import type { InferRequestType, InferResponseType } from 'hono/client';
 export type {
   ArtifactType,
   CaptureBarProps,
-  ChatIconName,
   ChatMessageItem,
   ChatMessageReferencedNote,
   ChatMessageRole,

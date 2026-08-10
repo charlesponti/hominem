@@ -48,7 +48,7 @@ jobs:
       - name: build-and-submit-production
         working-directory: apps/omiro
         run: >-
-          pnpm exec eas-cli build
+          pnpm exec eas build
           --platform ios
           --profile production
           --auto-submit

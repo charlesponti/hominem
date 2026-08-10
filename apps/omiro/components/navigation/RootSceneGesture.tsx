@@ -11,7 +11,7 @@ import Reanimated, {
 
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
-import { ALL_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
 const EDGE_SIZE = 28;
 const COMMIT_DISTANCE = 100;
@@ -45,7 +45,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
 
   const commitRoute = useCallback(
     (target: Scene) => {
-      router.replace(target === 'all' ? ALL_ROUTE : TIME_ROUTE);
+      router.replace(target === 'all' ? HOME_ROUTE : TIME_ROUTE);
       setIsSettling(false);
     },
     [router],

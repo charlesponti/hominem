@@ -1,7 +1,7 @@
 import { TextField } from '@ponti-studios/ui/native';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -16,7 +16,6 @@ import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { useAuth } from '~/services/auth/auth-provider';
-import { resolveAuthScreenState } from '~/services/auth/auth-screen-state';
 import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
 import { posthog } from '~/services/posthog';
 import t from '~/translations';
@@ -91,7 +90,8 @@ function AuthScreen() {
     return <Redirect href={CHAT_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
-  const { isProbing, displayError } = resolveAuthScreenState({ isPending, authError });
+  const isProbing = useMemo(() => isPending && !authError, [isPending, authError]);
+  const displayError = useMemo(() => !!authError, [authError]);
 
   return (
     <>
@@ -109,7 +109,7 @@ function AuthScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View className="w-full items-center">
-            <View className="w-full max-w-[420px] gap-[18px]">
+            <View className="w-full max-w-105 gap-4.5">
               <IconChip icon="envelope" />
 
               <View className="gap-2">

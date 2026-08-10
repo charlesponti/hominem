@@ -3,7 +3,7 @@ import { IconButton } from '@ponti-studios/ui/native';
 import { useRouter, useSegments } from 'expo-router';
 
 import AppIcon from '~/components/ui/icon';
-import { ALL_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
 type Destination = 'all' | 'time' | 'settings';
 
@@ -11,9 +11,9 @@ const destinations: {
   key: Destination;
   label: string;
   icon: MenuAction['image'];
-  route: typeof ALL_ROUTE;
+  route: typeof HOME_ROUTE;
 }[] = [
-  { key: 'all', label: 'All', icon: 'tray.full.fill', route: ALL_ROUTE },
+  { key: 'all', label: 'All', icon: 'tray.full.fill', route: HOME_ROUTE },
   { key: 'time', label: 'Time', icon: 'clock.fill', route: TIME_ROUTE },
 ];
 
