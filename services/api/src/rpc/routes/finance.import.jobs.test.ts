@@ -45,7 +45,7 @@ const job = {
   planId: 'plan-123',
   status: 'processing' as const,
   stats: {},
-  startTime: Date.now(),
+  startTime: new Date('2026-01-01T00:00:00.000Z').getTime(),
 };
 
 function createApp() {
