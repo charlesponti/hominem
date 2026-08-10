@@ -1,17 +1,22 @@
 import { CareerRepository, db, type CareerApplicationWithRelations } from '@hominem/db';
+import { Button } from '@ponti-studios/ui/primitives';
 import {
   ArrowLeftIcon,
   Briefcase,
   Calendar,
+  FileText,
   MapPin,
   PaperclipIcon,
   StickyNoteIcon,
 } from 'lucide-react';
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { data, NavLink, Outlet, redirect, useNavigate } from 'react-router';
 
+import { QuickActions } from '~/components/career/applications/QuickActions';
+import { StatusBadge } from '~/components/status-badge';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { cn } from '~/lib/utils';
+import { getApplicationStatusTone } from '~/lib/utils/applicationUtils';
 
 import { Route } from './+types/applications.$id';
 
@@ -22,6 +27,52 @@ export const meta: Route.MetaFunction = ({ matches }) => {
   const app = data?.application;
   return [{ title: app ? `${app.title} at ${app.company} | career` : 'Application | career' }];
 };
+
+export async function action({ context, params, request }: Route.ActionArgs) {
+  const user = context.get(userContext)!;
+  const { id } = params;
+  if (!id) throw new Response('Application ID is required', { status: 400 });
+
+  const application = await CareerRepository.getApplicationWithRelations(db, user.id, id);
+  if (!application) throw new Response('Application not found', { status: 404 });
+
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'update-application') {
+    const salaryRaw = formData.get('salaryExpectation') as string;
+    const salaryExpectation =
+      salaryRaw && Number.isFinite(Number(salaryRaw)) ? Math.round(Number(salaryRaw) * 100) : null;
+
+    await CareerRepository.updateApplication(db, user.id, id, {
+      title: formData.get('title') as string,
+      company: formData.get('company') as string,
+      location: (formData.get('location') as string) || null,
+      source: (formData.get('source') as string) || null,
+      appliedAt: (formData.get('appliedAt') as string) || null,
+      status: (formData.get('status') as string) || null,
+      jobPostingUrl: (formData.get('jobPostingUrl') as string) || null,
+      salaryExpectation,
+      notes: (formData.get('notes') as string) || null,
+    });
+    return data({ ok: true });
+  }
+
+  if (intent === 'update-status') {
+    const status = formData.get('status') as string;
+    if (status) {
+      await CareerRepository.updateApplication(db, user.id, id, { status });
+    }
+    return data({ ok: true });
+  }
+
+  if (intent === 'delete') {
+    await CareerRepository.deleteApplication(db, user.id, id);
+    return redirect('/applications');
+  }
+
+  return data({ ok: false });
+}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(userContext)!;
@@ -52,6 +103,7 @@ const tabItems = [
   { to: 'timeline', label: 'Timeline', icon: Calendar, end: false },
   { to: 'notes', label: 'Notes', icon: StickyNoteIcon, end: false },
   { to: 'files', label: 'Files', icon: PaperclipIcon, end: false },
+  { to: 'resume', label: 'Resume', icon: FileText, end: false },
 ] as const;
 
 export default function ApplicationDetailLayout({ loaderData }: Route.ComponentProps) {
@@ -60,40 +112,43 @@ export default function ApplicationDetailLayout({ loaderData }: Route.ComponentP
 
   return (
     <div className="flex flex-col gap-6">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        className="self-start"
         onClick={() => navigate('/applications')}
-        data-testid="back-button"
-        className="body-3 inline-flex items-center gap-2 self-start text-muted-foreground transition-colors"
       >
-        <ArrowLeftIcon className="size-4" />
+        <ArrowLeftIcon className="mr-2 size-4" />
         Back to applications
-      </button>
+      </Button>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div className="space-y-2">
-          <h1 className="heading-2 text-foreground">{application.title}</h1>
-          <div className="flex gap-2 body-3 text-muted-foreground">
-            <p className="p-2 py-1 border rounded bg-surface">{application.company}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          <h1 className="heading-2 truncate text-foreground">{application.title}</h1>
+          <p className="body-3 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted-foreground">
+            <span className="font-medium text-foreground">{application.company}</span>
             {application.location && (
-              <p className="p-2 py-1 border rounded bg-surface flex items-center gap-1">
-                <MapPin className="size-3" />
-                {application.location}
-              </p>
+              <>
+                <span aria-hidden className="text-muted-foreground/50">
+                  ·
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="size-3.5" />
+                  {application.location}
+                </span>
+              </>
             )}
-          </div>
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {application.status && (
-            <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium">
-              {application.status}
-            </span>
+            <StatusBadge
+              tone={getApplicationStatusTone(application.status)}
+              label={application.status}
+            />
           )}
-          {application.currentStage && (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-              {application.currentStage}
-            </span>
-          )}
+          {application.currentStage && <StatusBadge tone="info" label={application.currentStage} />}
+          <QuickActions currentStatus={application.status} />
         </div>
       </div>
 
@@ -106,7 +161,7 @@ export default function ApplicationDetailLayout({ loaderData }: Route.ComponentP
             className={({ isActive }) =>
               cn(
                 'text-text-primary flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-all',
-                isActive && 'bg-card text-card-foreground border-border/40 border',
+                isActive && 'bg-background text-card-foreground ring-border ring-1 ring-inset',
               )
             }
           >

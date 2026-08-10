@@ -1,9 +1,10 @@
 import { ApplicationNotesRepository, CareerRepository, db } from '@hominem/db';
 import { Textarea } from '@ponti-studios/ui/forms';
-import { Button } from '@ponti-studios/ui/primitives';
+import { Button, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { Form } from 'react-router';
 
 import { userContext } from '~/lib/middleware';
+import { formatApplicationDate } from '~/lib/utils/applicationUtils';
 
 import { Route } from './+types/applications.$id.notes';
 
@@ -54,26 +55,30 @@ export default function ApplicationNotesRoute({ loaderData }: Route.ComponentPro
       {notes.length === 0 ? (
         <p className="body-3 text-muted-foreground text-center py-6">No notes yet.</p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {notes.map((note) => (
-            <div key={note.id} className="rounded-lg border border-border p-4">
-              <div className="flex items-start justify-between gap-4">
-                <p className="body-3 whitespace-pre-wrap">{note.content}</p>
-                <Form method="post" navigate={false}>
-                  <input type="hidden" name="intent" value="delete" />
-                  <input type="hidden" name="id" value={note.id} />
-                  <button
-                    type="submit"
-                    className="footnote shrink-0 text-muted-foreground hover:text-destructive-text"
-                  >
-                    Remove
-                  </button>
-                </Form>
+        <Card>
+          <CardContent className="space-y-3">
+            {notes.map((note) => (
+              <div key={note.id} className="rounded-lg border border-border p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="body-3 whitespace-pre-wrap">{note.content}</p>
+                  <Form method="post" navigate={false}>
+                    <input type="hidden" name="intent" value="delete" />
+                    <input type="hidden" name="id" value={note.id} />
+                    <button
+                      type="submit"
+                      className="footnote shrink-0 text-muted-foreground hover:text-destructive-text"
+                    >
+                      Remove
+                    </button>
+                  </Form>
+                </div>
+                <p className="footnote text-muted-foreground mt-2">
+                  {formatApplicationDate(note.createdAt)}
+                </p>
               </div>
-              <p className="footnote text-muted-foreground mt-2">{String(note.createdAt)}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

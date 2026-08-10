@@ -6,6 +6,21 @@ import { describe, expect, it } from 'vitest';
 import type { Route } from './+types/home';
 import Home from './home';
 
+const emptyStats = {
+  totalApplications: 0,
+  activeApplications: 0,
+  rejectedApplications: 0,
+  offerCount: 0,
+  offerRate: 0,
+  employmentPositions: 0,
+  targetRoles: 0,
+  statusBreakdown: [],
+  sourcePerformance: [],
+  topCompanies: [],
+  monthlyActivity: [],
+  salaryHistory: [],
+};
+
 function renderHome(authenticated: boolean) {
   render(
     <MemoryRouter>
@@ -14,9 +29,11 @@ function renderHome(authenticated: boolean) {
           params: {},
           matches: [],
         } as unknown as Route.ComponentProps)}
-        loaderData={{
-          authenticated,
-        }}
+        loaderData={
+          authenticated
+            ? { authenticated: true as const, stats: emptyStats }
+            : { authenticated: false as const }
+        }
       />
     </MemoryRouter>,
   );

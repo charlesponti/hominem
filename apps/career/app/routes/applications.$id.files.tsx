@@ -176,7 +176,7 @@ export default function ApplicationFilesRoute({ loaderData }: Route.ComponentPro
         />
       </Form>
 
-      <div className="divide-y divide-border rounded-lg border border-border">
+      <div className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-surface shadow-xs">
         {files.map((file) => (
           <div key={file.id} className="flex items-center justify-between p-4">
             <a

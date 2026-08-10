@@ -101,7 +101,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   return data({
     user,
-    hasProfile: Boolean(user),
+    hasPortfolio: Boolean(user),
     apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
   });
 }

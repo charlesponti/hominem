@@ -13,20 +13,25 @@ export function getCompanyName(company: string | { name: string } | null | undef
 
 const APPLICATION_STATUS_TONE: Record<string, StatusTone> = {
   APPLIED: 'info',
-  PHONE_SCREEN: 'warning',
+  ACTIVE: 'info',
   INTERVIEW: 'info',
+  INTERVIEWING: 'info',
   FINAL_INTERVIEW: 'info',
+  PHONE_SCREEN: 'warning',
   OFFER: 'success',
   ACCEPTED: 'success',
   REJECTED: 'danger',
+  WITHDREW: 'neutral',
   WITHDRAWN: 'neutral',
 };
 
 /**
- * Get the shared StatusBadge tone for an application status
+ * Get the shared StatusBadge tone for an application status. Statuses arrive
+ * in mixed case from the warehouse ('active', 'APPLIED', 'INTERVIEWING'), so
+ * the lookup is case-insensitive.
  */
 export function getApplicationStatusTone(status: string): StatusTone {
-  return APPLICATION_STATUS_TONE[status] ?? 'neutral';
+  return APPLICATION_STATUS_TONE[status.toUpperCase()] ?? 'neutral';
 }
 
 /**

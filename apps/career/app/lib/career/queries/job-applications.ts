@@ -16,32 +16,67 @@ export type JobApplicationCard = {
 
 export type JobApplicationFilter = {
   status?: string;
+  source?: string;
+  query?: string;
 };
 
+export type SortDirection = 'asc' | 'desc';
+
 export type PaginationOptions = {
-  limit?: number;
+  page: number;
+  pageSize: number;
 };
 
 export function filterJobApplications(
   applications: JobApplicationCard[],
   filter?: JobApplicationFilter,
 ): JobApplicationCard[] {
-  if (!filter?.status) return applications;
-  return applications.filter((a) => a.status === filter.status);
+  let result = applications;
+
+  if (filter?.status) {
+    result = result.filter((a) => a.status === filter.status);
+  }
+
+  if (filter?.source) {
+    result = result.filter((a) => a.source === filter.source);
+  }
+
+  if (filter?.query) {
+    const query = filter.query.trim().toLowerCase();
+    result = result.filter((a) => {
+      const company = (a.company ?? '').toLowerCase();
+      const title = (a.title ?? '').toLowerCase();
+      return company.includes(query) || title.includes(query);
+    });
+  }
+
+  return result;
 }
 
-export function sortAndPaginateJobApplications(
+export function sortJobApplications(
   applications: JobApplicationCard[],
-  options?: PaginationOptions,
+  direction: SortDirection = 'desc',
 ): JobApplicationCard[] {
-  const sorted = [...applications].sort((a, b) => {
+  return [...applications].sort((a, b) => {
     const dateA = a.appliedAt ?? '';
     const dateB = b.appliedAt ?? '';
-    return dateB.localeCompare(dateA);
+    const cmp = dateB.localeCompare(dateA);
+    return direction === 'asc' ? -cmp : cmp;
   });
+}
 
-  if (options?.limit && options.limit > 0) {
-    return sorted.slice(0, options.limit);
-  }
-  return sorted;
+export function paginateJobApplications(
+  applications: JobApplicationCard[],
+  options: PaginationOptions,
+): { items: JobApplicationCard[]; total: number; totalPages: number; page: number } {
+  const total = applications.length;
+  const totalPages = Math.max(1, Math.ceil(total / options.pageSize));
+  const page = Math.min(Math.max(1, options.page), totalPages);
+  const start = (page - 1) * options.pageSize;
+  return {
+    items: applications.slice(start, start + options.pageSize),
+    total,
+    totalPages,
+    page,
+  };
 }
