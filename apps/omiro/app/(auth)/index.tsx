@@ -1,4 +1,3 @@
-import { TextField } from '@ponti-studios/ui/native';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
@@ -6,7 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
+  interpolateColor,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSequence,
   withTiming,
@@ -16,6 +17,7 @@ import { useCSSVariable } from 'uniwind';
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
+import { TextField } from '~/components/ui/text-field';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { useAuth } from '~/services/auth/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
@@ -35,11 +37,10 @@ function AuthScreen() {
   const normalizedEmail = normalizeEmail(email);
   const emailIsValid = isValidEmail(normalizedEmail);
 
-  const [destructive, borderDefault, textPrimary, success] = useCSSVariable([
-    '--color-destructive',
-    '--color-border',
+  const [textPrimary, mutedForeground, primaryColor] = useCSSVariable([
     '--color-foreground',
-    '--color-success',
+    '--color-muted-foreground',
+    '--color-primary',
   ]) as string[];
 
   const getEmailProgress = () => {
@@ -47,11 +48,9 @@ function AuthScreen() {
     if (!email.includes('@')) return { stage: 1, message: 'Add the @ symbol' };
     const [_local, domain] = email.split('@');
     if (!domain) return { stage: 2, message: 'Almost there! Add the domain' };
-    if (!domain.includes('.'))
-      return { stage: 3, message: "Don't forget the domain extension" };
+    if (!domain.includes('.')) return { stage: 3, message: "Don't forget the domain extension" };
     const [_domainName, ext] = domain.split('.');
-    if (!ext || ext.length < 2)
-      return { stage: 4, message: 'Complete the domain extension' };
+    if (!ext || ext.length < 2) return { stage: 4, message: 'Complete the domain extension' };
     return { stage: 5, message: 'Ready to go!' };
   };
 
@@ -78,6 +77,11 @@ function AuthScreen() {
     const stageProgress = [0, 0.2, 0.4, 0.6, 0.8, 1];
     drawProgress.value = withTiming(stageProgress[progress.stage], { duration: 350 });
   }, [progress.stage, drawProgress]);
+
+  // Border color travels from muted to primary alongside the draw progress.
+  const borderStrokeColor = useDerivedValue(() =>
+    interpolateColor(drawProgress.value, [0, 1], [mutedForeground, primaryColor]),
+  );
 
   // Animations
   const shakeStyle = useAnimatedStyle(
@@ -186,13 +190,10 @@ function AuthScreen() {
                       autoCorrect={false}
                       autoFocus
                       editable={!isSubmitting}
+                      hasError={displayError}
                       cursorColor={textPrimary}
                       selectionColor={textPrimary}
-                      style={{
-                        borderColor: displayError ? destructive : borderDefault,
-                        height: 48,
-                        opacity: isSubmitting ? 0.6 : 1,
-                      }}
+                      style={{ opacity: isSubmitting ? 0.6 : 1 }}
                       onChangeText={(text) => {
                         setEmail(text);
                         setAuthError(null);
@@ -239,7 +240,7 @@ function AuthScreen() {
                             style="stroke"
                             strokeWidth={2}
                             strokeCap="round"
-                            color={textPrimary}
+                            color={borderStrokeColor}
                             start={0}
                             end={drawProgress}
                           />

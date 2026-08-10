@@ -1,12 +1,15 @@
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeInDown,
+  interpolateColor,
   useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
@@ -41,6 +44,19 @@ function formatCountdown(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+const OTP_PROGRESS_MESSAGES = [
+  'Enter your 6-digit code',
+  'Nice start — 5 more to go',
+  'Keep going — 4 left',
+  'Halfway there!',
+  'So close — 2 more',
+  'Just one more digit!',
+];
+
+function getOtpProgressMessage(digitsEntered: number) {
+  return OTP_PROGRESS_MESSAGES[Math.min(digitsEntered, OTP_PROGRESS_MESSAGES.length - 1)];
+}
+
 function resolveTokenSentAt(sentAt?: string) {
   const parsedSentAt = sentAt ? Number(sentAt) : NaN;
   return Number.isFinite(parsedSentAt) ? parsedSentAt : Date.now();
@@ -49,6 +65,9 @@ function resolveTokenSentAt(sentAt?: string) {
 function resolveSecondsLeft(tokenSentAt: number, now = Date.now()) {
   return Math.max(0, OTP_EXPIRES_SECONDS - Math.floor((now - tokenSentAt) / 1000));
 }
+
+const VERIFY_BUTTON_HEIGHT = 44; // h-11
+const VERIFY_BUTTON_BORDER_RADIUS = 6; // rounded-md
 
 function resolveAutoSubmitInput({
   resolvedEmail,
@@ -136,10 +155,43 @@ function VerifyScreen() {
     '--color-success',
   ]) as string[];
 
+  // Clockwise-drawing border around the Verify button, filling in as digits are entered.
+  const [verifyButtonWidth, setVerifyButtonWidth] = React.useState(0);
+  const verifyBorderPath = React.useMemo(() => {
+    if (verifyButtonWidth === 0) return null;
+    const path = Skia.Path.Make();
+    path.addRRect(
+      {
+        rect: { x: 1, y: 1, width: verifyButtonWidth - 2, height: VERIFY_BUTTON_HEIGHT - 2 },
+        rx: VERIFY_BUTTON_BORDER_RADIUS,
+        ry: VERIFY_BUTTON_BORDER_RADIUS,
+      },
+      false, // clockwise
+    );
+    return path;
+  }, [verifyButtonWidth]);
+
+  const verifyDrawProgress = useSharedValue(0);
+  React.useEffect(() => {
+    verifyDrawProgress.value = withTiming(normalizedOtp.length / 6, { duration: 250 });
+  }, [normalizedOtp.length, verifyDrawProgress]);
+
+  // Border color travels from muted to primary alongside the draw progress.
+  const verifyBorderStrokeColor = useDerivedValue(() =>
+    interpolateColor(verifyDrawProgress.value, [0, 1], [textSecondary, primary]),
+  );
+
   // Animations
+  const verifyBorderStyle = useAnimatedStyle(
+    () => ({
+      opacity: withTiming(normalizedOtp.length === 6 ? 0 : 1, { duration: 200 }),
+    }),
+    [normalizedOtp.length],
+  );
+
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
-      opacity: withTiming(normalizedOtp.length === 6 ? 1 : 0, { duration: 36 }),
+      opacity: withTiming(normalizedOtp.length === 6 ? 1 : 0, { duration: 200 }),
     }),
     [normalizedOtp.length],
   );
@@ -217,14 +269,11 @@ function VerifyScreen() {
       >
         <View className="w-full items-center">
           <View className="w-full max-w-[420px] gap-[18px]">
-            <Animated.View entering={FadeInDown.duration(400).springify().damping(16)}>
+            <Animated.View entering={FadeIn.duration(400)}>
               <IconChip icon="lock.shield" />
             </Animated.View>
 
-            <Animated.View
-              entering={FadeInDown.duration(400).delay(60).springify().damping(16)}
-              className="gap-2"
-            >
+            <Animated.View entering={FadeIn.duration(400).delay(60)} className="gap-2">
               <Text className="text-title1 text-foreground">{t.auth.verify.title}</Text>
               <View className="flex-row items-center flex-wrap gap-1.5">
                 <Text className="text-subhead text-muted-foreground">
@@ -245,7 +294,7 @@ function VerifyScreen() {
             </Animated.View>
 
             <Animated.View
-              entering={FadeInDown.duration(400).delay(120).springify().damping(16)}
+              entering={FadeIn.duration(400).delay(120)}
               className="gap-4 items-center"
             >
               <View className={isBusy ? 'opacity-60' : ''}>
@@ -266,29 +315,74 @@ function VerifyScreen() {
               </View>
 
               {authError ? (
-                <Text
-                  testID="auth-otp-message"
-                  accessibilityLiveRegion="polite"
-                  className="text-footnote text-center text-destructive"
-                >
-                  {authError}
-                </Text>
+                <Animated.View entering={FadeIn.duration(200)}>
+                  <Text
+                    testID="auth-otp-message"
+                    accessibilityLiveRegion="polite"
+                    className="text-footnote text-center text-destructive"
+                  >
+                    {authError}
+                  </Text>
+                </Animated.View>
               ) : null}
 
-              {/* Verify / resend primary button — animates in once 6 digits are entered */}
-              <Animated.View
-                style={[verifyButtonStyle]}
-                className="overflow-hidden w-full"
-                pointerEvents={normalizedOtp.length === 6 ? 'auto' : 'none'}
+              {/* Clockwise-drawing border fills in as digits are entered, then fades
+                  into the Verify button once all 6 are present — zero layout shift. */}
+              <View
+                className="relative w-full items-center justify-center"
+                style={{ height: VERIFY_BUTTON_HEIGHT }}
+                onLayout={(e) => setVerifyButtonWidth(e.nativeEvent.layout.width)}
               >
-                <Button
-                  testID="auth-verify-otp"
-                  label={t.auth.verify.verifyButton}
-                  onPress={() => void handleVerifyPress()}
-                  disabled={isSubmitting || normalizedOtp.length !== 6}
-                  variant="primary"
-                />
-              </Animated.View>
+                {normalizedOtp.length < 6 && verifyBorderPath && (
+                  <Animated.View
+                    style={[
+                      {
+                        position: 'absolute',
+                        width: verifyButtonWidth,
+                        height: VERIFY_BUTTON_HEIGHT,
+                      },
+                      verifyBorderStyle,
+                    ]}
+                    pointerEvents="none"
+                  >
+                    <Canvas style={{ width: verifyButtonWidth, height: VERIFY_BUTTON_HEIGHT }}>
+                      <Path
+                        path={verifyBorderPath}
+                        style="stroke"
+                        strokeWidth={2}
+                        strokeCap="round"
+                        color={verifyBorderStrokeColor}
+                        start={0}
+                        end={verifyDrawProgress}
+                      />
+                    </Canvas>
+                  </Animated.View>
+                )}
+
+                {normalizedOtp.length < 6 && !authError && (
+                  <View className="flex-row items-center justify-center gap-1.5 px-4">
+                    {normalizedOtp.length > 0 ? (
+                      <Text className="text-footnote text-muted-foreground">↑</Text>
+                    ) : null}
+                    <Text className="text-footnote text-muted-foreground text-center">
+                      {getOtpProgressMessage(normalizedOtp.length)}
+                    </Text>
+                  </View>
+                )}
+
+                <Animated.View
+                  style={[{ position: 'absolute', width: '100%' }, verifyButtonStyle]}
+                  pointerEvents={normalizedOtp.length === 6 ? 'auto' : 'none'}
+                >
+                  <Button
+                    testID="auth-verify-otp"
+                    label={t.auth.verify.verifyButton}
+                    onPress={() => void handleVerifyPress()}
+                    disabled={isSubmitting || normalizedOtp.length !== 6}
+                    variant="primary"
+                  />
+                </Animated.View>
+              </View>
 
               <Pressable
                 testID="auth-resend-otp"

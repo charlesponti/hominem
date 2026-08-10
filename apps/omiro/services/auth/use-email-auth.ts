@@ -13,18 +13,25 @@ export function useEmailAuth(ops: EmailAuthOperations) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const run = useCallback(async (action: () => Promise<void>, resending = false) => {
-    const setBusy = resending ? setIsResending : setIsSubmitting;
-    try {
-      setBusy(true);
-      setError(null);
-      await action();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Authentication failed. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+  const run = useCallback(
+    async (
+      action: () => Promise<void>,
+      opts: { resending?: boolean; clearOtpOnError?: boolean } = {},
+    ) => {
+      const setBusy = opts.resending ? setIsResending : setIsSubmitting;
+      try {
+        setBusy(true);
+        setError(null);
+        await action();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : 'Authentication failed. Please try again.');
+        if (opts.clearOtpOnError) setOtp('');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [],
+  );
   return {
     email,
     setEmail,
@@ -47,15 +54,18 @@ export function useEmailAuth(ops: EmailAuthOperations) {
         setError(!resolvedEmail ? 'Email is required' : 'Verification code is required');
         return Promise.resolve();
       }
-      return run(() => ops.verifyOtp(resolvedEmail, resolvedOtp));
+      return run(() => ops.verifyOtp(resolvedEmail, resolvedOtp), { clearOtpOnError: true });
     },
     handleResendOtp: (emailOverride?: string) => {
       const resolved = normalizeEmail(emailOverride ?? email);
       return resolved
-        ? run(async () => {
-            await ops.resendOtp(resolved);
-            setOtp('');
-          }, true)
+        ? run(
+            async () => {
+              await ops.resendOtp(resolved);
+              setOtp('');
+            },
+            { resending: true },
+          )
         : (setError('Email is required'), Promise.resolve());
     },
   };

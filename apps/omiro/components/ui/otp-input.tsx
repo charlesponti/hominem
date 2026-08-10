@@ -146,7 +146,12 @@ export function OtpInput({
       onPress={() => inputRef.current?.focus()}
       accessibilityRole="none"
     >
-      <Animated.View className="flex-row gap-2" style={shakeStyle}>
+      <Animated.View
+        className="flex-row gap-2"
+        style={shakeStyle}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         {cells.map((digit, index) => (
           <OtpCell
             // biome-ignore lint: stable fixed-length grid, index is the identity
