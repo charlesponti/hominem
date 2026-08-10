@@ -7,7 +7,7 @@ import type { CalendarEvent } from '~/modules/on-device-ai';
  * states that are awkward to reproduce with a real calendar/task backend
  * (four weeks of overlapping events, tasks, and all-day entries, plus an
  * empty state). Picked from the header's dev menu (__DEV__ builds only) via
- * `useTimePreview()`. Never referenced in production code paths.
+ * `useTimePreview()`. The store avoids constructing these fixtures in production.
  */
 
 const NOW = () => Date.now();

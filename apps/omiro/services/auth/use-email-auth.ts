@@ -24,7 +24,9 @@ export function useEmailAuth(ops: EmailAuthOperations) {
         setError(null);
         await action();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Authentication failed. Please try again.');
+        setError(
+          cause instanceof Error ? cause.message : 'Authentication failed. Please try again.',
+        );
         if (opts.clearOtpOnError) setOtp('');
       } finally {
         setBusy(false);

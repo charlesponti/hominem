@@ -19,6 +19,7 @@ export const chatKeys = {
   resumableChats: queryKeys.chats.sessions,
   archivedChats: queryKeys.chats.archived,
   messages: (chatId: string) => queryKeys.chats.messages(chatId),
+  messageSearch: (chatId: string, query: string) => queryKeys.chats.messageSearch(chatId, query),
   detail: (chatId: string) => ['chats', 'detail', chatId] as const,
   activeChat: (chatId: string | null) => ['chats', 'detail', chatId] as const,
 } as const;

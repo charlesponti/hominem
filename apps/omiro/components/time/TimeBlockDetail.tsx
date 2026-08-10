@@ -7,17 +7,16 @@ import { Text } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { Button } from '~/components/ui/button';
-import type {
-  CalendarEvent,
-  CalendarEventPatch,
-  CalendarRecurrenceScope,
-} from '~/modules/on-device-ai';
+import type { CalendarEventPatch, CalendarRecurrenceScope } from '~/modules/on-device-ai';
+import {
+  useCalendarEvent,
+  useDeleteCalendarEvent,
+  useUpdateCalendarEvent,
+} from '~/services/calendar/calendar-queries';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
 import { useTaskDelete } from '~/services/tasks/use-task-delete';
 import { useTaskQuery } from '~/services/tasks/use-task-query';
 import { useTaskUpdate } from '~/services/tasks/use-task-update';
-
-import { timeEventGateway } from './time-event-gateway';
 
 export type TimeBlockDetailSource = 'task' | 'event';
 type ActiveField = 'location' | 'notes' | 'people' | 'time' | 'title' | null;
@@ -69,13 +68,70 @@ export function TimeBlockDetail({
   source: TimeBlockDetailSource;
   onClose: () => void;
 }) {
+  return source === 'task' ? (
+    <TaskDetailEditor id={id} initialActiveField={initialActiveField} onClose={onClose} />
+  ) : (
+    <CalendarEventDetailEditor id={id} initialActiveField={initialActiveField} onClose={onClose} />
+  );
+}
+
+export function TaskDetailEditor({
+  id,
+  initialActiveField = null,
+  onClose,
+}: {
+  id: string;
+  initialActiveField?: ActiveField;
+  onClose: () => void;
+}) {
+  return (
+    <TimeBlockEditor
+      id={id}
+      initialActiveField={initialActiveField}
+      onClose={onClose}
+      source="task"
+    />
+  );
+}
+
+export function CalendarEventDetailEditor({
+  id,
+  initialActiveField = null,
+  onClose,
+}: {
+  id: string;
+  initialActiveField?: ActiveField;
+  onClose: () => void;
+}) {
+  return (
+    <TimeBlockEditor
+      id={id}
+      initialActiveField={initialActiveField}
+      onClose={onClose}
+      source="event"
+    />
+  );
+}
+
+function TimeBlockEditor({
+  id,
+  initialActiveField = null,
+  source,
+  onClose,
+}: {
+  id: string;
+  initialActiveField?: ActiveField;
+  source: TimeBlockDetailSource;
+  onClose: () => void;
+}) {
   const taskQuery = useTaskQuery({ taskId: id, enabled: source === 'task' });
   const { mutateAsync: updateTask, isPending: isSavingTask } = useTaskUpdate();
   const { mutateAsync: deleteTask } = useTaskDelete();
   const { mutate: toggleTask, isPending: isTogglingTask } = useTaskComplete();
-  const [event, setEvent] = useState<CalendarEvent | null>(null);
+  const eventQuery = useCalendarEvent({ enabled: source === 'event', id });
+  const updateEvent = useUpdateCalendarEvent();
+  const deleteEvent = useDeleteCalendarEvent();
   const [eventError, setEventError] = useState('');
-  const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [draftDuration, setDraftDuration] = useState('');
   const [draftStart, setDraftStart] = useState<Date | null>(null);
   const [draftEnd, setDraftEnd] = useState<Date | null>(null);
@@ -88,38 +144,19 @@ export function TimeBlockDetail({
 
   const task = taskQuery.data?.task;
   const isTask = source === 'task';
+  const event = eventQuery.data ?? null;
   const block = isTask ? task : event;
-  const isLoading = isTask ? taskQuery.isLoading : event === null && !eventError;
+  const isLoading = isTask ? taskQuery.isLoading : eventQuery.isLoading;
   const error = isTask
     ? taskQuery.error instanceof Error
       ? taskQuery.error.message
       : ''
-    : eventError;
+    : eventError || (eventQuery.error instanceof Error ? eventQuery.error.message : '');
   const title = block?.title ?? 'Time block';
   const location = block?.location ?? null;
   const notes = isTask ? (task?.description ?? null) : (event?.notes ?? null);
   const originalPeople =
     taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '';
-  useEffect(() => {
-    if (source !== 'event') return;
-    let mounted = true;
-    void timeEventGateway
-      .getEvent(id)
-      .then((nextEvent) => {
-        if (mounted) setEvent(nextEvent);
-      })
-      .catch((loadError) => {
-        if (mounted) {
-          setEventError(
-            loadError instanceof Error ? loadError.message : 'Unable to load this calendar event.',
-          );
-        }
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [id, source]);
-
   useEffect(() => {
     if (!block) return;
     const start = isTask ? task?.scheduledStartAt : event?.startDate;
@@ -212,24 +249,18 @@ export function TimeBlockDetail({
       new Promise<boolean>((resolve, reject) => {
         withRecurrenceScope(
           (scope) => {
-            setIsSavingEvent(true);
-            void timeEventGateway
-              .updateEvent(id, patch, scope)
-              .then(() => timeEventGateway.getEvent(id))
-              .then((persistedEvent) => {
-                setEvent(persistedEvent);
+            void updateEvent
+              .mutateAsync({ id, patch, recurrenceScope: scope })
+              .then(() => {
                 setEventError('');
                 resolve(true);
               })
-              .catch(reject)
-              .finally(() => {
-                setIsSavingEvent(false);
-              });
+              .catch(reject);
           },
           () => resolve(false),
         );
       }),
-    [id, withRecurrenceScope],
+    [id, updateEvent, withRecurrenceScope],
   );
 
   const saveChanges = useCallback(async () => {
@@ -300,8 +331,8 @@ export function TimeBlockDetail({
         return;
       }
       withRecurrenceScope((scope) => {
-        void timeEventGateway
-          .deleteEvent(id, scope)
+        void deleteEvent
+          .mutateAsync({ id, recurrenceScope: scope })
           .then(onClose)
           .catch((deleteError) =>
             setEventError(
@@ -314,7 +345,7 @@ export function TimeBlockDetail({
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: confirm },
     ]);
-  }, [deleteTask, id, isTask, onClose, title, withRecurrenceScope]);
+  }, [deleteEvent, deleteTask, id, isTask, onClose, title, withRecurrenceScope]);
 
   if (isLoading) {
     return (
@@ -334,7 +365,7 @@ export function TimeBlockDetail({
   }
 
   const readOnlyEvent = !isTask && !event?.isEditable;
-  const saving = isSavingTask || isSavingEvent;
+  const saving = isSavingTask || updateEvent.isPending;
 
   return (
     <>

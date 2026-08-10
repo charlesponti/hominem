@@ -55,3 +55,8 @@ export const ChatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),
 });
+
+export const ChatsSearchMessagesQuerySchema = z.object({
+  query: z.string().trim().min(1).max(200),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});

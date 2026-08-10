@@ -1,70 +1,106 @@
-import { useCallback } from 'react';
+import { useIsFocused } from 'expo-router';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
 import { Button } from '~/components/ui/button';
-import type { CalendarPermissionStatus } from '~/modules/on-device-ai';
+import {
+  useCalendarEvents,
+  useCalendarPermission,
+  useConnectCalendar,
+} from '~/services/calendar/calendar-queries';
+import { useTaskComplete } from '~/services/tasks/use-task-complete';
+import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
-import type { TimeItem, TimeStreamRow } from './time-types';
-import { dayKey } from './time-utils';
+import { useTimePreview } from './time-preview-store';
+import type { TimeItem } from './time-types';
+import { buildTimeStreamRows, dayKey, getUnscheduledTasks } from './time-utils';
 import { TimeRow } from './TimeRow';
 
 interface TimeStreamProps {
-  calendarPermission: CalendarPermissionStatus | null;
-  isLoadingEvents: boolean;
-  onConnectCalendar: () => void;
-  onEndReached: () => void;
+  contentPaddingBottom: number;
   onOpenItem: (item: TimeItem) => void;
-  onRefresh: () => void;
-  onScrollOffsetChange: (offset: number) => void;
-  onToggleTask: (item: Extract<TimeItem, { kind: 'task' }>) => void;
-  restoredScrollOffset: number;
-  rows: TimeStreamRow[];
-  unscheduledTaskCount: number;
+  onError: (message: string) => void;
 }
 
-export function TimeStream({
-  calendarPermission,
-  isLoadingEvents,
-  onConnectCalendar,
-  onEndReached,
-  onOpenItem,
-  onRefresh,
-  onScrollOffsetChange,
-  onToggleTask,
-  restoredScrollOffset,
-  rows,
-  unscheduledTaskCount,
-}: TimeStreamProps) {
-  const renderItem = useCallback(
-    ({ item, index }: { item: TimeStreamRow; index: number }) => {
-      const previous = rows
-        .slice(0, index)
-        .reverse()
-        .find(
-          (candidate): candidate is TimeItem =>
-            candidate.kind === 'task' || candidate.kind === 'event',
-        );
+interface TimeStreamRenderRow {
+  item: TimeItem;
+  showDayLabel: boolean;
+}
 
+export const TimeStream = memo(function TimeStream({
+  contentPaddingBottom,
+  onOpenItem,
+  onError,
+}: TimeStreamProps) {
+  const isFocused = useIsFocused();
+  const { scenario } = useTimePreview();
+  const { data: permission = null } = useCalendarPermission({ enabled: isFocused });
+  const calendar = useCalendarEvents({ enabled: isFocused && permission === 'authorized' });
+  const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
+  const { mutate: toggleTask } = useTaskComplete();
+  const connectCalendar = useConnectCalendar();
+  const scrollOffsetRef = useRef(0);
+  const errorRef = useRef<string | null>(null);
+  const previewEvents = scenario ? scenario.events : calendar.events;
+  const previewTasks = scenario ? scenario.tasks : tasks;
+  const rows = useMemo(
+    () =>
+      buildTimeStreamRows({
+        events: previewEvents,
+        loadedUntil: scenario
+          ? new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+          : calendar.loadedUntil,
+        tasks: previewTasks,
+      }),
+    [calendar.loadedUntil, previewEvents, previewTasks, scenario],
+  );
+  const renderRows = useMemo<TimeStreamRenderRow[]>(() => {
+    let previous: TimeItem | null = null;
+    return rows.map((item) => {
+      const showDayLabel = !previous || dayKey(item) !== dayKey(previous);
+      previous = item;
+      return { item, showDayLabel };
+    });
+  }, [rows]);
+  const unscheduledTaskCount = getUnscheduledTasks(previewTasks).length;
+  const error = calendar.error ?? connectCalendar.error;
+
+  useEffect(() => {
+    const message = error instanceof Error ? error.message : null;
+    if (!message || message === errorRef.current) return;
+    errorRef.current = message;
+    onError(message);
+  }, [error, onError]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: TimeStreamRenderRow }) => {
       return (
         <TimeRow
-          item={item}
-          onOpen={() => onOpenItem(item)}
+          item={item.item}
+          onOpen={() => onOpenItem(item.item)}
           onToggleTask={() => {
-            if (item.kind === 'task') onToggleTask(item);
+            if (item.item.kind === 'task') {
+              toggleTask({
+                completed: item.item.value.status !== 'completed',
+                taskId: item.item.value.id,
+              });
+            }
           }}
-          showDayLabel={!previous || dayKey(item) !== dayKey(previous)}
+          showDayLabel={item.showDayLabel}
         />
       );
     },
-    [onOpenItem, onToggleTask, rows],
+    [onOpenItem, toggleTask],
   );
 
-  const scheduledRows = rows.filter((row) => row.kind === 'task' || row.kind === 'event');
+  const isLoadingEvents = scenario ? false : calendar.isLoadingEvents;
+  const scheduledRows = renderRows;
 
   return (
     <View className="flex-1">
-      {calendarPermission && calendarPermission !== 'authorized' ? (
+      {calendar.hasLoadedEvents ? <View testID="time-events-ready" /> : null}
+      {permission && permission !== 'authorized' ? (
         <View
           className="border border-border rounded-md gap-2 m-4 px-4 py-3"
           testID="time-calendar-permission-notice"
@@ -76,8 +112,8 @@ export function TimeStream({
             Tasks and flexible planning remain available in Time.
           </Text>
           <Button
-            label={calendarPermission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
-            onPress={onConnectCalendar}
+            label={permission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
+            onPress={() => connectCalendar.mutate()}
             size="sm"
             testID="time-calendar-connect"
             variant="secondary"
@@ -85,10 +121,11 @@ export function TimeStream({
         </View>
       ) : null}
       <StreamList
+        contentPaddingBottom={contentPaddingBottom}
         contentPaddingTop={8}
-        data={rows}
-        keyExtractor={(row) =>
-          `${row.kind}:${row.value.id}:${row.kind === 'event' ? row.value.startDate : ''}`
+        data={renderRows}
+        keyExtractor={({ item }) =>
+          `${item.kind}:${item.value.id}:${item.kind === 'event' ? item.value.startDate : ''}`
         }
         ListEmptyComponent={
           !isLoadingEvents && scheduledRows.length === 0 ? (
@@ -108,15 +145,24 @@ export function TimeStream({
             </View>
           ) : null
         }
-        onEndReached={onEndReached}
-        onScrollOffsetChange={onScrollOffsetChange}
+        onEndReached={() => {
+          if (permission === 'authorized' && !scenario) void calendar.loadNextPage();
+        }}
+        onScrollOffsetChange={(offset) => {
+          scrollOffsetRef.current = offset;
+        }}
         refreshControl={
-          <RefreshControl refreshing={isLoadingEvents && rows.length > 0} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={isLoadingEvents && renderRows.length > 0}
+            onRefresh={() => {
+              if (permission === 'authorized' && !scenario) void calendar.refresh();
+            }}
+          />
         }
         renderItem={renderItem}
-        restoredScrollOffset={restoredScrollOffset}
+        restoredScrollOffset={scrollOffsetRef.current}
         testID="time-stream"
       />
     </View>
   );
-}
+});

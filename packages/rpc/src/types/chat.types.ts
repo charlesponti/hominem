@@ -106,6 +106,10 @@ export type ChatsArchiveOutput = InferResponseType<_ChatsArchiveEndpoint, 200>;
 type _ChatsMessagesEndpoint = HonoClient['api']['chats'][':id']['messages']['$get'];
 export type ChatsGetMessagesOutput = InferResponseType<_ChatsMessagesEndpoint, 200>;
 
+type _ChatsSearchMessagesEndpoint = HonoClient['api']['chats'][':id']['messages']['search']['$get'];
+export type ChatsSearchMessagesInput = InferRequestType<_ChatsSearchMessagesEndpoint>['query'];
+export type ChatsSearchMessagesOutput = InferResponseType<_ChatsSearchMessagesEndpoint, 200>;
+
 // ============================================================================
 // STREAM (send message) — chatId is a client-side routing concern, not in the route body
 // ============================================================================

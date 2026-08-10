@@ -41,7 +41,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const { data: activeChat } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
-  const [composerHeight, setComposerHeight] = useState(0);
+  const [composerInset, setComposerInset] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
 
   const source = useMemo<SessionSource>(() => {
@@ -82,7 +82,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
     handleArchiveChat,
     isArchiving,
   } = useChatData({ chatId, onChatArchive: handleChatArchive });
-  const search = useChatSearch(messages);
+  const search = useChatSearch(messages, chatId);
   const transform = useChatTransform({
     chatId,
     source,
@@ -220,7 +220,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           onChangeSearchQuery={search.handleSearchQueryChange}
         />
         <ChatMessageList
-          bottomInset={composerHeight}
+          bottomInset={composerInset}
           isMessagesLoading={isMessagesLoading}
           displayMessages={search.displayMessages}
           showSearch={search.showSearch}
@@ -238,7 +238,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
             />
           }
         />
-        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
+        <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
           <Composer mode="chat" chatId={chatId} />
         </ComposerDock>
         <View className="absolute inset-0" pointerEvents="box-none">

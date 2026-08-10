@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   createChat: vi.fn(),
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
+  searchMessages: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
   resolveReferencedNotes: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock('@hominem/db', () => ({
     create: mocks.createChat,
     getOwnedOrThrow: mocks.getOwnedOrThrow,
     getMessages: mocks.getMessages,
+    searchMessages: mocks.searchMessages,
     insertMessage: mocks.insertMessage,
     touchLastMessage: mocks.touchLastMessage,
     resolveReferencedNotes: mocks.resolveReferencedNotes,
@@ -174,6 +176,30 @@ describe('chat stream accounting', () => {
         usage: expect.objectContaining({ totalTokens: 15, costUsd: 0.12 }),
       }),
     );
+  });
+});
+
+describe('chat message search', () => {
+  beforeEach(() => {
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.searchMessages.mockClear();
+    mocks.searchMessages.mockResolvedValue([]);
+  });
+
+  it('searches all messages for an owned chat', async () => {
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/search?query=important&limit=25',
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.searchMessages).toHaveBeenCalledWith({}, 'chat-id', 'important', 25);
+  });
+
+  it('rejects a search without a query', async () => {
+    const response = await createApp().request('/api/chats/chat-id/messages/search');
+
+    expect(response.status).toBe(400);
+    expect(mocks.searchMessages).not.toHaveBeenCalled();
   });
 });
 

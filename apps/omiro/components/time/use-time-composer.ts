@@ -1,69 +1,49 @@
+import { useIsFocused } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 
 import type { CalendarEvent } from '~/modules/on-device-ai';
-import { useTaskComplete } from '~/services/tasks/use-task-complete';
+import { calendarEventGateway } from '~/services/calendar/calendar-event-gateway';
+import {
+  useCalendarEvents,
+  useCalendarPermission,
+  useCreateCalendarEvent,
+} from '~/services/calendar/calendar-queries';
 import { useTaskCreate } from '~/services/tasks/use-task-create';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 import { useTimeBlockParse } from '~/services/tasks/use-time-block-parse';
 
-import { type TimeEventGateway, timeEventGateway } from './time-event-gateway';
-import { useTimePreview } from './time-preview-context';
-import { applyRequestResult, resolveTimeRequest } from './time-request';
-import { buildCalendarContext } from './time-screen-utils';
-import type {
-  EditableTimeBlockField,
-  TimeInteractionState,
-  TimeItem,
-  TimeOpening,
-} from './time-types';
-import { buildTimeStreamRows, getUnscheduledTasks } from './time-utils';
-import { useTimeCalendar } from './use-time-calendar';
+import { resolveTimeRequest } from './time-request';
+import { buildCalendarContext } from './time-request-context';
+import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
 
-interface UseTimeScreenOptions {
-  gateway?: TimeEventGateway;
-  isFocused: boolean;
+interface UseTimeComposerOptions {
+  onError: (message: string) => void;
   onOpenEvent: (event: CalendarEvent) => void;
 }
 
-export function useTimeScreen({
-  gateway = timeEventGateway,
-  isFocused,
-  onOpenEvent,
-}: UseTimeScreenOptions) {
+export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions) {
+  const isFocused = useIsFocused();
   const [prompt, setPrompt] = useState('');
   const [interaction, setInteraction] = useState<TimeInteractionState>({ kind: 'idle' });
-  const [isSaving, setIsSaving] = useState(false);
-  const [errorToast, setErrorToast] = useState<string | null>(null);
-  const [toastKey, setToastKey] = useState(0);
-  const [toastExpanded, setToastExpanded] = useState(false);
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const { data: permission = null } = useCalendarPermission({ enabled: isFocused });
+  const calendar = useCalendarEvents({ enabled: isFocused && permission === 'authorized' });
   const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
-  const { mutate: toggleTask } = useTaskComplete();
-  const { mutateAsync: createTask } = useTaskCreate();
+  const createTask = useTaskCreate();
+  const createEvent = useCreateCalendarEvent();
   const parseTimeBlock = useTimeBlockParse();
-  const { scenario } = useTimePreview();
-
-  const showError = useCallback((message: string, submittedPrompt: string) => {
-    setPrompt(submittedPrompt);
-    setInteraction({ kind: 'idle' });
-    setToastExpanded(false);
-    setToastKey((key) => key + 1);
-    setErrorToast(message);
-  }, []);
-
-  const showCalendarError = useCallback((message: string) => {
-    setToastKey((key) => key + 1);
-    setErrorToast(message);
-  }, []);
-
-  const calendar = useTimeCalendar({
-    gateway,
-    onError: showCalendarError,
-  });
-
+  const isSaving = createEvent.isPending || createTask.isPending;
   const calendarContext = useMemo(
     () => buildCalendarContext(calendar.events, tasks),
     [calendar.events, tasks],
+  );
+
+  const fail = useCallback(
+    (message: string, submittedPrompt: string) => {
+      setPrompt(submittedPrompt);
+      setInteraction({ kind: 'idle' });
+      onError(message);
+    },
+    [onError],
   );
 
   const ask = useCallback(async () => {
@@ -74,25 +54,35 @@ export function useTimeScreen({
     const result = await resolveTimeRequest({
       calendarContext,
       events: calendar.events,
-      gateway,
+      gateway: calendarEventGateway,
       parse: ({ calendarContext: context, transcript }) =>
         parseTimeBlock.mutateAsync({ transcript, calendarContext: context }),
-      permission: calendar.permission,
+      permission,
       prompt: submittedPrompt,
       tasks,
     });
-    applyRequestResult(result, setInteraction, onOpenEvent, setPrompt, showError);
+
+    if (result.kind === 'error') {
+      fail(result.message, result.submittedPrompt);
+      return;
+    }
+    if (result.kind === 'open-event') {
+      onOpenEvent(result.event);
+      setInteraction({ kind: 'idle' });
+      return;
+    }
+    setPrompt('');
+    setInteraction(result);
   }, [
     calendar.events,
-    calendar.permission,
     calendarContext,
-    gateway,
+    fail,
     interaction.kind,
     isSaving,
     onOpenEvent,
     parseTimeBlock,
+    permission,
     prompt,
-    showError,
     tasks,
   ]);
 
@@ -112,6 +102,17 @@ export function useTimeScreen({
     });
   }, []);
 
+  const chooseEvent = useCallback(
+    (id: string) => {
+      if (interaction.kind !== 'event-choice') return;
+      const event = interaction.candidates.find((candidate) => candidate.id === id);
+      if (!event) return;
+      onOpenEvent(event);
+      setInteraction({ kind: 'idle' });
+    },
+    [interaction, onOpenEvent],
+  );
+
   const updateDraft = useCallback((field: EditableTimeBlockField, value: string) => {
     setInteraction((current) =>
       current.kind === 'draft'
@@ -125,14 +126,13 @@ export function useTimeScreen({
     const { block, submittedPrompt } = interaction;
     const title = block.title?.trim();
     if (!title) {
-      showError('Add a title before saving this time block.', submittedPrompt);
+      fail('Add a title before saving this time block.', submittedPrompt);
       return;
     }
 
-    setIsSaving(true);
     try {
       if (block.primary_intent === 'add_task') {
-        await createTask({
+        await createTask.mutateAsync({
           title,
           dueAt: block.deadline_fixed
             ? new Date(`${block.deadline_fixed}T23:59:59`).toISOString()
@@ -149,36 +149,33 @@ export function useTimeScreen({
         block.primary_intent === 'add_event' ||
         block.primary_intent === 'add_recurring_event'
       ) {
-        if (calendar.permission !== 'authorized') {
-          showError('Connect your iOS Calendar before adding an event.', submittedPrompt);
+        if (permission !== 'authorized') {
+          fail('Connect your iOS Calendar before adding an event.', submittedPrompt);
           return;
         }
         if (!block.start_time || !block.end_time) {
-          showError('Choose a start and end time before adding this event.', submittedPrompt);
+          fail('Choose a start and end time before adding this event.', submittedPrompt);
           return;
         }
-        const event = await gateway.createEvent(
+        await createEvent.mutateAsync({
+          endDate: block.end_time,
+          location: block.location,
+          recurrenceRule: block.recurrence_rule,
+          startDate: block.start_time,
           title,
-          block.start_time,
-          block.end_time,
-          block.location,
-          block.recurrence_rule,
-        );
-        calendar.addEvent(event);
+        });
       } else {
-        showError('Review this request before making a change.', submittedPrompt);
+        fail('Review this request before making a change.', submittedPrompt);
         return;
       }
       setInteraction({ kind: 'idle' });
     } catch (error) {
-      showError(
+      fail(
         error instanceof Error ? error.message : 'Unable to save this time block.',
         submittedPrompt,
       );
-    } finally {
-      setIsSaving(false);
     }
-  }, [calendar, createTask, gateway, interaction, isSaving, showError]);
+  }, [createEvent, createTask, fail, interaction, isSaving, permission]);
 
   const cancelResult = useCallback(() => {
     const submittedPrompt =
@@ -189,42 +186,16 @@ export function useTimeScreen({
     setInteraction({ kind: 'idle' });
   }, [interaction]);
 
-  const previewEvents = scenario ? scenario.events : calendar.events;
-  const previewTasks = scenario ? scenario.tasks : tasks;
-  const rows = buildTimeStreamRows({
-    events: previewEvents,
-    loadedUntil: scenario ? new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) : calendar.loadedUntil,
-    tasks: previewTasks,
-  });
-
   return {
     ask,
-    calendar: {
-      ...calendar,
-      isLoadingEvents: scenario ? false : calendar.isLoadingEvents,
-      permission: scenario ? 'authorized' : calendar.permission,
-    },
     cancelResult,
+    chooseEvent,
     chooseOpening,
-    errorToast,
     interaction,
     isSaving,
-    onDismissError: () => {
-      setErrorToast(null);
-      setToastExpanded(false);
-    },
-    onExpandError: () => setToastExpanded((expanded) => !expanded),
-    onScrollOffsetChange: setScrollOffset,
-    onToggleTask: (item: Extract<TimeItem, { kind: 'task' }>) =>
-      toggleTask({ taskId: item.value.id, completed: item.value.status !== 'completed' }),
     prompt,
-    rows,
     setPrompt,
-    restoredScrollOffset: scrollOffset,
     submitDraft,
-    toastExpanded,
-    toastKey,
-    unscheduledTaskCount: getUnscheduledTasks(previewTasks).length,
     updateDraft,
   };
 }

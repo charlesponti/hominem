@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCalendarContext } from '~/components/time/time-screen-utils';
+import { buildCalendarContext } from '~/components/time/time-request-context';
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event: CalendarEvent = {
@@ -17,7 +17,7 @@ const event: CalendarEvent = {
   title: 'Planning',
 };
 
-describe('useTimeScreen helpers', () => {
+describe('time request context', () => {
   it('builds bounded parser context from events and scheduled tasks', () => {
     const context = buildCalendarContext(
       [event],

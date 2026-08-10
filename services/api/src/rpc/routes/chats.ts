@@ -18,6 +18,7 @@ import {
   ChatsCreateSchema,
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
+  ChatsSearchMessagesQuerySchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
   ChatsUpdateSchema,
@@ -230,6 +231,16 @@ const chatByIdRoutes = new Hono<AppContext>()
     const offset = query.offset ? Number.parseInt(query.offset, 10) : 0;
 
     const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
+    return c.json(messages.map(toChatMessageDto));
+  })
+  .get('/messages/search', zValidator('query', ChatsSearchMessagesQuerySchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const { query, limit } = c.req.valid('query');
+    const messages = await ChatRepository.searchMessages(db, chatId, query, limit);
+
     return c.json(messages.map(toChatMessageDto));
   })
   .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {

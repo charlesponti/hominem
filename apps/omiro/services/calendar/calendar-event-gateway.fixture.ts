@@ -6,7 +6,7 @@ import type {
   OnDeviceAIResult,
 } from '~/modules/on-device-ai';
 
-import type { TimeEventGateway } from './time-event-gateway';
+import type { CalendarEventGateway } from './calendar-event-gateway';
 
 export type TimeFixtureScenario = 'authorized' | 'denied' | 'error' | 'loading' | 'notDetermined';
 
@@ -51,7 +51,6 @@ const fixtureEvents: CalendarEvent[] = [
     title: 'Fixture recurring read-only',
   },
 ];
-
 let scenario: TimeFixtureScenario = 'authorized';
 
 export function setTimeFixtureScenario(nextScenario: TimeFixtureScenario) {
@@ -69,7 +68,7 @@ async function maybeFail() {
   if (scenario === 'loading') await new Promise((resolve) => setTimeout(resolve, 750));
 }
 
-export const timeFixtureGateway: TimeEventGateway = {
+export const timeFixtureGateway: CalendarEventGateway = {
   askSchedule: async (prompt): Promise<OnDeviceAIResult> => {
     await maybeFail();
     return { isOnDevice: true, text: `Fixture answer for ${prompt}` };
@@ -77,10 +76,15 @@ export const timeFixtureGateway: TimeEventGateway = {
   createEvent: async (title, startDate, endDate, location): Promise<CalendarEvent> => {
     await maybeFail();
     const created = {
-      ...fixtureEvents[0],
+      calendarTitle: 'Omiro test calendar',
       endDate,
       id: `time-fixture-created-${fixtureEvents.length}`,
+      isAllDay: false,
+      isEditable: true,
       location,
+      notes: null,
+      participants: [],
+      recurrenceDescription: null,
       startDate,
       title,
     };

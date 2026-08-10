@@ -1,8 +1,11 @@
 import type { ChatMessageItem } from '@hominem/chat';
+import { useApiClient } from '@hominem/rpc/react';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useReducer, useRef } from 'react';
 import type { TextInput } from 'react-native';
 
-import { filterMessagesByQuery } from '~/services/chat/chat-search';
+import { toMessageOutput } from '~/services/chat/use-chat-messages';
+import { chatKeys } from '~/services/notes/query-keys';
 
 interface ChatSearchState {
   showSearch: boolean;
@@ -33,13 +36,31 @@ export function chatSearchReducer(
   }
 }
 
-export function useChatSearch(messages: ChatMessageItem[]) {
+export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
+  const client = useApiClient();
   const [state, dispatch] = useReducer(chatSearchReducer, initialChatSearchState);
   const searchInputRef = useRef<TextInput | null>(null);
 
+  const searchQuery = state.searchQuery.trim();
+  const searchResults = useQuery({
+    queryKey: chatKeys.messageSearch(chatId, searchQuery),
+    queryFn: async () => {
+      const res = await client.api.chats[':id'].messages.search.$get({
+        param: { id: chatId },
+        query: { query: searchQuery },
+      });
+      const result = await res.json();
+      return result.flatMap((message) => {
+        const output = toMessageOutput(message);
+        return output ? [output] : [];
+      });
+    },
+    enabled: state.showSearch && searchQuery.length > 0,
+  });
+
   const displayMessages = useMemo(
-    () => filterMessagesByQuery(messages, state.searchQuery),
-    [messages, state.searchQuery],
+    () => (searchQuery ? (searchResults.data ?? []) : messages),
+    [messages, searchQuery, searchResults.data],
   );
 
   const handleOpenSearch = useCallback(() => {
@@ -65,5 +86,6 @@ export function useChatSearch(messages: ChatMessageItem[]) {
     handleOpenSearch,
     handleCloseSearch,
     handleSearchQueryChange,
+    isSearching: searchResults.isFetching,
   };
 }

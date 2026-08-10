@@ -1,4 +1,5 @@
 import { IconButton } from '@ponti-studios/ui/native';
+import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
@@ -14,7 +15,12 @@ interface TimeRowProps {
   showDayLabel: boolean;
 }
 
-export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowProps) {
+export const TimeRow = memo(function TimeRow({
+  item,
+  onOpen,
+  onToggleTask,
+  showDayLabel,
+}: TimeRowProps) {
   const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useCSSVariable([
     '--color-chart-1',
     '--color-chart-2',
@@ -106,4 +112,4 @@ export function TimeRow({ item, onOpen, onToggleTask, showDayLabel }: TimeRowPro
       </Pressable>
     </View>
   );
-}
+});

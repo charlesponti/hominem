@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Platform, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
@@ -13,21 +13,25 @@ import {
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
 export function HomeScreen() {
-  const [composerHeight, setComposerHeight] = useState(0);
+  const [composerInset, setComposerInset] = useState(0);
   const inbox = useInboxStreamItems();
   const { isFetching: isFetchingTasks, refetch: refetchTasks } = useTasksQuery();
   const recentItems = inbox.items.slice(0, 6);
+  const inset = useMemo(
+    () => (Platform.OS === 'ios' ? { bottom: composerInset } : undefined),
+    [composerInset],
+  );
 
   return (
     <View className="flex-1 bg-background" testID="home-screen">
       <ScrollView
-        contentInset={Platform.OS === 'ios' ? { bottom: composerHeight } : undefined}
+        contentInset={inset}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={
-          Platform.OS === 'android' ? { paddingBottom: composerHeight + 20 } : undefined
+          Platform.OS === 'android' ? { paddingBottom: composerInset + 20 } : undefined
         }
         className="gap-4"
-        scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: composerHeight } : undefined}
+        scrollIndicatorInsets={inset}
         refreshControl={
           <RefreshControl
             refreshing={inbox.isRefreshing || isFetchingTasks}
@@ -39,7 +43,7 @@ export function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <HomeSection title="Continue">
+        <View className="gap-2">
           {recentItems.map((item) => (
             <InboxStreamItem item={item} key={item.id} />
           ))}
@@ -48,9 +52,9 @@ export function HomeScreen() {
               Capture a thought to start your inbox.
             </Text>
           ) : null}
-        </HomeSection>
+        </View>
       </ScrollView>
-      <ComposerDock onHeightChange={setComposerHeight} testID="home-composer-dock">
+      <ComposerDock onInsetChange={setComposerInset} testID="home-composer-dock">
         <Composer
           entryMode="mixed"
           initialMessage={readInboxDraft()}
@@ -59,32 +63,6 @@ export function HomeScreen() {
           onDraftChange={writeInboxDraft}
         />
       </ComposerDock>
-    </View>
-  );
-}
-
-function HomeSection({
-  actionLabel,
-  children,
-  onActionPress,
-  title,
-}: {
-  actionLabel?: string;
-  children: React.ReactNode;
-  onActionPress?: () => void;
-  title: string;
-}) {
-  return (
-    <View className="gap-2">
-      <View className="flex-row items-center justify-between px-4">
-        <Text className="text-title2">{title}</Text>
-        {actionLabel && onActionPress ? (
-          <Pressable accessibilityRole="button" onPress={onActionPress}>
-            <Text className="text-primary text-subhead">{actionLabel}</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {children}
     </View>
   );
 }

@@ -116,6 +116,14 @@ export function ChatMessageList({
     );
   }
 
+  if (!hasSearchQuery && displayMessages.length === 0 && emptyState) {
+    return (
+      <View className="flex-1" style={{ paddingBottom: bottomInset }}>
+        {emptyState}
+      </View>
+    );
+  }
+
   return (
     <FlashList
       ref={listRef}

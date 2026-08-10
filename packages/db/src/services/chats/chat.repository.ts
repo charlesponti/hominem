@@ -339,6 +339,38 @@ export const ChatRepository = {
   },
 
   /**
+   * Search all messages in a chat by content, enriched with referenced note titles.
+   */
+  async searchMessages(
+    handle: DbHandle,
+    chatId: string,
+    query: string,
+    limit = 50,
+  ): Promise<ChatMessageRecord[]> {
+    const escapedQuery = query.trim().replace(/[\\%_]/g, '\\$&');
+    const messages = (await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('role', '!=', 'tool')
+      .where('content', 'ilike', `%${escapedQuery}%`)
+      .orderBy('createdat', 'asc')
+      .limit(limit)
+      .execute()) as ChatMessageRow[];
+
+    const noteIds = [
+      ...new Set(
+        messages.flatMap((m) =>
+          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
+        ),
+      ),
+    ];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+  },
+
+  /**
    * Insert a single message. Returns the raw row for transaction composition.
    */
   async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRow> {
