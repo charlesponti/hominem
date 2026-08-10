@@ -16,7 +16,9 @@ import {
 } from '../../application/ai-usage.service';
 import {
   ChatsCreateSchema,
+  ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
+  ChatsSearchMessagesQuerySchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
   ChatsUpdateSchema,
@@ -189,6 +191,12 @@ function getChatId(c: { req: { param: (name: string) => string | undefined } }):
   return chatId;
 }
 
+function getMessageId(c: { req: { param: (name: string) => string | undefined } }): string {
+  const messageId = c.req.param('messageId');
+  if (!messageId) throw new ValidationError('Message id is required');
+  return messageId;
+}
+
 function writeChunkEvent(
   stream: { writeSSE: (input: { data: string }) => Promise<void> },
   chunk: string,
@@ -247,6 +255,33 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
     return c.json(messages.map(toChatMessageDto));
+  })
+  .get('/messages/search', zValidator('query', ChatsSearchMessagesQuerySchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const { query, limit } = c.req.valid('query');
+    const messages = await ChatRepository.searchMessages(db, chatId, query, limit);
+
+    return c.json(messages.map(toChatMessageDto));
+  })
+  .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+    const { content } = c.req.valid('json');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const updated = await ChatRepository.updateMessageContent(
+      db,
+      chatId,
+      messageId,
+      userId,
+      content,
+    );
+
+    return c.json(toChatMessageDto(updated));
   })
   .post('/stream', zValidator('json', ChatsSendSchema), async (c) => {
     const userId = c.get('auth')!.userId;
@@ -390,7 +425,7 @@ export const chatsRoutes = new Hono<AppContext>()
   })
   .post('/start-stream', zValidator('json', ChatsStartStreamSchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const { title, message, fileIds = [], noteIds = [] } = c.req.valid('json');
+    const { title, message, fileIds = [], noteIds = [], responseLength } = c.req.valid('json');
 
     const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
     const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
@@ -422,9 +457,11 @@ export const chatsRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
     const completion = streamChatCompletion({
       messages: [
-        { role: 'system', content: CHAT_ASSISTANT_PROMPT },
+        { role: 'system', content: getSystemPrompt(responseLength) },
         { role: 'user', content: prompt },
       ],
+      maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+      reasoning: getReasoningConfig(responseLength),
     });
 
     return streamSSE(c, async (stream) => {

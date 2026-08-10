@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 
-import { ALL_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE } from '~/services/navigation/routes';
 
 export default function InboxRoute() {
-  return <Redirect href={ALL_ROUTE} />;
+  return <Redirect href={HOME_ROUTE} />;
 }

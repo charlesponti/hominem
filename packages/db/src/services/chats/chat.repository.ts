@@ -242,6 +242,46 @@ export const ChatRepository = {
   },
 
   /**
+   * Update a user message's content. Only the message's author may edit it,
+   * and only 'user' role messages are editable.
+   */
+  async updateMessageContent(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+    userId: string,
+    content: string,
+  ): Promise<ChatMessageRecord> {
+    const existing = await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('authorUserid', '=', userId)
+      .executeTakeFirst();
+
+    if (!existing || existing.role !== 'user') {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const updated = (await handle
+      .updateTable('app.chatMessages')
+      .set({ content, updatedat: new Date().toISOString() })
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('authorUserid', '=', userId)
+      .returningAll()
+      .executeTakeFirstOrThrow()) as ChatMessageRow;
+
+    const noteIds = Array.isArray(updated.referencedNoteIds)
+      ? (updated.referencedNoteIds as string[])
+      : [];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return toChatMessageRecord(updated, noteTitlesById);
+  },
+
+  /**
    * Touch lastMessageAt after sending messages.
    */
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {
@@ -284,6 +324,38 @@ export const ChatRepository = {
       .orderBy('createdat', 'asc')
       .limit(limit)
       .offset(offset)
+      .execute()) as ChatMessageRow[];
+
+    const noteIds = [
+      ...new Set(
+        messages.flatMap((m) =>
+          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
+        ),
+      ),
+    ];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+  },
+
+  /**
+   * Search all messages in a chat by content, enriched with referenced note titles.
+   */
+  async searchMessages(
+    handle: DbHandle,
+    chatId: string,
+    query: string,
+    limit = 50,
+  ): Promise<ChatMessageRecord[]> {
+    const escapedQuery = query.trim().replace(/[\\%_]/g, '\\$&');
+    const messages = (await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('role', '!=', 'tool')
+      .where('content', 'ilike', `%${escapedQuery}%`)
+      .orderBy('createdat', 'asc')
+      .limit(limit)
       .execute()) as ChatMessageRow[];
 
     const noteIds = [

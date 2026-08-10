@@ -128,7 +128,7 @@ function InnerRootLayout() {
 
     const target = getContentRoute(resumeTarget.kind, resumeTarget.id);
     if (pathname !== target) {
-      router.replace(target);
+      router.push(target);
     }
   }, [currentUser?.id, isPending, isRestoring, isSignedIn, pathname, router]);
 

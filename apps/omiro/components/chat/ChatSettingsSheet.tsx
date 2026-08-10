@@ -1,10 +1,10 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCSSVariable } from 'uniwind';
 
-import { fontSizes, makeStyles, Text, useThemeColors } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { DiscreteSlider } from '~/components/ui/discrete-slider';
 import {
@@ -19,69 +19,14 @@ interface ChatSettingsSheetProps {
   onClose: () => void;
 }
 
-const useStyles = makeStyles((theme) => ({
-  sheetBackground: {
-    backgroundColor: theme.colors['background'],
-  },
-  dragHandle: {
-    backgroundColor: theme.colors['border-default'],
-    width: 40,
-    height: 4,
-  },
-  container: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.xl,
-  },
-  title: {
-    fontSize: fontSizes.title2,
-    fontWeight: '700',
-  },
-  section: {
-    gap: theme.spacing.sm,
-  },
-  sectionLabel: {
-    fontSize: fontSizes.md,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    fontSize: fontSizes.footnote,
-  },
-  selectedOption: {
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: theme.spacing.sm,
-  },
-  selectedEmoji: {
-    fontSize: 40,
-  },
-  selectedName: {
-    fontSize: fontSizes.lg,
-    fontWeight: '700',
-  },
-  selectedCaption: {
-    fontSize: fontSizes.footnote,
-  },
-  sliderRow: {
-    paddingHorizontal: theme.spacing.sm,
-  },
-  optionLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.sm,
-  },
-  optionEmoji: {
-    fontSize: 18,
-    opacity: 0.4,
-  },
-  optionEmojiActive: {
-    opacity: 1,
-  },
-}));
-
 export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) {
   const insets = useSafeAreaInsets();
-  const themeColors = useThemeColors();
-  const styles = useStyles();
+  const [borderDefault, background, textPrimary, textSecondary] = useCSSVariable([
+    '--color-border',
+    '--color-background',
+    '--color-foreground',
+    '--color-muted-foreground',
+  ]) as [string, string, string, string];
   const modalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['45%'], []);
   const responseLength = useChatResponseLength();
@@ -113,20 +58,20 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
       ref={modalRef}
       snapPoints={snapPoints}
       enablePanDownToClose
-      handleIndicatorStyle={styles.dragHandle}
-      backgroundStyle={styles.sheetBackground}
+      handleIndicatorStyle={{ backgroundColor: borderDefault, width: 40, height: 4 }}
+      backgroundStyle={{ backgroundColor: background }}
       onDismiss={handleDismiss}
     >
-      <BottomSheetView style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={[styles.title, { color: themeColors['text-primary'] }]}>
+      <BottomSheetView className="gap-6 px-6" style={{ paddingBottom: insets.bottom + 24 }}>
+        <Text className="text-title2 font-bold" style={{ color: textPrimary }}>
           {t.chat.settings.title}
         </Text>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: themeColors['text-primary'] }]}>
+        <View className="gap-2">
+          <Text className="text-base font-semibold" style={{ color: textPrimary }}>
             {t.chat.settings.responseLengthLabel}
           </Text>
-          <Text style={[styles.sectionDescription, { color: themeColors['text-secondary'] }]}>
+          <Text className="text-footnote" style={{ color: textSecondary }}>
             {t.chat.settings.responseLengthDescription}
           </Text>
 
@@ -134,18 +79,18 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
             key={responseLength}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}
-            style={styles.selectedOption}
+            className="items-center gap-0.5 py-2"
           >
-            <Text style={styles.selectedEmoji}>{selectedOption.emoji}</Text>
-            <Text style={[styles.selectedName, { color: themeColors['text-primary'] }]}>
+            <Text className="text-[40px]">{selectedOption.emoji}</Text>
+            <Text className="text-lg font-bold" style={{ color: textPrimary }}>
               {selectedOption.name}
             </Text>
-            <Text style={[styles.selectedCaption, { color: themeColors['text-secondary'] }]}>
+            <Text className="text-footnote" style={{ color: textSecondary }}>
               {selectedOption.caption}
             </Text>
           </Animated.View>
 
-          <View style={styles.sliderRow}>
+          <View className="px-2">
             <DiscreteSlider
               value={Math.max(0, selectedIndex)}
               steps={CHAT_RESPONSE_LENGTHS.length}
@@ -154,11 +99,12 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
             />
           </View>
 
-          <View style={styles.optionLabels}>
+          <View className="flex-row justify-between px-2">
             {CHAT_RESPONSE_LENGTHS.map((length) => (
               <Text
                 key={length}
-                style={[styles.optionEmoji, length === responseLength && styles.optionEmojiActive]}
+                className="text-lg"
+                style={{ opacity: length === responseLength ? 1 : 0.4 }}
               >
                 {t.chat.settings.responseLengthOptions[length].emoji}
               </Text>

@@ -316,6 +316,51 @@ export const CareerRepository = {
     );
   },
 
+  async deleteApplication(
+    handle: DbHandle,
+    ownerUserId: string,
+    applicationId: string,
+  ): Promise<void> {
+    await handle
+      .deleteFrom('app.careerApplications')
+      .where('id', '=', applicationId)
+      .where('ownerUserid', '=', ownerUserId)
+      .execute();
+  },
+
+  async listOffers(
+    handle: DbHandle,
+    ownerUserId: string,
+  ): Promise<
+    Array<CareerOfferRecord & { company: string; title: string; appliedAt: string | null }>
+  > {
+    const rows = await handle
+      .selectFrom('app.careerOffers as o')
+      .innerJoin('app.careerApplications as a', 'a.id', 'o.applicationId')
+      .select([
+        'o.id',
+        'o.applicationId',
+        'o.baseSalary',
+        'o.bonus',
+        'o.currency',
+        'o.decision',
+        'o.decisionAt',
+        'o.equity',
+        'o.notes',
+        'o.signingBonus',
+        'o.totalComp',
+        'o.createdAt',
+        'a.company',
+        'a.title',
+        'a.appliedAt',
+      ])
+      .where('a.ownerUserid', '=', ownerUserId)
+      .execute();
+    return rows as Array<
+      CareerOfferRecord & { company: string; title: string; appliedAt: string | null }
+    >;
+  },
+
   async getApplicationCardStats(
     handle: DbHandle,
     applicationIds: string[],

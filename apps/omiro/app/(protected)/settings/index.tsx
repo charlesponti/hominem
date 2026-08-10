@@ -67,10 +67,9 @@ function SettingsRow({
   destructive?: boolean;
   testID?: string;
 }) {
-  const [destructiveColor, textPrimaryColor, textSecondaryColor, tertiaryColor] = useCSSVariable([
+  const [destructiveColor, textPrimaryColor, tertiaryColor] = useCSSVariable([
     '--color-destructive',
     '--color-foreground',
-    '--color-muted-foreground',
     '--color-tertiary',
   ]) as string[];
 
@@ -130,21 +129,14 @@ function Settings() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [
-    popoverColor,
-    textPrimaryColor,
-    textSecondaryColor,
-    tertiaryColor,
-    borderDefaultColor,
-    destructiveColor,
-  ] = useCSSVariable([
-    '--color-popover',
-    '--color-foreground',
-    '--color-muted-foreground',
-    '--color-tertiary',
-    '--color-border',
-    '--color-destructive',
-  ]) as string[];
+  const [popoverColor, textPrimaryColor, tertiaryColor, borderDefaultColor, destructiveColor] =
+    useCSSVariable([
+      '--color-popover',
+      '--color-foreground',
+      '--color-tertiary',
+      '--color-border',
+      '--color-destructive',
+    ]) as string[];
 
   const normalizedName = state.name.trim();
   const initialNormalizedName = initialName.trim();

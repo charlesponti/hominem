@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   createChat: vi.fn(),
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
+  searchMessages: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
   resolveReferencedNotes: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock('@hominem/db', () => ({
     create: mocks.createChat,
     getOwnedOrThrow: mocks.getOwnedOrThrow,
     getMessages: mocks.getMessages,
+    searchMessages: mocks.searchMessages,
     insertMessage: mocks.insertMessage,
     touchLastMessage: mocks.touchLastMessage,
     resolveReferencedNotes: mocks.resolveReferencedNotes,
@@ -124,6 +126,7 @@ function createApp() {
 
 describe('chat stream accounting', () => {
   beforeEach(() => {
+    mocks.streamChatCompletion.mockClear();
     mocks.createChat.mockResolvedValue({ id: 'chat-id' });
     mocks.getMessages.mockResolvedValue([]);
     mocks.insertMessage.mockResolvedValue(undefined);
@@ -174,6 +177,48 @@ describe('chat stream accounting', () => {
         usage: expect.objectContaining({ totalTokens: 15, costUsd: 0.12 }),
       }),
     );
+  });
+
+  it('applies response length settings to the first message of a new chat', async () => {
+    const response = await createApp().request('/api/chats/start-stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Test', message: 'Hello', responseLength: 'long' }),
+    });
+
+    expect(response.status).toBe(200);
+    await response.text();
+
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.maxTokens).toBe(6000);
+    expect(completionOptions.reasoning).toEqual({ effort: 'medium' });
+    expect(completionOptions.messages[0]?.role).toBe('system');
+    expect(completionOptions.messages[0]?.content).toContain('silently plan a short outline');
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
+  });
+});
+
+describe('chat message search', () => {
+  beforeEach(() => {
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.searchMessages.mockClear();
+    mocks.searchMessages.mockResolvedValue([]);
+  });
+
+  it('searches all messages for an owned chat', async () => {
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/search?query=important&limit=25',
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.searchMessages).toHaveBeenCalledWith({}, 'chat-id', 'important', 25);
+  });
+
+  it('rejects a search without a query', async () => {
+    const response = await createApp().request('/api/chats/chat-id/messages/search');
+
+    expect(response.status).toBe(400);
+    expect(mocks.searchMessages).not.toHaveBeenCalled();
   });
 });
 

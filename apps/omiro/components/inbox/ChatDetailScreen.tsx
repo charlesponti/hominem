@@ -1,36 +1,30 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
-import {
-  ChatMessageList,
-  ChatReviewOverlay,
-  ChatSearchModal,
-  type ChatRenderIcon,
-} from '~/components/chat';
+import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { EmptyState } from '~/components/ui';
-import AppIcon from '~/components/ui/icon';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
 import { useChatTransform, type ChatContentCreated } from '~/hooks/use-chat-transform';
-import { useCopyMessage, useShareMessage } from '~/hooks/use-message-actions';
 import {
   DEFAULT_CHAT_TITLE,
   getChatTitle,
   updateChatTitleCaches,
   useActiveChat,
+  useEditChatMessage,
 } from '~/services/chat';
 import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { writeResumeTarget } from '~/services/navigation/launch-state';
-import { INBOX_ROUTE, getContentRoute } from '~/services/navigation/routes';
+import { HOME_ROUTE, getContentRoute } from '~/services/navigation/routes';
 import t from '~/translations';
 
 function getConversationActionIcon(kind: string, type?: string) {
@@ -44,24 +38,12 @@ function getConversationActionIcon(kind: string, type?: string) {
   return 'ellipsis.circle';
 }
 
-const renderChatIcon: ChatRenderIcon = (name, props) => {
-  const tintColor = props.color;
-  return (
-    <View style={props.style}>
-      <AppIcon name={name} size={props.size} tintColor={tintColor} />
-    </View>
-  );
-};
-
-export function ChatDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation();
+export function ChatDetailScreen({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: activeChat } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
-  const canGoBack = navigation.canGoBack();
-  const [composerHeight, setComposerHeight] = useState(0);
+  const [composerInset, setComposerInset] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
 
   const source = useMemo<SessionSource>(() => {
@@ -90,7 +72,7 @@ export function ChatDetailScreen() {
   );
 
   const handleChatArchive = useCallback(() => {
-    router.dismissTo(INBOX_ROUTE);
+    router.dismissTo(HOME_ROUTE);
   }, [router]);
 
   const {
@@ -102,16 +84,21 @@ export function ChatDetailScreen() {
     handleArchiveChat,
     isArchiving,
   } = useChatData({ chatId, onChatArchive: handleChatArchive });
-  const search = useChatSearch(messages);
+  const search = useChatSearch(messages, chatId);
   const transform = useChatTransform({
     chatId,
     source,
     messages,
     onContentCreated: handleContentCreated,
   });
-  const handleCopyMessage = useCopyMessage();
-  const handleShareMessage = useShareMessage();
   const handleToggleDebug = useCallback(() => setShowDebug((value) => !value), []);
+  const editMessage = useEditChatMessage(chatId);
+  const handleEditMessage = useCallback(
+    (messageId: string, content: string) => {
+      void editMessage.mutateAsync({ messageId, content });
+    },
+    [editMessage],
+  );
 
   const displayTitle = getChatTitle(activeChat?.title, transform.resolvedSource);
   const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
@@ -153,20 +140,6 @@ export function ChatDetailScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerBackButtonDisplayMode: 'minimal',
-          headerBackVisible: canGoBack,
-        }}
-      />
-      {!canGoBack ? (
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(INBOX_ROUTE)}>
-            Inbox
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
-      ) : null}
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Menu
           accessibilityLabel={t.chat.conversationActionsLabel}
@@ -264,17 +237,13 @@ export function ChatDetailScreen() {
           onChangeSearchQuery={search.handleSearchQueryChange}
         />
         <ChatMessageList
-          bottomInset={composerHeight}
+          bottomInset={composerInset}
           isMessagesLoading={isMessagesLoading}
           displayMessages={search.displayMessages}
           showSearch={search.showSearch}
           searchQuery={search.searchQuery}
           showDebug={showDebug}
-          onCopy={handleCopyMessage}
-          onShare={(message: Parameters<typeof handleShareMessage>[0]) => {
-            void handleShareMessage(message);
-          }}
-          renderIcon={renderChatIcon}
+          onEdit={handleEditMessage}
           formatTimestamp={formatRelativeAge}
           emptyState={messagesError ? errorState : emptyState}
           refreshControl={
@@ -286,7 +255,7 @@ export function ChatDetailScreen() {
             />
           }
         />
-        <ComposerDock onHeightChange={setComposerHeight} testID="chat-composer-dock">
+        <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
           <Composer mode="chat" chatId={chatId} />
         </ComposerDock>
         <View className="absolute inset-0" pointerEvents="box-none">

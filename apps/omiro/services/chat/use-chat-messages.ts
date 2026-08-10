@@ -8,7 +8,7 @@ import { type MessageOutput } from './chatMessages';
 
 export const CHAT_MESSAGES_LIMIT = 50;
 
-function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
+export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
   if (message.role === 'tool') {
     return null;
   }

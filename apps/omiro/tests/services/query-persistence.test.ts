@@ -32,6 +32,7 @@ describe('mobile query persistence', () => {
 
   it('persists successful application data but excludes in-flight streams', () => {
     expect(shouldPersistQuery(query({ key: ['notes', 'detail', 'note-1'], data: {} }))).toBe(true);
+    expect(shouldPersistQuery(query({ key: ['calendar', 'events'], data: {} }))).toBe(false);
     expect(
       shouldPersistQuery(
         query({

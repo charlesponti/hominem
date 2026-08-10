@@ -26,7 +26,7 @@ export function ModalOverlay({
   animationType = 'fade',
   statusBarTranslucent = false,
 }: ModalOverlayProps) {
-  const scrimColor = useCSSVariable(backdropToken) as string;
+  const scrimColor = useCSSVariable(`--color-${backdropToken}`) as string;
   const Backdrop = dismissOnBackdropPress ? Pressable : View;
 
   const positionClass =

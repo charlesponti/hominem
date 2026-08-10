@@ -1,8 +1,14 @@
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import { type ReactElement, useEffect, useRef } from 'react';
-import type { NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native';
+import {
+  Platform,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type RefreshControlProps,
+} from 'react-native';
 
 interface StreamListProps<T> {
+  contentPaddingBottom?: number;
   contentPaddingTop?: number;
   data: readonly T[];
   keyExtractor: (item: T) => string;
@@ -18,6 +24,7 @@ interface StreamListProps<T> {
 }
 
 export function StreamList<T>({
+  contentPaddingBottom = 0,
   contentPaddingTop = 0,
   data,
   keyExtractor,
@@ -50,9 +57,13 @@ export function StreamList<T>({
   return (
     <FlashList
       ref={listRef}
-      contentContainerStyle={{ paddingTop: contentPaddingTop }}
+      contentContainerStyle={{
+        paddingBottom: Platform.OS === 'android' ? contentPaddingBottom : undefined,
+        paddingTop: contentPaddingTop,
+      }}
+      contentInset={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
       contentInsetAdjustmentBehavior="automatic"
-      data={[...data]}
+      data={data}
       keyboardDismissMode="on-drag"
       keyExtractor={keyExtractor}
       ListEmptyComponent={ListEmptyComponent}
@@ -64,6 +75,7 @@ export function StreamList<T>({
       refreshControl={refreshControl}
       renderItem={renderItem}
       scrollEventThrottle={16}
+      scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
       showsVerticalScrollIndicator={false}
       testID={testID}
     />

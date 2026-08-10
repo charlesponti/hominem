@@ -4,6 +4,7 @@ export default [
   index('routes/home.tsx'),
   route('/auth', 'routes/auth/index.tsx'),
   route('/login', 'routes/login.tsx'),
+  route('/demo', 'routes/demo.tsx'),
   route('health', 'routes/health.ts'),
   route('api/portfolio/:owner_userid', 'routes/api.portfolio.$userId.ts'),
   route('api/resume/convert', 'routes/api.resume.convert.ts'),
@@ -14,10 +15,12 @@ export default [
   route('api/job/scrape', 'routes/api.job.scrape.ts'),
   route('p/:slug', 'routes/p.$slug.tsx'),
   layout('routes/_authenticated.tsx', [
+    route('onboarding', 'routes/onboarding.tsx'),
     layout('routes/_authenticated-pages.tsx', [
       route('account', 'routes/account.tsx'),
       layout('routes/_portfolio-required.tsx', [
         route('work', 'routes/work.tsx'),
+        route('work/new', 'routes/work.new.tsx'),
         route('work/:id', 'routes/work.$id.tsx'),
         route('skills', 'routes/skills.tsx'),
         route('projects', 'routes/projects.tsx'),
@@ -27,11 +30,13 @@ export default [
         route('testimonials/new', 'routes/testimonials.new.tsx'),
         route('testimonials/:id', 'routes/testimonials.$id.tsx'),
         route('applications', 'routes/applications.tsx'),
+        route('applications/new', 'routes/applications.new.tsx'),
         route('applications/:id', 'routes/applications.$id.tsx', [
           index('routes/applications.$id._index.tsx'),
           route('timeline', 'routes/applications.$id.timeline.tsx'),
           route('notes', 'routes/applications.$id.notes.tsx'),
           route('files', 'routes/applications.$id.files.tsx'),
+          route('resume', 'routes/applications.$id.resume.tsx'),
         ]),
       ]),
     ]),

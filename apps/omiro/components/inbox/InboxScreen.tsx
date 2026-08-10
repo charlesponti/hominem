@@ -17,7 +17,7 @@ interface InboxScreenProps {
 }
 
 export function InboxScreen({ isFocused }: InboxScreenProps) {
-  const [composerHeight, setComposerHeight] = useState(0);
+  const [composerInset, setComposerInset] = useState(0);
   const {
     error,
     items,
@@ -37,7 +37,7 @@ export function InboxScreen({ isFocused }: InboxScreenProps) {
     <View className="flex-1 bg-background">
       <View className="flex-1">
         <InboxList
-          contentPaddingBottom={composerHeight}
+          contentPaddingBottom={composerInset}
           emptyTitle="No recent work yet."
           error={error}
           isFetchingNextPage={isFetchingNextPage}
@@ -49,7 +49,7 @@ export function InboxScreen({ isFocused }: InboxScreenProps) {
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
         />
       </View>
-      <ComposerDock onHeightChange={setComposerHeight} testID="workspace-composer-dock">
+      <ComposerDock onInsetChange={setComposerInset} testID="workspace-composer-dock">
         <Composer
           mode="inbox"
           entryMode="mixed"

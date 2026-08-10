@@ -9,7 +9,6 @@ import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
 
-const THUMB_SIZE = 48;
 const BADGE_SIZE = 16;
 
 export function ComposerAttachmentRow() {

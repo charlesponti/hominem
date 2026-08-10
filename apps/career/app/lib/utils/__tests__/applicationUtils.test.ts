@@ -44,6 +44,13 @@ describe('Application Utils', () => {
       expect(getApplicationStatusTone('WITHDRAWN')).toBe('neutral');
     });
 
+    it('should return correct tones for lowercase and mixed-case statuses', () => {
+      expect(getApplicationStatusTone('active')).toBe('info');
+      expect(getApplicationStatusTone('rejected')).toBe('danger');
+      expect(getApplicationStatusTone('withdrew')).toBe('neutral');
+      expect(getApplicationStatusTone('INTERVIEWING')).toBe('info');
+    });
+
     it('should return the neutral tone for unknown statuses', () => {
       expect(getApplicationStatusTone('UNKNOWN_STATUS')).toBe('neutral');
       expect(getApplicationStatusTone('')).toBe('neutral');

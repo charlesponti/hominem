@@ -5,7 +5,6 @@ import { useCSSVariable } from 'uniwind';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { TimePreviewProvider } from '~/components/time/time-preview-context';
 import { Button } from '~/components/ui/button';
 import { APP_NAME } from '~/constants';
 import { useAppLock } from '~/hooks/use-app-lock';
@@ -75,35 +74,33 @@ function ProtectedShell() {
   return (
     <FeatureErrorBoundary featureName="Protected">
       <ApiProvider queryClient={queryClient}>
-        <TimePreviewProvider>
-          <View className="flex-1">
-            <Stack
-              initialRouteName="index"
-              screenOptions={{
-                ...screenOptions,
-                contentStyle: { backgroundColor: background },
-                headerLargeTitle: false,
-                headerShadowVisible: false,
-                headerTintColor: textPrimary,
+        <View className="flex-1">
+          <Stack
+            initialRouteName="index"
+            screenOptions={{
+              ...screenOptions,
+              contentStyle: { backgroundColor: background },
+              headerLargeTitle: false,
+              headerShadowVisible: false,
+              headerTintColor: textPrimary,
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="inbox" options={{ headerShown: false }} />
+            <Stack.Screen name="time" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="settings/index"
+              options={{
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+                title: 'Settings',
               }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="inbox" options={{ headerShown: false }} />
-              <Stack.Screen name="time" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="settings/index"
-                options={{
-                  presentation: 'formSheet',
-                  sheetGrabberVisible: true,
-                  title: 'Settings',
-                }}
-              />
-              <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
-              <Stack.Screen name="onboarding" options={{ headerShown: true }} />
-              <Stack.Screen name="dev/ui-lab" options={{ title: 'UI Lab' }} />
-            </Stack>
-          </View>
-        </TimePreviewProvider>
+            />
+            <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: true }} />
+            <Stack.Screen name="dev/ui-lab" options={{ title: 'UI Lab' }} />
+          </Stack>
+        </View>
       </ApiProvider>
     </FeatureErrorBoundary>
   );

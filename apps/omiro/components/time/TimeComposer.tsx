@@ -1,12 +1,11 @@
 import { Card, IconButton, nativeShadows, TextField } from '@ponti-studios/ui/native';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { TextInput as RNTextInput } from 'react-native';
 import { Text } from 'react-native';
 import Animated, { FadeInUp, useReducedMotion } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
-import { ComposerDock } from '~/components/composer/ComposerDock';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
 import AppIcon from '~/components/ui/icon';
@@ -16,34 +15,28 @@ import t from '~/translations';
 
 import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
 import { formatDraftDetails } from './time-utils';
+import { useTimeComposer } from './use-time-composer';
 
 interface TimeComposerProps {
-  disabled: boolean;
-  isSaving: boolean;
-  onChangeText: (value: string) => void;
-  onCancel: () => void;
-  onChooseEvent: (id: string) => void;
-  onChooseOpening: (opening: TimeOpening) => void;
-  onEditField: (field: EditableTimeBlockField, value: string) => void;
-  onSubmit: () => void;
-  onSubmitDraft: () => void;
-  state: TimeInteractionState;
-  value: string;
+  onError: (message: string) => void;
+  onOpenEvent: (event: { id: string }) => void;
 }
 
-export function TimeComposer({
-  disabled,
-  isSaving,
-  onChangeText,
-  onCancel,
-  onChooseEvent,
-  onChooseOpening,
-  onEditField,
-  onSubmit,
-  onSubmitDraft,
-  state,
-  value,
-}: TimeComposerProps) {
+export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
+  const controller = useTimeComposer({ onError, onOpenEvent });
+  const {
+    ask,
+    cancelResult,
+    chooseEvent,
+    chooseOpening,
+    interaction: state,
+    isSaving,
+    prompt: value,
+    setPrompt,
+    submitDraft,
+    updateDraft,
+  } = controller;
+  const disabled = state.kind === 'parsing' || isSaving;
   const [primaryColor, destructiveColor, borderDefaultColor] = useCSSVariable([
     '--color-primary',
     '--color-destructive',
@@ -57,7 +50,7 @@ export function TimeComposer({
 
   const voice = useVoiceComposerInput({
     getMessage: () => valueRef.current,
-    setMessage: onChangeText,
+    setMessage: setPrompt,
   });
 
   const canSubmit = value.trim().length > 0;
@@ -77,15 +70,15 @@ export function TimeComposer({
     ) : undefined;
 
   return (
-    <ComposerDock testID="time-composer-dock">
+    <>
       {!isIdle && !isParsing ? (
         <ResultSurface
           isSaving={isSaving}
-          onCancel={onCancel}
-          onChooseEvent={onChooseEvent}
-          onChooseOpening={onChooseOpening}
-          onEditField={onEditField}
-          onSubmitDraft={onSubmitDraft}
+          onCancel={cancelResult}
+          onChooseEvent={chooseEvent}
+          onChooseOpening={chooseOpening}
+          onEditField={updateDraft}
+          onSubmitDraft={submitDraft}
           state={state}
           testID="time-result"
         />
@@ -117,9 +110,9 @@ export function TimeComposer({
               editable={!disabled}
               ref={inputRef}
               onBlur={() => setIsFocused(false)}
-              onChangeText={onChangeText}
+              onChangeText={setPrompt}
               onFocus={() => setIsFocused(true)}
-              onSubmitEditing={onSubmit}
+              onSubmitEditing={ask}
               placeholder="Add or search anything..."
               returnKeyType="send"
               submitBehavior="submit"
@@ -152,7 +145,7 @@ export function TimeComposer({
                 }
                 disabled={disabled || !canSubmit || voice.isBusy}
                 testID="time-composer-submit"
-                onPress={onSubmit}
+                onPress={ask}
               >
                 <AppIcon name="arrow.up" size={20} />
               </IconButton>
@@ -166,7 +159,7 @@ export function TimeComposer({
           </View>
         </ResultSurface>
       ) : null}
-    </ComposerDock>
+    </>
   );
 }
 
@@ -196,6 +189,7 @@ function ResultSurface({
   testID,
 }: ResultSurfaceProps) {
   const reducedMotion = useReducedMotion();
+  const { height: screenHeight } = useWindowDimensions();
   const isSimple = !state || state.kind === 'parsing';
 
   const inner = isSimple ? (
@@ -238,7 +232,7 @@ function ResultSurface({
   ) : state.kind === 'availability' ? (
     <>
       <Text className="text-headline">Possible times</Text>
-      {state.openings.map((opening) => (
+      {state.openings.slice(0, 3).map((opening) => (
         <Pressable
           key={opening.start}
           accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
@@ -335,11 +329,16 @@ function ResultSurface({
           : undefined)
       }
       entering={reducedMotion ? undefined : FadeInUp.duration(220)}
-      className="w-full p-3 gap-3 bg-card rounded border border-border"
-      style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
+      className="w-full gap-3 px-1"
       testID={testID}
     >
-      {inner}
+      <ScrollView
+        contentContainerStyle={{ gap: 12 }}
+        showsVerticalScrollIndicator={false}
+        style={{ maxHeight: screenHeight * 0.4 }}
+      >
+        {inner}
+      </ScrollView>
     </Animated.View>
   );
 }

@@ -1,6 +1,12 @@
 import { buttonVariants } from '@ponti-studios/ui/primitives';
 import { Link } from 'react-router';
 
+import { ActivityChart } from '~/components/career/dashboard/ActivityChart';
+import { ApplicationMetricsCard } from '~/components/career/dashboard/ApplicationMetricsCard';
+import { MetricsGrid } from '~/components/career/dashboard/MetricsGrid';
+import { SalaryChart } from '~/components/career/dashboard/SalaryChart';
+import { TopCompaniesInsights } from '~/components/career/dashboard/TopCompaniesInsights';
+import { getDashboardStats } from '~/lib/career/queries/dashboard-stats.server';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { cn } from '~/lib/utils';
@@ -29,7 +35,8 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!user) return { authenticated: false as const };
 
   try {
-    return { authenticated: true as const };
+    const stats = await getDashboardStats(user.id);
+    return { authenticated: true as const, stats };
   } catch (error) {
     logger.error('Error loading career data', error, { owner_userid: user.id });
     throw new Response('Failed to load career data', { status: 500 });
@@ -49,6 +56,7 @@ const searchProblems = [
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   if (loaderData.authenticated) {
+    const { stats } = loaderData;
     return (
       <div className="flex flex-col gap-6">
         <div>
@@ -56,6 +64,30 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <p className="body-2 mt-2 text-muted-foreground">
             Manage your positions, applications, and education history.
           </p>
+        </div>
+
+        <MetricsGrid
+          totalApplications={stats.totalApplications}
+          activeApplications={stats.activeApplications}
+          rejectedApplications={stats.rejectedApplications}
+          offerCount={stats.offerCount}
+        />
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <ActivityChart data={stats.monthlyActivity} />
+          </div>
+          <ApplicationMetricsCard
+            statusBreakdown={stats.statusBreakdown}
+            sourcePerformance={stats.sourcePerformance}
+          />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <SalaryChart data={stats.salaryHistory} />
+          <div className="lg:col-span-2">
+            <TopCompaniesInsights companies={stats.topCompanies} />
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -115,6 +147,15 @@ function LandingPage() {
                   className={cn(buttonVariants({ size: 'lg' }), 'h-11 rounded-full px-6 text-sm')}
                 >
                   Get started
+                </Link>
+                <Link
+                  to="/demo"
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'lg' }),
+                    'h-11 rounded-full px-5 text-sm',
+                  )}
+                >
+                  See the difference
                 </Link>
               </div>
             </div>

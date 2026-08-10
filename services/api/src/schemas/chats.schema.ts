@@ -30,6 +30,7 @@ export const ChatsStartStreamSchema = ChatsCreateSchema.extend({
   message: z.string(),
   fileIds: z.array(z.uuid()).max(5).optional(),
   noteIds: z.array(z.uuid()).max(10).optional(),
+  responseLength: z.enum(['short', 'medium', 'long']).optional(),
 }).superRefine((value, ctx) => {
   if (
     value.message.trim().length === 0 &&
@@ -48,7 +49,16 @@ export const ChatsUpdateSchema = z.object({
   title: z.string().trim().min(1).max(120),
 });
 
+export const ChatsEditMessageSchema = z.object({
+  content: z.string().trim().min(1).max(20_000),
+});
+
 export const ChatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),
+});
+
+export const ChatsSearchMessagesQuerySchema = z.object({
+  query: z.string().trim().min(1).max(200),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });

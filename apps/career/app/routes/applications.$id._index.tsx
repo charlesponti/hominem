@@ -1,86 +1,131 @@
 import type { CareerApplicationWithRelations } from '@hominem/db';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@ponti-studios/ui/primitives';
+import { ExternalLinkIcon, PencilIcon } from 'lucide-react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useOutletContext } from 'react-router';
+
+import { ApplicationEditor } from '~/components/career/applications/ApplicationEditor';
+import { formatApplicationDate, formatApplicationSalary } from '~/lib/utils/applicationUtils';
+
+interface DetailItemProps {
+  label: string;
+  children: ReactNode;
+}
+
+function DetailItem({ label, children }: DetailItemProps) {
+  return (
+    <div className="space-y-1">
+      <dt className="footnote text-muted-foreground">{label}</dt>
+      <dd className="body-3">{children}</dd>
+    </div>
+  );
+}
 
 export default function ApplicationOverviewRoute() {
   const application = useOutletContext<CareerApplicationWithRelations>();
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return <ApplicationEditor application={application} onCancel={() => setIsEditing(false)} />;
+  }
 
   return (
-    <div className="space-y-6">
-      <section>
-        <h2 className="heading-4 mb-3">Details</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {application.source && (
-            <div>
-              <p className="footnote text-muted-foreground">Source</p>
-              <p className="body-3">{application.source}</p>
-            </div>
-          )}
-          {application.appliedAt && (
-            <div>
-              <p className="footnote text-muted-foreground">Applied</p>
-              <p className="body-3">{application.appliedAt}</p>
-            </div>
-          )}
-          {application.salaryExpectation != null && (
-            <div>
-              <p className="footnote text-muted-foreground">Salary Expectation</p>
-              <p className="body-3">${(application.salaryExpectation / 100).toLocaleString()}</p>
-            </div>
-          )}
-          {application.jobPostingUrl && (
-            <div>
-              <p className="footnote text-muted-foreground">Job Posting</p>
-              <a
-                href={application.jobPostingUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="body-3 text-blue-600 hover:underline"
-              >
-                View posting
-              </a>
-            </div>
-          )}
-          {application.location && (
-            <div>
-              <p className="footnote text-muted-foreground">Location</p>
-              <p className="body-3">{application.location}</p>
-            </div>
-          )}
-        </div>
-      </section>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Details</CardTitle>
+            <CardDescription>Application information.</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <PencilIcon className="mr-2 size-4" />
+            Edit
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-4">
+            {application.source && <DetailItem label="Source">{application.source}</DetailItem>}
+            {application.appliedAt && (
+              <DetailItem label="Applied">
+                {formatApplicationDate(application.appliedAt)}
+              </DetailItem>
+            )}
+            {application.location && (
+              <DetailItem label="Location">{application.location}</DetailItem>
+            )}
+            {application.salaryExpectation != null && (
+              <DetailItem label="Salary Expectation">
+                {formatApplicationSalary(application.salaryExpectation)}
+              </DetailItem>
+            )}
+            {application.jobPostingUrl && (
+              <DetailItem label="Job Posting">
+                <a
+                  href={application.jobPostingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-accent hover:underline"
+                >
+                  View posting
+                  <ExternalLinkIcon className="size-3.5" />
+                </a>
+              </DetailItem>
+            )}
+          </dl>
+        </CardContent>
+      </Card>
 
       {application.notes && (
-        <section>
-          <h2 className="heading-4 mb-3">Notes</h2>
-          <p className="body-2 text-muted-foreground whitespace-pre-wrap">{application.notes}</p>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="body-2 text-muted-foreground whitespace-pre-wrap">{application.notes}</p>
+          </CardContent>
+        </Card>
       )}
 
       {application.offer && (
-        <section>
-          <h2 className="heading-4 mb-3">Offer</h2>
-          <div className="rounded-lg border border-border p-4 space-y-2">
-            {application.offer.baseSalary != null && (
-              <p className="body-3">
-                Base: ${(application.offer.baseSalary / 100).toLocaleString()}
-              </p>
-            )}
-            {application.offer.equity && (
-              <p className="body-3">Equity: {application.offer.equity}</p>
-            )}
-            {application.offer.bonus != null && (
-              <p className="body-3">Bonus: ${(application.offer.bonus / 100).toLocaleString()}</p>
-            )}
-            {application.offer.totalComp != null && (
-              <p className="body-3">
-                Total: ${(application.offer.totalComp / 100).toLocaleString()}
-              </p>
-            )}
-            {application.offer.decision && (
-              <p className="body-3">Decision: {application.offer.decision}</p>
-            )}
-          </div>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Offer</CardTitle>
+            <CardDescription>Compensation details.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+              {application.offer.baseSalary != null && (
+                <DetailItem label="Base">
+                  {formatApplicationSalary(application.offer.baseSalary)}
+                </DetailItem>
+              )}
+              {application.offer.equity && (
+                <DetailItem label="Equity">{application.offer.equity}</DetailItem>
+              )}
+              {application.offer.bonus != null && (
+                <DetailItem label="Bonus">
+                  {formatApplicationSalary(application.offer.bonus)}
+                </DetailItem>
+              )}
+              {application.offer.totalComp != null && (
+                <DetailItem label="Total Comp">
+                  {formatApplicationSalary(application.offer.totalComp)}
+                </DetailItem>
+              )}
+              {application.offer.decision && (
+                <DetailItem label="Decision">{application.offer.decision}</DetailItem>
+              )}
+            </dl>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

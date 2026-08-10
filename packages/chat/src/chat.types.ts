@@ -35,28 +35,6 @@ export function getReferencedNoteLabel(note: ChatMessageReferencedNote) {
   return note.title || note.id;
 }
 
-export type ChatIconName =
-  | 'arrow.clockwise'
-  | 'doc.on.doc'
-  | 'ellipsis'
-  | 'magnifyingglass'
-  | 'square.and.pencil'
-  | 'plus'
-  | 'square.and.arrow.up'
-  | 'speaker.wave.2'
-  | 'stop.fill'
-  | 'trash'
-  | 'xmark';
-
-export type ChatRenderIcon = (
-  name: ChatIconName,
-  props: {
-    color?: string;
-    size: number;
-    style?: object;
-  },
-) => import('react').ReactNode;
-
 export type MarkdownComponent = import('react').ComponentType<{
   children: import('react').ReactNode;
   style?: object;

@@ -10,9 +10,6 @@ export interface ResumeTarget {
 }
 
 export const HOME_ROUTE = '/(protected)' as RelativePathString;
-export const ALL_ROUTE = HOME_ROUTE;
-// Compatibility alias for callers that still describe the All stream as Inbox.
-export const INBOX_ROUTE = ALL_ROUTE;
 export const TIME_ROUTE = '/(protected)/time' as RelativePathString;
 export const UNSCHEDULED_ROUTE = '/(protected)/time/unscheduled' as RelativePathString;
 export const SETTINGS_ROUTE = '/(protected)/settings' as RelativePathString;

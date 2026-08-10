@@ -1,4 +1,3 @@
-import { replaceUnderscores } from '@hominem/utils/text';
 import { Input } from '@ponti-studios/ui/forms';
 import { PaginationControls } from '@ponti-studios/ui/navigation';
 
@@ -9,20 +8,16 @@ import type { ApplicationsFiltersProps } from './types';
 export function ApplicationsFilters({
   searchValue,
   onSearchChange,
-  statuses,
+  statusOptions,
   selectedStatus,
   onStatusChange,
   sourceOptions,
   selectedSource,
   onSourceChange,
   onClearFilters,
+  sortChip,
   pagination,
 }: ApplicationsFiltersProps) {
-  const statusOptions = statuses.map((status) => ({
-    value: status,
-    label: replaceUnderscores(status),
-  }));
-
   const activeFilters = [
     ...(searchValue
       ? [
@@ -37,7 +32,7 @@ export function ApplicationsFilters({
       ? [
           {
             id: 'status',
-            label: replaceUnderscores(selectedStatus),
+            label: selectedStatus,
             onRemove: () => onStatusChange(''),
           },
         ]
@@ -88,12 +83,16 @@ export function ApplicationsFilters({
         />,
       ]}
       results={
-        <PaginationControls
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.onPageChange}
-        />
+        pagination.totalPages > 1 ? (
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.onPageChange}
+          />
+        ) : undefined
       }
-    />
+    >
+      {sortChip}
+    </SearchFilterBar>
   );
 }

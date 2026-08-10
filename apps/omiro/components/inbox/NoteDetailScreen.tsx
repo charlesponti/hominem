@@ -2,7 +2,7 @@ import { parseInboxTimestamp } from '@hominem/chat';
 import type { Note } from '@hominem/rpc/types';
 import { TextField } from '@ponti-studios/ui/native';
 import { Image } from 'expo-image';
-import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -27,7 +27,7 @@ import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
 import { normalizeChatTitle, useStartChatFromInbox } from '~/services/chat';
 import { writeResumeTarget } from '~/services/navigation/launch-state';
-import { INBOX_ROUTE } from '~/services/navigation/routes';
+import { HOME_ROUTE } from '~/services/navigation/routes';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import { useNoteQuery } from '~/services/notes/use-note-query';
 import t from '~/translations';
@@ -92,9 +92,6 @@ export function NoteDetailScreen() {
 
 function NoteDetailEditor({ noteId }: { noteId: string }) {
   const router = useRouter();
-  const navigation = useNavigation();
-  const homeRoute = INBOX_ROUTE;
-  const canGoBack = navigation.canGoBack();
 
   const { data: note, error, isInitialLoading, isRefreshing, refetch } = useNoteQuery({ noteId });
   const { save, flushSave, updateCache, detachFile } = useNoteEditor(noteId);
@@ -108,30 +105,16 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
         style: 'destructive',
         onPress: () => {
           deleteNote(undefined, {
-            onSuccess: () => router.dismissTo(homeRoute),
+            onSuccess: () => router.dismissTo(HOME_ROUTE),
           });
         },
       },
     ]);
-  }, [deleteNote, homeRoute, router]);
+  }, [deleteNote, router]);
 
   if (isInitialLoading) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: '',
-            headerBackButtonDisplayMode: 'minimal',
-            headerBackVisible: canGoBack,
-          }}
-        />
-        {!canGoBack ? (
-          <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(homeRoute)}>
-              Inbox
-            </Stack.Toolbar.Button>
-          </Stack.Toolbar>
-        ) : null}
         <NoteDetailPlaceholder />
       </>
     );
@@ -140,20 +123,6 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
   if (!note) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: '',
-            headerBackButtonDisplayMode: 'minimal',
-            headerBackVisible: canGoBack,
-          }}
-        />
-        {!canGoBack ? (
-          <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(homeRoute)}>
-              Inbox
-            </Stack.Toolbar.Button>
-          </Stack.Toolbar>
-        ) : null}
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
@@ -180,8 +149,6 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
   return (
     <NoteEditorBody
       note={note}
-      canGoBack={canGoBack}
-      homeRoute={homeRoute}
       isRefreshing={isRefreshing}
       refetch={refetch}
       save={save}
@@ -195,8 +162,6 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
 
 interface NoteEditorBodyProps {
   note: Note;
-  canGoBack: boolean;
-  homeRoute: typeof INBOX_ROUTE;
   isRefreshing: boolean;
   refetch: () => void;
   save: ReturnType<typeof useNoteEditor>['save'];
@@ -208,8 +173,6 @@ interface NoteEditorBodyProps {
 
 function NoteEditorBody({
   note,
-  canGoBack,
-  homeRoute,
   isRefreshing,
   refetch,
   save,
@@ -218,7 +181,6 @@ function NoteEditorBody({
   detachFile,
   onDeleteNote,
 }: NoteEditorBodyProps) {
-  const router = useRouter();
   const contentInputRef = useRef<TextInput>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [draft, setDraft] = useState<NoteDraft>(() => ({
@@ -344,20 +306,6 @@ function NoteEditorBody({
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerBackButtonDisplayMode: 'minimal',
-          headerBackVisible: canGoBack,
-        }}
-      />
-      {!canGoBack ? (
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(homeRoute)}>
-            Inbox
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
-      ) : null}
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           accessibilityLabel={isPreviewing ? t.notes.editor.editMode : t.notes.editor.previewMode}

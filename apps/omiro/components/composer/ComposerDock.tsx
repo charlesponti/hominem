@@ -1,26 +1,42 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { getFloatingDockInset } from './composerDock.helpers';
+
+export { getFloatingDockInset } from './composerDock.helpers';
 
 interface ComposerDockProps {
   children: ReactNode;
   testID?: string;
   /**
-   * Reports the dock's total rendered height (including the safe-area
-   * bottom padding) so scrollable content can reserve enough space to
-   * avoid rendering underneath this floating, absolutely-positioned dock.
+   * Reports the space a scroll surface must reserve for this floating dock.
+   * This includes its rendered height and, while the keyboard is open, the
+   * portion of the screen the keyboard occupies above the safe area.
    */
-  onHeightChange?: (height: number) => void;
+  onInsetChange?: (inset: number) => void;
 }
 
-export function ComposerDock({ children, testID, onHeightChange }: ComposerDockProps) {
+export function ComposerDock({ children, testID, onInsetChange }: ComposerDockProps) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardState((state) => state.height);
+  const [dockHeight, setDockHeight] = useState(0);
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    onHeightChange?.(event.nativeEvent.layout.height);
+    setDockHeight(event.nativeEvent.layout.height);
   };
+
+  useEffect(() => {
+    onInsetChange?.(
+      getFloatingDockInset({
+        dockHeight,
+        keyboardHeight,
+        safeAreaBottom: insets.bottom,
+      }),
+    );
+  }, [dockHeight, insets.bottom, keyboardHeight, onInsetChange]);
 
   return (
     <KeyboardStickyView

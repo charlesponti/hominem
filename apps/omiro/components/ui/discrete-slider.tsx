@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { LayoutChangeEvent, Pressable, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { LayoutChangeEvent, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   runOnJS,
@@ -7,8 +7,7 @@ import Reanimated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-
-import { makeStyles, useThemeColors } from '~/components/theme';
+import { useCSSVariable } from 'uniwind';
 
 const THUMB_SIZE = 24;
 const TRACK_HEIGHT = 4;
@@ -22,40 +21,6 @@ interface DiscreteSliderProps {
   accessibilityLabel?: string;
 }
 
-const useStyles = makeStyles(() => ({
-  container: {
-    height: THUMB_SIZE,
-    justifyContent: 'center',
-  },
-  track: {
-    borderRadius: TRACK_HEIGHT / 2,
-    height: TRACK_HEIGHT,
-    left: THUMB_SIZE / 2,
-    position: 'absolute',
-    right: THUMB_SIZE / 2,
-  },
-  fill: {
-    borderRadius: TRACK_HEIGHT / 2,
-    bottom: 0,
-    height: TRACK_HEIGHT,
-    left: THUMB_SIZE / 2,
-    position: 'absolute',
-  },
-  stopDot: {
-    borderRadius: 2,
-    height: 4,
-    position: 'absolute',
-    top: (THUMB_SIZE - TRACK_HEIGHT) / 2,
-    width: 4,
-  },
-  thumb: {
-    borderRadius: THUMB_SIZE / 2,
-    height: THUMB_SIZE,
-    position: 'absolute',
-    width: THUMB_SIZE,
-  },
-}));
-
 function nearestStep(fraction: number, steps: number): number {
   const clamped = Math.min(1, Math.max(0, fraction));
   return Math.round(clamped * (steps - 1));
@@ -68,11 +33,17 @@ export function DiscreteSlider({
   onValueChange,
   accessibilityLabel,
 }: DiscreteSliderProps) {
-  const styles = useStyles();
-  const themeColors = useThemeColors();
+  const [borderDefault, textPrimary] = useCSSVariable(['--color-border', '--color-foreground']) as [
+    string,
+    string,
+  ];
   const trackWidth = useSharedValue(0);
   const [measuredTrackWidth, setMeasuredTrackWidth] = useState(0);
   const position = useSharedValue(steps > 1 ? value / (steps - 1) : 0);
+
+  useEffect(() => {
+    position.value = steps > 1 ? value / (steps - 1) : 0;
+  }, [position, steps, value]);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -94,7 +65,7 @@ export function DiscreteSlider({
     (fraction: number) => {
       const index = nearestStep(fraction, steps);
       position.value = withTiming(steps > 1 ? index / (steps - 1) : 0, { duration: 150 });
-      runOnJS(commitStep)(index);
+      commitStep(index);
     },
     [commitStep, position, steps],
   );
@@ -116,17 +87,36 @@ export function DiscreteSlider({
     width: position.value * trackWidth.value + THUMB_SIZE / 2,
   }));
 
+  const handleAccessibilityAction = useCallback(
+    (event: AccessibilityActionEvent) => {
+      const current = Math.min(steps - 1, Math.max(0, value));
+      if (event.nativeEvent.actionName === 'increment' && current < steps - 1) {
+        setStepFromFraction((current + 1) / Math.max(1, steps - 1));
+      }
+      if (event.nativeEvent.actionName === 'decrement' && current > 0) {
+        setStepFromFraction((current - 1) / Math.max(1, steps - 1));
+      }
+    },
+    [setStepFromFraction, steps, value],
+  );
+
   return (
     <View
-      style={styles.container}
+      className="h-6 justify-center"
       onLayout={handleLayout}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="adjustable"
       accessibilityValue={{ min: 0, max: steps - 1, now: value }}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={handleAccessibilityAction}
     >
-      <View style={[styles.track, { backgroundColor: themeColors['border-default'] }]} />
+      <View
+        className="absolute left-3 right-3 h-1 rounded-full"
+        style={{ backgroundColor: borderDefault }}
+      />
       <Reanimated.View
-        style={[styles.fill, { backgroundColor: themeColors['text-primary'] }, fillStyle]}
+        className="absolute left-3 h-1 rounded-full"
+        style={[{ backgroundColor: textPrimary, top: (THUMB_SIZE - TRACK_HEIGHT) / 2 }, fillStyle]}
       />
       {Array.from({ length: steps }, (_, index) => (
         <Pressable
@@ -134,18 +124,25 @@ export function DiscreteSlider({
           hitSlop={12}
           onPress={() => setStepFromFraction(steps > 1 ? index / (steps - 1) : 0)}
           style={[
-            styles.stopDot,
+            {
+              borderRadius: 2,
+              height: TRACK_HEIGHT,
+              position: 'absolute',
+              top: (THUMB_SIZE - TRACK_HEIGHT) / 2,
+              width: TRACK_HEIGHT,
+            },
             {
               left:
                 THUMB_SIZE / 2 - 2 + (steps > 1 ? (index / (steps - 1)) * measuredTrackWidth : 0),
-              backgroundColor: themeColors['border-default'],
+              backgroundColor: borderDefault,
             },
           ]}
         />
       ))}
       <GestureDetector gesture={pan}>
         <Reanimated.View
-          style={[styles.thumb, { backgroundColor: themeColors['text-primary'] }, thumbStyle]}
+          className="h-6 w-6 rounded-full"
+          style={[{ backgroundColor: textPrimary }, thumbStyle]}
         />
       </GestureDetector>
     </View>

@@ -7,9 +7,9 @@ import OnDeviceAIModule, {
   type OnDeviceAIResult,
 } from '~/modules/on-device-ai';
 
-import { timeFixtureGateway } from './time-event-gateway.fixture';
+import { timeFixtureGateway } from './calendar-event-gateway.fixture';
 
-export interface TimeEventGateway {
+export interface CalendarEventGateway {
   askSchedule: (prompt: string) => Promise<OnDeviceAIResult>;
   createEvent: (
     title: string,
@@ -30,7 +30,7 @@ export interface TimeEventGateway {
   ) => Promise<CalendarEvent>;
 }
 
-const productionTimeEventGateway: TimeEventGateway = {
+const productionCalendarEventGateway: CalendarEventGateway = {
   askSchedule: (prompt) => OnDeviceAIModule.askCalendar(prompt),
   createEvent: (title, startDate, endDate, location, recurrenceRule) =>
     OnDeviceAIModule.createCalendarEvent(title, startDate, endDate, location, recurrenceRule),
@@ -43,4 +43,6 @@ const productionTimeEventGateway: TimeEventGateway = {
     OnDeviceAIModule.updateCalendarEvent(id, patch, recurrenceScope),
 };
 
-export const timeEventGateway = E2E_TESTING ? timeFixtureGateway : productionTimeEventGateway;
+export const calendarEventGateway = E2E_TESTING
+  ? timeFixtureGateway
+  : productionCalendarEventGateway;

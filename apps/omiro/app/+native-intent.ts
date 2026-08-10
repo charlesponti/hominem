@@ -1,5 +1,5 @@
 import {
-  INBOX_ROUTE,
+  HOME_ROUTE,
   SETTINGS_ROUTE,
   getContentRoute,
   getTimeBlockRoute,
@@ -37,7 +37,7 @@ export function redirectSystemPath({
 
   // App Intent / Siri: note/add -> All
   if (normalized === 'note/add') {
-    return INBOX_ROUTE;
+    return HOME_ROUTE;
   }
 
   // OTP verification link: verify?token=xxx -> /(auth)/verify?token=xxx
@@ -59,7 +59,7 @@ export function redirectSystemPath({
   // Chat with seed (start new): chat?seed=<text> -> inbox with seed
   if (normalized.startsWith('chat')) {
     const seedParam = normalized.replace(/^chat\??/, '');
-    const homeRoute = INBOX_ROUTE;
+    const homeRoute = HOME_ROUTE;
     return `${homeRoute}${seedParam ? `?${seedParam}` : ''}`;
   }
 
@@ -71,7 +71,7 @@ export function redirectSystemPath({
 
   // Notes list -> inbox
   if (normalized === 'notes') {
-    return INBOX_ROUTE;
+    return HOME_ROUTE;
   }
 
   // Focus with specific ID -> note detail
@@ -82,7 +82,7 @@ export function redirectSystemPath({
 
   // Focus list -> inbox
   if (normalized === 'focus') {
-    return INBOX_ROUTE;
+    return HOME_ROUTE;
   }
 
   // Account/settings screen
