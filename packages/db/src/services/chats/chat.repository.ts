@@ -242,6 +242,46 @@ export const ChatRepository = {
   },
 
   /**
+   * Update a user message's content. Only the message's author may edit it,
+   * and only 'user' role messages are editable.
+   */
+  async updateMessageContent(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+    userId: string,
+    content: string,
+  ): Promise<ChatMessageRecord> {
+    const existing = await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('authorUserid', '=', userId)
+      .executeTakeFirst();
+
+    if (!existing || existing.role !== 'user') {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const updated = (await handle
+      .updateTable('app.chatMessages')
+      .set({ content, updatedat: new Date().toISOString() })
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('authorUserid', '=', userId)
+      .returningAll()
+      .executeTakeFirstOrThrow()) as ChatMessageRow;
+
+    const noteIds = Array.isArray(updated.referencedNoteIds)
+      ? (updated.referencedNoteIds as string[])
+      : [];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return toChatMessageRecord(updated, noteTitlesById);
+  },
+
+  /**
    * Touch lastMessageAt after sending messages.
    */
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {

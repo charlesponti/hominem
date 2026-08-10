@@ -16,6 +16,7 @@ import {
 } from '../../application/ai-usage.service';
 import {
   ChatsCreateSchema,
+  ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
@@ -166,6 +167,12 @@ function getChatId(c: { req: { param: (name: string) => string | undefined } }):
   return chatId;
 }
 
+function getMessageId(c: { req: { param: (name: string) => string | undefined } }): string {
+  const messageId = c.req.param('messageId');
+  if (!messageId) throw new ValidationError('Message id is required');
+  return messageId;
+}
+
 function writeChunkEvent(
   stream: { writeSSE: (input: { data: string }) => Promise<void> },
   chunk: string,
@@ -224,6 +231,23 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
     return c.json(messages.map(toChatMessageDto));
+  })
+  .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+    const { content } = c.req.valid('json');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const updated = await ChatRepository.updateMessageContent(
+      db,
+      chatId,
+      messageId,
+      userId,
+      content,
+    );
+
+    return c.json(toChatMessageDto(updated));
   })
   .post('/stream', zValidator('json', ChatsSendSchema), async (c) => {
     const userId = c.get('auth')!.userId;

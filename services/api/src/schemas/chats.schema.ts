@@ -47,6 +47,10 @@ export const ChatsUpdateSchema = z.object({
   title: z.string().trim().min(1).max(120),
 });
 
+export const ChatsEditMessageSchema = z.object({
+  content: z.string().trim().min(1).max(20_000),
+});
+
 export const ChatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),

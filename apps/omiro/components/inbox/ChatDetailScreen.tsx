@@ -1,6 +1,6 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { Stack, useNavigation, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
@@ -17,6 +17,7 @@ import {
   getChatTitle,
   updateChatTitleCaches,
   useActiveChat,
+  useEditChatMessage,
 } from '~/services/chat';
 import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
@@ -36,12 +37,10 @@ function getConversationActionIcon(kind: string, type?: string) {
 }
 
 export function ChatDetailScreen({ id }: { id: string }) {
-  const navigation = useNavigation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: activeChat } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
-  const canGoBack = navigation.canGoBack();
   const [composerHeight, setComposerHeight] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
 
@@ -91,6 +90,13 @@ export function ChatDetailScreen({ id }: { id: string }) {
     onContentCreated: handleContentCreated,
   });
   const handleToggleDebug = useCallback(() => setShowDebug((value) => !value), []);
+  const editMessage = useEditChatMessage(chatId);
+  const handleEditMessage = useCallback(
+    (messageId: string, content: string) => {
+      void editMessage.mutateAsync({ messageId, content });
+    },
+    [editMessage],
+  );
 
   const displayTitle = getChatTitle(activeChat?.title, transform.resolvedSource);
   const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
@@ -130,20 +136,6 @@ export function ChatDetailScreen({ id }: { id: string }) {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerBackButtonDisplayMode: 'minimal',
-          headerBackVisible: canGoBack,
-        }}
-      />
-      {!canGoBack ? (
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(HOME_ROUTE)}>
-            Inbox
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
-      ) : null}
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Menu
           accessibilityLabel={t.chat.conversationActionsLabel}
@@ -234,6 +226,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           showSearch={search.showSearch}
           searchQuery={search.searchQuery}
           showDebug={showDebug}
+          onEdit={handleEditMessage}
           formatTimestamp={formatRelativeAge}
           emptyState={messagesError ? errorState : emptyState}
           refreshControl={

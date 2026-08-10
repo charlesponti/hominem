@@ -12,10 +12,9 @@ import t from '~/translations';
 
 const Onboarding = () => {
   const { isSignedIn, currentUser, updateProfile, signOut } = useAuth();
-  const [destructive, textPrimary, textSecondary, borderDefault] = useCSSVariable([
+  const [destructive, textPrimary, borderDefault] = useCSSVariable([
     '--color-destructive',
     '--color-foreground',
-    '--color-muted-foreground',
     '--color-border',
   ]) as string[];
   const [name, setName] = useState('');
