@@ -6,6 +6,7 @@ export const ChatsSendSchema = z
     fileIds: z.array(z.uuid()).max(5).optional(),
     noteIds: z.array(z.uuid()).max(10).optional(),
     responseModality: z.enum(['text', 'audio']).optional(),
+    responseLength: z.enum(['short', 'medium', 'long']).optional(),
   })
   .superRefine((value, ctx) => {
     if (
@@ -29,6 +30,7 @@ export const ChatsStartStreamSchema = ChatsCreateSchema.extend({
   message: z.string(),
   fileIds: z.array(z.uuid()).max(5).optional(),
   noteIds: z.array(z.uuid()).max(10).optional(),
+  responseLength: z.enum(['short', 'medium', 'long']).optional(),
 }).superRefine((value, ctx) => {
   if (
     value.message.trim().length === 0 &&

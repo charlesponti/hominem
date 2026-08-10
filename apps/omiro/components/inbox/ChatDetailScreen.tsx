@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
+import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
@@ -29,6 +30,7 @@ import t from '~/translations';
 function getConversationActionIcon(kind: string, type?: string) {
   if (kind === 'search') return 'magnifyingglass';
   if (kind === 'toggle-debug') return 'ladybug';
+  if (kind === 'settings') return 'slider.horizontal.3';
   if (kind === 'archive') return 'archivebox';
   if (type === 'note') return 'doc.text';
   if (type === 'task') return 'checkmark.circle';
@@ -110,6 +112,8 @@ export function ChatDetailScreen({ id }: { id: string }) {
     });
   }, [activeChat?.updatedAt, chatId, displayTitle]);
 
+  const [showChatSettings, setShowChatSettings] = useState(false);
+
   const conversationActions = useMemo(
     () =>
       buildConversationActionsModel({
@@ -168,6 +172,18 @@ export function ChatDetailScreen({ id }: { id: string }) {
                 );
               }
 
+              if (item.kind === 'settings') {
+                return (
+                  <Stack.Toolbar.MenuAction
+                    key={item.kind}
+                    icon={getConversationActionIcon(item.kind)}
+                    onPress={() => setShowChatSettings(true)}
+                  >
+                    {item.label}
+                  </Stack.Toolbar.MenuAction>
+                );
+              }
+
               if (item.kind === 'transform' && item.type) {
                 return (
                   <Stack.Toolbar.MenuAction
@@ -211,6 +227,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
       </Stack.Toolbar>
 
       <View className="flex-1">
+        <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
         <ChatSearchModal
           visible={search.showSearch}
           searchQuery={search.searchQuery}

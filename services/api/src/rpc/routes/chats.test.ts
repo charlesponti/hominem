@@ -126,6 +126,7 @@ function createApp() {
 
 describe('chat stream accounting', () => {
   beforeEach(() => {
+    mocks.streamChatCompletion.mockClear();
     mocks.createChat.mockResolvedValue({ id: 'chat-id' });
     mocks.getMessages.mockResolvedValue([]);
     mocks.insertMessage.mockResolvedValue(undefined);
@@ -176,6 +177,24 @@ describe('chat stream accounting', () => {
         usage: expect.objectContaining({ totalTokens: 15, costUsd: 0.12 }),
       }),
     );
+  });
+
+  it('applies response length settings to the first message of a new chat', async () => {
+    const response = await createApp().request('/api/chats/start-stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Test', message: 'Hello', responseLength: 'long' }),
+    });
+
+    expect(response.status).toBe(200);
+    await response.text();
+
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.maxTokens).toBe(6000);
+    expect(completionOptions.reasoning).toEqual({ effort: 'medium' });
+    expect(completionOptions.messages[0]?.role).toBe('system');
+    expect(completionOptions.messages[0]?.content).toContain('silently plan a short outline');
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
   });
 });
 

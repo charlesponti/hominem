@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveTimeRequest } from '~/components/time/time-request';
 import type { CalendarEvent } from '~/modules/on-device-ai';
@@ -30,6 +30,14 @@ const options = {
 };
 
 describe('resolveTimeRequest', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: new Date('2026-08-10T09:00:00.000Z') });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('returns an answer for a calendar search', async () => {
     const result = await resolveTimeRequest({
       ...options,

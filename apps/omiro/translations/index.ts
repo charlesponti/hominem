@@ -95,6 +95,7 @@ const t = {
       searchMessages: 'Search',
       hideDebugMetadata: 'Hide debug',
       showDebugMetadata: 'Show debug',
+      chatSettings: 'Chat settings',
       transformToNote: 'Create note',
       createTasks: 'Create tasks',
       noTasksFoundTitle: 'No tasks found',
@@ -103,6 +104,17 @@ const t = {
       createTasksLabel: (count: number) => `CREATE ${count} TASK${count === 1 ? '' : 'S'}`,
       archiving: 'Archiving…',
       archiveChat: 'Archive chat',
+    },
+    settings: {
+      title: 'Chat settings',
+      responseLengthLabel: 'Response length',
+      responseLengthDescription: 'Choose how long you want the assistant’s replies to be.',
+      responseLengthOptions: {
+        short: { emoji: '🎬', name: 'Danny DeVito', caption: 'Short · under 600 characters' },
+        medium: { emoji: '🍔', name: 'Value Meal', caption: 'Medium · a 3-5 min read' },
+        long: { emoji: '🌭', name: "Nathan's Famous", caption: 'Long · full essay, outlined first' },
+      },
+      done: 'Done',
     },
     classification: {
       saveAsPrefix: 'SAVE AS',

@@ -120,6 +120,7 @@ export type ChatsSendInput = {
   noteIds?: string[];
   chatId?: string;
   responseModality?: 'text' | 'audio';
+  responseLength?: 'short' | 'medium' | 'long';
 };
 
 export type ChatUIMessageInput = {

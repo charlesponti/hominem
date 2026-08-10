@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
 
 import { API_BASE_URL } from '~/constants';
+import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import {
   appendAssistantChunk,
@@ -45,7 +46,10 @@ export function useStartChatFromInbox() {
       try {
         await streamSSE<ChatsStartStreamEvent>({
           url: `${API_BASE_URL}/api/chats/start-stream`,
-          payload: input,
+          payload: {
+            ...input,
+            responseLength: getChatResponseLength(),
+          },
           getHeaders: getAuthHeaders,
           onEvent: (event) => {
             if (event.type === 'ready') {
