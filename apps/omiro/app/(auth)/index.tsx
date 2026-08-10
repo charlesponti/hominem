@@ -1,11 +1,13 @@
 import { TextField } from '@ponti-studios/ui/native';
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
@@ -20,20 +22,62 @@ import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
 import { posthog } from '~/services/posthog';
 import t from '~/translations';
 
+const BUTTON_HEIGHT = 44; // h-11
+const BUTTON_BORDER_RADIUS = 6; // rounded-md
+
 function AuthScreen() {
   const { isPending, isSignedIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [buttonWidth, setButtonWidth] = useState(0);
   const normalizedEmail = normalizeEmail(email);
   const emailIsValid = isValidEmail(normalizedEmail);
 
-  const [destructive, borderDefault, textPrimary] = useCSSVariable([
+  const [destructive, borderDefault, textPrimary, success] = useCSSVariable([
     '--color-destructive',
     '--color-border',
     '--color-foreground',
+    '--color-success',
   ]) as string[];
+
+  const getEmailProgress = () => {
+    if (!email) return { stage: 0, message: 'Enter your email' };
+    if (!email.includes('@')) return { stage: 1, message: 'Add the @ symbol' };
+    const [_local, domain] = email.split('@');
+    if (!domain) return { stage: 2, message: 'Almost there! Add the domain' };
+    if (!domain.includes('.'))
+      return { stage: 3, message: "Don't forget the domain extension" };
+    const [_domainName, ext] = domain.split('.');
+    if (!ext || ext.length < 2)
+      return { stage: 4, message: 'Complete the domain extension' };
+    return { stage: 5, message: 'Ready to go!' };
+  };
+
+  const progress = useMemo(() => getEmailProgress(), [email]);
+
+  // Rounded-rect path for the button outline, traced clockwise from top-left.
+  const borderPath = useMemo(() => {
+    if (buttonWidth === 0) return null;
+    const path = Skia.Path.Make();
+    path.addRRect(
+      {
+        rect: { x: 1, y: 1, width: buttonWidth - 2, height: BUTTON_HEIGHT - 2 },
+        rx: BUTTON_BORDER_RADIUS,
+        ry: BUTTON_BORDER_RADIUS,
+      },
+      false, // clockwise
+    );
+    return path;
+  }, [buttonWidth]);
+
+  // Continuous 0-1 draw progress, one step per email-completion stage.
+  const drawProgress = useSharedValue(0);
+  useEffect(() => {
+    const stageProgress = [0, 0.2, 0.4, 0.6, 0.8, 1];
+    drawProgress.value = withTiming(stageProgress[progress.stage], { duration: 350 });
+  }, [progress.stage, drawProgress]);
 
   // Animations
   const shakeStyle = useAnimatedStyle(
@@ -54,11 +98,19 @@ function AuthScreen() {
     }),
     [authError],
   );
+
+  const borderStyle = useAnimatedStyle(
+    () => ({
+      opacity: withTiming(progress.stage === 5 ? 0 : 1, { duration: 200 }),
+    }),
+    [progress.stage],
+  );
+
   const continueButtonStyle = useAnimatedStyle(
     () => ({
-      opacity: withTiming(emailIsValid ? 1 : 0, { duration: 36 }),
+      opacity: withTiming(progress.stage === 5 ? 1 : 0, { duration: 200 }),
     }),
-    [emailIsValid],
+    [progress.stage],
   );
 
   const handleSendCode = useCallback(async () => {
@@ -114,9 +166,11 @@ function AuthScreen() {
 
               <View className="gap-2">
                 <Text className="text-title1 text-foreground">{t.auth.emailEntry.title}</Text>
-                <Text className="text-subhead text-muted-foreground">
-                  {isProbing ? t.auth.restoringSignIn : t.auth.emailEntry.helper}
-                </Text>
+                {isProbing && (
+                  <Text className="text-subhead text-muted-foreground">
+                    {t.auth.restoringSignIn}
+                  </Text>
+                )}
               </View>
 
               {!isProbing ? (
@@ -139,7 +193,6 @@ function AuthScreen() {
                         height: 48,
                         opacity: isSubmitting ? 0.6 : 1,
                       }}
-                      className="bg-card text-foreground text-body min-h-12 border rounded-xl px-3.5 py-3"
                       onChangeText={(text) => {
                         setEmail(text);
                         setAuthError(null);
@@ -165,19 +218,60 @@ function AuthScreen() {
                     </Text>
                   ) : null}
 
-                  {/* Continue button — animates in when email is valid */}
-                  <Animated.View
-                    style={continueButtonStyle}
-                    pointerEvents={emailIsValid ? 'auto' : 'none'}
+                  {/* Animated border + button container */}
+                  <View
+                    className="relative w-full items-center justify-center"
+                    style={{ height: BUTTON_HEIGHT }}
+                    onLayout={(e) => setButtonWidth(e.nativeEvent.layout.width)}
                   >
-                    <Button
-                      testID="auth-send-otp"
-                      label={t.auth.emailEntry.submitButton}
-                      onPress={() => void handleSendCode()}
-                      disabled={isSubmitting}
-                      variant="primary"
-                    />
-                  </Animated.View>
+                    {/* Clockwise-drawing border (stages 0-4) */}
+                    {progress.stage < 5 && borderPath && (
+                      <Animated.View
+                        style={[
+                          { position: 'absolute', width: buttonWidth, height: BUTTON_HEIGHT },
+                          borderStyle,
+                        ]}
+                        pointerEvents="none"
+                      >
+                        <Canvas style={{ width: buttonWidth, height: BUTTON_HEIGHT }}>
+                          <Path
+                            path={borderPath}
+                            style="stroke"
+                            strokeWidth={2}
+                            strokeCap="round"
+                            color={textPrimary}
+                            start={0}
+                            end={drawProgress}
+                          />
+                        </Canvas>
+                      </Animated.View>
+                    )}
+
+                    {/* Helper text, centered inside the animating border (stages 0-4) */}
+                    {progress.stage < 5 && !displayError && (
+                      <View className="flex-row items-center justify-center gap-1.5 px-4">
+                        {progress.stage > 0 ? (
+                          <Text className="text-footnote text-muted-foreground">↑</Text>
+                        ) : null}
+                        <Text className="text-footnote text-muted-foreground text-center">
+                          {progress.message}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Button (stage 5 only) */}
+                    <Animated.View
+                      style={[{ position: 'absolute', width: '100%' }, continueButtonStyle]}
+                    >
+                      <Button
+                        testID="auth-send-otp"
+                        label={t.auth.emailEntry.submitButton}
+                        onPress={() => void handleSendCode()}
+                        disabled={isSubmitting}
+                        variant="primary"
+                      />
+                    </Animated.View>
+                  </View>
                 </View>
               ) : null}
             </View>
