@@ -268,7 +268,7 @@ function VerifyScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="w-full items-center">
-          <View className="w-full max-w-[420px] gap-[18px]">
+          <View className="w-full max-w-105 gap-4.5">
             <Animated.View entering={FadeIn.duration(400)}>
               <IconChip icon="lock.shield" />
             </Animated.View>
@@ -283,7 +283,7 @@ function VerifyScreen() {
                   hitSlop={8}
                   onPress={handleChangeEmail}
                   style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}
-                  className="flex-row items-center gap-1 px-2 py-[3px] rounded-lg bg-card"
+                  className="flex-row items-center gap-1 px-2 py-0.75 rounded-lg bg-card"
                 >
                   <Text className="text-body font-medium text-foreground">
                     {maskEmail(resolvedEmail)}
@@ -390,7 +390,7 @@ function VerifyScreen() {
                 disabled={isBusy || secondsLeft > 0}
                 hitSlop={8}
                 style={({ pressed }) => [{ opacity: pressed && secondsLeft === 0 ? 0.65 : 1 }]}
-                className="flex-row items-center self-center gap-[5px] px-2.5 py-1 rounded-full bg-card"
+                className="flex-row items-center self-center gap-1 px-2.5 py-1 rounded-full bg-card"
               >
                 <AppIcon
                   name={secondsLeft === 0 ? 'arrow.clockwise' : 'clock'}

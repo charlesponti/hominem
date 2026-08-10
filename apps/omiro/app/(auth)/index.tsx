@@ -35,7 +35,6 @@ function AuthScreen() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [buttonWidth, setButtonWidth] = useState(0);
   const normalizedEmail = normalizeEmail(email);
-  const emailIsValid = isValidEmail(normalizedEmail);
 
   const [textPrimary, mutedForeground, primaryColor] = useCSSVariable([
     '--color-foreground',

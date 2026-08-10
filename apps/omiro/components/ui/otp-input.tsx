@@ -39,7 +39,7 @@ function Caret({ color }: { color: string }) {
 
   return (
     <Animated.View
-      className="rounded-[1px] h-[22px] w-0.5"
+      className="rounded-[1px] h-6 w-0.5"
       style={[{ backgroundColor: color }, style]}
     />
   );
@@ -89,7 +89,7 @@ function OtpCell({
 
   return (
     <Animated.View
-      className="items-center rounded-md border h-14 justify-center w-[46px]"
+      className="items-center rounded-md border h-14 justify-center w-12"
       style={[{ borderColor: resolvedBorderColor }, animatedStyle]}
     >
       {digit ? (
