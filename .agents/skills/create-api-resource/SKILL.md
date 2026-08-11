@@ -1,6 +1,6 @@
 ---
 name: create-api-resource
-description: 'Add a new resource (domain) to hominem\'s API: shared Zod schemas in services/api/src/schemas, one implementation in services/api/src/application/*.service.ts, and two thin adapters that reuse it — an MCP tool in services/api/src/mcp/tools and Hono RPC routes in services/api/src/rpc/routes — plus integration tests. Use when adding a feature that must be reachable over MCP and/or HTTP/RPC, or when reviewing whether new tool/route code follows the shared-implementation pattern.'
+description: 'Add a new resource (domain) to hominem API: shared Zod schemas in services/api/src/schemas, one implementation in services/api/src/application/*.service.ts, and two thin adapters that reuse it — an MCP tool in services/api/src/mcp/tools and Hono RPC routes in services/api/src/rpc/routes — plus integration tests. Use when adding a feature that must be reachable over MCP and/or HTTP/RPC, or when reviewing whether new tool/route code follows the shared-implementation pattern.'
 ---
 
 # Create an API resource in hominem
@@ -11,7 +11,7 @@ A resource (e.g. `calendar`, `people`, `career`) is exposed over **two outward s
 2. **RPC routes** — `services/api/src/rpc/routes/*.ts`, plain HTTP JSON under `/api`, called by web/mobile clients.
 
 **Golden rule: MCP and RPC are thin adapters over ONE shared implementation.** Both surfaces import
-the *same* Zod schemas from `services/api/src/schemas/` and the *same* query logic from
+the _same_ Zod schemas from `services/api/src/schemas/` and the _same_ query logic from
 `services/api/src/application/*.service.ts`. Never fork query logic or schemas between the two —
 a change to a resource's behavior must be a single edit in the application layer, verified by a
 single test suite, and both surfaces pick it up for free.
@@ -26,13 +26,13 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 
 ## Where files live
 
-| Layer | Path | Owns |
-|---|---|---|
-| Schema | `services/api/src/schemas/<domain>.schema.ts` | Zod input/output shapes (the single contract) |
-| Service | `services/api/src/application/<domain>.service.ts` | All query/business logic, `ownerUserId`-scoped |
-| MCP tool | `services/api/src/mcp/tools/<domain>.ts` | `registerTool` wiring only |
-| RPC routes | `services/api/src/rpc/routes/<domain>.ts` | Hono route wiring only |
-| Tests | `services/api/src/mcp/tools/<domain>.test.ts`, `services/api/src/rpc/routes/<domain>.test.ts`, optional `services/api/src/schemas/<domain>.schema.test.ts` | Behavior verification |
+| Layer      | Path                                                                                                                                                       | Owns                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Schema     | `services/api/src/schemas/<domain>.schema.ts`                                                                                                              | Zod input/output shapes (the single contract)  |
+| Service    | `services/api/src/application/<domain>.service.ts`                                                                                                         | All query/business logic, `ownerUserId`-scoped |
+| MCP tool   | `services/api/src/mcp/tools/<domain>.ts`                                                                                                                   | `registerTool` wiring only                     |
+| RPC routes | `services/api/src/rpc/routes/<domain>.ts`                                                                                                                  | Hono route wiring only                         |
+| Tests      | `services/api/src/mcp/tools/<domain>.test.ts`, `services/api/src/rpc/routes/<domain>.test.ts`, optional `services/api/src/schemas/<domain>.schema.test.ts` | Behavior verification                          |
 
 ## Workflow
 
@@ -67,7 +67,10 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 
    ```ts
    import { getCalendarEvents } from '../../application/calendar.service';
-   import { calendarEventsInputSchema, calendarEventsOutputSchema } from '../../schemas/calendar.schema';
+   import {
+     calendarEventsInputSchema,
+     calendarEventsOutputSchema,
+   } from '../../schemas/calendar.schema';
    import { registerTool } from '../tools';
 
    registerTool(
@@ -80,7 +83,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
        readOnly: true,
        scopes: ['calendar:read'],
        sensitivity: 'sensitive', // or 'standard' for non-personal data
-       resultCap: 50,            // must be >= every array field's max length
+       resultCap: 50, // must be >= every array field's max length
      },
      async (ownerUserId, input) => getCalendarEvents({ ownerUserId, ...input }),
    );
@@ -93,6 +96,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
    - The tool's own `scopes` array — `mcp/server.ts` enforces that the caller holds **every**
      listed scope (`hasRequiredScopes` uses `every`). A cross-domain tool (e.g. `person_timeline`
      reads people + calendar + travel) must list all of them.
+
 5. **RPC adapter** (`rpc/routes/<domain>.ts`): Hono routes calling the same service, with
    `zValidator` for input and `respondWithData` for the `{ data }` envelope:
 
@@ -101,22 +105,21 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
    import { Hono } from 'hono';
 
    import { getCalendarEvents } from '../../application/calendar.service';
-   import { calendarEventsInputSchema, calendarEventsOutputSchema } from '../../schemas/calendar.schema';
+   import {
+     calendarEventsInputSchema,
+     calendarEventsOutputSchema,
+   } from '../../schemas/calendar.schema';
    import { authMiddleware, type AppContext } from '../middleware/auth';
    import { respondWithData } from '../response';
 
    const routes = new Hono<AppContext>().use('*', authMiddleware);
 
-   routes.get(
-     '/calendar/events',
-     zValidator('query', calendarEventsInputSchema),
-     async (c) => {
-       const userId = c.get('auth')!.userId;
-       const input = c.req.valid('query');
-       const events = await getCalendarEvents({ ownerUserId: userId, ...input });
-       return respondWithData(c, calendarEventsOutputSchema, events);
-     },
-   );
+   routes.get('/calendar/events', zValidator('query', calendarEventsInputSchema), async (c) => {
+     const userId = c.get('auth')!.userId;
+     const input = c.req.valid('query');
+     const events = await getCalendarEvents({ ownerUserId: userId, ...input });
+     return respondWithData(c, calendarEventsOutputSchema, events);
+   });
 
    export const calendarRoutes: Hono<AppContext> = routes;
    ```
@@ -125,6 +128,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
    `import { calendarRoutes } from './routes/calendar';` then
    `.route('', calendarRoutes)` (prefixed routes use `.route('/prefix', ...)`).
    Route handlers must be one-liners that delegate to the service — no query logic in the route.
+
 6. **Tests.** Write integration tests against the real `app-test` Postgres database:
    - **MCP** (`mcp/tools/<domain>.test.ts`) — mirror `mcp/tools/people.test.ts` / `calendar.test.ts`:
      in `beforeAll`, `DELETE FROM "user" WHERE id = $1` for a fixed test `userId` (cascades to all
