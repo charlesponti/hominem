@@ -7,7 +7,7 @@ import { makeConvertedResumeData } from '~/test/factories/resume';
 import { generateUniqueSlug, saveResumeToDatabase } from './resume-conversion.service';
 
 const testDb = createCareerTestDb();
-const slugTestValues = ['charles-ponti', 'charles-ponti-2', 'charles-ponti-3'];
+const slugTestValues = ['test-person', 'test-person-2', 'test-person-3'];
 
 let slugUser: { id: string };
 
@@ -48,7 +48,7 @@ describe('resume conversion slug generation', () => {
       })
       .execute();
 
-    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-2');
+    await expect(generateUniqueSlug(db, 'test-person')).resolves.toBe('test-person-2');
 
     await db
       .insertInto('app.careerProfile')
@@ -60,7 +60,7 @@ describe('resume conversion slug generation', () => {
       })
       .execute();
 
-    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-3');
+    await expect(generateUniqueSlug(db, 'test-person')).resolves.toBe('test-person-3');
   });
 
   it('handles the case where the first 99 suffixes are all taken', async () => {
