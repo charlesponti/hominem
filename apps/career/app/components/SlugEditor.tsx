@@ -2,15 +2,14 @@ import { Input } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Check, ExternalLink, Loader2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useSubmit } from 'react-router';
 
 import { cn } from '~/lib/utils';
 
 interface SlugEditorProps {
-  portfolioId: string;
+  profileId: string;
   initialSlug: string;
   liveUrl?: string | null;
-  onSave?: (newSlug: string) => void;
+  onSave: (newSlug: string) => Promise<void>;
 }
 
 interface ValidationState {
@@ -20,11 +19,9 @@ interface ValidationState {
   isValid: boolean;
 }
 
-const DEFAULT_SLUG_PLACEHOLDER = 'your-portfolio-name';
+const DEFAULT_SLUG_PLACEHOLDER = 'your-profile-name';
 
-export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEditorProps) {
-  const submit = useSubmit();
-
+export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEditorProps) {
   // Component state
   const [slugValue, setSlugValue] = useState(initialSlug);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,7 +77,7 @@ export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEd
 
       try {
         const response = await fetch(
-          `/api/validate-slug?slug=${encodeURIComponent(slug)}&currentId=${encodeURIComponent(portfolioId)}`,
+          `/api/validate-slug?slug=${encodeURIComponent(slug)}&currentId=${encodeURIComponent(profileId)}`,
         );
         const data = (await response.json()) as {
           success: boolean;
@@ -112,7 +109,7 @@ export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEd
         });
       }
     },
-    [portfolioId, initialSlug],
+    [profileId, initialSlug],
   );
 
   // Debounce validation calls
@@ -131,19 +128,8 @@ export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEd
     }
 
     setIsSaving(true);
-
     try {
-      const formData = new FormData();
-      formData.append('action', 'update-slug');
-      formData.append('slug', slugValue);
-      formData.append('portfolio_id', portfolioId);
-
-      submit(formData, { method: 'post' });
-
-      // Let the parent component handle the success state
-      onSave?.(slugValue);
-    } catch {
-      // React Router submit is synchronous here; leave saving state cleanup to finally.
+      await onSave(slugValue);
     } finally {
       setIsSaving(false);
     }
@@ -200,7 +186,7 @@ export function SlugEditor({ portfolioId, initialSlug, liveUrl, onSave }: SlugEd
               </span>
             ) : null}
             <Input
-              id="portfolio-slug"
+              id="profile-slug"
               type="text"
               value={slugValue}
               onChange={handleInputChange}

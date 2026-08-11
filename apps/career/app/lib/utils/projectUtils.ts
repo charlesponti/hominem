@@ -1,21 +1,17 @@
 import { humanizeIdentifier } from '@hominem/utils/text';
 
-export function getProjectStatusClasses(status: string): string {
-  switch (status) {
-    case 'planned':
-      return 'bg-amber-100 text-amber-800';
-    case 'in-progress':
-      return 'border-accent/30 bg-accent/10 text-foreground';
-    case 'on_hold':
-    case 'archived':
-      return 'bg-muted text-foreground';
-    case 'completed':
-      return 'border-success/30 bg-success/10 text-foreground';
-    case 'cancelled':
-      return 'border-destructive/30 bg-destructive/10 text-foreground';
-    default:
-      return 'bg-muted text-foreground';
-  }
+import type { StatusTone } from '~/components/patterns';
+
+const PROJECT_STATUS_TONE: Record<string, StatusTone> = {
+  BACKLOG: 'neutral',
+  IN_PROGRESS: 'info',
+  DONE: 'success',
+  CANCELED: 'danger',
+};
+
+/** Get the shared StatusBadge tone for a project status (BACKLOG, IN_PROGRESS, DONE, CANCELED). */
+export function getProjectStatusTone(status: string): StatusTone {
+  return PROJECT_STATUS_TONE[status.toUpperCase()] ?? 'neutral';
 }
 
 export const formatProjectStatus = humanizeIdentifier;

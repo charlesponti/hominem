@@ -1,7 +1,15 @@
 import { CareerRepository, db, type CareerApplicationWithRelations } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
-import { Briefcase, Calendar, FileText, MapPin, PaperclipIcon, StickyNoteIcon } from 'lucide-react';
-import { data, NavLink, Outlet, redirect } from 'react-router';
+import {
+  ArrowLeftIcon,
+  Briefcase,
+  Calendar,
+  FileText,
+  MapPin,
+  PaperclipIcon,
+  StickyNoteIcon,
+} from 'lucide-react';
+import { data, Link, NavLink, Outlet, redirect } from 'react-router';
 
 import { QuickActions } from '~/components/career/applications/QuickActions';
 import { StatusBadge } from '~/components/status-badge';
@@ -112,8 +120,21 @@ const tabItems = [
 export default function ApplicationDetailLayout({ loaderData }: Route.ComponentProps) {
   const { application } = loaderData;
 
+  const statusLabel = application.status ? humanizeIdentifier(application.status) : null;
+  const showCurrentStage =
+    application.currentStage &&
+    application.currentStage.toLowerCase() !== statusLabel?.toLowerCase();
+
   return (
     <div className="flex flex-col gap-6">
+      <Link
+        to="/applications"
+        className="footnote inline-flex w-fit items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeftIcon className="size-3.5" />
+        Applications
+      </Link>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0 space-y-1">
           <h1 className="heading-2 truncate text-foreground">{application.title}</h1>
@@ -133,13 +154,10 @@ export default function ApplicationDetailLayout({ loaderData }: Route.ComponentP
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {application.status && (
-            <StatusBadge
-              tone={getApplicationStatusTone(application.status)}
-              label={humanizeIdentifier(application.status)}
-            />
+          {application.status && statusLabel && (
+            <StatusBadge tone={getApplicationStatusTone(application.status)} label={statusLabel} />
           )}
-          {application.currentStage && <StatusBadge tone="info" label={application.currentStage} />}
+          {showCurrentStage && <StatusBadge tone="info" label={application.currentStage} />}
           <QuickActions currentStatus={application.status} />
         </div>
       </div>

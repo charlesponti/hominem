@@ -1,0 +1,297 @@
+import { Switch } from '@ponti-studios/ui/forms';
+import { Label } from '@ponti-studios/ui/primitives';
+import { Download } from 'lucide-react';
+import { useState } from 'react';
+import { useRevalidator } from 'react-router';
+
+import { AccountDocumentsSection } from '~/components/account/AccountDocumentsSection';
+import { BasicInfoForm } from '~/components/account/BasicInfoForm';
+import { CertificationsSection } from '~/components/account/CertificationsSection';
+import { SocialLinksSection } from '~/components/account/SocialLinksSection';
+import { SlugEditor } from '~/components/SlugEditor';
+import type {
+  AccountActionResult,
+  BasicInfoFormValues,
+  CertificationFormValues,
+  ProfileLoaderData,
+  SocialLinksFormValues,
+} from '~/lib/account/types';
+
+import { UploadResumeForm } from '../UploadResumeForm';
+import { ActionButtonRow } from './ActionButtonRow';
+
+export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
+  const revalidator = useRevalidator();
+  const { user, currentProfile, socialLinks, documents, certifications } = loaderData;
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+  const [isPublic, setIsPublic] = useState(currentProfile.isPublic);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
+  const submitProfileAction = async <TData,>(
+    formData: FormData,
+  ): Promise<AccountActionResult<TData>> => {
+    const response = await fetch('/profile', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const contentType = response.headers.get('content-type');
+    const result = contentType?.includes('application/json')
+      ? ((await response.json()) as AccountActionResult<TData>)
+      : {
+          success: response.ok,
+          error: response.ok ? undefined : await response.text(),
+        };
+
+    if (!response.ok) {
+      throw new Error(result.error || result.message || 'Request failed');
+    }
+
+    return result;
+  };
+
+  const handleUpdateSlug = async (slug: string) => {
+    const formData = new FormData();
+    formData.append('action', 'update-slug');
+    formData.append('slug', slug);
+    formData.append('profileId', currentProfile.id);
+
+    await submitProfileAction<{ slug: string }>(formData);
+    revalidator.revalidate();
+  };
+
+  const handleToggleVisibility = async (checked: boolean) => {
+    const previous = isPublic;
+    setIsPublic(checked);
+    setIsTogglingVisibility(true);
+
+    const formData = new FormData();
+    formData.append('action', 'update-visibility');
+    formData.append('isPublic', String(checked));
+
+    try {
+      const result = await submitProfileAction<{ isPublic: boolean }>(formData);
+      if (result.success === false) {
+        setIsPublic(previous);
+      } else {
+        revalidator.revalidate();
+      }
+    } catch {
+      setIsPublic(previous);
+    } finally {
+      setIsTogglingVisibility(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!currentProfile.slug || !isPublic) {
+      setPdfError('Make your profile public before generating a PDF.');
+      return;
+    }
+
+    try {
+      setPdfGenerating(true);
+      setPdfError(null);
+
+      const profileUrl = `${window.location.origin}/p/${currentProfile.slug}`;
+
+      const response = await fetch('https://career-worker.fly.dev/trigger-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: profileUrl,
+          ownerUserid: user.id,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        success?: boolean;
+        pdfUrl?: string;
+        message?: string;
+      };
+
+      if (result.success && result.pdfUrl) {
+        window.open(result.pdfUrl, '_blank');
+        return;
+      }
+
+      setPdfError(result.message || 'Failed to generate PDF');
+    } catch {
+      setPdfError('Failed to generate PDF. Please try again.');
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
+  const handleDeleteDocument = async (fileId: string) => {
+    const formData = new FormData();
+    formData.append('action', 'delete-document');
+    formData.append('fileId', fileId);
+    const result = await submitProfileAction(formData);
+    if (result.success === false) {
+      throw new Error(result.error || 'Failed to delete file');
+    }
+    revalidator.revalidate();
+  };
+
+  const handleConvertDocument = async (fileId: string) => {
+    const formData = new FormData();
+    formData.append('fileId', fileId);
+    formData.append('replaceExisting', 'true');
+    const response = await fetch('/api/resume/convert', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData,
+    });
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Conversion failed');
+    }
+    revalidator.revalidate();
+  };
+
+  const handleImageUpload = async (croppedImageBlob: Blob) => {
+    const formData = new FormData();
+    formData.append('image', croppedImageBlob, 'profile-image.jpg');
+    formData.append('action', 'upload-profile-image');
+
+    const result = await submitProfileAction<{ imageUrl: string }>(formData);
+    revalidator.revalidate();
+
+    return result.data?.imageUrl;
+  };
+
+  const handleSaveBasics = async (values: BasicInfoFormValues) => {
+    const formData = new FormData();
+    formData.append('action', 'update-basics');
+    formData.append('profileData', JSON.stringify(values));
+
+    const result = await submitProfileAction(formData);
+    revalidator.revalidate();
+    return result;
+  };
+
+  const handleSaveSocialLinks = async (values: SocialLinksFormValues) => {
+    const formData = new FormData();
+    formData.append('action', 'update-social-links');
+    formData.append('socialLinksData', JSON.stringify(values));
+
+    const result = await submitProfileAction(formData);
+    revalidator.revalidate();
+    return result;
+  };
+
+  const handleAddCertification = async (values: CertificationFormValues) => {
+    const formData = new FormData();
+    formData.append('action', 'add-certification');
+    formData.append('name', values.name);
+    formData.append('issuingOrganization', values.issuingOrganization);
+    if (values.issueDate) formData.append('issueDate', values.issueDate);
+
+    const result = await submitProfileAction(formData);
+    revalidator.revalidate();
+    return result;
+  };
+
+  const handleDeleteCertification = async (id: string) => {
+    const formData = new FormData();
+    formData.append('action', 'delete-certification');
+    formData.append('id', id);
+
+    const result = await submitProfileAction(formData);
+    if (result.success === false) {
+      throw new Error(result.error || 'Failed to remove certification');
+    }
+    revalidator.revalidate();
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="heading-2 text-foreground">Profile</h2>
+        <ActionButtonRow
+          icon={Download}
+          label="Download PDF"
+          onClick={() => handleDownloadPdf()}
+          variant="outline"
+          disabled={pdfGenerating}
+          isLoading={pdfGenerating}
+          loadingLabel="Generating PDF..."
+          helper={!isPublic ? 'Make your profile public to generate a PDF.' : undefined}
+        />
+      </div>
+
+      <div className="max-w-2xl space-y-6">
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="profile-slug" className="subheading-4 text-muted-foreground">
+              Profile URL
+            </Label>
+            <SlugEditor
+              profileId={currentProfile.id}
+              initialSlug={currentProfile.slug || ''}
+              liveUrl={isPublic && currentProfile.slug ? `/p/${currentProfile.slug}` : null}
+              onSave={handleUpdateSlug}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-4 border border-border">
+            <div>
+              <p className="subheading-4 text-foreground">Public profile</p>
+              <p className="body-4 text-muted-foreground">
+                Anyone with the link can view your profile at this URL.
+              </p>
+            </div>
+            <Switch
+              checked={isPublic}
+              disabled={isTogglingVisibility}
+              onCheckedChange={handleToggleVisibility}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <UploadResumeForm
+            mode="replace"
+            onUploadStart={() => undefined}
+            onUploadComplete={() => revalidator.revalidate()}
+            onUploadError={() => undefined}
+          />
+
+          {pdfError ? (
+            <div className="rounded-2xl bg-destructive/10 p-4">
+              <p className="subheading-4 text-destructive">PDF export unavailable</p>
+              <p className="body-3 mt-1 text-destructive">{pdfError}</p>
+            </div>
+          ) : null}
+        </section>
+
+        <BasicInfoForm
+          profile={currentProfile}
+          accountEmail={user.email}
+          onSave={handleSaveBasics}
+          onImageUpload={handleImageUpload}
+        />
+
+        <AccountDocumentsSection
+          documents={documents}
+          onDelete={handleDeleteDocument}
+          onConvert={handleConvertDocument}
+        />
+
+        <SocialLinksSection socialLinks={socialLinks} onSave={handleSaveSocialLinks} />
+
+        <CertificationsSection
+          certifications={certifications}
+          onAdd={handleAddCertification}
+          onDelete={handleDeleteCertification}
+        />
+      </div>
+    </div>
+  );
+}

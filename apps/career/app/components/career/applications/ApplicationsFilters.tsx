@@ -1,3 +1,4 @@
+import { humanizeIdentifier } from '@hominem/utils/text';
 import { ActiveFiltersBar } from '@ponti-studios/ui/filters';
 import {
   Input,
@@ -8,25 +9,27 @@ import {
   SelectValue,
 } from '@ponti-studios/ui/forms';
 import { PaginationControls } from '@ponti-studios/ui/navigation';
-import { SearchIcon } from 'lucide-react';
+import { Button } from '@ponti-studios/ui/primitives';
+import { ArrowDownIcon, ArrowUpIcon, SearchIcon } from 'lucide-react';
 
+import { JobApplicationStatusSelect } from './JobApplicationStatusSelect';
 import type { ApplicationsFiltersProps } from './types';
 
 export function ApplicationsFilters({
+  statusOptions,
   searchValue,
   onSearchChange,
-  statusOptions,
   selectedStatus,
   onStatusChange,
   sourceOptions,
   selectedSource,
   onSourceChange,
   onClearFilters,
-  sortChip,
+  sort,
+  onSortChange,
   pagination,
 }: ApplicationsFiltersProps) {
-  const selectedStatusLabel =
-    statusOptions.find((option) => option.value === selectedStatus)?.label ?? selectedStatus;
+  const selectedStatusLabel = humanizeIdentifier(selectedStatus);
   const selectedSourceLabel =
     sourceOptions.find((option) => option.value === selectedSource)?.label ?? selectedSource;
   const activeFilters = [
@@ -78,19 +81,11 @@ export function ApplicationsFilters({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedStatus} onValueChange={onStatusChange}>
-            <SelectTrigger id="application-status-filter" size="sm" aria-label="Filter by status">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All statuses</SelectItem>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <JobApplicationStatusSelect
+            options={statusOptions}
+            value={selectedStatus}
+            onValueChange={onStatusChange}
+          />
 
           <Select value={selectedSource} onValueChange={onSourceChange}>
             <SelectTrigger id="application-source-filter" size="sm" aria-label="Filter by source">
@@ -106,7 +101,10 @@ export function ApplicationsFilters({
             </SelectContent>
           </Select>
 
-          {sortChip}
+          <Button type="button" variant="ghost" size="sm" onClick={onSortChange}>
+            {sort === 'desc' ? <ArrowDownIcon /> : <ArrowUpIcon />}
+            {sort === 'desc' ? 'Newest first' : 'Oldest first'}
+          </Button>
         </div>
       </div>
 
@@ -118,7 +116,7 @@ export function ApplicationsFilters({
         />
 
         {pagination.totalPages > 1 ? (
-          <div className="ml-auto">
+          <div className="*:h-10">
             <PaginationControls
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}

@@ -5,29 +5,27 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 
 import { FormErrorAlert } from '~/components/FormErrorAlert';
+import { PhoneField } from '~/components/PhoneField';
 import { ProfileImageUpload } from '~/components/ProfileImageUpload';
-import { SlugEditor } from '~/components/SlugEditor';
 import type { AccountActionResult, BasicInfoFormValues } from '~/lib/account/types';
 
 export function BasicInfoForm({
-  portfolio,
+  profile,
   accountEmail,
   onSave,
   onImageUpload,
-  onUpdateSlug,
 }: {
-  portfolio: CareerProfileRecord;
+  profile: CareerProfileRecord;
   accountEmail?: string | null;
   onSave: (values: BasicInfoFormValues) => Promise<AccountActionResult<unknown>>;
   onImageUpload: (croppedImageBlob: Blob) => Promise<string | undefined>;
-  onUpdateSlug: (slug: string) => Promise<void>;
 }) {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isTogglingFlag, setIsTogglingFlag] = useState(false);
 
-  const lockedEmail = accountEmail || portfolio.email || '';
+  const lockedEmail = accountEmail || profile.email || '';
 
-  const fullName = [portfolio.firstName, portfolio.lastName].filter(Boolean).join(' ') || '';
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '';
 
   const {
     register,
@@ -39,14 +37,14 @@ export function BasicInfoForm({
     setValue,
     watch,
   } = useForm<BasicInfoFormValues>({
-    defaultValues: portfolioToFormValues(portfolio, lockedEmail),
+    defaultValues: profileToFormValues(profile, lockedEmail),
   });
 
   const displayName = watch('name') || fullName || lockedEmail || 'Profile';
 
   useEffect(() => {
-    reset(portfolioToFormValues(portfolio, lockedEmail));
-  }, [portfolio, lockedEmail, reset]);
+    reset(profileToFormValues(profile, lockedEmail));
+  }, [profile, lockedEmail, reset]);
 
   const onSubmit: SubmitHandler<BasicInfoFormValues> = async (formData) => {
     if (!isDirty) {
@@ -98,36 +96,18 @@ export function BasicInfoForm({
         <div className="flex items-center gap-4">
           <ProfileImageUpload
             compact
-            currentImageUrl={portfolio.profileImageUrl || undefined}
+            currentImageUrl={profile.profileImageUrl || undefined}
             onUpload={onImageUpload}
           />
           <div className="min-w-0 space-y-1">
             <p className="subheading-3 truncate">{displayName}</p>
             <p className="body-4 text-muted-foreground">
-              Updated {new Date(portfolio.updatedAt).toLocaleDateString()}
+              Updated {new Date(profile.updatedAt).toLocaleDateString()}
             </p>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="portfolio-slug" className="subheading-4 text-muted-foreground">
-              Portfolio URL
-            </Label>
-            <SlugEditor
-              portfolioId={portfolio.id}
-              initialSlug={portfolio.slug || ''}
-              liveUrl={portfolio.isPublic ? `/p/${portfolio.slug}` : null}
-              onSave={(slug) => onUpdateSlug(slug)}
-            />
-          </div>
-          <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="email" className="subheading-4 text-muted-foreground">
-              Email
-            </Label>
-            <Input id="email" type="email" value={lockedEmail} disabled readOnly />
-          </div>
-
           <div className="space-y-1 md:col-span-2">
             <Label htmlFor="name" className="subheading-4 text-muted-foreground">
               Full Name
@@ -178,12 +158,7 @@ export function BasicInfoForm({
 
       <EditorSection title="Contact">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="phone" className="subheading-4 text-muted-foreground">
-              Phone
-            </Label>
-            <Input id="phone" {...register('phone')} maxLength={50} />
-          </div>
+          <PhoneField {...register('phone')} maxLength={50} />
         </div>
       </EditorSection>
 
@@ -256,22 +231,20 @@ export function BasicInfoForm({
   );
 }
 
-function portfolioToFormValues(portfolio: CareerProfileRecord, email: string): BasicInfoFormValues {
-  const name = [portfolio.firstName, portfolio.lastName].filter(Boolean).join(' ') || '';
+function profileToFormValues(profile: CareerProfileRecord, email: string): BasicInfoFormValues {
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '';
   return {
     name,
-    initials: portfolio.initials || '',
-    title: portfolio.title || '',
-    jobTitle: portfolio.headline || '',
-    bio: portfolio.summary || '',
-    tagline: portfolio.tagline || '',
-    currentLocation: portfolio.location || '',
+    initials: profile.initials || '',
+    title: profile.title || '',
+    jobTitle: profile.headline || '',
+    bio: profile.summary || '',
+    tagline: profile.tagline || '',
+    currentLocation: profile.location || '',
     email,
-    phone: portfolio.phone || '',
-    availabilityStatus: portfolio.availabilityStatus || false,
-    openToRemote: portfolio.openToRemote || false,
-    isPublic: portfolio.isPublic,
-    isActive: portfolio.isActive,
+    phone: profile.phone || '',
+    availabilityStatus: profile.availabilityStatus || false,
+    openToRemote: profile.openToRemote || false,
   };
 }
 

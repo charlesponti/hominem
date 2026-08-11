@@ -1,4 +1,4 @@
-import type { CareerSocialLinksRecord } from '@hominem/db';
+import type { CareerCertificationRecord, CareerSocialLinksRecord } from '@hominem/db';
 import type { CareerProfileRecord } from '@hominem/db';
 
 export interface AccountPageUser {
@@ -15,12 +15,20 @@ export interface AccountDocumentFile {
   lastModified: string | null;
 }
 
-export interface AccountLoaderData {
+/** Loader data for /profile — everything that makes up your profile content. */
+export interface ProfileLoaderData {
   user: AccountPageUser;
   currentProfile: CareerProfileRecord;
   hasProfile: true;
   socialLinks: CareerSocialLinksRecord | null;
   documents: AccountDocumentFile[];
+  certifications: CareerCertificationRecord[];
+}
+
+/** Loader data for /account — identity, visibility, and administration only. */
+export interface AccountSettingsLoaderData {
+  user: AccountPageUser;
+  currentProfile: CareerProfileRecord;
 }
 
 export interface BasicInfoFormValues {
@@ -35,8 +43,6 @@ export interface BasicInfoFormValues {
   phone?: string | null;
   availabilityStatus?: boolean;
   openToRemote?: boolean;
-  isPublic?: boolean;
-  isActive?: boolean;
 }
 
 export interface SocialLinksFormValues {
@@ -44,6 +50,12 @@ export interface SocialLinksFormValues {
   linkedin?: string | null;
   twitter?: string | null;
   website?: string | null;
+}
+
+export interface CertificationFormValues {
+  name: string;
+  issuingOrganization: string;
+  issueDate?: string | null;
 }
 
 export interface AccountActionResult<TData = undefined> {

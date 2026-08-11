@@ -1,19 +1,31 @@
-import { db, SocialLinksRepository } from '@hominem/db';
+import { CertificationRepository, db, SocialLinksRepository } from '@hominem/db';
 import type { CareerProfileRecord } from '@hominem/db';
 
-import { listUserDocuments } from './documents.server';
-import type { AccountLoaderData, AccountPageUser } from './types';
+import { logger } from '~/lib/logger';
 
-export async function loadAccountPageData({
+import { listUserDocuments } from './documents.server';
+import type { AccountDocumentFile, AccountPageUser, ProfileLoaderData } from './types';
+
+async function listUserDocumentsSafely(userId: string): Promise<AccountDocumentFile[]> {
+  try {
+    return await listUserDocuments(userId);
+  } catch (error) {
+    logger.error('Failed to list account documents', error, { owner_userid: userId });
+    return [];
+  }
+}
+
+export async function loadProfilePageData({
   user,
   currentProfile,
 }: {
   user: AccountPageUser;
   currentProfile: CareerProfileRecord;
-}): Promise<AccountLoaderData> {
-  const [socialLinks, documents] = await Promise.all([
+}): Promise<ProfileLoaderData> {
+  const [socialLinks, documents, certifications] = await Promise.all([
     SocialLinksRepository.get(db, user.id),
-    listUserDocuments(user.id),
+    listUserDocumentsSafely(user.id),
+    CertificationRepository.list(db, user.id),
   ]);
 
   return {
@@ -22,5 +34,6 @@ export async function loadAccountPageData({
     hasProfile: true,
     socialLinks,
     documents,
+    certifications,
   };
 }

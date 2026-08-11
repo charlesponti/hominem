@@ -14,8 +14,6 @@ interface UploadResumeFormProps {
   onUploadComplete: (response: UploadResumeApiResponse) => void;
   onUploadError?: (error: string) => void;
   mode?: 'create' | 'replace';
-  /** When false, only the drop zone + actions render (parent supplies page title). */
-  showHeading?: boolean;
 }
 
 function isPdfFile(file: File): boolean {
@@ -28,7 +26,7 @@ async function readUploadResponse(response: Response): Promise<UploadResumeApiRe
   } catch {
     return {
       error: response.ok
-        ? 'Upload succeeded but the response was unreadable. Refresh your account page to check your portfolio.'
+        ? 'Upload succeeded but the response was unreadable. Refresh your profile page to check your profile.'
         : 'Server returned an unreadable error response. Try again.',
       stage: 'request',
       retryable: true,
@@ -41,7 +39,6 @@ export function UploadResumeForm({
   onUploadComplete,
   onUploadError,
   mode = 'create',
-  showHeading = true,
 }: UploadResumeFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<DropZoneStatus>('empty');
@@ -166,17 +163,10 @@ export function UploadResumeForm({
   };
 
   return (
-    <div className="w-full max-w-md space-y-4">
-      {showHeading ? (
-        <header className="space-y-1 text-center">
-          <h2 className="heading-4">
-            {mode === 'replace' ? 'Replace your portfolio' : 'Upload your resume'}
-          </h2>
-          <p className="body-3 text-muted-foreground">
-            PDF only. We’ll extract the details and keep everything editable.
-          </p>
-        </header>
-      ) : null}
+    <div className="w-full max-w-md space-y-4 border rounded-2xl p-2 flex flex-col items-center">
+      <h2 className="heading-4 self-start">
+        {mode === 'replace' ? 'Replace your profile' : 'Upload your resume'}
+      </h2>
       <DropZone
         status={status}
         file={selectedFile ? { name: selectedFile.name, size: selectedFile.size } : null}
@@ -190,8 +180,8 @@ export function UploadResumeForm({
         }
         emptyHint="PDF only · max 10MB"
         busyLabel="Resume processing"
-        busyDescription="We're extracting your resume details and building your portfolio."
-        submitLabel={mode === 'replace' ? 'Replace Portfolio' : 'Upload Resume'}
+        busyDescription="We're extracting your resume details and building your profile."
+        submitLabel={mode === 'replace' ? 'Replace Profile' : 'Upload Resume'}
         retryLabel="Try again"
         cancelLabel="Cancel"
         onFiles={handleFiles}

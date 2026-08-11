@@ -1,10 +1,10 @@
 import { TestimonialRepository, db, type CareerTestimonialRecord } from '@hominem/db';
-import { EmptyState } from '@ponti-studios/ui/feedback';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ChevronRightIcon, PlusIcon, QuoteIcon } from 'lucide-react';
+import { PlusIcon, QuoteIcon, Trash2Icon } from 'lucide-react';
 import { Form, Link } from 'react-router';
 
+import { CareerCollection } from '~/components/career/career-list';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 
@@ -60,55 +60,40 @@ export default function TestimonialsRoute({ loaderData }: Route.ComponentProps) 
         </Button>
       </div>
 
-      {testimonials.length === 0 ? (
-        <EmptyState
-          icon={<QuoteIcon className="size-6" />}
-          title="No testimonials yet"
-          description="Add a testimonial to showcase your work."
-          className="mt-6"
-        />
-      ) : (
-        <div className="mt-6 divide-y divide-border rounded-lg border border-border">
-          {testimonials.map((testimonial) => (
-            <Link
-              key={testimonial.id}
-              to={`/testimonials/${testimonial.id}`}
-              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+      <div className="mt-6">
+        <CareerCollection
+          items={testimonials}
+          keyFor={(t) => t.id}
+          hrefFor={(t) => `/testimonials/${t.id}`}
+          title={(t) => t.name}
+          subtitle={(t) => [t.title, t.company].filter(Boolean).join(' at ')}
+          meta={(t) => t.content}
+          trailing={(t) => (
+            <Form
+              method="post"
+              navigate={false}
+              onClick={(e) => e.stopPropagation()}
+              onSubmit={(e) => {
+                if (!confirm(`Delete testimonial from "${t.name}"?`)) e.preventDefault();
+              }}
             >
-              <div className="min-w-0 flex-1">
-                <p className="heading-4 truncate">{testimonial.name}</p>
-                <p className="body-3 text-muted-foreground truncate">
-                  {[testimonial.title, testimonial.company].filter(Boolean).join(' at ')}
-                </p>
-                <p className="footnote text-muted-foreground mt-1 truncate">
-                  {testimonial.content}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Form
-                  method="post"
-                  navigate={false}
-                  onClick={(e) => e.stopPropagation()}
-                  onSubmit={(e) => {
-                    if (!confirm(`Delete testimonial from "${testimonial.name}"?`))
-                      e.preventDefault();
-                  }}
-                >
-                  <input type="hidden" name="intent" value="delete" />
-                  <input type="hidden" name="id" value={testimonial.id} />
-                  <button
-                    type="submit"
-                    className="footnote text-muted-foreground hover:text-destructive-text"
-                  >
-                    Delete
-                  </button>
-                </Form>
-                <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="id" value={t.id} />
+              <button
+                type="submit"
+                className="footnote text-muted-foreground hover:text-destructive-text"
+              >
+                <Trash2Icon className="size-4" />
+              </button>
+            </Form>
+          )}
+          empty={{
+            icon: <QuoteIcon className="size-6" />,
+            title: 'No testimonials yet',
+            description: 'Add a testimonial to showcase your work.',
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ export default [
   route('/demo', 'routes/demo.tsx'),
   route('health', 'routes/health.ts'),
   route('api/portfolio/:owner_userid', 'routes/api.portfolio.$userId.ts'),
+  route('api/career/applications', 'routes/api.career.applications.ts'),
   route('api/resume/convert', 'routes/api.resume.convert.ts'),
   route('api/resume/customize', 'routes/api.resume.customize.ts'),
   route('api/skills/derive', 'routes/api.skills.derive.ts'),
@@ -18,7 +19,8 @@ export default [
     route('onboarding', 'routes/onboarding.tsx'),
     layout('routes/_authenticated-pages.tsx', [
       route('account', 'routes/account.tsx'),
-      layout('routes/_portfolio-required.tsx', [
+      route('profile', 'routes/profile.tsx'),
+      layout('routes/_profile-required.tsx', [
         route('work', 'routes/work.tsx'),
         route('work/new', 'routes/work.new.tsx'),
         route('work/:id', 'routes/work.$id.tsx'),

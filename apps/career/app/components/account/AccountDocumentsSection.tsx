@@ -53,7 +53,7 @@ export function AccountDocumentsSection({
       <div className="space-y-1">
         <h2 className="heading-3">Uploaded resumes</h2>
         <p className="body-3 text-muted-foreground">
-          PDFs you&apos;ve uploaded. Convert one to update your portfolio, or delete files you no
+          PDFs you&apos;ve uploaded. Convert one to update your profile, or delete files you no
           longer need.
         </p>
       </div>
@@ -67,7 +67,8 @@ export function AccountDocumentsSection({
       {documents.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-6 text-center">
           <p className="body-3 text-muted-foreground">
-            No resumes uploaded yet. Import one from onboarding or replace portfolio above.
+            No resumes uploaded yet. Upload a PDF from the Account page to import your profile
+            from it.
           </p>
         </div>
       ) : (

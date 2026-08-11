@@ -2,14 +2,14 @@ import { Navigation as UiNavigation } from '@ponti-studios/ui/navigation';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Link, useLocation } from 'react-router';
 
-import { useHasPortfolio, useUser } from '../hooks/useAuth';
+import { useHasProfile, useUser } from '../hooks/useAuth';
 
 interface NavLink {
   href: string;
   label: string;
 }
 
-const PORTFOLIO_LINKS: NavLink[] = [
+const PROFILE_LINKS: NavLink[] = [
   { href: '/work', label: 'Work' },
   { href: '/projects', label: 'Projects' },
   { href: '/skills', label: 'Skills' },
@@ -20,6 +20,7 @@ const PUBLIC_LINKS: NavLink[] = [{ href: '/demo', label: 'Demo' }];
 
 const AUTHENTICATED_LINKS: NavLink[] = [
   { href: '/applications', label: 'Applications' },
+  { href: '/profile', label: 'Profile' },
   { href: '/account', label: 'Account' },
 ];
 
@@ -30,13 +31,13 @@ function isActive(pathname: string, href: string) {
 
 export default function Navigation() {
   const user = useUser();
-  const hasPortfolio = useHasPortfolio();
+  const hasProfile = useHasProfile();
   const location = useLocation();
   const isAuthenticated = Boolean(user);
 
   const links: NavLink[] = isAuthenticated
-    ? hasPortfolio
-      ? [...PORTFOLIO_LINKS, ...AUTHENTICATED_LINKS]
+    ? hasProfile
+      ? [...PROFILE_LINKS, ...AUTHENTICATED_LINKS]
       : []
     : PUBLIC_LINKS;
 

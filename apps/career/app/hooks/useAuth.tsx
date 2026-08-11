@@ -4,7 +4,7 @@ import type { User } from '../lib/auth.server';
 
 type RootLoaderData = {
   user: User | null;
-  hasPortfolio?: boolean;
+  hasProfile?: boolean;
 };
 
 /**
@@ -16,8 +16,8 @@ export const useUser = (): User | null => {
   return rootData?.user ?? null;
 };
 
-/** True when the signed-in user has a portfolio (product nav is available). */
-export const useHasPortfolio = (): boolean => {
+/** True when the signed-in user has a profile (product nav is available). */
+export const useHasProfile = (): boolean => {
   const rootData = useRouteLoaderData('root') as RootLoaderData | undefined;
-  return rootData?.hasPortfolio ?? false;
+  return rootData?.hasProfile ?? false;
 };

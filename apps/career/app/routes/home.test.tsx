@@ -6,51 +6,62 @@ import { describe, expect, it } from 'vitest';
 import type { Route } from './+types/home';
 import Home from './home';
 
-const emptyStats = {
-  totalApplications: 0,
-  activeApplications: 0,
-  rejectedApplications: 0,
-  offerCount: 0,
-  offerRate: 0,
-  employmentPositions: 0,
-  targetRoles: 0,
-  statusBreakdown: [],
-  sourcePerformance: [],
-  topCompanies: [],
-  monthlyActivity: [],
-  salaryHistory: [],
-};
-
-function renderHome(authenticated: boolean) {
+function renderHome(loaderData: unknown) {
   render(
     <MemoryRouter>
       <Home
         {...({
           params: {},
           matches: [],
+          loaderData,
         } as unknown as Route.ComponentProps)}
-        loaderData={
-          authenticated
-            ? { authenticated: true as const, stats: emptyStats }
-            : { authenticated: false as const }
-        }
       />
     </MemoryRouter>,
   );
 }
 
 describe('Home', () => {
-  it('renders the workspace when authenticated', () => {
-    renderHome(true);
+  it('renders empty prompts when authenticated with no history', () => {
+    renderHome({ authenticated: true, engagements: [], projects: [] });
 
-    expect(screen.getByText('Your career workspace')).toBeInTheDocument();
-    expect(screen.getByText('Positions')).toBeInTheDocument();
-    expect(screen.getByText('Applications')).toBeInTheDocument();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Work history')).toBeInTheDocument();
+    expect(screen.getByText('No positions yet')).toBeInTheDocument();
+    expect(screen.getByText('Projects')).toBeInTheDocument();
+    expect(screen.getByText('No projects yet')).toBeInTheDocument();
+  });
+
+  it('renders a summary of work and project history when authenticated', () => {
+    renderHome({
+      authenticated: true,
+      engagements: [
+        {
+          id: 'eng-1',
+          title: 'Staff Engineer',
+          company: 'Acme Corp',
+          startDate: '2023-01-01',
+          endDate: null,
+          isCurrent: true,
+        },
+      ],
+      projects: [
+        {
+          id: 'proj-1',
+          title: 'Career Tracker',
+          organization: null,
+          shortDescription: 'A private workspace for job seekers.',
+          startDate: '2024-01-01',
+          endDate: null,
+        },
+      ],
+    });
+
+    expect(screen.getByText('Staff Engineer')).toBeInTheDocument();
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    expect(screen.getByText('Career Tracker')).toBeInTheDocument();
   });
 
   it('renders the landing page when unauthenticated', () => {
-    renderHome(false);
+    renderHome({ authenticated: false });
 
     expect(screen.getByText('Keep your job search from scattering.')).toBeInTheDocument();
     expect(screen.getByText('Get started')).toBeInTheDocument();

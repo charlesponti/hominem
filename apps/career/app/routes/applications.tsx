@@ -1,22 +1,13 @@
 import { humanizeIdentifier } from '@hominem/utils/text';
-import { EmptyState } from '@ponti-studios/ui/feedback';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ArrowDownIcon, ArrowUpIcon, FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
-import { useMemo } from 'react';
+import { FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 
 import { ApplicationsFilters } from '~/components/career/applications/ApplicationsFilters';
-import { CareerList, CareerListRow } from '~/components/career/career-list';
+import { CareerCollection } from '~/components/career/career-list';
 import { StatusBadge } from '~/components/status-badge';
-import {
-  filterJobApplications,
-  NO_SOURCE_FILTER,
-  NO_STATUS_FILTER,
-  paginateJobApplications,
-  sortJobApplications,
-} from '~/lib/career/queries/job-applications';
-import { getApplicationCards } from '~/lib/career/queries/job-applications.server';
+import { getApplicationPage } from '~/lib/career/queries/job-applications.server';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { formatApplicationDate, getApplicationStatusTone } from '~/lib/utils/applicationUtils';
@@ -30,19 +21,34 @@ export const meta: Route.MetaFunction = () => [
 
 const PAGE_SIZE = 15;
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const user = context.get(userContext)!;
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get('page') ?? '1') || 1);
+  const sort = url.searchParams.get('sort') === 'asc' ? 'asc' : 'desc';
   try {
-    const cards = await getApplicationCards(user.id);
-    return { applications: cards };
+    return await getApplicationPage(user.id, {
+      page,
+      pageSize: PAGE_SIZE,
+      status: url.searchParams.get('status') ?? undefined,
+      source: url.searchParams.get('source') ?? undefined,
+      query: url.searchParams.get('query') ?? undefined,
+      sort,
+    });
   } catch (error) {
     logger.error('Error loading applications', error, { owner_userid: user.id });
-    return { applications: [] };
+    return {
+      applications: [],
+      total: 0,
+      hasApplications: false,
+      statusOptions: [],
+      sourceOptions: [],
+    };
   }
 }
 
 export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) {
-  const { applications } = loaderData;
+  const { applications, total, hasApplications, statusOptions, sourceOptions } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const statusFilter = searchParams.get('status') || '';
@@ -51,55 +57,8 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
   const sort = searchParams.get('sort') === 'asc' ? 'asc' : 'desc';
   const page = Number(searchParams.get('page') ?? '1') || 1;
 
-  const statusOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const app of applications) {
-      const key = app.status ?? NO_STATUS_FILTER;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([value, count]) => ({
-        value,
-        label:
-          value === NO_STATUS_FILTER
-            ? `No status (${count})`
-            : `${humanizeIdentifier(value)} (${count})`,
-      }));
-  }, [applications]);
-
-  const sourceOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const app of applications) {
-      const key = app.source ?? NO_SOURCE_FILTER;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([value, count]) => ({
-        value,
-        label: value === NO_SOURCE_FILTER ? `No source (${count})` : `${value} (${count})`,
-      }));
-  }, [applications]);
-
-  const filtered = useMemo(() => {
-    const base = filterJobApplications(applications, {
-      status: statusFilter || undefined,
-      source: sourceFilter || undefined,
-      query: query || undefined,
-    });
-    return sortJobApplications(base, sort);
-  }, [applications, statusFilter, sourceFilter, query, sort]);
-
-  const {
-    items,
-    total,
-    totalPages,
-    page: currentPage,
-  } = useMemo(
-    () => paginateJobApplications(filtered, { page, pageSize: PAGE_SIZE }),
-    [filtered, page],
-  );
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
 
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -108,7 +67,9 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
     } else {
       next.delete(key);
     }
-    next.delete('page');
+    if (key !== 'page') {
+      next.delete('page');
+    }
     setSearchParams(next, { preventScrollReset: true });
   };
 
@@ -140,24 +101,20 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
         }
       />
 
-      {applications.length > 0 && (
+      {hasApplications && (
         <div className="mt-6">
           <ApplicationsFilters
+            statusOptions={statusOptions}
             searchValue={query}
             onSearchChange={(v) => setParam('query', v)}
-            statusOptions={statusOptions}
             selectedStatus={statusFilter}
             onStatusChange={(v) => setParam('status', v)}
             sourceOptions={sourceOptions}
             selectedSource={sourceFilter}
             onSourceChange={(v) => setParam('source', v)}
             onClearFilters={() => clearParams(['status', 'source', 'query'])}
-            sortChip={
-              <Button type="button" variant="ghost" size="sm" onClick={toggleSort}>
-                {sort === 'desc' ? <ArrowDownIcon /> : <ArrowUpIcon />}
-                {sort === 'desc' ? 'Newest first' : 'Oldest first'}
-              </Button>
-            }
+            sort={sort}
+            onSortChange={toggleSort}
             pagination={{
               currentPage: currentPage - 1,
               totalPages,
@@ -167,65 +124,64 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
         </div>
       )}
 
-      {applications.length === 0 ? (
-        <EmptyState
-          icon={<FolderIcon className="size-6" />}
-          title="No applications yet"
-          description="Applications will appear here once data is migrated from your warehouse."
-          className="mt-6"
-        />
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={<SearchIcon className="size-6" />}
-          title="No matching applications"
-          description="Try adjusting your filters or search."
-          className="mt-6"
-          action={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => clearParams(['status', 'source', 'query', 'sort'])}
-            >
-              Clear filters
-            </Button>
-          }
-        />
-      ) : (
-        <>
-          <CareerList className="mt-6">
-            {items.map((app) => (
-              <CareerListRow
-                key={app.id}
-                to={`/applications/${app.id}`}
-                title={app.title}
-                subtitle={app.company}
-                meta={
-                  <span className="footnote text-muted-foreground">
-                    {app.appliedAt && formatApplicationDate(app.appliedAt)}
-                    {app.source && ` · ${app.source}`}
-                    {app.stageCount > 0 && ` · ${app.stageCount} stages`}
-                  </span>
-                }
-                trailing={
-                  <div className="flex items-center gap-1.5">
-                    {app.status && (
-                      <StatusBadge
-                        tone={getApplicationStatusTone(app.status)}
-                        label={humanizeIdentifier(app.status)}
-                      />
-                    )}
-                    {app.hasOffer && <StatusBadge tone="success" label="Offer" />}
-                  </div>
-                }
+      <CareerCollection
+        className="mt-6"
+        items={applications}
+        keyFor={(app) => app.id}
+        hrefFor={(app) => `/applications/${app.id}`}
+        title={(app) => app.title}
+        subtitle={(app) => app.company}
+        meta={(app) =>
+          [
+            app.appliedAt && formatApplicationDate(app.appliedAt),
+            app.source,
+            app.stageCount > 0 && `${app.stageCount} stages`,
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        }
+        trailing={(app) => (
+          <div className="flex items-center gap-1.5">
+            {app.status && (
+              <StatusBadge
+                tone={getApplicationStatusTone(app.status)}
+                label={humanizeIdentifier(app.status)}
               />
-            ))}
-          </CareerList>
+            )}
+            {app.hasOffer && <StatusBadge tone="success" label="Offer" />}
+          </div>
+        )}
+        empty={
+          !hasApplications
+            ? {
+                icon: <FolderIcon className="size-6" />,
+                title: 'No applications yet',
+                description:
+                  'Applications will appear here once data is migrated from your warehouse.',
+              }
+            : {
+                icon: <SearchIcon className="size-6" />,
+                variant: 'search',
+                title: 'No matching applications',
+                description: 'Try adjusting your filters or search.',
+                action: (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearParams(['status', 'source', 'query', 'sort'])}
+                  >
+                    Clear filters
+                  </Button>
+                ),
+              }
+        }
+      />
 
-          <p className="footnote text-muted-foreground mt-4">
-            Showing {pageStart}–{pageEnd} of {total}
-          </p>
-        </>
+      {applications.length > 0 && (
+        <p className="footnote text-muted-foreground mt-4">
+          Showing {pageStart}–{pageEnd} of {total}
+        </p>
       )}
     </div>
   );

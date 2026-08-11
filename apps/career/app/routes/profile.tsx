@@ -1,12 +1,13 @@
 import { CareerRepository, db } from '@hominem/db';
 
-import { AccountSettingsPage } from '~/components/account/AccountSettingsPage';
+import { ProfilePage } from '~/components/account/ProfilePage';
 import { handleAccountAction } from '~/lib/account/account.actions.server';
+import { loadProfilePageData } from '~/lib/account/account.loader.server';
 import { userContext } from '~/lib/middleware';
 
-import type { Route } from './+types/account';
+import type { Route } from './+types/profile';
 
-export const meta = () => [{ title: 'Account | career' }];
+export const meta = () => [{ title: 'Profile | career' }];
 
 export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
@@ -17,7 +18,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     throw new Response('Profile not found', { status: 404 });
   }
 
-  return { user, currentProfile: profile };
+  return loadProfilePageData({ user, currentProfile: profile });
 }
 
 export async function action({ context, request }: Route.ActionArgs) {
@@ -28,6 +29,6 @@ export async function action({ context, request }: Route.ActionArgs) {
   return handleAccountAction({ formData, user });
 }
 
-export default function AccountRoute({ loaderData }: Route.ComponentProps) {
-  return <AccountSettingsPage loaderData={loaderData} />;
+export default function ProfileRoute({ loaderData }: Route.ComponentProps) {
+  return <ProfilePage loaderData={loaderData} />;
 }

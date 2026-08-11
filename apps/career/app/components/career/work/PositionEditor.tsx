@@ -154,10 +154,27 @@ export function PositionEditor({
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="address">Address</Label>
+          <Input id="address" name="address" defaultValue={position?.address ?? ''} />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
           <Input id="source" name="source" defaultValue={position?.source ?? ''} />
         </div>
       </div>
+
+      {!isCurrent && (
+        <div className="space-y-2">
+          <Label htmlFor="reasonForLeaving">Reason for leaving</Label>
+          <textarea
+            id="reasonForLeaving"
+            name="reasonForLeaving"
+            rows={3}
+            defaultValue={position?.reasonForLeaving ?? ''}
+            className="w-full resize-none rounded-lg border border-border px-3 py-2"
+          />
+        </div>
+      )}
 
       <div className="flex justify-end gap-3">
         {onCancel && (

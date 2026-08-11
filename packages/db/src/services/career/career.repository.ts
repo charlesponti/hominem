@@ -1,4 +1,4 @@
-import type { Selectable } from 'kysely';
+import { sql, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type {
@@ -277,10 +277,107 @@ export const CareerRepository = {
       );
     }
 
-    return query
-      .orderBy('appliedAt', 'desc')
-      .limit(opts?.limit ?? 20)
-      .execute() as Promise<CareerApplicationWithCurrentStage[]>;
+    let limitedQuery = query.orderBy(sql`"applied_at" desc nulls last`);
+    if (opts?.limit) {
+      limitedQuery = limitedQuery.limit(opts.limit);
+    }
+
+    return limitedQuery.execute() as Promise<CareerApplicationWithCurrentStage[]>;
+  },
+
+  async listApplicationsPage(
+    handle: DbHandle,
+    ownerUserId: string,
+    opts: {
+      page: number;
+      pageSize: number;
+      status?: string | null;
+      source?: string | null;
+      query?: string;
+      sort?: 'asc' | 'desc';
+    },
+  ): Promise<{ items: CareerApplicationWithCurrentStage[]; total: number }> {
+    let query = handle
+      .selectFrom('app.careerApplications as application')
+      .where('application.ownerUserid', '=', ownerUserId);
+
+    if (opts.status !== undefined) {
+      query =
+        opts.status === null
+          ? query.where('application.status', 'is', null)
+          : query.where('application.status', '=', opts.status as AppCareerApplications['status']);
+    }
+
+    if (opts.source !== undefined) {
+      query =
+        opts.source === null
+          ? query.where('application.source', 'is', null)
+          : query.where('application.source', '=', opts.source);
+    }
+
+    const trimmedQuery = opts.query?.trim();
+    if (trimmedQuery) {
+      const pattern = `%${trimmedQuery}%`;
+      query = query.where((eb) =>
+        eb.or([
+          eb('application.company', 'ilike', pattern),
+          eb('application.title', 'ilike', pattern),
+        ]),
+      );
+    }
+
+    const direction = opts.sort === 'asc' ? 'asc' : 'desc';
+
+    const [totalRow, items] = await Promise.all([
+      query.select((eb) => eb.fn.countAll<number>().as('count')).executeTakeFirst(),
+      query
+        .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'application.currentStageId')
+        .selectAll('application')
+        .select('stage.stage as currentStage')
+        .orderBy(sql`"application"."applied_at" ${sql.raw(direction)} nulls last`)
+        .offset((opts.page - 1) * opts.pageSize)
+        .limit(opts.pageSize)
+        .execute(),
+    ]);
+
+    return {
+      items: items as CareerApplicationWithCurrentStage[],
+      total: Number(totalRow?.count ?? 0),
+    };
+  },
+
+  async getApplicationFilterCounts(
+    handle: DbHandle,
+    ownerUserId: string,
+  ): Promise<{
+    statusCounts: Array<{ status: string | null; count: number }>;
+    sourceCounts: Array<{ source: string | null; count: number }>;
+  }> {
+    const [statusCounts, sourceCounts] = await Promise.all([
+      handle
+        .selectFrom('app.careerApplications')
+        .select(['status', (eb) => eb.fn.countAll<number>().as('count')])
+        .where('ownerUserid', '=', ownerUserId)
+        .groupBy('status')
+        .execute(),
+      handle
+        .selectFrom('app.careerApplications')
+        .select(['source', (eb) => eb.fn.countAll<number>().as('count')])
+        .where('ownerUserid', '=', ownerUserId)
+        .groupBy('source')
+        .execute(),
+    ]);
+
+    return {
+      statusCounts: statusCounts.map((row) => ({
+        status: row.status,
+        count: Number(row.count),
+      })),
+      sourceCounts: sourceCounts.map((row) => ({
+        source: row.source,
+        count: Number(row.count),
+      })),
+    };
   },
 
   async createApplication(

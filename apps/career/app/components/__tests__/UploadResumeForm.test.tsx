@@ -191,7 +191,7 @@ describe('UploadResumeForm', () => {
     const { onUploadComplete } = renderForm('replace');
     await selectFile(user, new File(['pdf'], 'resume.pdf', { type: 'application/pdf' }));
 
-    await user.click(screen.getByRole('button', { name: /replace portfolio/i }));
+    await user.click(screen.getByRole('button', { name: /replace profile/i }));
 
     await waitFor(() => expect(onUploadComplete).toHaveBeenCalledWith(uploadResponse));
     expect(submittedWithReplaceExisting).toBe(true);

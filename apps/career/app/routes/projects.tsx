@@ -1,14 +1,15 @@
 import { ProjectRepository, db, type CareerProjectRecord } from '@hominem/db';
-import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ChevronRightIcon, FolderIcon, PlusIcon } from 'lucide-react';
+import { FolderIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Form, Link } from 'react-router';
 
+import { CareerCollection } from '~/components/career/career-list';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
+import { formatDateRange } from '~/lib/utils/dateRange';
 
 import { Route } from './+types/projects';
 
@@ -78,66 +79,48 @@ export default function ProjectsRoute({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
-      {projects.length === 0 ? (
-        <EmptyState
-          icon={<FolderIcon className="size-6" />}
-          title="No projects yet"
-          description="Add a project to showcase your work."
-          className="mt-6"
-        />
-      ) : (
-        <div className="mt-6 divide-y divide-border rounded-lg border border-border">
-          {filtered.map((project) => (
-            <Link
-              key={project.id}
-              to={`/projects/${project.id}`}
-              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+      <div className="mt-6">
+        <CareerCollection
+          items={filtered}
+          keyFor={(p) => p.id}
+          hrefFor={(p) => `/projects/${p.id}`}
+          title={(p) => p.title}
+          subtitle={(p) => p.organization ?? p.shortDescription ?? undefined}
+          meta={(p) => (p.startDate || p.endDate) && formatDateRange(p.startDate, p.endDate)}
+          trailing={(p) => (
+            <Form
+              method="post"
+              navigate={false}
+              onClick={(e) => e.stopPropagation()}
+              onSubmit={(e) => {
+                if (!confirm(`Delete "${p.title}"?`)) e.preventDefault();
+              }}
             >
-              <div className="min-w-0 flex-1">
-                <p className="heading-4 truncate">{project.title}</p>
-                {project.organization && (
-                  <p className="body-3 text-muted-foreground truncate">{project.organization}</p>
-                )}
-                {project.shortDescription && (
-                  <p className="body-3 text-muted-foreground truncate">
-                    {project.shortDescription}
-                  </p>
-                )}
-                {Array.isArray(project.technologies) && project.technologies.length > 0 && (
-                  <p className="footnote text-muted-foreground mt-1">
-                    {project.technologies.join(', ')}
-                  </p>
-                )}
-                {project.engagements.length > 0 && (
-                  <p className="footnote text-muted-foreground mt-1">
-                    {project.engagements.map((engagement) => engagement.company).join(', ')}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <Form
-                  method="post"
-                  navigate={false}
-                  onClick={(e) => e.stopPropagation()}
-                  onSubmit={(e) => {
-                    if (!confirm(`Delete "${project.title}"?`)) e.preventDefault();
-                  }}
-                >
-                  <input type="hidden" name="intent" value="delete" />
-                  <input type="hidden" name="id" value={project.id} />
-                  <button
-                    type="submit"
-                    className="footnote text-muted-foreground hover:text-destructive-text"
-                  >
-                    Delete
-                  </button>
-                </Form>
-                <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="id" value={p.id} />
+              <button
+                type="submit"
+                className="footnote text-muted-foreground hover:text-destructive-text"
+              >
+                <Trash2Icon className="size-4" />
+              </button>
+            </Form>
+          )}
+          empty={
+            projects.length === 0
+              ? {
+                  icon: <FolderIcon className="size-6" />,
+                  title: 'No projects yet',
+                  description: 'Add a project to showcase your work.',
+                }
+              : {
+                  variant: 'search',
+                  title: 'No matching projects',
+                  description: 'Try a different search.',
+                }
+          }
+        />
+      </div>
     </div>
   );
 }

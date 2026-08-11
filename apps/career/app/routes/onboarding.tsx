@@ -10,14 +10,14 @@ export function meta() {
     { title: 'Import resume — career' },
     {
       name: 'description',
-      content: 'Update your portfolio from a resume PDF.',
+      content: 'Update your profile from a resume PDF.',
     },
   ];
 }
 
 /**
- * Optional import path. Portfolio already exists (created at sign-in);
- * upload always replaces/updates that single portfolio.
+ * Optional import path. Profile already exists (created at sign-in);
+ * upload always replaces/updates that single profile.
  */
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -31,17 +31,16 @@ export default function Onboarding() {
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
       <header className="space-y-2 text-center sm:text-left">
         <p className="ui-eyebrow">Import</p>
-        <h1 className="heading-2 text-foreground">Fill your portfolio from a resume</h1>
+        <h1 className="heading-2 text-foreground">Fill your profile from a resume</h1>
         <p className="body-2 text-muted-foreground">
-          We’ll replace your current portfolio details with what we extract from the PDF. You can
+          We’ll replace your current profile details with what we extract from the PDF. You can
           always edit afterward.
         </p>
       </header>
 
       <div className="mx-auto w-full max-w-md">
         <UploadResumeForm
-          mode="replace"
-          showHeading={false}
+          mode="create"
           onUploadStart={() => setIsUploading(true)}
           onUploadComplete={(response) => {
             setIsUploading(false);

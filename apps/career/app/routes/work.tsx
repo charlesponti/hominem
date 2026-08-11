@@ -1,5 +1,4 @@
 import type { CareerEngagementRecord } from '@hominem/db';
-import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
@@ -7,7 +6,7 @@ import { BriefcaseIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
-import { CareerList, CareerListRow } from '~/components/career/career-list';
+import { CareerCollection } from '~/components/career/career-list';
 import { getUserEngagements } from '~/lib/career/queries/career-queries';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
@@ -48,39 +47,6 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => filterPositions(positions, search), [positions, search]);
 
-  if (positions.length === 0) {
-    return (
-      <div>
-        <SectionIntro
-          title="Work history"
-          description="Your work history and engagements."
-          actions={
-            <Button asChild variant="outline">
-              <Link to="/work/new">
-                <PlusIcon className="mr-2 size-4" />
-                Add engagement
-              </Link>
-            </Button>
-          }
-        />
-        <EmptyState
-          icon={<BriefcaseIcon className="size-6" />}
-          title="No engagements yet"
-          description="Engagements will appear here once you add work history."
-          className="mt-6"
-          action={
-            <Button asChild variant="outline" size="sm">
-              <Link to="/work/new">
-                <PlusIcon className="mr-2 size-4" />
-                Add engagement
-              </Link>
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
-
   return (
     <div>
       <SectionIntro
@@ -95,36 +61,51 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
           </Button>
         }
       />
-      <div className="mt-4">
-        <Input
-          placeholder="Search work history..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
 
-      {filtered.length > 0 && (
-        <div className="mt-6">
-          <h2 className="heading-3 mb-4">Work History</h2>
-          <CareerList>
-            {filtered.map((pos) => (
-              <CareerListRow
-                key={pos.id}
-                to={`/work/${pos.id}`}
-                title={pos.title}
-                subtitle={pos.company}
-                meta={
-                  <span className="footnote text-muted-foreground">
-                    {formatDateRange(pos.startDate, pos.endDate)}
-                    {pos.location && ` • ${pos.location}`}
-                  </span>
-                }
-              />
-            ))}
-          </CareerList>
+      {positions.length > 0 && (
+        <div className="mt-4">
+          <Input
+            placeholder="Search work history..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-sm"
+          />
         </div>
       )}
+
+      <div className="mt-6">
+        <CareerCollection
+          items={filtered}
+          keyFor={(p) => p.id}
+          hrefFor={(p) => `/work/${p.id}`}
+          title={(p) => p.title}
+          subtitle={(p) => p.company}
+          meta={(p) =>
+            `${formatDateRange(p.startDate, p.endDate)}${p.location ? ` • ${p.location}` : ''}`
+          }
+          empty={
+            positions.length === 0
+              ? {
+                  icon: <BriefcaseIcon className="size-6" />,
+                  title: 'No engagements yet',
+                  description: 'Engagements will appear here once you add work history.',
+                  action: (
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/work/new">
+                        <PlusIcon className="mr-2 size-4" />
+                        Add engagement
+                      </Link>
+                    </Button>
+                  ),
+                }
+              : {
+                  variant: 'search',
+                  title: 'No matching positions',
+                  description: 'Try a different search.',
+                }
+          }
+        />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
+import { CareerRepository, CertificationRepository, db, SocialLinksRepository } from '@hominem/db';
 import { imageStorageService, isStorageServiceError, validateFile } from '@hominem/storage';
 
 import { logger } from '~/lib/logger';
@@ -26,9 +26,12 @@ const accountActionHandlers: Record<string, AccountActionHandler> = {
   delete: handleDeleteProfileAction,
   'upload-profile-image': handleUploadProfileImageAction,
   'update-slug': handleUpdateSlugAction,
+  'update-visibility': handleUpdateVisibilityAction,
   'update-basics': handleUpdateBasicsAction,
   'update-social-links': handleUpdateSocialLinksAction,
   'delete-document': handleDeleteDocumentAction,
+  'add-certification': handleAddCertificationAction,
+  'delete-certification': handleDeleteCertificationAction,
 };
 
 function getProfileImageUploadErrorMessage(error: unknown): string {
@@ -195,6 +198,28 @@ async function handleUpdateSlugAction({
   }
 }
 
+async function handleUpdateVisibilityAction({
+  formData,
+  user,
+}: {
+  formData: FormData;
+  user: AccountPageUser;
+}): Promise<AccountActionResult<{ isPublic: boolean }>> {
+  const isPublic = formData.get('isPublic') === 'true';
+
+  try {
+    await CareerRepository.saveProfile(db, user.id, { isPublic });
+    return {
+      success: true,
+      message: isPublic ? 'Profile is now public' : 'Profile is now private',
+      data: { isPublic },
+    };
+  } catch (error) {
+    logger.error('Failed to update profile visibility', error, { owner_userid: user.id });
+    return { success: false, error: "We couldn't update your profile visibility. Try again." };
+  }
+}
+
 async function handleUpdateSocialLinksAction({
   formData,
   user,
@@ -232,7 +257,7 @@ async function handleUpdateBasicsAction({
   formData: FormData;
   user: AccountPageUser;
 }): Promise<AccountActionResult> {
-  const profileDataResult = parseFormData<BasicInfoFormValues>(formData, 'portfolioData');
+  const profileDataResult = parseFormData<BasicInfoFormValues>(formData, 'profileData');
 
   if ('success' in profileDataResult && !profileDataResult.success) {
     return { success: false, error: 'Your changes couldn’t be read. Refresh and try again.' };
@@ -258,8 +283,6 @@ async function handleUpdateBasicsAction({
       title: profileData.title ?? null,
       availabilityStatus: profileData.availabilityStatus ?? false,
       openToRemote: profileData.openToRemote ?? false,
-      isPublic: profileData.isPublic ?? true,
-      isActive: profileData.isActive ?? true,
     });
 
     return { success: true, message: 'Profile basics updated successfully' };
@@ -293,5 +316,53 @@ async function handleDeleteDocumentAction({
       owner_userid: user.id,
     });
     return { success: false, error: 'We couldn’t delete that file. Try again.' };
+  }
+}
+
+async function handleAddCertificationAction({
+  formData,
+  user,
+}: {
+  formData: FormData;
+  user: AccountPageUser;
+}): Promise<AccountActionResult> {
+  const name = (formData.get('name') as string)?.trim();
+  const issuingOrganization = (formData.get('issuingOrganization') as string)?.trim();
+
+  if (!name || !issuingOrganization) {
+    return { success: false, error: 'Name and issuing organization are required.' };
+  }
+
+  try {
+    await CertificationRepository.create(db, user.id, {
+      name,
+      issuingOrganization,
+      issueDate: (formData.get('issueDate') as string) || null,
+    });
+    return { success: true, message: 'Certification added' };
+  } catch (error) {
+    logger.error('Failed to add certification', error, { owner_userid: user.id });
+    return { success: false, error: "We couldn't add that certification. Try again." };
+  }
+}
+
+async function handleDeleteCertificationAction({
+  formData,
+  user,
+}: {
+  formData: FormData;
+  user: AccountPageUser;
+}): Promise<AccountActionResult> {
+  const id = formData.get('id');
+  if (typeof id !== 'string' || !id) {
+    return { success: false, error: 'Choose a certification to remove.' };
+  }
+
+  try {
+    await CertificationRepository.remove(db, user.id, id);
+    return { success: true, message: 'Certification removed' };
+  } catch (error) {
+    logger.error('Failed to delete certification', error, { owner_userid: user.id });
+    return { success: false, error: "We couldn't remove that certification. Try again." };
   }
 }

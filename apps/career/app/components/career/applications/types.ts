@@ -1,16 +1,18 @@
-import type { ReactNode } from 'react';
+import type { SortDirection } from '~/lib/career/queries/job-applications';
+import type { FilterOption } from '~/lib/career/queries/job-applications';
 
 export interface ApplicationsFiltersProps {
+  statusOptions: FilterOption[];
   searchValue: string;
   onSearchChange: (value: string) => void;
-  statusOptions: Array<{ value: string; label: string }>;
   selectedStatus: string;
   onStatusChange: (status: string) => void;
-  sourceOptions: Array<{ value: string; label: string }>;
+  sourceOptions: FilterOption[];
   selectedSource: string;
   onSourceChange: (source: string) => void;
   onClearFilters: () => void;
-  sortChip?: ReactNode;
+  sort: SortDirection;
+  onSortChange: () => void;
   pagination: {
     currentPage: number;
     totalPages: number;

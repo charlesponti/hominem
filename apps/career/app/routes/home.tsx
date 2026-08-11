@@ -1,15 +1,13 @@
+import { ProjectRepository, db } from '@hominem/db';
 import { buttonVariants } from '@ponti-studios/ui/primitives';
+import { BriefcaseIcon, FolderIcon, PlusIcon } from 'lucide-react';
 import { Link } from 'react-router';
 
-import { ActivityChart } from '~/components/career/dashboard/ActivityChart';
-import { ApplicationMetricsCard } from '~/components/career/dashboard/ApplicationMetricsCard';
-import { MetricsGrid } from '~/components/career/dashboard/MetricsGrid';
-import { SalaryChart } from '~/components/career/dashboard/SalaryChart';
-import { TopCompaniesInsights } from '~/components/career/dashboard/TopCompaniesInsights';
-import { getDashboardStats } from '~/lib/career/queries/dashboard-stats.server';
-import { logger } from '~/lib/logger';
+import { CareerCollection } from '~/components/career/career-list';
+import { getUserEngagements } from '~/lib/career/queries/career-queries';
 import { userContext } from '~/lib/middleware';
 import { cn } from '~/lib/utils';
+import { formatDateRange } from '~/lib/utils/dateRange';
 
 import { Route } from './+types/home';
 
@@ -32,15 +30,20 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
-  if (!user) return { authenticated: false as const };
-
-  try {
-    const stats = await getDashboardStats(user.id);
-    return { authenticated: true as const, stats };
-  } catch (error) {
-    logger.error('Error loading career data', error, { owner_userid: user.id });
-    throw new Response('Failed to load career data', { status: 500 });
+  if (!user) {
+    return { authenticated: false as const };
   }
+
+  const [engagements, projects] = await Promise.all([
+    getUserEngagements(user.id),
+    ProjectRepository.list(db, user.id),
+  ]);
+
+  return {
+    authenticated: true as const,
+    engagements: engagements.slice(0, 5),
+    projects: projects.slice(0, 6),
+  };
 }
 
 const searchProblems = [
@@ -56,76 +59,133 @@ const searchProblems = [
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   if (loaderData.authenticated) {
-    const { stats } = loaderData;
     return (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="heading-2">Your career workspace</h1>
-          <p className="body-2 mt-2 text-muted-foreground">
-            Manage your positions, applications, and education history.
-          </p>
-        </div>
-
-        <MetricsGrid
-          totalApplications={stats.totalApplications}
-          activeApplications={stats.activeApplications}
-          rejectedApplications={stats.rejectedApplications}
-          offerCount={stats.offerCount}
-        />
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <ActivityChart data={stats.monthlyActivity} />
-          </div>
-          <ApplicationMetricsCard
-            statusBreakdown={stats.statusBreakdown}
-            sourcePerformance={stats.sourcePerformance}
-          />
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <SalaryChart data={stats.salaryHistory} />
-          <div className="lg:col-span-2">
-            <TopCompaniesInsights companies={stats.topCompanies} />
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Link
-            to="/work"
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'lg' }),
-              'h-24 flex-col items-start justify-center gap-1',
-            )}
-          >
-            <span className="heading-4">Positions</span>
-            <span className="body-3 text-muted-foreground">Work history & target roles</span>
-          </Link>
-          <Link
-            to="/applications"
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'lg' }),
-              'h-24 flex-col items-start justify-center gap-1',
-            )}
-          >
-            <span className="heading-4">Applications</span>
-            <span className="body-3 text-muted-foreground">Track your pipeline</span>
-          </Link>
-          <Link
-            to="/account"
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'lg' }),
-              'h-24 flex-col items-start justify-center gap-1',
-            )}
-          >
-            <span className="heading-4">Profile</span>
-            <span className="body-3 text-muted-foreground">Your career profile</span>
-          </Link>
-        </div>
+      <div className="flex flex-col gap-10">
+        <WorkSummary engagements={loaderData.engagements} />
+        <ProjectsSummary projects={loaderData.projects} />
       </div>
     );
   }
+
   return <LandingPage />;
+}
+
+function SummarySection({
+  title,
+  viewAllTo,
+  addTo,
+  addLabel,
+  children,
+}: {
+  title: string;
+  viewAllTo: string;
+  addTo: string;
+  addLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-4 border-b border-border pb-3">
+        <h2 className="heading-4 text-foreground">{title}</h2>
+        <div className="flex items-center gap-4">
+          <Link
+            to={viewAllTo}
+            className="footnote font-mono text-muted-foreground transition-colors hover:text-foreground"
+          >
+            View all →
+          </Link>
+          <Link
+            to={addTo}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5')}
+          >
+            <PlusIcon className="size-4" />
+            {addLabel}
+          </Link>
+        </div>
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function WorkSummary({
+  engagements,
+}: {
+  engagements: Array<{
+    id: string;
+    title: string;
+    company: string;
+    startDate: string | null;
+    endDate: string | null;
+    isCurrent: boolean | null;
+  }>;
+}) {
+  return (
+    <SummarySection title="Work history" viewAllTo="/work" addTo="/work/new" addLabel="Add role">
+      <CareerCollection
+        items={engagements}
+        keyFor={(e) => e.id}
+        hrefFor={(e) => `/work/${e.id}`}
+        title={(e) => e.title}
+        subtitle={(e) => e.company}
+        meta={(e) => formatDateRange(e.startDate, e.isCurrent ? null : e.endDate)}
+        empty={{
+          icon: <BriefcaseIcon className="size-6" />,
+          title: 'No positions yet',
+          description: "Add your roles as you go so your story isn't a scramble later.",
+          action: (
+            <Link to="/work/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+              Add your first role
+            </Link>
+          ),
+        }}
+      />
+    </SummarySection>
+  );
+}
+
+function ProjectsSummary({
+  projects,
+}: {
+  projects: Array<{
+    id: string;
+    title: string;
+    organization: string | null;
+    shortDescription: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  }>;
+}) {
+  return (
+    <SummarySection
+      title="Projects"
+      viewAllTo="/projects"
+      addTo="/projects/new"
+      addLabel="Add project"
+    >
+      <CareerCollection
+        items={projects}
+        keyFor={(p) => p.id}
+        hrefFor={(p) => `/projects/${p.id}`}
+        title={(p) => p.title}
+        subtitle={(p) => p.organization ?? p.shortDescription ?? undefined}
+        meta={(p) => (p.startDate || p.endDate) && formatDateRange(p.startDate, p.endDate)}
+        empty={{
+          icon: <FolderIcon className="size-6" />,
+          title: 'No projects yet',
+          description: "Log a project or win while it's fresh, before the details fade.",
+          action: (
+            <Link
+              to="/projects/new"
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            >
+              Add your first project
+            </Link>
+          ),
+        }}
+      />
+    </SummarySection>
+  );
 }
 
 function LandingPage() {
