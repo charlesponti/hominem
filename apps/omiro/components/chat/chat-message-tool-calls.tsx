@@ -5,11 +5,11 @@ import { useCSSVariable } from 'uniwind';
 type ToolCall = NonNullable<ChatMessageItem['toolCalls']>[number];
 
 export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
+  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
+
   if (toolCalls.length === 0) {
     return null;
   }
-
-  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
 
   return (
     <View className="gap-1">

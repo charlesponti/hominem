@@ -7,7 +7,7 @@ Better Auth is the only authority for sessions. Keep its session database, signe
 - **Career** — Forwards the incoming request cookie for server-side API calls.
 - **MCP** — Uses OAuth bearer access tokens with its own scopes, budgets, and rate limits.
 
-MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web and mobile API requests use Better Auth session cookies. `/api/mcp` accepts only MCP OAuth bearer tokens with the `career:read` scope.
+MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web and mobile API requests use Better Auth session cookies. `/api/mcp` accepts MCP OAuth bearer tokens with the scopes required by each tool; career reads require `career:read` and career mutations require `career:write`.
 
 ## Session and OTP rules
 

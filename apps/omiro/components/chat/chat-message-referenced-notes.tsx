@@ -3,11 +3,11 @@ import { Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
 export function ReferencedNotes({ message }: { message: ChatMessageItem }) {
+  const [textSecondary] = useCSSVariable(['--color-muted-foreground']) as string[];
+
   if (!Array.isArray(message.referencedNotes) || message.referencedNotes.length === 0) {
     return null;
   }
-
-  const [textSecondary] = useCSSVariable(['--color-muted-foreground']) as string[];
 
   return (
     <View className="flex-row flex-wrap gap-2">

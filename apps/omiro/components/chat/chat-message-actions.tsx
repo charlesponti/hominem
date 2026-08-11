@@ -35,11 +35,11 @@ export function ActiveMessageActions({
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
 }) {
+  const [tertiary] = useCSSVariable(['--color-tertiary']) as string[];
+
   if (!isActive) {
     return null;
   }
-
-  const [tertiary] = useCSSVariable(['--color-tertiary']) as string[];
 
   return (
     <Reanimated.View
