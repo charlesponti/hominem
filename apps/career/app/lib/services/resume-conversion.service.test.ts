@@ -27,7 +27,7 @@ describe('resume conversion slug generation', () => {
 
   it('normalizes mixed-case and invalid slug input', async () => {
     await expect(generateUniqueSlug(db, ' Test Person!! ', 'Fallback')).resolves.toBe(
-      'charles-ponti',
+      'test-person',
     );
   });
 

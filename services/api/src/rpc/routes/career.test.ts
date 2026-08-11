@@ -67,7 +67,7 @@ beforeAll(async () => {
       ownerUserid: userId,
       company: 'Acme',
       title: 'Engineer',
-      status: 'WISHLIST',
+      status: 'REJECTED',
     })
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
