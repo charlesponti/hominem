@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
 import { CareerList, CareerListRow } from '~/components/career/career-list';
-import { getUserPositions } from '~/lib/career/queries/career-queries';
+import { getUserEngagements } from '~/lib/career/queries/career-queries';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
 import { logger } from '../lib/logger';
@@ -17,7 +17,7 @@ import { Route } from './+types/work';
 
 export const meta: Route.MetaFunction = () => [
   { title: 'Positions | career' },
-  { name: 'description', content: 'Manage your work history and target positions.' },
+  { name: 'description', content: 'Manage your work history and engagements.' },
 ];
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -25,15 +25,15 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!user) throw new Response('Unauthorized', { status: 401 });
 
   try {
-    const positions = await getUserPositions(user.id);
-    return { positions };
+    const engagements = await getUserEngagements(user.id);
+    return { engagements };
   } catch (error) {
-    logger.error('Error loading positions', error, { owner_userid: user.id });
-    throw new Response('Failed to load positions', { status: 500 });
+    logger.error('Error loading engagements', error, { owner_userid: user.id });
+    throw new Response('Failed to load engagements', { status: 500 });
   }
 }
 
-function filterPositions(positions: CareerPositionRecord[], search: string) {
+function filterPositions(positions: CareerEngagementRecord[], search: string) {
   const query = search.trim().toLowerCase();
   if (!query) return positions;
   return positions.filter((p) => {
@@ -44,41 +44,35 @@ function filterPositions(positions: CareerPositionRecord[], search: string) {
 }
 
 export default function WorkPage({ loaderData }: Route.ComponentProps) {
-  const { positions } = loaderData;
+  const { engagements: positions } = loaderData;
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => filterPositions(positions, search), [positions, search]);
-
-  const grouped = useMemo(() => {
-    const employment = filtered.filter((p) => !(p.isTarget ?? false));
-    const targets = filtered.filter((p) => p.isTarget ?? false);
-    return { employment, targets };
-  }, [filtered]);
 
   if (positions.length === 0) {
     return (
       <div>
         <SectionIntro
-          title="Positions"
-          description="Your work history and target roles."
+          title="Work history"
+          description="Your work history and engagements."
           actions={
             <Button asChild variant="outline">
               <Link to="/work/new">
                 <PlusIcon className="mr-2 size-4" />
-                Add position
+                Add engagement
               </Link>
             </Button>
           }
         />
         <EmptyState
           icon={<BriefcaseIcon className="size-6" />}
-          title="No positions yet"
-          description="Positions will appear here once data is migrated from your warehouse."
+          title="No engagements yet"
+          description="Engagements will appear here once you add work history."
           className="mt-6"
           action={
             <Button asChild variant="outline" size="sm">
               <Link to="/work/new">
                 <PlusIcon className="mr-2 size-4" />
-                Add position
+                Add engagement
               </Link>
             </Button>
           }
@@ -90,31 +84,31 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <SectionIntro
-        title="Positions"
-        description="Your work history and target roles."
+        title="Work history"
+        description="Your work history and engagements."
         actions={
           <Button asChild variant="outline">
             <Link to="/work/new">
               <PlusIcon className="mr-2 size-4" />
-              Add position
+              Add engagement
             </Link>
           </Button>
         }
       />
       <div className="mt-4">
         <Input
-          placeholder="Search positions..."
+          placeholder="Search work history..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
       </div>
 
-      {grouped.employment.length > 0 && (
+      {filtered.length > 0 && (
         <div className="mt-6">
           <h2 className="heading-3 mb-4">Work History</h2>
           <CareerList>
-            {grouped.employment.map((pos) => (
+            {filtered.map((pos) => (
               <CareerListRow
                 key={pos.id}
                 to={`/work/${pos.id}`}
@@ -126,22 +120,6 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
                     {pos.location && ` • ${pos.location}`}
                   </span>
                 }
-              />
-            ))}
-          </CareerList>
-        </div>
-      )}
-
-      {grouped.targets.length > 0 && (
-        <div className="mt-8">
-          <h2 className="heading-3 mb-4">Target Companies</h2>
-          <CareerList>
-            {grouped.targets.map((pos) => (
-              <CareerListRow
-                key={pos.id}
-                to={`/work/${pos.id}`}
-                title={pos.company}
-                subtitle={pos.url ?? undefined}
               />
             ))}
           </CareerList>

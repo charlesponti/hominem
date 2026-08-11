@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 
 export const EMPLOYMENT_TYPE_OPTIONS = [
@@ -259,22 +259,18 @@ export function formatCurrencyInput(cents: number | null | undefined) {
   return `${cents / 100}`;
 }
 
-export function hasCompensation(workExperience: CareerPositionRecord) {
+export function hasCompensation(workExperience: CareerEngagementRecord) {
   return [workExperience.salaryLow, workExperience.salaryHigh].some(
     (value) => value !== null && value !== undefined,
   );
 }
 
-export function hasTeamDetails(workExperience: CareerPositionRecord) {
+export function hasTeamDetails(workExperience: CareerEngagementRecord) {
   return [workExperience.contactName, workExperience.contactPhone].some(
     (value) => value !== null && value !== undefined && value !== '',
   );
 }
 
-export function hasExitDetails(workExperience: CareerPositionRecord) {
-  return (
-    workExperience.projectStatus !== null &&
-    workExperience.projectStatus !== undefined &&
-    workExperience.projectStatus !== ''
-  );
+export function hasExitDetails(workExperience: CareerEngagementRecord) {
+  return workExperience.reasonForLeaving !== null && workExperience.reasonForLeaving !== undefined;
 }

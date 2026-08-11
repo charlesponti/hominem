@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 
 function formatTenure(startDate: string | null, endDate: string | null): string {
   const start = startDate
@@ -13,7 +13,7 @@ function formatTenure(startDate: string | null, endDate: string | null): string 
   return `${start} – ${end}`;
 }
 
-export function ChapterMarker({ workExperience }: { workExperience: CareerPositionRecord }) {
+export function ChapterMarker({ workExperience }: { workExperience: CareerEngagementRecord }) {
   return (
     <div className="relative pb-4 pl-7">
       <div className="absolute top-0.5 left-[-2px] h-3.5 w-3.5 rotate-45 rounded-[3px] border-2 border-foreground bg-background" />

@@ -1,4 +1,4 @@
-import type { CareerOfferRecord, CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord, CareerOfferRecord } from '@hominem/db';
 
 import type { JobApplicationCard } from './job-applications';
 
@@ -29,7 +29,7 @@ export type DashboardStats = {
 
 export function computeDashboardStats(
   applications: JobApplicationCard[],
-  positions: CareerPositionRecord[],
+  positions: CareerEngagementRecord[],
   offers: Array<CareerOfferRecord & { appliedAt: string | null }>,
 ): DashboardStats {
   const totalApplications = applications.length;
@@ -37,8 +37,8 @@ export function computeDashboardStats(
 
   const activeApplications = applications.filter((app) => app.status === 'active').length;
   const rejectedApplications = applications.filter((app) => app.status === 'rejected').length;
-  const employmentPositions = positions.filter((pos) => pos.isTarget !== true).length;
-  const targetRoles = positions.filter((pos) => pos.isTarget === true).length;
+  const employmentPositions = positions.length;
+  const targetRoles = 0;
 
   return {
     totalApplications,

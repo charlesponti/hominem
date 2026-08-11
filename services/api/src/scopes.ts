@@ -9,6 +9,7 @@
 export const MCP_SCOPES = [
   'calendar:read',
   'career:read',
+  'career:write',
   'collections:read',
   'collections:write',
   'finance:read',

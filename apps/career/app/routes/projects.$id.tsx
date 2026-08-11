@@ -1,4 +1,4 @@
-import { ProjectRepository, db } from '@hominem/db';
+import { CareerRepository, ProjectRepository, db } from '@hominem/db';
 import { TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Form, redirect } from 'react-router';
@@ -13,10 +13,13 @@ export const meta: Route.MetaFunction = ({ loaderData }) => [
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(userContext)!;
-  const projects = await ProjectRepository.list(db, user.id);
+  const [projects, engagements] = await Promise.all([
+    ProjectRepository.list(db, user.id),
+    CareerRepository.listEngagements(db, user.id, { limit: 100 }),
+  ]);
   const project = projects.find((p) => p.id === params.id);
   if (!project) throw new Response('Project not found', { status: 404 });
-  return { project };
+  return { project, engagements };
 }
 
 export async function action({ context, params, request }: Route.ActionArgs) {
@@ -37,14 +40,24 @@ export async function action({ context, params, request }: Route.ActionArgs) {
     .split(',')
     .map((t) => t.trim())
     .filter(Boolean);
+  const engagementIds = formData
+    .getAll('engagementIds')
+    .filter((value): value is string => typeof value === 'string');
 
   await ProjectRepository.update(db, user.id, params.id, {
     title,
+    organization: (formData.get('organization') as string) || null,
     description: (formData.get('description') as string) || null,
     shortDescription: (formData.get('shortDescription') as string) || null,
     liveUrl: (formData.get('liveUrl') as string) || null,
     githubUrl: (formData.get('githubUrl') as string) || null,
+    status: ((formData.get('status') as string) || 'BACKLOG') as
+      | 'BACKLOG'
+      | 'IN_PROGRESS'
+      | 'DONE'
+      | 'CANCELED',
     technologies,
+    engagementIds,
   });
 
   return { ok: true };
@@ -58,10 +71,43 @@ export default function ProjectDetailRoute({ loaderData }: Route.ComponentProps)
       <Form method="post" className="flex flex-col gap-4">
         <TextField label="Title" name="title" required defaultValue={project.title} />
         <TextField
+          label="Organization"
+          name="organization"
+          defaultValue={project.organization ?? ''}
+        />
+        <TextField
           label="Short description"
           name="shortDescription"
           defaultValue={project.shortDescription ?? ''}
         />
+        <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="status">
+          Status
+          <select
+            id="status"
+            name="status"
+            defaultValue={project.status ?? 'BACKLOG'}
+            className="rounded-md border border-border p-2"
+          >
+            <option value="BACKLOG">Backlog</option>
+            <option value="IN_PROGRESS">In progress</option>
+            <option value="DONE">Done</option>
+            <option value="CANCELED">Canceled</option>
+          </select>
+        </label>
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">Related work engagements</legend>
+          {loaderData.engagements.map((engagement) => (
+            <label key={engagement.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="engagementIds"
+                value={engagement.id}
+                defaultChecked={project.engagements.some((item) => item.id === engagement.id)}
+              />
+              {engagement.title} at {engagement.company}
+            </label>
+          ))}
+        </fieldset>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="description" className="text-foreground text-sm font-medium">
             Description

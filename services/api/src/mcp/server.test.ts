@@ -85,7 +85,7 @@ describe('mcp server transport', () => {
 
     expect(response.status).toBe(401);
     expect(response.headers.get('www-authenticate')).toContain(
-      'scope="calendar:read career:read collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
+      'scope="calendar:read career:read career:write collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
     );
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
@@ -100,7 +100,7 @@ describe('mcp server transport', () => {
     expect(response.status).toBe(403);
     expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
     expect(response.headers.get('www-authenticate')).toContain(
-      'scope="calendar:read career:read collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
+      'scope="calendar:read career:read career:write collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
     );
     await expect(response.json()).resolves.toMatchObject({
       code: 'INSUFFICIENT_SCOPE',
@@ -136,7 +136,8 @@ describe('mcp server transport', () => {
       const tools = await client.listTools();
       const toolNames = tools.tools.map((t) => t.name);
       expect(toolNames).toContain('career_profile');
-      expect(toolNames).toContain('career_positions');
+      expect(toolNames).toContain('career_engagements');
+      expect(toolNames).toContain('career_wishlist_add');
     } finally {
       await client.close();
     }
@@ -146,12 +147,29 @@ describe('mcp server transport', () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
-        name: 'career_positions',
+        name: 'career_engagements',
         arguments: { limit: 1 },
       });
 
       expect(result.isError).not.toBe(true);
-      expect(result.structuredContent).toMatchObject({ positions: [] });
+      expect(result.structuredContent).toMatchObject({ engagements: [] });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('rejects a wishlist mutation without career:write', async () => {
+    const client = await createClient(createApp(mcpAuthContext));
+    try {
+      const result = await client.callTool({
+        name: 'career_wishlist_add',
+        arguments: { company: 'Acme' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content).toEqual([
+        { type: 'text', text: 'Missing required scope(s): career:write' },
+      ]);
     } finally {
       await client.close();
     }
@@ -176,7 +194,7 @@ describe('mcp server transport', () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
       const result = await client.callTool({
-        name: 'career_positions',
+        name: 'career_engagements',
         arguments: { limit: 'not-a-number' },
       });
 

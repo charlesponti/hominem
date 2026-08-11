@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { describe, expect, it } from 'vitest';
 
 import { computeDashboardStats } from '../queries/dashboard-stats';
@@ -24,7 +24,7 @@ function makeApplication(
   };
 }
 
-function makePosition(overrides: Partial<CareerPositionRecord> = {}): CareerPositionRecord {
+function makePosition(overrides: Partial<CareerEngagementRecord> = {}): CareerEngagementRecord {
   return {
     id: 'pos-1',
     company: 'Acme',
@@ -37,16 +37,15 @@ function makePosition(overrides: Partial<CareerPositionRecord> = {}): CareerPosi
     description: null,
     endDate: null,
     isCurrent: false,
-    isTarget: false,
     location: null,
     ownerUserid: 'user-1',
-    projectStatus: null,
-    recordType: 'employment',
+    kind: 'EMPLOYMENT',
     salaryHigh: null,
     salaryLow: null,
     source: null,
     startDate: null,
     updatedAt: '2025-01-01',
+    reasonForLeaving: null,
     url: null,
     ...overrides,
   };
@@ -85,15 +84,12 @@ describe('computeDashboardStats', () => {
     expect(stats.offerRate).toBe(25);
   });
 
-  it('separates employment positions from target roles', () => {
-    const positions = [
-      makePosition({ id: 'emp', isTarget: false }),
-      makePosition({ id: 'target', isTarget: true }),
-    ];
+  it('counts work engagements without target-role records', () => {
+    const positions = [makePosition({ id: 'first' }), makePosition({ id: 'second' })];
     const stats = computeDashboardStats([], positions, []);
 
-    expect(stats.employmentPositions).toBe(1);
-    expect(stats.targetRoles).toBe(1);
+    expect(stats.employmentPositions).toBe(2);
+    expect(stats.targetRoles).toBe(0);
   });
 
   it('builds status breakdown with percentages', () => {
@@ -158,10 +154,11 @@ describe('computeDashboardStats', () => {
       {
         id: 'o1',
         applicationId: 'a',
+        stageId: 's1',
         baseSalary: 150_000_00,
         bonus: null,
         currency: 'USD',
-        decision: null,
+        decision: 'PENDING' as const,
         decisionAt: null,
         equity: null,
         notes: null,
@@ -175,10 +172,11 @@ describe('computeDashboardStats', () => {
       {
         id: 'o2',
         applicationId: 'b',
+        stageId: 's2',
         baseSalary: 170_000_00,
         bonus: null,
         currency: 'USD',
-        decision: null,
+        decision: 'PENDING' as const,
         decisionAt: null,
         equity: null,
         notes: null,

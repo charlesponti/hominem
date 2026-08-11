@@ -9,8 +9,8 @@ import { userContext } from '~/lib/middleware';
 import type { Route } from './+types/work.new';
 
 export const meta: Route.MetaFunction = () => [
-  { title: 'New Position | career' },
-  { name: 'description', content: 'Add a work history entry or target role.' },
+  { title: 'New Engagement | career' },
+  { name: 'description', content: 'Add a work history engagement.' },
 ];
 
 export async function action({ context, request }: Route.ActionArgs) {
@@ -29,7 +29,7 @@ export async function action({ context, request }: Route.ActionArgs) {
       return Number.isFinite(n) ? Math.round(n * 100) : null;
     };
 
-    const position = await CareerRepository.createPosition(db, user.id, {
+    const engagement = await CareerRepository.createEngagement(db, user.id, {
       company,
       title,
       location: (formData.get('location') as string) || null,
@@ -37,7 +37,6 @@ export async function action({ context, request }: Route.ActionArgs) {
       startDate: (formData.get('startDate') as string) || null,
       endDate: (formData.get('endDate') as string) || null,
       isCurrent: formData.get('isCurrent') === 'on',
-      isTarget: formData.get('isTarget') === 'on',
       salaryLow: toInt(formData.get('salaryLow')),
       salaryHigh: toInt(formData.get('salaryHigh')),
       currency: (formData.get('currency') as string) || 'USD',
@@ -45,13 +44,13 @@ export async function action({ context, request }: Route.ActionArgs) {
       contactName: (formData.get('contactName') as string) || null,
       contactPhone: (formData.get('contactPhone') as string) || null,
       source: (formData.get('source') as string) || null,
-      projectStatus: (formData.get('projectStatus') as string) || null,
+      kind: (formData.get('kind') as string) || 'EMPLOYMENT',
     });
 
-    return redirect(`/work/${position.id}`);
+    return redirect(`/work/${engagement.id}`);
   } catch (error) {
-    logger.error('Error creating position', error, { owner_userid: user.id });
-    throw new Response('Failed to create position. Please try again.', { status: 500 });
+    logger.error('Error creating engagement', error, { owner_userid: user.id });
+    throw new Response('Failed to create engagement. Please try again.', { status: 500 });
   }
 }
 
@@ -59,10 +58,10 @@ export default function NewPositionPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <SectionIntro title="New Position" description="Add a work history entry or target role." />
+        <SectionIntro title="New Engagement" description="Add a work history engagement." />
       </div>
       <div className="rounded-lg border border-border p-6">
-        <PositionEditor submitLabel="Create position" />
+        <PositionEditor submitLabel="Create engagement" />
       </div>
     </div>
   );

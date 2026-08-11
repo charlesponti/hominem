@@ -95,6 +95,9 @@ export default function ProjectsRoute({ loaderData }: Route.ComponentProps) {
             >
               <div className="min-w-0 flex-1">
                 <p className="heading-4 truncate">{project.title}</p>
+                {project.organization && (
+                  <p className="body-3 text-muted-foreground truncate">{project.organization}</p>
+                )}
                 {project.shortDescription && (
                   <p className="body-3 text-muted-foreground truncate">
                     {project.shortDescription}
@@ -103,6 +106,11 @@ export default function ProjectsRoute({ loaderData }: Route.ComponentProps) {
                 {Array.isArray(project.technologies) && project.technologies.length > 0 && (
                   <p className="footnote text-muted-foreground mt-1">
                     {project.technologies.join(', ')}
+                  </p>
+                )}
+                {project.engagements.length > 0 && (
+                  <p className="footnote text-muted-foreground mt-1">
+                    {project.engagements.map((engagement) => engagement.company).join(', ')}
                   </p>
                 )}
               </div>

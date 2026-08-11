@@ -96,14 +96,14 @@ export type {
   CreateAIUsageEventInput,
 } from './services/ai/ai-usage.repository';
 
-export { CareerRepository } from './services/career/career.repository';
+export { CareerEngagementRepository, CareerRepository } from './services/career/career.repository';
 export type {
   CareerApplicationRecord,
   CareerApplicationStageRecord,
   CareerApplicationWithRelations,
   CareerEducationRecord,
   CareerOfferRecord,
-  CareerPositionRecord,
+  CareerEngagementRecord,
   CareerProfileRecord,
   CareerTimelineRecord,
 } from './services/career/career.repository';

@@ -19,7 +19,11 @@ if (
 ) {
   await import('./tools/calendar');
 }
-if (enabledScopes.size === 0 || enabledScopes.has('career:read')) {
+if (
+  enabledScopes.size === 0 ||
+  enabledScopes.has('career:read') ||
+  enabledScopes.has('career:write')
+) {
   await import('./tools/career');
 }
 if (

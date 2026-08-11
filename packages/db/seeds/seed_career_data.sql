@@ -53,16 +53,16 @@ BEGIN
     SELECT 1 FROM app.career_profile WHERE owner_userid = target_uid
   );
 
-  -- ── Positions ──────────────────────────────────────────────────────────────
+  -- ── Work engagements ───────────────────────────────────────────────────────
 
-  INSERT INTO app.career_positions (
+  INSERT INTO app.career_engagements (
     id, owner_userid, company, title, description, location,
-    start_date, end_date, is_current, is_target,
-    salary_low, salary_high, currency, record_type
+    start_date, end_date, is_current,
+    salary_low, salary_high, currency, kind
   )
   SELECT v.id::uuid, target_uid, v.company, v.title, v.description, v.location,
-    v.start_date::date, v.end_date::date, v.is_current, false,
-    v.salary_low, v.salary_high, 'USD', 'employment'
+    v.start_date::date, v.end_date::date, v.is_current,
+    v.salary_low, v.salary_high, 'USD', 'EMPLOYMENT'
   FROM (VALUES
     ('00000000-0000-4000-8000-000000000010',
      'Stripe',
@@ -89,7 +89,7 @@ BEGIN
      130000, 165000)
   ) AS v(id, company, title, description, location, start_date, end_date, is_current, salary_low, salary_high)
   WHERE NOT EXISTS (
-    SELECT 1 FROM app.career_positions WHERE owner_userid = target_uid
+    SELECT 1 FROM app.career_engagements WHERE owner_userid = target_uid
   );
 
   -- ── Education ──────────────────────────────────────────────────────────────
@@ -125,10 +125,10 @@ BEGIN
 
   INSERT INTO app.career_applications (
     id, owner_userid, company, title, location, source,
-    applied_at, current_stage, status, salary_expectation, notes
+    applied_at, status, salary_expectation, notes
   )
   SELECT v.id::uuid, target_uid, v.company, v.title, v.location, v.source,
-    v.applied_at::date, v.current_stage, v.status, v.salary_expectation, v.notes
+    v.applied_at::date, v.status::app.career_application_status, v.salary_expectation, v.notes
   FROM (VALUES
     ('00000000-0000-4000-8000-000000000030',
      'Notion',
@@ -136,8 +136,7 @@ BEGIN
      'San Francisco, CA',
      'referral',
      '2026-07-15',
-     'technical_screen',
-     'INTERVIEWING',
+     'SCREENING',
      230000,
      'Referred by former Stripe colleague. Excited about their data layer work.'),
 
@@ -147,22 +146,11 @@ BEGIN
      'Remote',
      'company_website',
      '2026-06-01',
-     'applied',
      'APPLIED',
      250000,
-     'Love their approach to issue tracking. Applied cold — no response yet.'),
+     'Love their approach to issue tracking. Applied cold — no response yet.')
 
-    ('00000000-0000-4000-8000-000000000032',
-     'Figma',
-     'Senior Software Engineer — Plugins',
-     'SF / Remote',
-     'linkedin',
-     '2026-07-01',
-     'rejected',
-     'REJECTED',
-     225000,
-     'Made it to on-site. Feedback: strong systems but wanted more plugin experience.')
-  ) AS v(id, company, title, location, source, applied_at, current_stage, status, salary_expectation, notes)
+  ) AS v(id, company, title, location, source, applied_at, status, salary_expectation, notes)
   WHERE NOT EXISTS (
     SELECT 1 FROM app.career_applications WHERE owner_userid = target_uid
   );
@@ -170,27 +158,59 @@ BEGIN
   -- ── Application Stages ─────────────────────────────────────────────────────
 
   INSERT INTO app.career_application_stages (
-    id, application_id, stage, entered_at, notes
+    id, application_id, stage, stage_kind, stage_order, entered_at, notes
   )
   SELECT v.id::uuid, v.application_id::uuid, v.stage,
-    v.entered_at::timestamptz, v.notes
+    v.stage_kind::app.career_application_stage_kind,
+    v.stage_order, v.entered_at::timestamptz, v.notes
   FROM (VALUES
     ('00000000-0000-4000-8000-000000000040',
      '00000000-0000-4000-8000-000000000030',
      'recruiter_screen',
+     'SCREEN',
+     1,
      '2026-07-20 10:00:00+00',
      '30-min call with recruiter. Passed to hiring manager.'),
 
     ('00000000-0000-4000-8000-000000000041',
      '00000000-0000-4000-8000-000000000030',
      'technical_screen',
+     'SCREEN',
+     2,
      '2026-07-28 14:00:00+00',
-     '1-hour coding + system design. Felt solid.')
-  ) AS v(id, application_id, stage, entered_at, notes)
+     '1-hour coding + system design. Felt solid.'),
+
+    ('00000000-0000-4000-8000-000000000042',
+     '00000000-0000-4000-8000-000000000031',
+     'application',
+     'APPLICATION',
+     1,
+     '2026-06-01 09:00:00+00',
+     'Application submitted.')
+  ) AS v(id, application_id, stage, stage_kind, stage_order, entered_at, notes)
   WHERE NOT EXISTS (
     SELECT 1 FROM app.career_application_stages
+    WHERE id = v.id::uuid
+  )
+  ON CONFLICT DO NOTHING;
+
+  UPDATE app.career_applications
+  SET current_stage_id = (
+    SELECT id FROM app.career_application_stages
     WHERE application_id = '00000000-0000-4000-8000-000000000030'
-  );
+    ORDER BY stage_order DESC
+    LIMIT 1
+  )
+  WHERE id = '00000000-0000-4000-8000-000000000030';
+
+  UPDATE app.career_applications
+  SET current_stage_id = (
+    SELECT id FROM app.career_application_stages
+    WHERE application_id = '00000000-0000-4000-8000-000000000031'
+    ORDER BY stage_order DESC
+    LIMIT 1
+  )
+  WHERE id = '00000000-0000-4000-8000-000000000031';
 
   -- ── Application Notes ──────────────────────────────────────────────────────
 
@@ -214,27 +234,6 @@ BEGIN
   WHERE NOT EXISTS (
     SELECT 1 FROM app.career_application_files
     WHERE application_id = '00000000-0000-4000-8000-000000000030'
-  );
-
-  -- ── Offers ─────────────────────────────────────────────────────────────────
-
-  INSERT INTO app.career_offers (
-    id, application_id, base_salary, equity, bonus,
-    signing_bonus, total_comp, currency, decision, notes
-  )
-  SELECT '00000000-0000-4000-8000-000000000060',
-    '00000000-0000-4000-8000-000000000032',
-    215000,
-    'ISO 40000 shares / 4-year vest',
-    30000,
-    20000,
-    265000,
-    'USD',
-    'declined',
-    'Competitive offer. Decided to focus on Notion and Linear pipelines.'
-  WHERE NOT EXISTS (
-    SELECT 1 FROM app.career_offers
-    WHERE application_id = '00000000-0000-4000-8000-000000000032'
   );
 
   -- ── Skills ─────────────────────────────────────────────────────────────────
@@ -262,13 +261,14 @@ BEGIN
   -- ── Projects ───────────────────────────────────────────────────────────────
 
   INSERT INTO app.career_projects (
-    id, owner_userid, position_id, title, description, short_description,
+    id, owner_userid, organization, title, description, short_description,
     technologies, status, is_featured, sort_order
   )
   SELECT v.id::uuid, target_uid,
-    (SELECT id FROM app.career_positions WHERE owner_userid = target_uid AND company = v.position_company LIMIT 1),
-    v.title, v.description, v.short_description,
-    v.technologies::jsonb, v.status, v.is_featured, v.sort_order
+    v.position_company, v.title, v.description, v.short_description,
+    v.technologies::jsonb,
+    CASE v.status WHEN 'completed' THEN 'DONE' ELSE 'BACKLOG' END::app.career_project_status,
+    v.is_featured, v.sort_order
   FROM (VALUES
     ('00000000-0000-4000-8000-000000000080',
      'Stripe',
@@ -288,6 +288,15 @@ BEGIN
   WHERE NOT EXISTS (
     SELECT 1 FROM app.career_projects WHERE owner_userid = target_uid
   );
+
+  INSERT INTO app.career_project_engagements (project_id, engagement_id, owner_userid)
+  SELECT project.id, engagement.id, target_uid
+  FROM app.career_projects project
+  JOIN app.career_engagements engagement
+    ON engagement.owner_userid = target_uid
+   AND engagement.company = project.organization
+  WHERE project.owner_userid = target_uid
+  ON CONFLICT DO NOTHING;
 
   -- ── Testimonials ───────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { useFetcher } from 'react-router';
 
 import { useCareerEditorSubmission } from './useCareerEditorSubmission';
@@ -35,7 +35,7 @@ export function useWorkExperienceSection({
 export function submitDelete(
   fetcher: ReturnType<typeof useFetcher>,
   clearSubmissionError: () => void,
-  position: CareerPositionRecord,
+  position: CareerEngagementRecord,
 ) {
   const formData = new FormData();
   formData.append('operation', 'delete');

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { db, pool } from '@hominem/db';
 import { Hono } from 'hono';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -42,6 +44,14 @@ async function postJson(app: ReturnType<typeof createApp>, path: string, body: u
   });
 }
 
+async function patchJson(app: ReturnType<typeof createApp>, path: string, body: unknown) {
+  return app.request(path, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 beforeAll(async () => {
   for (const id of [userId, otherUserId]) {
     await pool.query(
@@ -57,6 +67,7 @@ beforeAll(async () => {
       ownerUserid: userId,
       company: 'Acme',
       title: 'Engineer',
+      status: 'APPLIED',
     })
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
@@ -113,18 +124,138 @@ describe('career skills routes', () => {
   });
 });
 
+describe('career wishlist routes', () => {
+  it('round-trips create, list, update, and delete', async () => {
+    const app = createApp(userId);
+    const created = await postJson(app, '/career/wishlist', { company: 'OpenAI' });
+    expect(created.status).toBe(201);
+    const createdBody = (await created.json()) as { company: { id: string; company: string } };
+    expect(createdBody.company.company).toBe('OpenAI');
+
+    const listed = await app.request('/career/wishlist');
+    const listedBody = (await listed.json()) as { companies: Array<{ id: string }> };
+    expect(listedBody.companies.some((company) => company.id === createdBody.company.id)).toBe(
+      true,
+    );
+
+    const updated = await patchJson(app, `/career/wishlist/${createdBody.company.id}`, {
+      company: 'OpenAI Research',
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      company: { company: 'OpenAI Research' },
+    });
+
+    const deleted = await app.request(`/career/wishlist/${createdBody.company.id}`, {
+      method: 'DELETE',
+    });
+    expect(deleted.status).toBe(200);
+    await expect(deleted.json()).resolves.toEqual({ removed: true });
+  });
+
+  it('does not mutate a non-wishlist application', async () => {
+    const app = createApp(userId);
+    const response = await patchJson(app, `/career/wishlist/${applicationId}`, {
+      company: 'Not Acme',
+    });
+
+    expect(response.status).toBe(404);
+  });
+});
+
+describe('career engagement routes', () => {
+  it('rejects the removed target filter', async () => {
+    const response = await createApp(userId).request('/career/engagements?type=target');
+
+    expect(response.status).toBe(400);
+  });
+});
+
 describe('career projects, testimonials, certifications, social-links', () => {
   it('creates and lists a project', async () => {
     const app = createApp(userId);
+    const standalone = await postJson(app, '/career/projects/create', {
+      title: `Standalone project ${randomUUID()}`,
+    });
+    expect(standalone.status).toBe(201);
+    const standaloneBody = (await standalone.json()) as { id: string; engagements: unknown[] };
+    expect(standaloneBody.engagements).toEqual([]);
+    await postJson(app, '/career/projects/delete', { id: standaloneBody.id });
+
+    const engagement = await db
+      .insertInto('app.careerEngagements')
+      .values({ ownerUserid: userId, company: 'Acme', title: 'Engineer' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
     const created = await postJson(app, '/career/projects/create', {
       title: 'Side Project',
       technologies: ['TypeScript', 'React'],
+      status: 'IN_PROGRESS',
+      engagementIds: [engagement.id],
     });
     expect(created.status).toBe(201);
+    const createdBody = (await created.json()) as {
+      title: string;
+      status: string;
+      engagements: Array<{ id: string }>;
+    };
+    expect(createdBody).toMatchObject({ title: 'Side Project', status: 'IN_PROGRESS' });
+    expect(createdBody.engagements).toEqual([
+      { id: engagement.id, company: 'Acme', title: 'Engineer', kind: 'EMPLOYMENT' },
+    ]);
 
     const listed = await app.request('/career/projects');
-    const body = (await listed.json()) as { projects: { title: string }[] };
-    expect(body.projects.some((p) => p.title === 'Side Project')).toBe(true);
+    const body = (await listed.json()) as {
+      projects: Array<{ id: string; title: string; engagements: Array<{ id: string }> }>;
+    };
+    expect(body.projects).toContainEqual(
+      expect.objectContaining({
+        title: 'Side Project',
+        engagements: [
+          { id: engagement.id, company: 'Acme', title: 'Engineer', kind: 'EMPLOYMENT' },
+        ],
+      }),
+    );
+
+    const project = body.projects.find((item) => item.title === 'Side Project');
+    expect(project).toBeDefined();
+
+    const updated = await postJson(app, '/career/projects/update', {
+      id: (project as { id: string }).id,
+      data: { engagementIds: [] },
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({ engagements: [] });
+
+    await postJson(app, '/career/projects/delete', { id: (project as { id: string }).id });
+    await db.deleteFrom('app.careerEngagements').where('id', '=', engagement.id).execute();
+  });
+
+  it('does not expose another owner project or engagement', async () => {
+    const owner = createApp(userId);
+    const intruder = createApp(otherUserId);
+    const engagement = await db
+      .insertInto('app.careerEngagements')
+      .values({ ownerUserid: userId, company: 'Private Co', title: 'Private role' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    const created = await postJson(owner, '/career/projects/create', {
+      title: `Private project ${randomUUID()}`,
+      engagementIds: [engagement.id],
+    });
+    const project = (await created.json()) as { id: string };
+
+    const listed = await intruder.request('/career/projects');
+    const body = (await listed.json()) as { projects: Array<{ id: string }> };
+    expect(body.projects.some((item) => item.id === project.id)).toBe(false);
+    const update = await postJson(intruder, '/career/projects/update', {
+      id: project.id,
+      data: { title: 'Leaked project' },
+    });
+    expect(update.status).toBe(404);
+
+    await postJson(owner, '/career/projects/delete', { id: project.id });
+    await db.deleteFrom('app.careerEngagements').where('id', '=', engagement.id).execute();
   });
 
   it('creates and lists a testimonial', async () => {

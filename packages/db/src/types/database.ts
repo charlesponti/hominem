@@ -5,6 +5,28 @@
 
 import type { ColumnType } from 'kysely';
 
+export type AppCareerApplicationStageKind = 'APPLICATION' | 'OFFER' | 'OUTCOME' | 'SCREEN';
+
+export type AppCareerApplicationStatus =
+  | 'ACCEPTED'
+  | 'APPLIED'
+  | 'OFFER'
+  | 'REJECTED'
+  | 'SCREENING'
+  | 'WISHLIST'
+  | 'WITHDRAWN';
+
+export type AppCareerEngagementKind =
+  | 'CONTRACT'
+  | 'EMPLOYMENT'
+  | 'FREELANCE'
+  | 'OTHER'
+  | 'VOLUNTEER';
+
+export type AppCareerOfferDecision = 'ACCEPTED' | 'DECLINED' | 'NEGOTIATING' | 'PENDING';
+
+export type AppCareerProjectStatus = 'BACKLOG' | 'CANCELED' | 'DONE' | 'IN_PROGRESS';
+
 export type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
     ? ColumnType<S, I | undefined, U>
@@ -93,7 +115,7 @@ export interface AppCareerApplications {
   company: string;
   coverLetterUrl: string | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  currentStage: string | null;
+  currentStageId: string | null;
   id: Generated<string>;
   jobPostingUrl: string | null;
   legacyId: string | null;
@@ -104,9 +126,25 @@ export interface AppCareerApplications {
   resumeUrl: string | null;
   salaryExpectation: number | null;
   source: string | null;
-  status: string | null;
+  status: AppCareerApplicationStatus;
   title: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppCareerApplicationsOffers {
+  applicationId: string;
+  baseSalary: number | null;
+  bonus: number | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  currency: Generated<string | null>;
+  decision: Generated<AppCareerOfferDecision>;
+  decisionAt: ColumnType<string, Date | string, Date | string> | null;
+  equity: string | null;
+  id: Generated<string>;
+  notes: string | null;
+  signingBonus: number | null;
+  stageId: string;
+  totalComp: number | null;
 }
 
 export interface AppCareerApplicationStages {
@@ -117,6 +155,8 @@ export interface AppCareerApplicationStages {
   id: Generated<string>;
   notes: string | null;
   stage: string;
+  stageKind: AppCareerApplicationStageKind;
+  stageOrder: number;
 }
 
 export interface AppCareerCertifications {
@@ -150,22 +190,7 @@ export interface AppCareerEducation {
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
-export interface AppCareerOffers {
-  applicationId: string | null;
-  baseSalary: number | null;
-  bonus: number | null;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  currency: Generated<string | null>;
-  decision: string | null;
-  decisionAt: ColumnType<string, Date | string, Date | string> | null;
-  equity: string | null;
-  id: Generated<string>;
-  notes: string | null;
-  signingBonus: number | null;
-  totalComp: number | null;
-}
-
-export interface AppCareerPositions {
+export interface AppCareerEngagements {
   address: string | null;
   company: string;
   contactName: string | null;
@@ -176,11 +201,10 @@ export interface AppCareerPositions {
   endDate: ColumnType<string, Date | string, Date | string> | null;
   id: Generated<string>;
   isCurrent: Generated<boolean | null>;
-  isTarget: Generated<boolean | null>;
+  kind: Generated<AppCareerEngagementKind>;
   location: string | null;
   ownerUserid: string;
-  projectStatus: string | null;
-  recordType: Generated<string>;
+  reasonForLeaving: string | null;
   salaryHigh: number | null;
   salaryLow: number | null;
   source: Generated<string | null>;
@@ -220,6 +244,14 @@ export interface AppCareerProfile {
   websites: string | null;
 }
 
+export interface AppCareerProjectEngagements {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  engagementId: string;
+  ownerUserid: string;
+  projectId: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppCareerProjects {
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
   description: string | null;
@@ -230,12 +262,12 @@ export interface AppCareerProjects {
   isFeatured: Generated<boolean>;
   isVisible: Generated<boolean>;
   liveUrl: string | null;
+  organization: string | null;
   ownerUserid: string;
-  positionId: string | null;
   shortDescription: string | null;
   sortOrder: Generated<number>;
   startDate: ColumnType<string, Date | string, Date | string> | null;
-  status: Generated<string | null>;
+  status: Generated<AppCareerProjectStatus | null>;
   technologies: Generated<Json>;
   title: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1249,12 +1281,13 @@ export interface DB {
   'app.careerApplicationFiles': AppCareerApplicationFiles;
   'app.careerApplicationNotes': AppCareerApplicationNotes;
   'app.careerApplications': AppCareerApplications;
+  'app.careerApplicationsOffers': AppCareerApplicationsOffers;
   'app.careerApplicationStages': AppCareerApplicationStages;
   'app.careerCertifications': AppCareerCertifications;
   'app.careerEducation': AppCareerEducation;
-  'app.careerOffers': AppCareerOffers;
-  'app.careerPositions': AppCareerPositions;
+  'app.careerEngagements': AppCareerEngagements;
   'app.careerProfile': AppCareerProfile;
+  'app.careerProjectEngagements': AppCareerProjectEngagements;
   'app.careerProjects': AppCareerProjects;
   'app.careerSkills': AppCareerSkills;
   'app.careerSocialLinks': AppCareerSocialLinks;

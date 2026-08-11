@@ -34,18 +34,20 @@ export async function fetchCareerProfile(
   return (data as { profile: Record<string, unknown> | null }).profile;
 }
 
-export async function fetchCareerPositions(
+export async function fetchCareerEngagements(
   request: Request,
   query?: { type?: string; limit?: number },
-): Promise<{ positions: Record<string, unknown>[] }> {
+): Promise<{ engagements: Record<string, unknown>[] }> {
   const { career } = createServerHonoClient(request);
   const params = new URLSearchParams();
   if (query?.type) params.set('type', query.type);
   if (query?.limit) params.set('limit', String(query.limit));
   const qs = params.toString();
-  const res = await career.positions.$get({ query: qs ? Object.fromEntries(params) : {} } as never);
+  const res = await career.engagements.$get({
+    query: qs ? Object.fromEntries(params) : {},
+  } as never);
   const data = await res.json();
-  return data as { positions: Record<string, unknown>[] };
+  return data as { engagements: Record<string, unknown>[] };
 }
 
 export async function fetchCareerApplications(

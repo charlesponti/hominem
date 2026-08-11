@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +34,7 @@ export function WorkExperienceDetail({
   workExperience,
   linkedProjectCount,
 }: {
-  workExperience: CareerPositionRecord;
+  workExperience: CareerEngagementRecord;
   linkedProjectCount: number;
 }) {
   const navigate = useNavigate();
