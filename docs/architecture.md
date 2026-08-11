@@ -1,13 +1,17 @@
 # II. Architecture
 
-Hominem is a monorepo because boundaries are shared decisions. The system grows by making authority narrower and interfaces more explicit—not by adding layers that merely rename imports.
+Hominem is a monorepo containing several products and shared packages. They do not all use the same path to reach data.
 
-## Authority map
+## How the parts connect
 
 ```text
-Omiro / web products
-  -> transport and domain packages
+Omiro
+  -> RPC client and shared domain packages
   -> API
+  -> database and infrastructure
+
+Career browser
+  -> Career server routes and services
   -> database and infrastructure
 
 API
@@ -16,20 +20,26 @@ API
   -> persistence and orchestration
 ```
 
-- Omiro is an RPC client. It does not reach into the database or recreate server authority locally.
-- API resolves identity exactly once at the edge into canonical auth context. Route families authorize against that context; they do not perform a second session lookup.
-- Career may use the database only from server-owned files. Browser code does not depend on the database.
-- A deployable service is not automatically a client contract package. Runtime handlers and public transport contracts are separate responsibilities.
-- Shared packages expose narrow, real boundaries. Root barrels stay small and must not become import-anything buckets.
-- Type-only imports do not create workspace dependency edges. Use a local TypeScript path alias to the source contract instead.
+- Omiro must use `@hominem/rpc` to access data.
+- Career route's `loaders` and `actions` access the database directly. Browser components should use database-derived TypeScript types, but database handles and queries must stay on the server.
+- Most protected RPC and MCP requests use the auth context created by the API's global auth middleware. The middleware resolves identity before route handling, and protected route middleware rejects requests without that context.
+- The `/api/auth` routes are an exception. The global auth middleware skips them because they implement session and authentication operations, and those routes call Better Auth directly when they need the current session.
+- The API is both a deployable service and the source of several client contracts. It exports `@hominem/api/types`, `@hominem/api/career`, and `@hominem/api/finance`; client packages consume those type contracts without using the API as a runtime dependency.
+- Shared package entry points expose the public handles, types, errors, repositories, and helpers that each package supports. `@hominem/db` owns database access, repositories, schemas, and transactions; only server-owned code may import it directly, and client applications must use RPC instead of its runtime exports.
+- Type-only imports do not create workspace dependency edges. Use a local TypeScript path alias when a package needs a source contract without a runtime dependency.
 
-## Omiro protected navigation
+Omiro's route ownership and app-specific implementation details are documented in [the Omiro README](../apps/omiro/README.md).
 
-Omiro has one protected Expo Router stack with All and Time root scenes, not a persistent tab bar:
+## Data rules
 
-- **All** (`/(protected)`) is the signed-in entry point and canonical mixed stream for chats and notes.
-- **Time** owns the chronological schedule and time-block detail routes. Unscheduled tasks are a dedicated secondary route, not schedule rows.
+- Validate all external input at runtime. Typed client code must still parse API responses before changing application state.
+- Generated database types are checked into the build process. Run `just db codegen` to generate them; CI rejects drift.
+- Omiro's database is the source of truth for tasks and their scheduling intent. Apple Calendar and Reminders are device integrations. Their IDs and sync state are projections; they do not replace the task record.
+- All tests must use the test database.
 
-Legacy Inbox links translate to All. Chat and note detail remain owned by `/(protected)/inbox/[kind]/[id]`; `kind` is required and persisted. Deep links select the owning destination directly. Settings is a protected form sheet. Transient state stays inside the screen that owns it; route params are reserved for destinations and deep-linkable detail identity.
+## Open decisions
 
-Thread view models are presentation adapters over existing chat and note APIs. They do not introduce a kindless query key, persistence model, migration, or conversion path.
+- **Public transport contract ownership** — Clients no longer depend on the deployable API package for runtime or type ownership.
+- **Career data model** — One documented server/DB or API-backed model; database imports stay in its permitted layer.
+- **Finance release tier** — README, CI, deployment configuration, and command scopes agree.
+- **Better Auth bearer sessions** — Keep or remove the plugin with a tested external compatibility contract.

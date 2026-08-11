@@ -12,35 +12,94 @@ Hominem is a product monorepo. Active products:
 The repository's operating law lives in `docs/`. Read the relevant part before
 changing a system boundary. Package READMEs are setup entrypoints only.
 
-### Product
+### I. Product
 
-- [Product](./docs/product.md)
+Hominem is one product system made up of the API, Omiro, and shared packages.
 
-### System
+#### Product today
 
-- [Architecture](./docs/architecture.md)
-- [Authentication](./docs/auth.md)
-- [Data](./docs/data.md)
+- **API** owns identity, persistence, orchestration, and work that clients cannot be trusted to perform.
+- **Career** is a web product whose data access is owned by the server.
+- **Finance** is in the monorepo. Its release tier must be decided explicitly; do not infer it from a command or workflow.
 
-### Experience
+- [Product philosophy](#philosophy)
 
-- [Time](./docs/time.md)
+### II. System
+
+- [Architecture](./docs/architecture.md) — data flow, ownership boundaries, and open architecture decisions
+- [Authentication](./docs/auth.md) — session authority, MCP OAuth, and production incident investigation
 - Design system: `@ponti-studios/ui/docs/`
 
-### Voice
+### III. Operations
 
-- [Voice](./docs/voice.md)
+- [Developer](./docs/developer.md) — commands, development, and deployment rules
+- [Evidence](./docs/evidence.md) — validation standards before calling a change complete
 
-### Operations
+### App-specific facts
 
-- [Developer](./docs/developer.md)
-- [Evidence](./docs/evidence.md)
-- [Sentry](./docs/sentry.md)
-- [Production](./docs/production.md)
+Each app documents its own architecture, navigation, and behavior in its own README, not in `docs/`. Omiro's navigation, Time, Voice, native build (Sentry), and release verification facts live in [apps/omiro/README.md](./apps/omiro/README.md).
 
-### Other
+## Philosophy
 
-- [Design](./docs/design.md)
+This section holds Hominem's product and design opinions. The numbered documents under `docs/` describe facts, current behavior, and explicit technical decisions.
+
+### Product
+
+Hominem should make it easier to capture, understand, continue, and act on work. Add complexity only when it removes friction from that process.
+
+Capture should be immediate. A person should be able to type, speak, attach context, or resume work without configuring the system first.
+
+The product should name real things. It should not hide ordinary work behind metaphors, slogans, or invented categories.
+
+AI should support a visible human outcome: clearer text, a continued conversation, or tasks that a person can inspect and change. AI is not a substitute for state, authority, or recovery.
+
+A user should not lose submitted meaning when secondary automation fails. Preserve raw text before optional cleanup. If task extraction fails, show the transcript so the user can recover it.
+
+Keep setup, permissions, and operational details out of the task surface until the person needs them.
+
+Before adding a feature, ask:
+
+1. What human work becomes easier?
+2. What is the smallest visible outcome?
+3. What can the person recover if automation, network, or permission fails?
+4. Which existing product word and surface own it?
+
+If any answer is unclear, the feature is not ready to spread across the system.
+
+### Information design
+
+Information should be easy to understand and accurate. Check:
+
+- Accuracy: Is it true?
+- Clarity: Can someone understand it in seconds?
+- Hierarchy: What matters most?
+- Context: Why does it matter?
+- Flow: What happens next?
+
+Use this approach in practice:
+
+- Dashboards should surface the decision, not just the data.
+- Presentations should focus on one idea per slide; the spoken explanation can carry nuance.
+- Writing should use short paragraphs, strong topic sentences, and useful headings.
+- Every product screen should answer: What do I do here and why?
+
+### Discovery
+
+People often do not know what they want until they see options in context. Desire responds to what is presented rather than existing fully in advance.
+
+The hard part is often discovery, not matching. People can only choose from the options they see. There is no perfect decision process; make decisions quickly using the best information available.
+
+People often learn what they like through repeated exposure. An experience may need to introduce an idea, reinforce it, and then give the person enough detail to decide.
+
+### Form and focus
+
+Digital products should use shapes that support the work. Rectangles are familiar tools for storing and viewing information. Excessive rounding can add layout constraints and make a focused tool feel designed for passive consumption.
+
+The interface should favor precision, readable structure, and purposeful controls over decoration that does not help the user act.
+
+### System design
+
+Keep each responsibility in one place and make interfaces between parts explicit. Do not add layers that only rename imports.
 
 ## Architecture
 
@@ -62,43 +121,9 @@ The default direction is from apps into shared packages, and from shared package
 
 Consumers that need authentication should configure an npm token outside the committed project `.npmrc`.
 
-## Golden Path
+## Commands
 
-Use the smallest possible loop by default.
-
-1. `just setup`
-2. `pnpm --filter @hominem/api dev`
-3. `pnpm test --filter=@hominem/api...`
-
-When you are working on the API or shared backend code, run the API validation lane instead:
-
-1. Start the local test services you need.
-2. Run `pnpm lint --filter=@hominem/api...`, `pnpm typecheck --filter=@hominem/api...`, `pnpm build --filter=@hominem/api...`, `pnpm test --filter=@hominem/api...`
-
-For Omiro work, use the app bootstrap loop in `apps/omiro/README.md`:
-
-1. `just mobile prebuild development`
-2. `just mobile dev`
-
-## Canonical Commands
-
-- `just setup`: install dependencies and prepare the repo toolchain
-- `just check`: read-only format, lint, typecheck, build, and test validation across the whole repo
-- `pnpm dev` / `pnpm typecheck` / `pnpm build` / `pnpm test`: run for every package, or scope with `--filter=@hominem/<pkg>...` (e.g. `--filter=@hominem/api...`)
-- `pnpm format`: apply formatting across the repo
-- `pnpm lint` / `pnpm lint:fix`: lint the repo, or lint and apply fixes
-- `just db backup`: create a timestamped SQL backup of the dev database in `~/.hominem/`
-- `just db migrate [test]`: apply database migrations
-- `just db codegen`: regenerate database types against the caller's `DATABASE_URL`
-- `just mobile <action>`: iOS development, test, build, update, and release commands
-
-## Setup And Build
-
-1. `just setup`
-2. `pnpm lint --filter=@hominem/api... && pnpm typecheck --filter=@hominem/api... && pnpm build --filter=@hominem/api... && pnpm test --filter=@hominem/api...`
-3. `pnpm build` for a full workspace build when needed
-
-`just` provides `setup`, `check`, `db`, `mcp`, and `mobile`. Everything else is a root `pnpm` script, optionally scoped with `--filter`.
+See [docs/developer.md](./docs/developer.md) for setup, validation, and command references.
 
 ## CI Model
 

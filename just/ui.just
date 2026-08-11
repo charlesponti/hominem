@@ -25,7 +25,7 @@ unlink:
     #!/usr/bin/env bash
     set -euo pipefail
     registry_target="$(find "{{root_dir}}/node_modules/.pnpm" -type d -path '*/node_modules/@ponti-studios/ui' -print -quit)"
-    [[ -n "$registry_target" ]] || { echo "Registry @ponti-studios/ui 1.1.0 is not installed" >&2; exit 1; }
+    [[ -n "$registry_target" ]] || { echo "Registry @ponti-studios/ui 1.3.0 is not installed" >&2; exit 1; }
     for consumer in {{ui_consumers}}; do
       echo "Restoring registry @ponti-studios/ui in $consumer"
       rm -f "$consumer/node_modules/@ponti-studios/ui"

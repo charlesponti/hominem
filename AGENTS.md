@@ -4,41 +4,32 @@
 - Agents may commit code, but every commit must follow the Conventional Commits standard. Load [.agents/skills/conventional-commit/SKILL.md](.agents/skills/conventional-commit/SKILL.md) before staging, committing, or pushing.
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 - Never start long-running services (Expo/Metro, `pnpm dev`, the API, workers, databases, Docker containers, etc.) on your own. The user starts services for you. If a service is needed and not running, say so and ask the user to start it.
+- **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md). 
+
 
 ## Decision authority
 
 - The user is the product manager and software architect. Do not invent, infer, or silently select product behavior, information architecture, navigation hierarchy, route ownership, or platform architecture.
-- In particular, do not introduce, remove, or relocate root destinations; change tabs into stacks or stacks into tabs; change route ownership; alter information architecture; or reinterpret a design reference without explicit user approval.
-- Treat user-stated product intent, approved PRDs, approved specs, and existing governing Bible rules as authoritative. If they conflict or leave an architectural choice open, stop and ask the user; do not resolve the conflict by choosing an architecture.
-- When the request, PRD, spec, plan, task list, and code disagree: stop implementation at the disagreement, state the exact conflict and affected files, and ask the user which source is authoritative.
-- Never rewrite a PRD, spec, plan, or task list to justify an implementation choice that the user did not approve. Mark unresolved decisions as `OPEN — USER DECISION REQUIRED`.
+- Do not introduce, remove, or relocate root destinations; alter information architecture; or reinterpret a design reference without explicit user approval.
+- Treat the documentation as authoritative. If the user wishes to do something that will go against the documentation, ask them for explicit approval. If they confirm, update the relevant documentation before proceeding with the implementation.
+- Never rewrite documentation to justify your own implementation choices that the user did not approve. Mark unresolved decisions as `OPEN — USER DECISION REQUIRED`.
 - If implementation work reveals that the approved architecture cannot be expressed with the chosen library, report the constraint and alternatives without selecting one.
-
-## Evidence before completion
-
-- A change is complete only when its validation proves the exact behavior that changed in the environment where that behavior runs. Type checks, linting, a build, or unrelated tests are supporting evidence; none proves a user interaction, visual layout, external side effect, or deployment outcome.
-- Select validation from the risk, not from habit: verify user-visible or interactive changes on the target device/browser; verify external writes against the resulting external state; verify library/framework assumptions with a minimal working proof before building a feature on them.
-- For stateful interactions, test every affected state and transition, including entry, active/focused or loading state, cancellation or failure, and return to the prior state. A control that renders is not validated until its action and resulting state are observed.
-- Before composing controls into a constrained surface, prove that the full composition fits at the smallest supported viewport, device, or container. If the chosen primitive cannot meet the approved behavior within those constraints, stop and report the limitation; do not improvise a different product behavior.
-- Treat a failed, skipped, ambiguous, stale-build, or non-targeted validation as a blocker. State exactly what remains unproven. Never call work done, update acceptance tests as though it passed, or claim a result based on a test that did not exercise the changed behavior.
-- Automation needs a deterministic observation path. If an app-owned control or outcome cannot be selected or observed reliably, resolve that testability gap or report it before completion; do not replace it with a fuzzy assertion and call the interaction verified.
-- For Omiro, a user-visible interaction requires Maestro evidence on the booted iPhone simulator and visual inspection of every changed state. A type check or unit test may supplement this evidence but never replace it.
 
 ## Repo structure
 
 pnpm monorepo orchestrated with Turbo. Key directories:
 
-- `apps/omiro` — Expo/React Native iOS app (Apple-only; no Android fallbacks)
+- `apps/omiro` — Expo/React Native iOS app (Apple-only; no Android fallbacks). See [apps/omiro/AGENTS.md](apps/omiro/AGENTS.md).
 - `apps/career` — React Router v7 web app
-- `services/api` — Hono HTTP + BullMQ worker
-- `packages/db` — PostgreSQL + Kysely + Goose migrations
+- `services/api` — Hono HTTP + BullMQ worker. See [services/api/AGENTS.md](services/api/AGENTS.md).
+- `packages/db` — PostgreSQL + Kysely + Goose migrations. See [packages/db/AGENTS.md](packages/db/AGENTS.md).
 - `packages/auth` — Better-auth (passkeys + OTP)
 - `packages/ai` — OpenRouter integration
 - `justfile` and `just/*.just` — the repository command interface and its domain modules
 
 ## Commands
 
-Use `just` for `setup`, `check`, and `db`; use `pnpm` for dev/lint/format/typecheck/build/test. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives.
+Use `just` for `setup`, `check`, and `db`; use `pnpm` for dev/lint/format/typecheck/build/test. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives. `scripts/command` is a Bash command router invoked through `just`; use the `justfile` recipes as the public command interface.
 
 ```bash
 pnpm --filter @hominem/api dev
@@ -97,151 +88,21 @@ Keep it in sync with whatever `services/api/package.json`'s `exports` map says t
 3. `deploy-<name>.yml`, if it deploys: trigger on `workflow_run: { workflows: [validate-<name>] }`. The workflow **name** (the `name:` field, not the filename) must match exactly — renaming a `validate-*.yml` workflow silently breaks its deploy trigger with no error.
 4. A new deployable app's CI workflow must set every env var required by its own code _and_ its transitive `@hominem/*` dependencies — missing one silently breaks CI with an `EnvValidationError`, not an obviously-related error message.
 
-## CI and build performance
+## Performance
 
-- Real remote caching (Vercel Remote Cache or self-hosted) is not configured — every CI log shows "Remote caching disabled" even though `TURBO_TOKEN`/`TURBO_TEAM` are wired into every `validate-*.yml`. Until that's set up, `.github/actions/setup-pnpm-workspace/action.yml` caches turbo's local `.turbo/cache` directory via `actions/cache`, shared across all validate workflows on a branch — this is what stops every workflow from redundantly rebuilding the same core packages. Setting up real remote caching (needs a Vercel team/token or a self-hosted cache server) would let this same benefit extend across branches and to every contributor's local machine, and should replace this local-cache stand-in once available.
+### Build / CI
+
+- The `.github/actions/setup-pnpm-workspace/action.yml` caches turbo's local `.turbo/cache` directory via `actions/cache`, shared across all validate workflows on a branch — this is what stops every workflow from redundantly rebuilding the same core packages.
 - `assumeChangesOnlyAffectDirectDependencies` is set in `tsconfig.base.json` for tsserver editor responsiveness in this project-reference graph (ignored by `tsc`/CI, editor-only). Anything that doesn't go through the shared `tsconfig.profiles/*` chain — like `apps/omiro`, which extends `expo/tsconfig.base` directly — needs the same flag set explicitly in its own `tsconfig.json`.
 - `turbo.json`'s `typecheck` task `dependsOn: ["^build"]` — a package's composite dependencies get built (and turbo-cached) before it typechecks, so referenced projects have real declaration output to resolve against.
 
-## Monorepo notes
+## Monorepo
 
-- This root file is the sole agent instruction authority for the repository. Path-scoped `.claude/rules/` files may add narrowly scoped guidance, but must not duplicate or contradict these rules.
+- This root file is the primary agent instruction authority for the repository. Nested `AGENTS.md` files in [apps/omiro/](apps/omiro/AGENTS.md), [services/api/](services/api/AGENTS.md), and [packages/db/](packages/db/AGENTS.md) add directory-scoped detail for agents working in those trees; they must not duplicate or contradict these root rules.
 - The work tracker owns temporary execution.
 
-## Expo and EAS
+## Directory-scoped agent instructions
 
-- `apps/omiro` uses Expo managed workflow with Metro package exports enabled.
-- Shared ESM packages may use explicit `.js` imports while their source files are TypeScript. Keep the Omiro Metro resolver fallback that retries an explicit `.js` import without the extension so Metro can resolve the source file; do not rewrite shared Node ESM imports just to satisfy Metro.
-- With Corepack enabled, do not pin `pnpm` in `apps/omiro/eas.json`. EAS may attempt a conflicting global install and fail with `npm ERR! EEXIST`.
-- Verify an EAS fix with the same embed command used by the build: `pnpm --filter @hominem/omiro exec expo export:embed --eager --platform ios --dev false`.
-
-## Mobile (omiro)
-
-### Navigation and components
-
-- Uses Expo Router file-based routes. Route files live in `apps/omiro/app/`; the `~` alias maps to the Omiro project root.
-- Navigation architecture is user-owned. Do not introduce a root tab bar, remove a context from the header, move Tasks into a separate root destination, or otherwise change the Chats/Notes/Tasks information architecture without explicit approval in the current user request and governing spec.
-- `app/(auth)/` contains unauthenticated screens. `app/(protected)/` requires auth and is guarded through `resolveAuthRedirect` in its layout. Auth redirect logic lives in `services/navigation/auth-route-guard.ts`.
-- Root provider order is `GestureHandlerRootView` → `SafeAreaProvider` → `KeyboardProvider` → `QueryClientProvider` → `AuthProvider` → `PostHogProvider`. Do not add a provider without checking that chain.
-- Use `makeStyles` and `theme` from `~/components/theme`; do not introduce hardcoded style values through raw `StyleSheet.create`.
-
-### Commands
-
-```bash
-just mobile dev                  # launch on iOS simulator
-just mobile lint                 # lint
-just mobile prebuild development # Expo prebuild for development
-just mobile test                 # Omiro test lane
-```
-
-### Testing the omiro app (iOS Simulator)
-
-Use **Maestro** for programmatic UI testing of `apps/omiro`. The app is installed on the booted simulator as `com.pontistudios.hakumi.dev`.
-
-**Prerequisites — Java 17 must be on PATH before running Maestro:**
-
-```bash
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
-```
-
-**Launch the app:**
-
-```bash
-xcrun simctl launch booted com.pontistudios.hakumi.dev
-```
-
-**Take a screenshot:**
-
-```bash
-xcrun simctl io booted screenshot /tmp/omiro_screen.png
-```
-
-**Run a Maestro flow:**
-
-```bash
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH" && export JAVA_HOME="/opt/homebrew/opt/openjdk@17" && maestro test my_flow.yaml
-```
-
-**Maestro flow skeleton:**
-
-```yaml
-appId: com.pontistudios.hakumi.dev
----
-- launchApp
-- assertVisible: 'Omiro'
-- tapOn:
-    id: 'feed-composer-input' # use testID values from source
-- inputText: 'some text'
-- takeScreenshot: /tmp/omiro_step
-```
-
-Tap targets use the React Native `testID` prop. Key IDs already in the codebase:
-
-- `feed-composer` — the composer shell on the home screen
-- `feed-composer-input` — the text input inside the home composer
-- `chat-composer` / `chat-composer-input` — same for the chat detail screen
-
-The booted simulator is iPhone 17 Pro (UDID `BD390792-D3EC-4351-BE57-EAF642FABD34`).
-
-**Known issue — always tap by `id`, not by fuzzy text:** iOS's accessibility tree merges all children of a screen (e.g. a bottom sheet) into a single node whenever no text field currently has focus. When that happens, `tapOn: text: '...'` (or the Maestro MCP `tap_on` tool's `text` param) resolves to the center point of that merged node's bounds — which is often the modal backdrop, not the element you meant — and silently dismisses the sheet instead of tapping the target. Tapping by `id` (i.e. the element's `testID`) works reliably regardless of focus state and does not suffer from this merging. Prefer `id` selectors over `text` selectors for anything inside a modal/sheet.
-
-## API implementation rules
-
-`services/api` is a Hono HTTP server and BullMQ worker. Its entry points are `src/index.ts` for HTTP and `src/worker.ts` for jobs.
-
-- `AppEnv` in `src/server.ts` declares Hono's context variable map. Auth middleware sets `ctx.var.user`, `ctx.var.userId`, and `ctx.var.auth`; route handlers read those values and do not re-fetch the user.
-- A route lives in `src/routes/<name>.ts` as a `Hono<AppEnv>` instance and is registered from `src/server.ts` with `app.route('/path', myRoutes)`. Apply `authJwtMiddleware` only when its route-specific protection is needed.
-- `src/rpc/app.ts` is the type-safe RPC contract consumed by clients through `@hominem/api/types`. Update affected clients in the same change as an RPC contract change.
-- Use `isServiceError` from `src/errors.ts` for known domain failures. Throw typed errors and let the global handler map them to HTTP responses.
-- Job handlers live in `src/workers/` and register in `src/worker.ts`. The worker is a separate process and shares no HTTP-server memory.
-- From `services/api`, build with `node build.mjs`; standard Turbo build is not its build path. Use `pnpm test --filter=@hominem/api...` and `pnpm --filter @hominem/api dev` for its normal lanes.
-
-## Database implementation rules
-
-`packages/db` is PostgreSQL access code and server-only. Client code uses `@hominem/rpc`, never the database package directly.
-
-### Migrations and generated types
-
-- `packages/db/src/types/database.ts` is generated by `kysely-codegen`; never edit it manually. After schema changes, run `just db migrate` then `just db codegen`.
-- Migrations live in `packages/db/migrations/`, use Goose SQL `Up` and `Down` markers, and are idempotent because CI runs `goose up` twice.
-- The schemas are `auth`, `app`, and `ops`. `pgcrypto`, `pg_trgm`, `unaccent`, `vector`, `earthdistance`, `ltree`, and `fuzzystrmatch` are already installed; do not create them again.
-
-### Database workflow
-
-After any schema change, follow [.agents/skills/db-migrate/SKILL.md](.agents/skills/db-migrate/SKILL.md):
-
-```bash
-just db migrate            # apply migrations using DATABASE_URL
-just db codegen            # regenerate Kysely types using DATABASE_URL
-```
-
-Tests require `DATABASE_URL` to point at the intended test database with migrations applied:
-
-```bash
-just db migrate test
-```
-
-Do not rely on fallback database URLs. Set `DATABASE_URL` explicitly for local dev, CI, and tests.
-
-### Repository boundary
-
-Each domain has one repository file under `packages/db/src/services/<domain>/<name>.repository.ts`; split only when a domain contains entities with separate lifecycles or tables.
-
-1. Keep the Kysely `Selectable<T>` row type private.
-2. Export a hand-written, JSON-serializable DTO; never expose or alias `Selectable<T>` publicly.
-3. Convert rows to DTOs in one explicit mapper.
-4. Export functions returning DTOs, never row types. Query-local casts are permitted before mapping, never on an exported result.
-5. Compose repositories in one direction. Put shared sibling checks in a leaf module rather than importing back into a parent domain.
-
-At the RPC layer, return repository DTOs directly with `c.json({ x })`; do not recreate a parallel response type. Use `runInTransaction` from `@hominem/db` for multi-table writes.
-
-## Production authentication
-
-- Better Auth is the sole authentication authority. Preserve its session database, signed cookies, and native client storage contract.
-- Do not add custom token or session storage when the Better Auth surface already exists.
-- The test OTP store is enabled by `NODE_ENV !== 'production'`. A duplicate env-var gate is unnecessary and harmful. When enabled, the API records OTPs in the test store and returns success without sending through Resend.
-- A `200` response from the OTP request endpoint does not prove delivery. Check the email provider path without logging OTPs, tokens, cookies, or credentials.
-- Never rotate `BETTER_AUTH_SECRET` casually. Better Auth signs session cookies with it; changing it can invalidate every stored client session even when the database session rows still exist.
-- When investigating a production auth incident, check the API deployment status, `/api/status`, auth HTTP status patterns, the presence of the OTP flag, and aggregate session counts/expiry through an approved Railway database tunnel. Do not retrieve session tokens or user records.
-- `scripts/command` is a Bash command router invoked through `just`; use the `justfile` recipes as the public command interface.
+- [apps/omiro/AGENTS.md](apps/omiro/AGENTS.md) — Expo/EAS, navigation, mobile commands, Maestro/simulator evidence.
+- [services/api/AGENTS.md](services/api/AGENTS.md) — Hono/BullMQ implementation rules, production authentication.
+- [packages/db/AGENTS.md](packages/db/AGENTS.md) — migrations, generated types, repository boundary.
