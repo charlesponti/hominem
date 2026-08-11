@@ -1,4 +1,5 @@
 import type { CareerApplicationWithRelations } from '@hominem/db';
+import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DatePicker,
   Input,
@@ -11,6 +12,8 @@ import {
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
+
+import { JOB_APPLICATION_STATUSES } from '~/types/career';
 
 interface ApplicationEditorProps {
   application: CareerApplicationWithRelations;
@@ -67,13 +70,11 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                {['active', 'rejected', 'withdrew', 'APPLIED', 'INTERVIEWING', 'REJECTED'].map(
-                  (status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ),
-                )}
+                {JOB_APPLICATION_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {humanizeIdentifier(status)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

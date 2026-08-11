@@ -9,6 +9,12 @@ export enum JobApplicationStatus {
   WITHDRAWN = 'WITHDRAWN',
 }
 
+export const JOB_APPLICATION_STATUSES = Object.values(JobApplicationStatus);
+
+export function isJobApplicationStatus(value: string): value is JobApplicationStatus {
+  return JOB_APPLICATION_STATUSES.includes(value as JobApplicationStatus);
+}
+
 export enum JobApplicationStage {
   APPLICATION = 'APPLICATION',
   PHONE_SCREEN = 'PHONE_SCREEN',

@@ -1,11 +1,13 @@
+import { DropZone, type DropZoneProps } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { LogIn } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-import { DropZone, type DropZoneStatus } from '~/components/patterns';
 import type { UploadResumeApiResponse } from '~/lib/api-contracts';
 
 import type { ResumeConvertStage } from '../types/resume';
+
+type DropZoneStatus = DropZoneProps['status'];
 
 interface UploadResumeFormProps {
   onUploadStart: () => void;

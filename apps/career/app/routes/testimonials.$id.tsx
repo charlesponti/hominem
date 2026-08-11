@@ -1,8 +1,7 @@
 import { TestimonialRepository, db } from '@hominem/db';
 import { TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ArrowLeftIcon } from 'lucide-react';
-import { Form, redirect, useNavigate } from 'react-router';
+import { Form, redirect } from 'react-router';
 
 import { userContext } from '~/lib/middleware';
 
@@ -47,20 +46,10 @@ export async function action({ context, params, request }: Route.ActionArgs) {
 
 export default function TestimonialDetailRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { testimonial } = loaderData;
-  const navigate = useNavigate();
 
   return (
     <div className="max-w-2xl">
-      <button
-        type="button"
-        onClick={() => navigate('/testimonials')}
-        className="body-3 inline-flex items-center gap-2 text-muted-foreground transition-colors"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to testimonials
-      </button>
-
-      <Form method="post" className="mt-6 flex flex-col gap-4">
+      <Form method="post" className="flex flex-col gap-4">
         <TextField label="Name" name="name" required defaultValue={testimonial.name} />
         <div className="grid grid-cols-2 gap-4">
           <TextField label="Title" name="title" defaultValue={testimonial.title ?? ''} />

@@ -1,7 +1,6 @@
 import { CareerRepository, db } from '@hominem/db';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
-import { Link, redirect } from 'react-router';
+import { redirect } from 'react-router';
 
 import { PositionEditor } from '~/components/career/work/PositionEditor';
 import { logger } from '~/lib/logger';
@@ -61,9 +60,6 @@ export default function NewPositionPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <SectionIntro title="New Position" description="Add a work history entry or target role." />
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/work">Back to positions</Link>
-        </Button>
       </div>
       <div className="rounded-lg border border-border p-6">
         <PositionEditor submitLabel="Create position" />

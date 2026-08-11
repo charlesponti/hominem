@@ -1,8 +1,7 @@
 import { ProjectRepository, db } from '@hominem/db';
 import { TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ArrowLeftIcon } from 'lucide-react';
-import { Form, redirect, useNavigate } from 'react-router';
+import { Form, redirect } from 'react-router';
 
 import { userContext } from '~/lib/middleware';
 
@@ -53,20 +52,10 @@ export async function action({ context, params, request }: Route.ActionArgs) {
 
 export default function ProjectDetailRoute({ loaderData }: Route.ComponentProps) {
   const { project } = loaderData;
-  const navigate = useNavigate();
 
   return (
     <div className="max-w-2xl">
-      <button
-        type="button"
-        onClick={() => navigate('/projects')}
-        className="body-3 inline-flex items-center gap-2 text-muted-foreground transition-colors"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to projects
-      </button>
-
-      <Form method="post" className="mt-6 flex flex-col gap-4">
+      <Form method="post" className="flex flex-col gap-4">
         <TextField label="Title" name="title" required defaultValue={project.title} />
         <TextField
           label="Short description"

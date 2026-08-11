@@ -1,6 +1,8 @@
+import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -10,7 +12,7 @@ import { Button } from '@ponti-studios/ui/primitives';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { useSubmit } from 'react-router';
 
-const STATUSES = ['active', 'rejected', 'withdrew', 'APPLIED', 'INTERVIEWING'];
+import { JOB_APPLICATION_STATUSES } from '~/types/career';
 
 interface QuickActionsProps {
   currentStatus: string | null;
@@ -37,13 +39,15 @@ export function QuickActions({ currentStatus }: QuickActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent sideOffset={8} className="w-56">
-        <DropdownMenuLabel>Update status</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {STATUSES.filter((status) => status !== currentStatus).map((status) => (
-          <DropdownMenuItem key={status} onSelect={() => updateStatus(status)}>
-            {status}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Update status</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {JOB_APPLICATION_STATUSES.filter((status) => status !== currentStatus).map((status) => (
+            <DropdownMenuItem key={status} onSelect={() => updateStatus(status)}>
+              {humanizeIdentifier(status)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={deleteApplication}>
           <Trash2 className="size-4" />

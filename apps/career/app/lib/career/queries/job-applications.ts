@@ -14,6 +14,9 @@ export type JobApplicationCard = {
   hasOffer: boolean;
 };
 
+export const NO_STATUS_FILTER = '__no_status__';
+export const NO_SOURCE_FILTER = '__no_source__';
+
 export type JobApplicationFilter = {
   status?: string;
   source?: string;
@@ -34,11 +37,15 @@ export function filterJobApplications(
   let result = applications;
 
   if (filter?.status) {
-    result = result.filter((a) => a.status === filter.status);
+    result = result.filter((a) =>
+      filter.status === NO_STATUS_FILTER ? a.status === null : a.status === filter.status,
+    );
   }
 
   if (filter?.source) {
-    result = result.filter((a) => a.source === filter.source);
+    result = result.filter((a) =>
+      filter.source === NO_SOURCE_FILTER ? a.source === null : a.source === filter.source,
+    );
   }
 
   if (filter?.query) {

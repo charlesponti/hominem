@@ -8,9 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@ponti-studios/ui/primitives';
-import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
+import { Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
 
-import { RouteLink } from '~/components/route-link';
 import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
@@ -45,13 +44,7 @@ export function AccountHeader({
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="outline" asChild>
-          <RouteLink to="/accounts">
-            <ArrowLeft className="size-4 mr-2" />
-            Back to Accounts
-          </RouteLink>
-        </Button>
+      <div className="flex items-center justify-end">
         <Button variant="outline" onClick={onRefresh} disabled={isLoading}>
           <RefreshCcw className="size-4 mr-2" />
           Refresh

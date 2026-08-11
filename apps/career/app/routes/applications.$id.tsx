@@ -1,15 +1,7 @@
 import { CareerRepository, db, type CareerApplicationWithRelations } from '@hominem/db';
-import { Button } from '@ponti-studios/ui/primitives';
-import {
-  ArrowLeftIcon,
-  Briefcase,
-  Calendar,
-  FileText,
-  MapPin,
-  PaperclipIcon,
-  StickyNoteIcon,
-} from 'lucide-react';
-import { data, NavLink, Outlet, redirect, useNavigate } from 'react-router';
+import { humanizeIdentifier } from '@hominem/utils/text';
+import { Briefcase, Calendar, FileText, MapPin, PaperclipIcon, StickyNoteIcon } from 'lucide-react';
+import { data, NavLink, Outlet, redirect } from 'react-router';
 
 import { QuickActions } from '~/components/career/applications/QuickActions';
 import { StatusBadge } from '~/components/status-badge';
@@ -17,6 +9,7 @@ import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { cn } from '~/lib/utils';
 import { getApplicationStatusTone } from '~/lib/utils/applicationUtils';
+import { isJobApplicationStatus } from '~/types/career';
 
 import { Route } from './+types/applications.$id';
 
@@ -40,6 +33,14 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   const intent = formData.get('intent');
 
   if (intent === 'update-application') {
+    const statusValue = formData.get('status');
+    if (
+      statusValue !== null &&
+      (typeof statusValue !== 'string' ||
+        (statusValue !== '' && !isJobApplicationStatus(statusValue)))
+    ) {
+      throw new Response('Invalid application status', { status: 400 });
+    }
     const salaryRaw = formData.get('salaryExpectation') as string;
     const salaryExpectation =
       salaryRaw && Number.isFinite(Number(salaryRaw)) ? Math.round(Number(salaryRaw) * 100) : null;
@@ -50,7 +51,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       location: (formData.get('location') as string) || null,
       source: (formData.get('source') as string) || null,
       appliedAt: (formData.get('appliedAt') as string) || null,
-      status: (formData.get('status') as string) || null,
+      status: statusValue || null,
       jobPostingUrl: (formData.get('jobPostingUrl') as string) || null,
       salaryExpectation,
       notes: (formData.get('notes') as string) || null,
@@ -59,9 +60,11 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   }
 
   if (intent === 'update-status') {
-    const status = formData.get('status') as string;
-    if (status) {
+    const status = formData.get('status');
+    if (typeof status === 'string' && isJobApplicationStatus(status)) {
       await CareerRepository.updateApplication(db, user.id, id, { status });
+    } else {
+      throw new Response('Invalid application status', { status: 400 });
     }
     return data({ ok: true });
   }
@@ -108,20 +111,9 @@ const tabItems = [
 
 export default function ApplicationDetailLayout({ loaderData }: Route.ComponentProps) {
   const { application } = loaderData;
-  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col gap-6">
-      <Button
-        type="button"
-        variant="outline"
-        className="self-start"
-        onClick={() => navigate('/applications')}
-      >
-        <ArrowLeftIcon className="mr-2 size-4" />
-        Back to applications
-      </Button>
-
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0 space-y-1">
           <h1 className="heading-2 truncate text-foreground">{application.title}</h1>
@@ -144,7 +136,7 @@ export default function ApplicationDetailLayout({ loaderData }: Route.ComponentP
           {application.status && (
             <StatusBadge
               tone={getApplicationStatusTone(application.status)}
-              label={application.status}
+              label={humanizeIdentifier(application.status)}
             />
           )}
           {application.currentStage && <StatusBadge tone="info" label={application.currentStage} />}

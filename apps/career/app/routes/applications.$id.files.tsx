@@ -1,16 +1,17 @@
 import { ApplicationFilesRepository, CareerRepository, db } from '@hominem/db';
 import { documentStorageService, validateFile } from '@hominem/storage';
+import { DropZone, type DropZoneProps } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { PaperclipIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Form } from 'react-router';
 
-import { DropZone } from '~/components/drop-zone';
-import type { DropZoneStatus } from '~/components/drop-zone';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/applications.$id.files';
+
+type DropZoneStatus = DropZoneProps['status'];
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(userContext)!;
@@ -82,7 +83,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
 export default function ApplicationFilesRoute({ loaderData }: Route.ComponentProps) {
   const { files } = loaderData;
   const [status, setStatus] = useState<DropZoneStatus>('empty');
-  const [, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -109,6 +110,7 @@ export default function ApplicationFilesRoute({ loaderData }: Route.ComponentPro
         />
         <DropZone
           status={status}
+          file={selectedFile ? { name: selectedFile.name, size: selectedFile.size } : null}
           accept=".pdf,.doc,.docx,.txt,.md,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           emptyHint="PDF, Word, or text files — up to 25 MB"
           notice={error || undefined}
@@ -153,6 +155,7 @@ export default function ApplicationFilesRoute({ loaderData }: Route.ComponentPro
         />
         <DropZone
           status={status}
+          file={selectedFile ? { name: selectedFile.name, size: selectedFile.size } : null}
           accept=".pdf,.doc,.docx,.txt,.md,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           emptyHint="PDF, Word, or text files — up to 25 MB"
           notice={error || undefined}

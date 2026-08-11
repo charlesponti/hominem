@@ -1,4 +1,4 @@
-import { replaceUnderscores } from '@hominem/utils/text';
+import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DatePicker,
   Input,
@@ -18,7 +18,7 @@ import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
 import type { JobPosting } from '~/lib/services/job-scraping.service';
-import { JobApplicationStatus } from '~/types/career';
+import { isJobApplicationStatus, JobApplicationStatus } from '~/types/career';
 
 export const meta: MetaFunction = () => [
   { title: 'New Application | career' },
@@ -38,7 +38,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const position = formData.get('position') as string;
   const companyName = formData.get('company') as string;
-  const status = formData.get('status') as JobApplicationStatus;
+  const statusValue = formData.get('status');
+  if (typeof statusValue !== 'string' || !isJobApplicationStatus(statusValue)) {
+    throw new Response('Invalid application status', { status: 400 });
+  }
+  const status = statusValue as JobApplicationStatus;
   const location = formData.get('location') as string;
   const salaryQuoted = formData.get('salaryQuoted') as string;
 
@@ -227,7 +231,7 @@ export default function CreateJobApplication() {
                   className="body-4 text-muted-foreground underline transition-colors"
                   onClick={() => setInputMethod('url')}
                 >
-                  Back to URL
+                  Use a job posting URL
                 </button>
               </div>
             </div>
@@ -367,7 +371,7 @@ export default function CreateJobApplication() {
                     <SelectContent>
                       {Object.values(JobApplicationStatus).map((status) => (
                         <SelectItem key={status} value={status}>
-                          {replaceUnderscores(status)}
+                          {humanizeIdentifier(status)}
                         </SelectItem>
                       ))}
                     </SelectContent>

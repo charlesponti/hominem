@@ -1,14 +1,12 @@
 import type { AccountGetOutput } from '@hominem/rpc/finance';
 import { Alert, AlertDescription, AlertTitle } from '@ponti-studios/ui/feedback';
 import { Badge } from '@ponti-studios/ui/primitives';
-import { Button } from '@ponti-studios/ui/primitives';
-import { ArrowLeft, RefreshCcw } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { redirect, useParams } from 'react-router';
 
 import { AccountHeader } from '~/components/accounts/account-header';
 import { AccountSpendingChart } from '~/components/accounts/account-spending-chart';
-import { RouteLink } from '~/components/route-link';
 import { TransactionsList } from '~/components/transactions/transactions-list';
 import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
@@ -138,15 +136,6 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
   if (!account) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" asChild>
-            <RouteLink to="/accounts">
-              <ArrowLeft className="size-4 mr-2" />
-              Back to Accounts
-            </RouteLink>
-          </Button>
-        </div>
-
         <Alert>
           <AlertTitle>Account Not Found</AlertTitle>
           <AlertDescription>

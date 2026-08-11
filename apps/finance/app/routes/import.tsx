@@ -10,18 +10,9 @@ import { PreflightReview } from '~/components/import/preflight-review';
 import { useFileInput } from '~/lib/hooks/use-file-input';
 import { useImportTransactionsStore } from '~/lib/hooks/use-import-transactions-store';
 import { useToast } from '~/lib/hooks/use-toast';
-import { cn } from '~/lib/utils';
 
 export default function TransactionImportPage() {
-  const {
-    files,
-    dragActive,
-    handleFileChange,
-    removeFile,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-  } = useFileInput();
+  const { files, removeFile, handleDrop } = useFileInput();
   const {
     isConnected,
     statuses,
@@ -200,13 +191,8 @@ export default function TransactionImportPage() {
 
       <div className="flex w-full justify-center">
         <DropZone
-          isImporting={isImportInProgress}
-          dragActive={dragActive}
-          className={cn(dragActive && 'border-border')}
-          onDrop={handleDropWithValidation}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onChange={handleFileChange}
+          status={isImportInProgress ? 'busy' : 'empty'}
+          onFiles={handleDropWithValidation}
           accept=".csv"
           multiple={true}
         />

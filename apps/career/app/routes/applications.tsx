@@ -1,8 +1,8 @@
+import { humanizeIdentifier } from '@hominem/utils/text';
 import { EmptyState } from '@ponti-studios/ui/feedback';
-import { FilterChip } from '@ponti-studios/ui/filters';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
-import { FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
@@ -11,14 +11,15 @@ import { CareerList, CareerListRow } from '~/components/career/career-list';
 import { StatusBadge } from '~/components/status-badge';
 import {
   filterJobApplications,
+  NO_SOURCE_FILTER,
+  NO_STATUS_FILTER,
   paginateJobApplications,
   sortJobApplications,
 } from '~/lib/career/queries/job-applications';
 import { getApplicationCards } from '~/lib/career/queries/job-applications.server';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
-import { formatApplicationDate } from '~/lib/utils/applicationUtils';
-import { getApplicationStatusTone } from '~/lib/utils/applicationUtils';
+import { formatApplicationDate, getApplicationStatusTone } from '~/lib/utils/applicationUtils';
 
 import { Route } from './+types/applications';
 
@@ -53,23 +54,32 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
   const statusOptions = useMemo(() => {
     const counts = new Map<string, number>();
     for (const app of applications) {
-      const key = app.status ?? '(none)';
+      const key = app.status ?? NO_STATUS_FILTER;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([value, count]) => ({ value, label: `${value} (${count})` }));
+      .map(([value, count]) => ({
+        value,
+        label:
+          value === NO_STATUS_FILTER
+            ? `No status (${count})`
+            : `${humanizeIdentifier(value)} (${count})`,
+      }));
   }, [applications]);
 
   const sourceOptions = useMemo(() => {
     const counts = new Map<string, number>();
     for (const app of applications) {
-      const key = app.source ?? '(none)';
+      const key = app.source ?? NO_SOURCE_FILTER;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([value, count]) => ({ value, label: `${value} (${count})` }));
+      .map(([value, count]) => ({
+        value,
+        label: value === NO_SOURCE_FILTER ? `No source (${count})` : `${value} (${count})`,
+      }));
   }, [applications]);
 
   const filtered = useMemo(() => {
@@ -120,7 +130,6 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
     <div>
       <SectionIntro
         title="Applications"
-        description={`${total} applications in your pipeline.`}
         actions={
           <Button asChild variant="outline">
             <Link to="/applications/new">
@@ -144,14 +153,10 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
             onSourceChange={(v) => setParam('source', v)}
             onClearFilters={() => clearParams(['status', 'source', 'query'])}
             sortChip={
-              <FilterChip
-                label={sort === 'desc' ? 'Newest first' : 'Oldest first'}
-                onClick={toggleSort}
-                onRemove={() => setParam('sort', '')}
-                variant="sort"
-                direction={sort}
-                role="button"
-              />
+              <Button type="button" variant="ghost" size="sm" onClick={toggleSort}>
+                {sort === 'desc' ? <ArrowDownIcon /> : <ArrowUpIcon />}
+                {sort === 'desc' ? 'Newest first' : 'Oldest first'}
+              </Button>
             }
             pagination={{
               currentPage: currentPage - 1,
@@ -205,7 +210,10 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
                 trailing={
                   <div className="flex items-center gap-1.5">
                     {app.status && (
-                      <StatusBadge tone={getApplicationStatusTone(app.status)} label={app.status} />
+                      <StatusBadge
+                        tone={getApplicationStatusTone(app.status)}
+                        label={humanizeIdentifier(app.status)}
+                      />
                     )}
                     {app.hasOffer && <StatusBadge tone="success" label="Offer" />}
                   </div>

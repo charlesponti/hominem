@@ -1,7 +1,5 @@
-import { Badge, buttonVariants, Card, CardContent } from '@ponti-studios/ui/primitives';
-import { ArrowLeft } from 'lucide-react';
+import { Badge, Card, CardContent } from '@ponti-studios/ui/primitives';
 import type { MetaFunction } from 'react-router';
-import { Link } from 'react-router';
 
 export const meta: MetaFunction = () => {
   return [
@@ -77,11 +75,7 @@ const demoPortfolio = {
 export default function Demo() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <Link to="/" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-          <ArrowLeft className="size-4" />
-          Back to career
-        </Link>
+      <div className="flex justify-end">
         <Badge variant="outline">Demo Portfolio</Badge>
       </div>
 

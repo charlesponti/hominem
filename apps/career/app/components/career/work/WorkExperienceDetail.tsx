@@ -11,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from '@ponti-studios/ui/overlays';
 import { Button } from '@ponti-studios/ui/primitives';
-import { ArrowLeftIcon, TrashIcon } from 'lucide-react';
+import { TrashIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFetcher, useNavigate } from 'react-router';
 
@@ -57,16 +57,6 @@ export function WorkExperienceDetail({
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <button
-        type="button"
-        onClick={() => navigate('/work')}
-        data-testid="back-button"
-        className="body-3 inline-flex items-center gap-2 self-start text-muted-foreground transition-colors"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to work
-      </button>
-
       <FormErrorAlert title="Work experience wasn’t deleted" message={submissionError} />
 
       <section className="border-b pb-5">
