@@ -26,7 +26,7 @@ describe('resume conversion slug generation', () => {
   });
 
   it('normalizes mixed-case and invalid slug input', async () => {
-    await expect(generateUniqueSlug(db, ' Charles Ponti!! ', 'Fallback')).resolves.toBe(
+    await expect(generateUniqueSlug(db, ' Test Person!! ', 'Fallback')).resolves.toBe(
       'charles-ponti',
     );
   });
@@ -162,7 +162,7 @@ describe('resume conversion database save', () => {
 
     const [positionCount, skillCount, project] = await Promise.all([
       db
-        .selectFrom('app.careerPositions')
+        .selectFrom('app.careerEngagements')
         .select(({ fn }) => fn.countAll<number>().as('count'))
         .where('ownerUserid', '=', user.id)
         .executeTakeFirstOrThrow(),

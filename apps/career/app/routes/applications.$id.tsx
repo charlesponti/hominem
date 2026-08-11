@@ -51,7 +51,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       location: (formData.get('location') as string) || null,
       source: (formData.get('source') as string) || null,
       appliedAt: (formData.get('appliedAt') as string) || null,
-      status: statusValue || null,
+      status: statusValue || application.status,
       jobPostingUrl: (formData.get('jobPostingUrl') as string) || null,
       salaryExpectation,
       notes: (formData.get('notes') as string) || null,

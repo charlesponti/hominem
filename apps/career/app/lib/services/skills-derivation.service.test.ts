@@ -36,7 +36,7 @@ vi.mock('@hominem/services', () => ({
 vi.mock('@hominem/db', () => ({
   db: {},
   CareerRepository: {
-    listPositions: mocks.listWorkExperiences,
+    listEngagements: mocks.listWorkExperiences,
   },
   ProjectRepository: {
     list: mocks.listProjects,

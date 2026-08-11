@@ -12,7 +12,9 @@ export function getCompanyName(company: string | { name: string } | null | undef
 }
 
 const APPLICATION_STATUS_TONE: Record<string, StatusTone> = {
+  WISHLIST: 'neutral',
   APPLIED: 'info',
+  SCREENING: 'info',
   ACTIVE: 'info',
   INTERVIEW: 'info',
   INTERVIEWING: 'info',
