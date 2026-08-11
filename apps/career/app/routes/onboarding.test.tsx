@@ -54,7 +54,7 @@ describe('Onboarding', () => {
     renderOnboarding();
     expect(screen.getByRole('button', { name: /mock upload form/i })).toHaveAttribute(
       'data-mode',
-      'replace',
+      'create',
     );
   });
 
