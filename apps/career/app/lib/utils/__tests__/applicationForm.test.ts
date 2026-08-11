@@ -22,7 +22,7 @@ describe('parseApplicationUpdateFormData', () => {
     const result = parseApplicationUpdateFormData(
       form({
         title: '  Staff Engineer  ',
-        status: JobApplicationStatus.INTERVIEW,
+        status: JobApplicationStatus.SCREENING,
         location: '',
         source: '  LinkedIn  ',
       }),
@@ -30,7 +30,7 @@ describe('parseApplicationUpdateFormData', () => {
 
     expect(result.application).toMatchObject({
       title: 'Staff Engineer',
-      status: JobApplicationStatus.INTERVIEW,
+      status: JobApplicationStatus.SCREENING,
       location: null,
       source: 'LinkedIn',
     });

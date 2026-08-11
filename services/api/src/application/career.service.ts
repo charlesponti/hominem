@@ -8,14 +8,23 @@ import {
   SocialLinksRepository,
   TestimonialRepository,
   db,
+  type CareerApplicationRecord,
   type CareerCertificationInput,
   type CareerProjectInput,
+  type CareerProjectRecord,
   type CareerSkillInput,
   type CareerSocialLinksInput,
   type CareerTestimonialInput,
 } from '@hominem/db';
+import { z } from 'zod';
 
-import { careerProfileSchema } from '../schemas/career.schema';
+import {
+  careerProfileSchema,
+  careerProjectSchema,
+  careerProjectStatusSchema,
+  careerProjectsSchema,
+  careerWishlistCompanySchema,
+} from '../schemas/career.schema';
 
 export async function getCareerProfile(ownerUserId: string) {
   const profile = await CareerRepository.getProfile(db, ownerUserId);
@@ -37,14 +46,14 @@ export async function getCareerProfile(ownerUserId: string) {
   });
 }
 
-export async function listCareerPositions(
+export async function listCareerEngagements(
   ownerUserId: string,
-  opts?: { type?: 'all' | 'employment' | 'target'; limit?: number },
+  opts?: { type?: 'all' | 'employment'; limit?: number },
 ) {
-  const positions = await CareerRepository.listPositions(db, ownerUserId, opts);
+  const engagements = await CareerRepository.listEngagements(db, ownerUserId, opts);
 
   return {
-    positions: positions.map((p) => ({
+    engagements: engagements.map((p) => ({
       id: p.id,
       company: p.company,
       title: p.title,
@@ -53,11 +62,10 @@ export async function listCareerPositions(
       startDate: p.startDate,
       endDate: p.endDate,
       isCurrent: p.isCurrent ?? false,
-      isTarget: p.isTarget ?? false,
       salaryLow: p.salaryLow,
       salaryHigh: p.salaryHigh,
       currency: p.currency,
-      recordType: p.recordType,
+      kind: p.kind,
       url: p.url,
     })),
   };
@@ -85,12 +93,62 @@ export async function listCareerApplications(
         salaryExpectation: a.salaryExpectation,
         notes: a.notes,
         stageCount: detail?.stages.length ?? 0,
-        hasOffer: detail?.offer !== null,
+        hasOffer: (detail?.offers.length ?? 0) > 0,
       };
     }),
   );
 
   return { applications: enriched };
+}
+
+function toWishlistCompany(application: CareerApplicationRecord) {
+  return careerWishlistCompanySchema.parse({
+    id: application.id,
+    company: application.company,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+  });
+}
+
+export async function listCareerWishlistCompanies(ownerUserId: string, limit?: number) {
+  const applications = await CareerRepository.listApplications(db, ownerUserId, {
+    status: 'WISHLIST',
+    limit,
+  });
+  return { companies: applications.map(toWishlistCompany) };
+}
+
+export async function addCareerWishlistCompany(ownerUserId: string, company: string) {
+  const existing = await CareerRepository.listApplications(db, ownerUserId, {
+    status: 'WISHLIST',
+    limit: 100,
+  });
+  const normalizedCompany = company.toLowerCase();
+  const duplicate = existing.find(
+    (application) => application.company.toLowerCase() === normalizedCompany,
+  );
+  if (duplicate) return toWishlistCompany(duplicate);
+
+  return toWishlistCompany(
+    await CareerRepository.createApplication(db, ownerUserId, {
+      company,
+      title: company,
+      status: 'WISHLIST',
+    }),
+  );
+}
+
+export async function updateCareerWishlistCompany(
+  ownerUserId: string,
+  id: string,
+  company: string,
+) {
+  const updated = await CareerRepository.updateWishlistApplication(db, ownerUserId, id, company);
+  return updated ? toWishlistCompany(updated) : null;
+}
+
+export async function removeCareerWishlistCompany(ownerUserId: string, id: string) {
+  return CareerRepository.deleteWishlistApplication(db, ownerUserId, id);
 }
 
 export async function getCareerApplicationDetail(ownerUserId: string, id: string) {
@@ -116,24 +174,25 @@ export async function getCareerApplicationDetail(ownerUserId: string, id: string
       stages: detail.stages.map((s) => ({
         id: s.id,
         stage: s.stage,
+        stageKind: s.stageKind,
+        stageOrder: s.stageOrder,
         enteredAt: s.enteredAt,
         exitedAt: s.exitedAt,
         notes: s.notes,
       })),
-      offer: detail.offer
-        ? {
-            id: detail.offer.id,
-            baseSalary: detail.offer.baseSalary,
-            equity: detail.offer.equity,
-            bonus: detail.offer.bonus,
-            signingBonus: detail.offer.signingBonus,
-            totalComp: detail.offer.totalComp,
-            currency: detail.offer.currency,
-            decision: detail.offer.decision,
-            decisionAt: detail.offer.decisionAt,
-            notes: detail.offer.notes,
-          }
-        : null,
+      offers: detail.offers.map((offer) => ({
+        id: offer.id,
+        stageId: offer.stageId,
+        baseSalary: offer.baseSalary,
+        equity: offer.equity,
+        bonus: offer.bonus,
+        signingBonus: offer.signingBonus,
+        totalComp: offer.totalComp,
+        currency: offer.currency,
+        decision: offer.decision,
+        decisionAt: offer.decisionAt,
+        notes: offer.notes,
+      })),
     },
   };
 }
@@ -183,7 +242,7 @@ export async function removeCareerSkill(ownerUserId: string, id: string) {
 
 export async function listCareerProjects(ownerUserId: string) {
   const projects = await ProjectRepository.list(db, ownerUserId);
-  return { projects: projects.map(toProjectDto) };
+  return careerProjectsSchema.parse({ projects: projects.map(toProjectDto) });
 }
 
 export async function createCareerProject(ownerUserId: string, input: CareerProjectInput) {
@@ -376,27 +435,10 @@ function toSkillDto(skill: {
   };
 }
 
-function toProjectDto(project: {
-  id: string;
-  positionId: string | null;
-  title: string;
-  description: string | null;
-  shortDescription: string | null;
-  liveUrl: string | null;
-  githubUrl: string | null;
-  imageUrl: string | null;
-  videoUrl: string | null;
-  technologies: unknown;
-  status: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  isFeatured: boolean;
-  isVisible: boolean;
-  sortOrder: number;
-}) {
-  return {
+function toProjectDto(project: CareerProjectRecord): z.infer<typeof careerProjectSchema> {
+  return careerProjectSchema.parse({
     id: project.id,
-    positionId: project.positionId,
+    organization: project.organization,
     title: project.title,
     description: project.description,
     shortDescription: project.shortDescription,
@@ -405,13 +447,14 @@ function toProjectDto(project: {
     imageUrl: project.imageUrl,
     videoUrl: project.videoUrl,
     technologies: Array.isArray(project.technologies) ? project.technologies : [],
-    status: project.status,
+    status: project.status === null ? null : careerProjectStatusSchema.parse(project.status),
     startDate: project.startDate,
     endDate: project.endDate,
     isFeatured: project.isFeatured,
     isVisible: project.isVisible,
     sortOrder: project.sortOrder,
-  };
+    engagements: project.engagements,
+  });
 }
 
 function toTestimonialDto(testimonial: {

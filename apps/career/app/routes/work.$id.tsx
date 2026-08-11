@@ -6,7 +6,7 @@ import { data, redirect } from 'react-router';
 import { Form } from 'react-router';
 
 import { PositionEditor } from '~/components/career/work/PositionEditor';
-import { getUserPositionById } from '~/lib/career/queries/career-queries';
+import { getUserEngagementById } from '~/lib/career/queries/career-queries';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 
@@ -17,13 +17,13 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   if (!user) throw new Response('Unauthorized', { status: 401 });
 
   try {
-    const position = await getUserPositionById(user.id, params.id);
-    if (!position) throw new Response('Position not found', { status: 404 });
+    const position = await getUserEngagementById(user.id, params.id);
+    if (!position) throw new Response('Engagement not found', { status: 404 });
     return data({ position });
   } catch (error) {
     if (error instanceof Response) throw error;
-    logger.error('Error loading position', error, { position_id: params.id });
-    throw new Response('Failed to load position', { status: 500 });
+    logger.error('Error loading engagement', error, { engagement_id: params.id });
+    throw new Response('Failed to load engagement', { status: 500 });
   }
 }
 
@@ -35,7 +35,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   const intent = formData.get('intent');
 
   if (intent === 'delete') {
-    await CareerRepository.deletePosition(db, user.id, params.id);
+    await CareerRepository.deleteEngagement(db, user.id, params.id);
     return redirect('/work');
   }
 
@@ -46,7 +46,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   };
 
   try {
-    await CareerRepository.updatePosition(db, user.id, params.id, {
+    await CareerRepository.updateEngagement(db, user.id, params.id, {
       company: (formData.get('company') as string) ?? undefined,
       title: (formData.get('title') as string) ?? undefined,
       location: (formData.get('location') as string) || null,
@@ -54,7 +54,6 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       startDate: (formData.get('startDate') as string) || null,
       endDate: (formData.get('endDate') as string) || null,
       isCurrent: formData.get('isCurrent') === 'on',
-      isTarget: formData.get('isTarget') === 'on',
       salaryLow: toInt(formData.get('salaryLow')),
       salaryHigh: toInt(formData.get('salaryHigh')),
       currency: (formData.get('currency') as string) || 'USD',
@@ -62,12 +61,13 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       contactName: (formData.get('contactName') as string) || null,
       contactPhone: (formData.get('contactPhone') as string) || null,
       source: (formData.get('source') as string) || null,
-      projectStatus: (formData.get('projectStatus') as string) || null,
+      kind: (formData.get('kind') as string) || 'EMPLOYMENT',
+      reasonForLeaving: (formData.get('reasonForLeaving') as string) || null,
     });
     return data({ ok: true });
   } catch (error) {
-    logger.error('Error updating position', error, { position_id: params.id });
-    throw new Response('Failed to update position', { status: 500 });
+    logger.error('Error updating engagement', error, { engagement_id: params.id });
+    throw new Response('Failed to update engagement', { status: 500 });
   }
 }
 
@@ -93,7 +93,7 @@ export default function WorkDetailPage({ loaderData }: Route.ComponentProps) {
     return (
       <div>
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="heading-2">Edit position</h1>
+          <h1 className="heading-2">Edit engagement</h1>
           <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
             Cancel
           </Button>
@@ -138,19 +138,14 @@ export default function WorkDetailPage({ loaderData }: Route.ComponentProps) {
         </div>
         <p className="heading-3 text-muted-foreground mt-1">{position.company}</p>
         <div className="flex flex-wrap gap-3 mt-2">
-          {position.recordType && (
+          {position.kind && (
             <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
-              {position.recordType}
+              {position.kind}
             </span>
           )}
           {position.isCurrent && (
             <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
               Current
-            </span>
-          )}
-          {position.isTarget && (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-              Target
             </span>
           )}
         </div>
@@ -222,13 +217,6 @@ export default function WorkDetailPage({ loaderData }: Route.ComponentProps) {
                 </a>
               )}
             </div>
-          </section>
-        )}
-
-        {position.projectStatus && (
-          <section>
-            <h2 className="heading-4 mb-2">Project Status</h2>
-            <p className="body-2">{position.projectStatus}</p>
           </section>
         )}
       </div>

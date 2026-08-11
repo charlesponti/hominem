@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import {
   Select,
   SelectContent,
@@ -23,11 +23,11 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function ExitSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+export function ExitSection({ workExperience }: { workExperience: CareerEngagementRecord }) {
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      reasonForLeaving: workExperience.projectStatus ?? '',
+      reasonForLeaving: workExperience.reasonForLeaving ?? '',
     }),
     [workExperience],
   );
@@ -101,7 +101,7 @@ export function ExitSection({ workExperience }: { workExperience: CareerPosition
         <div className="space-y-4">
           <DetailRow
             label="Reason for leaving"
-            value={formatOptionalLabel(workExperience.projectStatus) ?? 'Not set'}
+            value={formatOptionalLabel(workExperience.reasonForLeaving) ?? 'Not set'}
           />
         </div>
       ) : (

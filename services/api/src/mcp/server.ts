@@ -80,7 +80,7 @@ function createToolHandler(definition: McpToolDefinition) {
 function createMcpServer() {
   const mcpServer = new McpServer(
     { name: 'Hominem MCP', version: '1.0.0' },
-    { instructions: 'Read-only MCP tools for authenticated Hominem users.' },
+    { instructions: 'MCP tools for authenticated Hominem users.' },
   );
 
   for (const definition of listTools()) {

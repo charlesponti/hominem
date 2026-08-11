@@ -23,7 +23,7 @@ describe('Applications route', () => {
               makeApplication({
                 id: 'application-1',
                 title: 'Staff Engineer',
-                status: JobApplicationStatus.INTERVIEW,
+                status: JobApplicationStatus.SCREENING,
                 source: 'linkedin',
                 applicationDate: new Date('2024-01-15T00:00:00.000Z').toISOString(),
                 responseDate: new Date('2024-01-20T00:00:00.000Z').toISOString(),

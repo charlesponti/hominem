@@ -10,7 +10,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   const [positions, projects, skills] = await Promise.all([
-    CareerRepository.listPositions(db, profile.ownerUserid, { type: 'employment' }),
+    CareerRepository.listEngagements(db, profile.ownerUserid, { type: 'employment' }),
     ProjectRepository.list(db, profile.ownerUserid),
     SkillRepository.list(db, profile.ownerUserid),
   ]);

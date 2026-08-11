@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import {
+  addCareerWishlistCompany,
   addCareerApplicationFile,
   addCareerApplicationNote,
   createCareerCertification,
@@ -16,27 +17,32 @@ import {
   listCareerApplications,
   listCareerCertifications,
   listCareerEducation,
-  listCareerPositions,
+  listCareerEngagements,
   listCareerProjects,
   listCareerSkills,
   listCareerTestimonials,
+  listCareerWishlistCompanies,
   removeCareerApplicationFile,
   removeCareerApplicationNote,
   removeCareerCertification,
   removeCareerProject,
   removeCareerSkill,
   removeCareerTestimonial,
+  removeCareerWishlistCompany,
   saveCareerSocialLinks,
   updateCareerCertification,
   updateCareerProject,
   updateCareerSkill,
   updateCareerTestimonial,
+  updateCareerWishlistCompany,
 } from '../../application/career.service';
 import {
   careerApplicationFileCreateSchema,
   careerApplicationFileDeleteSchema,
   careerApplicationNoteCreateSchema,
   careerApplicationNoteDeleteSchema,
+  careerApplicationsQuerySchema,
+  careerEngagementsQuerySchema,
   careerCertificationCreateSchema,
   careerCertificationDeleteSchema,
   careerCertificationUpdateSchema,
@@ -50,6 +56,8 @@ import {
   careerTestimonialCreateSchema,
   careerTestimonialDeleteSchema,
   careerTestimonialUpdateSchema,
+  careerWishlistCompaniesQuerySchema,
+  careerWishlistCompanyCreateSchema,
 } from '../../schemas/career.schema';
 import { NotFoundError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -61,18 +69,15 @@ export const careerRoutes = new Hono<AppContext>()
     const profile = await getCareerProfile(userId);
     return c.json({ profile });
   })
-  .get('/positions', async (c) => {
+  .get('/engagements', zValidator('query', careerEngagementsQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const type = c.req.query('type') as 'all' | 'employment' | 'target' | undefined;
-    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-    const result = await listCareerPositions(userId, { type, limit });
+    const { type, limit } = c.req.valid('query');
+    const result = await listCareerEngagements(userId, { type, limit });
     return c.json(result);
   })
-  .get('/applications', async (c) => {
+  .get('/applications', zValidator('query', careerApplicationsQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const status = c.req.query('status');
-    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-    const result = await listCareerApplications(userId, { status, limit });
+    const result = await listCareerApplications(userId, c.req.valid('query'));
     return c.json(result);
   })
   .get('/applications/:id', async (c) => {
@@ -80,6 +85,33 @@ export const careerRoutes = new Hono<AppContext>()
     const id = c.req.param('id');
     const result = await getCareerApplicationDetail(userId, id);
     return c.json(result);
+  })
+  .get('/wishlist', zValidator('query', careerWishlistCompaniesQuerySchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    return c.json(await listCareerWishlistCompanies(userId, c.req.valid('query').limit));
+  })
+  .post('/wishlist', zValidator('json', careerWishlistCompanyCreateSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    return c.json(
+      { company: await addCareerWishlistCompany(userId, c.req.valid('json').company) },
+      201,
+    );
+  })
+  .patch('/wishlist/:id', zValidator('json', careerWishlistCompanyCreateSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const company = await updateCareerWishlistCompany(
+      userId,
+      c.req.param('id'),
+      c.req.valid('json').company,
+    );
+    if (!company) throw new NotFoundError('Wishlist company not found');
+    return c.json({ company });
+  })
+  .delete('/wishlist/:id', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const removed = await removeCareerWishlistCompany(userId, c.req.param('id'));
+    if (!removed) throw new NotFoundError('Wishlist company not found');
+    return c.json({ removed });
   })
   .get('/education', async (c) => {
     const userId = c.get('auth')!.userId;

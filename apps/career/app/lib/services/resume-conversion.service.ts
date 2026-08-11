@@ -75,7 +75,7 @@ export async function saveResumeToDatabase(
     }
 
     for (const workExperience of data.workExperience) {
-      await CareerRepository.createPosition(tx, ownerUserid, {
+      await CareerRepository.createEngagement(tx, ownerUserid, {
         company: workExperience.company,
         title: workExperience.role,
         description: workExperience.description,
@@ -103,7 +103,12 @@ export async function saveResumeToDatabase(
         liveUrl: project.live_url ?? null,
         githubUrl: project.github_url ?? null,
         technologies: serializeJsonColumn(project.technologies),
-        status: project.status,
+        status:
+          project.status === 'in-progress'
+            ? 'IN_PROGRESS'
+            : project.status === 'completed'
+              ? 'DONE'
+              : 'CANCELED',
         isVisible: true,
         isFeatured: false,
         sortOrder: 0,

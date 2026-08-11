@@ -1,11 +1,11 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { DatePicker, Input, Switch } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
 interface PositionEditorProps {
-  position?: CareerPositionRecord;
+  position?: CareerEngagementRecord;
   onCancel?: () => void;
   submitLabel?: string;
 }
@@ -47,6 +47,21 @@ export function PositionEditor({
         <div className="space-y-2">
           <Label htmlFor="url">URL</Label>
           <Input id="url" name="url" type="url" defaultValue={position?.url ?? ''} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="kind">Engagement type</Label>
+          <select
+            id="kind"
+            name="kind"
+            defaultValue={position?.kind ?? 'EMPLOYMENT'}
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+          >
+            <option value="EMPLOYMENT">Employment</option>
+            <option value="CONTRACT">Contract</option>
+            <option value="FREELANCE">Freelance</option>
+            <option value="VOLUNTEER">Volunteer</option>
+            <option value="OTHER">Other</option>
+          </select>
         </div>
       </div>
 
@@ -142,19 +157,6 @@ export function PositionEditor({
           <Label htmlFor="source">Source</Label>
           <Input id="source" name="source" defaultValue={position?.source ?? ''} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="projectStatus">Project status</Label>
-          <Input
-            id="projectStatus"
-            name="projectStatus"
-            defaultValue={position?.projectStatus ?? ''}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Switch name="isTarget" defaultChecked={position?.isTarget ?? false} />
-        <Label>Target role (job search goal)</Label>
       </div>
 
       <div className="flex justify-end gap-3">

@@ -94,39 +94,34 @@ export default function ApplicationOverviewRoute() {
         </Card>
       )}
 
-      {application.offer && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Offer</CardTitle>
-            <CardDescription>Compensation details.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-              {application.offer.baseSalary != null && (
-                <DetailItem label="Base">
-                  {formatApplicationSalary(application.offer.baseSalary)}
-                </DetailItem>
-              )}
-              {application.offer.equity && (
-                <DetailItem label="Equity">{application.offer.equity}</DetailItem>
-              )}
-              {application.offer.bonus != null && (
-                <DetailItem label="Bonus">
-                  {formatApplicationSalary(application.offer.bonus)}
-                </DetailItem>
-              )}
-              {application.offer.totalComp != null && (
-                <DetailItem label="Total Comp">
-                  {formatApplicationSalary(application.offer.totalComp)}
-                </DetailItem>
-              )}
-              {application.offer.decision && (
-                <DetailItem label="Decision">{application.offer.decision}</DetailItem>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
-      )}
+      {application.offers.map((offer) => {
+        const stage = application.stages.find((candidate) => candidate.id === offer.stageId);
+        return (
+          <Card key={offer.id}>
+            <CardHeader>
+              <CardTitle>{stage?.stage ?? 'Offer'}</CardTitle>
+              <CardDescription>Compensation details.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                {offer.baseSalary != null && (
+                  <DetailItem label="Base">{formatApplicationSalary(offer.baseSalary)}</DetailItem>
+                )}
+                {offer.equity && <DetailItem label="Equity">{offer.equity}</DetailItem>}
+                {offer.bonus != null && (
+                  <DetailItem label="Bonus">{formatApplicationSalary(offer.bonus)}</DetailItem>
+                )}
+                {offer.totalComp != null && (
+                  <DetailItem label="Total Comp">
+                    {formatApplicationSalary(offer.totalComp)}
+                  </DetailItem>
+                )}
+                <DetailItem label="Decision">{offer.decision}</DetailItem>
+              </dl>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

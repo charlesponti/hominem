@@ -1,16 +1,20 @@
 import * as z from 'zod';
 
 import {
+  addCareerWishlistCompany,
   getCareerApplicationDetail,
   getCareerProfile,
   getCareerSocialLinks,
   listCareerApplications,
   listCareerCertifications,
   listCareerEducation,
-  listCareerPositions,
+  listCareerEngagements,
   listCareerProjects,
   listCareerSkills,
   listCareerTestimonials,
+  listCareerWishlistCompanies,
+  removeCareerWishlistCompany,
+  updateCareerWishlistCompany,
 } from '../../application/career.service';
 import {
   careerApplicationDetailSchema,
@@ -18,13 +22,19 @@ import {
   careerApplicationsSchema,
   careerCertificationsSchema,
   careerEducationSchema,
-  careerPositionsQuerySchema,
-  careerPositionsSchema,
+  careerEngagementsQuerySchema,
+  careerEngagementsSchema,
   careerProfileSchema,
   careerProjectsSchema,
   careerSkillsSchema,
   careerSocialLinksSchema,
   careerTestimonialsSchema,
+  careerWishlistCompaniesQuerySchema,
+  careerWishlistCompaniesSchema,
+  careerWishlistCompanyCreateSchema,
+  careerWishlistCompanyDeleteSchema,
+  careerWishlistCompanySchema,
+  careerWishlistCompanyUpdateSchema,
 } from '../../schemas/career.schema';
 import { logRedaction } from '../evidence';
 import { registerTool } from '../tools';
@@ -73,21 +83,87 @@ registerTool(
 
 registerTool(
   {
-    name: 'career_positions',
-    title: 'List career positions',
-    description: 'Returns work positions (past, current, and target companies) filtered by type.',
-    inputSchema: careerPositionsQuerySchema,
-    outputSchema: careerPositionsSchema,
+    name: 'career_engagements',
+    title: 'List career engagements',
+    description: 'Returns authenticated work history engagements filtered by type.',
+    inputSchema: careerEngagementsQuerySchema,
+    outputSchema: careerEngagementsSchema,
     readOnly: true,
     scopes: ['career:read'],
     sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => {
-    const result = await listCareerPositions(ownerUserId, input);
-    logRedaction('career_positions', REDACTED_FIELDS, result.positions.length);
+    const result = await listCareerEngagements(ownerUserId, input);
+    logRedaction('career_engagements', REDACTED_FIELDS, result.engagements.length);
     return result;
   },
+);
+
+registerTool(
+  {
+    name: 'career_wishlist_companies',
+    title: 'List career wishlist companies',
+    description: 'Lists companies you want to work for that are not active job applications.',
+    inputSchema: careerWishlistCompaniesQuerySchema,
+    outputSchema: careerWishlistCompaniesSchema,
+    readOnly: true,
+    scopes: ['career:read'],
+    sensitivity: 'sensitive',
+    resultCap: 100,
+  },
+  (ownerUserId, input) => listCareerWishlistCompanies(ownerUserId, input.limit),
+);
+
+registerTool(
+  {
+    name: 'career_wishlist_add',
+    title: 'Add a career wishlist company',
+    description: 'Adds a company you want to work for to your career wishlist.',
+    inputSchema: careerWishlistCompanyCreateSchema,
+    outputSchema: z.object({ company: careerWishlistCompanySchema }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    company: await addCareerWishlistCompany(ownerUserId, input.company),
+  }),
+);
+
+registerTool(
+  {
+    name: 'career_wishlist_update',
+    title: 'Update a career wishlist company',
+    description: 'Renames a company on your career wishlist.',
+    inputSchema: careerWishlistCompanyUpdateSchema,
+    outputSchema: z.object({ company: careerWishlistCompanySchema.nullable() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    company: await updateCareerWishlistCompany(ownerUserId, input.id, input.company),
+  }),
+);
+
+registerTool(
+  {
+    name: 'career_wishlist_remove',
+    title: 'Remove a career wishlist company',
+    description: 'Removes a company from your career wishlist.',
+    inputSchema: careerWishlistCompanyDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerWishlistCompany(ownerUserId, input.id),
+  }),
 );
 
 registerTool(
@@ -184,7 +260,7 @@ registerTool(
   async (ownerUserId, _input) => {
     const result = await listCareerProjects(ownerUserId);
     logRedaction('career_projects', REDACTED_FIELDS, result.projects.length);
-    return result;
+    return careerProjectsSchema.parse(result);
   },
 );
 

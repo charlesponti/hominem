@@ -1,5 +1,19 @@
 import * as z from 'zod';
 
+export const careerApplicationStatusSchema = z.enum([
+  'WISHLIST',
+  'APPLIED',
+  'SCREENING',
+  'OFFER',
+  'ACCEPTED',
+  'REJECTED',
+  'WITHDRAWN',
+]);
+
+export const careerOfferDecisionSchema = z.enum(['PENDING', 'NEGOTIATING', 'ACCEPTED', 'DECLINED']);
+
+export const careerProjectStatusSchema = z.enum(['BACKLOG', 'IN_PROGRESS', 'DONE', 'CANCELED']);
+
 export const careerProfileSchema = z.object({
   id: z.string().uuid(),
   firstName: z.string().nullable(),
@@ -15,13 +29,13 @@ export const careerProfileSchema = z.object({
   twitterHandles: z.string().nullable(),
 });
 
-export const careerPositionsQuerySchema = z.object({
-  type: z.enum(['all', 'employment', 'target']).optional().default('all'),
-  limit: z.number().int().min(1).max(50).optional().default(20),
+export const careerEngagementsQuerySchema = z.object({
+  type: z.enum(['all', 'employment']).optional().default('all'),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
 });
 
-export const careerPositionsSchema = z.object({
-  positions: z.array(
+export const careerEngagementsSchema = z.object({
+  engagements: z.array(
     z.object({
       id: z.string().uuid(),
       company: z.string(),
@@ -31,18 +45,17 @@ export const careerPositionsSchema = z.object({
       startDate: z.string().nullable(),
       endDate: z.string().nullable(),
       isCurrent: z.boolean(),
-      isTarget: z.boolean(),
       salaryLow: z.number().nullable(),
       salaryHigh: z.number().nullable(),
       currency: z.string().nullable(),
-      recordType: z.string(),
+      kind: z.enum(['EMPLOYMENT', 'CONTRACT', 'FREELANCE', 'VOLUNTEER', 'OTHER']),
       url: z.string().nullable(),
     }),
   ),
 });
 
 export const careerApplicationsQuerySchema = z.object({
-  status: z.string().optional(),
+  status: careerApplicationStatusSchema.optional(),
   limit: z.number().int().min(1).max(50).optional().default(20),
 });
 
@@ -56,7 +69,7 @@ export const careerApplicationsSchema = z.object({
       source: z.string().nullable(),
       appliedAt: z.string().nullable(),
       currentStage: z.string().nullable(),
-      status: z.string().nullable(),
+      status: careerApplicationStatusSchema,
       jobPostingUrl: z.string().nullable(),
       salaryExpectation: z.number().nullable(),
       notes: z.string().nullable(),
@@ -65,6 +78,31 @@ export const careerApplicationsSchema = z.object({
     }),
   ),
 });
+
+export const careerWishlistCompanySchema = z.object({
+  id: z.string().uuid(),
+  company: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const careerWishlistCompaniesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+});
+
+export const careerWishlistCompaniesSchema = z.object({
+  companies: z.array(careerWishlistCompanySchema),
+});
+
+export const careerWishlistCompanyCreateSchema = z.object({
+  company: z.string().trim().min(1).max(200),
+});
+
+export const careerWishlistCompanyUpdateSchema = careerWishlistCompanyCreateSchema.extend({
+  id: z.string().uuid(),
+});
+
+export const careerWishlistCompanyDeleteSchema = z.object({ id: z.string().uuid() });
 
 export const careerApplicationDetailSchema = z.object({
   application: z
@@ -77,7 +115,7 @@ export const careerApplicationDetailSchema = z.object({
       referredBy: z.string().nullable(),
       appliedAt: z.string().nullable(),
       currentStage: z.string().nullable(),
-      status: z.string().nullable(),
+      status: careerApplicationStatusSchema.nullable(),
       resumeUrl: z.string().nullable(),
       coverLetterUrl: z.string().nullable(),
       jobPostingUrl: z.string().nullable(),
@@ -87,25 +125,28 @@ export const careerApplicationDetailSchema = z.object({
         z.object({
           id: z.string().uuid(),
           stage: z.string(),
+          stageKind: z.enum(['APPLICATION', 'SCREEN', 'OFFER', 'OUTCOME']),
+          stageOrder: z.number(),
           enteredAt: z.string().nullable(),
           exitedAt: z.string().nullable(),
           notes: z.string().nullable(),
         }),
       ),
-      offer: z
-        .object({
+      offers: z.array(
+        z.object({
           id: z.string().uuid(),
+          stageId: z.string().uuid(),
           baseSalary: z.number().nullable(),
           equity: z.string().nullable(),
           bonus: z.number().nullable(),
           signingBonus: z.number().nullable(),
           totalComp: z.number().nullable(),
           currency: z.string().nullable(),
-          decision: z.string().nullable(),
+          decision: careerOfferDecisionSchema,
           decisionAt: z.string().nullable(),
           notes: z.string().nullable(),
-        })
-        .nullable(),
+        }),
+      ),
     })
     .nullable(),
 });
@@ -164,7 +205,7 @@ export const careerSkillDeleteSchema = z.object({ id: z.string().uuid() });
 
 export const careerProjectSchema = z.object({
   id: z.string().uuid(),
-  positionId: z.string().uuid().nullable(),
+  organization: z.string().nullable(),
   title: z.string(),
   description: z.string().nullable(),
   shortDescription: z.string().nullable(),
@@ -173,18 +214,26 @@ export const careerProjectSchema = z.object({
   imageUrl: z.string().nullable(),
   videoUrl: z.string().nullable(),
   technologies: z.array(z.string()),
-  status: z.string().nullable(),
+  status: careerProjectStatusSchema.nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   isFeatured: z.boolean(),
   isVisible: z.boolean(),
   sortOrder: z.number(),
+  engagements: z.array(
+    z.object({
+      id: z.string().uuid(),
+      company: z.string(),
+      title: z.string(),
+      kind: z.enum(['EMPLOYMENT', 'CONTRACT', 'FREELANCE', 'VOLUNTEER', 'OTHER']),
+    }),
+  ),
 });
 
 export const careerProjectsSchema = z.object({ projects: z.array(careerProjectSchema) });
 
 export const careerProjectCreateSchema = z.object({
-  positionId: z.string().uuid().nullable().optional(),
+  organization: z.string().trim().nullable().optional(),
   title: z.string().min(1),
   description: z.string().nullable().optional(),
   shortDescription: z.string().nullable().optional(),
@@ -193,12 +242,13 @@ export const careerProjectCreateSchema = z.object({
   imageUrl: z.string().nullable().optional(),
   videoUrl: z.string().nullable().optional(),
   technologies: z.array(z.string()).optional(),
-  status: z.string().nullable().optional(),
+  status: careerProjectStatusSchema.nullable().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   isFeatured: z.boolean().optional(),
   isVisible: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  engagementIds: z.array(z.string().uuid()).optional(),
 });
 
 export const careerProjectUpdateSchema = z.object({

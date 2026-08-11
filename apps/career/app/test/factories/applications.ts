@@ -3,9 +3,11 @@ import type { CareerApplicationRecord } from '@hominem/db';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApplicationOverrides = Partial<CareerApplicationRecord> & Record<string, any>;
 
-export function makeApplication(
-  overrides: ApplicationOverrides = {},
-): CareerApplicationRecord & { stageCount: number; hasOffer: boolean } {
+export function makeApplication(overrides: ApplicationOverrides = {}): CareerApplicationRecord & {
+  currentStage: string | null;
+  stageCount: number;
+  hasOffer: boolean;
+} {
   return {
     id: 'app-1',
     ownerUserid: 'user-1',
@@ -28,5 +30,9 @@ export function makeApplication(
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
     ...overrides,
-  } as CareerApplicationRecord & { stageCount: number; hasOffer: boolean };
+  } as CareerApplicationRecord & {
+    currentStage: string | null;
+    stageCount: number;
+    hasOffer: boolean;
+  };
 }

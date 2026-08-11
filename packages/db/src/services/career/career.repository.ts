@@ -5,21 +5,24 @@ import type {
   AppCareerApplications,
   AppCareerApplicationStages,
   AppCareerEducation,
-  AppCareerOffers,
-  AppCareerPositions,
+  AppCareerApplicationsOffers,
+  AppCareerEngagements,
   AppCareerProfile,
 } from '../../types/database';
 
 export type CareerProfileRecord = Selectable<AppCareerProfile>;
-export type CareerPositionRecord = Selectable<AppCareerPositions>;
+export type CareerEngagementRecord = Selectable<AppCareerEngagements>;
 export type CareerEducationRecord = Selectable<AppCareerEducation>;
 export type CareerApplicationRecord = Selectable<AppCareerApplications>;
 export type CareerApplicationStageRecord = Selectable<AppCareerApplicationStages>;
-export type CareerOfferRecord = Selectable<AppCareerOffers>;
+export type CareerOfferRecord = Selectable<AppCareerApplicationsOffers>;
+type CareerApplicationWithCurrentStage = CareerApplicationRecord & {
+  currentStage: string | null;
+};
 
-export type CareerApplicationWithRelations = CareerApplicationRecord & {
+export type CareerApplicationWithRelations = CareerApplicationWithCurrentStage & {
   stages: CareerApplicationStageRecord[];
-  offer: CareerOfferRecord | null;
+  offers: CareerOfferRecord[];
 };
 
 export type CareerTimelineRecord = {
@@ -132,84 +135,86 @@ export const CareerRepository = {
     await handle.deleteFrom('app.careerProfile').where('ownerUserid', '=', ownerUserId).execute();
   },
 
-  async listPositions(
+  async listEngagements(
     handle: DbHandle,
     ownerUserId: string,
-    opts?: { type?: 'all' | 'employment' | 'target'; limit?: number },
-  ): Promise<CareerPositionRecord[]> {
+    opts?: { type?: 'all' | 'employment'; limit?: number },
+  ): Promise<CareerEngagementRecord[]> {
     let query = handle
-      .selectFrom('app.careerPositions')
+      .selectFrom('app.careerEngagements')
       .selectAll()
       .where('ownerUserid', '=', ownerUserId);
 
     if (opts?.type === 'employment') {
-      query = query.where('isTarget', '=', false);
-    } else if (opts?.type === 'target') {
-      query = query.where('isTarget', '=', true);
+      query = query.where('kind', '=', 'EMPLOYMENT');
     }
 
     return query
       .orderBy('endDate', 'desc')
       .orderBy('startDate', 'desc')
       .limit(opts?.limit ?? 20)
-      .execute() as Promise<CareerPositionRecord[]>;
+      .execute() as Promise<CareerEngagementRecord[]>;
   },
 
-  async getPositionById(
+  async getEngagementById(
     handle: DbHandle,
     ownerUserId: string,
-    positionId: string,
-  ): Promise<CareerPositionRecord | null> {
+    engagementId: string,
+  ): Promise<CareerEngagementRecord | null> {
     const result = await handle
-      .selectFrom('app.careerPositions')
+      .selectFrom('app.careerEngagements')
       .selectAll()
-      .where('id', '=', positionId)
+      .where('id', '=', engagementId)
       .where('ownerUserid', '=', ownerUserId)
       .executeTakeFirst();
-    return (result ?? null) as CareerPositionRecord | null;
+    return (result ?? null) as CareerEngagementRecord | null;
   },
 
-  async createPosition(
+  async createEngagement(
     handle: DbHandle,
     ownerUserId: string,
     data: Record<string, unknown> & {
       company: string;
       title: string;
     },
-  ): Promise<CareerPositionRecord> {
+  ): Promise<CareerEngagementRecord> {
     return (
       handle
-        .insertInto('app.careerPositions')
+        .insertInto('app.careerEngagements')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .values({ ...data, ownerUserid: ownerUserId } as any)
         .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerPositionRecord>
+        .executeTakeFirstOrThrow() as Promise<CareerEngagementRecord>
     );
   },
 
-  async updatePosition(
+  async updateEngagement(
     handle: DbHandle,
     ownerUserId: string,
-    positionId: string,
+    engagementId: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: Record<string, any>,
-  ): Promise<CareerPositionRecord> {
+  ): Promise<CareerEngagementRecord> {
     return (
       handle
-        .updateTable('app.careerPositions')
+        .updateTable('app.careerEngagements')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .set(data as any)
-        .where('id', '=', positionId)
+        .where('id', '=', engagementId)
         .where('ownerUserid', '=', ownerUserId)
         .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerPositionRecord>
+        .executeTakeFirstOrThrow() as Promise<CareerEngagementRecord>
     );
   },
 
-  async deletePosition(handle: DbHandle, ownerUserId: string, positionId: string): Promise<void> {
+  async deleteEngagement(
+    handle: DbHandle,
+    ownerUserId: string,
+    engagementId: string,
+  ): Promise<void> {
     await handle
-      .deleteFrom('app.careerPositions')
-      .where('id', '=', positionId)
+      .deleteFrom('app.careerEngagements')
+      .where('id', '=', engagementId)
       .where('ownerUserid', '=', ownerUserId)
       .execute();
   },
@@ -256,20 +261,26 @@ export const CareerRepository = {
     handle: DbHandle,
     ownerUserId: string,
     opts?: { status?: string; limit?: number },
-  ): Promise<CareerApplicationRecord[]> {
+  ): Promise<CareerApplicationWithCurrentStage[]> {
     let query = handle
-      .selectFrom('app.careerApplications')
-      .selectAll()
-      .where('ownerUserid', '=', ownerUserId);
+      .selectFrom('app.careerApplications as application')
+      .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'application.currentStageId')
+      .selectAll('application')
+      .select('stage.stage as currentStage')
+      .where('application.ownerUserid', '=', ownerUserId);
 
     if (opts?.status) {
-      query = query.where('status', '=', opts.status);
+      query = query.where(
+        'application.status',
+        '=',
+        opts.status as AppCareerApplications['status'],
+      );
     }
 
     return query
       .orderBy('appliedAt', 'desc')
       .limit(opts?.limit ?? 20)
-      .execute() as Promise<CareerApplicationRecord[]>;
+      .execute() as Promise<CareerApplicationWithCurrentStage[]>;
   },
 
   async createApplication(
@@ -328,6 +339,38 @@ export const CareerRepository = {
       .execute();
   },
 
+  async updateWishlistApplication(
+    handle: DbHandle,
+    ownerUserId: string,
+    applicationId: string,
+    company: string,
+  ): Promise<CareerApplicationRecord | null> {
+    const updated = await handle
+      .updateTable('app.careerApplications')
+      .set({ company, title: company })
+      .where('id', '=', applicationId)
+      .where('ownerUserid', '=', ownerUserId)
+      .where('status', '=', 'WISHLIST')
+      .returningAll()
+      .executeTakeFirst();
+    return (updated ?? null) as CareerApplicationRecord | null;
+  },
+
+  async deleteWishlistApplication(
+    handle: DbHandle,
+    ownerUserId: string,
+    applicationId: string,
+  ): Promise<boolean> {
+    const deleted = await handle
+      .deleteFrom('app.careerApplications')
+      .where('id', '=', applicationId)
+      .where('ownerUserid', '=', ownerUserId)
+      .where('status', '=', 'WISHLIST')
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
+  },
+
   async listOffers(
     handle: DbHandle,
     ownerUserId: string,
@@ -335,7 +378,7 @@ export const CareerRepository = {
     Array<CareerOfferRecord & { company: string; title: string; appliedAt: string | null }>
   > {
     const rows = await handle
-      .selectFrom('app.careerOffers as o')
+      .selectFrom('app.careerApplicationsOffers as o')
       .innerJoin('app.careerApplications as a', 'a.id', 'o.applicationId')
       .select([
         'o.id',
@@ -380,7 +423,7 @@ export const CareerRepository = {
         .groupBy('applicationId')
         .execute(),
       handle
-        .selectFrom('app.careerOffers')
+        .selectFrom('app.careerApplicationsOffers')
         .select('applicationId')
         .where('applicationId', 'in', applicationIds)
         .execute(),
@@ -405,29 +448,33 @@ export const CareerRepository = {
     applicationId: string,
   ): Promise<CareerApplicationWithRelations | null> {
     const application = (await handle
-      .selectFrom('app.careerApplications')
-      .selectAll()
-      .where('id', '=', applicationId)
-      .where('ownerUserid', '=', ownerUserId)
-      .executeTakeFirst()) as CareerApplicationRecord | undefined;
+      .selectFrom('app.careerApplications as application')
+      .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'application.currentStageId')
+      .selectAll('application')
+      .select('stage.stage as currentStage')
+      .where('application.id', '=', applicationId)
+      .where('application.ownerUserid', '=', ownerUserId)
+      .executeTakeFirst()) as CareerApplicationWithCurrentStage | undefined;
 
     if (!application) return null;
 
-    const [stages, offerRow] = await Promise.all([
+    const [stages, offers] = await Promise.all([
       handle
         .selectFrom('app.careerApplicationStages')
         .selectAll()
         .where('applicationId', '=', applicationId)
-        .orderBy('enteredAt', 'asc')
+        .orderBy('stageOrder', 'asc')
         .execute() as Promise<CareerApplicationStageRecord[]>,
       handle
-        .selectFrom('app.careerOffers')
-        .selectAll()
-        .where('applicationId', '=', applicationId)
-        .executeTakeFirst() as Promise<CareerOfferRecord | undefined>,
+        .selectFrom('app.careerApplicationsOffers as offer')
+        .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'offer.stageId')
+        .selectAll('offer')
+        .where('offer.applicationId', '=', applicationId)
+        .orderBy('stage.stageOrder', 'asc')
+        .execute() as Promise<CareerOfferRecord[]>,
     ]);
 
-    return { ...application, stages, offer: offerRow ?? null };
+    return { ...application, stages, offers };
   },
 
   async applicationBelongsToOwner(
@@ -447,10 +494,10 @@ export const CareerRepository = {
   async getTimeline(handle: DbHandle, ownerUserId: string): Promise<CareerTimelineRecord[]> {
     const [positions, education, applications] = await Promise.all([
       handle
-        .selectFrom('app.careerPositions')
+        .selectFrom('app.careerEngagements')
         .select(['id', 'company', 'title', 'startDate', 'endDate', 'isCurrent'])
         .where('ownerUserid', '=', ownerUserId)
-        .where('isTarget', '=', false)
+        .where('kind', '=', 'EMPLOYMENT')
         .orderBy('endDate', 'desc')
         .orderBy('startDate', 'desc')
         .execute(),
@@ -513,3 +560,5 @@ export const CareerRepository = {
     return timeline;
   },
 };
+
+export const CareerEngagementRepository = CareerRepository;

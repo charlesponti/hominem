@@ -1,4 +1,4 @@
-import { CareerRepository, db, type CareerPositionRecord } from '@hominem/db';
+import { CareerRepository, db, type CareerEngagementRecord } from '@hominem/db';
 
 export type TimelineEntry = {
   id: string;
@@ -13,7 +13,7 @@ export type TimelineEntry = {
 
 export async function getCareerTimeline(ownerUserId: string): Promise<TimelineEntry[]> {
   const [positions, education] = await Promise.all([
-    CareerRepository.listPositions(db, ownerUserId),
+    CareerRepository.listEngagements(db, ownerUserId),
     CareerRepository.listEducation(db, ownerUserId, 50),
   ]);
 
@@ -52,14 +52,14 @@ export async function getCareerTimeline(ownerUserId: string): Promise<TimelineEn
   });
 }
 
-export async function getUserPositions(ownerUserId: string): Promise<CareerPositionRecord[]> {
-  return CareerRepository.listPositions(db, ownerUserId);
+export async function getUserEngagements(ownerUserId: string): Promise<CareerEngagementRecord[]> {
+  return CareerRepository.listEngagements(db, ownerUserId);
 }
 
-export async function getUserPositionById(
+export async function getUserEngagementById(
   ownerUserId: string,
   id: string,
-): Promise<CareerPositionRecord | null> {
-  const positions = await CareerRepository.listPositions(db, ownerUserId);
+): Promise<CareerEngagementRecord | null> {
+  const positions = await CareerRepository.listEngagements(db, ownerUserId);
   return positions.find((p) => p.id === id) ?? null;
 }

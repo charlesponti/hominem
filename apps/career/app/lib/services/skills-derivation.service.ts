@@ -36,7 +36,7 @@ export async function deriveSkillsFromCareerHistory(
   profileId: string,
 ): Promise<DerivedSkill[]> {
   const [workExperiences, projects] = await Promise.all([
-    CareerRepository.listPositions(db, ownerUserid, { type: 'employment' }),
+    CareerRepository.listEngagements(db, ownerUserid, { type: 'employment' }),
     ProjectRepository.list(db, ownerUserid),
   ]);
 

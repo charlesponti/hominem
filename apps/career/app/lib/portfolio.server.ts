@@ -49,7 +49,7 @@ export async function ensureUserHasProfile(request: Request): Promise<boolean> {
 export async function getFullCareerContext(ownerUserId: string) {
   const [profile, positions, education] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
-    CareerRepository.listPositions(db, ownerUserId),
+    CareerRepository.listEngagements(db, ownerUserId),
     CareerRepository.listEducation(db, ownerUserId, 50),
   ]);
 
@@ -66,7 +66,7 @@ export async function getFullCareerContext(ownerUserId: string) {
 export async function getPublicCareerProfile(ownerUserId: string) {
   const [profile, positions] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
-    CareerRepository.listPositions(db, ownerUserId, { type: 'employment' }),
+    CareerRepository.listEngagements(db, ownerUserId, { type: 'employment' }),
   ]);
 
   return { profile, positions };
@@ -80,7 +80,7 @@ export async function getResumePortfolioContext(
 ): Promise<ResumePortfolio | null> {
   const [profile, positions, skills, projects] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
-    CareerRepository.listPositions(db, ownerUserId),
+    CareerRepository.listEngagements(db, ownerUserId),
     SkillRepository.list(db, ownerUserId),
     ProjectRepository.list(db, ownerUserId),
   ]);

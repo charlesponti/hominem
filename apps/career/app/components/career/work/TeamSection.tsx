@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import {
   Input,
   Select,
@@ -25,7 +25,7 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-type TeamWorkExperience = CareerPositionRecord & {
+type TeamWorkExperience = CareerEngagementRecord & {
   department?: string | null;
   directReports?: number | null;
   reportsTo?: string | null;
@@ -33,7 +33,7 @@ type TeamWorkExperience = CareerPositionRecord & {
   teamSize?: number | null;
 };
 
-export function TeamSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+export function TeamSection({ workExperience }: { workExperience: CareerEngagementRecord }) {
   const teamWorkExperience = workExperience as TeamWorkExperience;
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(

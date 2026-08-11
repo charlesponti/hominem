@@ -7,7 +7,7 @@ import { makeConvertedResumeData } from '~/test/factories/resume';
 import { generateUniqueSlug, saveResumeToDatabase } from './resume-conversion.service';
 
 const testDb = createCareerTestDb();
-const slugTestValues = ['charles-ponti', 'charles-ponti-2', 'charles-ponti-3'];
+const slugTestValues = ['test-person', 'test-person-2', 'test-person-3'];
 
 let slugUser: { id: string };
 
@@ -26,8 +26,8 @@ describe('resume conversion slug generation', () => {
   });
 
   it('normalizes mixed-case and invalid slug input', async () => {
-    await expect(generateUniqueSlug(db, ' Charles Ponti!! ', 'Fallback')).resolves.toBe(
-      'charles-ponti',
+    await expect(generateUniqueSlug(db, ' Test Person!! ', 'Fallback')).resolves.toBe(
+      'test-person',
     );
   });
 
@@ -42,25 +42,25 @@ describe('resume conversion slug generation', () => {
       .insertInto('app.careerProfile')
       .values({
         ownerUserid: slugUser.id,
-        slug: 'charles-ponti',
+        slug: 'test-person',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
       .execute();
 
-    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-2');
+    await expect(generateUniqueSlug(db, 'test-person')).resolves.toBe('test-person-2');
 
     await db
       .insertInto('app.careerProfile')
       .values({
         ownerUserid: slugUser2.id,
-        slug: 'charles-ponti-2',
+        slug: 'test-person-2',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
       .execute();
 
-    await expect(generateUniqueSlug(db, 'charles-ponti')).resolves.toBe('charles-ponti-3');
+    await expect(generateUniqueSlug(db, 'test-person')).resolves.toBe('test-person-3');
   });
 
   it('handles the case where the first 99 suffixes are all taken', async () => {
@@ -162,7 +162,7 @@ describe('resume conversion database save', () => {
 
     const [positionCount, skillCount, project] = await Promise.all([
       db
-        .selectFrom('app.careerPositions')
+        .selectFrom('app.careerEngagements')
         .select(({ fn }) => fn.countAll<number>().as('count'))
         .where('ownerUserid', '=', user.id)
         .executeTakeFirstOrThrow(),

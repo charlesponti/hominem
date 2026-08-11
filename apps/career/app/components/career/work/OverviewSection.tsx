@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { Input, Textarea } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
@@ -21,7 +21,7 @@ export function OverviewSection({
   workExperience,
   metadata,
 }: {
-  workExperience: CareerPositionRecord;
+  workExperience: CareerEngagementRecord;
   metadata: WorkExperienceMetadata;
 }) {
   const [isEditing, setIsEditing] = useState(false);

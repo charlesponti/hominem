@@ -1,4 +1,4 @@
-import type { CareerPositionRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db';
 import { Input } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
@@ -17,7 +17,11 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function CompensationSection({ workExperience }: { workExperience: CareerPositionRecord }) {
+export function CompensationSection({
+  workExperience,
+}: {
+  workExperience: CareerEngagementRecord;
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
