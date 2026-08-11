@@ -42,7 +42,7 @@ describe('resume conversion slug generation', () => {
       .insertInto('app.careerProfile')
       .values({
         ownerUserid: slugUser.id,
-        slug: 'charles-ponti',
+        slug: 'test-person',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -54,7 +54,7 @@ describe('resume conversion slug generation', () => {
       .insertInto('app.careerProfile')
       .values({
         ownerUserid: slugUser2.id,
-        slug: 'charles-ponti-2',
+        slug: 'test-person-2',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
