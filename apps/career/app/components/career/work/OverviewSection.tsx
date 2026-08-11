@@ -81,36 +81,36 @@ export function OverviewSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Role</Label>
+              <Label>Role</Label>
               <Input {...register('role', { required: 'Add the role title.' })} />
               {errors.role?.message && (
-                <p className="body-4 text-destructive">{errors.role.message}</p>
+                <p className="text-sm text-destructive">{errors.role.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Company</Label>
+              <Label>Company</Label>
               <Input {...register('company', { required: 'Add the company name.' })} />
               {errors.company?.message && (
-                <p className="body-4 text-destructive">{errors.company.message}</p>
+                <p className="text-sm text-destructive">{errors.company.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Start month</Label>
+              <Label>Start month</Label>
               <Input type="month" {...register('startDate')} />
               {errors.startDate?.message && (
-                <p className="body-4 text-destructive">{errors.startDate.message}</p>
+                <p className="text-sm text-destructive">{errors.startDate.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">End month</Label>
-              <p className="body-4 text-muted-foreground">Leave blank for a current role.</p>
+              <Label>End month</Label>
+              <p className="text-sm text-muted-foreground">Leave blank for a current role.</p>
               <Input type="month" {...register('endDate')} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="subheading-4 text-muted-foreground">Description</Label>
-            <p className="body-4 text-muted-foreground">
+            <Label>Description</Label>
+            <p className="text-sm text-muted-foreground">
               Focus on scope, responsibilities, and the shape of the role.
             </p>
             <Textarea rows={5} {...register('description')} />
@@ -118,7 +118,7 @@ export function OverviewSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Location</Label>
+              <Label>Location</Label>
               <Input placeholder="San Francisco, CA" {...register('location')} />
             </div>
           </div>

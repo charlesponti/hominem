@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   clearScreen: false,
+  optimizeDeps: {
+    force: mode === 'development',
+  },
   plugins: [tailwindcss(), reactRouter()],
   resolve: {
     alias: [

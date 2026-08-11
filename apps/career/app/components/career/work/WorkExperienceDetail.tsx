@@ -71,7 +71,7 @@ export function WorkExperienceDetail({
               </p>
             </div>
 
-            <div className="body-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
+            <div className="text-sm flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
               <span>{formatDateRange(workExperience.startDate, workExperience.endDate)}</span>
             </div>
           </div>

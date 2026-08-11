@@ -224,7 +224,10 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
       </div>
 
       <p
-        className={cn('body-4', validation.message ? helperToneClassName : 'text-muted-foreground')}
+        className={cn(
+          'text-sm',
+          validation.message ? helperToneClassName : 'text-muted-foreground',
+        )}
       >
         {validation.message || 'Lowercase letters, numbers, and hyphens only.'}
       </p>

@@ -18,11 +18,7 @@ export function PhoneField({
 }: PhoneFieldProps) {
   return (
     <div className="space-y-1">
-      {label ? (
-        <Label htmlFor={id} className="subheading-4 text-muted-foreground">
-          {label}
-        </Label>
-      ) : null}
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
       <div className="flex items-center">
         <span className="inline-flex h-9 shrink-0 items-center rounded-l-md border border-r-0 bg-surface-base px-3 text-muted-foreground">
           <Phone className="size-4" aria-hidden />

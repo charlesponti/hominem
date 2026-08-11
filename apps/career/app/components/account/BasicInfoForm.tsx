@@ -25,8 +25,6 @@ export function BasicInfoForm({
 
   const lockedEmail = accountEmail || profile.email || '';
 
-  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '';
-
   const {
     register,
     handleSubmit,
@@ -35,12 +33,9 @@ export function BasicInfoForm({
     control,
     getValues,
     setValue,
-    watch,
   } = useForm<BasicInfoFormValues>({
     defaultValues: profileToFormValues(profile, lockedEmail),
   });
-
-  const displayName = watch('name') || fullName || lockedEmail || 'Profile';
 
   useEffect(() => {
     reset(profileToFormValues(profile, lockedEmail));
@@ -89,117 +84,91 @@ export function BasicInfoForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 border rounded-2xl p-4">
       <FormErrorAlert title="Basic info wasn’t saved" message={submissionError} />
 
       <section className="space-y-5">
-        <div className="flex items-center gap-4">
-          <ProfileImageUpload
-            compact
-            currentImageUrl={profile.profileImageUrl || undefined}
-            onUpload={onImageUpload}
-          />
-          <div className="min-w-0 space-y-1">
-            <p className="subheading-3 truncate">{displayName}</p>
-            <p className="body-4 text-muted-foreground">
-              Updated {new Date(profile.updatedAt).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
+        <ProfileImageUpload
+          compact
+          currentImageUrl={profile.profileImageUrl || undefined}
+          onUpload={onImageUpload}
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="name" className="subheading-4 text-muted-foreground">
-              Full Name
-            </Label>
+            <Label htmlFor="name">Full Name</Label>
             <Input id="name" {...register('name', { required: 'Name is required' })} />
-            {errors.name && <p className="body-4 text-destructive">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="initials" className="subheading-4 text-muted-foreground">
-              Initials
-            </Label>
+            <Label htmlFor="initials">Initials</Label>
             <Input id="initials" {...register('initials')} maxLength={10} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="jobTitle" className="subheading-4 text-muted-foreground">
-              Job Title
-            </Label>
+            <Label htmlFor="jobTitle">Job Title</Label>
             <Input id="jobTitle" {...register('jobTitle', { required: 'Job title is required' })} />
             {errors.jobTitle && (
-              <p className="body-4 text-destructive">{errors.jobTitle.message}</p>
+              <p className="text-sm text-destructive">{errors.jobTitle.message}</p>
             )}
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="tagline" className="subheading-4 text-muted-foreground">
-              Tagline
-            </Label>
+            <Label htmlFor="tagline">Tagline</Label>
             <Input
               id="tagline"
               {...register('tagline', { required: 'Tagline is required' })}
               maxLength={500}
             />
-            {errors.tagline && <p className="body-4 text-destructive">{errors.tagline.message}</p>}
+            {errors.tagline && <p className="text-sm text-destructive">{errors.tagline.message}</p>}
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="bio" className="subheading-4 text-muted-foreground">
-              Bio
-            </Label>
+            <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
               {...register('bio', { required: 'Bio is required' })}
               rows={4}
               className="resize-none"
             />
-            {errors.bio && <p className="body-4 text-destructive">{errors.bio.message}</p>}
+            {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
           </div>
         </div>
       </section>
 
-      <EditorSection title="Contact">
-        <div className="grid gap-4 md:grid-cols-2">
-          <PhoneField {...register('phone')} maxLength={50} />
-        </div>
-      </EditorSection>
+      <PhoneField {...register('phone')} maxLength={50} />
 
-      <EditorSection title="Location">
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="currentLocation" className="subheading-4 text-muted-foreground">
-              Location
-            </Label>
-            <Input
-              id="currentLocation"
-              {...register('currentLocation', { required: 'Location is required' })}
-              maxLength={255}
-            />
-            {errors.currentLocation && (
-              <p className="body-4 text-destructive">{errors.currentLocation.message}</p>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="currentLocation">Location</Label>
+          <Input
+            id="currentLocation"
+            {...register('currentLocation', { required: 'Location is required' })}
+            maxLength={255}
+          />
+          {errors.currentLocation && (
+            <p className="text-sm text-destructive">{errors.currentLocation.message}</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between border rounded-2xl bg-muted/40 px-4 py-2 max-w-fit gap-4">
+          <p className="subheading-4 text-foreground">Open to remote</p>
+          <Controller
+            name="openToRemote"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                id="openToRemote"
+                checked={field.value}
+                disabled={isTogglingFlag || isSubmitting}
+                onCheckedChange={(checked) => {
+                  void handleFlagToggle('openToRemote', checked);
+                }}
+              />
             )}
-          </div>
-
-          <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-4">
-            <p className="subheading-4 text-foreground">Open to remote</p>
-            <Controller
-              name="openToRemote"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  id="openToRemote"
-                  checked={field.value}
-                  disabled={isTogglingFlag || isSubmitting}
-                  onCheckedChange={(checked) => {
-                    void handleFlagToggle('openToRemote', checked);
-                  }}
-                />
-              )}
-            />
-          </div>
+          />
         </div>
-      </EditorSection>
+      </div>
 
-      <section className="pt-6">
-        <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-4">
+      <section>
+        <div className="flex items-center justify-between border rounded-2xl bg-muted/40 px-4 py-2 max-w-fit gap-4">
           <p className="subheading-4 text-foreground">Open to opportunities</p>
           <Controller
             name="availabilityStatus"

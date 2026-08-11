@@ -182,7 +182,7 @@ export function EmailOtpAuthFlow({
             value={otp}
           />
           {error ? (
-            <p className="body-4 text-destructive-text" role="alert">
+            <p className="text-sm text-destructive-text" role="alert">
               {error}
             </p>
           ) : null}

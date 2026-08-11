@@ -10,6 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const authSource = path.resolve(import.meta.dirname, '../../packages/auth/src');
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
+  const isDev = mode === 'development';
   const isProd = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
 
@@ -146,6 +147,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       tsconfigPaths: true,
     },
     optimizeDeps: {
+      force: isDev,
       exclude: ['@react-router/node'],
     },
   };

@@ -67,8 +67,8 @@ export function AccountDocumentsSection({
       {documents.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-6 text-center">
           <p className="body-3 text-muted-foreground">
-            No resumes uploaded yet. Upload a PDF from the Account page to import your profile
-            from it.
+            No resumes uploaded yet. Upload a PDF from the Account page to import your profile from
+            it.
           </p>
         </div>
       ) : (
@@ -84,7 +84,7 @@ export function AccountDocumentsSection({
                   <FileTextIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 space-y-0.5">
                     <p className="subheading-4 truncate text-foreground">{doc.displayName}</p>
-                    <p className="body-4 text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {formatBytes(doc.size)}
                       {formatDate(doc.lastModified) ? ` · ${formatDate(doc.lastModified)}` : ''}
                     </p>

@@ -65,9 +65,7 @@ export function AchievementsSection({ achievements }: { achievements: string[] }
                 <span className="body-3 mt-3 text-muted-foreground">•</span>
                 <div className="flex-1">
                   <div className="space-y-1.5">
-                    {index === 0 && (
-                      <Label className="subheading-4 text-muted-foreground">Achievement</Label>
-                    )}
+                    {index === 0 && <Label>Achievement</Label>}
                     <Textarea rows={3} {...register(`items.${index}.value` as const)} />
                   </div>
                 </div>

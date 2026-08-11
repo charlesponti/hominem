@@ -29,7 +29,7 @@ export function ProjectsSection({
               ? 'No projects are linked to this role yet.'
               : `${linkedProjectCount} project${linkedProjectCount === 1 ? '' : 's'} linked to this role.`}
           </p>
-          <p className="body-4 text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Open the shared projects screen to manage launches, case studies, and shipped work for{' '}
             {companyName}. We’ll pre-apply the client filter for you.
           </p>

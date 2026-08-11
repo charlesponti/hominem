@@ -211,12 +211,16 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="heading-2 text-foreground">Profile</h2>
+    <div className="space-y-12 mx-auto max-w-3xl">
+      <header className="flex justify-between">
+        <h2 className="text-4xl italic font-serif text-foreground">
+          Profile
+          <p className="text-sm text-muted-foreground/25">
+            Last Updated: {new Date(currentProfile.updatedAt).toLocaleDateString()}
+          </p>
+        </h2>
         <ActionButtonRow
           icon={Download}
-          label="Download PDF"
           onClick={() => handleDownloadPdf()}
           variant="outline"
           disabled={pdfGenerating}
@@ -224,14 +228,12 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
           loadingLabel="Generating PDF..."
           helper={!isPublic ? 'Make your profile public to generate a PDF.' : undefined}
         />
-      </div>
+      </header>
 
       <div className="max-w-2xl space-y-6">
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="profile-slug" className="subheading-4 text-muted-foreground">
-              Profile URL
-            </Label>
+        <section className="space-y-8">
+          <div className="space-y-1 border border-border rounded-2xl p-4">
+            <Label htmlFor="profile-slug">Profile URL</Label>
             <SlugEditor
               profileId={currentProfile.id}
               initialSlug={currentProfile.slug || ''}
@@ -242,8 +244,8 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
 
           <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-4 border border-border">
             <div>
-              <p className="subheading-4 text-foreground">Public profile</p>
-              <p className="body-4 text-muted-foreground">
+              <p className="text-lg text-foreground">Public profile</p>
+              <p className="text-sm text-muted-foreground">
                 Anyone with the link can view your profile at this URL.
               </p>
             </div>

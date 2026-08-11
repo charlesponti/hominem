@@ -185,7 +185,7 @@ export function ApplicationResumeTab({
                 </span>
               ))}
               {(parsedJobPosting.skills?.length ?? 0) > 6 && (
-                <span className="body-4 text-muted-foreground">
+                <span className="text-sm text-muted-foreground">
                   +{(parsedJobPosting.skills?.length ?? 0) - 6} more
                 </span>
               )}
@@ -225,7 +225,7 @@ export function ApplicationResumeTab({
             </div>
           </CardHeader>
           <CardContent>
-            <pre className="body-4 text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+            <pre className="text-sm text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
               {application.resumeUrl.slice(0, 800)}
               {application.resumeUrl.length > 800 ? '\n\n…' : ''}
             </pre>
@@ -245,9 +245,7 @@ export function ApplicationResumeTab({
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="resume-format" className="subheading-4 text-muted-foreground">
-                  Format
-                </Label>
+                <Label htmlFor="resume-format">Format</Label>
                 <Select
                   value={resumeFormat}
                   onValueChange={(v) => setResumeFormat(v as typeof resumeFormat)}
@@ -265,9 +263,7 @@ export function ApplicationResumeTab({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="resume-length" className="subheading-4 text-muted-foreground">
-                  Length
-                </Label>
+                <Label htmlFor="resume-length">Length</Label>
                 <Select
                   value={targetLength}
                   onValueChange={(v) => setTargetLength(v as typeof targetLength)}
@@ -285,7 +281,7 @@ export function ApplicationResumeTab({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="resume-focus-areas" className="subheading-4 text-muted-foreground">
+              <Label htmlFor="resume-focus-areas">
                 Focus Areas{' '}
                 <span className="font-normal text-muted-foreground/70">
                   (optional, comma-separated)

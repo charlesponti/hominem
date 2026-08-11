@@ -13,7 +13,7 @@ export function ActionButtonRow({
   loadingLabel,
 }: {
   icon: typeof Edit;
-  label: string;
+  label?: string;
   helper?: string;
   onClick: () => void | Promise<void>;
   variant?: 'default' | 'outline' | 'ghost';
@@ -32,10 +32,10 @@ export function ActionButtonRow({
         isLoading={isLoading}
         loadingLabel={loadingLabel}
       >
-        <Icon className="mr-2 h-4 w-4" />
-        {label}
+        <Icon className="size-4" />
+        {label ?? null}
       </Button>
-      {helper ? <p className="body-4 px-1 text-muted-foreground">{helper}</p> : null}
+      {helper ? <p className="text-sm px-1 text-muted-foreground">{helper}</p> : null}
     </div>
   );
 }

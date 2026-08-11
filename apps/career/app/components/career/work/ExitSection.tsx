@@ -63,7 +63,7 @@ export function ExitSection({ workExperience }: { workExperience: CareerEngageme
           <FormErrorAlert title="Exit details weren’t saved" message={submissionError} />
 
           <div className="space-y-1.5">
-            <Label className="subheading-4 text-muted-foreground">Reason for leaving</Label>
+            <Label>Reason for leaving</Label>
             <Controller
               control={control}
               name="reasonForLeaving"

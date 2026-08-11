@@ -62,8 +62,8 @@ export function CompensationSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Base salary</Label>
-              <p className="body-4 text-muted-foreground">Enter the annual amount in dollars.</p>
+              <Label>Base salary</Label>
+              <p className="text-sm text-muted-foreground">Enter the annual amount in dollars.</p>
               <Input inputMode="decimal" placeholder="180000" {...register('baseSalary')} />
             </div>
           </div>

@@ -93,7 +93,7 @@ export default function Demo() {
               {demoPortfolio.personalInfo.stats.map((stat) => (
                 <div key={stat.label} className="rounded-md border border-border bg-muted/40 p-3">
                   <div className="heading-4 text-foreground">{stat.value}</div>
-                  <div className="body-4 text-muted-foreground">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -118,13 +118,13 @@ export default function Demo() {
                     <h3 className="heading-4 text-foreground">{job.title}</h3>
                     <p className="body-3 text-muted-foreground">{job.role}</p>
                   </div>
-                  <p className="body-4 text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(job.start_date).getFullYear()} -{' '}
                     {job.end_date ? new Date(job.end_date).getFullYear() : 'Present'}
                   </p>
                 </div>
                 <p className="body-3 mt-3 text-muted-foreground">{job.description}</p>
-                <p className="body-4 mt-2 text-muted-foreground">{job.metrics}</p>
+                <p className="text-sm mt-2 text-muted-foreground">{job.metrics}</p>
                 <TagList tags={job.tags} />
               </div>
             ))}

@@ -54,8 +54,8 @@ export function TechnologiesSection({ technologies }: { technologies: string[] }
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormErrorAlert title="Technologies weren’t saved" message={submissionError} />
           <div className="space-y-1.5">
-            <Label className="subheading-4 text-muted-foreground">Technologies</Label>
-            <p className="body-4 text-muted-foreground">
+            <Label>Technologies</Label>
+            <p className="text-sm text-muted-foreground">
               Use a comma-separated list, like React, TypeScript, GraphQL.
             </p>
             <Textarea rows={4} {...register('technologies')} />
@@ -75,7 +75,7 @@ export function TechnologiesSection({ technologies }: { technologies: string[] }
           {technologies.map((technology) => (
             <span
               key={technology}
-              className="body-4 rounded-full border px-3 py-1 text-foreground/90"
+              className="text-sm rounded-full border px-3 py-1 text-foreground/90"
             >
               {technology}
             </span>

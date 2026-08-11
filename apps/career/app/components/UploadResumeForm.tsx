@@ -191,7 +191,7 @@ export function UploadResumeForm({
         failedActions={
           <>
             {errorStage ? (
-              <p className="body-4 text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Failed during {errorStage.replaceAll('-', ' ')}.
               </p>
             ) : null}

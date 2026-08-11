@@ -83,7 +83,7 @@ export function TeamSection({ workExperience }: { workExperience: CareerEngageme
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Seniority level</Label>
+              <Label>Seniority level</Label>
               <Controller
                 control={control}
                 name="seniorityLevel"
@@ -108,21 +108,21 @@ export function TeamSection({ workExperience }: { workExperience: CareerEngageme
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Department</Label>
+              <Label>Department</Label>
               <Input placeholder="Engineering" {...register('department')} />
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Team size</Label>
+              <Label>Team size</Label>
               <Input inputMode="numeric" placeholder="12" {...register('teamSize')} />
             </div>
             <div className="space-y-1.5">
-              <Label className="subheading-4 text-muted-foreground">Direct reports</Label>
+              <Label>Direct reports</Label>
               <Input inputMode="numeric" placeholder="4" {...register('directReports')} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="subheading-4 text-muted-foreground">Reports to</Label>
+            <Label>Reports to</Label>
             <Input placeholder="Director of Engineering" {...register('reportsTo')} />
           </div>
 

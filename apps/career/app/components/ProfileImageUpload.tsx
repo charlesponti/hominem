@@ -100,9 +100,9 @@ export function ProfileImageUpload({
   const avatarIconClass = compact ? 'w-5 h-5' : 'w-6 h-6';
 
   return (
-    <div>
+    <div className="space-y-1">
       {/* Current Profile Image */}
-      <div className={compact ? 'mb-3 flex items-center' : 'mb-4 flex items-center'}>
+      <div className={compact ? 'flex items-center' : 'mb-4 flex items-center'}>
         <Button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -110,7 +110,7 @@ export function ProfileImageUpload({
           className="group p-0"
           aria-label="Upload profile image"
         >
-          <div className="mr-4 flex shrink-0 items-center justify-center">
+          <div className="flex shrink-0 items-center justify-center">
             <div
               className={cn(
                 'flex items-center justify-center overflow-hidden rounded-full border border-border bg-muted',

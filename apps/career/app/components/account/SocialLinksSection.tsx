@@ -110,7 +110,7 @@ export function SocialLinksSection({
                   />
                 </div>
                 {errors.github && (
-                  <p className="body-4 text-destructive">{errors.github.message}</p>
+                  <p className="text-sm text-destructive">{errors.github.message}</p>
                 )}
               </div>
 
@@ -142,7 +142,7 @@ export function SocialLinksSection({
                   />
                 </div>
                 {errors.linkedin && (
-                  <p className="body-4 text-destructive">{errors.linkedin.message}</p>
+                  <p className="text-sm text-destructive">{errors.linkedin.message}</p>
                 )}
               </div>
 
@@ -174,7 +174,7 @@ export function SocialLinksSection({
                   />
                 </div>
                 {errors.twitter && (
-                  <p className="body-4 text-destructive">{errors.twitter.message}</p>
+                  <p className="text-sm text-destructive">{errors.twitter.message}</p>
                 )}
               </div>
 
@@ -200,7 +200,7 @@ export function SocialLinksSection({
                   })}
                 />
                 {errors.website && (
-                  <p className="body-4 text-destructive">{errors.website.message}</p>
+                  <p className="text-sm text-destructive">{errors.website.message}</p>
                 )}
               </div>
             </div>
