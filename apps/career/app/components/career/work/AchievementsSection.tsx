@@ -1,9 +1,10 @@
 import { Textarea } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
-import { PencilIcon, PlusIcon } from 'lucide-react';
+import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm, type SubmitHandler } from 'react-hook-form';
 
+import { AddButton } from '~/components/AddButton';
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { useWorkExperienceSection } from '~/hooks/useWorkExperienceSection';
 import type { AchievementsFormValues } from '~/lib/career/work-experience-form';
@@ -82,10 +83,7 @@ export function AchievementsSection({ achievements }: { achievements: string[] }
             ))}
           </div>
 
-          <Button type="button" variant="outline" onClick={() => append({ value: '' })}>
-            <PlusIcon className="size-4" />
-            Add achievement
-          </Button>
+          <AddButton type="button" label="Add achievement" onClick={() => append({ value: '' })} />
 
           <SectionFormActions
             isSubmitting={isSubmitting}

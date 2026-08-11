@@ -16,7 +16,6 @@ function loaderData(overrides: Partial<Route.ComponentProps['loaderData']> = {})
     total: 0,
     hasApplications: false,
     statusOptions: [],
-    sourceOptions: [],
     ...overrides,
   };
 }
@@ -48,7 +47,6 @@ describe('Applications route', () => {
             total: 1,
             hasApplications: true,
             statusOptions: [{ value: JobApplicationStatus.SCREENING, label: 'SCREENING (1)' }],
-            sourceOptions: [{ value: 'linkedin', label: 'linkedin (1)' }],
           })}
         />
       </MemoryRouter>,

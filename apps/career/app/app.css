@@ -4,6 +4,181 @@
 
 @source '../node_modules/@ponti-studios/ui/src';
 
+/* App theme overrides — light mode. */
+:root {
+  --background: #fcfcfd;
+  --card: #f9f9fb;
+  --popover: #f0f0f3;
+  --muted: #f9f9fb;
+  --text-primary: #1c2024;
+  --text-secondary: #60646c;
+  --tertiary: #80838d;
+  --primary: #000000;
+  --destructive: #ce2c31;
+  --success: #30a46c;
+  --warning: #ffc53d;
+  --primary-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
+  --text-destructive: #c82c31;
+  --border-default: #cdced6;
+  --focus-ring: #000000;
+}
+
+/* App theme overrides — dark mode. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111113;
+    --card: #18191b;
+    --popover: #212225;
+    --muted: #18191b;
+    --text-primary: #edeef0;
+    --text-secondary: #b0b4ba;
+    --tertiary: #777b84;
+    --primary: #ffffff;
+    --destructive: #ce2c31;
+    --success: #30a46c;
+    --warning: #ffc53d;
+    --primary-foreground: #111113;
+    --destructive-foreground: #ffffff;
+    --text-destructive: #ff9592;
+    --border-default: #43484e;
+    --focus-ring: #ffffff;
+  }
+}
+
+@utility heading-1 {
+  font-size: clamp(2.25rem, 3vw, 3rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
+}
+
+@utility heading-2 {
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-tight);
+}
+
+@utility heading-3 {
+  font-size: clamp(1.125rem, 1.5vw, 1.25rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+
+@utility heading-4 {
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  letter-spacing: -0.03em;
+}
+
+@utility body-1 {
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.6;
+  letter-spacing: var(--tracking-normal);
+}
+
+@utility body-2 {
+  font-size: clamp(0.875rem, 1vw, 1rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-normal);
+}
+
+@utility body-3 {
+  font-size: clamp(0.75rem, 0.875vw, 0.875rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+@utility body-4 {
+  font-size: clamp(0.625rem, 0.75vw, 0.75rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+@utility subheading-1 {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+@utility subheading-2 {
+  font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+@utility subheading-3 {
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-normal);
+}
+
+@utility subheading-4 {
+  font-size: clamp(0.875rem, 1vw, 1.125rem);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-normal);
+}
+
+@keyframes sort-direction-change {
+  from {
+    opacity: 0.65;
+    transform: rotate(-90deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes sort-label-change {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-sort-direction {
+  animation: sort-direction-change var(--duration-200) var(--ease-out) 1;
+  display: inline-flex;
+}
+
+@utility animate-sort-label {
+  animation: sort-label-change var(--duration-150) var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sort-direction {
+    animation: sort-label-change var(--duration-150) linear 1;
+  }
+}
+
 /* Hominem-only compatibility tokens for legacy app surfaces. These derive
  * missing semantic states from the 0.4.1 base palette without extending the
  * shared package's public token contract. */

@@ -4,6 +4,7 @@ import { Button, Label } from '@ponti-studios/ui/primitives';
 import { AwardIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
+import { AddButton } from '~/components/AddButton';
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import type { AccountActionResult, CertificationFormValues } from '~/lib/account/types';
 
@@ -121,9 +122,7 @@ export function CertificationsSection({
           <Input id="cert-date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
         </div>
         <div className="sm:col-span-3">
-          <Button type="submit" variant="outline" disabled={isSubmitting}>
-            Add certification
-          </Button>
+          <AddButton type="submit" label="Add certification" disabled={isSubmitting} />
         </div>
       </form>
     </section>

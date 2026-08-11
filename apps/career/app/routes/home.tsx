@@ -3,6 +3,7 @@ import { buttonVariants } from '@ponti-studios/ui/primitives';
 import { BriefcaseIcon, FolderIcon, PlusIcon } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { CareerCollection } from '~/components/career/career-list';
 import { getUserEngagements } from '~/lib/career/queries/career-queries';
 import { userContext } from '~/lib/middleware';
@@ -94,13 +95,11 @@ function SummarySection({
           >
             View all →
           </Link>
-          <Link
-            to={addTo}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5')}
-          >
-            <PlusIcon className="size-4" />
-            {addLabel}
-          </Link>
+          <AddButton asChild label={addLabel}>
+            <Link to={addTo}>
+              <PlusIcon aria-hidden />
+            </Link>
+          </AddButton>
         </div>
       </div>
       <div className="mt-4">{children}</div>
@@ -134,9 +133,11 @@ function WorkSummary({
           title: 'No positions yet',
           description: "Add your roles as you go so your story isn't a scramble later.",
           action: (
-            <Link to="/work/new" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
-              Add your first role
-            </Link>
+            <AddButton asChild label="Add your first role">
+              <Link to="/work/new">
+                <PlusIcon aria-hidden />
+              </Link>
+            </AddButton>
           ),
         }}
       />
@@ -175,12 +176,11 @@ function ProjectsSummary({
           title: 'No projects yet',
           description: "Log a project or win while it's fresh, before the details fade.",
           action: (
-            <Link
-              to="/projects/new"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-            >
-              Add your first project
-            </Link>
+            <AddButton asChild label="Add your first project">
+              <Link to="/projects/new">
+                <PlusIcon aria-hidden />
+              </Link>
+            </AddButton>
           ),
         }}
       />

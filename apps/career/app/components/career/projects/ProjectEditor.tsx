@@ -4,6 +4,8 @@ import { Button } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
+
 interface ProjectEditorProps {
   project?: CareerProjectRecord;
   engagements?: Array<{ id: string; title: string; company: string }>;
@@ -146,9 +148,13 @@ export function ProjectEditor({
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {submitLabel}
-        </Button>
+        {submitLabel.startsWith('Add ') ? (
+          <AddButton type="submit" label={submitLabel} disabled={isSubmitting} />
+        ) : (
+          <Button type="submit" disabled={isSubmitting}>
+            {submitLabel}
+          </Button>
+        )}
       </div>
     </Form>
   );

@@ -1,9 +1,10 @@
 import { humanizeIdentifier } from '@hominem/utils/text';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { Button } from '@ponti-studios/ui/primitives';
-import { FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
+import { BriefcaseBusinessIcon, FolderIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { ApplicationsFilters } from '~/components/career/applications/ApplicationsFilters';
 import { CareerCollection } from '~/components/career/career-list';
 import { StatusBadge } from '~/components/status-badge';
@@ -31,7 +32,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       page,
       pageSize: PAGE_SIZE,
       status: url.searchParams.get('status') ?? undefined,
-      source: url.searchParams.get('source') ?? undefined,
       query: url.searchParams.get('query') ?? undefined,
       sort,
     });
@@ -42,17 +42,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       total: 0,
       hasApplications: false,
       statusOptions: [],
-      sourceOptions: [],
     };
   }
 }
 
 export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) {
-  const { applications, total, hasApplications, statusOptions, sourceOptions } = loaderData;
+  const { applications, total, hasApplications, statusOptions } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const statusFilter = searchParams.get('status') || '';
-  const sourceFilter = searchParams.get('source') || '';
   const query = searchParams.get('query') || '';
   const sort = searchParams.get('sort') === 'asc' ? 'asc' : 'desc';
   const page = Number(searchParams.get('page') ?? '1') || 1;
@@ -92,12 +90,11 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
       <SectionIntro
         title="Applications"
         actions={
-          <Button asChild variant="outline">
+          <AddButton asChild label="Add application">
             <Link to="/applications/new">
-              <PlusIcon className="mr-2 size-4" />
-              Add application
+              <PlusIcon aria-hidden />
             </Link>
-          </Button>
+          </AddButton>
         }
       />
 
@@ -109,10 +106,7 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
             onSearchChange={(v) => setParam('query', v)}
             selectedStatus={statusFilter}
             onStatusChange={(v) => setParam('status', v)}
-            sourceOptions={sourceOptions}
-            selectedSource={sourceFilter}
-            onSourceChange={(v) => setParam('source', v)}
-            onClearFilters={() => clearParams(['status', 'source', 'query'])}
+            onClearFilters={() => clearParams(['status', 'query'])}
             sort={sort}
             onSortChange={toggleSort}
             pagination={{
@@ -129,17 +123,14 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
         items={applications}
         keyFor={(app) => app.id}
         hrefFor={(app) => `/applications/${app.id}`}
-        title={(app) => app.title}
-        subtitle={(app) => app.company}
-        meta={(app) =>
-          [
-            app.appliedAt && formatApplicationDate(app.appliedAt),
-            app.source,
-            app.stageCount > 0 && `${app.stageCount} stages`,
-          ]
-            .filter(Boolean)
-            .join(' · ')
-        }
+        leading={() => (
+          <span className="flex size-10 items-center justify-center rounded-xl bg-accent-subtle text-accent sm:size-11">
+            <BriefcaseBusinessIcon className="size-5" aria-hidden />
+          </span>
+        )}
+        title={(app) => app.company}
+        subtitle={(app) => app.title}
+        meta={(app) => (app.appliedAt ? formatApplicationDate(app.appliedAt) : undefined)}
         trailing={(app) => (
           <div className="flex items-center gap-1.5">
             {app.status && (
@@ -169,7 +160,7 @@ export default function ApplicationsRoute({ loaderData }: Route.ComponentProps) 
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => clearParams(['status', 'source', 'query', 'sort'])}
+                    onClick={() => clearParams(['status', 'query', 'sort'])}
                   >
                     Clear filters
                   </Button>

@@ -1,12 +1,12 @@
 import type { CareerEngagementRecord } from '@hominem/db';
-import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
 import { BriefcaseIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { CareerCollection } from '~/components/career/career-list';
+import { ExpandableSearch } from '~/components/career/ExpandableSearch';
 import { getUserEngagements } from '~/lib/career/queries/career-queries';
 import { formatDateRange } from '~/lib/utils/dateRange';
 
@@ -53,22 +53,22 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
         title="Work history"
         description="Your work history and engagements."
         actions={
-          <Button asChild variant="outline">
+          <AddButton asChild label="Add engagement">
             <Link to="/work/new">
-              <PlusIcon className="mr-2 size-4" />
-              Add engagement
+              <PlusIcon aria-hidden />
             </Link>
-          </Button>
+          </AddButton>
         }
       />
 
       {positions.length > 0 && (
         <div className="mt-4">
-          <Input
-            placeholder="Search work history..."
+          <ExpandableSearch
+            id="work-search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
+            onChange={setSearch}
+            placeholder="Search work history..."
+            ariaLabel="Search work history"
           />
         </div>
       )}
@@ -90,12 +90,11 @@ export default function WorkPage({ loaderData }: Route.ComponentProps) {
                   title: 'No engagements yet',
                   description: 'Engagements will appear here once you add work history.',
                   action: (
-                    <Button asChild variant="outline" size="sm">
+                    <AddButton asChild label="Add engagement">
                       <Link to="/work/new">
-                        <PlusIcon className="mr-2 size-4" />
-                        Add engagement
+                        <PlusIcon aria-hidden />
                       </Link>
-                    </Button>
+                    </AddButton>
                   ),
                 }
               : {

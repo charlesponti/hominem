@@ -1,9 +1,9 @@
 import { TestimonialRepository, db } from '@hominem/db';
 import { TextField, Textarea } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
 import { Form, redirect } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { userContext } from '~/lib/middleware';
 
 import { Route } from './+types/testimonials.new';
@@ -51,7 +51,7 @@ export default function NewTestimonialRoute({ actionData }: Route.ComponentProps
         <TextField label="LinkedIn URL" name="linkedinUrl" placeholder="https://" />
         {actionData?.error && <p className="body-3 text-destructive-text">{actionData.error}</p>}
         <div className="flex justify-end">
-          <Button type="submit">Add testimonial</Button>
+          <AddButton type="submit" label="Add testimonial" />
         </div>
       </Form>
     </div>

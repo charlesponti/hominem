@@ -1,12 +1,12 @@
 import { ProjectRepository, db, type CareerProjectRecord } from '@hominem/db';
-import { Input } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
-import { FolderIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { FolderIcon, FolderKanbanIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Form, Link } from 'react-router';
+import { Link } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { CareerCollection } from '~/components/career/career-list';
+import { ExpandableSearch } from '~/components/career/ExpandableSearch';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { formatDateRange } from '~/lib/utils/dateRange';
@@ -60,21 +60,21 @@ export default function ProjectsRoute({ loaderData }: Route.ComponentProps) {
     <div>
       <div className="flex items-center justify-between gap-4">
         <SectionIntro title="Projects" description="Side projects and portfolio work." />
-        <Button asChild variant="outline">
+        <AddButton asChild label="Add project">
           <Link to="/projects/new">
-            <PlusIcon className="mr-2 size-4" />
-            Add project
+            <PlusIcon aria-hidden />
           </Link>
-        </Button>
+        </AddButton>
       </div>
 
       {projects.length > 0 && (
         <div className="mt-4">
-          <Input
-            placeholder="Search projects..."
+          <ExpandableSearch
+            id="projects-search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
+            onChange={setSearch}
+            placeholder="Search projects..."
+            ariaLabel="Search projects"
           />
         </div>
       )}
@@ -84,28 +84,14 @@ export default function ProjectsRoute({ loaderData }: Route.ComponentProps) {
           items={filtered}
           keyFor={(p) => p.id}
           hrefFor={(p) => `/projects/${p.id}`}
+          leading={() => (
+            <span className="flex size-10 items-center justify-center rounded-xl bg-warning-subtle text-warning sm:size-11">
+              <FolderKanbanIcon className="size-5" aria-hidden />
+            </span>
+          )}
           title={(p) => p.title}
           subtitle={(p) => p.organization ?? p.shortDescription ?? undefined}
           meta={(p) => (p.startDate || p.endDate) && formatDateRange(p.startDate, p.endDate)}
-          trailing={(p) => (
-            <Form
-              method="post"
-              navigate={false}
-              onClick={(e) => e.stopPropagation()}
-              onSubmit={(e) => {
-                if (!confirm(`Delete "${p.title}"?`)) e.preventDefault();
-              }}
-            >
-              <input type="hidden" name="intent" value="delete" />
-              <input type="hidden" name="id" value={p.id} />
-              <button
-                type="submit"
-                className="footnote text-muted-foreground hover:text-destructive-text"
-              >
-                <Trash2Icon className="size-4" />
-              </button>
-            </Form>
-          )}
           empty={
             projects.length === 0
               ? {

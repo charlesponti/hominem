@@ -1,9 +1,9 @@
 import { TestimonialRepository, db, type CareerTestimonialRecord } from '@hominem/db';
 import { SectionIntro } from '@ponti-studios/ui/layout';
-import { Button } from '@ponti-studios/ui/primitives';
 import { PlusIcon, QuoteIcon, Trash2Icon } from 'lucide-react';
 import { Form, Link } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { CareerCollection } from '~/components/career/career-list';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
@@ -52,12 +52,11 @@ export default function TestimonialsRoute({ loaderData }: Route.ComponentProps) 
           title="Testimonials"
           description="Testimonials from colleagues, managers, and clients."
         />
-        <Button asChild variant="outline">
+        <AddButton asChild label="Add testimonial">
           <Link to="/testimonials/new">
-            <PlusIcon className="mr-2 size-4" />
-            Add testimonial
+            <PlusIcon aria-hidden />
           </Link>
-        </Button>
+        </AddButton>
       </div>
 
       <div className="mt-6">

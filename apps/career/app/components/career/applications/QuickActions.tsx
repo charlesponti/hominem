@@ -43,13 +43,13 @@ export function QuickActions({ currentStatus }: QuickActionsProps) {
           <DropdownMenuLabel>Update status</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {JOB_APPLICATION_STATUSES.filter((status) => status !== currentStatus).map((status) => (
-            <DropdownMenuItem key={status} onSelect={() => updateStatus(status)}>
+            <DropdownMenuItem key={status} onClick={() => updateStatus(status)}>
               {humanizeIdentifier(status)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onSelect={deleteApplication}>
+        <DropdownMenuItem variant="destructive" onClick={deleteApplication}>
           <Trash2 className="size-4" />
           Delete
         </DropdownMenuItem>

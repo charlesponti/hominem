@@ -7,9 +7,6 @@ export interface ApplicationsFiltersProps {
   onSearchChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (status: string) => void;
-  sourceOptions: FilterOption[];
-  selectedSource: string;
-  onSourceChange: (source: string) => void;
   onClearFilters: () => void;
   sort: SortDirection;
   onSortChange: () => void;

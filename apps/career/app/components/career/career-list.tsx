@@ -26,34 +26,44 @@ export function CareerListRow({
   className,
 }: CareerListRowProps) {
   return (
-    <li>
-      <Link
-        to={to}
-        className={cn(
-          'group flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3.5 transition-all duration-150 sm:px-5',
-          'hover:border-(--tertiary)/60 hover:bg-popover',
-          'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
-          className,
-        )}
-      >
-        {leading ? <div className="shrink-0">{leading}</div> : null}
-        <div className="min-w-0 flex-1 space-y-1">
-          {title && title !== leading ? (
-            <h3 className="heading-4 truncate text-foreground">{title}</h3>
-          ) : null}
-          {subtitle && subtitle !== title ? (
-            <p className="body-3 truncate text-muted-foreground">{subtitle}</p>
-          ) : null}
-          {meta ? (
-            <p className="font-mono text-xs text-muted-foreground/80 tabular-nums">{meta}</p>
-          ) : null}
-        </div>
+    <li
+      className={cn(
+        'group rounded-2xl border border-border bg-card transition-colors',
+        'focus-within:border-primary focus-within:ring-ring focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background',
+        className,
+      )}
+    >
+      <div className="flex h-20 min-w-0 items-center gap-3 px-3 sm:gap-4 sm:px-4">
+        <Link
+          to={to}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-3 sm:gap-4',
+            'focus-visible:outline-none',
+          )}
+        >
+          {leading ? <div className="shrink-0">{leading}</div> : null}
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              {title && title !== leading ? (
+                <h3 className="body-2 min-w-0 truncate font-semibold text-foreground">{title}</h3>
+              ) : null}
+            </div>
+            {subtitle && subtitle !== title ? (
+              <p className="body-3 mt-0.5 truncate text-muted-foreground">{subtitle}</p>
+            ) : null}
+            {meta ? (
+              <p className="mt-1 truncate font-mono text-xs tracking-wide text-muted-foreground/80 tabular-nums">
+                {meta}
+              </p>
+            ) : null}
+          </div>
+        </Link>
         {trailing ? <div className="shrink-0">{trailing}</div> : null}
         <ChevronRightIcon
-          className="size-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-foreground"
+          className="size-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
           aria-hidden
         />
-      </Link>
+      </div>
     </li>
   );
 }
@@ -64,7 +74,7 @@ interface CareerListProps {
 }
 
 export function CareerList({ children, className }: CareerListProps) {
-  return <ul className={cn('flex flex-col gap-2', className)}>{children}</ul>;
+  return <ul className={cn('flex flex-col gap-2.5', className)}>{children}</ul>;
 }
 
 interface CareerCollectionEmptyProps {

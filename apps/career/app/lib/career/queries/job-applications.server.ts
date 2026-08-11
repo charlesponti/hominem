@@ -1,9 +1,7 @@
 import { CareerRepository, db } from '@hominem/db';
 
 import {
-  buildSourceOptions,
   buildStatusOptions,
-  NO_SOURCE_FILTER,
   NO_STATUS_FILTER,
   type FilterOption,
   type JobApplicationCard,
@@ -48,7 +46,6 @@ export type ApplicationPageData = {
   total: number;
   hasApplications: boolean;
   statusOptions: FilterOption[];
-  sourceOptions: FilterOption[];
 };
 
 export async function getApplicationPage(
@@ -57,7 +54,6 @@ export async function getApplicationPage(
     page: number;
     pageSize: number;
     status?: string;
-    source?: string;
     query?: string;
     sort?: SortDirection;
   },
@@ -66,7 +62,6 @@ export async function getApplicationPage(
     page: opts.page,
     pageSize: opts.pageSize,
     status: opts.status === NO_STATUS_FILTER ? null : opts.status || undefined,
-    source: opts.source === NO_SOURCE_FILTER ? null : opts.source || undefined,
     query: opts.query,
     sort: opts.sort ?? 'desc',
   });
@@ -84,6 +79,5 @@ export async function getApplicationPage(
     total,
     hasApplications: counts.statusCounts.reduce((sum, count) => sum + count.count, 0) > 0,
     statusOptions: buildStatusOptions(counts.statusCounts),
-    sourceOptions: buildSourceOptions(counts.sourceCounts),
   };
 }

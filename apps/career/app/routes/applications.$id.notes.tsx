@@ -1,8 +1,9 @@
 import { ApplicationNotesRepository, CareerRepository, db } from '@hominem/db';
 import { Textarea } from '@ponti-studios/ui/forms';
-import { Button, Card, CardContent } from '@ponti-studios/ui/primitives';
+import { Card, CardContent } from '@ponti-studios/ui/primitives';
 import { Form } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { userContext } from '~/lib/middleware';
 import { formatApplicationDate } from '~/lib/utils/applicationUtils';
 
@@ -48,7 +49,7 @@ export default function ApplicationNotesRoute({ loaderData }: Route.ComponentPro
       <Form method="post" navigate={false} className="flex flex-col gap-3">
         <Textarea name="content" rows={3} placeholder="Add a note..." required />
         <div className="flex justify-end">
-          <Button type="submit">Add note</Button>
+          <AddButton type="submit" label="Add note" />
         </div>
       </Form>
 

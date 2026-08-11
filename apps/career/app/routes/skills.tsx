@@ -10,11 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@ponti-studios/ui/overlays';
-import { Button } from '@ponti-studios/ui/primitives';
-import { LightbulbIcon, PlusIcon, XIcon } from 'lucide-react';
+import { LightbulbIcon, XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
+import { AddButton } from '~/components/AddButton';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 
@@ -80,10 +80,7 @@ export default function SkillsRoute({ loaderData }: Route.ComponentProps) {
         <SectionIntro title="Skills" description="Skills and areas of expertise." />
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">
-              <PlusIcon className="mr-2 size-4" />
-              Add skill
-            </Button>
+            <AddButton label="Add skill" />
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -103,9 +100,7 @@ export default function SkillsRoute({ loaderData }: Route.ComponentProps) {
                 <TextField label="Years of experience" name="yearsOfExperience" min={0} />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isSubmitting}>
-                  Add skill
-                </Button>
+                <AddButton type="submit" label="Add skill" disabled={isSubmitting} />
               </DialogFooter>
             </Form>
           </DialogContent>
