@@ -3,13 +3,15 @@
 Better Auth is the only authority for sessions. Keep its session database, signed cookies, and native client-storage contract.
 
 - **Omiro** — Persists and forwards the Better Auth session cookie.
-- **Finance** — Uses browser session credentials and cookies.
-- **Career** — Forwards the incoming request cookie for server-side API calls.
+- **Career and Finance** — Unauthenticated browsers redirect to the API-hosted `/login`; server-side session and data calls use the required private Railway API URL.
 - **MCP** — Uses OAuth bearer access tokens with its own scopes, budgets, and rate limits.
 
 MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web and mobile API requests use Better Auth session cookies. `/api/mcp` accepts MCP OAuth bearer tokens with the scopes required by each tool; career reads require `career:read` and career mutations require `career:write`.
 
 ## Session and OTP rules
+
+- First-party web apps do not host duplicate OTP screens or maintain app-owned auth state. Better Auth session cookies remain the only web credential, and app `/auth` routes are compatibility redirects to the API hosted login.
+- Browser traffic uses `VITE_PUBLIC_API_URL`; server-side auth and Hono/RPC data calls use required `HOMINEM_INTERNAL_API_URL`. Never fall back from the private URL to the public URL.
 
 - Browser sessions use Better Auth's short-lived signed cookie cache (five minutes). All web server boundaries must forward every `Set-Cookie` header returned by Better Auth; never collapse them with `headers.get('set-cookie')`.
 - Better Auth stores OTP rate-limit state in its database-backed `rateLimit` table so limits survive restarts and apply across API instances.

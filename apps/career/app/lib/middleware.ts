@@ -1,6 +1,7 @@
 import { createContext, redirect, type RouterContext } from 'react-router';
 
 import { getServerSession, type User } from './auth.server';
+import { hostedLoginUrl } from './hosted-auth.server';
 
 export const userContext = createContext<User | null>(null);
 
@@ -27,8 +28,7 @@ function unauthorizedResponse(request: Request) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  const next = encodeURIComponent(url.pathname + url.search);
-  return redirect(`/auth?next=${next}`);
+  return redirect(hostedLoginUrl(request, url.pathname + url.search));
 }
 
 export async function sessionMiddleware(

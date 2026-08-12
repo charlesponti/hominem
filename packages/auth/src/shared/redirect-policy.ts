@@ -120,3 +120,17 @@ export function resolveAppRedirectUrl(
 
   return url.toString();
 }
+
+export function buildHostedLoginUrl(input: {
+  apiBaseUrl: string;
+  appOrigin: string;
+  next: string | null | undefined;
+  fallback: string;
+  allowedPrefixes: readonly string[];
+}): string {
+  const { safeRedirect } = resolveAuthRedirect(input.next, input.fallback, input.allowedPrefixes);
+  const returnUrl = new URL(safeRedirect, input.appOrigin);
+  const loginUrl = new URL('/login', input.apiBaseUrl);
+  loginUrl.searchParams.set('next', returnUrl.toString());
+  return loginUrl.toString();
+}

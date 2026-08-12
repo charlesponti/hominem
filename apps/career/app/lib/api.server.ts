@@ -1,7 +1,7 @@
 import type { careerRoutes } from '@hominem/api/career';
 import { hc } from 'hono/client';
 
-import { serverEnv } from './env';
+import { serverEnv } from './env.server';
 
 const customFetch =
   (request?: Request): typeof fetch =>
@@ -18,7 +18,7 @@ const customFetch =
 
 function createServerHonoClient(request?: Request) {
   const career = hc<typeof careerRoutes>(
-    new URL('/api/career', serverEnv.VITE_PUBLIC_API_URL).toString(),
+    new URL('/api/career', serverEnv.HOMINEM_INTERNAL_API_URL).toString(),
     { fetch: customFetch(request) },
   );
 

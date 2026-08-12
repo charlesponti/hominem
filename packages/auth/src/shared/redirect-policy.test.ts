@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildHostedLoginUrl,
   resolveAppRedirectUrl,
   resolveAuthRedirect,
   resolveOAuthResumeUrl,
 } from './redirect-policy.js';
+
+describe('buildHostedLoginUrl', () => {
+  it('builds a trusted absolute return URL from a local app path', () => {
+    expect(
+      buildHostedLoginUrl({
+        apiBaseUrl: 'https://api.ponti.io',
+        appOrigin: 'https://career.ponti.io',
+        next: '/work?view=month',
+        fallback: '/work',
+        allowedPrefixes: ['/work'],
+      }),
+    ).toBe('https://api.ponti.io/login?next=https%3A%2F%2Fcareer.ponti.io%2Fwork%3Fview%3Dmonth');
+  });
+});
 
 describe('resolveAuthRedirect', () => {
   it('falls back when redirect is missing', () => {

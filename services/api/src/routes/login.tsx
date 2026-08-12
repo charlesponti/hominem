@@ -350,6 +350,11 @@ const pageStyles = `
    }
 
    /* The auth surface is intentionally one quiet card. */
+   .auth-page { padding: 64px 16px; }
+   .auth-layout { width: min(100%, 512px); }
+   .auth-card { border-radius: 8px; }
+   .auth-card h2 { font-weight: 650; }
+   .card-copy { margin-bottom: 28px; }
    .auth-page { background: #0c1014; }
    .auth-page::before, .auth-page::after, .auth-grid { display: none; }
    .auth-layout { display: block; width: min(100%, 420px); }
@@ -363,6 +368,94 @@ const pageStyles = `
    .card-copy { margin-bottom: 24px; }
    .card-footnote { margin-top: 20px; }
    .logout-card .brand-mark { width: 42px; height: 42px; margin: 0 auto 28px; border: 0; border-radius: 12px; object-fit: cover; transform: none; }
+
+   /* Career auth surface: quiet neutral card, semantic app tokens, no brand accent. */
+   :root {
+     color-scheme: light;
+     --auth-background: #fcfcfd;
+     --auth-card: #f9f9fb;
+     --auth-panel: #f0f0f3;
+     --auth-text: #1c2024;
+     --auth-muted: #60646c;
+     --auth-tertiary: #80838d;
+     --auth-primary: #000000;
+     --auth-primary-text: #ffffff;
+     --auth-border: #cdced6;
+     --auth-danger: #c82c31;
+     --auth-danger-background: #fff4f3;
+   }
+   @media (prefers-color-scheme: dark) {
+     :root {
+       color-scheme: dark;
+       --auth-background: #111113;
+       --auth-card: #18191b;
+       --auth-panel: #212225;
+       --auth-text: #edeef0;
+       --auth-muted: #b0b4ba;
+       --auth-tertiary: #777b84;
+       --auth-primary: #ffffff;
+       --auth-primary-text: #111113;
+       --auth-border: #43484e;
+       --auth-danger: #ff9592;
+       --auth-danger-background: #321b1b;
+     }
+   }
+   .auth-page { background: var(--auth-background); color: var(--auth-text); padding: 64px 16px; }
+   .auth-layout { width: min(100%, 512px); }
+   .auth-card {
+     padding: 64px 48px;
+     border: 1px solid var(--auth-border);
+     border-radius: 8px;
+     color: var(--auth-text);
+     background: var(--auth-card);
+     box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+   }
+   .auth-content { width: 100%; max-width: 384px; margin: 0 auto; display: flex; flex-direction: column; gap: 80px; text-align: center; }
+   .auth-heading { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+   .auth-heading h2 { margin: 0; }
+   .auth-card::before { display: none; }
+   .auth-card .brand-lockup { margin-bottom: 32px; color: var(--auth-text); }
+   .brand-logo { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; filter: grayscale(1); }
+   .card-topline { margin-bottom: 16px; color: var(--auth-muted); font-weight: 500; letter-spacing: .04em; }
+   .step-label { color: var(--auth-tertiary); }
+   .auth-card h2 { color: var(--auth-text); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.04em; }
+   .card-copy { margin: 0; color: var(--auth-muted); }
+   .card-copy strong { color: var(--auth-text); }
+   .field { gap: 6px; text-align: left; }
+   .field label { color: var(--auth-text); font-weight: 500; }
+   .field input {
+     min-height: 36px;
+     border: 1px solid var(--auth-border);
+     border-radius: 6px;
+     color: var(--auth-text);
+     background: var(--auth-panel);
+   }
+   .field input:hover { border-color: var(--auth-muted); }
+   .field input:focus { border-color: var(--auth-primary); background: var(--auth-card); box-shadow: 0 0 0 2px color-mix(in srgb, var(--auth-primary) 20%, transparent); }
+   .otp-field { display: flex; align-items: center; justify-content: center; gap: 8px; }
+   .otp-input { width: 40px; height: 48px; min-height: 48px; padding: 0; text-align: center; font-size: 16px; font-weight: 600; }
+   .primary-button {
+     min-height: 36px;
+     margin-top: 12px;
+     border-radius: 6px;
+     color: var(--auth-primary-text);
+     background: var(--auth-primary);
+     box-shadow: none;
+     font-weight: 600;
+   }
+   .primary-button:hover { background: color-mix(in srgb, var(--auth-primary) 86%, var(--auth-text)); box-shadow: none; transform: none; }
+   .primary-button:focus-visible, .secondary-button:focus-visible { outline: 2px solid var(--auth-primary); outline-offset: 2px; }
+   .auth-links { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+   .auth-links form { display: contents; }
+   .secondary-button { margin: 0; padding: 0; color: var(--auth-primary); font-size: 14px; font-weight: 500; }
+   .secondary-button:hover { color: var(--auth-text); }
+   .alert { border-color: color-mix(in srgb, var(--auth-danger) 35%, transparent); border-radius: 6px; color: var(--auth-danger); background: var(--auth-danger-background); }
+   .error-symbol { border-color: var(--auth-border); border-radius: 8px; color: var(--auth-danger); background: var(--auth-danger-background); }
+   .error-card a { border-radius: 6px; color: var(--auth-primary-text); background: var(--auth-primary); }
+   .card-footnote { color: var(--auth-tertiary); }
+   @media (max-width: 540px) {
+     .auth-card { padding: 48px 16px; }
+   }
 `;
 
 function getFormValue(form: Record<string, string | File>, name: string) {
@@ -418,6 +511,21 @@ function PageFrame({
         <meta content="#0c1014" name="theme-color" />
         <title>{title}</title>
         <style dangerouslySetInnerHTML={{ __html: pageStyles }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.addEventListener('input', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;
+  input.value = input.value.replace(/\\D/g, '').slice(-1);
+  const form = input.form;
+  const hidden = form?.querySelector('[name="otp"]');
+  if (hidden instanceof HTMLInputElement) {
+    hidden.value = Array.from(form.querySelectorAll('[data-otp-digit]')).map((digit) => digit.value).join('');
+  }
+  if (input.value) input.nextElementSibling?.focus();
+});`,
+          }}
+        />
       </head>
       <body>
         <div class="auth-page">
@@ -438,81 +546,85 @@ function BrandLockup() {
   );
 }
 
-function LoginPage({ email, error, mode, resumeQuery, step }: LoginPageProps) {
+function LoginPage({ email, error, resumeQuery, step }: LoginPageProps) {
   const isOtpStep = step === 'otp';
-  const accessLabel = mode === 'oauth' ? 'OAuth access' : 'App access';
+  const changeEmailUrl = loginUrl({ resumeQuery, step: 'email' });
 
   return (
     <PageFrame>
       <main class="auth-layout">
         <section aria-labelledby="auth-title" class="auth-card">
-          <BrandLockup />
-          <div class="card-topline">
-            <span class="secure-label">{accessLabel}</span>
-            <span class="step-label">{isOtpStep ? '02 / 02' : '01 / 02'}</span>
-          </div>
-          <h2 id="auth-title">{isOtpStep ? 'Check your inbox.' : 'Sign in'}</h2>
-          <p class="card-copy">
-            {isOtpStep ? (
-              <>
-                Code sent to <strong>{email}</strong>.
-              </>
-            ) : (
-              'Enter your email to continue.'
-            )}
-          </p>
-          {error ? (
-            <p aria-live="polite" class="alert" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
-            <input name="resume" type="hidden" value={resumeQuery} />
-            {isOtpStep ? (
-              <>
-                <input name="email" type="hidden" value={email} />
+          <div class="auth-content">
+            <div class="auth-heading">
+              <h2 id="auth-title">{isOtpStep ? 'Check your email' : 'Auth'}</h2>
+              <p class="card-copy">
+                {isOtpStep
+                  ? `We sent a verification code to ${email}.`
+                  : 'Enter your email to receive the one-time code.'}
+              </p>
+            </div>
+            {error ? (
+              <p aria-live="polite" class="alert" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
+              <input name="resume" type="hidden" value={resumeQuery} />
+              {isOtpStep ? (
+                <>
+                  <input name="email" type="hidden" value={email} />
+                  <input id="otp" name="otp" type="hidden" />
+                  <div class="otp-field" role="group" aria-label="One-time verification code">
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <input
+                        key={index}
+                        aria-label={`Character ${index + 1} of 6`}
+                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                        autoFocus={index === 0}
+                        class="otp-input"
+                        data-otp-digit
+                        inputMode="numeric"
+                        maxLength={1}
+                        pattern="[0-9]"
+                        required
+                        type="text"
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
                 <div class="field">
-                  <label htmlFor="otp">Verification code</label>
+                  <label htmlFor="email">Email address</label>
                   <input
-                    autoComplete="one-time-code"
+                    autoComplete="email"
                     autoFocus
-                    class="otp-input"
-                    id="otp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    name="otp"
-                    pattern="[0-9]{6}"
+                    id="email"
+                    name="email"
                     required
+                    type="email"
+                    value={email}
                   />
                 </div>
-              </>
-            ) : (
-              <div class="field">
-                <label htmlFor="email">Email address</label>
-                <input
-                  autoComplete="email"
-                  autoFocus
-                  id="email"
-                  name="email"
-                  required
-                  type="email"
-                  value={email}
-                />
-              </div>
-            )}
-            <button class="primary-button" type="submit">
-              {isOtpStep ? 'Verify and continue' : 'Send my code'}
-            </button>
-          </form>
-          {isOtpStep ? (
-            <form action="/login/send" method="post">
-              <input name="resume" type="hidden" value={resumeQuery} />
-              <input name="email" type="hidden" value={email} />
-              <button class="secondary-button" type="submit">
-                Resend code
+              )}
+              <button class="primary-button" type="submit">
+                {isOtpStep ? 'Verify' : 'Continue'}
               </button>
             </form>
-          ) : null}
+            {isOtpStep ? (
+              <div class="auth-links">
+                <form action="/login/send" method="post">
+                  <input name="resume" type="hidden" value={resumeQuery} />
+                  <input name="email" type="hidden" value={email} />
+                  <button class="secondary-button" type="submit">
+                    Resend code
+                  </button>
+                </form>
+                <a class="secondary-button" href={changeEmailUrl}>
+                  Use a different email
+                </a>
+              </div>
+            ) : null}
+          </div>
         </section>
       </main>
     </PageFrame>
@@ -563,7 +675,7 @@ function LogoutPage({ signedOut = false }: { signedOut?: boolean }) {
               : 'This clears your Hominem browser session.'}
           </p>
           {signedOut ? (
-            <p class="card-copy">Start a new sign-in from your MCP client.</p>
+            <p class="card-copy">Start a new sign-in from the app or client you came from.</p>
           ) : (
             <form action="/logout" method="post">
               <button class="primary-button" type="submit">

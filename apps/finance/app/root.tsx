@@ -15,7 +15,7 @@ import {
 
 import type { Route } from './+types/root';
 import { HonoProvider } from './lib/api';
-import { authConfig, getServerSession } from './lib/auth.server';
+import { getServerSession } from './lib/auth.server';
 import { serverEnv } from './lib/env';
 
 import './globals.css';
@@ -26,9 +26,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       user,
-      authEnv: {
-        apiBaseUrl: authConfig.apiBaseUrl,
-      },
       apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
     { headers },

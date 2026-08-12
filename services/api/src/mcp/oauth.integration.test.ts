@@ -134,7 +134,9 @@ describe('MCP OAuth integration', () => {
       headers: { cookie: cookies.header() },
     });
     expect(loginPageResponse.status).toBe(200);
-    await expect(loginPageResponse.text()).resolves.toContain('Enter your email to continue.');
+    await expect(loginPageResponse.text()).resolves.toContain(
+      'Enter your email to receive the one-time code.',
+    );
 
     const sendOtpResponse = await app.request(`${apiUrl}/login/send`, {
       method: 'POST',
