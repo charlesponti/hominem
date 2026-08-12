@@ -39,7 +39,6 @@ token.json
 credentials/
 
 # db schema snapshots (scratch, regenerated on demand)
-.agents/skills/db-schema-diff/snapshots/
 .auth/
 
 # user data exports (scratch, contains real PII when run against production)
@@ -84,5 +83,4 @@ tmp/
 .claude/worktrees
 .worktrees/
 .claude/settings.local.json
-railway.json
 debug-storybook.log

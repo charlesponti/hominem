@@ -1,0 +1,6 @@
+interface:
+  display_name: "Hominem Database"
+  short_description: "Safely diff and migrate database schemas"
+  default_prompt: "Use $hominem-database to inspect or safely change the Hominem database schema."
+policy:
+  allow_implicit_invocation: false

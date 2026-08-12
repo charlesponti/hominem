@@ -19,7 +19,7 @@ trap 'rm -f "$SCRIPT_DIR/railway.json"' EXIT
 
 cd "$SCRIPT_DIR"
 set +e
-pnpm exec railway up --ci --no-gitignore --service "$SERVICE" 2>&1 | tee /tmp/railway-up.log
+pnpm exec railway up --ci --service "$SERVICE" 2>&1 | tee /tmp/railway-up.log
 status=${PIPESTATUS[0]}
 set -e
 

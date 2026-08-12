@@ -12,6 +12,7 @@ WAREHOUSE_DB="${WAREHOUSE_DB:-$HOME/.hominem/warehouse.db}"
 HOMINEM_DATABASE_URL="${HOMINEM_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:5434/hominem}"
 OUT_DIR="${OUT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/snapshots}"
 TS="$(date +%Y%m%d_%H%M%S)"
+HOMINEM_SOURCE='<redacted Postgres URL>'
 
 mkdir -p "$OUT_DIR"
 
@@ -54,7 +55,7 @@ echo "Wrote $WAREHOUSE_OUT"
 {
   echo "# Hominem schema snapshot"
   echo
-  echo "Source: \`$HOMINEM_DATABASE_URL\`"
+  echo "Source: \`$HOMINEM_SOURCE\`"
   echo "Pulled: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo
 
