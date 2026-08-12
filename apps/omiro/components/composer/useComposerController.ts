@@ -1,13 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { deriveComposerCapabilities } from '~/components/composer/composerCapabilities.helpers';
+import { deriveComposerBusyCapabilities } from '~/components/composer/composerCapabilities.helpers';
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
 import { useComposerDraft } from '~/components/composer/useComposerDraft';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { useInlineEnhance } from '~/services/ai';
 
 import type { ComposerEntryKind } from './composer.types';
-import { inferComposerEntryKind } from './composerInference';
 
 interface UseComposerControllerOptions {
   initialMessage?: string;
@@ -18,10 +17,17 @@ interface UseComposerControllerOptions {
   entryMode?: 'mixed' | ComposerEntryKind;
 }
 
-// Composes the composer's independent concerns — draft text, attachments,
-// voice input, inline enhance, and focus — into the single set of derived
-// capabilities and handlers that Composer.tsx renders from. Submission itself
-// (what happens on save/send) lives in useComposerSubmission, not here.
+// Composes the composer's independent concerns -- draft text, attachments,
+// voice input, inline enhance, and focus -- into the derived capabilities and
+// handlers Composer.tsx renders from. Submission itself (what happens on
+// save/send) lives in useComposerSubmission, not here.
+//
+// Deliberately does NOT read the draft message reactively: draft.store is an
+// external store (see useComposerMessageStore.ts), and only the leaf
+// component that actually needs per-keystroke text (ComposerActiveArea)
+// subscribes to it. Reading draft.getMessage()'s value here via React state
+// would re-render every consumer of this hook -- the whole composer -- on
+// every keystroke.
 export function useComposerController({
   initialMessage,
   isSubmitting = false,
@@ -40,13 +46,9 @@ export function useComposerController({
       ),
     [attachments],
   );
-  const hasContent = draft.message.trim().length > 0 || uploadedAttachmentIds.length > 0;
   const [manualEntryKind, setManualEntryKind] = useState<ComposerEntryKind | null>(
     entryMode === 'mixed' ? null : entryMode,
   );
-  const inferredEntryKind = inferComposerEntryKind(draft.message);
-  const selectedEntryKind =
-    manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
 
   const voice = useVoiceComposerInput({
     getMessage: draft.getMessage,
@@ -61,24 +63,17 @@ export function useComposerController({
   const handleInputFocus = useCallback(() => setIsFocused(true), []);
   const handleInputBlur = useCallback(() => setIsFocused(false), []);
 
-  const { canSubmit, canOpenEnhance, canPickMedia, canToggleVoice, isColumnLayout } =
-    deriveComposerCapabilities({
-      hasContent,
-      isSubmitting,
-      isUploading,
-      isFocused,
-      showAttachments,
-      voice: {
-        isBusy: voice.isBusy,
-        isRecording: voice.isRecording,
-        isCleaningVoice: voice.isCleaningVoice,
-        isRecordingElsewhere: voice.isRecordingElsewhere,
-      },
-      enhance: {
-        isEnhancing: enhance.isEnhancing,
-        isEnhanceOpen: enhance.isEnhanceOpen,
-      },
-    });
+  const { canPickMedia, canToggleVoice, isInteractionBusy } = deriveComposerBusyCapabilities({
+    isSubmitting,
+    isUploading,
+    voice: {
+      isBusy: voice.isBusy,
+      isRecording: voice.isRecording,
+      isCleaningVoice: voice.isCleaningVoice,
+      isRecordingElsewhere: voice.isRecordingElsewhere,
+    },
+    enhance: { isEnhancing: enhance.isEnhancing },
+  });
 
   const clearComposer = useCallback(() => {
     draft.clearDraft();
@@ -90,48 +85,42 @@ export function useComposerController({
 
   return useMemo(
     () => ({
-      hasContent,
-      isFocused,
-      message: draft.message,
+      messageStore: draft.store,
+      getMessage: draft.getMessage,
       setMessage: draft.setMessage,
+      isFocused,
       showAttachments,
       uploadedAttachmentIds,
-      canSubmit,
-      canOpenEnhance,
       canPickMedia,
       canToggleVoice,
+      isInteractionBusy,
       handleInputFocus,
       handleInputBlur,
-      isColumnLayout,
       voice,
       enhance,
       clearComposer,
-      inferredEntryKind,
+      entryMode,
       manualEntryKind,
-      selectedEntryKind,
       setManualEntryKind,
       markAttachmentsSubmitted,
     }),
     [
-      draft.message,
-      hasContent,
-      isFocused,
+      draft.store,
+      draft.getMessage,
       draft.setMessage,
+      isFocused,
       showAttachments,
       uploadedAttachmentIds,
-      canSubmit,
-      canOpenEnhance,
       canPickMedia,
       canToggleVoice,
+      isInteractionBusy,
       handleInputFocus,
       handleInputBlur,
-      isColumnLayout,
       voice,
       enhance,
       clearComposer,
-      inferredEntryKind,
+      entryMode,
       manualEntryKind,
-      selectedEntryKind,
       markAttachmentsSubmitted,
     ],
   );

@@ -1,12 +1,26 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Creates a note from the inbox composer. Typing text and tapping the
-# primary submit button ("Save note") saves it as a note by default in the
-# inbox composer's 'mixed' entry mode.
+# Creates a note from the inbox composer. Typing text, selecting the
+# Document kind, and tapping composer-submit-note saves it as a note.
+#
+# The kind selection isn't optional: inferComposerEntryKind
+# (composerInference.ts) infers 'chat' by default for any non-empty
+# single-line, unstructured message -- only empty input or multi-line/
+# structured text (headings, lists) infers 'note'. Without the explicit
+# composer-kind-note tap, composer-submit-note never renders for plain text
+# like this and the flow fails to find it.
+#
+# Deletes the note afterward (long-press -> Delete -> confirm) so repeated
+# runs don't accumulate notes -- see notes-delete.yaml for why this needs
+# extendedWaitUntil guards around the native Alert transitions.
 - runFlow: startup.yaml
 - tapOn:
     id: inbox-composer-input
 - inputText: Pack for the weekend trip
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
 - tapOn:
     id: composer-submit-note
 - assertVisible:
@@ -14,3 +28,25 @@ appId: com.pontistudios.hakumi.dev
     index: 0
 # Note: the note's title text is behind the nav bar after creation;
 # the testID-based assertion above confirms the item exists in the hierarchy.
+- waitForAnimationToEnd:
+    timeout: 2000
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Delete
+    times: 3
+    commands:
+      - longPressOn: Pack for the weekend trip
+      - extendedWaitUntil:
+          visible: Delete
+          timeout: 2000
+          optional: true
+- assertVisible: Delete
+- tapOn: Delete
+- extendedWaitUntil:
+    visible: Delete note
+    timeout: 8000
+- tapOn:
+    text: '^Delete$'
+- assertNotVisible: Pack for the weekend trip

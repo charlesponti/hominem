@@ -1,20 +1,49 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Assumes seed data: a chat titled "Test Chat" exists and is visible in the
-# Chats tab of the inbox. Swipes left on the chat row to reveal the archive
-# action, taps "Archive", and verifies the chat is no longer visible.
+# Creates a throwaway chat from the inbox composer (self-contained, no seed
+# data assumption), archives it via the row's long-press menu, and confirms
+# it disappears from the inbox list.
 #
-# The swipe action button uses the accessibility label "Archive" (no testID),
-# so it is targeted by text regex. This is the same pattern used in
-# tasks-swipe-delete-task.yaml.
+# Archive/delete live behind a native long-press Alert.alert on the row
+# (InboxStreamItem.tsx handleLongPress), titled with the item's own text --
+# there's no dedicated "actions" button/testID and no swipe action anymore.
+# Archive has no second confirmation (handleArchive fires immediately),
+# unlike delete (see notes-delete.yaml). The extendedWaitUntil before tapping
+# "Archive chat" isn't cosmetic -- tapping immediately after longPressOn
+# races the native Alert's open animation and misses the button.
 - runFlow: startup.yaml
-- tapOn: Chats
-- assertVisible: Chats
-- assertVisible: Test Chat
-- swipe:
-    direction: LEFT
-    element:
-      text: Test Chat
 - tapOn:
-    text: '^Archive$'
-- assertNotVisible: Test Chat
+    id: inbox-composer-input
+- inputText: Maestro archive test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true
+- assertVisible: Maestro archive test chat
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Archive chat
+    times: 3
+    commands:
+      - longPressOn: Maestro archive test chat
+      - extendedWaitUntil:
+          visible: Archive chat
+          timeout: 2000
+          optional: true
+- assertVisible: Archive chat
+- tapOn: Archive chat
+- assertNotVisible: Maestro archive test chat
+- assertVisible:
+    id: inbox-composer-input

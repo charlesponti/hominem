@@ -19,11 +19,11 @@ import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { getContentRoute } from '~/services/navigation/routes';
 import { chatKeys } from '~/services/notes/query-keys';
 
-interface StartChatFromInboxOptions {
+interface StartChatOptions {
   onReady?: () => void;
 }
 
-export function useStartChatFromInbox() {
+export function useStartChat() {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -32,7 +32,7 @@ export function useStartChatFromInbox() {
   const assistantMessageIdRef = useRef<string | null>(null);
   const userMessageIdRef = useRef<string | null>(null);
 
-  const mutation = useMutation<void, Error, ChatsStartStreamInput & StartChatFromInboxOptions>({
+  const mutation = useMutation<void, Error, ChatsStartStreamInput & StartChatOptions>({
     mutationFn: async ({ onReady, ...input }) => {
       const net = await NetInfo.fetch();
       if (net.isConnected === false) {
@@ -111,7 +111,7 @@ export function useStartChatFromInbox() {
   });
 
   const startChat = useCallback(
-    async (input: ChatsStartStreamInput & StartChatFromInboxOptions) => mutation.mutateAsync(input),
+    async (input: ChatsStartStreamInput & StartChatOptions) => mutation.mutateAsync(input),
     [mutation],
   );
 

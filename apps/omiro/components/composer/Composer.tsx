@@ -1,18 +1,25 @@
-import { Card, nativeShadows, TextField } from '@ponti-studios/ui/native';
+import { Card, nativeShadows } from '@ponti-studios/ui/native';
+import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { useCallback, useRef } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  FadeOutUp,
+  LinearTransition,
+} from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
+import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
-import { ComposerAttachButton } from './ComposerAttachButton';
+import { ComposerActiveArea } from './ComposerActiveArea';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
-import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
 import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
@@ -55,24 +62,38 @@ function ComposerContent(props: ComposerProps) {
     onWalkieTalkieTranscript: props.mode === 'chat' ? handleWalkieTalkieTranscript : undefined,
   });
   clearComposerRef.current = controller.clearComposer;
-  const presentation = getComposerSubmissionConfig(props, controller.selectedEntryKind);
+  // Static (mode-only) fields for the outer shell -- the kind-dependent
+  // fields (placeholder, submitTestID, ...) are recomputed inside
+  // ComposerActiveArea, which is the only thing that knows the live,
+  // possibly-inferred entry kind without subscribing to the message store here.
+  const presentation = getComposerSubmissionConfig(props);
 
-  const submit = useCallback(
-    (kind: ComposerSubmitKind) => {
-      if (controller.canSubmit) {
+  const handleActiveAreaSubmit = useCallback(
+    (kind: ComposerSubmitKind, message: string, canSubmit: boolean) => {
+      if (canSubmit) {
         controller.markAttachmentsSubmitted(controller.uploadedAttachmentIds);
       }
       void submission.submit(
         {
-          canSubmit: controller.canSubmit,
+          canSubmit,
           clearComposer: controller.clearComposer,
           fileIds: controller.uploadedAttachmentIds,
-          message: controller.message,
+          message,
         },
         kind,
       );
     },
-    [controller, submission],
+    [
+      controller.clearComposer,
+      controller.markAttachmentsSubmitted,
+      controller.uploadedAttachmentIds,
+      submission,
+    ],
+  );
+
+  const onToggleWalkieTalkie = useCallback(
+    () => controller.voice.setWalkieTalkie((prev) => !prev),
+    [controller.voice],
   );
 
   const [primary, destructive, borderDefault] = useCSSVariable([
@@ -80,6 +101,7 @@ function ComposerContent(props: ComposerProps) {
     '--color-destructive',
     '--color-border',
   ]) as string[];
+  const prefersReducedMotion = useReducedMotion();
 
   const isRecording = controller.voice.isRecording;
   const isWalkieTalkieSending =
@@ -96,58 +118,42 @@ function ComposerContent(props: ComposerProps) {
       />
     ) : undefined;
 
+  const bannerLayout = prefersReducedMotion
+    ? undefined
+    : LinearTransition.duration(transitionDurations[150]);
+  const bannerEntering = prefersReducedMotion
+    ? FadeIn.duration(transitionDurations[150])
+    : FadeInDown.duration(transitionDurations[150]);
+  const bannerExiting = prefersReducedMotion
+    ? FadeOut.duration(transitionDurations[100])
+    : FadeOutUp.duration(transitionDurations[100]);
+
   return (
-    <View className="w-full gap-3" testID={presentation.shellTestID}>
-      {props.mode === 'inbox' && props.entryMode === 'mixed' ? (
-        <View className="flex-row gap-2 px-1" testID="composer-kind-control">
-          {(['chat', 'note'] as const).map((kind) => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: controller.selectedEntryKind === kind }}
-              className={
-                controller.selectedEntryKind === kind
-                  ? 'bg-primary rounded-full px-3 py-2'
-                  : 'bg-muted rounded-full px-3 py-2'
-              }
-              key={kind}
-              onPress={() => controller.setManualEntryKind(kind)}
-              testID={`composer-kind-${kind}`}
-            >
-              <Text
-                className={
-                  controller.selectedEntryKind === kind
-                    ? 'text-primary-foreground text-caption1'
-                    : 'text-foreground text-caption1'
-                }
-              >
-                {kind === 'chat' ? 'Conversation' : 'Document'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+    <Animated.View className="w-full gap-3" layout={bannerLayout} testID={presentation.shellTestID}>
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
       {!showVoicePanel && controller.enhance.isEnhanceOpen ? (
-        <InlineEnhanceTray
-          instruction={controller.enhance.enhanceInstruction}
-          onInstructionChange={controller.enhance.setEnhanceInstruction}
-          onPresetSelect={(instruction) =>
-            void controller.enhance.runEnhance({
-              instruction,
-              text: controller.message,
-              onEnhanced: controller.setMessage,
-            })
-          }
-          onCancel={controller.enhance.closeEnhance}
-          onConfirm={() =>
-            void controller.enhance.runEnhance({
-              text: controller.message,
-              onEnhanced: controller.setMessage,
-            })
-          }
-          isEnhancing={controller.enhance.isEnhancing}
-          error={controller.enhance.enhanceError}
-        />
+        <Animated.View entering={bannerEntering} exiting={bannerExiting}>
+          <InlineEnhanceTray
+            instruction={controller.enhance.enhanceInstruction}
+            onInstructionChange={controller.enhance.setEnhanceInstruction}
+            onPresetSelect={(instruction) =>
+              void controller.enhance.runEnhance({
+                instruction,
+                text: controller.getMessage(),
+                onEnhanced: controller.setMessage,
+              })
+            }
+            onCancel={controller.enhance.closeEnhance}
+            onConfirm={() =>
+              void controller.enhance.runEnhance({
+                text: controller.getMessage(),
+                onEnhanced: controller.setMessage,
+              })
+            }
+            isEnhancing={controller.enhance.isEnhancing}
+            error={controller.enhance.enhanceError}
+          />
+        </Animated.View>
       ) : undefined}
       <Card
         className="w-full gap-2 p-3"
@@ -159,60 +165,54 @@ function ComposerContent(props: ComposerProps) {
         }}
         testID={`${presentation.shellTestID ?? 'composer'}-surface`}
       >
-        {errorBanner}
+        {errorBanner ? (
+          <Animated.View entering={bannerEntering} exiting={bannerExiting} layout={bannerLayout}>
+            {errorBanner}
+          </Animated.View>
+        ) : undefined}
         {showVoicePanel ? (
-          <VoiceRecordingPanel
-            startedAt={controller.voice.recordingStartedAt}
-            onCancel={() => void controller.voice.cancelVoiceRecording()}
-            onDone={() => void controller.voice.handleVoicePress()}
-            phase={isRecording ? 'recording' : 'sending'}
-          />
+          <Animated.View
+            entering={FadeIn.duration(transitionDurations[150])}
+            exiting={FadeOut.duration(transitionDurations[100])}
+            key="voice-panel"
+          >
+            <VoiceRecordingPanel
+              startedAt={controller.voice.recordingStartedAt}
+              onCancel={() => void controller.voice.cancelVoiceRecording()}
+              onDone={() => void controller.voice.handleVoicePress()}
+              phase={isRecording ? 'recording' : 'sending'}
+            />
+          </Animated.View>
         ) : (
-          <>
-            <TextField
-              value={controller.message}
-              onChangeText={controller.setMessage}
-              placeholder={presentation.placeholder}
-              testID={presentation.inputTestID}
+          <Animated.View
+            entering={FadeIn.duration(transitionDurations[150])}
+            exiting={FadeOut.duration(transitionDurations[100])}
+            key="composer-fields"
+          >
+            <ComposerActiveArea
+              composerProps={props}
+              messageStore={controller.messageStore}
+              entryMode={controller.entryMode}
+              manualEntryKind={controller.manualEntryKind}
+              onManualEntryKindChange={controller.setManualEntryKind}
+              uploadedAttachmentCount={controller.uploadedAttachmentIds.length}
+              isFocused={controller.isFocused}
+              showAttachments={controller.showAttachments}
+              isInteractionBusy={controller.isInteractionBusy}
+              isSubmitting={submission.isSubmitting}
+              canPickMedia={controller.canPickMedia}
+              canToggleVoice={controller.canToggleVoice}
+              voice={controller.voice}
+              enhance={controller.enhance}
+              onToggleWalkieTalkie={props.mode === 'chat' ? onToggleWalkieTalkie : undefined}
               onFocus={controller.handleInputFocus}
               onBlur={controller.handleInputBlur}
-              multiline
-              numberOfLines={5}
-              style={{
-                borderRadius: 0,
-                borderWidth: 0,
-                minHeight: 0,
-                paddingHorizontal: 0,
-                paddingVertical: 0,
-              }}
+              onSubmit={handleActiveAreaSubmit}
+              onChangeMessage={controller.setMessage}
             />
-            <View className="flex-row items-center justify-between">
-              <ComposerAttachButton disabled={!controller.canPickMedia} />
-              <ComposerToolbar
-                canEnhance={controller.canOpenEnhance}
-                canSubmit={controller.canSubmit}
-                canToggleVoice={controller.canToggleVoice}
-                hasContent={controller.hasContent}
-                isEnhancing={controller.enhance.isEnhancing}
-                isRecordingElsewhere={controller.voice.isRecordingElsewhere}
-                isSubmitting={submission.isSubmitting}
-                isVoiceBusy={controller.voice.isBusy}
-                isWalkieTalkie={controller.voice.isWalkieTalkie}
-                onEnhancePress={controller.enhance.toggleEnhance}
-                onSubmit={() => submit(presentation.primarySubmitKind)}
-                onVoicePress={() => void controller.voice.handleVoicePress()}
-                onToggleWalkieTalkie={
-                  props.mode === 'chat'
-                    ? () => controller.voice.setWalkieTalkie((prev) => !prev)
-                    : undefined
-                }
-                submitAccessibilityLabel={presentation.submitAccessibilityLabel}
-                submitTestID={presentation.submitTestID}
-              />
-            </View>
-          </>
+          </Animated.View>
         )}
       </Card>
-    </View>
+    </Animated.View>
   );
 }

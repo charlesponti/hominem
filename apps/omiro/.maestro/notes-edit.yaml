@@ -1,13 +1,30 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Assumes seed data: at least one note exists in the inbox. Opens the first
-# note, edits its title, and confirms the change round-trips back to the
-# inbox list after navigating back.
+# Creates a throwaway note (self-contained -- no longer assumes seed data:
+# the original "assumes at least one note exists" was a real fragility,
+# since which note ends up at index 0 depends on run order relative to every
+# other flow that creates/deletes notes), edits its title, and confirms the
+# change round-trips back to the inbox list after navigating back. Deletes
+# the note afterward instead of restoring the original title -- simpler and
+# equally clean once the note is self-created rather than shared/seeded.
 - runFlow: startup.yaml
+- tapOn:
+    id: inbox-composer-input
+- inputText: Note before Maestro edit
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
+- tapOn:
+    id: composer-submit-note
 - assertVisible:
     id: inbox-item-note-open
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn:
     id: inbox-item-note-open
+    index: 0
 - assertVisible:
     id: note-title-input
 - tapOn:
@@ -23,3 +40,23 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible:
     id: inbox-item-note-open
     index: 0
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Delete
+    times: 3
+    commands:
+      - longPressOn: Edited note title from Maestro
+      - extendedWaitUntil:
+          visible: Delete
+          timeout: 2000
+          optional: true
+- assertVisible: Delete
+- tapOn: Delete
+- extendedWaitUntil:
+    visible: Delete note
+    timeout: 8000
+- tapOn:
+    text: '^Delete$'
+- assertNotVisible: Edited note title from Maestro

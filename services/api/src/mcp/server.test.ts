@@ -143,6 +143,34 @@ describe('mcp server transport', () => {
     }
   });
 
+  it('advertises ChatGPT safety annotations and invocation status', async () => {
+    const client = await createClient(createApp(mcpAuthContext));
+    try {
+      const tools = await client.listTools();
+      const deleteTool = tools.tools.find((tool) => tool.name === 'career_wishlist_remove');
+      const readTool = tools.tools.find((tool) => tool.name === 'career_engagements');
+
+      expect(deleteTool?.annotations).toMatchObject({
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      });
+      expect(deleteTool?._meta).toMatchObject({
+        'openai/toolInvocation/invoking': expect.any(String),
+        'openai/toolInvocation/invoked': expect.any(String),
+      });
+      expect(readTool?.annotations).toMatchObject({
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it('requires only finance:read for finance tools', () => {
     const financeTools = listTools().filter((tool) => tool.name.startsWith('finance_'));
 

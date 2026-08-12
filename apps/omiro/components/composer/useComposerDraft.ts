@@ -1,39 +1,35 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
+
+import { createComposerMessageStore, type ComposerMessageStore } from './useComposerMessageStore';
 
 interface UseComposerDraftOptions {
   initialMessage?: string;
   onDraftChange?: (message: string) => void;
 }
 
+// The draft lives in an external store (not React state) so that typing
+// doesn't re-render every component holding a `useComposerController` result --
+// only whichever leaf component subscribes to the store re-renders per
+// keystroke. See useComposerMessageStore.ts and ComposerActiveArea.tsx.
 export function useComposerDraft({
   initialMessage = '',
   onDraftChange,
 }: UseComposerDraftOptions = {}) {
-  const [message, setMessageState] = useState(() => initialMessage);
-  // Mirrors `message` so callbacks that fire later (e.g. voice transcription
-  // finishing after the user kept typing) can read the latest draft via
-  // getMessage() without depending on `message` and re-creating on every keystroke.
-  const messageRef = useRef(initialMessage);
-
-  const applyMessage = useCallback(
-    (nextMessage: string) => {
-      messageRef.current = nextMessage;
-      setMessageState(nextMessage);
-      onDraftChange?.(nextMessage);
-    },
-    [onDraftChange],
-  );
+  const [store] = useState<ComposerMessageStore>(() => createComposerMessageStore(initialMessage));
 
   const setMessage = useCallback(
-    (nextMessage: string) => applyMessage(nextMessage),
-    [applyMessage],
+    (nextMessage: string) => {
+      store.setMessage(nextMessage);
+      onDraftChange?.(nextMessage);
+    },
+    [store, onDraftChange],
   );
 
-  const clearDraft = useCallback(() => applyMessage(''), [applyMessage]);
+  const clearDraft = useCallback(() => setMessage(''), [setMessage]);
 
   return {
-    getMessage: () => messageRef.current,
-    message,
+    store,
+    getMessage: store.getMessage,
     setMessage,
     clearDraft,
   };

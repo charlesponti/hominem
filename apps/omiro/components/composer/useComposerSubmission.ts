@@ -7,7 +7,7 @@ import {
   normalizeChatTitle,
   useAutoUpdateChatTitle,
   useSendMessage,
-  useStartChatFromInbox,
+  useStartChat,
 } from '~/services/chat';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { donateAddNoteIntent } from '~/services/intent-donation';
@@ -31,7 +31,7 @@ interface ComposerSubmitInput {
 export function useComposerSubmission(props: ComposerProps) {
   const queryClient = useQueryClient();
   const { mutateAsync: createNote, isPending: isSaving } = useCreateNote();
-  const { startChat, isStartingChat } = useStartChatFromInbox();
+  const { startChat, isStartingChat } = useStartChat();
   const chatId = props.mode === 'chat' ? props.chatId : '';
   const { sendChatMessage, isChatSending } = useSendMessage({ chatId });
   const autoUpdateChatTitle = useAutoUpdateChatTitle(chatId);
@@ -39,10 +39,16 @@ export function useComposerSubmission(props: ComposerProps) {
   const isInbox = props.mode === 'inbox';
   const onComplete = isInbox ? props.onComplete : undefined;
   const initialMessage = isInbox ? props.initialMessage : readChatDraft(props.chatId);
-  const onDraftChange = isInbox
-    ? props.onDraftChange
-    : (message: string) => writeChatDraft(props.chatId, message);
-  const onClearDraft = isInbox ? props.onClearDraft : () => clearChatDraft(props.chatId);
+  // Stable across renders (keyed only on chatId) so consumers that memoize on
+  // these -- useComposerDraft's setMessage, useComposerController's
+  // clearComposer -- don't churn identity on every unrelated re-render.
+  const writeChatDraftForId = useCallback(
+    (message: string) => writeChatDraft(chatId, message),
+    [chatId],
+  );
+  const clearChatDraftForId = useCallback(() => clearChatDraft(chatId), [chatId]);
+  const onDraftChange = isInbox ? props.onDraftChange : writeChatDraftForId;
+  const onClearDraft = isInbox ? props.onClearDraft : clearChatDraftForId;
 
   const submit = useCallback(
     async (

@@ -1,18 +1,57 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Starts a chat from the inbox composer. Typing text and tapping the
-# secondary action ("Start a new chat") creates a chat and navigates
-# to the chat detail screen.
+# Starts a chat from the inbox composer. Typing text, selecting the
+# Conversation kind, and tapping the submit button creates a chat and
+# navigates to the chat detail screen.
+#
+# There's no standalone "start chat" secondary-action button anymore --
+# ComposerToolbar dropped it when the Conversation/Document row was folded
+# into the composer's own bottom toolbar as an icon toggle (see
+# ComposerKindToggle.tsx). Selecting "chat" is what makes ComposerToolbar's
+# submit button become composer-submit-chat (composerSubmission.helpers.ts);
+# tapping composer-kind-chat explicitly rather than relying on
+# inferComposerEntryKind's default keeps this deterministic regardless of
+# what the typed text would otherwise infer to.
 - runFlow: startup.yaml
 - tapOn:
     id: inbox-composer-input
 - inputText: Native first smoke chat
 - tapOn:
-    id: composer-start-chat
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
 - assertVisible: Native first smoke chat
 - assertVisible:
     id: chat-composer-input
 - tapOn:
     id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true
+- assertVisible:
+    id: inbox-composer-input
+# Archived afterward (long-press -> Archive chat, no second confirmation --
+# see inbox-chat-archive.yaml) so repeated runs don't accumulate chats. Safe
+# to match by this exact title since it's a custom, non-default title, not
+# the generic "New conversation" default other chats can share.
+#
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Archive chat
+    times: 3
+    commands:
+      - longPressOn: Native first smoke chat
+      - extendedWaitUntil:
+          visible: Archive chat
+          timeout: 2000
+          optional: true
+- assertVisible: Archive chat
+- tapOn: Archive chat
+- assertNotVisible: Native first smoke chat
 - assertVisible:
     id: inbox-composer-input

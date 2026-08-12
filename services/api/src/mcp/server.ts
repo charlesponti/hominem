@@ -84,6 +84,10 @@ function createMcpServer() {
   );
 
   for (const definition of listTools()) {
+    const destructive = definition.destructive ?? /(?:delete|remove)/i.test(definition.name);
+    const idempotent =
+      definition.idempotent ?? /(?:delete|remove|update|save)/i.test(definition.name);
+
     mcpServer.registerTool(
       definition.name,
       {
@@ -91,7 +95,16 @@ function createMcpServer() {
         description: definition.description,
         inputSchema: definition.inputSchema,
         outputSchema: definition.outputSchema,
-        annotations: { readOnlyHint: definition.readOnly },
+        annotations: {
+          readOnlyHint: definition.readOnly,
+          destructiveHint: destructive,
+          idempotentHint: idempotent,
+          openWorldHint: definition.openWorld ?? false,
+        },
+        _meta: {
+          'openai/toolInvocation/invoking': definition.invoking ?? `${definition.title}…`,
+          'openai/toolInvocation/invoked': definition.invoked ?? `${definition.title} complete.`,
+        },
       },
       createToolHandler(definition),
     );

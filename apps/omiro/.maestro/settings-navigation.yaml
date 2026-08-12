@@ -1,12 +1,29 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Navigates from the inbox to the Settings screen via the header's profile
-# icon button (a direct pressable, not a dropdown menu), then back.
+# Navigates from the inbox to Settings via the nav-drawer menu, then back.
+#
+# Settings isn't reached via a direct header button anymore -- the inbox
+# header only renders NavDrawerMenuButton (a MenuView), whose "Settings"
+# native menu item pushes the settings route (components/navigation/
+# NavDrawerMenuButton.tsx). Asserted by settings-usage-section's testID
+# rather than the screen's title text, since "Settings" also names the menu
+# item that triggers the navigation and could race a text-based assertion.
+#
+# Settings is presented as an iOS form sheet (presentation: 'formSheet' in
+# app/(protected)/_layout.tsx), not a stack push -- there's no BackButton or
+# header "Inbox" button to tap. It dismisses like any native sheet: swipe
+# down. (There's also no in-screen close button to fall back on.)
 - runFlow: startup.yaml
 - tapOn:
-    id: inbox-open-settings
-- assertVisible: Settings
-- tapOn:
-    id: BackButton
+    id: nav-drawer-menu-button
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn: Settings
+- assertVisible:
+    id: settings-usage-section
+- swipe:
+    direction: DOWN
+    startPoint: '50%,10%'
+    endPoint: '50%,90%'
 - assertVisible:
     id: inbox-composer-input

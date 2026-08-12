@@ -71,12 +71,49 @@ appId: com.pontistudios.hakumi.dev
       - tapOn:
           text: Inbox
           optional: true
+# Same resume-target problem as chat/notes above, but for a calendar event
+# edit screen pushed from the Time route (getTimeBlockRoute in
+# TimeScreen.tsx). Its BackButton goes to the Time root, not the inbox --
+# see the next step for getting from there back to the inbox.
+- extendedWaitUntil:
+    visible:
+      id: time-block-editor
+    timeout: 5000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: time-block-editor
+    commands:
+      - tapOn:
+          id: BackButton
+          optional: true
+# If we're on the Time root (nav-drawer-menu-button visible, but not yet on
+# the inbox), use the nav drawer to get to "All" -- the same menu the
+# time-block-editor back step above can land on. Match by icon id
+# (tray.full.fill), not text: "All" also matches the inbox screen's own
+# header title once navigation lands, and text tap can race that.
+- runFlow:
+    when:
+      visible:
+        id: nav-drawer-menu-button
+      notVisible:
+        id: inbox-composer-input
+    commands:
+      - tapOn:
+          id: nav-drawer-menu-button
+      # Wait for the menu's open animation BEFORE tapping an item, not
+      # after -- see the identical comment in time-composer-interactions.yaml
+      # for why (tapping immediately raced the item settling into position).
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - tapOn:
+          id: tray.full.fill
 - extendedWaitUntil:
     visible:
       id: inbox-composer-input
     timeout: 30000
-# The native Picker exposes one stable identifier per Workspace context.
 - extendedWaitUntil:
     visible:
-      id: workspace-context-chats
+      id: nav-drawer-menu-button
     timeout: 15000

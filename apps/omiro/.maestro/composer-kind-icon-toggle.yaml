@@ -1,0 +1,60 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Exercises the inline Conversation/Document icon picker in the inbox
+# composer (mode="inbox" entryMode="mixed" in InboxScreen.tsx). The picker
+# lives inside the composer Card's bottom toolbar row now (composer-kind-chat
+# / composer-kind-note IconButtons, see Composer.tsx) instead of the old
+# text-pill row above the Card.
+#
+# There's no accessibilityState on these IconButtons to assert selection
+# directly, so this asserts the downstream effect instead: selecting a kind
+# changes ComposerToolbar's submit button testID (composer-submit-chat vs
+# composer-submit-note, see composerSubmission.helpers.ts) and the submit
+# button's own icon/testID. That's a reliable, code-level signal that the
+# tap actually changed selectedEntryKind rather than a no-op.
+- runFlow: startup.yaml
+
+- assertVisible:
+    id: inbox-composer-input
+- assertVisible:
+    id: composer-kind-control
+- assertVisible:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-kind-note
+- takeScreenshot: composer-kind-toggle-default
+
+# Default (empty input): inferComposerEntryKind falls back to note, so
+# Document is selected and the note submit testID should be visible.
+- assertVisible:
+    id: composer-submit-note
+
+# Select Conversation.
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- assertNotVisible:
+    id: composer-submit-note
+- takeScreenshot: composer-kind-toggle-chat-selected
+
+# Select Document.
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
+- assertNotVisible:
+    id: composer-submit-chat
+- takeScreenshot: composer-kind-toggle-note-selected
+
+# Typing a message shouldn't disturb the manual selection (once the user has
+# explicitly picked a kind, useComposerController stops inferring it from
+# message content).
+- tapOn:
+    id: inbox-composer-input
+- inputText: Draft a note about the roadmap
+- assertVisible:
+    id: composer-submit-note
+- takeScreenshot: composer-kind-toggle-note-typing
+- eraseText: 60
+- hideKeyboard

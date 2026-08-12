@@ -1,7 +1,7 @@
 import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { Image } from 'expo-image';
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
@@ -21,6 +21,8 @@ export function ComposerAttachmentRow() {
 
   return (
     <Animated.View
+      entering={FadeIn.duration(transitionDurations[150])}
+      exiting={FadeOut.duration(transitionDurations[100])}
       layout={
         prefersReducedMotion ? undefined : LinearTransition.duration(transitionDurations[150])
       }

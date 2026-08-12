@@ -3,7 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { TextInput as RNTextInput } from 'react-native';
 import { Text } from 'react-native';
-import Animated, { FadeInUp, useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInUp,
+  FadeOut,
+  FadeOutDown,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
@@ -44,6 +50,7 @@ export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
   ]) as [string, string, string];
   const inputRef = useRef<RNTextInput>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   const valueRef = useRef(value);
   valueRef.current = value;
@@ -85,73 +92,79 @@ export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
       ) : null}
 
       {isIdle ? (
-        <Card
-          className="w-full p-3 gap-3"
-          style={{
-            borderCurve: 'continuous',
-            boxShadow: nativeShadows.md,
-            borderColor: isFocused
-              ? primaryColor
-              : voice.isRecording
-                ? destructiveColor
-                : borderDefaultColor,
-          }}
-          testID="time-composer"
+        <Animated.View
+          entering={FadeIn.duration(reducedMotion ? 150 : 180)}
+          exiting={FadeOut.duration(120)}
         >
-          {voiceErrorBanner}
-          {voice.isRecording ? (
-            <VoiceRecordingPanel
-              startedAt={voice.recordingStartedAt}
-              onCancel={() => void voice.cancelVoiceRecording()}
-              onDone={() => void voice.handleVoicePress()}
-            />
-          ) : (
-            <TextField
-              editable={!disabled}
-              ref={inputRef}
-              onBlur={() => setIsFocused(false)}
-              onChangeText={setPrompt}
-              onFocus={() => setIsFocused(true)}
-              onSubmitEditing={ask}
-              placeholder="Add or search anything..."
-              returnKeyType="send"
-              submitBehavior="submit"
-              testID="time-composer-input"
-              value={value}
-              multiline
-              numberOfLines={5}
-              style={{
-                borderRadius: 0,
-                borderWidth: 0,
-                minHeight: 0,
-                paddingHorizontal: 0,
-                paddingVertical: 0,
-              }}
-            />
-          )}
-          {voice.isRecording ? null : (
-            <View className="flex-row items-center justify-end gap-2">
-              <IconButton
-                accessibilityLabel="Start voice input"
-                disabled={voice.isRecordingElsewhere}
-                testID="time-composer-mic-button"
-                onPress={() => void voice.handleVoicePress()}
-              >
-                <AppIcon name="mic.fill" size={20} />
-              </IconButton>
-              <IconButton
-                accessibilityLabel={
-                  isParsing ? 'Interpreting time request' : 'Interpret time request'
-                }
-                disabled={disabled || !canSubmit || voice.isBusy}
-                testID="time-composer-submit"
-                onPress={ask}
-              >
-                <AppIcon name="arrow.up" size={20} />
-              </IconButton>
-            </View>
-          )}
-        </Card>
+          <Card
+            className="w-full gap-2 p-3"
+            style={{
+              borderColor: isFocused
+                ? primaryColor
+                : voice.isRecording
+                  ? destructiveColor
+                  : borderDefaultColor,
+              borderCurve: 'continuous',
+              borderRadius: 24,
+              boxShadow: nativeShadows.sm,
+            }}
+            testID="time-composer"
+          >
+            {voiceErrorBanner}
+            {voice.isRecording ? (
+              <VoiceRecordingPanel
+                startedAt={voice.recordingStartedAt}
+                onCancel={() => void voice.cancelVoiceRecording()}
+                onDone={() => void voice.handleVoicePress()}
+              />
+            ) : (
+              <TextField
+                editable={!disabled}
+                ref={inputRef}
+                onBlur={() => setIsFocused(false)}
+                onChangeText={setPrompt}
+                onFocus={() => setIsFocused(true)}
+                onSubmitEditing={ask}
+                placeholder="Add or search anything..."
+                returnKeyType="send"
+                submitBehavior="submit"
+                testID="time-composer-input"
+                value={value}
+                multiline
+                numberOfLines={5}
+                style={{
+                  borderRadius: 0,
+                  borderWidth: 0,
+                  minHeight: 0,
+                  paddingHorizontal: 0,
+                  paddingVertical: 0,
+                }}
+              />
+            )}
+            {voice.isRecording ? null : (
+              <View className="flex-row items-center justify-end gap-2">
+                <IconButton
+                  accessibilityLabel="Start voice input"
+                  disabled={voice.isRecordingElsewhere}
+                  testID="time-composer-mic-button"
+                  onPress={() => void voice.handleVoicePress()}
+                >
+                  <AppIcon name="mic.fill" size={20} />
+                </IconButton>
+                <IconButton
+                  accessibilityLabel={
+                    isParsing ? 'Interpreting time request' : 'Interpret time request'
+                  }
+                  disabled={disabled || !canSubmit || voice.isBusy}
+                  testID="time-composer-submit"
+                  onPress={ask}
+                >
+                  <AppIcon name="arrow.up" size={20} />
+                </IconButton>
+              </View>
+            )}
+          </Card>
+        </Animated.View>
       ) : isParsing ? (
         <ResultSurface accessibilityLabel="Interpreting time request" testID="time-result-parsing">
           <View className="items-center justify-center min-h-11">
@@ -328,7 +341,8 @@ function ResultSurface({
             : 'Draft event ready'
           : undefined)
       }
-      entering={reducedMotion ? undefined : FadeInUp.duration(220)}
+      entering={reducedMotion ? FadeIn.duration(180) : FadeInUp.duration(220)}
+      exiting={reducedMotion ? FadeOut.duration(140) : FadeOutDown.duration(180)}
       className="w-full gap-3 px-1"
       testID={testID}
     >

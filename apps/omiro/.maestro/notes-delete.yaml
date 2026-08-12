@@ -1,18 +1,73 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Assumes seed data: exactly one note exists in the inbox. Deletes it via the
-# row's overflow "Item actions" menu and confirms it is removed.
+# Creates a throwaway note from the inbox composer (self-contained, no seed
+# data assumption), deletes it via the row's long-press menu, and confirms
+# it disappears.
+#
+# Delete lives behind a native long-press Alert.alert on the row
+# (InboxStreamItem.tsx handleLongPress) followed by a second confirmation
+# alert -- there is no "Item actions" button/testID (that translation string,
+# t.inbox.item.actionsLabel, is unused dead code). The retry around the
+# second alert exists for the same reason as the first (below): observed
+# directly that the confirmation alert can be slow to appear after the first
+# alert's own dismiss animation, past a bare extendedWaitUntil's timeout.
+#
+# inbox-item-note-open is used (not plain text) for the creation check: the
+# newest row's title sits behind the nav bar right after insert, so a bare
+# text assertVisible can flake there even though the row exists (see
+# notes-create.yaml's identical comment). By the time we long-press, the row
+# has settled and matching by its title text is reliable.
+#
+# The repeat/while block re-issues longPressOn if the Alert doesn't open --
+# on a freshly-inserted row, the long-press gesture occasionally doesn't
+# register on the first attempt (observed directly; not fully root-caused,
+# possibly the row's entrance animation/relayout swallowing the initial
+# touch-down even after waitForAnimationToEnd). Retrying is cheap and this
+# is the same repeat/while resilience pattern startup.yaml and
+# time-composer-interactions.yaml already use for other flaky transitions.
+#
+# KNOWN FLAKE, same spirit as the one documented in
+# time-composer-interactions.yaml: in interactive testing this exact
+# create -> long-press -> Delete -> "Delete note" sequence intermittently
+# stalls on the *second* alert never appearing, even with the retry above
+# and an 8s timeout on it -- but the identical sequence run as separate,
+# individually-dispatched commands (not one continuous flow) never failed,
+# which points at inter-command pacing in how flows are executed here
+# rather than an app-level bug or a wrong selector. Re-verify this flow via
+# a normal `maestro test` CLI run (not the same execution path) before
+# trusting a single failure from it as a real regression.
 - runFlow: startup.yaml
-- assertVisible:
-    id: inbox-item-note
-- assertVisible:
-    id: inbox-item-note-actions
 - tapOn:
-    id: inbox-item-note-actions
+    id: inbox-composer-input
+- inputText: Maestro delete test note
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
+- tapOn:
+    id: composer-submit-note
+- assertVisible:
+    id: inbox-item-note-open
     index: 0
+- waitForAnimationToEnd:
+    timeout: 2000
+- repeat:
+    while:
+      notVisible: Delete
+    times: 3
+    commands:
+      - longPressOn: Maestro delete test note
+      - extendedWaitUntil:
+          visible: Delete
+          timeout: 2000
+          optional: true
+- assertVisible: Delete
 - tapOn: Delete
-- assertVisible: Delete note
+- extendedWaitUntil:
+    visible: Delete note
+    timeout: 8000
 - tapOn:
     text: '^Delete$'
-- assertNotVisible:
-    id: inbox-item-note
+- assertNotVisible: Maestro delete test note
+- assertVisible:
+    id: inbox-composer-input

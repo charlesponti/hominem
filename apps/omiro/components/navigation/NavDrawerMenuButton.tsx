@@ -67,7 +67,11 @@ export function NavDrawerMenuButton() {
 
   return (
     <MenuView actions={actions} onPressAction={onPressAction} testID="nav-drawer-menu-button">
-      <IconButton accessibilityLabel="Open navigation menu" variant="plain">
+      <IconButton
+        accessibilityLabel="Open navigation menu"
+        testID="nav-drawer-menu-button"
+        variant="plain"
+      >
         <AppIcon name="line.3.horizontal" size={20} />
       </IconButton>
     </MenuView>

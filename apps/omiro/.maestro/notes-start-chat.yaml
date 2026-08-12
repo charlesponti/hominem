@@ -1,13 +1,35 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Assumes seed data: at least one note exists in the inbox. Opens the first
-# note, taps "Start chat" from the note's overflow menu, and confirms a new
-# chat is created, seeded with the note reference, and navigated to.
+# Creates a throwaway note (self-contained -- no seed data assumption),
+# opens it, taps "Start chat" from the note's overflow menu, and confirms a
+# new chat is created, seeded with the note reference, and navigated to.
+#
+# Teardown archives the chat from its own in-chat "Conversation actions"
+# menu (ChatDetailScreen.tsx) rather than long-pressing its row in the inbox
+# list: a note-seeded chat with no user-typed message defaults to the
+# generic "New conversation" title, which is not a safe/unique text
+# matcher to long-press on in the inbox list (other unrelated chats can
+# share that exact default title). Archiving in-chat calls
+# router.dismissTo(HOME_ROUTE), landing back on the inbox directly. The
+# note itself is deleted afterward via the usual long-press flow.
 - runFlow: startup.yaml
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro start-chat test note
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
+- tapOn:
+    id: composer-submit-note
 - assertVisible:
     id: inbox-item-note-open
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn:
     id: inbox-item-note-open
+    index: 0
 - assertVisible:
     id: note-title-input
 - tapOn: 'Note actions'
@@ -19,11 +41,30 @@ appId: com.pontistudios.hakumi.dev
     visible:
       text: '.*talk about this note.*'
     timeout: 20000
-- tapOn:
-    id: BackButton
-- assertVisible:
-    id: note-title-input
-- tapOn:
-    id: BackButton
+- tapOn: 'Conversation actions'
+- extendedWaitUntil:
+    visible: Archive chat
+    timeout: 3000
+- tapOn: Archive chat
 - assertVisible:
     id: inbox-composer-input
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Delete
+    times: 3
+    commands:
+      - longPressOn: Maestro start-chat test note
+      - extendedWaitUntil:
+          visible: Delete
+          timeout: 2000
+          optional: true
+- assertVisible: Delete
+- tapOn: Delete
+- extendedWaitUntil:
+    visible: Delete note
+    timeout: 8000
+- tapOn:
+    text: '^Delete$'
+- assertNotVisible: Maestro start-chat test note

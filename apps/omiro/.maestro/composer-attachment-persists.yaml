@@ -27,6 +27,13 @@ appId: com.pontistudios.hakumi.dev
 - tapOn:
     id: inbox-composer-input
 - inputText: Attachment persistence check
+# Explicit -- inferComposerEntryKind infers 'chat' by default for plain
+# single-line text like this; without selecting Document, composer-submit-note
+# never renders (see the same note in notes-create.yaml).
+- tapOn:
+    id: composer-kind-note
+- assertVisible:
+    id: composer-submit-note
 - tapOn:
     id: composer-submit-note
 # The note write + inbox query invalidation is a real network round-trip;
@@ -35,7 +42,7 @@ appId: com.pontistudios.hakumi.dev
     visible:
       text: 'Attachment persistence check'
     timeout: 30000
-# Tapped by its own text, not index — inbox-item-note-open's resource-id is
+# Tapped by its own text, not index -- inbox-item-note-open's resource-id is
 # shared across every row, so an index-based tap right after an insert can
 # race the list's re-sort and hit the wrong note.
 - tapOn:
@@ -50,3 +57,29 @@ appId: com.pontistudios.hakumi.dev
     visible:
       text: "\\.(jpg|jpeg|png)$"
     timeout: 10000
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Delete
+    times: 3
+    commands:
+      - longPressOn: Attachment persistence check
+      - extendedWaitUntil:
+          visible: Delete
+          timeout: 2000
+          optional: true
+- assertVisible: Delete
+- tapOn: Delete
+- extendedWaitUntil:
+    visible: Delete note
+    timeout: 8000
+- tapOn:
+    text: '^Delete$'
+- assertNotVisible: Attachment persistence check

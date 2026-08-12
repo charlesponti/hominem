@@ -1,17 +1,23 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Assumes seed data: a chat titled "Test Chat" exists and is visible in the
-# Chats tab of the inbox. Opens the chat, sends a message, and verifies the
-# message text appears in the conversation.
+# Creates a throwaway chat from the inbox composer (self-contained, no seed
+# data assumption -- there's no "Chats" tab-strip to find a pre-seeded chat
+# in anymore), sends a message inside it, and verifies the message text
+# appears in the conversation. Archives the chat afterward.
 #
 # Chat messages do not carry stable testIDs (they are rendered as Pressable
 # rows inside a FlashList), so we assert by text content after the message
 # round-trips through the server and back.
 - runFlow: startup.yaml
-- tapOn: Chats
-- assertVisible: Chats
-- assertVisible: Test Chat
-- tapOn: Test Chat
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro send-message test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
 - assertVisible:
     id: chat-composer-input
 - tapOn:
@@ -20,3 +26,27 @@ appId: com.pontistudios.hakumi.dev
 - tapOn:
     id: composer-submit-message
 - assertVisible: Hello from Maestro
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true
+- assertVisible: Maestro send-message test chat
+# Retries the long-press if the Alert doesn't open on the first attempt --
+# see the identical repeat/while block in notes-delete.yaml for why.
+- repeat:
+    while:
+      notVisible: Archive chat
+    times: 3
+    commands:
+      - longPressOn: Maestro send-message test chat
+      - extendedWaitUntil:
+          visible: Archive chat
+          timeout: 2000
+          optional: true
+- assertVisible: Archive chat
+- tapOn: Archive chat
+- assertNotVisible: Maestro send-message test chat
+- assertVisible:
+    id: inbox-composer-input

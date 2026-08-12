@@ -17,6 +17,11 @@ export interface McpToolDefinition<
   scopes: readonly string[];
   sensitivity: CapabilityDefinition['sensitivity'];
   resultCap: number;
+  destructive?: boolean;
+  idempotent?: boolean;
+  openWorld?: boolean;
+  invoking?: string;
+  invoked?: string;
 }
 
 export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {

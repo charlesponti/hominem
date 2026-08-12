@@ -25,7 +25,7 @@ import AppIcon from '~/components/ui/icon';
 import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
-import { normalizeChatTitle, useStartChatFromInbox } from '~/services/chat';
+import { normalizeChatTitle, useStartChat } from '~/services/chat';
 import { writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
@@ -200,7 +200,7 @@ function NoteEditorBody({
     runEnhance,
   } = useInlineEnhance();
 
-  const { startChat, isStartingChat } = useStartChatFromInbox();
+  const { startChat, isStartingChat } = useStartChat();
 
   const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
     useCSSVariable([

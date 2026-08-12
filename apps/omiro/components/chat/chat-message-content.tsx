@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
+import { StreamingRevealText } from './chat-streaming-text';
+
 async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
   return mod.default as MarkdownComponent;
@@ -81,7 +83,9 @@ export function MessageContent({
 
   return (
     <View className="gap-2 w-full">
-      {Markdown && enableMarkdown ? (
+      {!enableMarkdown ? (
+        <StreamingRevealText content={content} textStyle={textStyle} />
+      ) : Markdown ? (
         <Markdown style={markdownStyle}>{content}</Markdown>
       ) : (
         <Text style={textStyle}>{content}</Text>
