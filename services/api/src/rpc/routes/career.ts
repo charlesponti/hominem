@@ -6,6 +6,9 @@ import {
   addCareerApplicationFile,
   addCareerApplicationNote,
   createCareerCertification,
+  createCareerApplication,
+  createCareerEducation,
+  createCareerEngagement,
   createCareerProject,
   createCareerSkill,
   createCareerTestimonial,
@@ -24,14 +27,18 @@ import {
   listCareerWishlistCompanies,
   removeCareerApplicationFile,
   removeCareerApplicationNote,
+  removeCareerApplication,
   removeCareerCertification,
   removeCareerEngagement,
+  removeCareerEducation,
   removeCareerProject,
   removeCareerSkill,
   removeCareerTestimonial,
   removeCareerWishlistCompany,
   saveCareerSocialLinks,
   updateCareerCertification,
+  updateCareerApplication,
+  updateCareerEducation,
   updateCareerEngagement,
   updateCareerProject,
   updateCareerSkill,
@@ -44,9 +51,16 @@ import {
   careerApplicationNoteCreateSchema,
   careerApplicationNoteDeleteSchema,
   careerApplicationsQuerySchema,
+  careerApplicationCreateSchema,
+  careerApplicationDeleteSchema,
+  careerApplicationUpdateSchema,
+  careerEngagementCreateSchema,
   careerEngagementDeleteSchema,
   careerEngagementUpdateSchema,
   careerEngagementsQuerySchema,
+  careerEducationCreateSchema,
+  careerEducationDeleteSchema,
+  careerEducationUpdateSchema,
   careerCertificationCreateSchema,
   careerCertificationDeleteSchema,
   careerCertificationUpdateSchema,
@@ -79,6 +93,10 @@ export const careerRoutes = new Hono<AppContext>()
     const result = await listCareerEngagements(userId, { type, limit });
     return c.json(result);
   })
+  .post('/engagements/create', zValidator('json', careerEngagementCreateSchema), async (c) => {
+    const created = await createCareerEngagement(c.get('auth')!.userId, c.req.valid('json'));
+    return c.json(created, 201);
+  })
   .post('/engagements/update', zValidator('json', careerEngagementUpdateSchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const { id, data } = c.req.valid('json');
@@ -96,6 +114,21 @@ export const careerRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const result = await listCareerApplications(userId, c.req.valid('query'));
     return c.json(result);
+  })
+  .post('/applications/create', zValidator('json', careerApplicationCreateSchema), async (c) => {
+    const created = await createCareerApplication(c.get('auth')!.userId, c.req.valid('json'));
+    return c.json(created, 201);
+  })
+  .post('/applications/update', zValidator('json', careerApplicationUpdateSchema), async (c) => {
+    const { id, data } = c.req.valid('json');
+    const updated = await updateCareerApplication(c.get('auth')!.userId, id, data);
+    if (!updated) throw new NotFoundError('Application not found');
+    return c.json(updated);
+  })
+  .post('/applications/delete', zValidator('json', careerApplicationDeleteSchema), async (c) => {
+    const removed = await removeCareerApplication(c.get('auth')!.userId, c.req.valid('json').id);
+    if (!removed) throw new NotFoundError('Application not found');
+    return c.json({ removed });
   })
   .get('/applications/:id', async (c) => {
     const userId = c.get('auth')!.userId;
@@ -135,6 +168,21 @@ export const careerRoutes = new Hono<AppContext>()
     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
     const result = await listCareerEducation(userId, limit);
     return c.json(result);
+  })
+  .post('/education/create', zValidator('json', careerEducationCreateSchema), async (c) => {
+    const created = await createCareerEducation(c.get('auth')!.userId, c.req.valid('json'));
+    return c.json(created, 201);
+  })
+  .post('/education/update', zValidator('json', careerEducationUpdateSchema), async (c) => {
+    const { id, data } = c.req.valid('json');
+    const updated = await updateCareerEducation(c.get('auth')!.userId, id, data);
+    if (!updated) throw new NotFoundError('Education not found');
+    return c.json(updated);
+  })
+  .post('/education/delete', zValidator('json', careerEducationDeleteSchema), async (c) => {
+    const removed = await removeCareerEducation(c.get('auth')!.userId, c.req.valid('json').id);
+    if (!removed) throw new NotFoundError('Education not found');
+    return c.json({ removed });
   })
   // -- Skills --
   .get('/skills', async (c) => {

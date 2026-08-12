@@ -55,12 +55,14 @@ export const SkillRepository = {
     return (result ?? null) as CareerSkillRecord | null;
   },
 
-  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<void> {
-    await handle
+  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {
+    const deleted = await handle
       .deleteFrom('app.careerSkills')
       .where('id', '=', id)
       .where('ownerUserid', '=', ownerUserId)
-      .execute();
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 
   /** Diff-based replace: deletes skills no longer present, upserts the rest by name. */

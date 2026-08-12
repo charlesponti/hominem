@@ -2,6 +2,15 @@ import * as z from 'zod';
 
 import {
   addCareerWishlistCompany,
+  addCareerApplicationFile,
+  addCareerApplicationNote,
+  createCareerApplication,
+  createCareerCertification,
+  createCareerEducation,
+  createCareerEngagement,
+  createCareerProject,
+  createCareerSkill,
+  createCareerTestimonial,
   getCareerApplicationDetail,
   getCareerProfile,
   getCareerSocialLinks,
@@ -13,19 +22,43 @@ import {
   listCareerSkills,
   listCareerTestimonials,
   listCareerWishlistCompanies,
+  removeCareerApplication,
+  removeCareerApplicationFile,
+  removeCareerApplicationNote,
+  removeCareerCertification,
+  removeCareerEducation,
+  removeCareerSkill,
+  removeCareerTestimonial,
   removeCareerEngagement,
   removeCareerProject,
   removeCareerWishlistCompany,
   updateCareerEngagement,
   updateCareerProject,
   updateCareerWishlistCompany,
+  updateCareerApplication,
+  updateCareerCertification,
+  updateCareerEducation,
+  updateCareerSkill,
+  updateCareerTestimonial,
+  saveCareerSocialLinks,
 } from '../../application/career.service';
 import {
   careerApplicationDetailSchema,
+  careerApplicationCreateSchema,
+  careerApplicationDeleteSchema,
+  careerApplicationFileAddSchema,
+  careerApplicationFileRemoveSchema,
+  careerApplicationNoteAddSchema,
+  careerApplicationNoteRemoveSchema,
+  careerApplicationUpdateSchema,
   careerApplicationsQuerySchema,
   careerApplicationsSchema,
   careerCertificationsSchema,
   careerEducationSchema,
+  careerEducationCreateSchema,
+  careerEducationDeleteSchema,
+  careerEducationUpdateSchema,
+  careerEngagementCreateSchema,
   careerEngagementDeleteSchema,
   careerEngagementSchema,
   careerEngagementUpdateSchema,
@@ -35,10 +68,24 @@ import {
   careerProjectDeleteSchema,
   careerProjectSchema,
   careerProjectUpdateSchema,
+  careerProjectCreateSchema,
   careerProjectsSchema,
   careerSkillsSchema,
+  careerSkillCreateSchema,
+  careerSkillDeleteSchema,
+  careerSkillSchema,
+  careerSkillUpdateSchema,
   careerSocialLinksSchema,
+  careerSocialLinksSaveSchema,
   careerTestimonialsSchema,
+  careerTestimonialCreateSchema,
+  careerTestimonialDeleteSchema,
+  careerTestimonialSchema,
+  careerTestimonialUpdateSchema,
+  careerCertificationCreateSchema,
+  careerCertificationDeleteSchema,
+  careerCertificationSchema,
+  careerCertificationUpdateSchema,
   careerWishlistCompaniesQuerySchema,
   careerWishlistCompaniesSchema,
   careerWishlistCompanyCreateSchema,
@@ -89,6 +136,298 @@ registerTool(
     logRedaction('career_profile', REDACTED_FIELDS, profile ? 1 : 0);
     return { profile };
   },
+);
+
+const writeTool = {
+  readOnly: false as const,
+  scopes: ['career:write'] as ['career:write'],
+  sensitivity: 'sensitive' as const,
+  resultCap: 1,
+};
+
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_engagement_create',
+    title: 'Create a career engagement',
+    description: 'Creates a work history engagement.',
+    inputSchema: careerEngagementCreateSchema,
+    outputSchema: z.object({ engagement: careerEngagementSchema }),
+  },
+  async (ownerUserId, input) => ({ engagement: await createCareerEngagement(ownerUserId, input) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_create',
+    title: 'Create a career application',
+    description: 'Creates a job application.',
+    inputSchema: careerApplicationCreateSchema,
+    outputSchema: z.object({ application: careerApplicationsSchema.shape.applications.element }),
+  },
+  async (ownerUserId, input) => ({
+    application: await createCareerApplication(ownerUserId, input),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_update',
+    title: 'Update a career application',
+    description: 'Updates a job application.',
+    inputSchema: careerApplicationUpdateSchema,
+    outputSchema: z.object({
+      application: careerApplicationsSchema.shape.applications.element.nullable(),
+    }),
+  },
+  async (ownerUserId, input) => ({
+    application: await updateCareerApplication(ownerUserId, input.id, input.data),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_delete',
+    title: 'Delete a career application',
+    description: 'Deletes a job application.',
+    inputSchema: careerApplicationDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({ removed: await removeCareerApplication(ownerUserId, input.id) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_note_add',
+    title: 'Add an application note',
+    description: 'Adds a note to a job application.',
+    inputSchema: careerApplicationNoteAddSchema,
+    outputSchema: z.object({
+      note: z
+        .object({ id: z.string().uuid(), content: z.string(), createdAt: z.string() })
+        .nullable(),
+    }),
+  },
+  async (ownerUserId, input) => ({
+    note: await addCareerApplicationNote(ownerUserId, input.applicationId, input.content),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_note_remove',
+    title: 'Remove an application note',
+    description: 'Removes an application note.',
+    inputSchema: careerApplicationNoteRemoveSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerApplicationNote(ownerUserId, input.applicationId, input.id),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_file_add',
+    title: 'Add an application file',
+    description: 'Adds a file reference to a job application.',
+    inputSchema: careerApplicationFileAddSchema,
+    outputSchema: z.object({
+      file: z
+        .object({
+          id: z.string().uuid(),
+          fileName: z.string(),
+          fileUrl: z.string(),
+          fileType: z.string().nullable(),
+          createdAt: z.string(),
+        })
+        .nullable(),
+    }),
+  },
+  async (ownerUserId, input) => ({
+    file: await addCareerApplicationFile(ownerUserId, input.applicationId, input),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_application_file_remove',
+    title: 'Remove an application file',
+    description: 'Removes an application file.',
+    inputSchema: careerApplicationFileRemoveSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerApplicationFile(ownerUserId, input.applicationId, input.id),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_education_create',
+    title: 'Create education',
+    description: 'Creates an education entry.',
+    inputSchema: careerEducationCreateSchema,
+    outputSchema: z.object({ education: careerEducationSchema.shape.education.element }),
+  },
+  async (ownerUserId, input) => ({ education: await createCareerEducation(ownerUserId, input) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_education_update',
+    title: 'Update education',
+    description: 'Updates an education entry.',
+    inputSchema: careerEducationUpdateSchema,
+    outputSchema: z.object({ education: careerEducationSchema.shape.education.element.nullable() }),
+  },
+  async (ownerUserId, input) => ({
+    education: await updateCareerEducation(ownerUserId, input.id, input.data),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_education_delete',
+    title: 'Delete education',
+    description: 'Deletes an education entry.',
+    inputSchema: careerEducationDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({ removed: await removeCareerEducation(ownerUserId, input.id) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_skill_create',
+    title: 'Create a skill',
+    description: 'Creates a career skill.',
+    inputSchema: careerSkillCreateSchema,
+    outputSchema: z.object({ skill: careerSkillSchema }),
+  },
+  async (ownerUserId, input) => ({ skill: await createCareerSkill(ownerUserId, input) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_skill_update',
+    title: 'Update a skill',
+    description: 'Updates a career skill.',
+    inputSchema: careerSkillUpdateSchema,
+    outputSchema: z.object({ skill: careerSkillSchema.nullable() }),
+  },
+  async (ownerUserId, input) => ({
+    skill: await updateCareerSkill(ownerUserId, input.id, input.data),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_skill_delete',
+    title: 'Delete a skill',
+    description: 'Deletes a career skill.',
+    inputSchema: careerSkillDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({ removed: await removeCareerSkill(ownerUserId, input.id) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_project_create',
+    title: 'Create a project',
+    description: 'Creates a career project.',
+    inputSchema: careerProjectCreateSchema,
+    outputSchema: z.object({ project: careerProjectSchema }),
+  },
+  async (ownerUserId, input) => ({ project: await createCareerProject(ownerUserId, input) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_testimonial_create',
+    title: 'Create a testimonial',
+    description: 'Creates a career testimonial.',
+    inputSchema: careerTestimonialCreateSchema,
+    outputSchema: z.object({ testimonial: careerTestimonialSchema }),
+  },
+  async (ownerUserId, input) => ({
+    testimonial: await createCareerTestimonial(ownerUserId, input),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_testimonial_update',
+    title: 'Update a testimonial',
+    description: 'Updates a career testimonial.',
+    inputSchema: careerTestimonialUpdateSchema,
+    outputSchema: z.object({ testimonial: careerTestimonialSchema.nullable() }),
+  },
+  async (ownerUserId, input) => ({
+    testimonial: await updateCareerTestimonial(ownerUserId, input.id, input.data),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_testimonial_delete',
+    title: 'Delete a testimonial',
+    description: 'Deletes a career testimonial.',
+    inputSchema: careerTestimonialDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({ removed: await removeCareerTestimonial(ownerUserId, input.id) }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_certification_create',
+    title: 'Create a certification',
+    description: 'Creates a career certification.',
+    inputSchema: careerCertificationCreateSchema,
+    outputSchema: z.object({ certification: careerCertificationSchema }),
+  },
+  async (ownerUserId, input) => ({
+    certification: await createCareerCertification(ownerUserId, input),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_certification_update',
+    title: 'Update a certification',
+    description: 'Updates a career certification.',
+    inputSchema: careerCertificationUpdateSchema,
+    outputSchema: z.object({ certification: careerCertificationSchema.nullable() }),
+  },
+  async (ownerUserId, input) => ({
+    certification: await updateCareerCertification(ownerUserId, input.id, input.data),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_certification_delete',
+    title: 'Delete a certification',
+    description: 'Deletes a career certification.',
+    inputSchema: careerCertificationDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerCertification(ownerUserId, input.id),
+  }),
+);
+registerTool(
+  {
+    ...writeTool,
+    name: 'career_social_links_save',
+    title: 'Save career social links',
+    description: 'Saves public career profile links.',
+    inputSchema: careerSocialLinksSaveSchema,
+    outputSchema: z.object({ socialLinks: careerSocialLinksSchema.shape.socialLinks.unwrap() }),
+  },
+  async (ownerUserId, input) => ({ socialLinks: await saveCareerSocialLinks(ownerUserId, input) }),
 );
 
 registerTool(

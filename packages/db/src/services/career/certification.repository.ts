@@ -56,11 +56,13 @@ export const CertificationRepository = {
     return (result ?? null) as CareerCertificationRecord | null;
   },
 
-  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<void> {
-    await handle
+  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {
+    const deleted = await handle
       .deleteFrom('app.careerCertifications')
       .where('id', '=', id)
       .where('ownerUserid', '=', ownerUserId)
-      .execute();
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 };

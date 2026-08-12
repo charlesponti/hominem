@@ -88,6 +88,11 @@ export const careerEngagementUpdateSchema = z.object({
   data: careerEngagementUpdateDataSchema,
 });
 
+export const careerEngagementCreateSchema = careerEngagementUpdateDataSchema.extend({
+  company: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+});
+
 export const careerEngagementDeleteSchema = z.object({ id: z.string().uuid() });
 
 export const careerEngagementsSchema = z.object({
@@ -134,6 +139,23 @@ export const careerApplicationsSchema = z.object({
     }),
   ),
 });
+
+export const careerApplicationCreateSchema = z.object({
+  company: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+  location: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  appliedAt: z.string().nullable().optional(),
+  status: careerApplicationStatusSchema.optional(),
+  jobPostingUrl: z.string().nullable().optional(),
+  salaryExpectation: z.number().int().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+export const careerApplicationUpdateSchema = z.object({
+  id: z.string().uuid(),
+  data: careerApplicationCreateSchema.partial(),
+});
+export const careerApplicationDeleteSchema = z.object({ id: z.string().uuid() });
 
 export const careerWishlistCompanySchema = z.object({
   id: z.string().uuid(),
@@ -221,6 +243,20 @@ export const careerEducationSchema = z.object({
     }),
   ),
 });
+export const careerEducationCreateSchema = z.object({
+  school: z.string().trim().min(1),
+  degree: z.string().nullable().optional(),
+  fieldOfStudy: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  activities: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+export const careerEducationUpdateSchema = z.object({
+  id: z.string().uuid(),
+  data: careerEducationCreateSchema.partial(),
+});
+export const careerEducationDeleteSchema = z.object({ id: z.string().uuid() });
 
 // -- Skills --
 
@@ -431,6 +467,14 @@ export const careerApplicationNoteCreateSchema = z.object({
 });
 
 export const careerApplicationNoteDeleteSchema = z.object({ id: z.string().uuid() });
+export const careerApplicationNoteAddSchema = z.object({
+  applicationId: z.string().uuid(),
+  content: z.string().min(1),
+});
+export const careerApplicationNoteRemoveSchema = z.object({
+  applicationId: z.string().uuid(),
+  id: z.string().uuid(),
+});
 
 // -- Application files --
 
@@ -453,3 +497,10 @@ export const careerApplicationFileCreateSchema = z.object({
 });
 
 export const careerApplicationFileDeleteSchema = z.object({ id: z.string().uuid() });
+export const careerApplicationFileAddSchema = careerApplicationFileCreateSchema.extend({
+  applicationId: z.string().uuid(),
+});
+export const careerApplicationFileRemoveSchema = z.object({
+  applicationId: z.string().uuid(),
+  id: z.string().uuid(),
+});

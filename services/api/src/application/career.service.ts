@@ -10,6 +10,7 @@ import {
   db,
   type CareerApplicationRecord,
   type CareerCertificationInput,
+  type CareerEducationRecord,
   type CareerEngagementRecord,
   type CareerProjectInput,
   type CareerProjectRecord,
@@ -21,7 +22,12 @@ import { z } from 'zod';
 
 import {
   careerEngagementSchema,
+  careerEngagementCreateSchema,
+  careerApplicationCreateSchema,
+  careerApplicationsSchema,
   careerEngagementUpdateDataSchema,
+  careerEducationSchema,
+  careerEducationCreateSchema,
   careerProfileSchema,
   careerProjectSchema,
   careerProjectStatusSchema,
@@ -77,6 +83,13 @@ export async function removeCareerEngagement(ownerUserId: string, id: string) {
   return CareerRepository.deleteEngagement(db, ownerUserId, id);
 }
 
+export async function createCareerEngagement(
+  ownerUserId: string,
+  input: z.infer<typeof careerEngagementCreateSchema>,
+) {
+  return toEngagementDto(await CareerRepository.createEngagement(db, ownerUserId, input));
+}
+
 export async function listCareerApplications(
   ownerUserId: string,
   opts?: { status?: string; limit?: number },
@@ -86,25 +99,54 @@ export async function listCareerApplications(
   const enriched = await Promise.all(
     applications.map(async (a) => {
       const detail = await CareerRepository.getApplicationWithRelations(db, ownerUserId, a.id);
-      return {
-        id: a.id,
-        company: a.company,
-        title: a.title,
-        location: a.location,
-        source: a.source,
-        appliedAt: a.appliedAt,
-        currentStage: a.currentStage,
-        status: a.status,
-        jobPostingUrl: a.jobPostingUrl,
-        salaryExpectation: a.salaryExpectation,
-        notes: a.notes,
-        stageCount: detail?.stages.length ?? 0,
-        hasOffer: (detail?.offers.length ?? 0) > 0,
-      };
+      return toApplicationDto(a, detail);
     }),
   );
 
   return { applications: enriched };
+}
+
+function toApplicationDto(
+  application: CareerApplicationRecord & { currentStage?: string | null },
+  detail?: { stages: unknown[]; offers: unknown[] } | null,
+) {
+  return careerApplicationsSchema.shape.applications.element.parse({
+    id: application.id,
+    company: application.company,
+    title: application.title,
+    location: application.location,
+    source: application.source,
+    appliedAt: application.appliedAt,
+    currentStage: application.currentStage ?? null,
+    status: application.status ?? 'APPLIED',
+    jobPostingUrl: application.jobPostingUrl,
+    salaryExpectation: application.salaryExpectation,
+    notes: application.notes,
+    stageCount: detail?.stages.length ?? 0,
+    hasOffer: (detail?.offers.length ?? 0) > 0,
+  });
+}
+
+export async function createCareerApplication(
+  ownerUserId: string,
+  input: z.infer<typeof careerApplicationCreateSchema>,
+) {
+  return toApplicationDto(await CareerRepository.createApplication(db, ownerUserId, input));
+}
+
+export async function updateCareerApplication(
+  ownerUserId: string,
+  id: string,
+  data: Partial<z.infer<typeof careerApplicationCreateSchema>>,
+) {
+  const existing = await CareerRepository.getApplicationWithRelations(db, ownerUserId, id);
+  if (!existing) return null;
+  const updated = await CareerRepository.updateApplication(db, ownerUserId, id, data);
+  return updated ? toApplicationDto(updated) : null;
+}
+
+export async function removeCareerApplication(ownerUserId: string, id: string) {
+  return CareerRepository.deleteApplication(db, ownerUserId, id);
 }
 
 function toWishlistCompany(application: CareerApplicationRecord) {
@@ -207,17 +249,32 @@ export async function listCareerEducation(ownerUserId: string, limit?: number) {
   const education = await CareerRepository.listEducation(db, ownerUserId, limit);
 
   return {
-    education: education.map((e) => ({
-      id: e.id,
-      school: e.school,
-      degree: e.degree,
-      fieldOfStudy: e.fieldOfStudy,
-      startDate: e.startDate,
-      endDate: e.endDate,
-      activities: e.activities,
-      notes: e.notes,
-    })),
+    education: education.map(toEducationDto),
   };
+}
+
+function toEducationDto(education: CareerEducationRecord) {
+  return careerEducationSchema.shape.education.element.parse(education);
+}
+
+export async function createCareerEducation(
+  ownerUserId: string,
+  input: z.infer<typeof careerEducationCreateSchema>,
+) {
+  return toEducationDto(await CareerRepository.createEducation(db, ownerUserId, input));
+}
+
+export async function updateCareerEducation(
+  ownerUserId: string,
+  id: string,
+  data: Partial<z.infer<typeof careerEducationCreateSchema>>,
+) {
+  const updated = await CareerRepository.updateEducation(db, ownerUserId, id, data);
+  return updated ? toEducationDto(updated) : null;
+}
+
+export async function removeCareerEducation(ownerUserId: string, id: string) {
+  return CareerRepository.deleteEducation(db, ownerUserId, id);
 }
 
 // -- Skills --
@@ -241,7 +298,7 @@ export async function updateCareerSkill(
 }
 
 export async function removeCareerSkill(ownerUserId: string, id: string) {
-  await SkillRepository.remove(db, ownerUserId, id);
+  return SkillRepository.remove(db, ownerUserId, id);
 }
 
 // -- Projects --
@@ -289,7 +346,7 @@ export async function updateCareerTestimonial(
 }
 
 export async function removeCareerTestimonial(ownerUserId: string, id: string) {
-  await TestimonialRepository.remove(db, ownerUserId, id);
+  return TestimonialRepository.remove(db, ownerUserId, id);
 }
 
 // -- Certifications --
@@ -316,7 +373,7 @@ export async function updateCareerCertification(
 }
 
 export async function removeCareerCertification(ownerUserId: string, id: string) {
-  await CertificationRepository.remove(db, ownerUserId, id);
+  return CertificationRepository.remove(db, ownerUserId, id);
 }
 
 // -- Social links --

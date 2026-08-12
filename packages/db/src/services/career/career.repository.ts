@@ -255,6 +255,33 @@ export const CareerRepository = {
     );
   },
 
+  async updateEducation(
+    handle: DbHandle,
+    ownerUserId: string,
+    id: string,
+    data: Partial<CareerEducationRecord>,
+  ): Promise<CareerEducationRecord | null> {
+    const { id: _id, ownerUserid: _ownerUserid, ...changes } = data;
+    const updated = await handle
+      .updateTable('app.careerEducation')
+      .set(changes)
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserId)
+      .returningAll()
+      .executeTakeFirst();
+    return updated ?? null;
+  },
+
+  async deleteEducation(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {
+    const deleted = await handle
+      .deleteFrom('app.careerEducation')
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserId)
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
+  },
+
   async listApplications(
     handle: DbHandle,
     ownerUserId: string,
@@ -408,14 +435,15 @@ export const CareerRepository = {
     ownerUserId: string,
     applicationId: string,
     data: Partial<CareerApplicationRecord>,
-  ): Promise<CareerApplicationRecord> {
-    return handle
+  ): Promise<CareerApplicationRecord | null> {
+    const updated = await handle
       .updateTable('app.careerApplications')
       .set(data)
       .where('id', '=', applicationId)
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+    return updated ?? null;
   },
 
   async deleteApplication(
