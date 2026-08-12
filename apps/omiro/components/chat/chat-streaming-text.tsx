@@ -3,7 +3,6 @@ import { Text } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
-import { nativeMotionTiming } from '~/services/motion/native-motion';
 import {
   bufferContent,
   flush,
@@ -11,6 +10,7 @@ import {
   nextChunk,
   type RevealState,
 } from '~/services/chat/streaming-reveal';
+import { nativeMotionTiming } from '~/services/motion/native-motion';
 
 // Roughly 1.5 lines of chat text at this font size/width.
 const CHUNK_SIZE = 60;

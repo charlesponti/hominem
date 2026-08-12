@@ -34,7 +34,8 @@ describe('findNextChunkEnd', () => {
 
 describe('nextChunk', () => {
   it('never splits a word across chunk boundaries', () => {
-    const content = 'The quick brown fox jumps over the lazy dog and keeps running for a while longer';
+    const content =
+      'The quick brown fox jumps over the lazy dog and keeps running for a while longer';
     let state: RevealState = { content, revealedLength: 0 };
     const chunks: string[] = [];
 
@@ -139,7 +140,8 @@ describe('flush', () => {
   });
 
   it('composes with nextChunk so the two never double-reveal the same text', () => {
-    const content = 'a short streamed reply that ends mid word right here without a trailing space wooooord';
+    const content =
+      'a short streamed reply that ends mid word right here without a trailing space wooooord';
     let state: RevealState = { content, revealedLength: 0 };
     const revealed: string[] = [];
 
