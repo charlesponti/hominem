@@ -39,11 +39,19 @@ function createAllowedOrigins() {
   return new Set([env.API_URL, env.WEB_URL, env.FINANCE_URL, env.CAREER_URL]);
 }
 
+// OAuth discovery/registration endpoints (RFC 8414/9728/7591) are meant to be
+// called by any MCP client's own origin (e.g. claude.ai) — they don't rely on
+// cookies, so reflecting the caller's origin here doesn't expose session data.
+function isPublicMcpAuthPath(path: string) {
+  return path.startsWith('/.well-known/') || path.startsWith('/api/auth/mcp/');
+}
+
 function createCorsMiddleware(): MiddlewareHandler {
   const allowedOrigins = createAllowedOrigins();
 
   return cors({
-    origin: (origin) => (allowedOrigins.has(origin || '') ? origin : null),
+    origin: (origin, c) =>
+      isPublicMcpAuthPath(c.req.path) ? origin || null : allowedOrigins.has(origin || '') ? origin : null,
     credentials: true,
     allowMethods: ALLOWED_CORS_METHODS,
   });
