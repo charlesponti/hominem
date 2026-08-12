@@ -349,26 +349,6 @@ const pageStyles = `
      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
    }
 
-   /* The auth surface is intentionally one quiet card. */
-   .auth-page { padding: 64px 16px; }
-   .auth-layout { width: min(100%, 512px); }
-   .auth-card { border-radius: 8px; }
-   .auth-card h2 { font-weight: 650; }
-   .card-copy { margin-bottom: 28px; }
-   .auth-page { background: #0c1014; }
-   .auth-page::before, .auth-page::after, .auth-grid { display: none; }
-   .auth-layout { display: block; width: min(100%, 420px); }
-   .auth-intro { display: none; }
-   .auth-card { padding: 32px; border-radius: 22px; }
-   .auth-card::before { display: none; }
-   .auth-card .brand-lockup { margin-bottom: 34px; color: #20231f; }
-   .brand-logo { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
-   .card-topline { margin-bottom: 28px; }
-   .auth-card h2 { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 30px; font-weight: 750; letter-spacing: -.04em; }
-   .card-copy { margin-bottom: 24px; }
-   .card-footnote { margin-top: 20px; }
-   .logout-card .brand-mark { width: 42px; height: 42px; margin: 0 auto 28px; border: 0; border-radius: 12px; object-fit: cover; transform: none; }
-
    /* Career auth surface: quiet neutral card, semantic app tokens, no brand accent. */
    :root {
      color-scheme: light;
@@ -414,6 +394,8 @@ const pageStyles = `
    .auth-heading { display: flex; flex-direction: column; gap: 8px; text-align: left; }
    .auth-heading h2 { margin: 0; }
    .auth-card::before { display: none; }
+   .auth-page::before, .auth-page::after, .auth-grid { display: none; }
+   .auth-intro { display: none; }
    .auth-card .brand-lockup { margin-bottom: 32px; color: var(--auth-text); }
    .brand-logo { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; filter: grayscale(1); }
    .card-topline { margin-bottom: 16px; color: var(--auth-muted); font-weight: 500; letter-spacing: .04em; }
@@ -453,6 +435,7 @@ const pageStyles = `
    .error-symbol { border-color: var(--auth-border); border-radius: 8px; color: var(--auth-danger); background: var(--auth-danger-background); }
    .error-card a { border-radius: 6px; color: var(--auth-primary-text); background: var(--auth-primary); }
    .card-footnote { color: var(--auth-tertiary); }
+   .logout-card .brand-mark { width: 42px; height: 42px; margin: 0 auto 28px; border: 0; border-radius: 12px; object-fit: cover; transform: none; }
    @media (max-width: 540px) {
      .auth-card { padding: 48px 16px; }
    }
@@ -508,21 +491,40 @@ function PageFrame({
       <head>
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <meta content="#0c1014" name="theme-color" />
+        <meta content="#fcfcfd" media="(prefers-color-scheme: light)" name="theme-color" />
+        <meta content="#111113" media="(prefers-color-scheme: dark)" name="theme-color" />
         <title>{title}</title>
         <style dangerouslySetInnerHTML={{ __html: pageStyles }} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.addEventListener('input', (event) => {
-  const input = event.target;
-  if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;
-  input.value = input.value.replace(/\\D/g, '').slice(-1);
-  const form = input.form;
+            __html: `const otpInputs = () => Array.from(document.querySelectorAll('[data-otp-digit]'));
+const syncOtp = (form) => {
   const hidden = form?.querySelector('[name="otp"]');
   if (hidden instanceof HTMLInputElement) {
-    hidden.value = Array.from(form.querySelectorAll('[data-otp-digit]')).map((digit) => digit.value).join('');
+    hidden.value = otpInputs().map((digit) => digit.value).join('');
   }
-  if (input.value) input.nextElementSibling?.focus();
+};
+const fillOtp = (input, value) => {
+  const digits = value.replace(/\\D/g, '');
+  const inputs = otpInputs();
+  const start = inputs.indexOf(input);
+  if (!digits || start < 0) return;
+  inputs.slice(start).forEach((digit, index) => {
+    digit.value = digits[index] ?? '';
+  });
+  syncOtp(input.form);
+  inputs[Math.min(start + digits.length, inputs.length - 1)]?.focus();
+};
+document.addEventListener('paste', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;
+  event.preventDefault();
+  fillOtp(input, event.clipboardData?.getData('text') ?? '');
+});
+document.addEventListener('input', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;
+  fillOtp(input, input.value);
 });`,
           }}
         />
