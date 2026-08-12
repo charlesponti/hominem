@@ -38,6 +38,9 @@ credentials.json
 token.json
 credentials/
 
+# Agent skills and generated skill assets are host-side tooling, not app sources.
+.agents/
+
 # db schema snapshots (scratch, regenerated on demand)
 .auth/
 
