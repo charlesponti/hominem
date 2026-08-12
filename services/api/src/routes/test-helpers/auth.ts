@@ -8,7 +8,7 @@ import { vi } from 'vitest';
 export async function importServerWithEnv(envOverrides: Record<string, string>) {
   vi.resetModules();
   process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test';
-  process.env.BETTER_AUTH_SECRET = 'ci-test-better-auth-secret';
+  process.env.BETTER_AUTH_SECRET = 'ci-test-better-auth-secret-32-characters';
   process.env.OPENROUTER_API_KEY = 'some-random-key';
   process.env.REDIS_URL = 'redis://localhost:6379';
   process.env.RESEND_API_KEY = 'some-resend-api-key';

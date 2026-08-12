@@ -34,6 +34,12 @@ function getFormDataString(formData: FormData, key: string) {
   return typeof value === 'string' ? value : '';
 }
 
+export function copySetCookieHeaders(source: Headers) {
+  const headers = new Headers();
+  for (const setCookie of source.getSetCookie()) headers.append('set-cookie', setCookie);
+  return headers;
+}
+
 // ── Entry (email OTP request) ─────────────────────────────────────────────────
 export function createAuthEntryLoader(config: AuthConfig, getServerAuth: GetServerAuthFn) {
   return async ({ request }: { request: Request }) => {
@@ -65,11 +71,9 @@ export function createAuthEntryAction(config: ServerRouteConfig) {
     }
 
     // Forward any session cookies set by the auth server back to the browser
-    const headers = new Headers();
-    const setCookie = res.headers.get('set-cookie');
-    if (setCookie) headers.set('set-cookie', setCookie);
-
-    return redirect(`/auth/verify?email=${encodeURIComponent(email)}`, { headers });
+    return redirect(`/auth/verify?email=${encodeURIComponent(email)}`, {
+      headers: copySetCookieHeaders(res.headers),
+    });
   };
 }
 
@@ -104,8 +108,6 @@ export function createAuthVerifyAction(config: ServerRouteConfig) {
     });
 
     if (!res.ok) {
-      const errBody = await res.text();
-      console.error('[verify-action] API returned', res.status, email, otp, errBody);
       return data({ error: 'Invalid or expired code' }, { status: 400 });
     }
 
@@ -116,8 +118,7 @@ export function createAuthVerifyAction(config: ServerRouteConfig) {
         ? next
         : (config.defaultRedirect ?? '/');
 
-    const headers = new Headers(res.headers);
-    return redirect(dest, { headers });
+    return redirect(dest, { headers: copySetCookieHeaders(res.headers) });
   };
 }
 
@@ -133,13 +134,7 @@ export function createAuthLogoutRoute(config: ServerRouteConfig) {
     });
 
     // Forward set-cookie from sign-out response to clear the session cookie
-    const headers = new Headers();
-    const setCookie = res.headers.get('set-cookie');
-    if (setCookie) {
-      headers.set('set-cookie', setCookie);
-    }
-
-    return redirect('/auth', { headers });
+    return redirect('/auth', { headers: copySetCookieHeaders(res.headers) });
   };
   return { action: handler, loader: handler };
 }

@@ -68,6 +68,25 @@ describe('career middleware', () => {
     expect(requestContext.values.get(userContext)).toBe(testUser);
   });
 
+  it('forwards every refreshed Better Auth cookie to the browser', async () => {
+    const { sessionMiddleware } = await import('./middleware');
+    const requestContext = createRequestContext();
+    const headers = new Headers();
+    headers.append('set-cookie', 'better-auth.session_token=token; Path=/; HttpOnly');
+    headers.append('set-cookie', 'better-auth.session_data=data; Path=/; HttpOnly');
+    getServerSession.mockResolvedValue({ user: testUser, headers });
+
+    const result = await sessionMiddleware(
+      {
+        request: new Request('http://localhost/work.data'),
+        context: requestContext.context,
+      } as never,
+      next,
+    );
+
+    expect((result as Response).headers.getSetCookie()).toEqual(headers.getSetCookie());
+  });
+
   it('redirects page requests when auth is required and no session exists', async () => {
     const { requireAuthMiddleware } = await import('./middleware');
 

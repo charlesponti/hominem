@@ -1,5 +1,6 @@
 import { createHash, randomInt } from 'node:crypto';
 
+import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { authDb } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
@@ -49,7 +50,6 @@ function getAdvancedOptions() {
           crossSubDomainCookies: {
             enabled: true,
             domain: cookieDomain,
-            additionalCookies: ['session_token', 'session_data', 'dont_remember'],
           },
         }
       : {}),
@@ -196,6 +196,7 @@ function buildVerificationOtpEmail(input: {
 
 function getAuthPlugins() {
   const plugins: BetterAuthPlugin[] = [
+    expo(),
     emailOTP({
       expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
       resendStrategy: 'reuse',
@@ -258,6 +259,10 @@ const betterAuthOptions: BetterAuthOptions = {
   },
   session: {
     freshAge: 60 * 60 * 24, // 24 hours
+    cookieCache: { enabled: true, maxAge: 60 * 5 },
+  },
+  rateLimit: {
+    storage: 'database',
   },
   plugins: getAuthPlugins(),
 };

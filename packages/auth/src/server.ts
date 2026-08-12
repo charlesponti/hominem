@@ -9,6 +9,12 @@ interface BetterAuthGetSessionPayload {
   user: AuthUser | null;
 }
 
+function copySetCookieHeaders(source: Headers) {
+  const headers = new Headers();
+  for (const setCookie of source.getSetCookie()) headers.append('set-cookie', setCookie);
+  return headers;
+}
+
 export async function getServerAuth(request: Request, config: AuthConfig) {
   const headers = new Headers();
   const cookie = request.headers.get('cookie');
@@ -28,6 +34,6 @@ export async function getServerAuth(request: Request, config: AuthConfig) {
   const payload = (await response.json().catch(() => null)) as BetterAuthGetSessionPayload | null;
   return {
     user: payload?.session ? (payload.user ?? null) : null,
-    headers: new Headers(),
+    headers: copySetCookieHeaders(response.headers),
   };
 }

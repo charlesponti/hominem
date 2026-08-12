@@ -10,7 +10,7 @@ import { requestIdMiddleware } from '../rpc/middleware/auth';
 import { apiErrorHandler } from '../rpc/middleware/error';
 import { validationErrorMiddleware } from '../rpc/middleware/validation';
 import { mcpRoutes, oauthDiscoveryRoutes } from './routes';
-import { registerTool } from './tools';
+import { listTools, registerTool } from './tools';
 
 const testUser: RpcUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -141,6 +141,15 @@ describe('mcp server transport', () => {
     } finally {
       await client.close();
     }
+  });
+
+  it('requires only finance:read for finance tools', () => {
+    const financeTools = listTools().filter((tool) => tool.name.startsWith('finance_'));
+
+    expect(financeTools).not.toHaveLength(0);
+    expect(
+      financeTools.every((tool) => tool.scopes.length === 1 && tool.scopes[0] === 'finance:read'),
+    ).toBe(true);
   });
 
   it('invokes a career tool with a scoped MCP token', async () => {

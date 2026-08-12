@@ -11,8 +11,9 @@ import {
   financeSpendingByCategoryInputSchema,
   financeSpendingByCategoryOutputSchema,
 } from '../../schemas/finance.schema';
-import { MCP_SCOPES } from '../../scopes';
 import { registerTool } from '../tools';
+
+const FINANCE_READ_SCOPES = ['finance:read'] as const;
 
 // ── finance_net_worth ───────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ registerTool(
     inputSchema: financeNetWorthInputSchema,
     outputSchema: financeNetWorthOutputSchema,
     readOnly: true,
-    scopes: MCP_SCOPES,
+    scopes: FINANCE_READ_SCOPES,
     sensitivity: 'sensitive',
     resultCap: 50,
   },
@@ -43,7 +44,7 @@ registerTool(
     inputSchema: financeRecentTransactionsInputSchema,
     outputSchema: financeRecentTransactionsOutputSchema,
     readOnly: true,
-    scopes: MCP_SCOPES,
+    scopes: FINANCE_READ_SCOPES,
     sensitivity: 'sensitive',
     resultCap: 50,
   },
@@ -61,7 +62,7 @@ registerTool(
     inputSchema: financeSpendingByCategoryInputSchema,
     outputSchema: financeSpendingByCategoryOutputSchema,
     readOnly: true,
-    scopes: MCP_SCOPES,
+    scopes: FINANCE_READ_SCOPES,
     sensitivity: 'sensitive',
     resultCap: 50,
   },

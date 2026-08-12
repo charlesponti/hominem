@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from '~/services/auth/analytics';
 import { authClient } from '~/services/auth/auth-client';
-import { clearPendingAuthEmail, writePendingAuthEmail } from '~/services/auth/pending-email';
 
 const OTP_REQUEST_TIMEOUT_MS = 12000;
 const OTP_VERIFY_TIMEOUT_MS = 20000;
@@ -49,7 +48,6 @@ export function useEmailOtp() {
       clearTimeout(timeoutId);
     }
 
-    writePendingAuthEmail(email);
     captureAuthAnalyticsEvent('auth_email_otp_request_succeeded', {
       phase: 'email_otp_request',
       durationMs: Date.now() - startedAt,
@@ -83,7 +81,6 @@ export function useEmailOtp() {
           throw new Error(result.error?.message ?? 'Verification failed. Please try again.');
         }
 
-        clearPendingAuthEmail();
         captureAuthAnalyticsEvent('auth_email_otp_verify_succeeded', {
           phase: 'email_otp_verify',
           durationMs: Date.now() - startedAt,

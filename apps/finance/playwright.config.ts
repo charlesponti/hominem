@@ -34,7 +34,7 @@ export default defineConfig({
         NOTES_URL: 'http://notes.lvh.me:4445',
         ROCCO_URL: 'http://rocco.lvh.me:4446',
         DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test',
-        BETTER_AUTH_SECRET: 'e2e-better-auth-secret',
+        BETTER_AUTH_SECRET: 'e2e-better-auth-secret-32-characters',
         AUTH_E2E_SECRET: 'otp-secret',
         AUTH_E2E_ENABLED: 'true',
         AUTH_EMAIL_OTP_EXPIRES_SECONDS: '60',

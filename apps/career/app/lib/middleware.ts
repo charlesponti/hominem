@@ -39,12 +39,14 @@ export async function sessionMiddleware(
     return next();
   }
 
-  const { user } = await getServerSession(request);
+  const { user, headers } = await getServerSession(request);
   if (user) {
     context.set(userContext, user);
   }
 
-  return next();
+  const response = await next();
+  for (const setCookie of headers.getSetCookie()) response.headers.append('set-cookie', setCookie);
+  return response;
 }
 
 export async function requireAuthMiddleware(

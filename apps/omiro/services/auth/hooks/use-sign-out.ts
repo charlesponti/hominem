@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from '~/services/auth/analytics';
 import { authClient } from '~/services/auth/auth-client';
-import { clearPendingAuthEmail } from '~/services/auth/pending-email';
 import { clearPersistedQueryCache } from '~/services/query-persistence';
 import { LocalStore } from '~/services/storage/local-store';
 
@@ -23,7 +22,6 @@ export function useSignOut(currentEmail: string | null | undefined) {
         throw new Error(result.error.message ?? 'Failed to sign out. Please try again.');
       }
 
-      clearPendingAuthEmail();
       queryClient.clear();
       await clearPersistedQueryCache();
       await LocalStore.clearAllData();

@@ -16,7 +16,6 @@ import { useCSSVariable } from 'uniwind';
 
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { OTP_EXPIRES_SECONDS } from '~/config/auth-protocol';
-import { readPendingAuthEmail } from '~/services/auth/pending-email';
 import t from '~/translations';
 
 import { FeatureErrorBoundary } from '../../components/error-boundary/FeatureErrorBoundary';
@@ -99,7 +98,7 @@ function VerifyScreen() {
     token?: string;
     sentAt?: string;
   }>();
-  const resolvedEmail = emailParam ?? readPendingAuthEmail();
+  const resolvedEmail = emailParam ?? '';
   const initialTokenSentAt = React.useMemo(() => resolveTokenSentAt(sentAtParam), [sentAtParam]);
   const autoSubmitKeyRef = React.useRef<string | null>(null);
   const [verifySucceeded, setVerifySucceeded] = React.useState(false);

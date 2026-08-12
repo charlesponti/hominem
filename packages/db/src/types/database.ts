@@ -1202,6 +1202,13 @@ export interface Passkey {
   userId: string;
 }
 
+export interface RateLimit {
+  count: number;
+  id: string;
+  key: string;
+  lastRequest: Int8;
+}
+
 export interface Session {
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
   expiresAt: ColumnType<string, Date | string, Date | string>;
@@ -1312,6 +1319,7 @@ export interface DB {
   oauthApplication: OauthApplication;
   oauthConsent: OauthConsent;
   passkey: Passkey;
+  rateLimit: RateLimit;
   session: Session;
   user: User;
   verification: Verification;

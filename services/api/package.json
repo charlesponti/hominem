@@ -34,6 +34,7 @@
     "merge-user-data": "tsx scripts/merge-user-data.ts"
   },
   "dependencies": {
+    "@better-auth/expo": "1.6.23",
     "@better-auth/kysely-adapter": "1.6.23",
     "@hominem/ai": "workspace:*",
     "@hominem/db": "workspace:*",

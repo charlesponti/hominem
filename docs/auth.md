@@ -11,6 +11,8 @@ MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web an
 
 ## Session and OTP rules
 
+- Browser sessions use Better Auth's short-lived signed cookie cache (five minutes). All web server boundaries must forward every `Set-Cookie` header returned by Better Auth; never collapse them with `headers.get('set-cookie')`.
+- Better Auth stores OTP rate-limit state in its database-backed `rateLimit` table so limits survive restarts and apply across API instances.
 - The test OTP store is enabled when `NODE_ENV !== 'production'`. Do not add another environment-variable switch for it.
 - Do not rotate `BETTER_AUTH_SECRET` casually. It signs live session cookies.
 

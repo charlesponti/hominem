@@ -8,7 +8,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     env: {
       AUTH_E2E_SECRET: 'otp-secret',
-      BETTER_AUTH_SECRET: 'ci-test-better-auth-secret',
+      BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
       DATABASE_URL: TEST_DATABASE_URL,
       NODE_ENV: 'test',
       OPENROUTER_API_KEY: 'some-random-key',
