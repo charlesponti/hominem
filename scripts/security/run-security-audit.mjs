@@ -12,6 +12,7 @@ const staticOnly = args.has('--static-only');
 const authenticated = args.has('--authenticated');
 const strictDependencies = args.has('--strict-dependencies');
 const deployment = args.has('--deployment');
+const agentSkillsRoot = process.env.AGENTS_SKILLS_DIR ?? `${process.env.HOME}/.agents/skills`;
 
 function log(message) {
   console.log(`[security] ${message}`);
@@ -51,7 +52,7 @@ function runStaticChecks() {
   if (staticOnly || !liveOnly) {
     log('validating structured findings');
     run(process.execPath, [
-      '.agents/skills/cloudflare-security-audit/validate-findings.cjs',
+      `${agentSkillsRoot}/cloudflare-security-audit/validate-findings.cjs`,
       'security-audits/2026-08-11/findings.json',
     ]);
 

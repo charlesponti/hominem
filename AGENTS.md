@@ -1,7 +1,7 @@
 ## Rules
 
 - Follow YAGNI (You Aren't Gonna Need It) principle and one-liner solutions whenever possible.
-- Agents may commit code, but every commit must follow the Conventional Commits standard. Load [.agents/skills/conventional-commit/SKILL.md](.agents/skills/conventional-commit/SKILL.md) before staging, committing, or pushing.
+- Agents may commit code, but every commit must follow the Conventional Commits standard. Load the globally installed `conventional-commit` skill before staging, committing, or pushing.
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 - Never start long-running services (Expo/Metro, `pnpm dev`, the API, workers, databases, Docker containers, etc.) on your own. The user starts services for you. If a service is needed and not running, say so and ask the user to start it.
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md). 
@@ -51,7 +51,7 @@ just db migrate
 
 - Branch naming: `feature/<name>`
 - PR merge: squash commit
-- Every commit must follow the Conventional Commits standard. Load [.agents/skills/conventional-commit/SKILL.md](.agents/skills/conventional-commit/SKILL.md) before staging, committing, or pushing, and follow its workflow exactly.
+- Every commit must follow the Conventional Commits standard. Load the globally installed `conventional-commit` skill before staging, committing, or pushing, and follow its workflow exactly.
 
 ## Documentation
 

@@ -65,7 +65,7 @@ The audit output is intentionally summarized here without copying registry advis
 
 ## Validation evidence
 
-- Cloudflare findings schema: `node .agents/skills/cloudflare-security-audit/validate-findings.cjs security-audits/2026-08-11/findings.json` — passed with zero confirmed findings.
+- Cloudflare findings schema: `node $AGENTS_SKILLS_DIR/cloudflare-security-audit/validate-findings.cjs security-audits/2026-08-11/findings.json` — passed with zero confirmed findings.
 - Auth boundary tests: `pnpm --filter @hominem/api test -- src/middleware/auth.test.ts src/routes/auth.e2e-login.test.ts src/routes/auth.test-otp-route.test.ts` — 23 files and 107 tests passed.
 - Workspace formatting: `pnpm format:check` — 15 tasks passed.
 - Patch whitespace: `git diff --check` — passed.

@@ -16,8 +16,7 @@ duplicate or contradict it.
 
 ### Database workflow
 
-After any schema change, follow the migration reference in
-[Hominem Database](../../.agents/skills/hominem-database/SKILL.md):
+After any schema change, follow the globally installed `hominem-database` skill:
 
 ```bash
 just db migrate            # apply migrations using DATABASE_URL

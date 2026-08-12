@@ -10,7 +10,7 @@ case "$service_name" in api|career|workers) ;; *) echo "error: unknown Railway s
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 [[ -f "$SCRIPT_DIR/$CONFIG" ]] || { echo "error: Railway config not found: $CONFIG" >&2; exit 1; }
-[[ -n "${SERVICE:-}" ]] || { echo 'error: SERVICE must be set' >&2; exit 1; }
+SERVICE="${SERVICE:-$service_name}"
 [[ -n "${RAILWAY_TOKEN:-}" ]] || { echo 'error: RAILWAY_TOKEN must be set' >&2; exit 1; }
 [[ ! -e "$SCRIPT_DIR/railway.json" ]] || { echo 'error: railway.json already exists at the repository root' >&2; exit 1; }
 
