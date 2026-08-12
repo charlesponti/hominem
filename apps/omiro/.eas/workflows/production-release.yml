@@ -1,0 +1,57 @@
+name: Production release
+
+# Run manually with `eas workflow:run production-release.yml` (or `just
+# mobile release`) from apps/omiro, or via the EAS dashboard.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build_ios:
+    name: Build iOS (production)
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  # Fails the run before Apple ever sees the binary if the build resolved to
+  # the wrong app identity. This is the check that would have caught the
+  # incident where a locally-run "production" build silently picked up the
+  # dev bundle identifier (com.pontistudios.hakumi.dev) via an ambient
+  # APP_ENV in .env.development.local and got rejected by App Store Connect
+  # with "No suitable application records were found."
+  guard_identity:
+    name: Verify app identity before submitting
+    type: custom
+    needs: [build_ios]
+    steps:
+      - name: Assert production bundle identifier
+        run: |
+          expected="com.pontistudios.hakumi"
+          actual="${{ needs.build_ios.outputs.app_identifier }}"
+          if [ "$actual" != "$expected" ]; then
+            echo "Refusing to submit: build resolved to app identifier \"$actual\", expected \"$expected\"." >&2
+            exit 1
+          fi
+          echo "App identifier OK: $actual"
+      - name: Assert store distribution
+        run: |
+          expected="store"
+          actual="${{ needs.build_ios.outputs.distribution }}"
+          if [ "$actual" != "$expected" ]; then
+            echo "Refusing to submit: build distribution is \"$actual\", expected \"$expected\"." >&2
+            exit 1
+          fi
+          echo "Distribution OK: $actual"
+
+  approve:
+    name: Approve TestFlight submission
+    type: require-approval
+    needs: [guard_identity]
+
+  submit_ios:
+    name: Submit to TestFlight
+    type: submit
+    needs: [build_ios, approve]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production

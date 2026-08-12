@@ -6,6 +6,7 @@
   "scripts": {
     "build:dev": "pnpm exec eas build --platform ios --profile development",
     "build:e2e": "pnpm exec eas build --platform ios --profile e2e",
+    "build:prod": "node scripts/verify-release-identity.mjs && pnpm exec eas build --platform ios --profile production",
     "build:screenshots": "pnpm exec eas build --platform ios --profile screenshots",
     "dev": "APP_ENV=development expo start --clear",
     "eas-build-post-install": "pnpm --filter @ponti-studios/auth build",
@@ -21,10 +22,12 @@
     "run:ios": "APP_ENV=development SENTRY_USE_XCFRAMEWORK=0 expo run:ios",
     "run:ios:e2e": "APP_ENV=e2e SENTRY_USE_XCFRAMEWORK=0 expo run:ios",
     "start:ios": "APP_ENV=development expo start --dev-client --ios",
+    "submit": "node scripts/verify-release-identity.mjs && pnpm exec eas submit --platform ios --profile production --latest",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "update": "APP_ENV=production pnpm exec eas update --channel production"
+    "update": "APP_ENV=production pnpm exec eas update --channel production",
+    "verify:release": "node scripts/verify-release-identity.mjs"
   },
   "dependencies": {
     "@better-auth/expo": "1.6.23",
@@ -76,6 +79,7 @@
     "expo-splash-screen": "~57.0.6",
     "expo-store-review": "^57.0.1",
     "expo-symbols": "^57.0.2",
+    "expo-updates": "~57.0.13",
     "posthog-react-native": "^4.45.6",
     "react": "catalog:",
     "react-dom": "catalog:",

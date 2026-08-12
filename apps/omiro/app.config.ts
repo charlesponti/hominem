@@ -1,6 +1,12 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 import { z } from 'zod';
 
+// Expo's config loader only transpiles app.config.ts itself, not local
+// modules it imports (importing from ./env breaks `expo config` with
+// "Cannot find module './env'"), so this schema is intentionally
+// duplicated from env.ts's appEnvironmentSchema rather than shared.
+const appEnvironmentSchema = z.enum(['development', 'e2e', 'production', 'screenshots']);
+
 const EXPO_OWNER = 'pontistudios';
 const EXPO_PROJECT_ID = '4dfac82b-644f-4ff3-be42-e8f941287aa1';
 const APPLE_TEAM_ID = '3QHJ2KN8AL';
@@ -24,8 +30,13 @@ const APP_ENVIRONMENTS = Object.freeze({
 const ROOT_ASSETS_DIR = './assets';
 
 type AppEnvironment = keyof typeof APP_ENVIRONMENTS;
-type AppEnvironmentConfig = (typeof APP_ENVIRONMENTS)[AppEnvironment];
-const appEnvironmentSchema = z.enum(['development', 'e2e', 'production', 'screenshots']);
+
+const ENVIRONMENT_ICON_NAMES = Object.freeze({
+  development: 'icon.dev.png',
+  e2e: 'icon.dev.png',
+  production: 'icon.png',
+  screenshots: 'icon.png',
+} as const satisfies Record<AppEnvironment, string>);
 
 function getBrandAssetPaths(appEnvironment: AppEnvironment): { icon: string; splash: string } {
   const icon = `${ROOT_ASSETS_DIR}/${ENVIRONMENT_ICON_NAMES[appEnvironment]}`;
@@ -35,14 +46,59 @@ function getBrandAssetPaths(appEnvironment: AppEnvironment): { icon: string; spl
   };
 }
 
-function getAppEnvironment(rawEnvironment = process.env.APP_ENV ?? 'development'): AppEnvironment {
-  return appEnvironmentSchema.parse(rawEnvironment);
+/**
+ * EAS injects EAS_BUILD_PROFILE on the remote builder and it can't be
+ * shadowed by a local .env file the way APP_ENV can (see the incident where
+ * a locally-run "production" build picked up .env.development.local's
+ * ambient APP_ENV and silently shipped the dev bundle identity to the App
+ * Store). On the builder, EAS_BUILD_PROFILE is treated as the source of
+ * truth and a conflicting APP_ENV is a hard error rather than a guess.
+ */
+export function getAppEnvironment(): AppEnvironment {
+  const appEnv = process.env.APP_ENV;
+
+  if (process.env.EAS_BUILD === 'true') {
+    const profile = process.env.EAS_BUILD_PROFILE;
+    if (!profile) {
+      throw new Error('EAS_BUILD is set but EAS_BUILD_PROFILE is missing.');
+    }
+    const resolvedProfile = appEnvironmentSchema.parse(profile);
+    if (appEnv && appEnv !== resolvedProfile) {
+      throw new Error(
+        `APP_ENV ("${appEnv}") conflicts with EAS_BUILD_PROFILE ("${resolvedProfile}"). Refusing to guess which app identity to build.`,
+      );
+    }
+    return resolvedProfile;
+  }
+
+  if (appEnv) {
+    return appEnvironmentSchema.parse(appEnv);
+  }
+
+  if (process.env.CI === 'true') {
+    throw new Error('APP_ENV must be set explicitly when running in CI.');
+  }
+
+  return 'development';
 }
 
-function getAppEnvironmentConfig(
-  rawEnvironment = process.env.APP_ENV ?? 'development',
-): AppEnvironmentConfig {
-  return APP_ENVIRONMENTS[getAppEnvironment(rawEnvironment)];
+function getAppEnvironmentConfig(appEnvironment: AppEnvironment) {
+  return APP_ENVIRONMENTS[appEnvironment];
+}
+
+// Only the production identity ships to the App Store, so only it gets a
+// fingerprint runtimeVersion + EAS Update URL. The update channel itself is
+// driven by eas.json's build profile `channel`, not set here, so the two
+// can't drift out of sync.
+function getRuntimeVersion(appEnvironment: AppEnvironment): ExpoConfig['runtimeVersion'] {
+  return appEnvironment === 'production' ? { policy: 'fingerprint' } : undefined;
+}
+
+function getUpdatesConfig(appEnvironment: AppEnvironment): ExpoConfig['updates'] {
+  if (appEnvironment !== 'production') {
+    return { enabled: false, checkAutomatically: 'NEVER', fallbackToCacheTimeout: 0 };
+  }
+  return { url: `https://u.expo.dev/${EXPO_PROJECT_ID}` };
 }
 
 function usesDevelopmentClient(appEnvironment: AppEnvironment) {
@@ -58,6 +114,7 @@ export default ({ config }: ConfigContext) => {
   const appEnvironmentConfig = getAppEnvironmentConfig(appEnvironment);
   const brandAssets = getBrandAssetPaths(appEnvironment);
   const hasDevelopmentClient = usesDevelopmentClient(appEnvironment);
+  const runtimeVersion = getRuntimeVersion(appEnvironment);
   const plugins: ExpoConfig['plugins'] = [
     'expo-router',
     '@sentry/react-native',
@@ -138,6 +195,8 @@ export default ({ config }: ConfigContext) => {
     experiments: {
       tsconfigPaths: true,
     },
+    ...(runtimeVersion ? { runtimeVersion } : {}),
+    updates: getUpdatesConfig(appEnvironment),
     ios: {
       appleTeamId: APPLE_TEAM_ID,
       icon: brandAssets.icon,
@@ -169,10 +228,3 @@ export default ({ config }: ConfigContext) => {
     },
   };
 };
-
-const ENVIRONMENT_ICON_NAMES = Object.freeze({
-  development: 'icon.dev.png',
-  e2e: 'icon.dev.png',
-  production: 'icon.png',
-  screenshots: 'icon.png',
-} as const satisfies Record<AppEnvironment, string>);

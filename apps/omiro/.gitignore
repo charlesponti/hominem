@@ -1,8 +1,9 @@
 .env.local
 
-# expo managed workflow
+# expo managed workflow (Continuous Native Generation)
 .expo/
 expo-env.d.ts
+/ios/
 
 # metro
 .metro-health-check*

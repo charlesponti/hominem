@@ -1,0 +1,28 @@
+name: OTA update
+
+# Publishes a JS-only over-the-air update to the production channel. Run
+# manually with `eas workflow:run .eas/workflows/ota-update.yml -F
+# message="..."` (or `just mobile update "..."`) from apps/omiro, or via the
+# EAS dashboard. Only reaches installs already running a native build that
+# includes expo-updates with a matching fingerprint runtimeVersion — ship a
+# store build first.
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+        required: true
+        description: 'Update message shown in the EAS dashboard'
+
+jobs:
+  approve:
+    name: Approve production OTA update
+    type: require-approval
+
+  publish_update:
+    name: Publish to production channel
+    type: update
+    needs: [approve]
+    params:
+      channel: production
+      message: ${{ inputs.message }}

@@ -7,7 +7,6 @@
   "build": {
     "base": {
       "node": "24.18.0",
-      "pnpm": "11.10.0",
       "env": {
         "SENTRY_ORG": "ponti-studios",
         "SENTRY_PROJECT": "omiro",
@@ -51,6 +50,7 @@
       "distribution": "store",
       "environment": "production",
       "autoIncrement": true,
+      "channel": "production",
       "env": {
         "APP_ENV": "production"
       }

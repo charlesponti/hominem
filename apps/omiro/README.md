@@ -62,7 +62,8 @@ If the error still appears, the local generated `apps/omiro/ios` directory is li
 | Generate the dev iOS project        | `just mobile prebuild development`            | First-time setup or after native config changes during development |
 | Generate the production iOS project | `just mobile prebuild production`             | Local CNG verification before a native release                     |
 | Launch the iOS app                  | `just mobile dev`                             | Daily mobile development                                           |
-| Create and submit a production build | GitHub `deploy-mobile` workflow               | App Store/TestFlight release builds                                |
+| Create and submit a production build | `just mobile release`                         | App Store/TestFlight release builds                                |
+| Publish a JS-only OTA update         | `just mobile update "<message>"`              | Ship a fix without a new store build                                |
 | Start Metro / Expo                  | `just mobile start`                           | When you want to attach to an existing native build                |
 | Read Omiro's governing decisions    | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |
 
@@ -231,6 +232,6 @@ The release path is:
 local development client -> production TestFlight candidate -> phased App Store release
 ```
 
-TestFlight candidates and App Store releases use the same production bundle, backend, and native binary. There is no separate staging binary. Start production builds manually through GitHub workflows protected by the `omiro-testflight` environment. The marketing version is committed in app config and EAS remotely increments only the iOS build number.
+TestFlight candidates and App Store releases use the same production bundle, backend, and native binary. There is no separate staging binary. Start production builds with `just mobile release`, which runs [`.eas/workflows/production-release.yml`](.eas/workflows/production-release.yml): build → verify the build actually resolved to the production app identity (`com.pontistudios.hakumi`, store distribution) → wait for manual approval → submit to TestFlight. The identity check exists because a locally-run production build once silently shipped the dev bundle ID to Apple; the workflow now refuses to submit anything that doesn't match. The marketing version is committed in app config and EAS remotely increments only the iOS build number.
 
-Deliver every production change as a new TestFlight candidate, then submit and release it through App Store Connect. Only the protected GitHub deployment workflow may produce or submit production archives. Use local builds only for simulator testing and debugging.
+Deliver every production change as a new TestFlight candidate, then approve and release it through App Store Connect. `pnpm build:prod`/`pnpm submit` (which also run the identity check via `scripts/verify-release-identity.mjs`) exist for ad hoc local use, but `just mobile release` is the standard path. Ship JS-only fixes with `just mobile update "<message>"` (`.eas/workflows/ota-update.yml`) instead of a full store build — it only reaches installs already running a native build with matching `runtimeVersion`.
