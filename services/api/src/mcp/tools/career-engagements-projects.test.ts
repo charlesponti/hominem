@@ -87,7 +87,7 @@ describe('career engagement MCP tools', () => {
   });
 
   it('returns null when an engagement does not exist for the owner during update', async () => {
-    const updated = await CareerRepository.updateEngagementIfExists(db, {
+    const updated = await CareerRepository.updateEngagement(db, {
       id: 'a2000001-0000-4000-8000-000000000099',
       ownerUserid: userId,
       title: 'Nope',

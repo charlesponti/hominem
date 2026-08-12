@@ -126,8 +126,13 @@ export const CareerRepository = {
     return row === undefined;
   },
 
-  async deleteProfile(handle: DbHandle, ownerUserId: string): Promise<void> {
-    await handle.deleteFrom('app.careerProfile').where('ownerUserid', '=', ownerUserId).execute();
+  async deleteProfile(handle: DbHandle, ownerUserId: string): Promise<boolean> {
+    const deleted = await handle
+      .deleteFrom('app.careerProfile')
+      .where('ownerUserid', '=', ownerUserId)
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 
   async listEngagements(
@@ -184,20 +189,6 @@ export const CareerRepository = {
   },
 
   async updateEngagement(
-    handle: DbHandle,
-    update: CareerEngagementUpdate,
-  ): Promise<CareerEngagementRecord> {
-    const { id, ownerUserid, ...data } = update;
-    return handle
-      .updateTable('app.careerEngagements')
-      .set(data)
-      .where('id', '=', id)
-      .where('ownerUserid', '=', ownerUserid)
-      .returningAll()
-      .executeTakeFirstOrThrow();
-  },
-
-  async updateEngagementIfExists(
     handle: DbHandle,
     update: CareerEngagementUpdate,
   ): Promise<CareerEngagementRecord | null> {
@@ -431,12 +422,14 @@ export const CareerRepository = {
     handle: DbHandle,
     ownerUserId: string,
     applicationId: string,
-  ): Promise<void> {
-    await handle
+  ): Promise<boolean> {
+    const deleted = await handle
       .deleteFrom('app.careerApplications')
       .where('id', '=', applicationId)
       .where('ownerUserid', '=', ownerUserId)
-      .execute();
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 
   async updateWishlistApplication(

@@ -65,7 +65,7 @@ export async function updateCareerEngagement(
   id: string,
   data: z.infer<typeof careerEngagementUpdateDataSchema>,
 ) {
-  const updated = await CareerRepository.updateEngagementIfExists(db, {
+  const updated = await CareerRepository.updateEngagement(db, {
     ...data,
     id,
     ownerUserid: ownerUserId,

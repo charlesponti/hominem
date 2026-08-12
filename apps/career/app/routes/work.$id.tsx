@@ -47,7 +47,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   };
 
   try {
-    await CareerRepository.updateEngagement(db, {
+    const updated = await CareerRepository.updateEngagement(db, {
       id: params.id,
       ownerUserid: user.id,
       company: (formData.get('company') as string) ?? undefined,
@@ -68,8 +68,10 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       kind: (formData.get('kind') as AppCareerEngagementKind) || 'EMPLOYMENT',
       reasonForLeaving: (formData.get('reasonForLeaving') as string) || null,
     });
+    if (!updated) throw new Response('Engagement not found', { status: 404 });
     return data({ ok: true });
   } catch (error) {
+    if (error instanceof Response) throw error;
     logger.error('Error updating engagement', error, { engagement_id: params.id });
     throw new Response('Failed to update engagement', { status: 500 });
   }
