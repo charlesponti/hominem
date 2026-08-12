@@ -1,7 +1,7 @@
 import type { CareerApplicationWithRelations } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
-  DatePicker,
+  DateField,
   Input,
   Select,
   SelectContent,
@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
-import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
 import { JOB_APPLICATION_STATUSES } from '~/types/career';
@@ -21,9 +20,6 @@ interface ApplicationEditorProps {
 }
 
 export function ApplicationEditor({ application, onCancel }: ApplicationEditorProps) {
-  const [appliedAt, setAppliedAt] = useState<Date | undefined>(
-    application.appliedAt ? new Date(application.appliedAt) : undefined,
-  );
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
 
@@ -50,17 +46,12 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
             <Input id="source" name="source" defaultValue={application.source ?? ''} />
           </div>
           <div className="space-y-2">
-            <Label>Applied date</Label>
-            <DatePicker
+            <DateField
               id="appliedAt"
-              value={appliedAt}
-              onSelect={setAppliedAt}
-              placeholder="Pick applied date"
-            />
-            <input
-              type="hidden"
               name="appliedAt"
-              value={appliedAt ? appliedAt.toISOString().split('T')[0] : ''}
+              label="Applied date"
+              defaultValue={application.appliedAt}
+              placeholder="Pick applied date"
             />
           </div>
           <div className="space-y-2">

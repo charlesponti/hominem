@@ -1,7 +1,6 @@
 import type { CareerProjectRecord } from '@hominem/db';
-import { DatePicker, TextField, Textarea } from '@ponti-studios/ui/forms';
+import { DateField, TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
-import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
 import { AddButton } from '~/components/AddButton';
@@ -19,12 +18,6 @@ export function ProjectEditor({
   onCancel,
   submitLabel = 'Save project',
 }: ProjectEditorProps) {
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    project?.startDate ? new Date(project.startDate) : undefined,
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    project?.endDate ? new Date(project.endDate) : undefined,
-  );
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
   const relatedEngagementIds = new Set(project?.engagements.map((e) => e.id) ?? []);
@@ -61,31 +54,21 @@ export function ProjectEditor({
           </select>
         </label>
         <div className="space-y-1.5">
-          <p className="text-sm font-medium">Start date</p>
-          <DatePicker
+          <DateField
             id="startDate"
-            value={startDate}
-            onSelect={setStartDate}
-            placeholder="Pick start date"
-          />
-          <input
-            type="hidden"
             name="startDate"
-            value={startDate ? startDate.toISOString().split('T')[0] : ''}
+            label="Start date"
+            defaultValue={project?.startDate}
+            placeholder="Pick start date"
           />
         </div>
         <div className="space-y-1.5">
-          <p className="text-sm font-medium">End date</p>
-          <DatePicker
+          <DateField
             id="endDate"
-            value={endDate}
-            onSelect={setEndDate}
-            placeholder="Pick end date"
-          />
-          <input
-            type="hidden"
             name="endDate"
-            value={endDate ? endDate.toISOString().split('T')[0] : ''}
+            label="End date"
+            defaultValue={project?.endDate}
+            placeholder="Pick end date"
           />
         </div>
       </div>

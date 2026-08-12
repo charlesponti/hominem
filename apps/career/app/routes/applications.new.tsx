@@ -1,12 +1,13 @@
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
-  DatePicker,
+  DateField,
   Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  todayDateInput,
 } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
@@ -82,7 +83,6 @@ export default function CreateJobApplication() {
   const [url, setUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [scrapingError, setScrapingError] = useState<string | null>(null);
-  const [applicationDate, setApplicationDate] = useState(() => new Date());
 
   const handleScrapedData = (data: JobPosting) => {
     setScrapedData(data);
@@ -337,22 +337,13 @@ export default function CreateJobApplication() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <DatePicker
+                  <DateField
                     id="startDate"
+                    name="startDate"
                     label="Application Date *"
-                    value={applicationDate}
-                    onSelect={(nextDate) => {
-                      if (nextDate) {
-                        setApplicationDate(nextDate);
-                      }
-                    }}
+                    defaultValue={todayDateInput()}
                     placeholder="Pick application date"
                     containerClassName="min-w-0"
-                  />
-                  <input
-                    type="hidden"
-                    name="startDate"
-                    value={applicationDate.toISOString().split('T')[0]}
                   />
                 </div>
 

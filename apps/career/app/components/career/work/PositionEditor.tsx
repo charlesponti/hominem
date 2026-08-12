@@ -1,5 +1,5 @@
 import type { CareerEngagementRecord } from '@hominem/db';
-import { DatePicker, Input, Switch } from '@ponti-studios/ui/forms';
+import { DateField, Input, Switch } from '@ponti-studios/ui/forms';
 import { Button, Label } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
@@ -15,12 +15,6 @@ export function PositionEditor({
   onCancel,
   submitLabel = 'Save position',
 }: PositionEditorProps) {
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    position?.startDate ? new Date(position.startDate) : undefined,
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    position?.endDate ? new Date(position.endDate) : undefined,
-  );
   const [isCurrent, setIsCurrent] = useState(position?.isCurrent ?? false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
@@ -67,32 +61,22 @@ export function PositionEditor({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Start date</Label>
-          <DatePicker
+          <DateField
             id="startDate"
-            value={startDate}
-            onSelect={setStartDate}
-            placeholder="Pick start date"
-          />
-          <input
-            type="hidden"
             name="startDate"
-            value={startDate ? startDate.toISOString().split('T')[0] : ''}
+            label="Start date"
+            defaultValue={position?.startDate}
+            placeholder="Pick start date"
           />
         </div>
         {!hideEndDate && (
           <div className="space-y-2">
-            <Label>End date</Label>
-            <DatePicker
+            <DateField
               id="endDate"
-              value={endDate}
-              onSelect={setEndDate}
-              placeholder="Pick end date"
-            />
-            <input
-              type="hidden"
               name="endDate"
-              value={endDate ? endDate.toISOString().split('T')[0] : ''}
+              label="End date"
+              defaultValue={position?.endDate}
+              placeholder="Pick end date"
             />
           </div>
         )}
