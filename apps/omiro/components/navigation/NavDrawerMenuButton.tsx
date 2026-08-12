@@ -61,7 +61,7 @@ export function NavDrawerMenuButton() {
 
     const route = destinations.find((item) => item.key === destination)?.route;
     if (route) {
-      router.replace(route as never);
+      router.dismissTo(route as never);
     }
   };
 

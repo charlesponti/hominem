@@ -45,7 +45,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
 
   const commitRoute = useCallback(
     (target: Scene) => {
-      router.replace(target === 'all' ? HOME_ROUTE : TIME_ROUTE);
+      router.dismissTo(target === 'all' ? HOME_ROUTE : TIME_ROUTE);
       setIsSettling(false);
     },
     [router],
