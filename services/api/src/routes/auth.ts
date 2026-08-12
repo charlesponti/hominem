@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { betterAuthServer, TEST_OTP } from '../auth/better-auth';
 import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { env } from '../env';
-import { getRedis } from '../redis';
+import { getClientIp } from '../middleware/client-ip';
 import type { AppEnv } from '../server';
 
 export const authRoutes = new Hono<AppEnv>();
@@ -24,16 +24,6 @@ const testOtpQuerySchema = z.object({
   email: z.string().email(),
   type: z.string().min(1).optional(),
 });
-
-const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_E2E_LOGIN_LIMIT_MAX = 20;
-
-interface AuthRateLimitInput {
-  bucket: string;
-  identifier: string;
-  windowSec: number;
-  max: number;
-}
 
 interface AppSessionResponse {
   isAuthenticated: boolean;
@@ -58,47 +48,6 @@ function isE2eAuthEnabled() {
 
 function isTestOtpRetrievalEnabled() {
   return isTestOtpStoreEnabled();
-}
-
-function getClientIp(c: Context<AppEnv>) {
-  const forwarded = c.req.header('x-forwarded-for');
-  if (forwarded && forwarded.length > 0) {
-    const [first] = forwarded.split(',');
-    return first?.trim() ?? 'unknown';
-  }
-  return c.req.header('x-real-ip') ?? 'unknown';
-}
-
-function hashRateLimitIdentifier(value: string) {
-  return createHash('sha256').update(value).digest('hex').slice(0, 32);
-}
-
-async function enforceAuthRateLimit(c: Context<AppEnv>, input: AuthRateLimitInput) {
-  try {
-    const redis = await getRedis();
-    const key = `ratelimit:auth:${input.bucket}:${hashRateLimitIdentifier(input.identifier)}`;
-    const count = await redis.incr(key);
-    if (count === 1) {
-      await redis.expire(key, input.windowSec);
-    }
-
-    c.header('X-RateLimit-Limit', String(input.max));
-    c.header('X-RateLimit-Remaining', String(Math.max(0, input.max - count)));
-
-    if (count > input.max) {
-      return c.json(
-        {
-          error: 'rate_limit_exceeded',
-          message: 'Auth rate limit exceeded. Retry later.',
-        },
-        429,
-      );
-    }
-  } catch {
-    // Fail open on cache failures to preserve auth availability.
-  }
-
-  return null;
 }
 
 function copyHeadersWithSetCookie(headers: Headers) {
@@ -304,16 +253,6 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
       });
     }
     return c.json({ error: 'forbidden' }, 403);
-  }
-
-  const e2eLoginRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'mobile-e2e-login',
-    identifier: getClientIp(c),
-    windowSec: AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS,
-    max: AUTH_E2E_LOGIN_LIMIT_MAX,
-  });
-  if (e2eLoginRateLimit) {
-    return e2eLoginRateLimit;
   }
 
   const payload = c.req.valid('json');

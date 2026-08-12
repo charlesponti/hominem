@@ -17,6 +17,7 @@ import { authMiddleware } from './middleware/auth';
 import { authRateLimitMiddleware } from './middleware/auth-rate-limit';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
+import { securityHeadersMiddleware } from './middleware/security-headers';
 import { authRoutes } from './routes/auth';
 import { imagesRoutes } from './routes/images';
 import { loginRoutes } from './routes/login';
@@ -87,6 +88,7 @@ function registerBaseMiddleware(app: Hono<AppEnv>) {
   app.use('*', requestLogger());
   app.use('*', prettyJSON());
   app.use('*', createCorsMiddleware());
+  app.use('*', securityHeadersMiddleware());
   app.use('*', authMiddleware());
 }
 

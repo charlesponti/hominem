@@ -29,6 +29,7 @@
     "format:check": "turbo run format:check",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "security:audit": "node scripts/security/run-security-audit.mjs",
     "test": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test AUTH_E2E_SECRET=otp-secret turbo run test",
     "typecheck": "turbo run typecheck",
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."

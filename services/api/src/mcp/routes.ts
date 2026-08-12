@@ -4,7 +4,7 @@ import { Hono, type Context, type Next } from 'hono';
 import { betterAuthMcpServer } from '../auth/better-auth';
 import { env } from '../env';
 import { MCP_ENABLED_SCOPES, MCP_SCOPES } from '../scopes';
-import { isRateLimited } from './rate-limiter';
+import { checkRateLimit } from './rate-limiter';
 import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
 
 // Conditional imports — only register tools whose scope is in MCP_ENABLED_SCOPES
@@ -88,7 +88,7 @@ function createMcpAuthChallenge(error?: 'insufficient_scope') {
   return `Bearer realm="Hominem", scope="${requiredScopes}"${errorParameters}, resource_metadata="${resourceMetadataUrl}"`;
 }
 
-async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
+export async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
   const auth = c.get('auth');
   if (!auth || auth.credential !== 'mcp-oauth') {
     return new Response(
@@ -125,11 +125,35 @@ async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
   }
 
   // Rate limit check (production only)
-  if (env.NODE_ENV === 'production' && (await isRateLimited(auth.userId))) {
-    return new Response(
-      JSON.stringify({ error: 'rate_limited', code: 'RATE_LIMITED', message: 'Too many requests' }),
-      { status: 429, headers: { 'content-type': 'application/json' } },
-    );
+  if (env.NODE_ENV === 'production') {
+    const rateLimitResult = await checkRateLimit(auth.userId);
+    if (rateLimitResult === 'unavailable') {
+      return new Response(
+        JSON.stringify({
+          error: 'rate_limit_unavailable',
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          message: 'MCP is temporarily unavailable. Retry later.',
+        }),
+        {
+          status: 503,
+          headers: {
+            'content-type': 'application/json',
+            'retry-after': '5',
+          },
+        },
+      );
+    }
+
+    if (rateLimitResult === 'limited') {
+      return new Response(
+        JSON.stringify({
+          error: 'rate_limited',
+          code: 'RATE_LIMITED',
+          message: 'Too many requests',
+        }),
+        { status: 429, headers: { 'content-type': 'application/json' } },
+      );
+    }
   }
 
   return next();

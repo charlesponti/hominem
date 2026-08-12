@@ -30,7 +30,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "e2e:setup": "tsx scripts/e2e-setup.ts",
-    "export-user": "tsx scripts/export-user.ts"
+    "export-user": "tsx scripts/export-user.ts",
+    "merge-user-data": "tsx scripts/merge-user-data.ts"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "1.6.23",

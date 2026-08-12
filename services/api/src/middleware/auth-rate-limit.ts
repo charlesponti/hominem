@@ -4,6 +4,7 @@ import type { MiddlewareHandler } from 'hono';
 
 import { getRedis } from '../redis';
 import type { AppEnv } from '../server';
+import { getClientIp } from './client-ip';
 
 interface AuthRateLimit {
   path: string;
@@ -22,10 +23,7 @@ export function authRateLimitMiddleware(): MiddlewareHandler<AppEnv> {
     const limit = AUTH_RATE_LIMITS.find((r) => r.path === c.req.path);
     if (!limit) return next();
 
-    const forwarded = c.req.header('x-forwarded-for');
-    const ip = forwarded
-      ? (forwarded.split(',')[0]?.trim() ?? 'unknown')
-      : (c.req.header('x-real-ip') ?? 'unknown');
+    const ip = getClientIp(c);
 
     try {
       const redis = await getRedis();
@@ -43,7 +41,15 @@ export function authRateLimitMiddleware(): MiddlewareHandler<AppEnv> {
         );
       }
     } catch {
-      // Fail open on cache failures to preserve auth availability.
+      c.header('Retry-After', '5');
+      return c.json(
+        {
+          error: 'rate_limit_unavailable',
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          message: 'Authentication is temporarily unavailable. Retry later.',
+        },
+        503,
+      );
     }
 
     return next();

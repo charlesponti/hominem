@@ -1,0 +1,14 @@
+{
+  "sources": {
+    "cloudflare-security-audit": {
+      "repository": "https://github.com/cloudflare/security-audit-skill",
+      "commit": "8bac42001ddd90a4dcd8d5a5045199283a8eba75",
+      "license": "MIT"
+    },
+    "owasp-secure-agent-playbook": {
+      "repository": "https://github.com/OWASP/secure-agent-playbook",
+      "commit": "79fea6b9115b55687818f8c4073844ee9ba907a6",
+      "license": "See vendored plugin license"
+    }
+  }
+}

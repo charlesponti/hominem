@@ -9,7 +9,7 @@ vi.mock('@hominem/services/redis', () => ({
   redis: mocks,
 }));
 
-import { isRateLimited } from './rate-limiter';
+import { checkRateLimit } from './rate-limiter';
 
 describe('rate limiter', () => {
   beforeEach(() => {
@@ -21,34 +21,34 @@ describe('rate limiter', () => {
     mocks.incr.mockResolvedValueOnce(1).mockResolvedValueOnce(2).mockResolvedValueOnce(3);
     mocks.incr.mockResolvedValueOnce(4).mockResolvedValueOnce(5);
 
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(checkRateLimit('user-1')).resolves.toBe('allowed');
+    await expect(checkRateLimit('user-1')).resolves.toBe('allowed');
+    await expect(checkRateLimit('user-1')).resolves.toBe('allowed');
+    await expect(checkRateLimit('user-1')).resolves.toBe('allowed');
+    await expect(checkRateLimit('user-1')).resolves.toBe('allowed');
     expect(mocks.expire).toHaveBeenCalledOnce();
   });
 
   it('blocks the sixth request in the window', async () => {
     mocks.incr.mockResolvedValue(6);
 
-    await expect(isRateLimited('user-1')).resolves.toBe(true);
+    await expect(checkRateLimit('user-1')).resolves.toBe('limited');
     expect(mocks.expire).not.toHaveBeenCalled();
   });
 
   it('uses a separate hashed Redis key per user', async () => {
     mocks.incr.mockResolvedValue(1);
 
-    await isRateLimited('user-1');
-    await isRateLimited('user-2');
+    await checkRateLimit('user-1');
+    await checkRateLimit('user-2');
 
     expect(mocks.incr.mock.calls[0]?.[0]).not.toBe(mocks.incr.mock.calls[1]?.[0]);
     expect(mocks.incr.mock.calls[0]?.[0]).toMatch(/^ratelimit:mcp:[a-f0-9]{32}$/);
   });
 
-  it('fails open when Redis is unavailable', async () => {
+  it('reports unavailable when Redis is unavailable', async () => {
     mocks.incr.mockRejectedValue(new Error('redis unavailable'));
 
-    await expect(isRateLimited('user-1')).resolves.toBe(false);
+    await expect(checkRateLimit('user-1')).resolves.toBe('unavailable');
   });
 });

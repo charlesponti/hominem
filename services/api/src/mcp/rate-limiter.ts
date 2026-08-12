@@ -12,18 +12,20 @@ function rateLimitKey(userId: string) {
  * Enforce the MCP request limit through the shared Redis instance so the limit
  * applies consistently across API processes and deployments.
  *
- * Cache failures fail open to preserve API availability; authentication and
- * scope checks remain mandatory at the route boundary.
+ * Cache failures are reported separately so the route can fail closed while
+ * authentication and scope checks remain mandatory at the route boundary.
  */
-export async function isRateLimited(userId: string): Promise<boolean> {
+export type RateLimitResult = 'allowed' | 'limited' | 'unavailable';
+
+export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
   try {
     const { redis } = await import('@hominem/services/redis');
     const count = await redis.incr(rateLimitKey(userId));
     if (count === 1) {
       await redis.expire(rateLimitKey(userId), WINDOW_SEC);
     }
-    return count > MAX_REQUESTS_PER_SEC;
+    return count > MAX_REQUESTS_PER_SEC ? 'limited' : 'allowed';
   } catch {
-    return false;
+    return 'unavailable';
   }
 }

@@ -33,6 +33,7 @@ For Omiro work, use the app bootstrap loop in [apps/omiro/README.md](../apps/omi
 - `just db backup`: create a timestamped SQL backup of the dev database in `~/.hominem/`
 - `just db migrate [test]`: apply database migrations
 - `just db codegen`: regenerate database types against the caller's `DATABASE_URL`
+- `pnpm --filter @hominem/api merge-user-data`: dry-run-first, insert-only local-to-production user-data merge; see the API script help before use
 - `just mobile <action>`: iOS development, test, build, update, and release commands
 
 ## Development rules
@@ -44,6 +45,12 @@ For Omiro work, use the app bootstrap loop in [apps/omiro/README.md](../apps/omi
 - Use the same Node and pnpm versions in local development, CI, Docker, Railway, and EAS. A version mismatch is a defect.
 - `@hominem/env` defines shared environment-variable behavior. Framework prefixes adapt a variable for a runtime; they must not give it a second meaning.
 - Redact secrets from logs. Use a safe identifier instead of a raw third-party URL when one is available.
+
+## Production user-data merge
+
+`pnpm --filter @hominem/api merge-user-data --sourceEmail <email> --targetEmail <email>` plans a merge without writing to either database. It requires `SOURCE_DATABASE_URL` and `TARGET_DATABASE_URL`, resolves one user in each database, verifies the complete Goose history and app schema fingerprint, and writes a permission-restricted manifest under `~/.hominem/user-data-merges/`.
+
+Use `--apply --yes` only after reviewing that manifest. The tool creates a production `pg_dump` backup beside the manifest, inserts rows atomically, never updates or deletes production data, and aborts on any non-identical primary-key or unique-key collision. It excludes `app.ai_usage_events` and every `app.purchase_*` table. For Railway, use a temporary `railway connect database --tunnel-only --environment production` tunnel as `TARGET_DATABASE_URL`, then close the tunnel after the command finishes.
 
 ## Deployment rules
 
