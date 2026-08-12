@@ -8,6 +8,13 @@ vi.mock('./auth.server', () => ({
   getServerAuth: mockGetServerAuth,
 }));
 
+vi.mock('./env.server', () => ({
+  serverEnv: {
+    HOMINEM_INTERNAL_API_URL: 'http://localhost:4040',
+    VITE_PUBLIC_API_URL: 'http://localhost:4040',
+  },
+}));
+
 import { requireAuth } from './guards';
 
 describe('requireAuth', () => {
@@ -47,7 +54,7 @@ describe('requireAuth', () => {
     await requireAuth(new Request('http://localhost:4444/finance?view=month')).catch(
       (response: Response) => {
         expect(response.headers.get('Location')).toBe(
-          'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%3A4444%2Ffinance%3Fview%3Dmonth',
+          'http://localhost:4040/login?next=http%3A%2F%2Flocalhost%3A4444%2Ffinance%3Fview%3Dmonth',
         );
       },
     );

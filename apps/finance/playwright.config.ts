@@ -51,6 +51,7 @@ export default defineConfig({
       reuseExistingServer,
       timeout: 60_000,
       env: {
+        HOMINEM_INTERNAL_API_URL: apiBaseUrl,
         VITE_PUBLIC_API_URL: apiBaseUrl,
         AUTH_COOKIE_DOMAIN: 'lvh.me',
       },
