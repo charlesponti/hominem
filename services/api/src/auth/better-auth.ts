@@ -198,6 +198,7 @@ function getAuthPlugins() {
   const plugins: BetterAuthPlugin[] = [
     emailOTP({
       expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
+      resendStrategy: 'reuse',
       generateOTP: () => generateNumericOtp({ length: 6, isTest: !shouldSendEmails() }),
       sendVerificationOTP: async ({ email, otp, type }) => {
         if (env.NODE_ENV !== 'production') {
@@ -257,10 +258,6 @@ const betterAuthOptions: BetterAuthOptions = {
   },
   session: {
     freshAge: 60 * 60 * 24, // 24 hours
-    // Avoids a DB round trip on every getSession() call (e.g. career's
-    // per-navigation auth middleware). Kept short since a revoked session
-    // stays valid on other devices until this cache expires.
-    cookieCache: { enabled: true, maxAge: 60 },
   },
   plugins: getAuthPlugins(),
 };
