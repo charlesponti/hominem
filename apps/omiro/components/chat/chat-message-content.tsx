@@ -48,10 +48,16 @@ export function MessageContent({
   children?: React.ReactNode;
 }) {
   const Markdown = useMarkdownComponent();
+  const isStreaming = !enableMarkdown;
+  const [revealing, setRevealing] = useState(isStreaming);
   const [textPrimary, popover] = useCSSVariable([
     '--color-foreground',
     '--color-popover',
   ]) as string[];
+
+  useEffect(() => {
+    if (isStreaming) setRevealing(true);
+  }, [isStreaming]);
 
   const markdownStyle = useMemo(
     () => ({
@@ -83,8 +89,13 @@ export function MessageContent({
 
   return (
     <View className="gap-2 w-full">
-      {!enableMarkdown ? (
-        <StreamingRevealText content={content} textStyle={textStyle} />
+      {revealing ? (
+        <StreamingRevealText
+          content={content}
+          isStreaming={isStreaming}
+          onRevealComplete={() => setRevealing(false)}
+          textStyle={textStyle}
+        />
       ) : Markdown ? (
         <Markdown style={markdownStyle}>{content}</Markdown>
       ) : (

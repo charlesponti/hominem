@@ -1,69 +1,95 @@
 import { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
-import Reanimated, { FadeIn } from 'react-native-reanimated';
+import { Text } from 'react-native';
+import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
-import { nativeMotionContracts } from '~/services/motion/native-motion';
+import { nativeMotionTiming } from '~/services/motion/native-motion';
+import {
+  bufferContent,
+  flush,
+  initialRevealState,
+  nextChunk,
+  type RevealState,
+} from '~/services/chat/streaming-reveal';
 
-const LINE_REVEAL_DELAY_MS = 180;
+// Roughly 1.5 lines of chat text at this font size/width.
+const CHUNK_SIZE = 60;
+const CHUNK_REVEAL_DELAY_MS = 180;
 
-function useStreamingLines(content: string) {
-  const [revealedLines, setRevealedLines] = useState<string[]>([]);
-  const [currentLine, setCurrentLine] = useState('');
+// Drives the pure reveal state machine on a timer, decoupled from network
+// arrival. `content` may grow at any rate (or in bursts) — the returned
+// chunks are always released one at a time, paced, regardless. Nothing is
+// ever shown ahead of its scheduled reveal, so there is no "live" text that
+// later gets re-animated.
+function useStreamingChunks(content: string, isStreaming: boolean, onRevealComplete?: () => void) {
+  const [revealedChunks, setRevealedChunks] = useState<string[]>([]);
   const reducedMotion = useReducedMotion();
 
-  const queueRef = useRef<string[]>([]);
-  const accountedRef = useRef(0);
+  const stateRef = useRef<RevealState>(initialRevealState);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const previousContentRef = useRef('');
+  const onRevealCompleteRef = useRef(onRevealComplete);
+  onRevealCompleteRef.current = onRevealComplete;
 
   useEffect(() => {
-    const isReset =
-      previousContentRef.current !== '' && !content.startsWith(previousContentRef.current);
-    previousContentRef.current = content;
-
-    if (isReset) {
-      accountedRef.current = 0;
-      queueRef.current = [];
-      setRevealedLines([]);
-    }
-
-    const parts = content.split('\n');
-    const completed = parts.slice(0, -1);
-    const tail = parts[parts.length - 1] ?? '';
-    setCurrentLine(tail);
-
-    if (completed.length > accountedRef.current) {
-      queueRef.current.push(...completed.slice(accountedRef.current));
-      accountedRef.current = completed.length;
-    }
+    stateRef.current = bufferContent(stateRef.current, content);
 
     if (reducedMotion) {
-      if (queueRef.current.length > 0) {
-        setRevealedLines((prev) => [...prev, ...queueRef.current]);
-        queueRef.current = [];
+      // Reveal everything buffered immediately, no pacing.
+      const revealed: string[] = [];
+      for (let chunk = nextChunk(stateRef.current, CHUNK_SIZE); chunk; ) {
+        revealed.push(chunk.chunk);
+        stateRef.current = chunk.state;
+        chunk = nextChunk(stateRef.current, CHUNK_SIZE);
+      }
+      if (!isStreaming) {
+        const tail = flush(stateRef.current);
+        if (tail) {
+          revealed.push(tail.chunk);
+          stateRef.current = tail.state;
+        }
+      }
+      if (revealed.length > 0) {
+        setRevealedChunks((prev) => [...prev, ...revealed]);
+      }
+      if (!isStreaming) {
+        onRevealCompleteRef.current?.();
       }
       return;
     }
 
     function drain() {
-      if (queueRef.current.length === 0) {
+      const result = nextChunk(stateRef.current, CHUNK_SIZE);
+      if (!result) {
         timerRef.current = null;
         return;
       }
       timerRef.current = setTimeout(() => {
-        const next = queueRef.current.shift();
-        if (next !== undefined) {
-          setRevealedLines((prev) => [...prev, next]);
-        }
+        stateRef.current = result.state;
+        setRevealedChunks((prev) => [...prev, result.chunk]);
         drain();
-      }, LINE_REVEAL_DELAY_MS);
+      }, CHUNK_REVEAL_DELAY_MS);
     }
 
     if (!timerRef.current) {
       drain();
     }
-  }, [content, reducedMotion]);
+  }, [content, isStreaming, reducedMotion]);
+
+  // Once streaming ends, flush whatever's left in the buffer as a final
+  // chunk instead of waiting on word-boundary pacing indefinitely.
+  useEffect(() => {
+    if (isStreaming) return;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const result = flush(stateRef.current);
+    if (result) {
+      stateRef.current = result.state;
+      setRevealedChunks((prev) => [...prev, result.chunk]);
+    }
+    onRevealCompleteRef.current?.();
+  }, [isStreaming]);
 
   useEffect(
     () => () => {
@@ -75,34 +101,45 @@ function useStreamingLines(content: string) {
     [],
   );
 
-  return { revealedLines, currentLine };
+  return revealedChunks;
+}
+
+function RevealChunk({ text, reducedMotion }: { text: string; reducedMotion: boolean }) {
+  const opacity = useSharedValue(reducedMotion ? 1 : 0);
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      opacity.value = withTiming(1, nativeMotionTiming.enter);
+    }
+    // Each chunk fades in exactly once, on its own mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return <Reanimated.Text style={animatedStyle}>{text}</Reanimated.Text>;
 }
 
 export function StreamingRevealText({
   content,
+  isStreaming,
+  onRevealComplete,
   textStyle,
 }: {
   content: string;
+  isStreaming: boolean;
+  onRevealComplete?: () => void;
   textStyle: object;
 }) {
-  const { revealedLines, currentLine } = useStreamingLines(content);
+  const revealedChunks = useStreamingChunks(content, isStreaming, onRevealComplete);
   const reducedMotion = useReducedMotion();
 
   return (
-    <View>
-      {revealedLines.map((line, index) => (
-        <Reanimated.Text
-          // biome-ignore lint/suspicious/noArrayIndexKey: lines only ever append, never reorder
-          key={index}
-          entering={
-            reducedMotion ? undefined : FadeIn.duration(nativeMotionContracts.duration.standard)
-          }
-          style={textStyle}
-        >
-          {line.length > 0 ? line : ' '}
-        </Reanimated.Text>
+    <Text style={textStyle}>
+      {revealedChunks.map((chunk, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: chunks only ever append, never reorder
+        <RevealChunk key={index} text={chunk} reducedMotion={reducedMotion} />
       ))}
-      <Text style={textStyle}>{currentLine}</Text>
-    </View>
+    </Text>
   );
 }
