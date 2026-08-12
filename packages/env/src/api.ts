@@ -16,6 +16,9 @@ export const apiSchema = baseSchema.extend({
   // prod), not one of this monorepo's own apps. Trusted so its Realitea
   // game can use the shared hosted /login page's app-redirect mode.
   LABS_URL: z.url().default('http://localhost:3001'),
+  // labs also serves the same app at the apex domain (ponti.io) alongside
+  // labs.ponti.io — optional second trusted origin for that redirect target.
+  LABS_APEX_URL: z.url().optional(),
   DATABASE_URL: z.url(),
   // No default — a missing secret must fail loudly at boot, not silently run
   // with a hardcoded, publicly-known value.
