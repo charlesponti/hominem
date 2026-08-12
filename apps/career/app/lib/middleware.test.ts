@@ -104,6 +104,27 @@ describe('career middleware', () => {
     );
   });
 
+  it('uses the public forwarded origin for hosted login redirects', async () => {
+    const { requireAuthMiddleware } = await import('./middleware');
+
+    const result = await requireAuthMiddleware(
+      {
+        request: new Request('http://career-internal/work', {
+          headers: {
+            'x-forwarded-host': 'career.ponti.io',
+            'x-forwarded-proto': 'https',
+          },
+        }),
+        context: createRequestContext().context,
+      } as never,
+      next,
+    );
+
+    expect((result as Response).headers.get('location')).toBe(
+      'http://localhost:3000/login?next=https%3A%2F%2Fcareer.ponti.io%2Fwork',
+    );
+  });
+
   it('returns 401 for authenticated api requests without a session', async () => {
     const { requireAuthMiddleware } = await import('./middleware');
 
