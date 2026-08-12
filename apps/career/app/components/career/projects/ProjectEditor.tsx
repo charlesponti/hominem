@@ -53,22 +53,14 @@ export function ProjectEditor({
             <option value="CANCELED">Canceled</option>
           </select>
         </label>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 md:col-span-2">
           <DateField
+            mode="range"
             id="startDate"
-            name="startDate"
-            label="Start date"
-            defaultValue={project?.startDate}
-            placeholder="Pick start date"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <DateField
-            id="endDate"
-            name="endDate"
-            label="End date"
-            defaultValue={project?.endDate}
-            placeholder="Pick end date"
+            startName="startDate"
+            endName="endDate"
+            label="Dates"
+            defaultValue={{ from: project?.startDate, to: project?.endDate }}
           />
         </div>
       </div>

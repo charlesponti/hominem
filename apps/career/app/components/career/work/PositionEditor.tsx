@@ -19,8 +19,6 @@ export function PositionEditor({
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
 
-  const hideEndDate = isCurrent;
-
   return (
     <Form method="post" className="space-y-5">
       {position && <input type="hidden" name="intent" value="update-position" />}
@@ -59,30 +57,25 @@ export function PositionEditor({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <DateField
+            mode="range"
             id="startDate"
-            name="startDate"
-            label="Start date"
-            defaultValue={position?.startDate}
-            placeholder="Pick start date"
+            key={isCurrent ? 'current-role' : 'fixed-term'}
+            startName="startDate"
+            endName="endDate"
+            label="Dates"
+            defaultValue={
+              isCurrent
+                ? { from: position?.startDate }
+                : { from: position?.startDate, to: position?.endDate }
+            }
           />
         </div>
-        {!hideEndDate && (
-          <div className="space-y-2">
-            <DateField
-              id="endDate"
-              name="endDate"
-              label="End date"
-              defaultValue={position?.endDate}
-              placeholder="Pick end date"
-            />
-          </div>
-        )}
         <div className="space-y-2 flex items-end">
           <Label className="flex items-center gap-2 cursor-pointer">
-            <Switch checked={isCurrent} onCheckedChange={setIsCurrent} />
+            <Switch checked={isCurrent} onCheckedChange={setIsCurrent} name="isCurrent" />
             Current role
           </Label>
         </div>

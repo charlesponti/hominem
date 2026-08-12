@@ -25,12 +25,14 @@ import {
   removeCareerApplicationFile,
   removeCareerApplicationNote,
   removeCareerCertification,
+  removeCareerEngagement,
   removeCareerProject,
   removeCareerSkill,
   removeCareerTestimonial,
   removeCareerWishlistCompany,
   saveCareerSocialLinks,
   updateCareerCertification,
+  updateCareerEngagement,
   updateCareerProject,
   updateCareerSkill,
   updateCareerTestimonial,
@@ -42,6 +44,8 @@ import {
   careerApplicationNoteCreateSchema,
   careerApplicationNoteDeleteSchema,
   careerApplicationsQuerySchema,
+  careerEngagementDeleteSchema,
+  careerEngagementUpdateSchema,
   careerEngagementsQuerySchema,
   careerCertificationCreateSchema,
   careerCertificationDeleteSchema,
@@ -74,6 +78,19 @@ export const careerRoutes = new Hono<AppContext>()
     const { type, limit } = c.req.valid('query');
     const result = await listCareerEngagements(userId, { type, limit });
     return c.json(result);
+  })
+  .post('/engagements/update', zValidator('json', careerEngagementUpdateSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const { id, data } = c.req.valid('json');
+    const updated = await updateCareerEngagement(userId, id, data);
+    if (!updated) throw new NotFoundError('Engagement not found');
+    return c.json(updated);
+  })
+  .post('/engagements/delete', zValidator('json', careerEngagementDeleteSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const removed = await removeCareerEngagement(userId, c.req.valid('json').id);
+    if (!removed) throw new NotFoundError('Engagement not found');
+    return c.json({ removed });
   })
   .get('/applications', zValidator('query', careerApplicationsQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
@@ -160,8 +177,9 @@ export const careerRoutes = new Hono<AppContext>()
   })
   .post('/projects/delete', zValidator('json', careerProjectDeleteSchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    await removeCareerProject(userId, c.req.valid('json').id);
-    return c.json({ success: true });
+    const removed = await removeCareerProject(userId, c.req.valid('json').id);
+    if (!removed) throw new NotFoundError('Project not found');
+    return c.json({ removed });
   })
   // -- Testimonials --
   .get('/testimonials', async (c) => {

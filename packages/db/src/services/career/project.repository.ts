@@ -186,11 +186,13 @@ export const ProjectRepository = {
     return (await withEngagements(handle, ownerUserId, [result]))[0];
   },
 
-  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<void> {
-    await handle
+  async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {
+    const deleted = await handle
       .deleteFrom('app.careerProjects')
       .where('id', '=', id)
       .where('ownerUserid', '=', ownerUserId)
-      .execute();
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 };

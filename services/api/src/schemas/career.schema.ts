@@ -29,10 +29,66 @@ export const careerProfileSchema = z.object({
   twitterHandles: z.string().nullable(),
 });
 
+export const careerEngagementKindSchema = z.enum([
+  'EMPLOYMENT',
+  'CONTRACT',
+  'FREELANCE',
+  'VOLUNTEER',
+  'OTHER',
+]);
+
 export const careerEngagementsQuerySchema = z.object({
   type: z.enum(['all', 'employment']).optional().default('all'),
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
 });
+
+export const careerEngagementSchema = z.object({
+  id: z.string().uuid(),
+  company: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  location: z.string().nullable(),
+  address: z.string().nullable(),
+  url: z.string().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  isCurrent: z.boolean(),
+  salaryLow: z.number().nullable(),
+  salaryHigh: z.number().nullable(),
+  currency: z.string().nullable(),
+  contactName: z.string().nullable(),
+  contactPhone: z.string().nullable(),
+  source: z.string().nullable(),
+  kind: careerEngagementKindSchema,
+  reasonForLeaving: z.string().nullable(),
+});
+
+export const careerEngagementUpdateDataSchema = z.object({
+  company: z.string().trim().min(1).optional(),
+  title: z.string().trim().min(1).optional(),
+  location: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  isCurrent: z.boolean().optional(),
+  salaryLow: z.number().int().nullable().optional(),
+  salaryHigh: z.number().int().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  contactName: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  kind: careerEngagementKindSchema.optional(),
+  reasonForLeaving: z.string().nullable().optional(),
+});
+
+export const careerEngagementUpdateSchema = z.object({
+  id: z.string().uuid(),
+  data: careerEngagementUpdateDataSchema,
+});
+
+export const careerEngagementDeleteSchema = z.object({ id: z.string().uuid() });
 
 export const careerEngagementsSchema = z.object({
   engagements: z.array(
@@ -48,7 +104,7 @@ export const careerEngagementsSchema = z.object({
       salaryLow: z.number().nullable(),
       salaryHigh: z.number().nullable(),
       currency: z.string().nullable(),
-      kind: z.enum(['EMPLOYMENT', 'CONTRACT', 'FREELANCE', 'VOLUNTEER', 'OTHER']),
+      kind: careerEngagementKindSchema,
       url: z.string().nullable(),
     }),
   ),

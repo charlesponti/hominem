@@ -16,6 +16,7 @@
     "start": "react-router-serve ./build/server/index.js --port=${PORT:-3000}",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "typecheck": "react-router typegen && tsc --noEmit",
     "gallery:screenshot": "jiti scripts/gallery-screenshot.ts",
     "gallery:login": "jiti scripts/gallery-login.ts"
@@ -62,6 +63,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitest/coverage-v8": "4.1.2",
+    "@playwright/test": "^1.61.1",
     "jiti": "catalog:",
     "jsdom": "^30.0.0",
     "msw": "^2.12.13",

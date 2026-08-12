@@ -3,9 +3,9 @@ import { sql, type Selectable } from 'kysely';
 import type { DbHandle } from '../../transaction';
 import type {
   AppCareerApplications,
+  AppCareerApplicationsOffers,
   AppCareerApplicationStages,
   AppCareerEducation,
-  AppCareerApplicationsOffers,
   AppCareerEngagements,
   AppCareerProfile,
 } from '../../types/database';
@@ -19,6 +19,8 @@ export type CareerOfferRecord = Selectable<AppCareerApplicationsOffers>;
 type CareerApplicationWithCurrentStage = CareerApplicationRecord & {
   currentStage: string | null;
 };
+type CareerEngagementUpdate = Partial<CareerEngagementRecord> &
+  Pick<CareerEngagementRecord, 'id' | 'ownerUserid'>;
 
 export type CareerApplicationWithRelations = CareerApplicationWithCurrentStage & {
   stages: CareerApplicationStageRecord[];
@@ -43,7 +45,7 @@ export const CareerRepository = {
       .selectAll()
       .where('ownerUserid', '=', ownerUserId)
       .executeTakeFirst();
-    return (result ?? null) as CareerProfileRecord | null;
+    return result ?? null;
   },
 
   async getProfileBySlug(handle: DbHandle, slug: string): Promise<CareerProfileRecord | null> {
@@ -53,14 +55,13 @@ export const CareerRepository = {
       .where('slug', '=', slug)
       .where('isPublic', '=', true)
       .executeTakeFirst();
-    return (result ?? null) as CareerProfileRecord | null;
+    return result ?? null;
   },
 
   async saveProfile(
     handle: DbHandle,
     ownerUserId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: Record<string, any>,
+    data: Partial<CareerProfileRecord>,
   ): Promise<CareerProfileRecord> {
     const profile = await handle
       .selectFrom('app.careerProfile')
@@ -69,25 +70,19 @@ export const CareerRepository = {
       .executeTakeFirst();
 
     if (profile) {
-      return (
-        handle
-          .updateTable('app.careerProfile')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .set(data as any)
-          .where('ownerUserid', '=', ownerUserId)
-          .returningAll()
-          .executeTakeFirstOrThrow() as Promise<CareerProfileRecord>
-      );
+      return handle
+        .updateTable('app.careerProfile')
+        .set(data)
+        .where('ownerUserid', '=', ownerUserId)
+        .returningAll()
+        .executeTakeFirstOrThrow();
     }
 
-    return (
-      handle
-        .insertInto('app.careerProfile')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .values({ ...data, ownerUserid: ownerUserId } as any)
-        .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerProfileRecord>
-    );
+    return handle
+      .insertInto('app.careerProfile')
+      .values({ ...data, ownerUserid: ownerUserId })
+      .returningAll()
+      .executeTakeFirstOrThrow();
   },
 
   async updateProfileImage(
@@ -100,7 +95,7 @@ export const CareerRepository = {
       .set({ profileImageUrl: url })
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerProfileRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async updateSlug(
@@ -113,7 +108,7 @@ export const CareerRepository = {
       .set({ slug: newSlug })
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerProfileRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async isSlugAvailable(
@@ -153,7 +148,7 @@ export const CareerRepository = {
       .orderBy('endDate', 'desc')
       .orderBy('startDate', 'desc')
       .limit(opts?.limit ?? 20)
-      .execute() as Promise<CareerEngagementRecord[]>;
+      .execute();
   },
 
   async getEngagementById(
@@ -167,7 +162,7 @@ export const CareerRepository = {
       .where('id', '=', engagementId)
       .where('ownerUserid', '=', ownerUserId)
       .executeTakeFirst();
-    return (result ?? null) as CareerEngagementRecord | null;
+    return result ?? null;
   },
 
   async createEngagement(
@@ -184,39 +179,51 @@ export const CareerRepository = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .values({ ...data, ownerUserid: ownerUserId } as any)
         .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerEngagementRecord>
+        .executeTakeFirstOrThrow()
     );
   },
 
   async updateEngagement(
     handle: DbHandle,
-    ownerUserId: string,
-    engagementId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: Record<string, any>,
+    update: CareerEngagementUpdate,
   ): Promise<CareerEngagementRecord> {
-    return (
-      handle
-        .updateTable('app.careerEngagements')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .set(data as any)
-        .where('id', '=', engagementId)
-        .where('ownerUserid', '=', ownerUserId)
-        .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerEngagementRecord>
-    );
+    const { id, ownerUserid, ...data } = update;
+    return handle
+      .updateTable('app.careerEngagements')
+      .set(data)
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserid)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  },
+
+  async updateEngagementIfExists(
+    handle: DbHandle,
+    update: CareerEngagementUpdate,
+  ): Promise<CareerEngagementRecord | null> {
+    const { id, ownerUserid, ...data } = update;
+    const updated = await handle
+      .updateTable('app.careerEngagements')
+      .set(data)
+      .where('id', '=', id)
+      .where('ownerUserid', '=', ownerUserid)
+      .returningAll()
+      .executeTakeFirst();
+    return updated ?? null;
   },
 
   async deleteEngagement(
     handle: DbHandle,
     ownerUserId: string,
     engagementId: string,
-  ): Promise<void> {
-    await handle
+  ): Promise<boolean> {
+    const deleted = await handle
       .deleteFrom('app.careerEngagements')
       .where('id', '=', engagementId)
       .where('ownerUserid', '=', ownerUserId)
-      .execute();
+      .returning('id')
+      .executeTakeFirst();
+    return deleted !== undefined;
   },
 
   async listEducation(
@@ -231,7 +238,7 @@ export const CareerRepository = {
       .orderBy('endDate', 'desc')
       .orderBy('startDate', 'desc')
       .limit(limit ?? 10)
-      .execute() as Promise<CareerEducationRecord[]>;
+      .execute();
   },
 
   async createEducation(
@@ -253,7 +260,7 @@ export const CareerRepository = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .values({ ...data, ownerUserid: ownerUserId } as any)
         .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerEducationRecord>
+        .executeTakeFirstOrThrow()
     );
   },
 
@@ -282,7 +289,7 @@ export const CareerRepository = {
       limitedQuery = limitedQuery.limit(opts.limit);
     }
 
-    return limitedQuery.execute() as Promise<CareerApplicationWithCurrentStage[]>;
+    return limitedQuery.execute();
   },
 
   async listApplicationsPage(
@@ -341,7 +348,7 @@ export const CareerRepository = {
     ]);
 
     return {
-      items: items as CareerApplicationWithCurrentStage[],
+      items,
       total: Number(totalRow?.count ?? 0),
     };
   },
@@ -401,7 +408,7 @@ export const CareerRepository = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .values({ ...data, ownerUserid: ownerUserId } as any)
         .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerApplicationRecord>
+        .executeTakeFirstOrThrow()
     );
   },
 
@@ -409,19 +416,15 @@ export const CareerRepository = {
     handle: DbHandle,
     ownerUserId: string,
     applicationId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: Record<string, any>,
+    data: Partial<CareerApplicationRecord>,
   ): Promise<CareerApplicationRecord> {
-    return (
-      handle
-        .updateTable('app.careerApplications')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .set(data as any)
-        .where('id', '=', applicationId)
-        .where('ownerUserid', '=', ownerUserId)
-        .returningAll()
-        .executeTakeFirstOrThrow() as Promise<CareerApplicationRecord>
-    );
+    return handle
+      .updateTable('app.careerApplications')
+      .set(data)
+      .where('id', '=', applicationId)
+      .where('ownerUserid', '=', ownerUserId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
   },
 
   async deleteApplication(
@@ -450,7 +453,7 @@ export const CareerRepository = {
       .where('status', '=', 'WISHLIST')
       .returningAll()
       .executeTakeFirst();
-    return (updated ?? null) as CareerApplicationRecord | null;
+    return updated ?? null;
   },
 
   async deleteWishlistApplication(
@@ -480,6 +483,7 @@ export const CareerRepository = {
       .select([
         'o.id',
         'o.applicationId',
+        'o.stageId',
         'o.baseSalary',
         'o.bonus',
         'o.currency',
@@ -496,9 +500,7 @@ export const CareerRepository = {
       ])
       .where('a.ownerUserid', '=', ownerUserId)
       .execute();
-    return rows as Array<
-      CareerOfferRecord & { company: string; title: string; appliedAt: string | null }
-    >;
+    return rows;
   },
 
   async getApplicationCardStats(
@@ -544,14 +546,14 @@ export const CareerRepository = {
     ownerUserId: string,
     applicationId: string,
   ): Promise<CareerApplicationWithRelations | null> {
-    const application = (await handle
+    const application = await handle
       .selectFrom('app.careerApplications as application')
       .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'application.currentStageId')
       .selectAll('application')
       .select('stage.stage as currentStage')
       .where('application.id', '=', applicationId)
       .where('application.ownerUserid', '=', ownerUserId)
-      .executeTakeFirst()) as CareerApplicationWithCurrentStage | undefined;
+      .executeTakeFirst();
 
     if (!application) return null;
 
@@ -561,14 +563,14 @@ export const CareerRepository = {
         .selectAll()
         .where('applicationId', '=', applicationId)
         .orderBy('stageOrder', 'asc')
-        .execute() as Promise<CareerApplicationStageRecord[]>,
+        .execute(),
       handle
         .selectFrom('app.careerApplicationsOffers as offer')
         .leftJoin('app.careerApplicationStages as stage', 'stage.id', 'offer.stageId')
         .selectAll('offer')
         .where('offer.applicationId', '=', applicationId)
         .orderBy('stage.stageOrder', 'asc')
-        .execute() as Promise<CareerOfferRecord[]>,
+        .execute(),
     ]);
 
     return { ...application, stages, offers };
@@ -657,5 +659,3 @@ export const CareerRepository = {
     return timeline;
   },
 };
-
-export const CareerEngagementRepository = CareerRepository;

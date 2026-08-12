@@ -1,10 +1,9 @@
-import { CareerRepository, db } from '@hominem/db';
+import { CareerRepository, db, type AppCareerEngagementKind } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ArrowLeftIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { data, Link, redirect } from 'react-router';
-import { Form } from 'react-router';
+import { data, Form, Link, redirect } from 'react-router';
 
 import { PositionEditor } from '~/components/career/work/PositionEditor';
 import { StatusBadge } from '~/components/status-badge';
@@ -48,7 +47,9 @@ export async function action({ context, params, request }: Route.ActionArgs) {
   };
 
   try {
-    await CareerRepository.updateEngagement(db, user.id, params.id, {
+    await CareerRepository.updateEngagement(db, {
+      id: params.id,
+      ownerUserid: user.id,
       company: (formData.get('company') as string) ?? undefined,
       title: (formData.get('title') as string) ?? undefined,
       location: (formData.get('location') as string) || null,
@@ -64,7 +65,7 @@ export async function action({ context, params, request }: Route.ActionArgs) {
       contactName: (formData.get('contactName') as string) || null,
       contactPhone: (formData.get('contactPhone') as string) || null,
       source: (formData.get('source') as string) || null,
-      kind: (formData.get('kind') as string) || 'EMPLOYMENT',
+      kind: (formData.get('kind') as AppCareerEngagementKind) || 'EMPLOYMENT',
       reasonForLeaving: (formData.get('reasonForLeaving') as string) || null,
     });
     return data({ ok: true });

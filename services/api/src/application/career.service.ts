@@ -10,6 +10,7 @@ import {
   db,
   type CareerApplicationRecord,
   type CareerCertificationInput,
+  type CareerEngagementRecord,
   type CareerProjectInput,
   type CareerProjectRecord,
   type CareerSkillInput,
@@ -19,6 +20,8 @@ import {
 import { z } from 'zod';
 
 import {
+  careerEngagementSchema,
+  careerEngagementUpdateDataSchema,
   careerProfileSchema,
   careerProjectSchema,
   careerProjectStatusSchema,
@@ -53,22 +56,25 @@ export async function listCareerEngagements(
   const engagements = await CareerRepository.listEngagements(db, ownerUserId, opts);
 
   return {
-    engagements: engagements.map((p) => ({
-      id: p.id,
-      company: p.company,
-      title: p.title,
-      description: p.description,
-      location: p.location,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      isCurrent: p.isCurrent ?? false,
-      salaryLow: p.salaryLow,
-      salaryHigh: p.salaryHigh,
-      currency: p.currency,
-      kind: p.kind,
-      url: p.url,
-    })),
+    engagements: engagements.map(toEngagementDto),
   };
+}
+
+export async function updateCareerEngagement(
+  ownerUserId: string,
+  id: string,
+  data: z.infer<typeof careerEngagementUpdateDataSchema>,
+) {
+  const updated = await CareerRepository.updateEngagementIfExists(db, {
+    ...data,
+    id,
+    ownerUserid: ownerUserId,
+  });
+  return updated ? toEngagementDto(updated) : null;
+}
+
+export async function removeCareerEngagement(ownerUserId: string, id: string) {
+  return CareerRepository.deleteEngagement(db, ownerUserId, id);
 }
 
 export async function listCareerApplications(
@@ -259,7 +265,7 @@ export async function updateCareerProject(
 }
 
 export async function removeCareerProject(ownerUserId: string, id: string) {
-  await ProjectRepository.remove(db, ownerUserId, id);
+  return ProjectRepository.remove(db, ownerUserId, id);
 }
 
 // -- Testimonials --
@@ -433,6 +439,31 @@ function toSkillDto(skill: {
     isVisible: skill.isVisible,
     sortOrder: skill.sortOrder,
   };
+}
+
+function toEngagementDto(
+  engagement: CareerEngagementRecord,
+): z.infer<typeof careerEngagementSchema> {
+  return careerEngagementSchema.parse({
+    id: engagement.id,
+    company: engagement.company,
+    title: engagement.title,
+    description: engagement.description,
+    location: engagement.location,
+    address: engagement.address,
+    url: engagement.url,
+    startDate: engagement.startDate,
+    endDate: engagement.endDate,
+    isCurrent: engagement.isCurrent ?? false,
+    salaryLow: engagement.salaryLow,
+    salaryHigh: engagement.salaryHigh,
+    currency: engagement.currency,
+    contactName: engagement.contactName,
+    contactPhone: engagement.contactPhone,
+    source: engagement.source,
+    kind: engagement.kind,
+    reasonForLeaving: engagement.reasonForLeaving,
+  });
 }
 
 function toProjectDto(project: CareerProjectRecord): z.infer<typeof careerProjectSchema> {

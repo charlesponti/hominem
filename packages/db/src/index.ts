@@ -6,8 +6,8 @@
 
 export type { Selectable } from 'kysely';
 export { authDb, db, healthCheck, pool, sql } from './db';
-export type { DB, Json, JsonArray, JsonObject, JsonValue } from './types/database';
 export type { Database } from './db';
+export type { DB, Json, JsonArray, JsonObject, JsonValue } from './types/database';
 
 // Transaction support
 export { runInTransaction } from './transaction';
@@ -35,16 +35,16 @@ export type {
   ListNoteFeedInput,
   ListNotesInput,
   CreateNoteInput as NoteCreateInput,
-  NoteMutationCommand,
   NoteFeedPageRecord,
   NoteFeedRecord,
   NoteFileRecord,
+  NoteMutationCommand,
   NoteRecord,
-  SyncNoteFilesCommand,
-  UpdateNoteCommand,
   UpdateNoteInput as NoteUpdateInput,
   SearchNoteResult,
   SearchNotesInput,
+  SyncNoteFilesCommand,
+  UpdateNoteCommand,
 } from './services/notes/note.repository';
 
 export { ChatRepository } from './services/chats/chat.repository';
@@ -87,23 +87,23 @@ export type {
 export { AIUsageEventRepository } from './services/ai/ai-usage.repository';
 export type {
   AIUsageEventRecord,
+  AIUsageEventStatus,
   AIUsageFeature,
   AIUsageFeatureBreakdownRecord,
   AIUsageModelBreakdownRecord,
   AIUsageOperation,
-  AIUsageEventStatus,
   AIUsageSummaryRecord,
   CreateAIUsageEventInput,
 } from './services/ai/ai-usage.repository';
 
-export { CareerEngagementRepository, CareerRepository } from './services/career/career.repository';
+export { CareerRepository } from './services/career/career.repository';
 export type {
   CareerApplicationRecord,
   CareerApplicationStageRecord,
   CareerApplicationWithRelations,
   CareerEducationRecord,
-  CareerOfferRecord,
   CareerEngagementRecord,
+  CareerOfferRecord,
   CareerProfileRecord,
   CareerTimelineRecord,
 } from './services/career/career.repository';

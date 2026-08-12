@@ -169,6 +169,50 @@ describe('career engagement routes', () => {
 
     expect(response.status).toBe(400);
   });
+
+  it('round-trips engagement update and delete', async () => {
+    const app = createApp(userId);
+    const engagement = await db
+      .insertInto('app.careerEngagements')
+      .values({ ownerUserid: userId, company: 'Acme', title: 'Engineer' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    const updated = await postJson(app, '/career/engagements/update', {
+      id: engagement.id,
+      data: { title: 'Senior Engineer', salaryLow: 9000000, currency: 'EUR' },
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      title: 'Senior Engineer',
+      salaryLow: 9000000,
+      currency: 'EUR',
+    });
+
+    const deleted = await postJson(app, '/career/engagements/delete', { id: engagement.id });
+    expect(deleted.status).toBe(200);
+    await expect(deleted.json()).resolves.toEqual({ removed: true });
+  });
+
+  it('returns 404 when updating or deleting another owner engagement', async () => {
+    const intruder = createApp(otherUserId);
+    const engagement = await db
+      .insertInto('app.careerEngagements')
+      .values({ ownerUserid: userId, company: 'Private Co', title: 'Private role' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    const update = await postJson(intruder, '/career/engagements/update', {
+      id: engagement.id,
+      data: { title: 'Leaked' },
+    });
+    expect(update.status).toBe(404);
+
+    const remove = await postJson(intruder, '/career/engagements/delete', { id: engagement.id });
+    expect(remove.status).toBe(404);
+
+    await db.deleteFrom('app.careerEngagements').where('id', '=', engagement.id).execute();
+  });
 });
 
 describe('career projects, testimonials, certifications, social-links', () => {

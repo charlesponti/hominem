@@ -13,7 +13,11 @@ import {
   listCareerSkills,
   listCareerTestimonials,
   listCareerWishlistCompanies,
+  removeCareerEngagement,
+  removeCareerProject,
   removeCareerWishlistCompany,
+  updateCareerEngagement,
+  updateCareerProject,
   updateCareerWishlistCompany,
 } from '../../application/career.service';
 import {
@@ -22,9 +26,15 @@ import {
   careerApplicationsSchema,
   careerCertificationsSchema,
   careerEducationSchema,
+  careerEngagementDeleteSchema,
+  careerEngagementSchema,
+  careerEngagementUpdateSchema,
   careerEngagementsQuerySchema,
   careerEngagementsSchema,
   careerProfileSchema,
+  careerProjectDeleteSchema,
+  careerProjectSchema,
+  careerProjectUpdateSchema,
   careerProjectsSchema,
   careerSkillsSchema,
   careerSocialLinksSchema,
@@ -168,6 +178,41 @@ registerTool(
 
 registerTool(
   {
+    name: 'career_engagement_update',
+    title: 'Update a career engagement',
+    description:
+      'Updates a work history engagement (company, title, location, dates, salary in cents, contact, source, kind, description, reason for leaving). Returns the updated engagement.',
+    inputSchema: careerEngagementUpdateSchema,
+    outputSchema: z.object({ engagement: careerEngagementSchema.nullable() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    engagement: await updateCareerEngagement(ownerUserId, input.id, input.data),
+  }),
+);
+
+registerTool(
+  {
+    name: 'career_engagement_delete',
+    title: 'Delete a career engagement',
+    description: 'Deletes a work history engagement.',
+    inputSchema: careerEngagementDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerEngagement(ownerUserId, input.id),
+  }),
+);
+
+registerTool(
+  {
     name: 'career_applications',
     title: 'List job applications',
     description:
@@ -262,6 +307,41 @@ registerTool(
     logRedaction('career_projects', REDACTED_FIELDS, result.projects.length);
     return careerProjectsSchema.parse(result);
   },
+);
+
+registerTool(
+  {
+    name: 'career_project_update',
+    title: 'Update a career project',
+    description:
+      'Updates a project (title, organization, descriptions, URLs, dates, status, technologies, linked engagement ids). Returns the updated project.',
+    inputSchema: careerProjectUpdateSchema,
+    outputSchema: z.object({ project: careerProjectSchema.nullable() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    project: await updateCareerProject(ownerUserId, input.id, input.data),
+  }),
+);
+
+registerTool(
+  {
+    name: 'career_project_delete',
+    title: 'Delete a career project',
+    description: 'Deletes a project.',
+    inputSchema: careerProjectDeleteSchema,
+    outputSchema: z.object({ removed: z.boolean() }),
+    readOnly: false,
+    scopes: ['career:write'],
+    sensitivity: 'sensitive',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => ({
+    removed: await removeCareerProject(ownerUserId, input.id),
+  }),
 );
 
 registerTool(
