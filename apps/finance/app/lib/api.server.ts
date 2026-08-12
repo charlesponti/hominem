@@ -1,7 +1,7 @@
 import type { AppType } from '@hominem/api/types';
 import { hc } from 'hono/client';
 
-import { serverEnv } from '~/lib/env';
+import { serverEnv } from '~/lib/env.server';
 
 const customFetch =
   (request?: Request): typeof fetch =>
@@ -17,7 +17,7 @@ const customFetch =
   };
 
 export function createServerHonoClient(request?: Request) {
-  const client = hc<AppType>(serverEnv.VITE_PUBLIC_API_URL, {
+  const client = hc<AppType>(serverEnv.HOMINEM_INTERNAL_API_URL, {
     fetch: customFetch(request),
   });
 

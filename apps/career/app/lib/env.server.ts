@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 const serverEnvSchema = baseSchema.extend({
   DATABASE_URL: z.url(),
+  HOMINEM_INTERNAL_API_URL: z.url(),
   VITE_PUBLIC_API_URL: z.url(),
   OPENROUTER_API_KEY: z.string(),
 });

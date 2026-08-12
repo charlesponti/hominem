@@ -3,7 +3,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./env.server', () => ({
-  serverEnv: { VITE_PUBLIC_API_URL: 'http://localhost:3000' },
+  serverEnv: {
+    HOMINEM_INTERNAL_API_URL: 'http://api.railway.internal:8080',
+    VITE_PUBLIC_API_URL: 'http://localhost:3000',
+  },
 }));
 
 import { getServerSession } from './auth.server';
@@ -39,7 +42,7 @@ describe('career auth server helpers', () => {
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     if (!(init?.headers instanceof Headers)) throw new Error('expected fetch Headers');
 
-    expect(String(url)).toMatch(/\/api\/auth\/get-session$/);
+    expect(String(url)).toBe('http://api.railway.internal:8080/api/auth/get-session');
     expect(init.method).toBe('GET');
     expect(init.headers.get('cookie')).toBe('better-auth.session_token=session-token');
     expect(result.user?.id).toBe('auth-user-id');

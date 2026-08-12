@@ -11,7 +11,11 @@ vi.mock('../auth/better-auth', () => ({
     api: { getSession: mocks.getSession },
     handler: mocks.handler,
   },
-  getTrustedOrigins: () => ['https://labs.ponti.io'],
+  getTrustedOrigins: () => [
+    'https://career.ponti.io',
+    'https://finance.ponti.io',
+    'https://labs.ponti.io',
+  ],
 }));
 
 vi.mock('../env', () => ({
@@ -58,7 +62,7 @@ describe('API login route', () => {
   });
 
   it('renders the OTP form for an allow-listed app redirect request', async () => {
-    const next = encodeURIComponent('https://labs.ponti.io/games/realitea');
+    const next = encodeURIComponent('https://career.ponti.io/work');
     const response = await createApp().request(`http://localhost/login?next=${next}`);
 
     expect(response.status).toBe(200);

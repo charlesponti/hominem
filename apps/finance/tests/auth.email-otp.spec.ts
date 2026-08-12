@@ -16,9 +16,9 @@ test('email + otp rejects invalid verification code', async ({ page, context }) 
 
   await submitOtpCode(page, '111111');
 
-  await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 });
-  await expect(
-    page.getByText('Verification failed. Please check your code and try again.'),
-  ).toBeVisible({ timeout: 15000 });
+  await expect(page).toHaveURL(/\/login\?.*step=otp.*error=/, { timeout: 30000 });
+  await expect(page.getByText('Verification failed. Check your code and try again.')).toBeVisible({
+    timeout: 15000,
+  });
   await expect(page).not.toHaveURL(/\/finance$/);
 });

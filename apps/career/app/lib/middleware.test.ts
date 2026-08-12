@@ -99,7 +99,9 @@ describe('career middleware', () => {
     );
 
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).headers.get('location')).toBe('/auth?next=%2Faccount');
+    expect((result as Response).headers.get('location')).toBe(
+      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%2Faccount',
+    );
   });
 
   it('returns 401 for authenticated api requests without a session', async () => {

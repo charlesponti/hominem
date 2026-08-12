@@ -1,5 +1,7 @@
 import { redirect } from 'react-router';
 
+import { hostedLoginUrl } from '~/lib/hosted-auth.server';
+
 import type { Route } from './+types/verify';
 
 /**
@@ -8,13 +10,7 @@ import type { Route } from './+types/verify';
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const email = url.searchParams.get('email');
-  const next = url.searchParams.get('next');
-  const params = new URLSearchParams();
-  if (email) params.set('email', email);
-  if (next) params.set('next', next);
-  const qs = params.toString();
-  throw redirect(qs ? `/auth?${qs}` : '/auth');
+  throw redirect(hostedLoginUrl(request, url.searchParams.get('next')));
 }
 
 export default function AuthVerifyRedirect() {

@@ -5,6 +5,7 @@
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 - Never start long-running services (Expo/Metro, `pnpm dev`, the API, workers, databases, Docker containers, etc.) on your own. The user starts services for you. If a service is needed and not running, say so and ask the user to start it.
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md). 
+- **Production web auth**: Career and Finance redirect unauthenticated browsers to the API hosted login. Browser traffic uses the public API, while server auth/data calls require the private Railway API URL. See [docs/auth-production.md](docs/auth-production.md).
 
 
 ## Decision authority

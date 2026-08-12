@@ -32,8 +32,8 @@ export async function startEmailOtpFlow(page: Page, email: string) {
   await expect(continueButton).toBeEnabled();
   await continueButton.click();
 
-  // Wait for navigation to /auth/verify after the action redirects
-  await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 });
+  // The app redirects to the API-owned hosted login for the OTP step.
+  await expect(page).toHaveURL(/\/login\?.*step=otp.*email=/, { timeout: 30000 });
 }
 
 export async function fetchLatestSignInOtp(email: string) {
@@ -86,7 +86,7 @@ export async function enterOtpCode(page: Page, otp: string) {
     await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '', { timeout: 5000 });
   }
 
-  // Also handle a single OTP text input (most common in the finance app)
+  // The hosted login keeps the submitted OTP in a hidden form field.
   const otpField = page.locator('input[name="otp"]');
   const hasOtpField = await otpField.count();
 
