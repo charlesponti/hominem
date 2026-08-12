@@ -203,25 +203,16 @@ export function BasicInfoForm({
 function profileToFormValues(profile: CareerProfileRecord, email: string): BasicInfoFormValues {
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '';
   return {
-    name,
-    initials: profile.initials || '',
-    title: profile.title || '',
-    jobTitle: profile.headline || '',
-    bio: profile.summary || '',
-    tagline: profile.tagline || '',
-    currentLocation: profile.location || '',
     email,
-    phone: profile.phone || '',
+    name,
     availabilityStatus: profile.availabilityStatus || false,
+    bio: profile.summary || '',
+    currentLocation: profile.location || '',
+    initials: profile.initials || '',
+    jobTitle: profile.headline || '',
     openToRemote: profile.openToRemote || false,
+    phone: profile.phone || '',
+    tagline: profile.tagline || '',
+    title: profile.title || '',
   };
-}
-
-function EditorSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-5 border border-border p-4 rounded">
-      <h3 className="subheading-3">{title}</h3>
-      {children}
-    </section>
-  );
 }
