@@ -100,28 +100,23 @@ describe('career middleware', () => {
 
     expect(result).toBeInstanceOf(Response);
     expect((result as Response).headers.get('location')).toBe(
-      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%2Faccount',
+      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%3A4451%2Faccount',
     );
   });
 
-  it('uses the public forwarded origin for hosted login redirects', async () => {
+  it('uses the configured public origin for hosted login redirects', async () => {
     const { requireAuthMiddleware } = await import('./middleware');
 
     const result = await requireAuthMiddleware(
       {
-        request: new Request('http://career-internal/work', {
-          headers: {
-            'x-forwarded-host': 'career.ponti.io',
-            'x-forwarded-proto': 'https',
-          },
-        }),
+        request: new Request('http://career-internal/work'),
         context: createRequestContext().context,
       } as never,
       next,
     );
 
     expect((result as Response).headers.get('location')).toBe(
-      'http://localhost:3000/login?next=https%3A%2F%2Fcareer.ponti.io%2Fwork',
+      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%3A4451%2Fwork',
     );
   });
 

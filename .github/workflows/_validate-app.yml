@@ -34,6 +34,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:4433/hominem-test
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters'
       HOMINEM_INTERNAL_API_URL: http://localhost:3000
+      PUBLIC_APP_URL: http://localhost:3000
       VITE_PUBLIC_API_URL: http://localhost:3000
 
     services:

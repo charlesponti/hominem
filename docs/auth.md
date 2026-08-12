@@ -11,7 +11,7 @@ MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web an
 ## Session and OTP rules
 
 - First-party web apps do not host duplicate OTP screens or maintain app-owned auth state. Better Auth session cookies remain the only web credential, and app `/auth` routes are compatibility redirects to the API hosted login.
-- Browser traffic uses `VITE_PUBLIC_API_URL`; server-side auth and Hono/RPC data calls use required `HOMINEM_INTERNAL_API_URL`. Never fall back from the private URL to the public URL.
+- Browser traffic uses `VITE_PUBLIC_API_URL`; server-side auth and Hono/RPC data calls use required `HOMINEM_INTERNAL_API_URL`. Hosted-login return URLs use the explicit public app origin in `PUBLIC_APP_URL`. Never fall back from the private URL to the public URL.
 
 - Browser sessions use Better Auth's short-lived signed cookie cache (five minutes). All web server boundaries must forward every `Set-Cookie` header returned by Better Auth; never collapse them with `headers.get('set-cookie')`.
 - Better Auth stores OTP rate-limit state in its database-backed `rateLimit` table so limits survive restarts and apply across API instances.

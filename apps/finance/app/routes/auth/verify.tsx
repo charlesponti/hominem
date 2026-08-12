@@ -10,7 +10,7 @@ import type { Route } from './+types/verify';
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  throw redirect(hostedLoginUrl(request, url.searchParams.get('next')));
+  throw redirect(hostedLoginUrl(url.searchParams.get('next')));
 }
 
 export default function AuthVerifyRedirect() {

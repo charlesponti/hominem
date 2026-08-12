@@ -52,6 +52,7 @@ export default defineConfig({
       timeout: 60_000,
       env: {
         HOMINEM_INTERNAL_API_URL: apiBaseUrl,
+        PUBLIC_APP_URL: financeBaseUrl,
         VITE_PUBLIC_API_URL: apiBaseUrl,
         AUTH_COOKIE_DOMAIN: 'lvh.me',
       },

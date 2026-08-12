@@ -8,10 +8,11 @@ translates, or stores its own end-user credential.
 
 Use two API URLs with distinct owners, and keep the API's hosted login as the only first-party web OTP surface:
 
-| Caller | URL | Purpose |
-| --- | --- | --- |
-| Browser | `VITE_PUBLIC_API_URL` (`https://api.ponti.io`) | Hosted login redirects, public API, and Better Auth browser client requests |
-| Career or Finance server | `HOMINEM_INTERNAL_API_URL` | Session resolution and server-side Hono/RPC data calls |
+| Caller                   | URL                                            | Purpose                                                                     |
+| ------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------- |
+| Browser                  | `VITE_PUBLIC_API_URL` (`https://api.ponti.io`) | Hosted login redirects, public API, and Better Auth browser client requests |
+| Career or Finance server | `HOMINEM_INTERNAL_API_URL`                     | Session resolution and server-side Hono/RPC data calls                      |
+| Career or Finance server | `PUBLIC_APP_URL`                               | Explicit public origin used for hosted-login return URLs                    |
 
 `HOMINEM_INTERNAL_API_URL` is server-only. In Railway production it resolves
 to the API service's private address and port, currently
@@ -42,11 +43,12 @@ back to the browser; do not read, log, combine, or persist cookie values.
 
 ## App configuration
 
-Each deployed web app needs both values:
+Each deployed web app needs these values:
 
 ```dotenv
 VITE_PUBLIC_API_URL=https://api.ponti.io
 HOMINEM_INTERNAL_API_URL=http://hominem-api-production.railway.internal:8080
+PUBLIC_APP_URL=https://career.ponti.io # Finance uses https://finance.ponti.io
 ```
 
 `HOMINEM_INTERNAL_API_URL` is required. Local development sets it to the

@@ -11,6 +11,7 @@ vi.mock('./auth.server', () => ({
 vi.mock('./env.server', () => ({
   serverEnv: {
     HOMINEM_INTERNAL_API_URL: 'http://localhost:4040',
+    PUBLIC_APP_URL: 'http://localhost:4444',
     VITE_PUBLIC_API_URL: 'http://localhost:4040',
   },
 }));

@@ -12,7 +12,7 @@ export async function requireAuth(request: Request) {
 
   if (!auth.user) {
     const url = new URL(request.url);
-    throw redirect(hostedLoginUrl(request, url.pathname + url.search), { headers: auth.headers });
+    throw redirect(hostedLoginUrl(url.pathname + url.search), { headers: auth.headers });
   }
 
   return { user: auth.user, headers: auth.headers };

@@ -28,7 +28,7 @@ function unauthorizedResponse(request: Request) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  return redirect(hostedLoginUrl(request, url.pathname + url.search));
+  return redirect(hostedLoginUrl(url.pathname + url.search));
 }
 
 export async function sessionMiddleware(

@@ -11,7 +11,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect(careerAuthConfig.fallback);
   }
   const next = new URL(request.url).searchParams.get('next');
-  throw redirect(hostedLoginUrl(request, next));
+  throw redirect(hostedLoginUrl(next));
 }
 
 export default function AuthEntryPage() {

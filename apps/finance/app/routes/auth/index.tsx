@@ -10,7 +10,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw redirect('/finance', { headers });
   }
   const next = new URL(request.url).searchParams.get('next');
-  throw redirect(hostedLoginUrl(request, next));
+  throw redirect(hostedLoginUrl(next));
 }
 
 export default function AuthEntryPage() {
