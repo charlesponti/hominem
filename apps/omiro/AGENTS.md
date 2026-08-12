@@ -8,7 +8,7 @@ duplicate or contradict it.
 
 - `apps/omiro` uses Expo managed workflow with Metro package exports enabled.
 - Shared ESM packages may use explicit `.js` imports while their source files are TypeScript. Keep the Omiro Metro resolver fallback that retries an explicit `.js` import without the extension so Metro can resolve the source file; do not rewrite shared Node ESM imports just to satisfy Metro.
-- With Corepack enabled, do not pin `pnpm` in `apps/omiro/eas.json`. EAS may attempt a conflicting global install and fail with `npm ERR! EEXIST`.
+- Pin `pnpm` in `apps/omiro/eas.json`'s `build.base` to match the root `package.json`'s `packageManager` version. Removing the pin was tried and broke production builds: the EAS builder image's preinstalled pnpm didn't match the workspace's required version and `pnpm install --frozen-lockfile` refused to run (`This project is configured to use X of pnpm. Your current pnpm is vY`). If a future EAS image update makes the pin itself conflict with Corepack (`npm ERR! EEXIST`), reconcile by matching the pin to `packageManager` exactly rather than removing it.
 - Verify an EAS fix with the same embed command used by the build: `pnpm --filter @hominem/omiro exec expo export:embed --eager --platform ios --dev false`.
 
 ## Navigation and components
