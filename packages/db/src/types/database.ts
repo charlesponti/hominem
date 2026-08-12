@@ -929,48 +929,6 @@ export interface AppPossessions {
   url: string | null;
 }
 
-export interface AppPurchaseLineItems {
-  category: string | null;
-  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: Generated<string>;
-  metadata: Generated<Json>;
-  ownerUserid: string;
-  possessionId: string | null;
-  purchaseOrderId: string;
-  quantity: Generated<Numeric>;
-  serialNumber: string | null;
-  title: string;
-  unitAmount: Numeric | null;
-  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface AppPurchaseOrders {
-  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  currencyCode: Generated<string>;
-  externalOrderId: string | null;
-  id: Generated<string>;
-  merchant: string;
-  metadata: Generated<Json>;
-  orderedAt: ColumnType<string, Date | string, Date | string> | null;
-  ownerUserid: string;
-  status: string | null;
-  totalAmount: Numeric | null;
-  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface AppPurchaseReturns {
-  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  currencyCode: Generated<string>;
-  id: Generated<string>;
-  metadata: Generated<Json>;
-  ownerUserid: string;
-  purchaseOrderId: string;
-  reason: string | null;
-  resolution: string | null;
-  returnAmount: Numeric | null;
-  returnDate: ColumnType<string, Date | string, Date | string> | null;
-}
-
 export interface AppSocialContacts {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   displayName: string | null;
@@ -1333,9 +1291,6 @@ export interface DB {
   'app.plaidItems': AppPlaidItems;
   'app.possessionImages': AppPossessionImages;
   'app.possessions': AppPossessions;
-  'app.purchaseLineItems': AppPurchaseLineItems;
-  'app.purchaseOrders': AppPurchaseOrders;
-  'app.purchaseReturns': AppPurchaseReturns;
   'app.socialContacts': AppSocialContacts;
   'app.socialEngagements': AppSocialEngagements;
   'app.socialMessages': AppSocialMessages;
