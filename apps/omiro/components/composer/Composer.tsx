@@ -37,6 +37,7 @@ export function Composer(props: ComposerProps) {
 function ComposerContent(props: ComposerProps) {
   const submission = useComposerSubmission(props);
   const clearComposerRef = useRef<() => void>(() => {});
+  const setMessageRef = useRef<(message: string) => void>(() => {});
   const handleWalkieTalkieTranscript = useCallback(
     (rawText: string) => {
       if (!rawText.trim()) return;
@@ -47,6 +48,7 @@ function ComposerContent(props: ComposerProps) {
           fileIds: [],
           message: rawText,
           responseModality: 'audio',
+          restoreDraft: setMessageRef.current,
         },
         'message',
       );
@@ -62,6 +64,7 @@ function ComposerContent(props: ComposerProps) {
     onWalkieTalkieTranscript: props.mode === 'chat' ? handleWalkieTalkieTranscript : undefined,
   });
   clearComposerRef.current = controller.clearComposer;
+  setMessageRef.current = controller.setMessage;
   // Static (mode-only) fields for the outer shell -- the kind-dependent
   // fields (placeholder, submitTestID, ...) are recomputed inside
   // ComposerActiveArea, which is the only thing that knows the live,
@@ -79,6 +82,7 @@ function ComposerContent(props: ComposerProps) {
           clearComposer: controller.clearComposer,
           fileIds: controller.uploadedAttachmentIds,
           message,
+          restoreDraft: controller.setMessage,
         },
         kind,
       );
@@ -86,6 +90,7 @@ function ComposerContent(props: ComposerProps) {
     [
       controller.clearComposer,
       controller.markAttachmentsSubmitted,
+      controller.setMessage,
       controller.uploadedAttachmentIds,
       submission,
     ],

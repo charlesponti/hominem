@@ -22,6 +22,7 @@ interface ComposerSubmitInput {
   fileIds: string[];
   message: string;
   responseModality?: 'text' | 'audio';
+  restoreDraft?: (message: string) => void;
 }
 
 // Owns the actual submit actions (save note / start chat / send message) and,
@@ -52,7 +53,14 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const submit = useCallback(
     async (
-      { canSubmit, clearComposer, fileIds, message, responseModality }: ComposerSubmitInput,
+      {
+        canSubmit,
+        clearComposer,
+        fileIds,
+        message,
+        responseModality,
+        restoreDraft,
+      }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
       if (!canSubmit) return;
@@ -94,16 +102,24 @@ export function useComposerSubmission(props: ComposerProps) {
       }
 
       if (isChatSending) return;
+      const trimmedMessage = message.trim();
+      // Fire the send and clear the composer as soon as the message is
+      // dispatched (the optimistic update already renders it in the message
+      // list) -- don't wait for the AI's full streamed reply, which is what
+      // sendChatMessage's promise resolves on. On failure the draft is
+      // restored so the user doesn't lose what they typed.
+      const sendPromise = sendChatMessage({
+        message: trimmedMessage,
+        fileIds,
+        noteIds: [],
+        responseModality,
+      });
+      clearComposer();
       try {
-        await sendChatMessage({
-          message: message.trim(),
-          fileIds,
-          noteIds: [],
-          responseModality,
-        });
-        await autoUpdateChatTitle(message.trim());
-        clearComposer();
+        await sendPromise;
+        void autoUpdateChatTitle(trimmedMessage);
       } catch (error) {
+        restoreDraft?.(trimmedMessage);
         const alertMessage =
           error instanceof Error && error.message === 'offline_unavailable'
             ? 'You appear to be offline. Please reconnect and try again.'
