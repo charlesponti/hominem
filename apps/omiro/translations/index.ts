@@ -58,6 +58,7 @@ const t = {
     loadErrorRetry: 'Try again',
     conversationActionsLabel: 'Conversation actions',
     thinkingIndicator: 'Thinking...',
+    offlineBanner: "You're offline",
     input: {
       messagePlaceholder: 'Message',
       addAttachmentA11y: 'Add attachment',

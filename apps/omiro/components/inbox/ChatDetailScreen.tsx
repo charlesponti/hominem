@@ -4,7 +4,12 @@ import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, View } from 'react-native';
 
-import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
+import {
+  ChatMessageList,
+  ChatReviewOverlay,
+  ChatSearchModal,
+  OfflineBanner,
+} from '~/components/chat';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
@@ -236,6 +241,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           onClose={search.handleCloseSearch}
           onChangeSearchQuery={search.handleSearchQueryChange}
         />
+        <OfflineBanner />
         <ChatMessageList
           bottomInset={composerInset}
           isMessagesLoading={isMessagesLoading}
