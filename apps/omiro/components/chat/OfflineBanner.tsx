@@ -1,5 +1,5 @@
 import { transitionDurations } from '@ponti-studios/ui/tokens';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
