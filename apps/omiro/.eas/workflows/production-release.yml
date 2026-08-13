@@ -55,3 +55,13 @@ jobs:
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
+    hooks:
+      # The submit job's runner ships a preinstalled pnpm that doesn't match
+      # this repo's pinned packageManager version, and pnpm-workspace.yaml's
+      # pmOnFail: error (intentional, paired with the repo's other
+      # supply-chain hardening settings) makes that a hard failure rather
+      # than a silent auto-download. Activate the pinned version explicitly
+      # before EAS's automatic install step runs, instead of loosening that
+      # policy repo-wide.
+      before_install_node_modules:
+        - run: corepack prepare pnpm@11.10.0 --activate
