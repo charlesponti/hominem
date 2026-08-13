@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
@@ -101,6 +102,10 @@ export function useComposerSubmission(props: ComposerProps) {
           noteIds: [],
           responseModality,
         });
+        // Fire-and-forget: a light tactile confirmation that the message was
+        // sent. Deliberately placed after success, not on tap, so a failed
+        // send doesn't get a "sent" tick.
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         await autoUpdateChatTitle(message.trim());
         clearComposer();
       } catch (error) {
