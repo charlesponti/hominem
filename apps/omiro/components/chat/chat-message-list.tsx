@@ -19,6 +19,7 @@ interface ChatMessageListProps {
   onEdit?: (messageId: string, content: string) => void;
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
+  onRetry?: (messageId: string) => void;
   formatTimestamp: (value: string) => string;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
@@ -38,6 +39,7 @@ export function ChatMessageList({
   onEdit,
   onRegenerate,
   onDelete,
+  onRetry,
   formatTimestamp,
   emptyState,
   refreshControl,
@@ -86,11 +88,12 @@ export function ChatMessageList({
           onEdit: item.isStreaming ? undefined : onEdit,
           onRegenerate: item.isStreaming ? undefined : onRegenerate,
           onDelete: item.isStreaming ? undefined : onDelete,
+          onRetry,
           showDebug,
         }}
       />
     ),
-    [activeActionMessageId, formatTimestamp, onDelete, onEdit, onRegenerate, showDebug],
+    [activeActionMessageId, formatTimestamp, onDelete, onEdit, onRegenerate, onRetry, showDebug],
   );
 
   const emptySearch = useMemo(() => {

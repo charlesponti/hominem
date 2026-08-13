@@ -3,6 +3,9 @@ import { memo, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
+import AppIcon from '~/components/ui/icon';
+import t from '~/translations';
+
 import { ActiveMessageActions } from './chat-message-actions';
 import { MessageContent } from './chat-message-content';
 import { MessageDebug } from './chat-message-debug';
@@ -18,6 +21,7 @@ type ChatMessageProps = {
   onEdit?: (messageId: string, content: string) => void;
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
+  onRetry?: (messageId: string) => void;
   isActive?: boolean;
   onActivate?: () => void;
   formatTimestamp: (value: string) => string;
@@ -29,13 +33,18 @@ export const ChatMessage = memo(function ChatMessage({
   onEdit,
   onRegenerate,
   onDelete,
+  onRetry,
   isActive = false,
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const [textPrimary] = useCSSVariable(['--color-foreground']) as string[];
+  const [textPrimary, destructive, tertiary] = useCSSVariable([
+    '--color-foreground',
+    '--color-destructive',
+    '--color-tertiary',
+  ]) as string[];
 
-  const { role, message: content, isStreaming } = message;
+  const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
   const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
@@ -98,6 +107,27 @@ export const ChatMessage = memo(function ChatMessage({
         <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
           {isUser ? <ReferencedNotes message={message} /> : null}
         </MessageContent>
+
+        {failed && isUser ? (
+          <Pressable
+            accessibilityLabel={t.chat.retryMessageA11y}
+            accessibilityRole="button"
+            className="flex-row items-center gap-1 self-end"
+            onPress={() => onRetry?.(message.id)}
+          >
+            <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
+            <Text style={{ color: destructive, fontSize: 12 }}>
+              {message.error || t.chat.failedToSend} · {t.chat.tapToRetry}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {failed && !isUser ? (
+          <View className="flex-row items-center gap-1">
+            <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
+            <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
+          </View>
+        ) : null}
 
         {showDebug && !isStreaming ? (
           <MessageDebug hasReasoning={hasReasoning} message={message} />

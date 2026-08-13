@@ -90,7 +90,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     void,
     Error,
     SendInput,
-    { previousMessages: MessageOutput[]; assistantMsgId: string }
+    { previousMessages: MessageOutput[]; userMsgId: string; assistantMsgId: string }
   >({
     onMutate: async ({ message }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
@@ -110,7 +110,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           createStreamingPlaceholder(chatId, assistantMsgId),
         ].slice(-50),
       );
-      return { previousMessages, assistantMsgId };
+      return { previousMessages, userMsgId, assistantMsgId };
     },
 
     mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
@@ -157,12 +157,34 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       }
     },
 
-    onError: (_error, _input, context) => {
+    // Marks the failed turn in place instead of rolling it back out of the
+    // list -- the user's message (and any partial reply that had already
+    // streamed in) stays visible with a failed/interrupted marker so nothing
+    // is silently lost, and it can be retried from the transcript.
+    onError: (error, _input, context) => {
       streamingIdRef.current = null;
       flushNow();
-      if (context?.previousMessages) {
-        queryClient.setQueryData(chatKeys.messages(chatId), context.previousMessages);
-      }
+      if (!context) return;
+
+      const sendErrorMessage =
+        error instanceof Error && error.message === 'offline_unavailable'
+          ? 'You appear to be offline.'
+          : 'Failed to send.';
+
+      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
+        (prev ?? context.previousMessages).flatMap((m) => {
+          if (m.id === context.assistantMsgId) {
+            // Drop the placeholder if no reply text ever streamed in;
+            // otherwise keep the partial reply, marked interrupted.
+            if (!m.message) return [];
+            return [{ ...m, isStreaming: false, failed: true, error: 'Response interrupted.' }];
+          }
+          if (m.id === context.userMsgId) {
+            return [{ ...m, failed: true, error: sendErrorMessage }];
+          }
+          return [m];
+        }),
+      );
     },
   });
 
@@ -174,9 +196,35 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     [mutation],
   );
 
+  // Re-sends a failed user turn: drops the failed message (and any
+  // interrupted reply right after it) from the cache, then resubmits its
+  // text as a fresh send. Attachments aren't preserved on retry since
+  // MessageOutput doesn't retain the original fileIds once sent.
+  const retryFailedMessage = useCallback(
+    async (messageId: string) => {
+      const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
+      const index = messages.findIndex((m) => m.id === messageId);
+      const failedMessage = messages[index];
+      if (!failedMessage || failedMessage.role !== 'user' || !failedMessage.failed) return;
+
+      const next = messages.filter((m, i) => {
+        if (i === index) return false;
+        if (i === index + 1 && m.role === 'assistant' && m.failed) return false;
+        return true;
+      });
+      queryClient.setQueryData(chatKeys.messages(chatId), next);
+      // Failure is re-surfaced inline via onError above (it marks the fresh
+      // optimistic pair as failed again) -- nothing more to do with the
+      // rejection here, just don't let it become an unhandled rejection.
+      await sendChatMessage({ message: failedMessage.message }).catch(() => {});
+    },
+    [chatId, queryClient, sendChatMessage],
+  );
+
   return {
     isChatSending: mutation.isPending,
     sendChatError: mutation.isError,
     sendChatMessage,
+    retryFailedMessage,
   };
 }

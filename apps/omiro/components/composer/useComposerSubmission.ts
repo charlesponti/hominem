@@ -3,12 +3,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import type { ComposerProps, ComposerSubmitKind } from '~/components/composer/composer.types';
-import {
-  normalizeChatTitle,
-  useAutoUpdateChatTitle,
-  useSendMessage,
-  useStartChat,
-} from '~/services/chat';
+import { normalizeChatTitle, useAutoUpdateChatTitle, useStartChat } from '~/services/chat';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { donateAddNoteIntent } from '~/services/intent-donation';
 import { clearChatDraft, readChatDraft, writeChatDraft } from '~/services/navigation/launch-state';
@@ -22,7 +17,6 @@ interface ComposerSubmitInput {
   fileIds: string[];
   message: string;
   responseModality?: 'text' | 'audio';
-  restoreDraft?: (message: string) => void;
 }
 
 // Owns the actual submit actions (save note / start chat / send message) and,
@@ -34,7 +28,13 @@ export function useComposerSubmission(props: ComposerProps) {
   const { mutateAsync: createNote, isPending: isSaving } = useCreateNote();
   const { startChat, isStartingChat } = useStartChat();
   const chatId = props.mode === 'chat' ? props.chatId : '';
-  const { sendChatMessage, isChatSending } = useSendMessage({ chatId });
+  // Chat-mode sending is owned by the screen (ChatDetailScreen) and passed in
+  // via props.chatSend so a normal send and a retry-from-transcript share one
+  // in-flight mutation instead of each holding an independent stream.
+  const { sendChatMessage, isChatSending } =
+    props.mode === 'chat'
+      ? props.chatSend
+      : { sendChatMessage: async () => {}, isChatSending: false };
   const autoUpdateChatTitle = useAutoUpdateChatTitle(chatId);
 
   const isInbox = props.mode === 'inbox';
@@ -53,14 +53,7 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const submit = useCallback(
     async (
-      {
-        canSubmit,
-        clearComposer,
-        fileIds,
-        message,
-        responseModality,
-        restoreDraft,
-      }: ComposerSubmitInput,
+      { canSubmit, clearComposer, fileIds, message, responseModality }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
       if (!canSubmit) return;
@@ -106,8 +99,10 @@ export function useComposerSubmission(props: ComposerProps) {
       // Fire the send and clear the composer as soon as the message is
       // dispatched (the optimistic update already renders it in the message
       // list) -- don't wait for the AI's full streamed reply, which is what
-      // sendChatMessage's promise resolves on. On failure the draft is
-      // restored so the user doesn't lose what they typed.
+      // sendChatMessage's promise resolves on. A failed send is surfaced
+      // inline in the transcript as a failed bubble with retry (see
+      // useSendMessage's onError), not via an alert, so there's nothing to
+      // catch here.
       const sendPromise = sendChatMessage({
         message: trimmedMessage,
         fileIds,
@@ -118,13 +113,8 @@ export function useComposerSubmission(props: ComposerProps) {
       try {
         await sendPromise;
         void autoUpdateChatTitle(trimmedMessage);
-      } catch (error) {
-        restoreDraft?.(trimmedMessage);
-        const alertMessage =
-          error instanceof Error && error.message === 'offline_unavailable'
-            ? 'You appear to be offline. Please reconnect and try again.'
-            : 'We could not send that message right now. Please try again.';
-        Alert.alert('Could not send message', alertMessage, [{ text: 'OK' }]);
+      } catch {
+        // Failure is already visible inline in the transcript.
       }
     },
     [

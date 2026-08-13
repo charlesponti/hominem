@@ -31,7 +31,12 @@ describe('composer submission config', () => {
 
   it('configures chat detail for message submission', () => {
     expect(
-      getComposerSubmissionConfig({ mode: 'chat', chatId: 'chat-1', testID: 'custom-chat' }),
+      getComposerSubmissionConfig({
+        mode: 'chat',
+        chatId: 'chat-1',
+        testID: 'custom-chat',
+        chatSend: { sendChatMessage: async () => {}, isChatSending: false },
+      }),
     ).toMatchObject({
       inputTestID: 'chat-composer-input',
       isChatMode: true,
