@@ -51,7 +51,11 @@ function createCorsMiddleware(): MiddlewareHandler {
 
   return cors({
     origin: (origin, c) =>
-      isPublicMcpAuthPath(c.req.path) ? origin || null : allowedOrigins.has(origin || '') ? origin : null,
+      isPublicMcpAuthPath(c.req.path)
+        ? origin || null
+        : allowedOrigins.has(origin || '')
+          ? origin
+          : null,
     credentials: true,
     allowMethods: ALLOWED_CORS_METHODS,
   });
