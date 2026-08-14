@@ -20,7 +20,7 @@ export function JobApplicationStatusSelect({
   onValueChange,
 }: JobApplicationStatusSelectProps) {
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={(nextValue) => onValueChange(nextValue ?? '')}>
       <SelectTrigger id="application-status-filter" size="sm" aria-label="Filter by status">
         <SelectValue placeholder="Status" />
       </SelectTrigger>

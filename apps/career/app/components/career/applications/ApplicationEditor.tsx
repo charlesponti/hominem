@@ -52,6 +52,7 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
               label="Applied date"
               defaultValue={application.appliedAt}
               placeholder="Pick applied date"
+              captionLayout="dropdown"
             />
           </div>
           <div className="space-y-2">

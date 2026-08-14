@@ -66,6 +66,7 @@ export function PositionEditor({
             startName="startDate"
             endName="endDate"
             label="Dates"
+            captionLayout="dropdown"
             defaultValue={
               isCurrent
                 ? { from: position?.startDate }

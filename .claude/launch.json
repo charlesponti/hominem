@@ -13,6 +13,15 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@hominem/finance", "dev"],
       "port": 4444
+    },
+    {
+      "name": "ui-storybook",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd $HOME/Developer/ui && pnpm exec storybook dev -p 6006 --ci"
+      ],
+      "port": 6006
     }
   ]
 }

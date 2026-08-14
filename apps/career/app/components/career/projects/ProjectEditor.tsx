@@ -60,6 +60,7 @@ export function ProjectEditor({
             startName="startDate"
             endName="endDate"
             label="Dates"
+            captionLayout="dropdown"
             defaultValue={{ from: project?.startDate, to: project?.endDate }}
           />
         </div>

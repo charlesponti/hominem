@@ -344,6 +344,7 @@ export default function CreateJobApplication() {
                     defaultValue={todayDateInput()}
                     placeholder="Pick application date"
                     containerClassName="min-w-0"
+                    captionLayout="dropdown"
                   />
                 </div>
 
