@@ -123,7 +123,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     void,
     Error,
     SendInput,
-    { previousMessages: MessageOutput[]; assistantMsgId: string }
+    { previousMessages: MessageOutput[]; userMsgId: string; assistantMsgId: string }
   >({
     onMutate: async ({ message }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
@@ -143,7 +143,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       activeStreamRef.current = { assistantMessageId: assistantMsgId, localMessages, message };
 
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), localMessages);
-      return { previousMessages, assistantMsgId };
+      return { previousMessages, userMsgId, assistantMsgId };
     },
 
     mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
@@ -195,9 +195,20 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       streamingIdRef.current = null;
       activeStreamRef.current = null;
       flushNow();
-      if (context?.previousMessages) {
-        queryClient.setQueryData(chatKeys.messages(chatId), context.previousMessages);
-      }
+      if (!context) return;
+
+      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
+        (prev ?? context.previousMessages).flatMap((m) => {
+          if (m.id === context.assistantMsgId) {
+            if (!m.message) return [];
+            return [{ ...m, isStreaming: false, failed: true, error: 'Response interrupted.' }];
+          }
+          if (m.id === context.userMsgId) {
+            return [{ ...m, failed: true, error: 'Failed to send.' }];
+          }
+          return [m];
+        }),
+      );
     },
   });
 
@@ -209,9 +220,28 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     [mutation],
   );
 
+  const retryFailedMessage = useCallback(
+    async (messageId: string) => {
+      const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
+      const index = messages.findIndex((m) => m.id === messageId);
+      const failedMessage = messages[index];
+      if (!failedMessage || failedMessage.role !== 'user' || !failedMessage.failed) return;
+
+      const next = messages.filter((m, i) => {
+        if (i === index) return false;
+        if (i === index + 1 && m.role === 'assistant' && m.failed) return false;
+        return true;
+      });
+      queryClient.setQueryData(chatKeys.messages(chatId), next);
+      await sendChatMessage({ message: failedMessage.message }).catch(() => {});
+    },
+    [chatId, queryClient, sendChatMessage],
+  );
+
   return {
     isChatSending: mutation.isPending,
     sendChatError: mutation.isError,
     sendChatMessage,
+    retryFailedMessage,
   };
 }

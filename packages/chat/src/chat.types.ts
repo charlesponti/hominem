@@ -29,6 +29,11 @@ export interface ChatMessageItem {
   toolCalls: ChatMessageToolCall[] | null;
   isStreaming?: boolean;
   audio?: { url: string; mimeType: string } | null;
+  // Set in place (rather than rolling the message back out of the list) when
+  // a send fails or a stream is interrupted, so the transcript keeps a
+  // record the user can retry instead of silently losing what they typed.
+  failed?: boolean;
+  error?: string | null;
 }
 
 export function getReferencedNoteLabel(note: ChatMessageReferencedNote) {

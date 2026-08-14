@@ -4,12 +4,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import type { ComposerProps, ComposerSubmitKind } from '~/components/composer/composer.types';
-import {
-  normalizeChatTitle,
-  useAutoUpdateChatTitle,
-  useSendMessage,
-  useStartChat,
-} from '~/services/chat';
+import { normalizeChatTitle, useAutoUpdateChatTitle, useStartChat } from '~/services/chat';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { donateAddNoteIntent } from '~/services/intent-donation';
 import { clearChatDraft, readChatDraft, writeChatDraft } from '~/services/navigation/launch-state';
@@ -34,7 +29,12 @@ export function useComposerSubmission(props: ComposerProps) {
   const { mutateAsync: createNote, isPending: isSaving } = useCreateNote();
   const { startChat, isStartingChat } = useStartChat();
   const chatId = props.mode === 'chat' ? props.chatId : '';
-  const { sendChatMessage, isChatSending } = useSendMessage({ chatId });
+  // Chat-mode sending is owned by the screen and passed via chatSend so normal
+  // sends and transcript retries share one in-flight mutation.
+  const { sendChatMessage, isChatSending } =
+    props.mode === 'chat'
+      ? props.chatSend
+      : { sendChatMessage: async () => {}, isChatSending: false };
   const autoUpdateChatTitle = useAutoUpdateChatTitle(chatId);
 
   const isInbox = props.mode === 'inbox';
@@ -95,22 +95,20 @@ export function useComposerSubmission(props: ComposerProps) {
       }
 
       if (isChatSending) return;
+      const trimmedMessage = message.trim();
+      const sendPromise = sendChatMessage({
+        message: trimmedMessage,
+        fileIds,
+        noteIds: [],
+        responseModality,
+      });
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      clearComposer();
       try {
-        await sendChatMessage({
-          message: message.trim(),
-          fileIds,
-          noteIds: [],
-          responseModality,
-        });
-        await autoUpdateChatTitle(message.trim());
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        clearComposer();
-      } catch (error) {
-        const alertMessage =
-          error instanceof Error && error.message === 'offline_unavailable'
-            ? 'You appear to be offline. Please reconnect and try again.'
-            : 'We could not send that message right now. Please try again.';
-        Alert.alert('Could not send message', alertMessage, [{ text: 'OK' }]);
+        await sendPromise;
+        void autoUpdateChatTitle(trimmedMessage);
+      } catch {
+        // Failure is surfaced inline in the transcript.
       }
     },
     [

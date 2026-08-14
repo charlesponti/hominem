@@ -59,8 +59,13 @@ const t = {
     offlineIndicator: "You're offline. You can keep composing and send when you reconnect.",
     conversationActionsLabel: 'Conversation actions',
     thinkingIndicator: 'Thinking...',
+    failedToSend: 'Failed to send',
+    tapToRetry: 'Tap to retry',
+    retryMessageA11y: 'Retry sending message',
+    responseInterrupted: 'Response interrupted',
     input: {
       messagePlaceholder: 'Message',
+      messageTooLongA11y: 'Message length limit reached',
       addAttachmentA11y: 'Add attachment',
       startVoiceInputA11y: 'Record voice note',
       stopVoiceInputA11y: 'Stop recording voice note',

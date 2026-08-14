@@ -1,6 +1,9 @@
 import { TextField } from '@ponti-studios/ui/native';
-import { memo } from 'react';
-import { View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
+
+import t from '~/translations';
 
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
 import { ComposerAttachButton } from './ComposerAttachButton';
@@ -15,6 +18,13 @@ import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerMessageSelector } from './useComposerMessageStore';
 import type { ComposerMessageStore } from './useComposerMessageStore';
+
+// A generous ceiling meant to stop pathological pastes (megabytes of text)
+// from bloating the draft/optimistic message and jamming layout/markdown
+// rendering -- not a meaningful constraint for normal chat messages. The
+// counter only appears once the user is close to it.
+const MAX_MESSAGE_LENGTH = 8000;
+const LENGTH_WARNING_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
 interface ComposerActiveAreaProps {
   composerProps: ComposerProps;
@@ -82,6 +92,15 @@ function ComposerActiveAreaComponent({
   const hasContent =
     useComposerMessageSelector(messageStore, (value) => value.trim().length > 0) ||
     uploadedAttachmentCount > 0;
+  const [destructive, tertiary] = useCSSVariable([
+    '--color-destructive',
+    '--color-tertiary',
+  ]) as string[];
+  const handleChangeMessage = useCallback(
+    (text: string) =>
+      onChangeMessage(text.length > MAX_MESSAGE_LENGTH ? text.slice(0, MAX_MESSAGE_LENGTH) : text),
+    [onChangeMessage],
+  );
 
   const voiceCapabilitiesInput: ComposerCapabilitiesVoiceInput = {
     isBusy: voice.isBusy,
@@ -108,7 +127,7 @@ function ComposerActiveAreaComponent({
     <View className="gap-2">
       <TextField
         value={message}
-        onChangeText={onChangeMessage}
+        onChangeText={handleChangeMessage}
         placeholder={presentation.placeholder}
         testID={presentation.inputTestID}
         onFocus={onFocus}
@@ -123,6 +142,18 @@ function ComposerActiveAreaComponent({
           paddingVertical: 0,
         }}
       />
+      {message.length >= LENGTH_WARNING_THRESHOLD ? (
+        <Text
+          accessibilityLabel={t.chat.input.messageTooLongA11y}
+          style={{
+            alignSelf: 'flex-end',
+            color: message.length >= MAX_MESSAGE_LENGTH ? destructive : tertiary,
+            fontSize: 11,
+          }}
+        >
+          {message.length}/{MAX_MESSAGE_LENGTH}
+        </Text>
+      ) : null}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <ComposerAttachButton disabled={!canPickMedia} />

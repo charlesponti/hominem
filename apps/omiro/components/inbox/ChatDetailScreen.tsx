@@ -20,6 +20,7 @@ import {
   updateChatTitleCaches,
   useActiveChat,
   useEditChatMessage,
+  useSendMessage,
 } from '~/services/chat';
 import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
@@ -94,6 +95,14 @@ export function ChatDetailScreen({ id }: { id: string }) {
     onContentCreated: handleContentCreated,
   });
   const handleToggleDebug = useCallback(() => setShowDebug((value) => !value), []);
+  // Owned here (rather than inside Composer) so the composer's send and the
+  // message list's retry-a-failed-message action share one mutation instead
+  // of racing two independent streams.
+  const { sendChatMessage, isChatSending, retryFailedMessage } = useSendMessage({ chatId });
+  const chatSend = useMemo(
+    () => ({ sendChatMessage, isChatSending }),
+    [sendChatMessage, isChatSending],
+  );
   const editMessage = useEditChatMessage(chatId);
   const handleEditMessage = useCallback(
     (messageId: string, content: string) => {
@@ -258,6 +267,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           searchQuery={search.searchQuery}
           showDebug={showDebug}
           onEdit={handleEditMessage}
+          onRetry={retryFailedMessage}
           formatTimestamp={formatRelativeAge}
           emptyState={messagesError ? errorState : emptyState}
           refreshControl={
@@ -270,7 +280,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           }
         />
         <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
-          <Composer mode="chat" chatId={chatId} />
+          <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
         </ComposerDock>
         <View className="absolute inset-0" pointerEvents="box-none">
           <ChatReviewOverlay
