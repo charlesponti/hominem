@@ -6,6 +6,7 @@ import { Platform, Text, View } from 'react-native';
 import { EmptyState } from '~/components/ui/EmptyState';
 import t from '~/translations';
 
+import { inboxDayGroupKey, inboxDayGroupLabel } from './format-inbox-date';
 import { InboxStreamItem } from './InboxStreamItem';
 import type { InboxStreamItemData } from './InboxStreamItem.types';
 
@@ -24,6 +25,7 @@ export type InboxListRow =
       type: 'item';
       id: string;
       item: InboxStreamItemData;
+      itemIndex: number;
     };
 
 export type InboxTab = 'chats' | 'notes';
@@ -61,11 +63,23 @@ const RenderInboxHomeItem = memo(
 RenderInboxHomeItem.displayName = 'RenderInboxHomeItem';
 
 function buildRows({ items }: Pick<InboxListProps, 'items'>): InboxListRow[] {
-  return items.map((item) => ({
-    type: 'item' as const,
-    id: item.id,
-    item,
-  }));
+  const rows: InboxListRow[] = [];
+  let lastGroupKey: string | null = null;
+
+  items.forEach((item, itemIndex) => {
+    const groupKey = inboxDayGroupKey(item.updatedAt);
+    if (groupKey !== lastGroupKey) {
+      rows.push({
+        type: 'section',
+        id: `section-${groupKey}`,
+        title: inboxDayGroupLabel(item.updatedAt),
+      });
+      lastGroupKey = groupKey;
+    }
+    rows.push({ type: 'item', id: item.id, item, itemIndex });
+  });
+
+  return rows;
 }
 
 export function InboxList({
@@ -134,14 +148,19 @@ export function InboxList({
   }, [restoredScrollOffset]);
 
   const renderItem = useCallback<ListRenderItem<InboxListRow>>(
-    ({ item, index }) => {
-      if (item.type === 'section') return null;
-      const rowIndex = index ?? 0;
+    ({ item }) => {
+      if (item.type === 'section') {
+        return (
+          <Text className="text-caption1 text-tertiary px-4 pb-2 pt-4 font-semibold uppercase tracking-wide">
+            {item.title}
+          </Text>
+        );
+      }
       return (
         <RenderInboxHomeItem
           animateOnMount={animateEntrance}
-          index={rowIndex}
-          isNew={!animateEntrance && rowIndex === 0 && freshIds.has(item.item.id)}
+          index={item.itemIndex}
+          isNew={!animateEntrance && item.itemIndex === 0 && freshIds.has(item.item.id)}
           item={item.item}
         />
       );
@@ -194,6 +213,7 @@ export function InboxList({
         contentInsetAdjustmentBehavior="automatic"
         scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
         data={[...rows]}
+        getItemType={(item) => item.type}
         keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.id}
         ListFooterComponent={

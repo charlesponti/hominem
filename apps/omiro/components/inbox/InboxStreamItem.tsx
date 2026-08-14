@@ -1,7 +1,7 @@
 import { ListRow } from '@ponti-studios/ui/native';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,7 +17,11 @@ import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import t from '~/translations';
 
+import { formatInboxTimestamp } from './format-inbox-date';
 import type { InboxStreamItemData } from './InboxStreamItem.types';
+import { stripPreviewMarkdown } from './strip-preview-markdown';
+
+const BADGE_TINT_ALPHA = '26';
 
 interface InboxStreamItemProps {
   animateOnMount?: boolean;
@@ -31,8 +35,9 @@ export const InboxStreamItem = memo(
     const router = useRouter();
     const reducedMotion = useReducedMotion();
     const titleText = cleanText(item.title);
-    const previewText = cleanText(item.preview);
+    const previewText = cleanText(item.preview ? stripPreviewMarkdown(item.preview) : item.preview);
     const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
+    const timestamp = formatInboxTimestamp(item.updatedAt);
     const isChat = item.kind === 'chat';
     const primaryColor = useCSSVariable('--color-primary') as string;
     const chart2Color = useCSSVariable('--color-chart-2') as string;
@@ -107,17 +112,32 @@ export const InboxStreamItem = memo(
           accessibilityLabel={primaryText}
           actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
           leading={
-            <AppIcon
-              name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
-              size={20}
-              tintColor={accent}
-            />
+            <View
+              className="items-center justify-center rounded-md"
+              style={{ backgroundColor: `${accent}${BADGE_TINT_ALPHA}`, height: 26, width: 26 }}
+            >
+              <AppIcon
+                name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
+                size={14}
+                tintColor={accent}
+              />
+            </View>
           }
           onLongPress={handleLongPress}
           onPress={onOpen}
-          subtitle={!isChat && titleText ? previewText : null}
+          subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
           title={primaryText}
-          trailing={<AppIcon name="chevron.right" size={14} tintColor={tertiaryColor} />}
+          trailing={
+            <View className="items-end gap-1">
+              <Text
+                className="text-caption2 text-tertiary"
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
+                {timestamp}
+              </Text>
+              <AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />
+            </View>
+          }
         />
       </Reanimated.View>
     );

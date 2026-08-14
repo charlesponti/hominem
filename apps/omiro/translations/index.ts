@@ -238,7 +238,9 @@ const t = {
         confirm: 'Delete',
       },
       archive: 'Archive',
+      today: 'Today',
       yesterday: 'Yesterday',
+      earlier: 'Earlier',
     },
   },
   tasks: {

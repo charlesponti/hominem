@@ -4,7 +4,7 @@ import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-cl
 
 import { storage } from '~/services/storage/mmkv';
 
-const QUERY_CACHE_KEY = 'omiro-react-query-v2';
+const QUERY_CACHE_KEY = 'omiro-react-query-v3';
 
 export function shouldPersistQuery(query: Query<unknown, Error, unknown, QueryKey>) {
   if (query.state.status !== 'success') return false;
