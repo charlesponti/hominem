@@ -17,6 +17,15 @@ on:
         description: 'Extra shell command appended after the standard validate steps'
         type: string
         default: ''
+      public-app-url:
+        description: >-
+          The calling app's own public origin (used to build post-login
+          redirect targets, distinct from the shared hosted-login API's own
+          URL). Defaults to the API's own dev port for apps that don't set
+          this themselves; apps with their own dev port (career, finance,
+          ...) should override it to match.
+        type: string
+        default: 'http://localhost:3000'
 
 jobs:
   validate:
@@ -34,7 +43,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:4433/hominem-test
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters'
       HOMINEM_INTERNAL_API_URL: http://localhost:3000
-      PUBLIC_APP_URL: http://localhost:3000
+      PUBLIC_APP_URL: ${{ inputs.public-app-url }}
       VITE_PUBLIC_API_URL: http://localhost:3000
 
     services:
