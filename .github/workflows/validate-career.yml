@@ -47,4 +47,7 @@ jobs:
     uses: ./.github/workflows/_validate-app.yml
     with:
       package-filter: '@hominem/career'
+      # Matches apps/career's own dev port (vite.config.ts / .env.example) --
+      # middleware.test.ts asserts hosted-login redirects return here.
+      public-app-url: 'http://localhost:4451'
     secrets: inherit
