@@ -26,7 +26,7 @@ function query(input: { data: unknown; key: readonly unknown[]; status?: 'pendin
 
 describe('mobile query persistence', () => {
   it('uses the versioned cache buster and one-week expiry', () => {
-    expect(mobilePersistOptions.buster).toBe('omiro-react-query-v2');
+    expect(mobilePersistOptions.buster).toBe('omiro-react-query-v3');
     expect(mobilePersistOptions.maxAge).toBe(7 * 24 * 60 * 60_000);
   });
 
@@ -46,6 +46,6 @@ describe('mobile query persistence', () => {
 
   it('removes the complete persisted cache during a session reset', async () => {
     await clearPersistedQueryCache();
-    expect(storage.remove).toHaveBeenCalledWith('omiro-react-query-v2');
+    expect(storage.remove).toHaveBeenCalledWith('omiro-react-query-v3');
   });
 });
