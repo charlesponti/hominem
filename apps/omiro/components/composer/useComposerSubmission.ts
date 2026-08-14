@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
@@ -102,6 +103,7 @@ export function useComposerSubmission(props: ComposerProps) {
           responseModality,
         });
         await autoUpdateChatTitle(message.trim());
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         clearComposer();
       } catch (error) {
         const alertMessage =

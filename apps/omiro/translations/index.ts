@@ -56,6 +56,7 @@ const t = {
     },
     loadErrorTitle: 'Conversation unavailable',
     loadErrorRetry: 'Try again',
+    offlineIndicator: "You're offline. You can keep composing and send when you reconnect.",
     conversationActionsLabel: 'Conversation actions',
     thinkingIndicator: 'Thinking...',
     input: {

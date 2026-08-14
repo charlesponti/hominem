@@ -6,8 +6,10 @@ import {
   appendAssistantChunk,
   failAssistantStream,
   finishAssistantStream,
+  reconcileBackgroundedAssistantStream,
   seedStartedChat,
 } from '~/services/chat/chat-stream-cache';
+import type { MessageOutput } from '~/services/chat/chatMessages';
 import { chatKeys } from '~/services/notes/query-keys';
 
 vi.mock('~/services/storage/mmkv', () => {
@@ -177,5 +179,73 @@ describe('chat stream cache', () => {
     expect(messages).toHaveLength(50);
     expect(messages?.[0]?.id).toBe('old-1');
     expect(messages?.at(-1)?.id).toBe('assistant-message-1');
+  });
+
+  it('uses the server reply when a backgrounded stream completed', () => {
+    queryClient.setQueryData(chatKeys.messages('chat-1'), [
+      {
+        id: 'user-server',
+        role: 'user',
+        message: 'Hello world',
+      },
+      {
+        id: 'assistant-server',
+        role: 'assistant',
+        message: 'Hello from the server',
+      },
+    ]);
+
+    expect(
+      reconcileBackgroundedAssistantStream(queryClient, {
+        chatId: 'chat-1',
+        assistantMessageId: 'assistant-local',
+        message: 'Hello world',
+        localMessages: [],
+      }),
+    ).toBe('completed');
+    expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toEqual([
+      expect.objectContaining({ id: 'user-server' }),
+      expect.objectContaining({ id: 'assistant-server' }),
+    ]);
+  });
+
+  it('marks the local placeholder interrupted when the server has no reply', () => {
+    const localMessages = [
+      {
+        id: 'user-local',
+        role: 'user' as const,
+        message: 'Hello world',
+      },
+      {
+        id: 'assistant-local',
+        role: 'assistant' as const,
+        message: 'Partial reply',
+        isStreaming: true,
+      },
+    ] as MessageOutput[];
+    queryClient.setQueryData(chatKeys.messages('chat-1'), [
+      {
+        id: 'user-server',
+        role: 'user',
+        message: 'Hello world',
+      },
+    ]);
+
+    expect(
+      reconcileBackgroundedAssistantStream(queryClient, {
+        chatId: 'chat-1',
+        assistantMessageId: 'assistant-local',
+        message: 'Hello world',
+        localMessages,
+      }),
+    ).toBe('interrupted');
+    expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toEqual([
+      expect.objectContaining({ id: 'user-server' }),
+      expect.objectContaining({
+        id: 'assistant-local',
+        isStreaming: false,
+        message: 'Partial reply',
+      }),
+    ]);
   });
 });

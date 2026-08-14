@@ -2,7 +2,7 @@ import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
@@ -13,6 +13,7 @@ import { EmptyState } from '~/components/ui';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
 import { useChatTransform, type ChatContentCreated } from '~/hooks/use-chat-transform';
+import { useNetworkStatus } from '~/hooks/use-network-status';
 import {
   DEFAULT_CHAT_TITLE,
   getChatTitle,
@@ -45,6 +46,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
   const chatId = activeChat?.id ?? id;
   const [composerInset, setComposerInset] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
+  const { isOnline } = useNetworkStatus();
 
   const source = useMemo<SessionSource>(() => {
     if (activeChat?.noteId) {
@@ -236,6 +238,18 @@ export function ChatDetailScreen({ id }: { id: string }) {
           onClose={search.handleCloseSearch}
           onChangeSearchQuery={search.handleSearchQueryChange}
         />
+        {!isOnline ? (
+          <View
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            className="bg-muted border-b border-border px-4 py-2"
+            testID="chat-offline-indicator"
+          >
+            <Text className="text-center text-footnote text-muted-foreground">
+              {t.chat.offlineIndicator}
+            </Text>
+          </View>
+        ) : null}
         <ChatMessageList
           bottomInset={composerInset}
           isMessagesLoading={isMessagesLoading}

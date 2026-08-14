@@ -2,13 +2,49 @@ import type { ChatMessageItem } from '@hominem/chat';
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, type RefreshControlProps, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Platform,
+  Pressable,
+  type RefreshControlProps,
+  Text,
+  View,
+} from 'react-native';
 
 import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.25;
 const keyExtractor = (item: ChatMessageItem) => item.id;
+type AccessibleChatMessage = ChatMessageItem & {
+  errorMessage?: string | null;
+  status?: string | null;
+};
+
+function announceMessage(message: AccessibleChatMessage, previous?: AccessibleChatMessage) {
+  const failed = message.status === 'failed' || Boolean(message.errorMessage);
+  const wasFailed = previous?.status === 'failed' || Boolean(previous?.errorMessage);
+
+  if (failed && !wasFailed) {
+    AccessibilityInfo.announceForAccessibility('Message failed to send. Tap retry.');
+    return;
+  }
+
+  if (!previous) {
+    if (message.role === 'user') {
+      AccessibilityInfo.announceForAccessibility('Message sent.');
+    } else if (message.isStreaming) {
+      AccessibilityInfo.announceForAccessibility('Assistant is responding.');
+    } else {
+      AccessibilityInfo.announceForAccessibility('New assistant message.');
+    }
+    return;
+  }
+
+  if (previous.isStreaming && !message.isStreaming && !failed) {
+    AccessibilityInfo.announceForAccessibility('Assistant reply complete.');
+  }
+}
 
 interface ChatMessageListProps {
   isMessagesLoading: boolean;
@@ -48,6 +84,33 @@ export function ChatMessageList({
   const listRef = useRef<FlashListRef<ChatMessageItem> | null>(null);
   const prevCountRef = useRef(displayMessages.length);
   const prevLastMessageIdRef = useRef(displayMessages.at(-1)?.id ?? null);
+  const announcedMessagesRef = useRef(new Map<string, AccessibleChatMessage>());
+  const didInitializeAnnouncementsRef = useRef(false);
+
+  useEffect(() => {
+    const previousMessages = announcedMessagesRef.current;
+    if (
+      !didInitializeAnnouncementsRef.current &&
+      isMessagesLoading &&
+      displayMessages.length === 0
+    ) {
+      return;
+    }
+
+    if (!didInitializeAnnouncementsRef.current) {
+      for (const message of displayMessages) {
+        previousMessages.set(message.id, message);
+      }
+      didInitializeAnnouncementsRef.current = true;
+      return;
+    }
+
+    for (const message of displayMessages) {
+      const previous = previousMessages.get(message.id);
+      announceMessage(message, previous);
+      previousMessages.set(message.id, message);
+    }
+  }, [displayMessages, isMessagesLoading]);
 
   // Force-scroll to the bottom when the user sends a new message, even if they'd
   // scrolled up. Auto-follow while already near the bottom (including while a

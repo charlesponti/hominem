@@ -96,3 +96,53 @@ export function failAssistantStream(
     ),
   );
 }
+
+export function reconcileBackgroundedAssistantStream(
+  queryClient: QueryClient,
+  input: {
+    chatId: string;
+    assistantMessageId: string;
+    message: string;
+    localMessages: MessageOutput[];
+  },
+) {
+  const { assistantMessageId, chatId, localMessages, message } = input;
+  const serverMessages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
+  const userIndex = serverMessages.findLastIndex(
+    (item) => item.role === 'user' && item.message === message,
+  );
+  const hasServerReply =
+    userIndex >= 0 && serverMessages.slice(userIndex + 1).some((item) => item.role === 'assistant');
+
+  if (hasServerReply) {
+    queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (current = []) =>
+      current.filter((item) => item.id !== assistantMessageId),
+    );
+    return 'completed' as const;
+  }
+
+  const localUser = localMessages.find((item) => item.role === 'user' && item.message === message);
+  const localAssistant = localMessages.find((item) => item.id === assistantMessageId);
+
+  queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (current = []) => {
+    const next = [...current];
+    if (
+      localUser &&
+      !next.some(
+        (item) => item.id === localUser.id || (item.role === 'user' && item.message === message),
+      )
+    ) {
+      next.push(localUser);
+    }
+    if (localAssistant && !next.some((item) => item.id === assistantMessageId)) {
+      next.push(localAssistant);
+    }
+    return next;
+  });
+  failAssistantStream(queryClient, {
+    chatId,
+    assistantMessageId,
+    errorMessage: 'stream interrupted while the app was in the background',
+  });
+  return 'interrupted' as const;
+}

@@ -2,7 +2,8 @@ import type { ChatStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
@@ -11,6 +12,7 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 import { isTestMode, MOCK_AI_RESPONSE } from '~/services/testing/test-mode';
 
+import { reconcileBackgroundedAssistantStream } from './chat-stream-cache';
 import {
   createOptimisticMessage,
   createStreamingPlaceholder,
@@ -35,6 +37,12 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const streamingIdRef = useRef<string | null>(null);
   const chunkBufferRef = useRef('');
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeStreamRef = useRef<{
+    assistantMessageId: string;
+    message: string;
+    localMessages: MessageOutput[];
+  } | null>(null);
+  const wasBackgroundedRef = useRef(false);
 
   const writeBuffer = useCallback(() => {
     const id = streamingIdRef.current;
@@ -61,6 +69,31 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     }
     writeBuffer();
   }, [writeBuffer]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        if (activeStreamRef.current) {
+          wasBackgroundedRef.current = true;
+        }
+        return;
+      }
+
+      if (!wasBackgroundedRef.current || !activeStreamRef.current) return;
+      wasBackgroundedRef.current = false;
+      const stream = activeStreamRef.current;
+
+      void (async () => {
+        await queryClient.refetchQueries({ queryKey: chatKeys.messages(chatId), exact: true });
+        reconcileBackgroundedAssistantStream(queryClient, {
+          chatId,
+          ...stream,
+        });
+      })();
+    });
+
+    return () => subscription.remove();
+  }, [chatId, queryClient]);
 
   const onEvent = useCallback(
     (event: ChatStreamEvent) => {
@@ -102,14 +135,14 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       streamingIdRef.current = assistantMsgId;
       chunkBufferRef.current = '';
 
-      queryClient.setQueryData<MessageOutput[]>(
-        chatKeys.messages(chatId),
-        [
-          ...previousMessages,
-          createOptimisticMessage(chatId, message, null, userMsgId),
-          createStreamingPlaceholder(chatId, assistantMsgId),
-        ].slice(-50),
-      );
+      const localMessages = [
+        ...previousMessages,
+        createOptimisticMessage(chatId, message, null, userMsgId),
+        createStreamingPlaceholder(chatId, assistantMsgId),
+      ].slice(-50);
+      activeStreamRef.current = { assistantMessageId: assistantMsgId, localMessages, message };
+
+      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), localMessages);
       return { previousMessages, assistantMsgId };
     },
 
@@ -146,6 +179,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
     onSuccess: (_data, _input, context) => {
       streamingIdRef.current = null;
+      activeStreamRef.current = null;
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
         prev?.map((m) => (m.id === context?.assistantMsgId ? { ...m, isStreaming: false } : m)),
       );
@@ -159,6 +193,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
     onError: (_error, _input, context) => {
       streamingIdRef.current = null;
+      activeStreamRef.current = null;
       flushNow();
       if (context?.previousMessages) {
         queryClient.setQueryData(chatKeys.messages(chatId), context.previousMessages);
