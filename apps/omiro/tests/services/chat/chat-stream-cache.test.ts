@@ -12,21 +12,9 @@ import {
 import type { MessageOutput } from '~/services/chat/chatMessages';
 import { chatKeys } from '~/services/notes/query-keys';
 
-vi.mock('~/services/storage/mmkv', () => {
-  const store = new Map<string, string>();
+import { mockMmkvModule } from '../../mocks/mmkv';
 
-  return {
-    storage: {
-      getString: (key: string) => store.get(key),
-      remove: (key: string) => {
-        store.delete(key);
-      },
-      set: (key: string, value: string) => {
-        store.set(key, value);
-      },
-    },
-  };
-});
+vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
 
 describe('chat stream cache', () => {
   let queryClient: QueryClient;

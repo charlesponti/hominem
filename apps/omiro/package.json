@@ -104,8 +104,10 @@
   "devDependencies": {
     "@expo/plist": "^0.8.1",
     "@sentry/cli": "3.6.1",
+    "@testing-library/react": "^16.3.0",
     "babel-preset-expo": "57.0.4",
     "eas-cli": "21.7.0",
+    "jsdom": "^30.0.0",
     "oxlint-config-universe": "^0.0.3",
     "typescript": "~6.0.3"
   },

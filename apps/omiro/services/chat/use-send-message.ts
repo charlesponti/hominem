@@ -2,6 +2,7 @@ import type { ChatStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
+import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
@@ -12,6 +13,10 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 import { isTestMode, MOCK_AI_RESPONSE } from '~/services/testing/test-mode';
 
+import {
+  type AssistantCompletionHapticGate,
+  createAssistantCompletionHapticGate,
+} from './assistant-completion-haptic-gate';
 import { reconcileBackgroundedAssistantStream } from './chat-stream-cache';
 import {
   createOptimisticMessage,
@@ -22,6 +27,10 @@ import { streamSSE } from './stream-sse';
 
 // Batch chunk writes at ~2 frames (60 fps) to avoid a setQueryData per token.
 const FLUSH_INTERVAL_MS = 32;
+
+function triggerAssistantCompletionHaptic() {
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}
 
 export interface SendInput {
   message: string;
@@ -43,6 +52,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     localMessages: MessageOutput[];
   } | null>(null);
   const wasBackgroundedRef = useRef(false);
+  const hapticGateRef = useRef<AssistantCompletionHapticGate>(createAssistantCompletionHapticGate());
 
   const writeBuffer = useCallback(() => {
     const id = streamingIdRef.current;
@@ -85,10 +95,14 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       void (async () => {
         await queryClient.refetchQueries({ queryKey: chatKeys.messages(chatId), exact: true });
-        reconcileBackgroundedAssistantStream(queryClient, {
+        const result = reconcileBackgroundedAssistantStream(queryClient, {
           chatId,
           ...stream,
         });
+        if (result === 'completed') {
+          hapticGateRef.current.markCompletedViaBackgroundReconcile(stream.assistantMessageId);
+          triggerAssistantCompletionHaptic();
+        }
       })();
     });
 
@@ -180,6 +194,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     onSuccess: (_data, _input, context) => {
       streamingIdRef.current = null;
       activeStreamRef.current = null;
+      if (hapticGateRef.current.consumeForMutationSettle(context?.assistantMsgId)) {
+        triggerAssistantCompletionHaptic();
+      }
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
         prev?.map((m) => (m.id === context?.assistantMsgId ? { ...m, isStreaming: false } : m)),
       );
@@ -194,6 +211,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     onError: (_error, _input, context) => {
       streamingIdRef.current = null;
       activeStreamRef.current = null;
+      hapticGateRef.current.consumeForMutationSettle(context?.assistantMsgId);
       flushNow();
       if (!context) return;
 

@@ -85,6 +85,7 @@ export const ChatMessage = memo(function ChatMessage({
       onPress={isStreaming ? undefined : onActivate}
       className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}
       style={isUser ? { borderCurve: 'continuous' } : undefined}
+      testID={`chat-message-${message.id}`}
     >
       <MessageEditModal
         content={content}

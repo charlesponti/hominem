@@ -1,0 +1,65 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Opens a chat, creates enough history to require scrolling, leaves the chat,
+# and verifies that navigation back into the detail screen restores the newest
+# message into view.
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-item-chat-open
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: chat-composer-input
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Scroll probe one with enough text to add vertical history.'
+- tapOn:
+    id: composer-submit-message
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Scroll probe two with enough text to add vertical history.'
+- tapOn:
+    id: composer-submit-message
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Scroll probe three with enough text to add vertical history.'
+- tapOn:
+    id: composer-submit-message
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Scroll probe four with enough text to add vertical history.'
+- tapOn:
+    id: composer-submit-message
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- tapOn:
+    id: BackButton
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-item-chat-open
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: chat-composer-input
+- assertVisible: 'Scroll probe four with enough text to add vertical history.'
+- takeScreenshot: /tmp/omiro_chat_detail_scrolls_to_bottom

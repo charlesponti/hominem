@@ -88,6 +88,7 @@ export function ChatMessageList({
   const prevLastMessageIdRef = useRef(displayMessages.at(-1)?.id ?? null);
   const announcedMessagesRef = useRef(new Map<string, AccessibleChatMessage>());
   const didInitializeAnnouncementsRef = useRef(false);
+  const didInitialScrollRef = useRef(false);
 
   useEffect(() => {
     const previousMessages = announcedMessagesRef.current;
@@ -134,6 +135,17 @@ export function ChatMessageList({
       listRef.current?.scrollToEnd({ animated: true });
     });
   }, [displayMessages, showSearch]);
+
+  useEffect(() => {
+    if (hasSearchQuery || didInitialScrollRef.current || displayMessages.length === 0) return;
+
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: false });
+      didInitialScrollRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [displayMessages.length, hasSearchQuery]);
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
     ({ item }) => (
@@ -222,6 +234,7 @@ export function ChatMessageList({
       renderItem={renderItem}
       refreshControl={refreshControl}
       scrollEnabled={displayMessages.length > 0 || refreshControl !== undefined}
+      testID="chat-message-list"
     />
   );
 }

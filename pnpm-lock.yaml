@@ -645,12 +645,18 @@ importers:
       '@sentry/cli':
         specifier: 3.6.1
         version: 3.6.1
+      '@testing-library/react':
+        specifier: ^16.3.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.1.7(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       babel-preset-expo:
         specifier: 57.0.4
         version: 57.0.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(expo@57.0.12)(react-refresh@0.18.0)(supports-color@8.1.1)
       eas-cli:
         specifier: 21.7.0
         version: 21.7.0(@types/node@25.4.0)(supports-color@8.1.1)(typescript@6.0.3)
+      jsdom:
+        specifier: ^30.0.0
+        version: 30.0.0(@noble/hashes@2.2.0)
       oxlint-config-universe:
         specifier: ^0.0.3
         version: 0.0.3(oxlint@1.74.0)
@@ -5391,6 +5397,7 @@ packages:
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
