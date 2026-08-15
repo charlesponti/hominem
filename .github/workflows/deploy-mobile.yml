@@ -58,9 +58,19 @@ jobs:
 
       # EXPO_TOKEN authenticates eas-cli non-interactively (existing repo
       # secret, confirmed via `gh secret list`).
+      #
+      # APP_ENV=production: `eas workflow:run` packages and locally evaluates
+      # the project (via `expo config`) before uploading it, and
+      # app.config.ts's resolveAppEnvironment throws if APP_ENV is unset
+      # while running in CI (GitHub Actions sets CI=true) — same requirement
+      # verify-release-identity.mjs has for local manual releases. The actual
+      # build's identity is still independently re-verified by
+      # production-release.yml's own guard_identity job once the build
+      # completes on EAS's servers.
       - name: trigger-production-release-workflow
         working-directory: apps/omiro
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APP_ENV: production
         run: |
           pnpm exec eas workflow:run .eas/workflows/production-release.yml --non-interactive
