@@ -1,0 +1,66 @@
+name: deploy-mobile
+
+# Triggers the existing, already-hardened EAS Workflow at
+# apps/omiro/.eas/workflows/production-release.yml on every push to main
+# that passes validate-mobile, the same way `just mobile release` / the EAS
+# dashboard does today. Does NOT call `eas build`/`eas submit` (or the
+# package.json `build:prod`/`submit` scripts) itself, so the two known
+# package.json script bugs (the prebuild:prod lifecycle-name collision, and
+# verify-release-identity.mjs needing an explicit APP_ENV=production) never
+# come into play here.
+#
+# Gating: chains off validate-mobile via workflow_run, matching the pattern
+# used by deploy-career.yml / deploy-api.yml / deploy-workers.yml for their
+# corresponding validate-*.yml.
+#
+# Safety net that stays intact: production-release.yml's own guard_identity
+# job (post-build bundle-identifier/distribution check) and require-approval
+# job (a human must click Approve in the EAS dashboard before submit_ios
+# runs) are unchanged by this trigger — this workflow only starts the run,
+# it does not bypass or auto-approve anything.
+
+on:
+  workflow_run:
+    workflows: [validate-mobile]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  # eas.json's production build profile has `autoIncrement: true`. If two
+  # runs land close together, queue the second trigger behind the first
+  # rather than cancelling it — cancelling mid-trigger of a real App Store
+  # release pipeline is the wrong default here, unlike the other
+  # deploy-*.yml workflows. This only serializes the *triggering* Action; it
+  # doesn't serialize EAS builds started some other way (dashboard, `just
+  # mobile release`) against this one.
+  group: deploy-mobile-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  trigger-eas-release:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout-repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: setup-pnpm-workspace
+        uses: ./.github/actions/setup-pnpm-workspace
+        with:
+          node-version: '24.18.0'
+
+      # EXPO_TOKEN authenticates eas-cli non-interactively (existing repo
+      # secret, confirmed via `gh secret list`).
+      - name: trigger-production-release-workflow
+        working-directory: apps/omiro
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          pnpm exec eas workflow:run .eas/workflows/production-release.yml --non-interactive
