@@ -52,7 +52,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     localMessages: MessageOutput[];
   } | null>(null);
   const wasBackgroundedRef = useRef(false);
-  const hapticGateRef = useRef<AssistantCompletionHapticGate>(createAssistantCompletionHapticGate());
+  const hapticGateRef = useRef<AssistantCompletionHapticGate>(
+    createAssistantCompletionHapticGate(),
+  );
 
   const writeBuffer = useCallback(() => {
     const id = streamingIdRef.current;

@@ -21,8 +21,11 @@ export function renderHookWithQueryClient<TResult, TProps>(
   options?: RenderHookOptions<TProps> & { queryClient?: QueryClient },
 ) {
   const queryClient = options?.queryClient ?? createTestQueryClient();
+  const InnerWrapper = options?.wrapper;
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {InnerWrapper ? <InnerWrapper>{children}</InnerWrapper> : children}
+    </QueryClientProvider>
   );
 
   return { queryClient, ...renderHook(hook, { ...options, wrapper }) };

@@ -21,7 +21,10 @@ export function createAssistantCompletionHapticGate() {
       completedViaBackgroundReconcileId = assistantMessageId;
     },
     consumeForMutationSettle(assistantMessageId: string | undefined): boolean {
-      if (assistantMessageId !== undefined && completedViaBackgroundReconcileId === assistantMessageId) {
+      if (
+        assistantMessageId !== undefined &&
+        completedViaBackgroundReconcileId === assistantMessageId
+      ) {
         completedViaBackgroundReconcileId = null;
         return false;
       }
