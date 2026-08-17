@@ -5,7 +5,7 @@ on:
     inputs:
       node-version:
         type: string
-        default: '24.18.0'
+        default: '26.5.0'
       go-version:
         type: string
         default: '1.25'

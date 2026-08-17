@@ -120,6 +120,7 @@ export function AccountSelect(props: AccountSelectProps) {
       items={items}
       value={props.selectedAccount}
       onValueChange={(v) => {
+        if (v === null) return;
         const handleChange = props.onAccountChange || props.setSelectedAccount;
         if (!handleChange) {
           throw new Error(
