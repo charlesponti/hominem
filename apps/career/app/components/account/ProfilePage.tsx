@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
 
-import { AccountDocumentsSection } from '~/components/account/AccountDocumentsSection';
 import { BasicInfoForm, profileToFormValues } from '~/components/account/BasicInfoForm';
 import { CertificationsSection } from '~/components/account/CertificationsSection';
+import { ResumeImportSection } from '~/components/account/ResumeImportSection';
 import { SocialLinksSection } from '~/components/account/SocialLinksSection';
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { SaveBar } from '~/components/SaveBar';
@@ -21,7 +21,6 @@ import type {
   SocialLinksFormValues,
 } from '~/lib/account/types';
 
-import { UploadResumeForm } from '../UploadResumeForm';
 import { ActionButtonRow } from './ActionButtonRow';
 
 const SOCIAL_KEYS: readonly string[] = [
@@ -172,24 +171,6 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
     revalidator.revalidate();
   };
 
-  const handleConvertDocument = async (fileId: string) => {
-    const formData = new FormData();
-    formData.append('fileId', fileId);
-    formData.append('replaceExisting', 'true');
-    const response = await fetch('/api/resume/convert', {
-      method: 'POST',
-      credentials: 'same-origin',
-      body: formData,
-    });
-    const payload = (await response.json().catch(() => null)) as {
-      error?: string;
-    } | null;
-    if (!response.ok) {
-      throw new Error(payload?.error || 'Conversion failed');
-    }
-    revalidator.revalidate();
-  };
-
   const handleImageUpload = async (croppedImageBlob: Blob) => {
     const formData = new FormData();
     formData.append('image', croppedImageBlob, 'profile-image.jpg');
@@ -330,33 +311,20 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
           />
         </section>
 
-        <section className="space-y-4">
-          <UploadResumeForm
-            mode="replace"
-            onUploadStart={() => undefined}
-            onUploadComplete={() => revalidator.revalidate()}
-            onUploadError={() => undefined}
-          />
+        {pdfError ? (
+          <div className="rounded-2xl bg-destructive/10 p-4">
+            <p className="subheading-4 text-destructive">PDF export unavailable</p>
+            <p className="body-3 mt-1 text-destructive">{pdfError}</p>
+          </div>
+        ) : null}
 
-          {pdfError ? (
-            <div className="rounded-2xl bg-destructive/10 p-4">
-              <p className="subheading-4 text-destructive">PDF export unavailable</p>
-              <p className="body-3 mt-1 text-destructive">{pdfError}</p>
-            </div>
-          ) : null}
-        </section>
+        <ResumeImportSection documents={documents} onDelete={handleDeleteDocument} />
 
         <FormProvider {...detailsForm}>
           <form onSubmit={handleDetailsSubmit(onSaveDetails)} className="space-y-6">
             <FormErrorAlert title="Profile changes weren't saved" message={detailsError} />
 
             <BasicInfoForm profile={currentProfile} onImageUpload={handleImageUpload} />
-
-            <AccountDocumentsSection
-              documents={documents}
-              onDelete={handleDeleteDocument}
-              onConvert={handleConvertDocument}
-            />
 
             <SocialLinksSection />
 

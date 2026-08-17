@@ -5,6 +5,7 @@ import { logger } from '~/lib/logger';
 import { parseFormData } from '~/lib/route-utils';
 
 import { deleteUserDocument } from './documents.server';
+import { handleApplyResumeImportAction } from './resume-import.actions.server';
 import type {
   AccountActionResult,
   AccountPageUser,
@@ -32,6 +33,7 @@ const accountActionHandlers: Record<string, AccountActionHandler> = {
   'delete-document': handleDeleteDocumentAction,
   'add-certification': handleAddCertificationAction,
   'delete-certification': handleDeleteCertificationAction,
+  'apply-resume-import': handleApplyResumeImportAction,
 };
 
 function getProfileImageUploadErrorMessage(error: unknown): string {

@@ -171,6 +171,9 @@ importers:
       '@hominem/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@hominem/queues':
+        specifier: workspace:*
+        version: link:../../packages/queues
       '@hominem/services':
         specifier: workspace:*
         version: link:../../packages/services
@@ -808,6 +811,9 @@ importers:
       '@hominem/env':
         specifier: workspace:*
         version: link:../env
+      '@hominem/queues':
+        specifier: workspace:*
+        version: link:../queues
       '@hominem/telemetry':
         specifier: workspace:*
         version: link:../telemetry
@@ -12816,6 +12822,7 @@ snapshots:
       '@hominem/ai': file:packages/ai(@opentelemetry/api@1.8.0)
       '@hominem/db': file:packages/db
       '@hominem/env': file:packages/env
+      '@hominem/queues': file:packages/queues(pg@8.20.0)
       '@hominem/telemetry': file:packages/telemetry
       '@hominem/utils': file:packages/utils
       bullmq: 6.0.8(ioredis@6.0.0)(pg@8.20.0)

@@ -21,6 +21,7 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
+    "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
