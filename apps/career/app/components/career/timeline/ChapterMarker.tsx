@@ -2,12 +2,12 @@ import type { CareerEngagementRecord } from '@hominem/db';
 
 function formatTenure(startDate: string | null, endDate: string | null): string {
   const start = startDate
-    ? new Date(startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : null;
   if (!start) return endDate ? 'Ended' : 'Ongoing';
 
   const end = endDate
-    ? new Date(endDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : 'present';
 
   return `${start} – ${end}`;

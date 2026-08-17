@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
-  getMcpSession: vi.fn(),
   executeTakeFirst: vi.fn(),
 }));
 
@@ -18,9 +17,7 @@ vi.mock('@hominem/db', () => ({
 }));
 
 vi.mock('../auth/better-auth', () => ({
-  MCP_SCOPES: ['career:read'],
   betterAuthServer: { api: { getSession: mocks.getSession } },
-  betterAuthMcpServer: { api: { getMcpSession: mocks.getMcpSession } },
 }));
 
 import type { AuthContext } from '../auth/types';
@@ -54,7 +51,6 @@ async function createApp(envOverrides: Record<string, string | boolean> = {}) {
 describe('auth middleware', () => {
   beforeEach(() => {
     mocks.getSession.mockReset();
-    mocks.getMcpSession.mockReset();
     mocks.executeTakeFirst.mockReset();
     mocks.executeTakeFirst.mockResolvedValue(user);
   });
@@ -77,31 +73,33 @@ describe('auth middleware', () => {
       credential: 'session',
       scopes: [],
     });
-    expect(mocks.getMcpSession).not.toHaveBeenCalled();
   });
 
-  it('resolves MCP OAuth without performing a second normal session lookup', async () => {
-    mocks.getMcpSession.mockResolvedValue({ userId: user.id, scopes: 'career:read' });
-
-    const app = await createApp();
-    const response = await app.request('/api/mcp', {
-      headers: {
-        authorization: 'Bearer mcp-token',
-        'x-mcp-scopes': 'admin:write',
-      },
+  it('adapts verified JWT claims into the MCP auth context', async () => {
+    vi.resetModules();
+    const { setMcpAuthContext } = await import('./auth');
+    const contextApp = new Hono().get('*', async (c) => {
+      const resolved = await setMcpAuthContext(c, {
+        sub: user.id,
+        client_id: 'client-1',
+        scope: 'career:read',
+      });
+      return c.json({ resolved, auth: c.get('auth') });
     });
-    const auth = (await response.json()) as AuthContext;
+    const response = await contextApp.request('/api/mcp');
+    const body = (await response.json()) as { auth: AuthContext; resolved: boolean };
 
-    expect(auth).toMatchObject({
+    expect(body.resolved).toBe(true);
+    expect(body.auth).toMatchObject({
       userId: user.id,
       credential: 'mcp-oauth',
       scopes: ['career:read'],
     });
+    expect(body.auth.clientId).toBe('client-1');
     expect(mocks.getSession).not.toHaveBeenCalled();
   });
 
   it('does not treat an unrecognized bearer token as a Better Auth session', async () => {
-    mocks.getMcpSession.mockResolvedValue(null);
     mocks.getSession.mockResolvedValue(null);
 
     const app = await createApp();

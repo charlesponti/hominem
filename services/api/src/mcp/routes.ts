@@ -1,8 +1,10 @@
-import { oAuthDiscoveryMetadata, oAuthProtectedResourceMetadata } from 'better-auth/plugins';
+import { requireMcpAuth } from '@better-auth/mcp';
+import { createInsufficientScopeError } from 'better-auth/oauth2';
 import { Hono, type Context, type Next } from 'hono';
 
-import { betterAuthMcpServer } from '../auth/better-auth';
+import { betterAuthServer } from '../auth/better-auth';
 import { env } from '../env';
+import { setMcpAuthContext } from '../middleware/auth';
 import { MCP_ENABLED_SCOPES, MCP_SCOPES } from '../scopes';
 import { checkRateLimit } from './rate-limiter';
 import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
@@ -10,8 +12,6 @@ import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
 // Conditional imports — only register tools whose scope is in MCP_ENABLED_SCOPES
 // Use top-level await via ESM (services/api is ESM)
 const enabledScopes = new Set<string>(MCP_ENABLED_SCOPES);
-const requiredScopes = MCP_SCOPES.join(' ');
-
 if (
   enabledScopes.size === 0 ||
   enabledScopes.has('calendar:read') ||
@@ -58,105 +58,49 @@ if (enabledScopes.size === 0 || enabledScopes.has('social:read')) {
   await import('./tools/social');
 }
 
-async function addMcpScopes(response: Response): Promise<Response> {
-  const metadata = (await response.json()) as { scopes_supported?: string[] } & Record<
-    string,
-    unknown
-  >;
-  const headers = new Headers(response.headers);
-  headers.set('content-type', 'application/json');
-
-  return new Response(
-    JSON.stringify({
-      ...metadata,
-      scopes_supported: [...new Set([...(metadata.scopes_supported ?? []), ...MCP_SCOPES])],
-    }),
-    { status: response.status, headers },
-  );
-}
-
-function createMcpAuthChallenge(error?: 'insufficient_scope') {
-  const resourceMetadataUrl = new URL(
-    '/.well-known/oauth-protected-resource/api/mcp',
-    env.API_URL,
-  ).toString();
-  const errorParameters =
-    error === 'insufficient_scope'
-      ? ', error="insufficient_scope", error_description="Missing required MCP scope"'
-      : '';
-
-  return `Bearer realm="Hominem", scope="${requiredScopes}"${errorParameters}, resource_metadata="${resourceMetadataUrl}"`;
-}
-
 export async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
-  const auth = c.get('auth');
-  if (!auth || auth.credential !== 'mcp-oauth') {
-    return new Response(
-      JSON.stringify({
-        error: 'unauthorized',
-        code: 'UNAUTHORIZED',
-        message: 'Authentication required',
-      }),
-      {
-        status: 401,
-        headers: {
-          'content-type': 'application/json',
-          'WWW-Authenticate': createMcpAuthChallenge(),
-        },
-      },
-    );
-  }
+  const verifiedHandler = requireMcpAuth(
+    betterAuthServer,
+    async (_request, claims) => {
+      if (!(await setMcpAuthContext(c, claims))) {
+        return new Response(JSON.stringify({ error: 'invalid_token' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
 
-  if (!MCP_SCOPES.some((scope) => auth.scopes.includes(scope))) {
-    return new Response(
-      JSON.stringify({
-        error: 'insufficient_scope',
-        code: 'INSUFFICIENT_SCOPE',
-        message: 'The MCP token does not include the required scope',
-      }),
-      {
-        status: 403,
-        headers: {
-          'content-type': 'application/json',
-          'WWW-Authenticate': createMcpAuthChallenge('insufficient_scope'),
-        },
-      },
-    );
-  }
+      const auth = c.get('auth');
+      if (!auth || !MCP_SCOPES.some((scope) => auth.scopes.includes(scope))) {
+        throw createInsufficientScopeError([...MCP_SCOPES]);
+      }
 
-  // Rate limit check (production only)
-  if (env.NODE_ENV === 'production') {
-    const rateLimitResult = await checkRateLimit(auth.userId);
-    if (rateLimitResult === 'unavailable') {
-      return new Response(
-        JSON.stringify({
-          error: 'rate_limit_unavailable',
-          code: 'RATE_LIMIT_UNAVAILABLE',
-          message: 'MCP is temporarily unavailable. Retry later.',
-        }),
-        {
-          status: 503,
-          headers: {
-            'content-type': 'application/json',
-            'retry-after': '5',
-          },
-        },
-      );
-    }
+      if (env.NODE_ENV === 'production') {
+        const rateLimitResult = await checkRateLimit(auth.userId);
+        if (rateLimitResult === 'unavailable') {
+          return new Response(JSON.stringify({ error: 'rate_limit_unavailable' }), {
+            status: 503,
+            headers: { 'content-type': 'application/json', 'retry-after': '5' },
+          });
+        }
+        if (rateLimitResult === 'limited') {
+          return new Response(JSON.stringify({ error: 'rate_limited' }), {
+            status: 429,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+      }
 
-    if (rateLimitResult === 'limited') {
-      return new Response(
-        JSON.stringify({
-          error: 'rate_limited',
-          code: 'RATE_LIMITED',
-          message: 'Too many requests',
-        }),
-        { status: 429, headers: { 'content-type': 'application/json' } },
-      );
-    }
-  }
+      await next();
+      return c.res;
+    },
+    {
+      resource: new URL('/api/mcp', env.API_URL).toString(),
+      issuer: new URL('/api/auth', env.API_URL).toString(),
+      challengeScopes: [...MCP_SCOPES],
+    },
+  );
 
-  return next();
+  return verifiedHandler(c.req.raw);
 }
 
 export const mcpRoutes = new Hono<McpHonoEnv>()
@@ -168,13 +112,35 @@ export const mcpRoutes = new Hono<McpHonoEnv>()
  * OAuth discovery routes — mounted at the server root so MCP clients
  * can discover the authorization server without auth.
  */
+const mcpResource = new URL('/api/mcp', env.API_URL).toString();
+
 export const oauthDiscoveryRoutes = new Hono()
-  .get('/.well-known/oauth-authorization-server', async (c) => {
-    return addMcpScopes(await oAuthDiscoveryMetadata(betterAuthMcpServer)(c.req.raw));
+  .get('/.well-known/openai-apps-challenge', (c) => {
+    if (!env.OPENAI_APPS_CHALLENGE) {
+      return c.json({ error: 'OpenAI Apps challenge is not configured' }, 404);
+    }
+    return c.text(env.OPENAI_APPS_CHALLENGE);
   })
-  .get('/.well-known/oauth-protected-resource/*', async (c) => {
-    return oAuthProtectedResourceMetadata(betterAuthMcpServer)(c.req.raw);
+  .get('/.well-known/oauth-authorization-server', (c) => {
+    const authUrl = new URL(c.req.url);
+    authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
+    return betterAuthServer.handler(
+      new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
+    );
   })
-  .get('/.well-known/oauth-protected-resource', async (c) => {
-    return oAuthProtectedResourceMetadata(betterAuthMcpServer)(c.req.raw);
+  .get('/.well-known/oauth-protected-resource', (c) => {
+    return c.json({
+      resource: mcpResource,
+      authorization_servers: [new URL('/api/auth', env.API_URL).toString()],
+      bearer_methods_supported: ['header'],
+      scopes_supported: [...MCP_SCOPES],
+    });
+  })
+  .get('/.well-known/oauth-protected-resource/*', (c) => {
+    return c.json({
+      resource: mcpResource,
+      authorization_servers: [new URL('/api/auth', env.API_URL).toString()],
+      bearer_methods_supported: ['header'],
+      scopes_supported: [...MCP_SCOPES],
+    });
   });

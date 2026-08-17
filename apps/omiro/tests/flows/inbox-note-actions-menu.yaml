@@ -3,9 +3,7 @@ appId: com.pontistudios.hakumi.dev
 # Flow: Inbox note actions menu
 # Opens the note row overflow menu and captures the native menu presentation.
 
-- launchApp
-- waitForAnimationToEnd:
-    timeout: 3000
+- runFlow: ../subflows/reset-to-home.yaml
 - assertVisible:
     id: 'inbox-item-note'
 - longPressOn:

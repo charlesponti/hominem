@@ -43,7 +43,11 @@ function createAllowedOrigins() {
 // called by any MCP client's own origin (e.g. claude.ai) — they don't rely on
 // cookies, so reflecting the caller's origin here doesn't expose session data.
 function isPublicMcpAuthPath(path: string) {
-  return path.startsWith('/.well-known/') || path.startsWith('/api/auth/mcp/');
+  return (
+    path.startsWith('/.well-known/') ||
+    path.startsWith('/api/auth/oauth2/') ||
+    path === '/api/auth/jwks'
+  );
 }
 
 function createCorsMiddleware(): MiddlewareHandler {

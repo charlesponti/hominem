@@ -142,6 +142,7 @@ export function OtpInput({
 
   return (
     <Pressable
+      testID={testID ? `${testID}-container` : undefined}
       className="self-center"
       onPress={() => inputRef.current?.focus()}
       accessibilityRole="none"

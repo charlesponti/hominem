@@ -2,10 +2,7 @@ import * as z from 'zod';
 
 export const TaskPriority = z.enum(['low', 'medium', 'high']);
 
-const TaskParticipantSchema = z.object({
-  displayName: z.string().trim().min(1).max(120),
-  email: z.email().trim().max(320).nullable().optional(),
-});
+const TaskParticipantSchema = z.uuid();
 
 const TaskTimeFields = {
   durationMinutes: z.number().int().positive().nullable().optional(),

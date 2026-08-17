@@ -16,7 +16,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 function formatEntryDate(date: string | null): string {
   if (!date) return 'Unknown date';
-  return new Date(date).toLocaleDateString(undefined, {
+  return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

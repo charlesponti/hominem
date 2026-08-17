@@ -6,6 +6,7 @@ import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { Text } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
+import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
 import { Button } from '~/components/ui/button';
 import type { CalendarEventPatch, CalendarRecurrenceScope } from '~/modules/on-device-ai';
 import {
@@ -13,6 +14,7 @@ import {
   useDeleteCalendarEvent,
   useUpdateCalendarEvent,
 } from '~/services/calendar/calendar-queries';
+import type { PersonPickerRecord } from '~/services/people/use-people';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
 import { useTaskDelete } from '~/services/tasks/use-task-delete';
 import { useTaskQuery } from '~/services/tasks/use-task-query';
@@ -138,7 +140,7 @@ function TimeBlockEditor({
   const [draftTitle, setDraftTitle] = useState('');
   const [draftLocation, setDraftLocation] = useState('');
   const [draftNotes, setDraftNotes] = useState('');
-  const [draftPeople, setDraftPeople] = useState('');
+  const [draftPeople, setDraftPeople] = useState<PersonPickerRecord[]>([]);
   const [activeField, setActiveField] = useState<ActiveField>(initialActiveField);
   const [isScheduling, setIsScheduling] = useState(false);
 
@@ -155,8 +157,7 @@ function TimeBlockEditor({
   const title = block?.title ?? 'Time block';
   const location = block?.location ?? null;
   const notes = isTask ? (task?.description ?? null) : (event?.notes ?? null);
-  const originalPeople =
-    taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '';
+  const originalPeople = taskQuery.data?.participants ?? [];
   useEffect(() => {
     if (!block) return;
     const start = isTask ? task?.scheduledStartAt : event?.startDate;
@@ -172,7 +173,11 @@ function TimeBlockEditor({
     setDraftLocation(location ?? '');
     setDraftNotes(notes ?? '');
     setDraftPeople(
-      taskQuery.data?.participants.map((person) => person.displayName).join('\n') ?? '',
+      taskQuery.data?.participants.map((person) => ({
+        id: person.personId,
+        displayName: person.displayName,
+        email: person.email,
+      })) ?? [],
     );
     setDraftStart(start ? new Date(start) : defaultStart);
     setDraftTitle(title);
@@ -205,7 +210,8 @@ function TimeBlockEditor({
       draftEnd?.toISOString() !== (end ? new Date(end).toISOString() : undefined) ||
       draftLocation !== (location ?? '') ||
       draftNotes !== (notes ?? '') ||
-      draftPeople !== originalPeople ||
+      draftPeople.map((person) => person.id).join(',') !==
+        originalPeople.map((person) => person.personId).join(',') ||
       draftStart?.toISOString() !== (start ? new Date(start).toISOString() : undefined) ||
       draftTitle !== title
     );
@@ -280,11 +286,7 @@ function TimeBlockEditor({
           description: draftNotes.trim() || null,
           durationMinutes,
           location: draftLocation.trim() || null,
-          participants: draftPeople
-            .split('\n')
-            .map((person) => person.trim())
-            .filter(Boolean)
-            .map((displayName) => ({ displayName })),
+          participants: draftPeople.map((person) => person.id),
           scheduledEndAt: isScheduling ? draftEnd.toISOString() : null,
           scheduledStartAt: isScheduling ? draftStart.toISOString() : null,
           title: draftTitle.trim() || title,
@@ -500,17 +502,12 @@ function TimeBlockEditor({
                 testID="time-block-edit-people"
               >
                 {activeField === 'people' ? (
-                  <TextField
-                    autoFocus
-                    multiline
-                    onChangeText={setDraftPeople}
-                    placeholder="One person per line"
-                    testID="time-block-people"
-                    value={draftPeople}
-                  />
+                  <TaskPeoplePicker selected={draftPeople} onChange={setDraftPeople} />
                 ) : (
-                  <Text className={draftPeople ? 'text-foreground' : 'text-muted-foreground'}>
-                    {draftPeople || 'Add people'}
+                  <Text
+                    className={draftPeople.length > 0 ? 'text-foreground' : 'text-muted-foreground'}
+                  >
+                    {draftPeople.map((person) => person.displayName).join(', ') || 'Add people'}
                   </Text>
                 )}
               </DetailBlock>

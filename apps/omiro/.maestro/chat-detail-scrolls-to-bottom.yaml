@@ -61,5 +61,6 @@ appId: com.pontistudios.hakumi.dev
     timeout: 3000
 - assertVisible:
     id: chat-composer-input
-- assertVisible: 'Scroll probe four with enough text to add vertical history.'
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
 - takeScreenshot: /tmp/omiro_chat_detail_scrolls_to_bottom

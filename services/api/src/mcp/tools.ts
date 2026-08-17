@@ -1,5 +1,5 @@
 import { ValidationError } from '@hominem/db';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import * as z from 'zod';
 
 import type { CapabilityDefinition } from '../application/capability';

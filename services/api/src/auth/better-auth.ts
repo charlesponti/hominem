@@ -1,12 +1,15 @@
 import { createHash, randomInt } from 'node:crypto';
 
+import { cimd } from '@better-auth/cimd';
+import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
+import { mcp } from '@better-auth/mcp';
 import { authDb } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
 import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
-import { emailOTP, mcp, multiSession, openAPI } from 'better-auth/plugins';
+import { emailOTP, jwt, multiSession, openAPI } from 'better-auth/plugins';
 
 import { API_BRAND } from '../brand';
 import { env } from '../env';
@@ -70,15 +73,6 @@ type SendEmailParams = {
 };
 
 type VerificationOtpType = 'sign-in' | 'email-verification' | 'forget-password' | string;
-
-type BetterAuthServer = {
-  handler: (request: Request) => Promise<Response>;
-  api: {
-    getSession: (input: {
-      headers: Headers;
-    }) => Promise<typeof inferredBetterAuthServer.$Infer.Session | null>;
-  };
-};
 
 const verificationOtpSubjectByType = {
   'sign-in': 'Your sign-in code',
@@ -226,16 +220,21 @@ function getAuthPlugins() {
         }
       },
     }),
+    jwt(),
     mcp({
       loginPage: new URL('/login', env.API_URL).toString(),
+      consentPage: new URL('/consent', env.API_URL).toString(),
       resource: new URL('/api/mcp', env.API_URL).toString(),
-      oidcConfig: {
-        loginPage: new URL('/login', env.API_URL).toString(),
-        scopes: [...MCP_SCOPES],
-        metadata: {
-          scopes_supported: ['openid', 'profile', 'email', 'offline_access', ...MCP_SCOPES],
-        },
-      },
+      scopes: ['openid', 'profile', 'email', 'offline_access', ...MCP_SCOPES],
+      resources: [new URL('/api/mcp', env.API_URL).toString()],
+      clientRegistrationDefaultResources: [new URL('/api/mcp', env.API_URL).toString()],
+      clientRegistrationAllowedResources: [new URL('/api/mcp', env.API_URL).toString()],
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
+    }),
+    cimd({
+      fetchClientMetadataResource,
+      metadataProfile: 'mcp-2026-07-28',
     }),
     multiSession({ maximumSessions: 8 }),
     openAPI({
@@ -273,14 +272,4 @@ const inferredBetterAuthServer = betterAuth({
   database: kyselyAdapter(authDb),
 });
 
-export const betterAuthServer: BetterAuthServer = inferredBetterAuthServer;
-
-export const betterAuthMcpServer = betterAuthServer as BetterAuthServer & {
-  api: BetterAuthServer['api'] & {
-    getMcpSession: (input: {
-      headers: Headers;
-    }) => Promise<{ userId: string; scopes: string; clientId?: string } | null>;
-    getMcpOAuthConfig: (...args: unknown[]) => unknown;
-    getMCPProtectedResource: (...args: unknown[]) => unknown;
-  };
-};
+export const betterAuthServer = inferredBetterAuthServer;

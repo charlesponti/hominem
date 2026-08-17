@@ -8,6 +8,7 @@ import { filesRoutes } from './files';
 import { financeRoutes } from './finance';
 import { inboxRoutes } from './inbox';
 import { notesRoutes } from './notes';
+import { peopleRoutes } from './people';
 import { personalRoutes } from './personal';
 import { tasksRoutes } from './tasks';
 import { usageRoutes } from './usage';
@@ -21,6 +22,7 @@ export const economyRoutes = new Hono<AppContext>()
   .route('/finance', financeRoutes)
   .route('/inbox', inboxRoutes)
   .route('/notes', notesRoutes)
+  .route('/people', peopleRoutes)
   .route('/personal', personalRoutes)
   .route('/tasks', tasksRoutes)
   .route('/usage', usageRoutes)

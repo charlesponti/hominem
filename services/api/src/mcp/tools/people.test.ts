@@ -151,7 +151,7 @@ beforeAll(async () => {
     .execute();
 
   await db
-    .insertInto('app.events')
+    .insertInto('app.calendarEvents')
     .values([
       {
         id: eventId,
@@ -166,7 +166,7 @@ beforeAll(async () => {
     .execute();
 
   await db
-    .insertInto('app.eventAttendees')
+    .insertInto('app.calendarEventAttendees')
     .values([
       {
         id: 'b1000008-0000-4000-8000-000000000001',

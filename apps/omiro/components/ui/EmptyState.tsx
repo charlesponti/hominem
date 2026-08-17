@@ -8,12 +8,13 @@ import AppIcon from './icon';
 
 interface EmptyStateProps {
   action?: { label: string; onPress: () => void };
+  description?: string;
   imageSource?: ImageSourcePropType;
   sfSymbol?: SFSymbol;
   title: string;
 }
 
-function EmptyState({ action, imageSource, sfSymbol, title }: EmptyStateProps) {
+function EmptyState({ action, description, imageSource, sfSymbol, title }: EmptyStateProps) {
   const [textSecondary] = useCSSVariable(['--color-muted-foreground']) as [string];
 
   return (
@@ -30,6 +31,9 @@ function EmptyState({ action, imageSource, sfSymbol, title }: EmptyStateProps) {
           <AppIcon name={sfSymbol} size={32} tintColor={textSecondary} />
         ) : null}
         <Text className="text-[18px] text-foreground font-semibold text-center">{title}</Text>
+        {description ? (
+          <Text className="text-center text-muted-foreground">{description}</Text>
+        ) : null}
         {action ? (
           <Button label={action.label} onPress={action.onPress} variant="secondary" />
         ) : null}

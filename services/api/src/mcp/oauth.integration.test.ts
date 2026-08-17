@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { importServerWithEnv } from '../routes/test-helpers/auth';
 
@@ -10,7 +10,7 @@ const userEmail = 'mcp-oauth-integration@hominem.test';
 const otp = '000000';
 
 type CreateServer = (options?: { middleware?: unknown[] }) => {
-  request: (input: string | URL, init?: RequestInit) => Promise<Response>;
+  request: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 };
 
 function createCookieJar() {
@@ -43,6 +43,22 @@ async function readJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function readMcpJson(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  if (
+    !response.headers.get('content-type')?.includes('text/event-stream') &&
+    !text.startsWith('event:')
+  ) {
+    return JSON.parse(text) as Record<string, unknown>;
+  }
+  const data = text
+    .split('\n')
+    .filter((line) => line.startsWith('data: '))
+    .at(-1)
+    ?.slice(6);
+  return JSON.parse(data ?? '{}') as Record<string, unknown>;
+}
+
 describe('MCP OAuth integration', () => {
   let app: ReturnType<CreateServer>;
   const cookies = createCookieJar();
@@ -54,10 +70,14 @@ describe('MCP OAuth integration', () => {
       AUTH_E2E_SECRET: 'otp-secret',
     })) as CreateServer;
     app = createServer();
+    vi.stubGlobal('fetch', (input: string | URL | Request, init?: RequestInit) =>
+      app.request(new Request(input, init)),
+    );
   });
 
   afterAll(() => {
     cookies.clear();
+    vi.unstubAllGlobals();
   });
 
   it('completes discovery, API-hosted OTP login, PKCE, MCP access, and refresh', async () => {
@@ -76,11 +96,12 @@ describe('MCP OAuth integration', () => {
     const authorizationServer = await readJson<{
       authorization_endpoint: string;
       token_endpoint: string;
+      registration_endpoint: string;
       scopes_supported: string[];
     }>(authorizationServerResponse);
     expect(authorizationServer.scopes_supported).toContain('career:read');
 
-    const registrationResponse = await app.request(`${apiUrl}/api/auth/mcp/register`, {
+    const registrationResponse = await app.request(authorizationServer.registration_endpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -89,6 +110,9 @@ describe('MCP OAuth integration', () => {
         token_endpoint_auth_method: 'none',
         grant_types: ['authorization_code', 'refresh_token'],
         response_types: ['code'],
+        application_type: 'native',
+        scope: 'career:read',
+        resources: [`${apiUrl}/api/mcp`],
       }),
     });
     expect(registrationResponse.status).toBe(201);
@@ -160,13 +184,28 @@ describe('MCP OAuth integration', () => {
     expect(verifyOtpResponse.status).toBe(303);
     cookies.update(verifyOtpResponse);
     const resumeLocation = verifyOtpResponse.headers.get('location');
-    expect(resumeLocation).toContain('/api/auth/mcp/authorize?');
+    expect(resumeLocation).toContain('/api/auth/oauth2/authorize?');
 
-    const authorizationCompleteResponse = await app.request(resumeLocation!, {
+    const consentRedirectResponse = await app.request(resumeLocation!, {
       headers: { cookie: cookies.header() },
     });
-    expect(authorizationCompleteResponse.status).toBe(302);
-    const callbackLocation = new URL(authorizationCompleteResponse.headers.get('location')!);
+    expect(consentRedirectResponse.status).toBe(302);
+    const consentPageUrl = new URL(consentRedirectResponse.headers.get('location')!);
+    const consentLocation = await app.request(consentPageUrl, {
+      headers: { cookie: cookies.header() },
+    });
+    expect(consentLocation.status).toBe(200);
+    await expect(consentLocation.text()).resolves.toContain('Authorize');
+    const consentDecisionResponse = await app.request(`${apiUrl}/consent/decision`, {
+      method: 'POST',
+      headers: {
+        cookie: cookies.header(),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: formBody({ oauth_query: consentPageUrl.searchParams.toString(), accept: 'true' }),
+    });
+    expect(consentDecisionResponse.status).toBe(303);
+    const callbackLocation = new URL(consentDecisionResponse.headers.get('location')!);
     expect(callbackLocation.origin + callbackLocation.pathname).toBe(redirectUri);
     expect(callbackLocation.searchParams.get('state')).toBe(state);
     const authorizationCode = callbackLocation.searchParams.get('code');
@@ -210,13 +249,13 @@ describe('MCP OAuth integration', () => {
       id: 1,
       method: 'initialize',
       params: {
-        protocolVersion: '2025-06-18',
+        protocolVersion: '2026-07-28',
         capabilities: {},
         clientInfo: { name: 'oauth-integration-test', version: '1.0.0' },
       },
     });
     expect(initializeResponse.status).toBe(200);
-    await expect(initializeResponse.json()).resolves.toMatchObject({
+    await expect(readMcpJson(initializeResponse)).resolves.toMatchObject({
       result: { serverInfo: { name: 'Hominem MCP' } },
     });
 
@@ -227,7 +266,7 @@ describe('MCP OAuth integration', () => {
       params: {},
     });
     expect(toolsResponse.status).toBe(200);
-    await expect(toolsResponse.json()).resolves.toMatchObject({
+    await expect(readMcpJson(toolsResponse)).resolves.toMatchObject({
       result: {
         tools: expect.arrayContaining([
           expect.objectContaining({ name: 'career_profile' }),
@@ -257,9 +296,9 @@ describe('MCP OAuth integration', () => {
       params: { name: 'career_engagements', arguments: { limit: 1 } },
     });
     expect(refreshedToolResponse.status).toBe(200);
-    const refreshedTool = await readJson<{
+    const refreshedTool = (await readMcpJson(refreshedToolResponse)) as {
       result?: { isError?: boolean; structuredContent?: { engagements?: unknown[] } };
-    }>(refreshedToolResponse);
+    };
     expect(refreshedTool.result?.isError).not.toBe(true);
     expect(refreshedTool.result?.structuredContent).toHaveProperty('engagements');
   }, 30000);

@@ -1,6 +1,6 @@
 appId: com.pontistudios.hakumi.dev
 ---
-- launchApp
+- runFlow: ../subflows/reset-to-home.yaml
 - assertVisible:
     id: home-screen
 - tapOn:

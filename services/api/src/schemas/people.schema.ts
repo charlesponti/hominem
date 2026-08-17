@@ -44,6 +44,27 @@ export const peopleLookupOutputSchema = z.object({
   count: z.number().int().min(0),
 });
 
+export const peopleSearchInputSchema = z.object({
+  query: z.string().trim().min(1).max(200),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+export const personPickerSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  email: z.string().nullable(),
+});
+
+export const peopleSearchOutputSchema = z.object({
+  people: z.array(personPickerSchema),
+  count: z.number().int().min(0),
+});
+
+export const personCreateSchema = z.object({
+  displayName: z.string().trim().min(1).max(200),
+  email: z.email().trim().nullable().optional(),
+});
+
 // ── person_timeline ──────────────────────────────────────────────────
 
 export const personTimelineInputSchema = z.object({

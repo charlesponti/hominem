@@ -25,7 +25,7 @@ MCP OAuth bearer tokens and Better Auth sessions are different protocols. Web an
 
 ## MCP browser authorization
 
-The API owns the MCP OAuth browser flow. Better Auth discovery, authorization, token issuance, and the API-hosted `/login` page all run on the API origin. The `/login` page is server-rendered Hono JSX and sends OTP actions to Better Auth's native endpoints. It does not create another session, token, or refresh mechanism. After Better Auth sets the session cookie, the page continues the same `/api/auth/mcp/authorize` request. Career is not required for MCP OAuth login.
+The API owns the MCP OAuth 2.1 browser flow. Better Auth discovery, `/api/auth/oauth2/*` authorization/token/registration endpoints, and the API-hosted `/login` and `/consent` pages all run on the API origin. CIMD is preferred; unauthenticated Dynamic Client Registration remains temporarily enabled for Raycast compatibility. The `/login` page is server-rendered Hono JSX and sends OTP actions to Better Auth's native endpoints. Consent is a separate explicit approval step and does not create another session, token, or refresh mechanism. After Better Auth sets the session cookie, the page resumes the same `/api/auth/oauth2/authorize` request. Career is not required for MCP OAuth login.
 
 When MCP scopes change, reconnect the local client so it requests a new grant:
 

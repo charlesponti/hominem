@@ -12,14 +12,14 @@ const { useAuthHeaders } = await import('~/services/auth/hooks/use-auth-headers'
 
 describe('useAuthHeaders', () => {
   it('returns a cookie header when a session cookie exists', async () => {
-    mockGetCookie.mockReturnValue('session=abc123');
+    mockGetCookie.mockResolvedValue('session=abc123');
     const { result } = renderHook(() => useAuthHeaders());
 
     await expect(result.current()).resolves.toEqual({ cookie: 'session=abc123' });
   });
 
   it('returns an empty object when there is no session cookie', async () => {
-    mockGetCookie.mockReturnValue(undefined);
+    mockGetCookie.mockResolvedValue(undefined);
     const { result } = renderHook(() => useAuthHeaders());
 
     await expect(result.current()).resolves.toEqual({});

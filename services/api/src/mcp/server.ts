@@ -1,16 +1,10 @@
 import { logger } from '@hominem/telemetry';
-import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
-  WebStandardStreamableHTTPServerTransport,
-  type WebStandardStreamableHTTPServerTransportOptions,
-} from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
-import type {
-  CallToolResult,
-  ServerNotification,
-  ServerRequest,
-} from '@modelcontextprotocol/sdk/types.js';
+  createMcpHandler,
+  McpServer,
+  type AuthInfo,
+  type CallToolResult,
+} from '@modelcontextprotocol/server';
 import type { Context } from 'hono';
 
 import type { AuthContext } from '../auth/types';
@@ -27,11 +21,6 @@ interface McpAuthInfoExtra {
   ownerUserId: string;
   sessionId: string | null;
 }
-
-const transportOptions: WebStandardStreamableHTTPServerTransportOptions = {
-  sessionIdGenerator: undefined,
-  enableJsonResponse: true,
-};
 
 function createErrorResult(message: string): CallToolResult {
   return {
@@ -53,9 +42,9 @@ function hasRequiredScopes(grantedScopes: Set<string>, requiredScopes: readonly 
   return requiredScopes.every((scope) => grantedScopes.has(scope));
 }
 
-function createToolHandler(definition: McpToolDefinition) {
-  return async (args: unknown, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => {
-    const context = resolveRequestContext(extra.authInfo);
+function createToolHandler(definition: McpToolDefinition, fallbackAuthInfo?: AuthInfo) {
+  return async (args: unknown, extra: { authInfo?: AuthInfo }) => {
+    const context = resolveRequestContext(extra.authInfo ?? fallbackAuthInfo);
     if (!context) {
       return createErrorResult('Authentication required');
     }
@@ -77,7 +66,7 @@ function createToolHandler(definition: McpToolDefinition) {
   };
 }
 
-function createMcpServer() {
+function createMcpServer(authInfo?: AuthInfo) {
   const mcpServer = new McpServer(
     { name: 'Hominem MCP', version: '1.0.0' },
     { instructions: 'MCP tools for authenticated Hominem users.' },
@@ -93,8 +82,8 @@ function createMcpServer() {
       {
         title: definition.title,
         description: definition.description,
-        inputSchema: definition.inputSchema,
-        outputSchema: definition.outputSchema,
+        inputSchema: definition.inputSchema as never,
+        outputSchema: definition.outputSchema as never,
         annotations: {
           readOnlyHint: definition.readOnly,
           destructiveHint: destructive,
@@ -106,12 +95,17 @@ function createMcpServer() {
           'openai/toolInvocation/invoked': definition.invoked ?? `${definition.title} complete.`,
         },
       },
-      createToolHandler(definition),
+      createToolHandler(definition, authInfo) as never,
     );
   }
 
   return mcpServer;
 }
+
+const mcpHandler = createMcpHandler(({ authInfo }) => createMcpServer(authInfo), {
+  legacy: 'stateless',
+  responseMode: 'json',
+});
 
 export async function handleMcpRequestWithSession(c: Context<McpHonoEnv>): Promise<Response> {
   const auth = c.get('auth');
@@ -130,9 +124,5 @@ export async function handleMcpRequestWithSession(c: Context<McpHonoEnv>): Promi
     } satisfies McpAuthInfoExtra,
   };
 
-  const transport = new WebStandardStreamableHTTPServerTransport(transportOptions);
-  const mcpServer = createMcpServer();
-  await mcpServer.connect(transport);
-
-  return transport.handleRequest(c.req.raw, { authInfo });
+  return mcpHandler.fetch(c.req.raw, { authInfo });
 }

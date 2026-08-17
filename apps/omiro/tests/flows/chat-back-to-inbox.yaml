@@ -4,12 +4,7 @@ appId: com.pontistudios.hakumi.dev
 # Creates a chat from the home composer, taps the chat detail back control, and
 # verifies users land on the inbox instead of another history entry.
 
-- openLink: 'exp+hakumi://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
-- waitForAnimationToEnd:
-    timeout: 10000
-- openLink: 'hakumi-dev://'
-- waitForAnimationToEnd:
-    timeout: 3000
+- runFlow: ../subflows/open-dev-home.yaml
 - assertVisible:
     id: 'inbox-composer-input'
 - tapOn:

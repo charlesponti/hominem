@@ -21,7 +21,7 @@ interface UpdateTaskInput {
   scheduledEndAt?: string | null;
   timeZone?: string | null;
   location?: string | null;
-  participants?: { displayName: string; email?: string | null }[];
+  participants?: string[];
 }
 
 function applyPatch<T extends Task>(task: T, patch: UpdateTaskInput): T {

@@ -55,6 +55,9 @@ const t = {
       description: 'Ask a question, attach a photo, or record a voice note.',
     },
     loadErrorTitle: 'Conversation unavailable',
+    missingTitle: 'Conversation gone',
+    missingMessage: 'This conversation is no longer available.',
+    goBack: 'Go back',
     loadErrorRetry: 'Try again',
     offlineIndicator: "You're offline. You can keep composing and send when you reconnect.",
     conversationActionsLabel: 'Conversation actions',
@@ -118,7 +121,11 @@ const t = {
       responseLengthOptions: {
         short: { emoji: '🎬', name: 'Danny DeVito', caption: 'Short · under 600 characters' },
         medium: { emoji: '🍔', name: 'Value Meal', caption: 'Medium · a 3-5 min read' },
-        long: { emoji: '🌭', name: "Nathan's Famous", caption: 'Long · full essay, outlined first' },
+        long: {
+          emoji: '🌭',
+          name: "Nathan's Famous",
+          caption: 'Long · full essay, outlined first',
+        },
       },
       done: 'Done',
     },

@@ -34,8 +34,11 @@
     "merge-user-data": "tsx scripts/merge-user-data.ts"
   },
   "dependencies": {
-    "@better-auth/expo": "1.6.23",
-    "@better-auth/kysely-adapter": "1.6.23",
+    "@better-auth/cimd": "1.7.0-rc.6",
+    "@better-auth/expo": "1.7.0-rc.6",
+    "@better-auth/kysely-adapter": "1.7.0-rc.6",
+    "@better-auth/mcp": "1.7.0-rc.6",
+    "@better-auth/oauth-provider": "1.7.0-rc.6",
     "@hominem/ai": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
@@ -47,7 +50,7 @@
     "@hono/node-server": "^2.0.10",
     "@hono/standard-validator": "^0.3.0",
     "@hono/zod-validator": "^0.7.6",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@ponti-studios/auth": "workspace:*",
     "@scalar/hono-api-reference": "^0.11.11",
     "@sentry/node": "^8.54.0",
@@ -62,10 +65,11 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "catalog:",
     "@types/ws": "^8.18.1",
     "goose-cli": "3.25.0-a",
-    "tsx": "^4.10.0",
-    "rolldown": "^1.0.0"
+    "rolldown": "^1.0.0",
+    "tsx": "^4.10.0"
   }
 }

@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { betterAuthServer, getTrustedOrigins } from '../auth/better-auth';
 import { env } from '../env';
+import { MCP_SCOPES } from '../scopes';
 
 const emailSchema = z.string().email();
 const otpSchema = z.string().length(6);
@@ -36,6 +37,13 @@ type AuthErrorPageProps = {
   description?: string;
   error?: string;
   mode?: ResumeMode;
+};
+
+type ConsentPageProps = {
+  clientName: string;
+  query: string;
+  scopes: string[];
+  error?: string;
 };
 
 const pageStyles = `
@@ -527,6 +535,77 @@ function LoginPage({ email, error, resumeQuery, step }: LoginPageProps) {
   );
 }
 
+function ConsentPage({ clientName, query, scopes, error }: ConsentPageProps) {
+  const groupedScopes = scopes.reduce<Record<string, string[]>>((groups, scope) => {
+    const [domain] = scope.split(':');
+    (groups[domain ?? 'other'] ??= []).push(scope);
+    return groups;
+  }, {});
+
+  return (
+    <PageFrame title="Authorize access | Hominem">
+      <main class="auth-layout">
+        <section aria-labelledby="consent-title" class="auth-card">
+          <div class="auth-content">
+            <div class="auth-heading">
+              <h2 id="consent-title">Authorize {clientName}</h2>
+              <p class="card-copy">This client is requesting access to your Hominem data.</p>
+            </div>
+            {error ? (
+              <p class="alert" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div class="field">
+              <label>Requested permissions</label>
+              {Object.entries(groupedScopes).map(([domain, domainScopes]) => (
+                <div key={domain} class="card-copy">
+                  <strong>{domain}</strong>
+                  {(['read', 'write'] as const).map((access) => {
+                    const matchingScopes = domainScopes.filter((scope) =>
+                      scope.endsWith(`:${access}`),
+                    );
+                    if (matchingScopes.length === 0) return null;
+                    return (
+                      <div key={access}>
+                        {access}:{' '}
+                        {matchingScopes.map((scope) => scope.replace(`${domain}:`, '')).join(', ')}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <form action="/consent/decision" method="post">
+              <input name="oauth_query" type="hidden" value={query} />
+              <button class="primary-button" name="accept" type="submit" value="true">
+                Approve
+              </button>
+              <button class="secondary-button" name="accept" type="submit" value="false">
+                Deny
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </PageFrame>
+  );
+}
+
+function resolveConsentQuery(query: string) {
+  const params = new URLSearchParams(query);
+  const clientId = params.get('client_id');
+  const redirectUri = params.get('redirect_uri');
+  const signature = params.get('sig');
+  const expiry = Number(params.get('exp'));
+  if (!clientId || !redirectUri || !signature || !Number.isSafeInteger(expiry)) return null;
+  if (expiry <= Math.floor(Date.now() / 1000)) return null;
+  const scopes = (params.get('scope') ?? '').split(' ').filter((scope) => MCP_SCOPE_SET.has(scope));
+  return { clientId, scopes, query };
+}
+
+const MCP_SCOPE_SET = new Set<string>(MCP_SCOPES);
+
 function AuthErrorPage({ description, error, mode }: AuthErrorPageProps) {
   const accessLabel = mode === 'app' ? 'App access' : 'OAuth access';
   const returnCopy =
@@ -596,7 +675,7 @@ function copySetCookieHeaders(headers: Headers) {
 }
 
 async function callBetterAuth(input: {
-  body: Record<string, string>;
+  body: Record<string, string | boolean>;
   path: string;
   request: Request;
 }) {
@@ -655,6 +734,32 @@ export const loginRoutes = new Hono()
       />,
     );
   })
+  .get('/consent', async (c) => {
+    const query = new URL(c.req.url).searchParams.toString();
+    const consent = resolveConsentQuery(query);
+    if (!consent) return c.html(<AuthErrorPage error="invalid_request" />, 400);
+
+    const session = await betterAuthServer.api.getSession({ headers: c.req.raw.headers });
+    if (!session) return c.redirect(new URL(`/login?${query}`, env.API_URL).toString(), 303);
+
+    const clientResponse = await betterAuthServer.handler(
+      new Request(
+        `${env.API_URL}/api/auth/oauth2/public-client?client_id=${encodeURIComponent(consent.clientId)}`,
+        { headers: c.req.raw.headers },
+      ),
+    );
+    const client = clientResponse.ok
+      ? ((await clientResponse.json()) as { name?: string | null })
+      : null;
+
+    return c.html(
+      <ConsentPage
+        clientName={client?.name ?? consent.clientId}
+        query={consent.query}
+        scopes={consent.scopes}
+      />,
+    );
+  })
   .get('/error', (c) =>
     c.html(
       <AuthErrorPage description={c.req.query('error_description')} error={c.req.query('error')} />,
@@ -705,6 +810,31 @@ export const loginRoutes = new Hono()
     }
 
     return c.redirect(loginUrl({ email, resumeQuery, step: 'otp' }), 303);
+  })
+  .post('/consent/decision', async (c) => {
+    const form = await c.req.parseBody();
+    const query = getFormValue(form, 'oauth_query');
+    const consent = resolveConsentQuery(query);
+    if (!consent) return c.html(<AuthErrorPage error="invalid_request" />, 400);
+
+    const accept = getFormValue(form, 'accept') === 'true';
+    const response = await callBetterAuth({
+      body: { accept, oauth_query: query },
+      path: '/oauth2/consent',
+      request: c.req.raw,
+    });
+    if (!response.ok) {
+      return c.html(<AuthErrorPage error="access_denied" />, response.status as 400);
+    }
+
+    const body = (await response.json().catch(() => null)) as {
+      redirect_uri?: string;
+      redirect?: boolean;
+      url?: string;
+    } | null;
+    const redirectUrl = body?.redirect_uri ?? (body?.redirect ? body.url : undefined);
+    if (!redirectUrl) return c.html(<AuthErrorPage error="server_error" />, 500);
+    return c.redirect(redirectUrl, 303);
   })
   .post('/login/verify', async (c) => {
     const form = await c.req.parseBody();

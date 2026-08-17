@@ -12,7 +12,7 @@ catalog:
   '@react-router/dev': 8.3.0
   '@react-router/node': 8.3.0
   '@react-router/serve': 8.3.0
-  better-auth: 1.6.23
+  better-auth: 1.7.0-rc.6
   bullmq: 6.0.8
   clsx: 2.1.1
   hono: 4.12.34
@@ -35,7 +35,7 @@ catalog:
   zod: 4.4.3
 
 overrides:
-  '@better-auth/core': 1.6.23
+  '@better-auth/core': 1.7.0-rc.6
   '@hono/zod-validator': 0.7.6
   '@opentelemetry/api': 1.8.0
   fast-uri: '>=3.1.5'

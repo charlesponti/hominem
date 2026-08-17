@@ -192,7 +192,11 @@ function AuthScreen() {
                       hasError={displayError}
                       cursorColor={textPrimary}
                       selectionColor={textPrimary}
-                      style={{ opacity: isSubmitting ? 0.6 : 1 }}
+                      style={{
+                        opacity: isSubmitting ? 0.6 : 1,
+                        lineHeight: 24,
+                        paddingVertical: 0,
+                      }}
                       onChangeText={(text) => {
                         setEmail(text);
                         setAuthError(null);

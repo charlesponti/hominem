@@ -216,7 +216,7 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
         <h2 className="text-4xl italic font-serif text-foreground">
           Profile
           <p className="text-sm text-muted-foreground/25">
-            Last Updated: {new Date(currentProfile.updatedAt).toLocaleDateString()}
+            Last Updated: {new Date(currentProfile.updatedAt).toLocaleDateString('en-US')}
           </p>
         </h2>
         <ActionButtonRow

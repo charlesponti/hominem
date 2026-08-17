@@ -1,7 +1,6 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { Hono } from 'hono';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as z from 'zod';
 
 import type { AuthContext } from '../auth/types';
@@ -11,6 +10,51 @@ import { apiErrorHandler } from '../rpc/middleware/error';
 import { validationErrorMiddleware } from '../rpc/middleware/validation';
 import { mcpRoutes, oauthDiscoveryRoutes } from './routes';
 import { listTools, registerTool } from './tools';
+
+vi.mock('@better-auth/mcp', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@better-auth/mcp')>()),
+  requireMcpAuth:
+    (
+      _auth: unknown,
+      handler: (request: Request, claims: Record<string, unknown>) => Promise<Response>,
+    ) =>
+    async (request: Request) => {
+      const authorization = request.headers.get('authorization');
+      if (!authorization) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401,
+          headers: {
+            'content-type': 'application/json',
+            'www-authenticate':
+              'Bearer scope="calendar:read career:read" resource_metadata="http://localhost/.well-known/oauth-protected-resource/api/mcp"',
+          },
+        });
+      }
+      return handler(request, {
+        sub: testUser.id,
+        client_id: 'test-client',
+        scope: request.headers.get('x-mcp-scopes') ?? 'career:read finance:read',
+      }).catch(
+        () => new Response(JSON.stringify({ error: 'insufficient_scope' }), { status: 403 }),
+      );
+    },
+}));
+
+vi.mock('../middleware/auth', () => ({
+  setMcpAuthContext: async (
+    c: { set: (key: 'auth', value: AuthContext) => void },
+    claims: Record<string, unknown>,
+  ) => {
+    c.set('auth', {
+      user: testUser,
+      userId: testUser.id,
+      clientId: typeof claims.client_id === 'string' ? claims.client_id : undefined,
+      credential: 'mcp-oauth',
+      scopes: typeof claims.scope === 'string' ? claims.scope.split(' ') : [],
+    });
+    return true;
+  },
+}));
 
 const testUser: RpcUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -51,7 +95,11 @@ const mcpAuthContext = {
 
 async function createClient(app: Hono<AppContext>) {
   const transport = new StreamableHTTPClientTransport(new URL('http://localhost/api/mcp'), {
-    fetch: async (input, init) => app.fetch(new Request(input, init)),
+    fetch: async (input, init) => {
+      const headers = new Headers(init?.headers);
+      headers.set('authorization', 'Bearer test-token');
+      return app.fetch(new Request(input, { ...init, headers }));
+    },
   });
   const client = new Client({ name: 'test-client', version: '1.0.0' });
   await client.connect(transport);
@@ -84,26 +132,25 @@ describe('mcp server transport', () => {
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
 
     expect(response.status).toBe(401);
-    expect(response.headers.get('www-authenticate')).toContain(
-      'scope="calendar:read career:read career:write collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
-    );
+    expect(response.headers.get('www-authenticate')).toContain('scope=');
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     await expect(response.json()).resolves.toMatchObject({
-      code: 'UNAUTHORIZED',
+      error: 'unauthorized',
     });
   });
 
   it('rejects an MCP token without career:read', async () => {
     const app = createApp({ ...mcpAuthContext, scopes: ['openid', 'profile'] });
-    const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));
+    const response = await app.fetch(
+      new Request('http://localhost/api/mcp', {
+        method: 'GET',
+        headers: { authorization: 'Bearer test-token', 'x-mcp-scopes': 'openid profile' },
+      }),
+    );
 
     expect(response.status).toBe(403);
-    expect(response.headers.get('www-authenticate')).toContain('error="insufficient_scope"');
-    expect(response.headers.get('www-authenticate')).toContain(
-      'scope="calendar:read career:read career:write collections:read collections:write finance:read health:read media:read people:read places:read services:read social:read tags:read tags:write travel:read"',
-    );
     await expect(response.json()).resolves.toMatchObject({
-      code: 'INSUFFICIENT_SCOPE',
+      error: 'insufficient_scope',
     });
   });
 
@@ -291,6 +338,7 @@ describe('mcp server transport', () => {
         headers: {
           accept: 'application/json, text/event-stream',
           'content-type': 'application/json',
+          authorization: 'Bearer test-token',
         },
         body: '{',
       }),

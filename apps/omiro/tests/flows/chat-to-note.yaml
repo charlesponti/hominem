@@ -12,6 +12,7 @@ appId: com.pontistudios.hakumi.dev
 - openLink: 'hakumi-dev://enable-test-mode'
 - waitForAnimationToEnd:
     timeout: 3000
+- runFlow: ../subflows/ensure-authenticated.yaml
 - assertVisible:
     id: 'inbox-composer-input'
 - takeScreenshot: /tmp/omiro_flow_1_home
