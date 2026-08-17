@@ -300,30 +300,34 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
       </header>
 
       <div className="max-w-2xl space-y-6">
-        <section className="space-y-8">
-          <div className="space-y-1 border border-border rounded-2xl p-4">
-            <Label htmlFor="profile-slug">Profile URL</Label>
-            <SlugEditor
-              profileId={currentProfile.id}
-              initialSlug={currentProfile.slug || ''}
-              liveUrl={isPublic && currentProfile.slug ? `/p/${currentProfile.slug}` : null}
-              onSave={handleUpdateSlug}
-            />
-          </div>
-
-          <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-4 border border-border">
-            <div>
-              <p className="text-lg text-foreground">Public profile</p>
+        <section className="space-y-4 border border-border rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="profile-slug">Profile URL</Label>
               <p className="text-sm text-muted-foreground">
-                Anyone with the link can view your profile at this URL.
+                {isPublic
+                  ? 'Anyone with the link can view your profile at this URL.'
+                  : "Private — only you can see this. Turn it on to share it."}
               </p>
             </div>
-            <Switch
-              checked={isPublic}
-              disabled={isTogglingVisibility}
-              onCheckedChange={handleToggleVisibility}
-            />
+            <div className="flex shrink-0 items-center gap-2 pt-0.5">
+              <span className="text-sm text-muted-foreground">
+                {isPublic ? 'Public' : 'Private'}
+              </span>
+              <Switch
+                checked={isPublic}
+                disabled={isTogglingVisibility}
+                onCheckedChange={handleToggleVisibility}
+                aria-label="Toggle profile visibility"
+              />
+            </div>
           </div>
+          <SlugEditor
+            profileId={currentProfile.id}
+            initialSlug={currentProfile.slug || ''}
+            liveUrl={isPublic && currentProfile.slug ? `/p/${currentProfile.slug}` : null}
+            onSave={handleUpdateSlug}
+          />
         </section>
 
         <section className="space-y-4">
