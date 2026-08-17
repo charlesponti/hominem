@@ -4,9 +4,7 @@ appId: com.pontistudios.hakumi.dev
 # Assumes the app is installed and the user is signed in.
 
 # ── 1. Home / Inbox ──────────────────────────────────────────────────────────
-- launchApp
-- waitForAnimationToEnd:
-    timeout: 3000
+- runFlow: ../subflows/reset-to-home.yaml
 - assertVisible: 'Omiro'
 - takeScreenshot: /tmp/omiro_screen_01_inbox
 

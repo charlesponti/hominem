@@ -87,6 +87,38 @@ export interface AppAiUsageEvents {
   usageAvailable: Generated<boolean>;
 }
 
+export interface AppCalendarEventAttendees {
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  eventId: string;
+  id: Generated<string>;
+  personId: string | null;
+  role: Generated<string>;
+  source: string | null;
+}
+
+export interface AppCalendarEvents {
+  calendarId: string | null;
+  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
+  description: string | null;
+  endsAt: ColumnType<string, Date | string, Date | string> | null;
+  eventType: string | null;
+  externalUid: string | null;
+  id: Generated<string>;
+  isAllDay: Generated<boolean>;
+  metadata: Generated<Json>;
+  organizer: string | null;
+  ownerUserid: string;
+  placeId: string | null;
+  recurrenceRule: string | null;
+  source: string | null;
+  sourceRowId: string | null;
+  startsAt: ColumnType<string, Date | string, Date | string>;
+  status: string | null;
+  title: string;
+  tripId: string | null;
+  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppCalendars {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   id: Generated<string>;
@@ -377,38 +409,6 @@ export interface AppCollections {
   ownerUserid: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
   visibility: Generated<string>;
-}
-
-export interface AppEventAttendees {
-  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  eventId: string;
-  id: Generated<string>;
-  personId: string | null;
-  role: Generated<string>;
-  source: string | null;
-}
-
-export interface AppEvents {
-  calendarId: string | null;
-  createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  description: string | null;
-  endsAt: ColumnType<string, Date | string, Date | string> | null;
-  eventType: string | null;
-  externalUid: string | null;
-  id: Generated<string>;
-  isAllDay: Generated<boolean>;
-  metadata: Generated<Json>;
-  organizer: string | null;
-  ownerUserid: string;
-  placeId: string | null;
-  recurrenceRule: string | null;
-  source: string | null;
-  sourceRowId: string | null;
-  startsAt: ColumnType<string, Date | string, Date | string>;
-  status: string | null;
-  title: string;
-  tripId: string | null;
-  updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
 export interface AppFiles {
@@ -1036,10 +1036,7 @@ export interface AppTags {
 
 export interface AppTaskParticipants {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  displayName: string;
-  email: string | null;
-  id: Generated<string>;
-  personId: string | null;
+  personId: string;
   taskId: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
@@ -1143,7 +1140,9 @@ export interface GooseDbVersion {
 }
 
 export interface Jwks {
+  alg: string | null;
   createdAt: ColumnType<string, Date | string, Date | string>;
+  crv: string | null;
   expiresAt: ColumnType<string, Date | string, Date | string> | null;
   id: string;
   privateKey: string;
@@ -1151,6 +1150,24 @@ export interface Jwks {
 }
 
 export interface OauthAccessToken {
+  authorizationCodeId: string | null;
+  clientId: string;
+  confirmation: Json | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  expiresAt: ColumnType<string, Date | string, Date | string>;
+  id: string;
+  referenceId: string | null;
+  refreshId: string | null;
+  requestedUserInfoClaims: string | null;
+  resources: string | null;
+  revoked: ColumnType<string, Date | string, Date | string> | null;
+  scopes: string;
+  sessionId: string | null;
+  token: string;
+  userId: string | null;
+}
+
+export interface OauthAccessTokenLegacy20260817 {
   accessToken: string;
   accessTokenExpiresAt: ColumnType<string, Date | string, Date | string>;
   clientId: string;
@@ -1163,7 +1180,7 @@ export interface OauthAccessToken {
   userId: string | null;
 }
 
-export interface OauthApplication {
+export interface OauthApplicationLegacy20260817 {
   clientId: string;
   clientSecret: string | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1178,7 +1195,71 @@ export interface OauthApplication {
   userId: string | null;
 }
 
+export interface OauthClient {
+  applicationType: string | null;
+  backchannelLogoutSessionRequired: boolean | null;
+  backchannelLogoutUri: string | null;
+  clientCredentialsScopes: string | null;
+  clientDiscoveryId: string | null;
+  clientId: string;
+  clientSecret: string | null;
+  contacts: string | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  disabled: Generated<boolean>;
+  dpopBoundAccessTokens: Generated<boolean>;
+  enableEndSession: boolean | null;
+  grantTypes: string | null;
+  icon: string | null;
+  id: string;
+  jwks: string | null;
+  jwksUri: string | null;
+  metadata: Json | null;
+  name: string | null;
+  policy: string | null;
+  postLogoutRedirectUris: string | null;
+  redirectUris: string;
+  referenceId: string | null;
+  requirePKCE: boolean | null;
+  responseTypes: string | null;
+  scopes: string | null;
+  skipConsent: boolean | null;
+  softwareId: string | null;
+  softwareStatement: string | null;
+  softwareVersion: string | null;
+  subjectType: string | null;
+  tokenEndpointAuthMethod: string | null;
+  tos: string | null;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  uri: string | null;
+  userId: string | null;
+}
+
+export interface OauthClientAssertion {
+  expiresAt: ColumnType<string, Date | string, Date | string>;
+  id: string;
+}
+
+export interface OauthClientResource {
+  clientId: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: string;
+  metadata: Json | null;
+  resourceId: string;
+}
+
 export interface OauthConsent {
+  clientId: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: string;
+  referenceId: string | null;
+  requestedUserInfoClaims: string | null;
+  resources: string | null;
+  scopes: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userId: string | null;
+}
+
+export interface OauthConsentLegacy20260817 {
   clientId: string;
   consentGiven: Generated<boolean>;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1186,6 +1267,45 @@ export interface OauthConsent {
   scopes: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   userId: string;
+}
+
+export interface OauthRefreshToken {
+  authorizationCodeId: string | null;
+  authTime: ColumnType<string, Date | string, Date | string> | null;
+  clientId: string;
+  confirmation: Json | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  expiresAt: ColumnType<string, Date | string, Date | string>;
+  id: string;
+  referenceId: string | null;
+  requestedUserInfoClaims: string | null;
+  resources: string | null;
+  revoked: ColumnType<string, Date | string, Date | string> | null;
+  rotatedAt: ColumnType<string, Date | string, Date | string> | null;
+  rotationReplayExpiresAt: ColumnType<string, Date | string, Date | string> | null;
+  rotationReplayResponse: string | null;
+  scopes: string;
+  sessionId: string | null;
+  token: string;
+  userId: string;
+}
+
+export interface OauthResource {
+  accessTokenTtl: number | null;
+  allowedScopes: string | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  customClaims: Json | null;
+  disabled: Generated<boolean>;
+  dpopBoundAccessTokensRequired: Generated<boolean>;
+  id: string;
+  identifier: string;
+  metadata: Json | null;
+  name: string;
+  policyVersion: Generated<number>;
+  refreshTokenTtl: number | null;
+  signingAlgorithm: string | null;
+  signingKeyId: string | null;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
 export interface Passkey {
@@ -1242,6 +1362,8 @@ export interface Verification {
 export interface DB {
   account: Account;
   'app.aiUsageEvents': AppAiUsageEvents;
+  'app.calendarEventAttendees': AppCalendarEventAttendees;
+  'app.calendarEvents': AppCalendarEvents;
   'app.calendars': AppCalendars;
   'app.careerApplicationFiles': AppCareerApplicationFiles;
   'app.careerApplicationNotes': AppCareerApplicationNotes;
@@ -1262,8 +1384,6 @@ export interface DB {
   'app.collectionItems': AppCollectionItems;
   'app.collectionMembers': AppCollectionMembers;
   'app.collections': AppCollections;
-  'app.eventAttendees': AppEventAttendees;
-  'app.events': AppEvents;
   'app.files': AppFiles;
   'app.financeAccountLabels': AppFinanceAccountLabels;
   'app.financeAccounts': AppFinanceAccounts;
@@ -1316,8 +1436,15 @@ export interface DB {
   gooseDbVersion: GooseDbVersion;
   jwks: Jwks;
   oauthAccessToken: OauthAccessToken;
-  oauthApplication: OauthApplication;
+  oauthAccessTokenLegacy20260817: OauthAccessTokenLegacy20260817;
+  oauthApplicationLegacy20260817: OauthApplicationLegacy20260817;
+  oauthClient: OauthClient;
+  oauthClientAssertion: OauthClientAssertion;
+  oauthClientResource: OauthClientResource;
   oauthConsent: OauthConsent;
+  oauthConsentLegacy20260817: OauthConsentLegacy20260817;
+  oauthRefreshToken: OauthRefreshToken;
+  oauthResource: OauthResource;
   passkey: Passkey;
   rateLimit: RateLimit;
   session: Session;

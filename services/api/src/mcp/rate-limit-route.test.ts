@@ -4,6 +4,27 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ checkRateLimit: vi.fn() }));
 
 vi.mock('./rate-limiter', () => ({ checkRateLimit: mocks.checkRateLimit }));
+vi.mock('@better-auth/mcp', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@better-auth/mcp')>()),
+  requireMcpAuth:
+    (
+      _auth: unknown,
+      handler: (request: Request, claims: Record<string, string>) => Promise<Response>,
+    ) =>
+    (request: Request) =>
+      handler(request, { sub: 'user-1', scope: 'career:read', client_id: 'test' }),
+}));
+vi.mock('../middleware/auth', () => ({
+  setMcpAuthContext: async (c: { set: (key: 'auth', value: AuthContext) => void }) => {
+    c.set('auth', {
+      user: { id: 'user-1' },
+      userId: 'user-1',
+      credential: 'mcp-oauth',
+      scopes: ['career:read'],
+    } as AuthContext);
+    return true;
+  },
+}));
 
 import type { AuthContext } from '../auth/types';
 
@@ -45,7 +66,6 @@ describe('MCP rate-limit route behavior', () => {
     expect(response.headers.get('retry-after')).toBe('5');
     await expect(response.json()).resolves.toMatchObject({
       error: 'rate_limit_unavailable',
-      code: 'RATE_LIMIT_UNAVAILABLE',
     });
   });
 

@@ -20,7 +20,7 @@ interface CreateTaskInput {
   scheduledEndAt?: string | null;
   timeZone?: string | null;
   location?: string | null;
-  participants?: { displayName: string; email?: string | null }[];
+  participants?: string[];
   parentTaskId?: string | null;
 }
 

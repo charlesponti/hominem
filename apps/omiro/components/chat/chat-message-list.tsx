@@ -210,7 +210,12 @@ export function ChatMessageList({
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
         displayMessages.length > 0 ? (
-          <Pressable onPress={() => setActiveActionMessageId(null)} className="grow min-h-8" />
+          <Pressable
+            accessibilityLabel="Chat message list bottom"
+            onPress={() => setActiveActionMessageId(null)}
+            className="grow min-h-8"
+            testID="chat-message-list-bottom-sentinel"
+          />
         ) : null
       }
       contentContainerStyle={[

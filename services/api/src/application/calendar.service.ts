@@ -10,7 +10,7 @@ function endOfDay(isoDate: string): string {
 
 function eventBaseQuery(ownerUserId: string) {
   return db
-    .selectFrom('app.events as e')
+    .selectFrom('app.calendarEvents as e')
     .leftJoin('app.calendars as c', 'c.id', 'e.calendarId')
     .leftJoin('app.places as p', 'p.id', 'e.placeId')
     .select([

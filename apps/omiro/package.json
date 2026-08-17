@@ -30,7 +30,7 @@
     "verify:release": "node scripts/verify-release-identity.mjs"
   },
   "dependencies": {
-    "@better-auth/expo": "1.6.23",
+    "@better-auth/expo": "1.7.0-rc.6",
     "@expo/metro-runtime": "~57.0.9",
     "@expo/ui": "~57.0.10",
     "@gorhom/bottom-sheet": "^5.2.14",

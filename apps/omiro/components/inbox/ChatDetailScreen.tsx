@@ -40,10 +40,14 @@ function getConversationActionIcon(kind: string, type?: string) {
   return 'ellipsis.circle';
 }
 
+function isNotFoundError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
+}
+
 export function ChatDetailScreen({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: activeChat } = useActiveChat(id);
+  const { data: activeChat, error: activeChatError } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
   const [composerInset, setComposerInset] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
@@ -87,6 +91,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
     handleArchiveChat,
     isArchiving,
   } = useChatData({ chatId, onChatArchive: handleChatArchive });
+  const isConversationGone = isNotFoundError(activeChatError) || isNotFoundError(messagesError);
   const search = useChatSearch(messages, chatId);
   const transform = useChatTransform({
     chatId,
@@ -148,6 +153,17 @@ export function ChatDetailScreen({ id }: { id: string }) {
     ),
     [refetchMessages],
   );
+  const missingConversationState = useMemo(
+    () => (
+      <EmptyState
+        action={{ label: t.chat.goBack, onPress: () => router.dismissTo(HOME_ROUTE) }}
+        description={t.chat.missingMessage}
+        sfSymbol="bubble.left.and.exclamationmark.bubble.right"
+        title={t.chat.missingTitle}
+      />
+    ),
+    [router],
+  );
 
   return (
     <>
@@ -156,7 +172,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           accessibilityLabel={t.chat.conversationActionsLabel}
           icon="ellipsis.circle"
         >
-          {conversationActions.map((section) =>
+          {(isConversationGone ? [] : conversationActions).map((section) =>
             section.items.map((item) => {
               if (item.kind === 'search') {
                 return (
@@ -269,7 +285,9 @@ export function ChatDetailScreen({ id }: { id: string }) {
           onEdit={handleEditMessage}
           onRetry={retryFailedMessage}
           formatTimestamp={formatRelativeAge}
-          emptyState={messagesError ? errorState : emptyState}
+          emptyState={
+            isConversationGone ? missingConversationState : messagesError ? errorState : emptyState
+          }
           refreshControl={
             <RefreshControl
               refreshing={isMessagesRefreshing}
@@ -279,21 +297,25 @@ export function ChatDetailScreen({ id }: { id: string }) {
             />
           }
         />
-        <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
-          <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
-        </ComposerDock>
-        <View className="absolute inset-0" pointerEvents="box-none">
-          <ChatReviewOverlay
-            pendingReview={transform.pendingReview}
-            isVisible={transform.isReviewVisible}
-            onAccept={() => {
-              void transform.handleAcceptReview();
-            }}
-            onReject={() => {
-              void transform.handleRejectReview();
-            }}
-          />
-        </View>
+        {!isConversationGone ? (
+          <>
+            <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
+              <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
+            </ComposerDock>
+            <View className="absolute inset-0" pointerEvents="box-none">
+              <ChatReviewOverlay
+                pendingReview={transform.pendingReview}
+                isVisible={transform.isReviewVisible}
+                onAccept={() => {
+                  void transform.handleAcceptReview();
+                }}
+                onReject={() => {
+                  void transform.handleRejectReview();
+                }}
+              />
+            </View>
+          </>
+        ) : null}
       </View>
     </>
   );

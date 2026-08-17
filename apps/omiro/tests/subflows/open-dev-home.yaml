@@ -1,0 +1,6 @@
+appId: com.pontistudios.hakumi.dev
+---
+- openLink: 'exp+hakumi://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
+- waitForAnimationToEnd:
+    timeout: 10000
+- runFlow: reset-to-home.yaml

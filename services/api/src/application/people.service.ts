@@ -1,9 +1,15 @@
-import { db, sql } from '@hominem/db';
+import { db, runInTransaction, sql } from '@hominem/db';
 import z from 'zod';
 
 import type { personSummarySchema } from '../schemas/people.schema';
 
 export type PersonSummary = z.output<typeof personSummarySchema>;
+
+export interface PersonPickerRecord {
+  id: string;
+  displayName: string;
+  email: string | null;
+}
 
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
@@ -89,6 +95,106 @@ export async function getPersonPeople({
   return { people, count: people.length };
 }
 
+export async function searchPeople({
+  ownerUserId,
+  query,
+  limit,
+}: {
+  ownerUserId: string;
+  query: string;
+  limit: number;
+}): Promise<{ people: PersonPickerRecord[]; count: number }> {
+  const pattern = `%${escapeLike(query.toLowerCase())}%`;
+  const people = await db
+    .selectFrom('app.people as person')
+    .select('person.id')
+    .where('person.ownerUserid', '=', ownerUserId)
+    .where(sql<boolean>`(
+      lower(coalesce(person.display_name, '')) like ${pattern} escape '\\'
+      or lower(coalesce(person.first_name, '') || ' ' || coalesce(person.last_name, '')) like ${pattern} escape '\\'
+      or exists (
+        select 1
+        from app.person_contact_methods as contact
+        where contact.person_id = person.id
+          and contact.kind = 'email'
+          and lower(contact.value) like ${pattern} escape '\\'
+      )
+    )`)
+    .limit(limit)
+    .execute();
+
+  const records = await Promise.all(
+    people.map(({ id }) => getPersonPickerRecord({ ownerUserId, personId: id })),
+  );
+  const result = records.filter((person): person is PersonPickerRecord => person !== null);
+  return { people: result, count: result.length };
+}
+
+export async function createPerson({
+  ownerUserId,
+  displayName,
+  email,
+}: {
+  ownerUserId: string;
+  displayName: string;
+  email?: string | null;
+}): Promise<PersonPickerRecord> {
+  const personId = await runInTransaction(async (trx) => {
+    const person = await trx
+      .insertInto('app.people')
+      .values({ ownerUserid: ownerUserId, displayName: displayName.trim() })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    if (email) {
+      await trx
+        .insertInto('app.personContactMethods')
+        .values({
+          ownerUserid: ownerUserId,
+          personId: person.id,
+          kind: 'email',
+          value: email.trim(),
+          isPrimary: true,
+        })
+        .execute();
+    }
+
+    return person.id;
+  });
+
+  const result = await getPersonPickerRecord({ ownerUserId, personId });
+  if (!result) throw new Error('Created person could not be loaded');
+  return result;
+}
+
+export async function getPersonPickerRecord({
+  ownerUserId,
+  personId,
+}: {
+  ownerUserId: string;
+  personId: string;
+}): Promise<PersonPickerRecord | null> {
+  const person = await db
+    .selectFrom('app.people')
+    .select(['id', 'displayName'])
+    .where('id', '=', personId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+  if (!person?.displayName) return null;
+
+  const email = await db
+    .selectFrom('app.personContactMethods')
+    .select('value')
+    .where('personId', '=', personId)
+    .where('ownerUserid', '=', ownerUserId)
+    .where('kind', '=', 'email')
+    .orderBy('isPrimary', 'desc')
+    .orderBy('createdat', 'asc')
+    .executeTakeFirst();
+
+  return { id: person.id, displayName: person.displayName, email: email?.value ?? null };
+}
+
 export async function getPersonTimeline({
   ownerUserId,
   personId,
@@ -111,8 +217,8 @@ export async function getPersonTimeline({
     await Promise.all([
       loadPersonSummary(personId),
       db
-        .selectFrom('app.eventAttendees as a')
-        .innerJoin('app.events as e', 'e.id', 'a.eventId')
+        .selectFrom('app.calendarEventAttendees as a')
+        .innerJoin('app.calendarEvents as e', 'e.id', 'a.eventId')
         .select(['e.id as id', 'e.title as title', 'e.startsAt as startsAt', 'a.role as role'])
         .where('a.personId', '=', personId)
         .where('e.ownerUserid', '=', ownerUserId)

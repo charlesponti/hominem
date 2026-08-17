@@ -31,13 +31,13 @@ describe('task time fields', () => {
   it('accepts a replacement list of task participants', () => {
     const result = UpdateTaskSchema.parse({
       participants: [
-        { displayName: 'Maya Chen', email: 'maya@example.com' },
-        { displayName: 'Alex Rivera' },
+        '00000000-0000-4000-8000-000000000001',
+        '00000000-0000-4000-8000-000000000002',
       ],
     });
 
     expect(result.participants).toHaveLength(2);
-    expect(result.participants?.[1]?.email).toBeUndefined();
+    expect(result.participants?.[1]).toBe('00000000-0000-4000-8000-000000000002');
   });
 
   it('rejects a partial or reversed scheduled interval', () => {

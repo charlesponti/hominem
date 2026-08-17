@@ -302,7 +302,7 @@ export default function CreateJobApplication() {
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span>{scrapedData.wordCount} words</span>
                     {scrapedData.url && <span>URL captured</span>}
-                    <span>{new Date(scrapedData.scrapedAt).toLocaleDateString()}</span>
+                    <span>{new Date(scrapedData.scrapedAt).toLocaleDateString('en-US')}</span>
                   </div>
                 </div>
               </div>

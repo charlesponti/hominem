@@ -1,6 +1,9 @@
 appId: com.pontistudios.hakumi.dev
 ---
-- launchApp
+- openLink: hakumi-dev://time/event/time-fixture-editable
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow: ../subflows/ensure-authenticated.yaml
 - openLink: hakumi-dev://time/event/time-fixture-editable
 - assertVisible:
     id: time-block-editor

@@ -7,14 +7,9 @@ import type { AppTasks } from '../../types/database';
 type TaskRow = Selectable<AppTasks>;
 
 export interface TaskParticipantRecord {
-  id: string;
+  personId: string;
   displayName: string;
   email: string | null;
-}
-
-export interface TaskParticipantInput {
-  displayName: string;
-  email?: string | null;
 }
 
 export interface TaskRecord {
@@ -126,40 +121,59 @@ export const TaskRepository = {
     const rows = await handle
       .selectFrom('app.taskParticipants as participant')
       .innerJoin('app.tasks as task', 'task.id', 'participant.taskId')
-      .select(['participant.id', 'participant.displayName', 'participant.email'])
+      .innerJoin('app.people as person', 'person.id', 'participant.personId')
+      .select([
+        'participant.personId as personId',
+        'person.displayName as displayName',
+        (expressionBuilder) =>
+          expressionBuilder
+            .selectFrom('app.personContactMethods as email')
+            .select('email.value')
+            .whereRef('email.personId', '=', 'participant.personId')
+            .where('email.kind', '=', 'email')
+            .orderBy('email.isPrimary', 'desc')
+            .orderBy('email.createdat', 'asc')
+            .limit(1)
+            .as('email'),
+      ])
       .where('participant.taskId', '=', input.taskId)
       .where('task.ownerUserid', '=', input.userId)
       .orderBy('participant.createdat', 'asc')
       .execute();
 
     return rows.map((row) => ({
-      id: row.id,
-      displayName: row.displayName,
+      personId: row.personId,
+      displayName: row.displayName ?? 'Unknown person',
       email: row.email ?? null,
     }));
   },
 
   async replaceParticipants(
     handle: DbHandle,
-    input: { taskId: string; userId: string; participants: TaskParticipantInput[] },
+    input: { taskId: string; userId: string; participants: string[] },
   ): Promise<TaskParticipantRecord[]> {
     const task = await TaskRepository.getOwned(handle, input.taskId, input.userId);
     if (!task) {
       throw new NotFoundError('Task', { taskId: input.taskId });
     }
 
+    const personIds = [...new Set(input.participants)];
+    const ownedPeople = await handle
+      .selectFrom('app.people')
+      .select('id')
+      .where('ownerUserid', '=', input.userId)
+      .where('id', 'in', personIds)
+      .execute();
+    if (ownedPeople.length !== personIds.length) {
+      throw new NotFoundError('Person');
+    }
+
     await handle.deleteFrom('app.taskParticipants').where('taskId', '=', input.taskId).execute();
 
-    if (input.participants.length > 0) {
+    if (personIds.length > 0) {
       await handle
         .insertInto('app.taskParticipants')
-        .values(
-          input.participants.map((participant) => ({
-            taskId: input.taskId,
-            displayName: participant.displayName.trim(),
-            email: participant.email?.trim() || null,
-          })),
-        )
+        .values(personIds.map((personId) => ({ taskId: input.taskId, personId })))
         .execute();
     }
 

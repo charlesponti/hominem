@@ -99,7 +99,7 @@ export default function WorkDetailPage({ loaderData }: Route.ComponentProps) {
 
   const salary =
     (position.salaryLow ?? position.salaryHigh)
-      ? `${position.salaryLow ? `$${(position.salaryLow / 100).toLocaleString()}` : '?'} – ${position.salaryHigh ? `$${(position.salaryHigh / 100).toLocaleString()}` : '?'} ${position.currency ?? 'USD'}`
+      ? `${position.salaryLow ? `$${(position.salaryLow / 100).toLocaleString('en-US')}` : '?'} – ${position.salaryHigh ? `$${(position.salaryHigh / 100).toLocaleString('en-US')}` : '?'} ${position.currency ?? 'USD'}`
       : null;
 
   if (isEditing) {

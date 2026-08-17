@@ -78,7 +78,7 @@ describe('resolveOAuthResumeUrl', () => {
 
   it('builds the API authorize URL, forwarding the original query string', () => {
     expect(resolveOAuthResumeUrl(authorizeSearch, apiBaseUrl)).toBe(
-      `${apiBaseUrl}/api/auth/mcp/authorize${authorizeSearch}`,
+      `${apiBaseUrl}/api/auth/oauth2/authorize${authorizeSearch}`,
     );
   });
 

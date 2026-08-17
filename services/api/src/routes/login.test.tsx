@@ -120,7 +120,7 @@ describe('API login route', () => {
     });
 
     expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toContain('/api/auth/mcp/authorize?');
+    expect(response.headers.get('location')).toContain('/api/auth/oauth2/authorize?');
     expect(response.headers.get('set-cookie')).toContain('better-auth.session_token=session-token');
     const request = mocks.handler.mock.calls[0]?.[0] as Request;
     expect(request.url).toContain('/api/auth/sign-in/email-otp');

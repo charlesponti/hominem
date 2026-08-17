@@ -1,0 +1,32 @@
+appId: com.pontistudios.hakumi.dev
+---
+# The API's non-production OTP provider uses 000000 for the E2E account.
+# Override E2E_USER_EMAIL with `maestro test -e E2E_USER_EMAIL=...` when needed.
+- runFlow:
+    when:
+      visible:
+        id: auth-email-input
+    commands:
+      - tapOn:
+          id: auth-email-input
+      - inputText: ${E2E_USER_EMAIL || "e2e@test.hakumi.io"}
+      - tapOn:
+          id: auth-send-otp
+      - assertVisible:
+          id: auth-otp-input-container
+      - tapOn:
+          id: auth-otp-input-container
+      - inputText: '000000'
+      - tapOn:
+          id: auth-verify-otp
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - runFlow:
+          when:
+            visible: 'Continue without name'
+          commands:
+            - tapOn: 'Continue without name'
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - assertVisible:
+          id: inbox-composer-input

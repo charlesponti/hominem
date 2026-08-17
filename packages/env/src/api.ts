@@ -41,6 +41,7 @@ export const apiSchema = baseSchema.extend({
   OPENROUTER_API_KEY: z.string(),
   OPENROUTER_VOICE_CLEANUP_MODEL: z.string().default('qwen/qwen3.5-flash-02-23'),
   SENTRY_DSN: z.string().optional(),
+  OPENAI_APPS_CHALLENGE: z.string().optional(),
   SAVE_VOICE_AUDIO: z.stringbool().default(false),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),

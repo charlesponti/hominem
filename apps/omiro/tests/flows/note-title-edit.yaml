@@ -4,12 +4,7 @@ appId: com.pontistudios.hakumi.dev
 # Regresses the crash where focusing/editing the note title caused UIKit to
 # abort while reloading the editor keyboard accessory view.
 
-- openLink: 'exp+hakumi://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081'
-- waitForAnimationToEnd:
-    timeout: 10000
-- openLink: 'hakumi-dev://'
-- waitForAnimationToEnd:
-    timeout: 3000
+- runFlow: ../subflows/open-dev-home.yaml
 - assertVisible:
     id: 'inbox-composer-input'
 - assertVisible:
