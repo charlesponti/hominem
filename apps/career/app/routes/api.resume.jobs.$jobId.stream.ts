@@ -1,9 +1,9 @@
 import { getJobStatus, redis, REDIS_CHANNELS, type ResumeAnalysisJob } from '@hominem/queues';
 import type { LoaderFunctionArgs } from 'react-router';
 
+import { userContext } from '../lib/middleware';
 import { RESUME_STAGE_INFO } from '../lib/resume-import/stages';
 import type { SseResumeEvent } from '../lib/resume-import/types';
-import { userContext } from '../lib/middleware';
 
 function toSseEvent(job: ResumeAnalysisJob): SseResumeEvent {
   const info = RESUME_STAGE_INFO[job.stage];

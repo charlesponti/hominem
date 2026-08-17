@@ -1,19 +1,13 @@
+import { Collapsible } from '@base-ui/react/collapsible';
 import type {
   ResumeAnalysisStage,
   ResumeImportDiff,
   ResumeListItemChange,
   ResumeScalarFieldChange,
 } from '@hominem/queues';
-import { Collapsible } from '@base-ui/react/collapsible';
 import { DropZone, type DropZoneProps } from '@ponti-studios/ui/forms';
 import { Button, buttonVariants } from '@ponti-studios/ui/primitives';
-import {
-  ChevronDown,
-  FileTextIcon,
-  Loader2Icon,
-  RefreshCwIcon,
-  Trash2Icon,
-} from 'lucide-react';
+import { ChevronDown, FileTextIcon, Loader2Icon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRevalidator, useSearchParams } from 'react-router';
 
@@ -133,7 +127,11 @@ export function ResumeImportSection({
 
     try {
       const response = await fetch('/api/resume/analyze', { method: 'POST', body });
-      const result = (await response.json()) as { jobId?: string; fileUrl?: string; error?: string };
+      const result = (await response.json()) as {
+        jobId?: string;
+        fileUrl?: string;
+        error?: string;
+      };
 
       if (!response.ok || !result.jobId) {
         setDropzoneStatus('failed');
@@ -427,7 +425,13 @@ export function ResumeImportSection({
             >
               Apply selected updates
             </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={resetToIdle} disabled={phase === 'applying'}>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={resetToIdle}
+              disabled={phase === 'applying'}
+            >
               Discard
             </Button>
           </div>

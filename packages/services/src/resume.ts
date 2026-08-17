@@ -2,15 +2,19 @@ import { Buffer } from 'node:buffer';
 import { readFile } from 'node:fs/promises';
 
 import { createChatCompletion, getChatCompletionText } from '@hominem/ai';
-import { sql, type CareerProfileRecord, type CareerSocialLinksRecord, type DbHandle } from '@hominem/db';
-import PDFParser from 'pdf2json';
-import { z } from 'zod';
-
+import {
+  sql,
+  type CareerProfileRecord,
+  type CareerSocialLinksRecord,
+  type DbHandle,
+} from '@hominem/db';
 import type {
   ResumeImportDiff,
   ResumeListItemChange,
   ResumeScalarFieldChange,
 } from '@hominem/queues';
+import PDFParser from 'pdf2json';
+import { z } from 'zod';
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const presentDateValues = new Set(['present', 'current', 'now']);
@@ -159,7 +163,11 @@ export class ResumeParseError extends Error {
   issues?: z.ZodIssue[];
   cause?: unknown;
 
-  constructor(kind: 'ai-parse' | 'schema-validation', message: string, options?: { issues?: z.ZodIssue[]; cause?: unknown }) {
+  constructor(
+    kind: 'ai-parse' | 'schema-validation',
+    message: string,
+    options?: { issues?: z.ZodIssue[]; cause?: unknown },
+  ) {
     super(message);
     this.name = 'ResumeParseError';
     this.kind = kind;

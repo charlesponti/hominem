@@ -288,7 +288,7 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
               <p className="text-sm text-muted-foreground">
                 {isPublic
                   ? 'Anyone with the link can view your profile at this URL.'
-                  : "Private — only you can see this. Turn it on to share it."}
+                  : 'Private — only you can see this. Turn it on to share it.'}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2 pt-0.5">

@@ -74,7 +74,14 @@ describe('buildResumeImportDiff', () => {
         },
       ],
       skills: [
-        { name: 'TypeScript', level: 90, category: null, description: null, years_of_experience: 5, certifications: [] },
+        {
+          name: 'TypeScript',
+          level: 90,
+          category: null,
+          description: null,
+          years_of_experience: 5,
+          certifications: [],
+        },
       ],
     });
 
@@ -101,6 +108,10 @@ describe('buildResumeImportDiff', () => {
     const socialChanges = diff.scalarChanges.filter((c) => c.group === 'social');
 
     expect(socialChanges).toHaveLength(1);
-    expect(socialChanges[0]).toMatchObject({ field: 'linkedin', current: null, proposed: 'jane-doe' });
+    expect(socialChanges[0]).toMatchObject({
+      field: 'linkedin',
+      current: null,
+      proposed: 'jane-doe',
+    });
   });
 });

@@ -66,7 +66,11 @@ export const action: ActionFunction = async ({ request, context }) => {
     const rateLimit = resumeConvertRateLimit.isAllowed(user.id);
     const rateLimitHeaders = getRateLimitHeaders(rateLimit, resumeConvertRateLimit);
     if (!rateLimit.allowed) {
-      return errorResponse('Too many resume analysis attempts. Try again later.', 429, rateLimitHeaders);
+      return errorResponse(
+        'Too many resume analysis attempts. Try again later.',
+        429,
+        rateLimitHeaders,
+      );
     }
 
     const contentType = request.headers.get('content-type') || '';
@@ -95,22 +99,34 @@ export const action: ActionFunction = async ({ request, context }) => {
     } else if (pdfField instanceof File) {
       const validation = validateFile(pdfField, PDF_RESUME_VALIDATION);
       if (!validation.valid) {
-        return errorResponse(validation.error ?? 'The selected file is not a valid resume PDF.', 400);
+        return errorResponse(
+          validation.error ?? 'The selected file is not a valid resume PDF.',
+          400,
+        );
       }
 
       const uploadMimeType = resolveUploadMimeType(pdfField);
       try {
         const buffer = Buffer.from(await pdfField.arrayBuffer());
-        const uploadResult = await documentStorageService.storeFile(buffer, uploadMimeType, user.id, {
-          originalName: pdfField.name,
-        });
+        const uploadResult = await documentStorageService.storeFile(
+          buffer,
+          uploadMimeType,
+          user.id,
+          {
+            originalName: pdfField.name,
+          },
+        );
         fileId = uploadResult.id;
         fileUrl = uploadResult.url;
       } catch (error) {
         logger.error('Resume file upload failed', undefined, {
           ownerUserid: user.id,
           fileName: pdfField.name,
-          error: isStorageServiceError(error) ? error.code : error instanceof Error ? error.message : error,
+          error: isStorageServiceError(error)
+            ? error.code
+            : error instanceof Error
+              ? error.message
+              : error,
         });
         return errorResponse(resolveStorageFailure(error), 503);
       }
@@ -144,9 +160,13 @@ export const action: ActionFunction = async ({ request, context }) => {
 
     return { jobId, fileUrl } satisfies StartResumeAnalysisResponse;
   } catch (error) {
-    logger.error('Resume analysis request failed before processing', error instanceof Error ? error : undefined, {
-      ownerUserid: user.id,
-    });
+    logger.error(
+      'Resume analysis request failed before processing',
+      error instanceof Error ? error : undefined,
+      {
+        ownerUserid: user.id,
+      },
+    );
     return errorResponse('Could not start resume analysis. Please try again.', 500);
   }
 };
