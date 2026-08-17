@@ -43,7 +43,7 @@
     "@ponti-studios/auth": "workspace:*",
     "@ponti-studios/ui": "catalog:",
     "@react-native-community/netinfo": "12.0.1",
-    "@sentry/react-native": "^8.20.0",
+    "@sentry/react-native": "^8.23.0",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",
     "@tanstack/query-sync-storage-persister": "5.101.4",
