@@ -1,4 +1,3 @@
-import type { AIUsageMetrics } from '@hominem/ai';
 import {
   AIUsageEventRepository,
   db,
@@ -8,6 +7,8 @@ import {
   type AIUsageOperation,
 } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
+
+import type { AIUsageMetrics } from './shared';
 
 // Free-tier monthly cap on AI usage cost. Once a user's `cost_usd` sum for
 // the current calendar month reaches this, AI-cost-incurring routes refuse

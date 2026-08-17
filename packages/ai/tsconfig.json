@@ -7,5 +7,10 @@
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "build", "dist", ".turbo", ".cache", "coverage", "*.tsbuildinfo"],
-  "references": [{ "path": "../env" }, { "path": "../utils" }]
+  "references": [
+    { "path": "../db" },
+    { "path": "../env" },
+    { "path": "../telemetry" },
+    { "path": "../utils" }
+  ]
 }

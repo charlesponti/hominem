@@ -672,9 +672,15 @@ importers:
 
   packages/ai:
     dependencies:
+      '@hominem/db':
+        specifier: workspace:*
+        version: link:../db
       '@hominem/env':
         specifier: workspace:*
         version: link:../env
+      '@hominem/telemetry':
+        specifier: workspace:*
+        version: link:../telemetry
       '@hominem/utils':
         specifier: workspace:*
         version: link:../utils
@@ -833,12 +839,6 @@ importers:
 
   packages/services:
     dependencies:
-      '@hominem/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@hominem/db':
-        specifier: workspace:*
-        version: link:../db
       '@hominem/env':
         specifier: workspace:*
         version: link:../env
@@ -933,7 +933,7 @@ importers:
         version: file:packages/queues(pg@8.20.0)
       '@hominem/services':
         specifier: workspace:*
-        version: file:packages/services(@opentelemetry/api@1.8.0)(pg@8.20.0)
+        version: file:packages/services(pg@8.20.0)
       '@hominem/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -12817,7 +12817,9 @@ snapshots:
 
   '@hominem/ai@file:packages/ai(@opentelemetry/api@1.8.0)':
     dependencies:
+      '@hominem/db': file:packages/db
       '@hominem/env': file:packages/env
+      '@hominem/telemetry': file:packages/telemetry
       '@hominem/utils': file:packages/utils
       '@openrouter/sdk': 0.12.79
       '@tanstack/ai': 0.22.1(@opentelemetry/api@1.8.0)
@@ -12825,6 +12827,7 @@ snapshots:
       zod: 4.4.3
     transitivePeerDependencies:
       - '@opentelemetry/api'
+      - pg-native
 
   '@hominem/career-services@file:packages/career(@opentelemetry/api@1.8.0)(pg@8.20.0)':
     dependencies:
@@ -12866,10 +12869,8 @@ snapshots:
       - redis
       - supports-color
 
-  '@hominem/services@file:packages/services(@opentelemetry/api@1.8.0)(pg@8.20.0)':
+  '@hominem/services@file:packages/services(pg@8.20.0)':
     dependencies:
-      '@hominem/ai': file:packages/ai(@opentelemetry/api@1.8.0)
-      '@hominem/db': file:packages/db
       '@hominem/env': file:packages/env
       '@hominem/telemetry': file:packages/telemetry
       '@hominem/utils': file:packages/utils
@@ -12881,11 +12882,9 @@ snapshots:
       resend: 6.12.4
       zod: 4.4.3
     transitivePeerDependencies:
-      - '@opentelemetry/api'
       - '@react-email/render'
       - bullmq-otel
       - pg
-      - pg-native
       - redis
       - supports-color
 

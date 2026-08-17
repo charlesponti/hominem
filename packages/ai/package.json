@@ -15,13 +15,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
+    "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
+    "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@openrouter/sdk": "^0.12.35",
     "@tanstack/ai": "^0.22.1",

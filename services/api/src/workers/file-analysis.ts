@@ -1,8 +1,13 @@
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 
-import { createChatCompletion, getChatCompletionText, getChatCompletionUsage } from '@hominem/ai';
-import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
+import {
+  createChatCompletion,
+  getChatCompletionText,
+  getChatCompletionUsage,
+  recordAIUsageEvent,
+  startAIUsageTimer,
+} from '@hominem/ai';
 import { LOG_MESSAGES, logger } from '@hominem/telemetry';
 
 const MAX_IMAGE_ANALYSIS_BYTES = 20 * 1024 * 1024;

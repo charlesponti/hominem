@@ -1,9 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
-import { createChatCompletion, getChatCompletionText, getChatCompletionUsage } from '@hominem/ai';
+import {
+  createChatCompletion,
+  getChatCompletionText,
+  getChatCompletionUsage,
+  recordAIUsageEvent,
+  startAIUsageTimer,
+} from '@hominem/ai';
 import { db, SocialLinksRepository } from '@hominem/db';
-import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
 import { data, type ActionFunction } from 'react-router';
 import { z } from 'zod';
 

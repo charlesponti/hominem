@@ -26,9 +26,6 @@ vi.mock('@hominem/ai', () => ({
     cachedPromptTokens: null,
     reasoningTokens: null,
   })),
-}));
-
-vi.mock('@hominem/services', () => ({
   recordAIUsageEvent: mocks.recordAIUsageEvent,
   startAIUsageTimer: () => () => 0,
 }));

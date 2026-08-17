@@ -1,8 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { createChatCompletion, getChatCompletionText, getChatCompletionUsage } from '@hominem/ai';
+import {
+  createChatCompletion,
+  getChatCompletionText,
+  getChatCompletionUsage,
+  recordAIUsageEvent,
+  startAIUsageTimer,
+} from '@hominem/ai';
 import { CareerRepository, db, ProjectRepository } from '@hominem/db';
-import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
 import { z } from 'zod';
 
 const derivedSkillSchema = z.object({
