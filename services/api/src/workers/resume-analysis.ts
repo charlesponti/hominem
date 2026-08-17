@@ -1,5 +1,11 @@
 import { Buffer, File } from 'node:buffer';
 
+import {
+  buildResumeImportDiff,
+  extractPdfText,
+  parseResumeWithAI,
+  ResumeParseError,
+} from '@hominem/career-services/resume';
 import { CareerRepository, SocialLinksRepository, db } from '@hominem/db';
 import {
   getJobStatus,
@@ -11,12 +17,6 @@ import {
   type ResumeAnalysisStage,
 } from '@hominem/queues';
 import { redis as cache } from '@hominem/services/redis';
-import {
-  buildResumeImportDiff,
-  extractPdfText,
-  parseResumeWithAI,
-  ResumeParseError,
-} from '@hominem/services/resume';
 import { documentStorageService } from '@hominem/storage';
 import { logger } from '@hominem/telemetry';
 import { Worker } from 'bullmq';

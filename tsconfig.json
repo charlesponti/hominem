@@ -13,6 +13,7 @@
   "references": [
     { "path": "packages/ai" },
     { "path": "packages/auth" },
+    { "path": "packages/career" },
     { "path": "packages/chat" },
     { "path": "packages/db" },
     { "path": "packages/env" },

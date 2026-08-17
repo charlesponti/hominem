@@ -1,3 +1,4 @@
+import type { ConvertedResumeData } from '@hominem/career-services/resume';
 import {
   CareerRepository,
   ProjectRepository,
@@ -14,7 +15,6 @@ import {
   type ResumeAnalysisJob,
   type ResumeListItemChange,
 } from '@hominem/queues';
-import type { ConvertedResumeData } from '@hominem/services/resume';
 
 import { logger } from '~/lib/logger';
 

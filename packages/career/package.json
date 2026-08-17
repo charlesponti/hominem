@@ -1,0 +1,33 @@
+{
+  "name": "@hominem/career-services",
+  "version": "0.0.0",
+  "description": "Career domain business logic (resume parsing, import diffing)",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "format": "pnpm exec oxfmt ./src --write",
+    "format:check": "pnpm exec oxfmt ./src --check",
+    "lint": "pnpm exec oxlint ./src",
+    "lint:fix": "pnpm exec oxlint ./src --fix",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hominem/ai": "workspace:*",
+    "@hominem/db": "workspace:*",
+    "@hominem/queues": "workspace:*",
+    "pdf2json": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

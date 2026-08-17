@@ -165,6 +165,9 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@hominem/career-services':
+        specifier: workspace:*
+        version: link:../../packages/career
       '@hominem/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -694,6 +697,34 @@ importers:
         specifier: 'catalog:'
         version: 4.1.0(@opentelemetry/api@1.8.0)(@types/node@25.9.5)(jsdom@30.0.0(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@25.9.5)(typescript@7.0.2))(vite@8.1.5(@types/node@25.9.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
 
+  packages/career:
+    dependencies:
+      '@hominem/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@hominem/db':
+        specifier: workspace:*
+        version: link:../db
+      '@hominem/queues':
+        specifier: workspace:*
+        version: link:../queues
+      pdf2json:
+        specifier: 'catalog:'
+        version: 4.0.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.4.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.0(@opentelemetry/api@1.8.0)(@types/node@25.4.0)(jsdom@30.0.0(@noble/hashes@2.2.0))(msw@2.15.0(@types/node@25.4.0)(typescript@7.0.2))(vite@8.1.5(@types/node@25.4.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
+
   packages/chat:
     dependencies:
       date-fns:
@@ -811,9 +842,6 @@ importers:
       '@hominem/env':
         specifier: workspace:*
         version: link:../env
-      '@hominem/queues':
-        specifier: workspace:*
-        version: link:../queues
       '@hominem/telemetry':
         specifier: workspace:*
         version: link:../telemetry
@@ -888,6 +916,9 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@hominem/career-services':
+        specifier: workspace:*
+        version: file:packages/career(@opentelemetry/api@1.8.0)(pg@8.20.0)
       '@hominem/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -2492,6 +2523,9 @@ packages:
 
   '@hominem/ai@file:packages/ai':
     resolution: {directory: packages/ai, type: directory}
+
+  '@hominem/career-services@file:packages/career':
+    resolution: {directory: packages/career, type: directory}
 
   '@hominem/db@file:packages/db':
     resolution: {directory: packages/db, type: directory}
@@ -12792,6 +12826,21 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
+  '@hominem/career-services@file:packages/career(@opentelemetry/api@1.8.0)(pg@8.20.0)':
+    dependencies:
+      '@hominem/ai': file:packages/ai(@opentelemetry/api@1.8.0)
+      '@hominem/db': file:packages/db
+      '@hominem/queues': file:packages/queues(pg@8.20.0)
+      pdf2json: 4.0.3
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - bullmq-otel
+      - pg
+      - pg-native
+      - redis
+      - supports-color
+
   '@hominem/db@file:packages/db':
     dependencies:
       '@hominem/env': file:packages/env
@@ -12822,7 +12871,6 @@ snapshots:
       '@hominem/ai': file:packages/ai(@opentelemetry/api@1.8.0)
       '@hominem/db': file:packages/db
       '@hominem/env': file:packages/env
-      '@hominem/queues': file:packages/queues(pg@8.20.0)
       '@hominem/telemetry': file:packages/telemetry
       '@hominem/utils': file:packages/utils
       bullmq: 6.0.8(ioredis@6.0.0)(pg@8.20.0)

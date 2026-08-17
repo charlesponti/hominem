@@ -41,6 +41,7 @@
     "@better-auth/mcp": "1.7.0-rc.6",
     "@better-auth/oauth-provider": "1.7.0-rc.6",
     "@hominem/ai": "workspace:*",
+    "@hominem/career-services": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/finance-services": "workspace:*",
