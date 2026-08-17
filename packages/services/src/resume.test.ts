@@ -1,3 +1,4 @@
+import type { CareerProfileRecord, CareerSocialLinksRecord } from '@hominem/db';
 import { describe, expect, it } from 'vitest';
 
 import { buildResumeImportDiff, type ConvertedResumeData } from './resume';
@@ -42,10 +43,15 @@ describe('buildResumeImportDiff', () => {
       initials: 'JD',
       availabilityStatus: true,
       openToRemote: true,
-      // biome-ignore lint: minimal fixture
-    } as any;
+    } as unknown as CareerProfileRecord;
+    const currentSocial = {
+      github: 'janedoe', // unchanged
+      linkedin: null,
+      twitter: null,
+      website: null,
+    } as unknown as CareerSocialLinksRecord;
 
-    const diff = buildResumeImportDiff(parsed, currentProfile, null);
+    const diff = buildResumeImportDiff(parsed, currentProfile, currentSocial);
 
     expect(diff.scalarChanges).toHaveLength(1);
     expect(diff.scalarChanges[0]).toMatchObject({
@@ -101,8 +107,7 @@ describe('buildResumeImportDiff', () => {
       linkedin: null, // changed
       twitter: null,
       website: null,
-      // biome-ignore lint: minimal fixture
-    } as any;
+    } as unknown as CareerSocialLinksRecord;
 
     const diff = buildResumeImportDiff(parsed, null, currentSocial);
     const socialChanges = diff.scalarChanges.filter((c) => c.group === 'social');

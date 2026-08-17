@@ -1,10 +1,11 @@
+// Must run before any module that reads process.env at import time (e.g.
+// @hominem/queues' Redis client), so it can't be reordered by import sorting.
+import 'dotenv/config';
 import { createServer } from 'node:http';
 
 import { QUEUE_NAMES } from '@hominem/queues';
 import { logger } from '@hominem/telemetry';
 
-// Must be imported before any module that reads process.env at import time
-// (e.g. @hominem/queues' Redis client) so dotenv/config has already run.
 import { env } from './env';
 import { initRuntime } from './runtime';
 import { startEmbeddingGenerationWorker } from './workers/embedding-generation';

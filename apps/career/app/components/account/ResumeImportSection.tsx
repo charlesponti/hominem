@@ -24,6 +24,11 @@ const GROUP_LABELS: Record<ResumeListItemChange['group'], string> = {
   projects: 'Projects',
 };
 
+const SCALAR_GROUP_LABELS: Record<ResumeScalarFieldChange['group'], string> = {
+  basics: 'Basic info',
+  social: 'Social links',
+};
+
 function formatBytes(size: number) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
@@ -36,6 +41,16 @@ function scalarKey(change: ResumeScalarFieldChange) {
 
 function groupListChanges(changes: ResumeListItemChange[]) {
   const groups = new Map<ResumeListItemChange['group'], ResumeListItemChange[]>();
+  for (const change of changes) {
+    const existing = groups.get(change.group) ?? [];
+    existing.push(change);
+    groups.set(change.group, existing);
+  }
+  return groups;
+}
+
+function groupScalarChanges(changes: ResumeScalarFieldChange[]) {
+  const groups = new Map<ResumeScalarFieldChange['group'], ResumeScalarFieldChange[]>();
   for (const change of changes) {
     const existing = groups.get(change.group) ?? [];
     existing.push(change);
@@ -238,6 +253,13 @@ export function ResumeImportSection({
         : new Map<ResumeListItemChange['group'], ResumeListItemChange[]>(),
     [diff],
   );
+  const groupedScalarChanges = useMemo(
+    () =>
+      diff
+        ? groupScalarChanges(diff.scalarChanges)
+        : new Map<ResumeScalarFieldChange['group'], ResumeScalarFieldChange[]>(),
+    [diff],
+  );
 
   const toggleScalar = (key: string, checked: boolean) => {
     setSelectedScalarKeys((prev) => {
@@ -361,11 +383,11 @@ export function ResumeImportSection({
             </p>
           ) : null}
 
-          {diff.scalarChanges.length > 0 ? (
-            <div className="space-y-2">
-              <p className="subheading-4 text-foreground">Basic info</p>
+          {Array.from(groupedScalarChanges.entries()).map(([group, changes]) => (
+            <div key={group} className="space-y-2">
+              <p className="subheading-4 text-foreground">{SCALAR_GROUP_LABELS[group]}</p>
               <ul className="space-y-2">
-                {diff.scalarChanges.map((change) => {
+                {changes.map((change) => {
                   const key = scalarKey(change);
                   return (
                     <li key={key} className="flex items-start gap-2">
@@ -389,7 +411,7 @@ export function ResumeImportSection({
                 })}
               </ul>
             </div>
-          ) : null}
+          ))}
 
           {Array.from(groupedListChanges.entries()).map(([group, items]) => (
             <div key={group} className="space-y-2">

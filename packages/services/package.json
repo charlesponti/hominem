@@ -57,7 +57,6 @@
     "@hominem/ai": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
-    "@hominem/queues": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
     "bullmq": "catalog:",
@@ -67,5 +66,8 @@
     "pdf2json": "catalog:",
     "resend": "catalog:",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@hominem/queues": "workspace:*"
   }
 }

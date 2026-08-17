@@ -39,7 +39,7 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  const lockedEmail = user.email || '';
+  const lockedEmail = user.email || currentProfile.email || '';
   const detailsDefaultValues = (): ProfileDetailsFormValues => ({
     ...profileToFormValues(currentProfile, lockedEmail),
     github: socialLinks?.github || '',

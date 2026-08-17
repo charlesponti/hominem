@@ -1,4 +1,4 @@
-import { Buffer } from 'node:buffer';
+import { Buffer, File } from 'node:buffer';
 
 import { CareerRepository, SocialLinksRepository, db } from '@hominem/db';
 import {
