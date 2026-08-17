@@ -18,7 +18,7 @@ catalog:
   hono: 4.12.34
   ioredis: 6.0.0
   jiti: 2.7.0
-  kysely: 0.29.4
+  kysely: 0.29.5
   lucide-react: 1.28.0
   pdf2json: 4.0.3
   pg: 8.20.0
