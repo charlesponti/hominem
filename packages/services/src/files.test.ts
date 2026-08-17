@@ -1,97 +1,40 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const mocks = vi.hoisted(() => ({
-  createChatCompletion: vi.fn(),
-  recordAIUsageEvent: vi.fn(),
-}));
-
-vi.mock('@hominem/ai', () => ({
-  createChatCompletion: mocks.createChatCompletion,
-  getChatCompletionText: vi.fn(
-    (result: { choices?: Array<{ message?: { content?: string } }> }) =>
-      result.choices?.[0]?.message?.content ?? '',
-  ),
-  getChatCompletionUsage: vi.fn((result: { model: string; usage?: Record<string, unknown> }) => ({
-    provider: 'openrouter',
-    model: result.model,
-    promptTokens: Number(result.usage?.promptTokens ?? 0),
-    completionTokens: Number(result.usage?.completionTokens ?? 0),
-    totalTokens: Number(result.usage?.totalTokens ?? 0),
-    reportedTotalTokens: null,
-    costUsd: Number(result.usage?.cost ?? 0),
-    cachedPromptTokens: null,
-    reasoningTokens: null,
-  })),
-}));
-
-vi.mock('./ai-usage', () => ({
-  recordAIUsageEvent: mocks.recordAIUsageEvent,
-  startAIUsageTimer: () => () => 0,
-}));
-
-vi.mock('@hominem/telemetry', () => ({
-  LOG_MESSAGES: {
-    IMAGE_ANALYZE_ERROR: 'IMAGE_ANALYZE_ERROR',
-    FILE_PROCESS_ERROR: 'FILE_PROCESS_ERROR',
-    DOCUMENT_PROCESS_ERROR: 'DOCUMENT_PROCESS_ERROR',
-    DOCUMENT_SUMMARIZE_ERROR: 'DOCUMENT_SUMMARIZE_ERROR',
-  },
-  logger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-  },
-}));
+import { describe, expect, it } from 'vitest';
 
 import { FileProcessorService } from './files';
 
 describe('FileProcessorService', () => {
-  beforeEach(() => {
-    mocks.recordAIUsageEvent.mockResolvedValue(undefined);
+  it('extracts raw text from a plain-text file without calling any AI', async () => {
+    const file = await FileProcessorService.processFile(
+      new TextEncoder().encode('hello world').buffer,
+      'notes.txt',
+      'text/plain',
+      'file-id',
+    );
+
+    expect(file.type).toBe('document');
+    expect(file.textContent).toBe('hello world');
+    expect(file.content).toBe('hello world');
   });
 
-  it('records image analysis usage immediately after the provider responds', async () => {
-    mocks.createChatCompletion.mockResolvedValueOnce({
-      model: 'vision-model',
-      usage: { promptTokens: 6, completionTokens: 3, totalTokens: 9, cost: 0.09 },
-      choices: [{ message: { content: 'image summary' } }],
-    });
-
+  it('leaves images unanalyzed, since that requires an AI call outside this service', async () => {
     const file = await FileProcessorService.processFile(
       new TextEncoder().encode('tiny-image').buffer,
       'image.png',
       'image/png',
       'file-id',
-      'user-id',
     );
 
-    expect(file.textContent).toBe('image summary');
-    expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        feature: 'file_image_analyze',
-        usage: expect.objectContaining({ totalTokens: 9, costUsd: 0.09 }),
-      }),
-    );
+    expect(file.type).toBe('image');
+    expect(file.textContent).toBeUndefined();
   });
 
-  it('records failed image analysis attempts without provider usage', async () => {
-    mocks.createChatCompletion.mockRejectedValueOnce(
-      Object.assign(new Error('quota'), { code: 'quota_exceeded', status: 429 }),
-    );
+  it('formats byte sizes', () => {
+    expect(FileProcessorService.formatFileSize(0)).toBe('0 Bytes');
+    expect(FileProcessorService.formatFileSize(1024)).toBe('1 KB');
+  });
 
-    await FileProcessorService.processFile(
-      new TextEncoder().encode('tiny-image').buffer,
-      'image.png',
-      'image/png',
-      'file-id',
-      'user-id',
-    );
-
-    expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        feature: 'file_image_analyze',
-        status: 'failed',
-        error: expect.objectContaining({ code: 'quota_exceeded', status: 429 }),
-      }),
-    );
+  it('reports supported file types', () => {
+    expect(FileProcessorService.isSupportedFileType('application/pdf')).toBe(true);
+    expect(FileProcessorService.isSupportedFileType('application/zip')).toBe(false);
   });
 });
