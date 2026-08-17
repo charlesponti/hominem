@@ -24,7 +24,12 @@ import type {
 import { UploadResumeForm } from '../UploadResumeForm';
 import { ActionButtonRow } from './ActionButtonRow';
 
-const SOCIAL_KEYS: readonly string[] = ['github', 'linkedin', 'twitter', 'website'] satisfies (keyof SocialLinksFormValues)[];
+const SOCIAL_KEYS: readonly string[] = [
+  'github',
+  'linkedin',
+  'twitter',
+  'website',
+] satisfies (keyof SocialLinksFormValues)[];
 
 export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
   const revalidator = useRevalidator();
