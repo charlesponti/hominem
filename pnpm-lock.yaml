@@ -585,8 +585,8 @@ importers:
         specifier: ~57.0.13
         version: 57.0.13(expo-dev-client@57.0.11(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)))(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)(supports-color@8.1.1)
       posthog-react-native:
-        specifier: ^4.45.6
-        version: 4.58.0(expo-application@57.0.2(expo@57.0.12))(expo-device@57.0.1(expo@57.0.12))(expo-file-system@57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)))(expo-localization@57.0.1(expo@57.0.12)(react@19.2.8))(posthog-react-native-session-replay@1.6.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))(react-native-safe-area-context@5.7.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))
+        specifier: ^4.63.2
+        version: 4.63.2(expo-application@57.0.2(expo@57.0.12))(expo-device@57.0.1(expo@57.0.12))(expo-file-system@57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)))(expo-localization@57.0.1(expo@57.0.12)(react@19.2.8))(posthog-react-native-session-replay@1.6.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))(react-native-safe-area-context@5.7.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -3483,11 +3483,11 @@ packages:
       uniwind:
         optional: true
 
-  '@posthog/core@1.44.0':
-    resolution: {integrity: sha512-uE+mdKvetxNQC6gWQf4MHIH8bGt+JN6z7ho0A4G3t9G1VGQTx9wHYHNwkKf3gzi+1oAXS9ej2VVY4pjWUU2PWg==}
+  '@posthog/core@1.48.1':
+    resolution: {integrity: sha512-mxw31XdYgt/SnlwqLPAcltK67q+QmsiYjVLGQ4GbBc8OJ7O4yRFSDwAXt8QsokHokeyEZtTRWM6jDHL7LYMx1A==}
 
-  '@posthog/types@1.397.1':
-    resolution: {integrity: sha512-W/LpWbKVaaUnfZKuFuHa+Dg03D+fC87cM+PQbG+59JcSPW8F0JcBtSoXmpfrqbpuxUToMo+gktutrUkAb/KQBw==}
+  '@posthog/types@1.404.1':
+    resolution: {integrity: sha512-i2Gei6ARfOSBeTN4s2yUP1p97s2UNI+1NWmtLjhnR/V6t3RFOfI1sBWKcJNWHjtoOCCWoAFU+PNPY6SgT2VtEQ==}
 
   '@prisma/instrumentation@5.22.0':
     resolution: {integrity: sha512-LxccF392NN37ISGxIurUljZSh1YWnphO34V5a0+T7FVQG2u9bhAXRTJpgmQ3483woVhkraQZFF7cbRrpbw/F4Q==}
@@ -8805,10 +8805,11 @@ packages:
       react: 19.2.8
       react-native: '*'
 
-  posthog-react-native@4.58.0:
-    resolution: {integrity: sha512-vylqCWHaLekCPBx++gGwGJjijrk2k7trH6r9kL7h0EQEJIMZG1VBgWl9bNoBu6Y7e4zDyiACcV5oPYBDBxOveA==}
+  posthog-react-native@4.63.2:
+    resolution: {integrity: sha512-zNJ+zDNigVY6VTxMI42U15XKzfDME6zg+QNKoPktMO9Zzt8oe3eIjBQ2nxN1hQsww2btTQF0WEkPLEmoOCOV4Q==}
+    hasBin: true
     peerDependencies:
-      '@posthog/react-native-plugin': '>= 2.2.0'
+      '@posthog/react-native-plugin': '>= 2.3.0'
       '@react-native-async-storage/async-storage': '>=1.0.0'
       '@react-navigation/native': '>= 5.0.0'
       expo-application: '>= 4.0.0'
@@ -13773,11 +13774,11 @@ snapshots:
       - '@date-fns/tz'
       - '@types/react'
 
-  '@posthog/core@1.44.0':
+  '@posthog/core@1.48.1':
     dependencies:
-      '@posthog/types': 1.397.1
+      '@posthog/types': 1.404.1
 
-  '@posthog/types@1.397.1': {}
+  '@posthog/types@1.404.1': {}
 
   '@prisma/instrumentation@5.22.0':
     dependencies:
@@ -19434,10 +19435,10 @@ snapshots:
       react-native: 0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)
     optional: true
 
-  posthog-react-native@4.58.0(expo-application@57.0.2(expo@57.0.12))(expo-device@57.0.1(expo@57.0.12))(expo-file-system@57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)))(expo-localization@57.0.1(expo@57.0.12)(react@19.2.8))(posthog-react-native-session-replay@1.6.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))(react-native-safe-area-context@5.7.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)):
+  posthog-react-native@4.63.2(expo-application@57.0.2(expo@57.0.12))(expo-device@57.0.1(expo@57.0.12))(expo-file-system@57.0.2(expo@57.0.12)(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8)))(expo-localization@57.0.1(expo@57.0.12)(react@19.2.8))(posthog-react-native-session-replay@1.6.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8))(react-native-safe-area-context@5.7.0(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)):
     dependencies:
-      '@posthog/core': 1.44.0
-      '@posthog/types': 1.397.1
+      '@posthog/core': 1.48.1
+      '@posthog/types': 1.404.1
     optionalDependencies:
       expo-application: 57.0.2(expo@57.0.12)
       expo-device: 57.0.1(expo@57.0.12)
