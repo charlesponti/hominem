@@ -52,6 +52,9 @@ export interface SocialLinksFormValues {
   website?: string | null;
 }
 
+/** Combined shape backing ProfilePage's single unified form. */
+export type ProfileDetailsFormValues = BasicInfoFormValues & SocialLinksFormValues;
+
 export interface CertificationFormValues {
   name: string;
   issuingOrganization: string;

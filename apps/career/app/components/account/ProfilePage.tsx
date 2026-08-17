@@ -1,24 +1,30 @@
 import { Switch } from '@ponti-studios/ui/forms';
 import { Label } from '@ponti-studios/ui/primitives';
 import { Download } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
 
 import { AccountDocumentsSection } from '~/components/account/AccountDocumentsSection';
-import { BasicInfoForm } from '~/components/account/BasicInfoForm';
+import { BasicInfoForm, profileToFormValues } from '~/components/account/BasicInfoForm';
 import { CertificationsSection } from '~/components/account/CertificationsSection';
 import { SocialLinksSection } from '~/components/account/SocialLinksSection';
+import { FormErrorAlert } from '~/components/FormErrorAlert';
+import { SaveBar } from '~/components/SaveBar';
 import { SlugEditor } from '~/components/SlugEditor';
 import type {
   AccountActionResult,
   BasicInfoFormValues,
   CertificationFormValues,
+  ProfileDetailsFormValues,
   ProfileLoaderData,
   SocialLinksFormValues,
 } from '~/lib/account/types';
 
 import { UploadResumeForm } from '../UploadResumeForm';
 import { ActionButtonRow } from './ActionButtonRow';
+
+const SOCIAL_KEYS: readonly string[] = ['github', 'linkedin', 'twitter', 'website'] satisfies (keyof SocialLinksFormValues)[];
 
 export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
   const revalidator = useRevalidator();
@@ -27,6 +33,30 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
   const [isPublic, setIsPublic] = useState(currentProfile.isPublic);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  const lockedEmail = user.email || '';
+  const detailsDefaultValues = (): ProfileDetailsFormValues => ({
+    ...profileToFormValues(currentProfile, lockedEmail),
+    github: socialLinks?.github || '',
+    linkedin: socialLinks?.linkedin || '',
+    twitter: socialLinks?.twitter || '',
+    website: socialLinks?.website || '',
+  });
+
+  const detailsForm = useForm<ProfileDetailsFormValues>({
+    defaultValues: detailsDefaultValues(),
+  });
+  const {
+    handleSubmit: handleDetailsSubmit,
+    reset: resetDetails,
+    formState: { isDirty: detailsDirty, isSubmitting: detailsSubmitting, dirtyFields },
+  } = detailsForm;
+
+  useEffect(() => {
+    resetDetails(detailsDefaultValues());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProfile, socialLinks, lockedEmail, resetDetails]);
 
   const submitProfileAction = async <TData,>(
     formData: FormData,
@@ -186,6 +216,40 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
     return result;
   };
 
+  const onSaveDetails: SubmitHandler<ProfileDetailsFormValues> = async (values) => {
+    setDetailsError(null);
+
+    const dirtyKeys = Object.keys(dirtyFields);
+    const socialChanged = dirtyKeys.some((key) => SOCIAL_KEYS.includes(key));
+    const basicsChanged = dirtyKeys.some((key) => !SOCIAL_KEYS.includes(key));
+
+    try {
+      const results = await Promise.all([
+        basicsChanged ? handleSaveBasics(values) : null,
+        socialChanged
+          ? handleSaveSocialLinks({
+              github: values.github,
+              linkedin: values.linkedin,
+              twitter: values.twitter,
+              website: values.website,
+            })
+          : null,
+      ]);
+
+      const failed = results.find((result) => result && result.success === false);
+      if (failed) {
+        setDetailsError(failed.error || "We couldn't save your changes. Try again.");
+        return;
+      }
+
+      resetDetails(values);
+    } catch (error) {
+      setDetailsError(
+        error instanceof Error ? error.message : "We couldn't save your changes. Try again.",
+      );
+    }
+  };
+
   const handleAddCertification = async (values: CertificationFormValues) => {
     const formData = new FormData();
     formData.append('action', 'add-certification');
@@ -273,20 +337,23 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
           ) : null}
         </section>
 
-        <BasicInfoForm
-          profile={currentProfile}
-          accountEmail={user.email}
-          onSave={handleSaveBasics}
-          onImageUpload={handleImageUpload}
-        />
+        <FormProvider {...detailsForm}>
+          <form onSubmit={handleDetailsSubmit(onSaveDetails)} className="space-y-6">
+            <FormErrorAlert title="Profile changes weren't saved" message={detailsError} />
 
-        <AccountDocumentsSection
-          documents={documents}
-          onDelete={handleDeleteDocument}
-          onConvert={handleConvertDocument}
-        />
+            <BasicInfoForm profile={currentProfile} onImageUpload={handleImageUpload} />
 
-        <SocialLinksSection socialLinks={socialLinks} onSave={handleSaveSocialLinks} />
+            <AccountDocumentsSection
+              documents={documents}
+              onDelete={handleDeleteDocument}
+              onConvert={handleConvertDocument}
+            />
+
+            <SocialLinksSection />
+
+            <SaveBar dirty={detailsDirty} isSaving={detailsSubmitting} />
+          </form>
+        </FormProvider>
 
         <CertificationsSection
           certifications={certifications}
