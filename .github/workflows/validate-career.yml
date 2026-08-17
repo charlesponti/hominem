@@ -3,15 +3,16 @@ name: validate-career
 on:
   push:
     branches: [main]
-    paths:
+    paths: &validation-paths
       - 'apps/career/**'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'turbo.json'
-      - 'tsconfig.json'
+      - 'tsconfig*.json'
       - 'tsconfig.profiles/**'
+      - 'just/**'
       - 'justfile'
       - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
@@ -19,20 +20,7 @@ on:
       - '.github/workflows/_validate-app.yml'
   pull_request:
     branches: [main, preview]
-    paths:
-      - 'apps/career/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'turbo.json'
-      - 'tsconfig.json'
-      - 'tsconfig.profiles/**'
-      - 'justfile'
-      - 'scripts/**'
-      - '.github/actions/setup-pnpm-workspace/**'
-      - '.github/workflows/validate-career.yml'
-      - '.github/workflows/_validate-app.yml'
+    paths: *validation-paths
 
 concurrency:
   group: validate-career-${{ github.head_ref || github.ref }}
@@ -47,7 +35,4 @@ jobs:
     uses: ./.github/workflows/_validate-app.yml
     with:
       package-filter: '@hominem/career'
-      # Matches apps/career's own dev port (vite.config.ts / .env.example) --
-      # middleware.test.ts asserts hosted-login redirects return here.
       public-app-url: 'http://localhost:4451'
-    secrets: inherit

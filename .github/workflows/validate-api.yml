@@ -3,7 +3,7 @@ name: validate-api
 on:
   push:
     branches: [main]
-    paths:
+    paths: &validation-paths
       - 'services/api/**'
       - 'packages/**'
       - 'package.json'
@@ -12,8 +12,9 @@ on:
       - '.npmrc'
       - '.dockerignore'
       - 'turbo.json'
-      - 'tsconfig.json'
+      - 'tsconfig*.json'
       - 'tsconfig.profiles/**'
+      - 'just/**'
       - 'justfile'
       - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
@@ -21,22 +22,7 @@ on:
       - '.github/workflows/_validate-app.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'services/api/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - '.npmrc'
-      - '.dockerignore'
-      - 'turbo.json'
-      - 'tsconfig.json'
-      - 'tsconfig.profiles/**'
-      - 'justfile'
-      - 'scripts/**'
-      - '.github/actions/setup-pnpm-workspace/**'
-      - '.github/workflows/validate-api.yml'
-      - '.github/workflows/_validate-app.yml'
+    paths: *validation-paths
 
 concurrency:
   group: validate-api-${{ github.head_ref || github.ref }}
@@ -51,4 +37,3 @@ jobs:
     uses: ./.github/workflows/_validate-app.yml
     with:
       package-filter: '@hominem/api'
-    secrets: inherit

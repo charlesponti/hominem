@@ -1,5 +1,5 @@
 name: setup-pnpm-workspace
-description: Set up Node.js, pnpm, just, cache the pnpm store, and install dependencies.
+description: Set up the pinned Node.js and pnpm toolchain, install just, and restore the Turbo cache.
 
 inputs:
   node-version:
@@ -10,28 +10,19 @@ runs:
   using: composite
   steps:
     - name: setup-pnpm
-      uses: pnpm/setup@v2
+      uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
       with:
         runtime: node@${{ inputs.node-version }}
         cache: true
         cache-dependency-path: pnpm-lock.yaml
 
     - name: setup-just
-      uses: taiki-e/install-action@just
+      uses: taiki-e/install-action@1b0ab3d2f6e68837936954afdea248a125d3b906 # just
 
-    # Turbo's own cache entries are content-hash keyed (per task, independent
-    # of which workflow ran it), so one shared cache namespace here lets
-    # validate-api / validate-career / validate-mobile / validate-db all
-    # reuse each other's results for the shared core packages (ai, auth, db,
-    # env, services, storage, telemetry, utils, ...) instead of every
-    # workflow rebuilding/retesting/relinting them from scratch on every
-    # push. This is a local-filesystem stand-in for real remote caching
-    # (Vercel Remote Cache / self-hosted) — swap TURBO_TOKEN/TURBO_TEAM in
-    # once that's set up and this becomes redundant but harmless.
     - name: setup-turbo-cache
-      uses: actions/cache@v5
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
       with:
         path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ github.sha }}
+        key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.ref_name }}-${{ github.sha }}
         restore-keys: |
-          turbo-${{ runner.os }}-
+          turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.ref_name }}-

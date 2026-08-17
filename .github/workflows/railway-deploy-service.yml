@@ -19,24 +19,25 @@ on:
       RAILWAY_TOKEN:
         required: true
 
-concurrency:
-  group: railway-deploy-${{ inputs.service_name }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
-  packages: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: Production
+    concurrency:
+      group: railway-deploy-${{ inputs.service_name }}
+      cancel-in-progress: false
     env:
       SERVICE: ${{ secrets.service_target }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
+      SERVICE_NAME: ${{ inputs.service_name }}
+      CONFIG_PATH: ${{ inputs.config_path }}
     steps:
-      - uses: actions/checkout@v7
+      - name: checkout-repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.checkout_ref || github.sha }}
 
@@ -45,16 +46,11 @@ jobs:
         with:
           node-version: '24.18.0'
 
-      - name: validate-env
+      - name: validate-environment
         run: |
-          test -n "$SERVICE" || {
-            echo "Missing Railway service target secret for '${{ inputs.service_name }}'."
-            exit 1
-          }
-          test -n "$RAILWAY_TOKEN" || {
-            echo "Missing RAILWAY_TOKEN secret."
-            exit 1
-          }
+          set -euo pipefail
+          test -n "$SERVICE" || { echo "Missing Railway service target for $SERVICE_NAME"; exit 1; }
+          test -n "$RAILWAY_TOKEN" || { echo 'Missing Railway token'; exit 1; }
 
       - name: deploy-to-railway
-        run: bash just/deploy.sh "${{ inputs.service_name }}" "${{ inputs.config_path }}"
+        run: bash just/deploy.sh "$SERVICE_NAME" "$CONFIG_PATH"

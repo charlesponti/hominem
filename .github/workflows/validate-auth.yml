@@ -3,7 +3,7 @@ name: validate-auth
 on:
   push:
     branches: [main]
-    paths:
+    paths: &auth-paths
       - 'packages/auth/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -11,20 +11,18 @@ on:
       - 'turbo.json'
       - 'tsconfig*.json'
       - 'tsconfig.profiles/**'
+      - 'just/**'
+      - 'justfile'
+      - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
       - '.github/workflows/validate-auth.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'packages/auth/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'turbo.json'
-      - 'tsconfig*.json'
-      - 'tsconfig.profiles/**'
-      - '.github/actions/setup-pnpm-workspace/**'
-      - '.github/workflows/validate-auth.yml'
+    paths: *auth-paths
+
+concurrency:
+  group: validate-auth-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -32,15 +30,20 @@ permissions:
 jobs:
   validate-auth:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - name: checkout-repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: ./.github/actions/setup-pnpm-workspace
+      - name: setup-pnpm-workspace
+        uses: ./.github/actions/setup-pnpm-workspace
         with:
-          node-version: 24.18.0
+          node-version: '24.18.0'
 
       - name: validate-source
         run: |
-          pnpm --filter @ponti-studios/auth lint
-          pnpm --filter @ponti-studios/auth typecheck
-          pnpm --filter @ponti-studios/auth test
+          set -euo pipefail
+          pnpm format:check --filter @hominem/auth...
+          pnpm lint --filter @hominem/auth...
+          pnpm typecheck --filter @hominem/auth...
+          pnpm test --filter @hominem/auth...

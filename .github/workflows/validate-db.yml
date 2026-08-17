@@ -3,25 +3,25 @@ name: validate-db
 on:
   push:
     branches: [main]
-    paths:
+    paths: &db-paths
       - 'packages/db/**'
+      - 'package.json'
       - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig*.json'
+      - 'tsconfig.profiles/**'
+      - 'just/**'
       - 'justfile'
       - 'scripts/**'
       - '.github/actions/setup-pnpm-workspace/**'
       - '.github/workflows/validate-db.yml'
   pull_request:
     branches: [main, preview]
-    paths:
-      - 'packages/db/**'
-      - 'pnpm-lock.yaml'
-      - 'justfile'
-      - 'scripts/**'
-      - '.github/actions/setup-pnpm-workspace/**'
-      - '.github/workflows/validate-db.yml'
+    paths: *db-paths
 
 concurrency:
-  group: db-migrations-${{ github.head_ref || github.ref }}
+  group: validate-db-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -31,16 +31,7 @@ permissions:
 jobs:
   db-migrations:
     runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      TURBO_TELEMETRY_DISABLED: '1'
-
-    strategy:
-      matrix:
-        node-version: [24.18.0]
-        go-version: ['1.25']
-
+    timeout-minutes: 20
     services:
       postgres:
         image: ghcr.io/ponti-studios/foundation/postgres:1.0.5
@@ -49,38 +40,43 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d hominem-test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
           - 4433:5432
-
     steps:
       - name: checkout-repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
       - name: setup-pnpm-workspace
         uses: ./.github/actions/setup-pnpm-workspace
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '24.18.0'
 
       - name: setup-go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: '1.25'
+          cache: false
 
       - name: lint-migrations
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="origin/${{ github.base_ref }}"
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="origin/$BASE_REF"
           else
-            base="${{ github.event.before }}"
+            base="$BEFORE_SHA"
           fi
           if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
-            echo "No usable base ref (first push to branch) -- skipping changed-file lint."
+            echo 'No usable base ref; skipping changed-file migration lint.'
             exit 0
           fi
           just db lint --since "$base"
@@ -90,5 +86,6 @@ jobs:
 
       - name: validate-generated-types
         run: |
-          DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:4433/hominem-test" just db codegen
+          set -euo pipefail
+          DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:4433/hominem-test' just db codegen
           git diff --exit-code packages/db/src/types/database.ts

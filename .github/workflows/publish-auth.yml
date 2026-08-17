@@ -9,30 +9,26 @@ permissions:
 
 jobs:
   publish-auth:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      TURBO_TELEMETRY_DISABLED: '1'
-
-    strategy:
-      matrix:
-        node-version: [24.18.0]
-
+    timeout-minutes: 15
+    environment: Production
     steps:
       - name: checkout-repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: setup-pnpm-workspace
         uses: ./.github/actions/setup-pnpm-workspace
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '24.18.0'
 
       - name: validate-auth-package
         run: |
-          pnpm --filter @ponti-studios/auth lint
-          pnpm --filter @ponti-studios/auth typecheck
-          pnpm --filter @ponti-studios/auth test
+          set -euo pipefail
+          pnpm format:check --filter @ponti-studios/auth...
+          pnpm lint --filter @ponti-studios/auth...
+          pnpm typecheck --filter @ponti-studios/auth...
+          pnpm test --filter @ponti-studios/auth...
 
       - name: publish-to-npm
         working-directory: packages/auth
