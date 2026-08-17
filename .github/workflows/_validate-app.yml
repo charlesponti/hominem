@@ -10,34 +10,32 @@ on:
         type: string
         default: '1.25'
       package-filter:
-        description: 'Turbo package filter, e.g. @hominem/api'
+        description: Turbo package filter, for example @hominem/api
         type: string
         required: true
-      extra-run:
-        description: 'Extra shell command appended after the standard validate steps'
-        type: string
-        default: ''
+      mobile-export:
+        description: Run the fixed iOS embed export check for Omiro.
+        type: boolean
+        default: false
       public-app-url:
-        description: >-
-          The calling app's own public origin (used to build post-login
-          redirect targets, distinct from the shared hosted-login API's own
-          URL). Defaults to the API's own dev port for apps that don't set
-          this themselves; apps with their own dev port (career, finance,
-          ...) should override it to match.
+        description: Public origin used by app validation.
         type: string
         default: 'http://localhost:3000'
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       TURBO_TELEMETRY_DISABLED: '1'
       NODE_ENV: test
-      OPENROUTER_API_KEY: 'some-random-key'
+      OPENROUTER_API_KEY: 'ci-test-openrouter-key'
       REDIS_URL: redis://localhost:6379
-      RESEND_API_KEY: 'some-resend-api-key'
+      RESEND_API_KEY: 'ci-test-resend-key'
       RESEND_FROM_EMAIL: 'test@example.com'
       RESEND_FROM_NAME: 'Test Sender'
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:4433/hominem-test
@@ -54,16 +52,16 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d hominem-test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
           - 4433:5432
       redis:
-        image: redis:latest
+        image: redis@sha256:52334768d4a6594d8969f51a1a6fee3ffa7545f6359a4877229cdc754d2def82
         options: >-
-          --health-cmd "redis-cli ping || exit 1"
+          --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -72,7 +70,7 @@ jobs:
 
     steps:
       - name: checkout-repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: setup-pnpm-workspace
         uses: ./.github/actions/setup-pnpm-workspace
@@ -80,18 +78,23 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: setup-go-for-migrations
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: ${{ inputs.go-version }}
+          cache: false
 
       - name: run-database-migrations
         run: just db migrate test
 
       - name: validate
         run: |
-          pnpm format:check
+          set -euo pipefail
+          pnpm format:check --filter=${{ inputs.package-filter }}...
           pnpm lint --filter=${{ inputs.package-filter }}...
           pnpm typecheck --filter=${{ inputs.package-filter }}...
           pnpm build --filter=${{ inputs.package-filter }}...
           pnpm test --filter=${{ inputs.package-filter }}...
-          ${{ inputs.extra-run }}
+
+      - name: validate-mobile-embed
+        if: inputs.mobile-export
+        run: NODE_ENV=production pnpm --filter @hominem/omiro run export:embed:ios

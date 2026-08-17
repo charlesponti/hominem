@@ -6,9 +6,10 @@ import {
   getChatCompletionText,
   getChatCompletionUsage,
   OpenRouterRequestError,
+  recordAIUsageEvent,
+  startAIUsageTimer,
 } from '@hominem/ai';
 import { db, CareerRepository } from '@hominem/db';
-import { recordAIUsageEvent, startAIUsageTimer } from '@hominem/services';
 import {
   documentStorageService,
   isStorageServiceError,

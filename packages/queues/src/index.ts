@@ -28,3 +28,7 @@ export const fileProcessingQueue: Queue = new BullQueue(QUEUE_NAMES.FILE_PROCESS
 export const embeddingQueue: Queue = new BullQueue(QUEUE_NAMES.EMBEDDING_GENERATION, {
   connection: redis,
 });
+
+export const resumeAnalysisQueue: Queue = new BullQueue(QUEUE_NAMES.RESUME_ANALYSIS, {
+  connection: redis,
+});

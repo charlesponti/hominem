@@ -80,3 +80,14 @@ export type {
   TimeBlockExtractionInput,
   TimeBlockExtractionResult,
 } from './time-block-extraction';
+
+export {
+  assertUnderMonthlyUsageLimit,
+  getAIUsageFailureDetails,
+  getMonthlyUsageStatus,
+  MONTHLY_AI_USAGE_LIMIT_USD,
+  recordAIUsageEvent,
+  startAIUsageTimer,
+} from './ai-usage';
+
+export type { AIUsageFailureDetails, MonthlyUsageStatus } from './ai-usage';

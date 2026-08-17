@@ -5,6 +5,7 @@ export const QUEUE_NAMES = {
   PLACE_PHOTO_ENRICH: 'place-photo-enrich',
   FILE_PROCESSING: 'file-processing',
   EMBEDDING_GENERATION: 'embedding-generation',
+  RESUME_ANALYSIS: 'resume-analysis',
 } as const;
 
 export const REDIS_CHANNELS = {

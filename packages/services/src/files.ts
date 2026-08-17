@@ -1,12 +1,8 @@
 import { Buffer } from 'node:buffer';
-import { randomUUID } from 'node:crypto';
 
-import { createChatCompletion, getChatCompletionText, getChatCompletionUsage } from '@hominem/ai';
 import { LOG_MESSAGES, logger } from '@hominem/telemetry';
 import mammoth from 'mammoth';
 import PDFParser from 'pdf2json';
-
-import { recordAIUsageEvent, startAIUsageTimer } from './ai-usage.js';
 
 export interface ProcessedFile {
   id: string;
@@ -20,13 +16,19 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Generic, non-AI file access and extraction: type detection, raw text
+ * extraction from documents, and size/support helpers. Domain-specific
+ * analysis of that content (e.g. generating an image description or a
+ * document summary via an LLM) belongs to whichever feature consumes it,
+ * not here.
+ */
 export class FileProcessorService {
   static async processFile(
     buffer: ArrayBuffer,
     originalName: string,
     mimetype: string,
     fileId: string,
-    userId: string,
   ): Promise<ProcessedFile> {
     const baseFile: ProcessedFile = {
       id: fileId,
@@ -38,10 +40,8 @@ export class FileProcessorService {
 
     try {
       switch (baseFile.type) {
-        case 'image':
-          return await FileProcessorService.processImage(buffer, baseFile, userId);
         case 'document':
-          return await FileProcessorService.processDocument(buffer, baseFile, mimetype, userId);
+          return await FileProcessorService.processDocument(buffer, baseFile, mimetype);
         case 'audio':
           return await FileProcessorService.processAudio(buffer, baseFile);
         case 'video':
@@ -58,84 +58,10 @@ export class FileProcessorService {
     }
   }
 
-  private static async processImage(
-    buffer: ArrayBuffer,
-    file: ProcessedFile,
-    userId: string,
-  ): Promise<ProcessedFile> {
-    let textContent = '';
-    if (buffer.byteLength < 20 * 1024 * 1024) {
-      const eventId = randomUUID();
-      const getDurationMs = startAIUsageTimer();
-      try {
-        const base64Image = Buffer.from(buffer).toString('base64');
-        const response = await createChatCompletion({
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Please describe this image in detail. Focus on key elements, text, and context that would be useful for answering questions about it.',
-                },
-                {
-                  type: 'image_url',
-                  imageUrl: {
-                    url: `data:${file.mimetype};base64,${base64Image}`,
-                  },
-                },
-              ],
-            },
-          ],
-          maxTokens: 500,
-        });
-        await recordAIUsageEvent({
-          eventId,
-          userId,
-          feature: 'file_image_analyze',
-          operation: 'chat_completion',
-          usage: getChatCompletionUsage(response),
-          model: response.model,
-          status: 'succeeded',
-          durationMs: getDurationMs(),
-          metadata: {
-            fileId: file.id,
-            mimeType: file.mimetype,
-            sizeBytes: file.size,
-          },
-        });
-
-        textContent = getChatCompletionText(response);
-      } catch (error) {
-        await recordAIUsageEvent({
-          eventId,
-          userId,
-          feature: 'file_image_analyze',
-          operation: 'chat_completion',
-          status: 'failed',
-          error,
-          durationMs: getDurationMs(),
-          metadata: {
-            fileId: file.id,
-            mimeType: file.mimetype,
-            sizeBytes: file.size,
-          },
-        });
-        logger.warn(LOG_MESSAGES.IMAGE_ANALYZE_ERROR, { error });
-      }
-    }
-
-    return {
-      ...file,
-      textContent,
-    };
-  }
-
   private static async processDocument(
     buffer: ArrayBuffer,
     file: ProcessedFile,
     mimetype: string,
-    userId: string,
   ): Promise<ProcessedFile> {
     let textContent = '';
 
@@ -167,73 +93,13 @@ export class FileProcessorService {
         textContent = new TextDecoder().decode(buffer);
       }
 
-      let summary = '';
-      if (textContent.length > 1000) {
-        const eventId = randomUUID();
-        const getDurationMs = startAIUsageTimer();
-        try {
-          const response = await createChatCompletion({
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'You are a helpful assistant that summarizes documents. Provide a concise summary highlighting the key points and main topics.',
-              },
-              {
-                role: 'user',
-                content: `Please summarize this document:\n\n${textContent.slice(0, 10000)}${
-                  textContent.length > 10000 ? '...' : ''
-                }`,
-              },
-            ],
-            maxTokens: 300,
-          });
-          await recordAIUsageEvent({
-            eventId,
-            userId,
-            feature: 'file_document_summarize',
-            operation: 'chat_completion',
-            usage: getChatCompletionUsage(response),
-            model: response.model,
-            status: 'succeeded',
-            durationMs: getDurationMs(),
-            metadata: {
-              fileId: file.id,
-              mimeType: file.mimetype,
-              sizeBytes: file.size,
-              extractedCharacterCount: textContent.length,
-            },
-          });
-
-          summary = getChatCompletionText(response);
-        } catch (error) {
-          await recordAIUsageEvent({
-            eventId,
-            userId,
-            feature: 'file_document_summarize',
-            operation: 'chat_completion',
-            status: 'failed',
-            error,
-            durationMs: getDurationMs(),
-            metadata: {
-              fileId: file.id,
-              mimeType: file.mimetype,
-              sizeBytes: file.size,
-              extractedCharacterCount: textContent.length,
-            },
-          });
-          logger.warn(LOG_MESSAGES.DOCUMENT_SUMMARIZE_ERROR, { error });
-        }
-      }
-
       return {
         ...file,
         textContent,
-        content: summary || textContent.slice(0, 500),
+        content: textContent.slice(0, 500),
         metadata: {
           characterCount: textContent.length,
           wordCount: textContent.split(/\s+/).length,
-          summary,
         },
       };
     } catch (error) {

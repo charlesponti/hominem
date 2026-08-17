@@ -4,7 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 10
     commit-message:
       prefix: 'chore(deps)'
 
@@ -12,15 +12,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 10
     commit-message:
       prefix: 'chore(deps)'
 
   - package-ecosystem: docker
-    directory: /apps/web
+    directory: /apps/career
     schedule:
       interval: weekly
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
 
@@ -28,6 +28,6 @@ updates:
     directory: /services/api
     schedule:
       interval: weekly
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'

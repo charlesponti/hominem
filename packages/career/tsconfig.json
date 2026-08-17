@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.profiles/package.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
+    "outDir": "./build",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo"
+  ],
+  "references": [{ "path": "../ai" }, { "path": "../db" }, { "path": "../queues" }]
+}

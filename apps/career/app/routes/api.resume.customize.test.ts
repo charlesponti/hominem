@@ -30,6 +30,8 @@ vi.mock('@hominem/ai', () => ({
     cachedPromptTokens: null,
     reasoningTokens: null,
   })),
+  recordAIUsageEvent: mocks.recordAIUsageEvent,
+  startAIUsageTimer: () => () => 0,
 }));
 
 vi.mock('@hominem/db', () => ({
@@ -37,11 +39,6 @@ vi.mock('@hominem/db', () => ({
   SocialLinksRepository: {
     get: mocks.getSocialLinks,
   },
-}));
-
-vi.mock('@hominem/services', () => ({
-  recordAIUsageEvent: mocks.recordAIUsageEvent,
-  startAIUsageTimer: () => () => 0,
 }));
 
 vi.mock('../lib/logger', () => ({

@@ -24,8 +24,10 @@
   "dependencies": {
     "@base-ui/react": "catalog:",
     "@hominem/ai": "workspace:*",
+    "@hominem/career-services": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
+    "@hominem/queues": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/storage": "workspace:*",
     "@hominem/utils": "workspace:*",

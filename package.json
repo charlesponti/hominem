@@ -25,6 +25,7 @@
     "dev:api": "turbo run dev --filter @hominem/api",
     "dev:career": "turbo run dev --filter @hominem/career",
     "dev:finance": "turbo run dev --filter @hominem/finance",
+    "dev:worker": "turbo run dev:worker --filter @hominem/api",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint",

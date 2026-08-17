@@ -179,6 +179,53 @@
   }
 }
 
+@keyframes save-bar-jiggle-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.92) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.03) rotate(-1.5deg);
+  }
+  65% {
+    transform: translateY(0) scale(1.01) rotate(1.5deg);
+  }
+  85% {
+    transform: rotate(-0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes save-bar-jiggle-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+@utility animate-save-bar-in {
+  animation: save-bar-jiggle-in var(--duration-500, 500ms) var(--ease-out, ease-out) 1 both;
+}
+
+@utility animate-save-bar-out {
+  animation: save-bar-jiggle-out var(--duration-200, 200ms) var(--ease-in, ease-in) 1 both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-save-bar-in,
+  .animate-save-bar-out {
+    animation-duration: 1ms;
+  }
+}
+
 /* Hominem-only compatibility tokens for legacy app surfaces. These derive
  * missing semantic states from the 0.4.1 base palette without extending the
  * shared package's public token contract. */

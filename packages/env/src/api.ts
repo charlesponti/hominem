@@ -8,6 +8,11 @@ export const apiSchema = baseSchema.extend({
   // wrong for one of them. Each entrypoint supplies its own local-dev
   // fallback (services/api/src/index.ts, services/api/src/worker.ts).
   PORT: z.coerce.number().int().positive().optional(),
+  // Local-dev-only override so `pnpm dev` (index.ts) and `pnpm dev:worker`
+  // (worker.ts) can run side by side without fighting over one shared PORT
+  // value from a single .env file. Unset in Railway, where each deployed
+  // service already gets its own distinct PORT injected by the platform.
+  WORKER_PORT: z.coerce.number().int().positive().optional(),
   API_URL: z.url().default('http://localhost:4040'),
   CAREER_URL: z.url().default('http://localhost:4451'),
   WEB_URL: z.url().default('http://localhost:4445'),

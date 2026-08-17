@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   logError: vi.fn(),
 }));
 
-vi.mock('@hominem/services', () => ({
+vi.mock('@hominem/ai', () => ({
   recordAIUsageEvent: mocks.recordAIUsageEvent,
 }));
 

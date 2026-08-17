@@ -1,92 +1,32 @@
 import type { CareerProfileRecord } from '@hominem/db';
 import { Input, Switch, Textarea } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
-import { useEffect, useState } from 'react';
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
+import { Label } from '@ponti-studios/ui/primitives';
+import { Controller, useFormContext } from 'react-hook-form';
 
-import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { PhoneField } from '~/components/PhoneField';
 import { ProfileImageUpload } from '~/components/ProfileImageUpload';
-import type { AccountActionResult, BasicInfoFormValues } from '~/lib/account/types';
+import type { ProfileDetailsFormValues } from '~/lib/account/types';
 
+/**
+ * Basic-info fieldset. Reads and writes through the page-level
+ * react-hook-form context so all profile fields share one dirty state and
+ * one save action (see ProfilePage's SaveBar).
+ */
 export function BasicInfoForm({
   profile,
-  accountEmail,
-  onSave,
   onImageUpload,
 }: {
   profile: CareerProfileRecord;
-  accountEmail?: string | null;
-  onSave: (values: BasicInfoFormValues) => Promise<AccountActionResult<unknown>>;
   onImageUpload: (croppedImageBlob: Blob) => Promise<string | undefined>;
 }) {
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [isTogglingFlag, setIsTogglingFlag] = useState(false);
-
-  const lockedEmail = accountEmail || profile.email || '';
-
   const {
     register,
-    handleSubmit,
-    formState: { errors, isDirty, isSubmitting },
-    reset,
     control,
-    getValues,
-    setValue,
-  } = useForm<BasicInfoFormValues>({
-    defaultValues: profileToFormValues(profile, lockedEmail),
-  });
-
-  useEffect(() => {
-    reset(profileToFormValues(profile, lockedEmail));
-  }, [profile, lockedEmail, reset]);
-
-  const onSubmit: SubmitHandler<BasicInfoFormValues> = async (formData) => {
-    if (!isDirty) {
-      return;
-    }
-
-    setSubmissionError(null);
-    const result = await onSave({ ...formData, email: lockedEmail });
-
-    if (result.success === false) {
-      setSubmissionError(result.error || 'We couldn’t save your basic info. Try again.');
-      return;
-    }
-
-    reset({ ...formData, email: lockedEmail });
-  };
-
-  const handleFlagToggle = async (
-    field: 'availabilityStatus' | 'openToRemote',
-    checked: boolean,
-  ) => {
-    const previous = getValues(field) ?? false;
-    setValue(field, checked, { shouldDirty: false });
-    setIsTogglingFlag(true);
-    setSubmissionError(null);
-
-    const result = await onSave({
-      ...getValues(),
-      email: lockedEmail,
-      [field]: checked,
-    });
-
-    setIsTogglingFlag(false);
-
-    if (result.success === false) {
-      setValue(field, previous, { shouldDirty: false });
-      setSubmissionError(result.error || 'We couldn’t update that setting. Try again.');
-      return;
-    }
-
-    reset({ ...getValues(), email: lockedEmail, [field]: checked });
-  };
+    formState: { errors },
+  } = useFormContext<ProfileDetailsFormValues>();
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 border rounded-2xl p-4">
-      <FormErrorAlert title="Basic info wasn’t saved" message={submissionError} />
-
+    <section className="space-y-4 border rounded-2xl p-4">
       <section className="space-y-5">
         <ProfileImageUpload
           compact
@@ -154,14 +94,7 @@ export function BasicInfoForm({
             name="openToRemote"
             control={control}
             render={({ field }) => (
-              <Switch
-                id="openToRemote"
-                checked={field.value}
-                disabled={isTogglingFlag || isSubmitting}
-                onCheckedChange={(checked) => {
-                  void handleFlagToggle('openToRemote', checked);
-                }}
-              />
+              <Switch id="openToRemote" checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
         </div>
@@ -177,30 +110,33 @@ export function BasicInfoForm({
               <Switch
                 id="availabilityStatus"
                 checked={field.value}
-                disabled={isTogglingFlag || isSubmitting}
-                onCheckedChange={(checked) => {
-                  void handleFlagToggle('availabilityStatus', checked);
-                }}
+                onCheckedChange={field.onChange}
               />
             )}
           />
         </div>
       </section>
-
-      <Button
-        type="submit"
-        disabled={isSubmitting || isTogglingFlag || !isDirty}
-        variant="default"
-        isLoading={isSubmitting}
-        loadingLabel="Saving..."
-      >
-        Save changes
-      </Button>
-    </form>
+    </section>
   );
 }
 
-function profileToFormValues(profile: CareerProfileRecord, email: string): BasicInfoFormValues {
+export function profileToFormValues(
+  profile: CareerProfileRecord,
+  email: string,
+): Pick<
+  ProfileDetailsFormValues,
+  | 'email'
+  | 'name'
+  | 'availabilityStatus'
+  | 'bio'
+  | 'currentLocation'
+  | 'initials'
+  | 'jobTitle'
+  | 'openToRemote'
+  | 'phone'
+  | 'tagline'
+  | 'title'
+> {
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '';
   return {
     email,

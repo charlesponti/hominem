@@ -111,3 +111,61 @@ export interface EmbeddingGenerationJob {
   entityType: 'note' | 'chat';
   entityId: string;
 }
+
+/**
+ * Resume import: parsing a PDF resume and diffing it against the user's
+ * existing career profile so changes can be reviewed before being applied.
+ */
+export type ResumeAnalysisStage =
+  | 'queued'
+  | 'pdf-extraction'
+  | 'ai-parse'
+  | 'schema-validation'
+  | 'diffing'
+  | 'done'
+  | 'error';
+
+export type ResumeImportMode = 'create' | 'replace';
+
+export interface ResumeAnalysisQueuePayload {
+  jobId: string;
+  userId: string;
+  fileId: string;
+  mode: ResumeImportMode;
+  existingProfileId?: string;
+  createdAt: number;
+}
+
+/** A changed scalar field on the profile or social-links record. */
+export interface ResumeScalarFieldChange {
+  field: string;
+  group: 'basics' | 'social';
+  label: string;
+  current: string | boolean | null;
+  proposed: string | boolean | null;
+}
+
+/** A new list-type record (work experience, skill, or project) parsed from the resume. */
+export interface ResumeListItemChange {
+  key: string;
+  group: 'workExperience' | 'skills' | 'projects';
+  summary: string;
+  payload: unknown;
+}
+
+export interface ResumeImportDiff {
+  scalarChanges: ResumeScalarFieldChange[];
+  listChanges: ResumeListItemChange[];
+  portfolioSlugProposed: string;
+}
+
+export interface ResumeAnalysisJob extends BaseJob {
+  type: 'resume-analysis';
+  stage: ResumeAnalysisStage;
+  fileId: string;
+  mode: ResumeImportMode;
+  error?: string;
+  diff?: ResumeImportDiff;
+  startTime: number;
+  endTime?: number;
+}

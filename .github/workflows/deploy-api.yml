@@ -8,16 +8,15 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-api-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-api
+  cancel-in-progress: false
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   deploy-api:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
     uses: ./.github/workflows/railway-deploy-service.yml
     secrets:
       service_target: ${{ secrets.RAILWAY_SERVICE_API }}

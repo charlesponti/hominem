@@ -6,4 +6,4 @@ export {
   recordAIUsageEvent,
   startAIUsageTimer,
   type MonthlyUsageStatus,
-} from '@hominem/services';
+} from '@hominem/ai';

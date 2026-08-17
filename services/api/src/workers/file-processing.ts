@@ -6,6 +6,8 @@ import { fileStorageService } from '@hominem/storage';
 import { logger } from '@hominem/telemetry';
 import { Worker } from 'bullmq';
 
+import { describeImageForChat, summarizeDocumentForChat } from './file-analysis';
+
 let worker: Worker | null = null;
 
 interface FileProcessingJobData {
@@ -36,8 +38,27 @@ async function processFileUploadJob(data: FileProcessingJobData) {
     data.originalName,
     data.mimetype,
     data.fileId,
-    data.userId,
   );
+
+  if (processed.type === 'image') {
+    processed.textContent = await describeImageForChat(
+      arrayBuffer,
+      data.mimetype,
+      data.fileId,
+      data.userId,
+    );
+  } else if (processed.type === 'document' && processed.textContent) {
+    const summary = await summarizeDocumentForChat(
+      processed.textContent,
+      data.fileId,
+      data.mimetype,
+      data.userId,
+    );
+    if (summary) {
+      processed.content = summary;
+      processed.metadata = { ...processed.metadata, summary };
+    }
+  }
 
   await FileRepository.upsert(db, {
     id: data.fileId,

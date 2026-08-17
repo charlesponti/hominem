@@ -59,11 +59,6 @@ vi.mock('../lib/rate-limit', () => ({
   getRateLimitHeaders: mocks.getRateLimitHeaders,
 }));
 
-vi.mock('@hominem/services', () => ({
-  recordAIUsageEvent: mocks.recordAIUsageEvent,
-  startAIUsageTimer: () => () => 0,
-}));
-
 vi.mock('@hominem/ai', () => ({
   OpenRouterRequestError: class OpenRouterRequestError extends Error {
     status?: number;
@@ -97,6 +92,8 @@ vi.mock('@hominem/ai', () => ({
     cachedPromptTokens: null,
     reasoningTokens: null,
   })),
+  recordAIUsageEvent: mocks.recordAIUsageEvent,
+  startAIUsageTimer: () => () => 0,
 }));
 
 let action: typeof import('./api.resume.convert').action;

@@ -21,6 +21,7 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
+    "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
@@ -40,6 +41,7 @@
     "@better-auth/mcp": "1.7.0-rc.6",
     "@better-auth/oauth-provider": "1.7.0-rc.6",
     "@hominem/ai": "workspace:*",
+    "@hominem/career-services": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/finance-services": "workspace:*",
