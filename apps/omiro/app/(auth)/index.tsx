@@ -141,12 +141,12 @@ function AuthScreen() {
     }
   }, [normalizedEmail, requestEmailOtp, router]);
 
+  const isProbing = useMemo(() => isPending && !authError, [isPending, authError]);
+  const displayError = useMemo(() => !!authError, [authError]);
+
   if (isSignedIn) {
     return <Redirect href={CHAT_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
-
-  const isProbing = useMemo(() => isPending && !authError, [isPending, authError]);
-  const displayError = useMemo(() => !!authError, [authError]);
 
   return (
     <>
