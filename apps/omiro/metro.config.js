@@ -5,6 +5,7 @@ const { withUniwindConfig } = require("uniwind/metro");
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getSentryExpoConfig(__dirname);
 const authSource = path.resolve(__dirname, "../../packages/auth/src");
+const betterAuthExpoClient = path.dirname(require.resolve("@better-auth/expo"));
 const isDevelopment = process.env.APP_ENV === "development";
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
@@ -12,6 +13,10 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     moduleName = path.join(authSource, "index.ts");
   } else if (isDevelopment && moduleName.startsWith("@ponti-studios/auth/")) {
     moduleName = path.join(authSource, moduleName.slice("@ponti-studios/auth/".length));
+  }
+
+  if (moduleName === "@better-auth/expo/client") {
+    moduleName = path.join(betterAuthExpoClient, "client.js");
   }
 
   if (moduleName.endsWith(".js")) {
