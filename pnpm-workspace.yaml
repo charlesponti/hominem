@@ -8,7 +8,7 @@ catalog:
   '@tanstack/react-query': 5.101.4
   '@testing-library/jest-dom': 7.0.0
   '@types/node': 25.4.0
-  dotenv: 17.2.3
+  dotenv: 17.4.2
   '@react-router/dev': 8.3.0
   '@react-router/node': 8.3.0
   '@react-router/serve': 8.3.0
@@ -18,7 +18,7 @@ catalog:
   hono: 4.12.34
   ioredis: 6.0.0
   jiti: 2.7.0
-  kysely: 0.29.4
+  kysely: 0.29.5
   lucide-react: 1.28.0
   pdf2json: 4.0.3
   pg: 8.20.0
@@ -27,7 +27,7 @@ catalog:
   react-router: 8.3.0
   resend: 6.12.4
   '@types/react': 19.2.17
-  '@types/react-dom': 19.1.7
+  '@types/react-dom': 19.2.4
   '@ponti-studios/ui': 1.6.0
   typescript: 7.0.2
   vite: 8.1.5
@@ -43,7 +43,7 @@ overrides:
   prismjs: '>=1.30.0'
   markdown-it: '>=12.3.2'
   serialize-javascript: '>=7.0.3'
-  '@xmldom/xmldom': 0.8.13
+  '@xmldom/xmldom': '>=0.9.11'
   fast-xml-parser: '>=5.7.0'
   postcss: '>=8.5.10'
   uuid: '>=11.1.1'

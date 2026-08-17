@@ -69,7 +69,7 @@
     "jiti": "catalog:",
     "jsdom": "^30.0.0",
     "msw": "^2.12.13",
-    "playwright": "^1.61.1",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4.1.8",
     "tw-animate-css": "^1.3.4",
     "vite": "catalog:",
