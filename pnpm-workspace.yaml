@@ -73,7 +73,6 @@ blockExoticSubdeps: true
 strictDepBuilds: true
 allowBuilds:
   '@openrouter/sdk': true
-  '@railway/cli': true
   '@sentry/cli': true
   '@shopify/react-native-skia': true
   '@swc/core': true

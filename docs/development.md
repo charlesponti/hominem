@@ -50,7 +50,7 @@ For Omiro work, use the app bootstrap loop in [apps/omiro/README.md](../apps/omi
 
 `pnpm --filter @hominem/api merge-user-data --sourceEmail <email> --targetEmail <email>` plans a merge without writing to either database. It requires `SOURCE_DATABASE_URL` and `TARGET_DATABASE_URL`, resolves one user in each database, verifies the complete Goose history and app schema fingerprint, and writes a permission-restricted manifest under `~/.hominem/user-data-merges/`.
 
-Use `--apply --yes` only after reviewing that manifest. The tool creates a production `pg_dump` backup beside the manifest, inserts rows atomically, never updates or deletes production data, and aborts on any non-identical primary-key or unique-key collision. It excludes `app.ai_usage_events` and every `app.purchase_*` table. For Railway, use a temporary `railway connect database --tunnel-only --environment production` tunnel as `TARGET_DATABASE_URL`, then close the tunnel after the command finishes.
+Use `--apply --yes` only after reviewing that manifest. The tool creates a production `pg_dump` backup beside the manifest, inserts rows atomically, never updates or deletes production data, and aborts on any non-identical primary-key or unique-key collision. It excludes `app.ai_usage_events` and every `app.purchase_*` table. For Railway, use a temporary `pnpm dlx @railway/cli@5.25.1 connect database --tunnel-only --environment production` tunnel as `TARGET_DATABASE_URL`, then close the tunnel after the command finishes.
 
 ## Deployment rules
 

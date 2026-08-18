@@ -17,9 +17,29 @@ SERVICE="${SERVICE:-$service_name}"
 cp "$SCRIPT_DIR/$CONFIG" "$SCRIPT_DIR/railway.json"
 trap 'rm -f "$SCRIPT_DIR/railway.json"' EXIT
 
+RAILWAY_VERSION="5.25.1"
+
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64) RAILWAY_TRIPLE="x86_64-unknown-linux-gnu" ;;
+  Linux-aarch64) RAILWAY_TRIPLE="aarch64-unknown-linux-musl" ;;
+  Darwin-arm64) RAILWAY_TRIPLE="aarch64-apple-darwin" ;;
+  Darwin-x86_64) RAILWAY_TRIPLE="x86_64-apple-darwin" ;;
+  *) echo "error: unsupported platform for the railway CLI" >&2; exit 1 ;;
+esac
+
+RAILWAY_BIN_DIR="$HOME/.railway/bin"
+RAILWAY_BIN="$RAILWAY_BIN_DIR/railway"
+if [[ ! -x "$RAILWAY_BIN" ]]; then
+  mkdir -p "$RAILWAY_BIN_DIR"
+  curl -fsSL -o /tmp/railway.tar.gz \
+    "https://github.com/railwayapp/cli/releases/download/v${RAILWAY_VERSION}/railway-v${RAILWAY_VERSION}-${RAILWAY_TRIPLE}.tar.gz"
+  tar xzf /tmp/railway.tar.gz -C "$RAILWAY_BIN_DIR"
+  rm -f /tmp/railway.tar.gz
+fi
+
 cd "$SCRIPT_DIR"
 set +e
-pnpm exec railway up --ci --service "$SERVICE" 2>&1 | tee /tmp/railway-up.log
+"$RAILWAY_BIN" up --ci --service "$SERVICE" 2>&1 | tee /tmp/railway-up.log
 status=${PIPESTATUS[0]}
 set -e
 

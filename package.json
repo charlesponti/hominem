@@ -41,7 +41,6 @@
   "devDependencies": {
     "@expo/image-utils": "^0.11.4",
     "@expo/prebuild-config": "~56.0.16",
-    "@railway/cli": "5.25.1",
     "@types/node": "catalog:",
     "@types/pg": "^8.18.0",
     "@types/react": "catalog:",
