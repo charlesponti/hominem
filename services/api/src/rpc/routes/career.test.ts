@@ -124,6 +124,20 @@ describe('career skills routes', () => {
   });
 });
 
+describe('career import routes', () => {
+  it('returns a human validation error for unsafe URL schemes', async () => {
+    const response = await postJson(createApp(userId), '/career/imports', {
+      url: 'javascript:alert(1)',
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'INVALID_URL',
+      message: 'Enter a valid job posting URL.',
+    });
+  });
+});
+
 describe('career wishlist routes', () => {
   it('round-trips create, list, update, and delete', async () => {
     const app = createApp(userId);

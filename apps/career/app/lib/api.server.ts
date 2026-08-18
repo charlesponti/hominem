@@ -16,7 +16,7 @@ const customFetch =
     return fetch(input, { ...init, headers, credentials: 'include' });
   };
 
-function createServerHonoClient(request?: Request) {
+export function createServerHonoClient(request?: Request) {
   const career = hc<typeof careerRoutes>(
     new URL('/api/career', serverEnv.HOMINEM_INTERNAL_API_URL).toString(),
     { fetch: customFetch(request) },

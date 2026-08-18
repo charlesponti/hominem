@@ -50,11 +50,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       return data(
         {
           error:
-            result.error instanceof Error
-              ? result.error.message
-              : typeof result.error === 'string'
-                ? result.error
-                : 'Job posting scraping failed',
+            'We couldn’t read the job details from this posting. You can retry or paste the description.',
         } satisfies JobScrapeApiResponse,
         { status: 400 },
       );
@@ -79,9 +75,14 @@ export const action: ActionFunction = async ({ request, context }) => {
         job_posting: parseScrapedJobPostingContent(result.content ?? '', jobUrl),
       } satisfies JobScrapeApiResponse;
     } catch (error) {
+      logger.error('Job scraping response parsing failed', error, {
+        owner_userid: user.id,
+        jobUrl: new URL(jobUrl).hostname,
+      });
       return data(
         {
-          error: error instanceof Error ? error.message : 'Job posting scraping failed',
+          error:
+            'We couldn’t read the job details from this posting. You can retry or paste the description.',
         } satisfies JobScrapeApiResponse,
         { status: 400 },
       );

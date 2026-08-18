@@ -29,11 +29,11 @@ export interface JobStats {
 /**
  * Base job information shared by all job types
  */
-export interface BaseJob {
+export interface BaseJob<TStatus extends string = JobStatus> {
   jobId: string;
   userId: string;
   endTime?: number;
-  status: JobStatus;
+  status: TStatus;
   stats?: JobStats;
   type: string;
 }
@@ -168,4 +168,71 @@ export interface ResumeAnalysisJob extends BaseJob {
   diff?: ResumeImportDiff;
   startTime: number;
   endTime?: number;
+}
+
+export type CareerImportStage =
+  | 'queued'
+  | 'validating-url'
+  | 'fetching-posting'
+  | 'extracting-fields'
+  | 'validating-result'
+  | 'draft-ready';
+
+export type CareerImportStatus =
+  | 'queued'
+  | 'processing'
+  | 'ready'
+  | 'failed'
+  | 'dismissed'
+  | 'resolved';
+
+export interface CareerImportDraft {
+  jobTitle: string;
+  companyName: string;
+  companyDescription: string;
+  jobDescription: string;
+  location: string;
+  salaryRange: string;
+  salaryDetails: string;
+  employmentType: string;
+  experienceLevel: string;
+  education: string;
+  requirements: string[];
+  skills: string[];
+  benefits: string[];
+  responsibilities: string[];
+  industry: string;
+  postedDate: string;
+  applicationDeadline: string;
+  department: string;
+  hiringManager: string;
+  companySize: string;
+  fundingStage: string;
+  technologyStack: string[];
+  cultureAspects: string[];
+  fullText: string;
+  url: string;
+  scrapedAt: string;
+  wordCount: number;
+}
+
+export interface CareerImportJob extends BaseJob<CareerImportStatus> {
+  type: 'career-job-import';
+  status: CareerImportStatus;
+  stage: CareerImportStage;
+  sourceUrl: string;
+  draft?: CareerImportDraft;
+  errorCode?: string;
+  error?: string;
+  progress: number;
+  attempt: number;
+  startTime: number;
+  endTime?: number;
+}
+
+export interface CareerImportQueuePayload {
+  jobId: string;
+  userId: string;
+  sourceUrl: string;
+  createdAt: number;
 }

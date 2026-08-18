@@ -1,3 +1,5 @@
+import { CareerImportRepository, db } from '@hominem/db';
+import type { CareerImportDraft } from '@hominem/queues';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DateField,
@@ -10,16 +12,98 @@ import {
   todayDateInput,
 } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Form, Link, redirect } from 'react-router';
 
-import type { JobScrapeApiRequest, JobScrapeApiResponse } from '~/lib/api-contracts';
+import { serverEnv } from '~/lib/env';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
-import type { JobPosting } from '~/lib/services/job-scraping.service';
 import { isJobApplicationStatus, JobApplicationStatus } from '~/types/career';
+
+type JobPosting = {
+  job_title: string;
+  companyName: string;
+  companyDescription: string;
+  jobDescription: string;
+  location: string;
+  salaryRange: string;
+  salaryDetails: string;
+  employmentType: string;
+  experienceLevel: string;
+  education: string;
+  requirements: string[];
+  skills: string[];
+  benefits: string[];
+  responsibilities: string[];
+  industry: string;
+  postedDate: string;
+  applicationDeadline: string;
+  department: string;
+  hiringManager: string;
+  companySize: string;
+  fundingStage: string;
+  technologyStack: string[];
+  cultureAspects: string[];
+  fullText: string;
+  url: string;
+  scrapedAt: string;
+  wordCount: number;
+};
+
+type CareerImportDto = {
+  id: string;
+  queueJobId: string;
+  status: 'queued' | 'processing' | 'ready' | 'failed' | 'dismissed' | 'resolved';
+  stage: string;
+  progress: number;
+  sourceUrl: string;
+  draft?: CareerImportDraft;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+};
+
+function getImportErrorMessage(job: CareerImportDto): string {
+  if (job.errorMessage?.trim()) return job.errorMessage;
+  if (job.errorCode === 'POSTING_EMPTY') {
+    return 'The page opened, but no complete job description was available.';
+  }
+  if (job.errorCode === 'INVALID_URL') return 'Enter a valid job posting URL.';
+  return 'We couldn’t import this job posting. You can retry or paste the description.';
+}
+
+function toJobPosting(draft: CareerImportDraft): JobPosting {
+  return {
+    job_title: draft.jobTitle,
+    companyName: draft.companyName,
+    companyDescription: draft.companyDescription,
+    jobDescription: draft.jobDescription,
+    location: draft.location,
+    salaryRange: draft.salaryRange,
+    salaryDetails: draft.salaryDetails,
+    employmentType: draft.employmentType,
+    experienceLevel: draft.experienceLevel,
+    education: draft.education,
+    requirements: draft.requirements,
+    skills: draft.skills,
+    benefits: draft.benefits,
+    responsibilities: draft.responsibilities,
+    industry: draft.industry,
+    postedDate: draft.postedDate,
+    applicationDeadline: draft.applicationDeadline,
+    department: draft.department,
+    hiringManager: draft.hiringManager,
+    companySize: draft.companySize,
+    fundingStage: draft.fundingStage,
+    technologyStack: draft.technologyStack,
+    cultureAspects: draft.cultureAspects,
+    fullText: draft.fullText,
+    url: draft.url,
+    scrapedAt: draft.scrapedAt,
+    wordCount: draft.wordCount,
+  };
+}
 
 export const meta: MetaFunction = () => [
   { title: 'New Application | career' },
@@ -46,9 +130,30 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const status = statusValue as JobApplicationStatus;
   const location = formData.get('location') as string;
   const salaryQuoted = formData.get('salaryQuoted') as string;
+  const importId = formData.get('importId');
+  const jobPostingDataValue = formData.get('jobPostingData');
 
   if (!position || !companyName) {
     throw new Response('Position and company are required', { status: 400 });
+  }
+
+  let jobPostingData: { url?: string; jobDescription?: string } = {};
+  if (typeof jobPostingDataValue === 'string' && jobPostingDataValue) {
+    try {
+      const parsed = JSON.parse(jobPostingDataValue) as unknown;
+      if (parsed && typeof parsed === 'object') {
+        const value = parsed as { url?: unknown; jobDescription?: unknown };
+        jobPostingData = {
+          url: typeof value.url === 'string' ? value.url : undefined,
+          jobDescription:
+            typeof value.jobDescription === 'string' ? value.jobDescription : undefined,
+        };
+      }
+    } catch {
+      throw new Response('The imported job details are invalid. Please retry the import.', {
+        status: 400,
+      });
+    }
   }
 
   let salaryExpectation: number | null = null;
@@ -67,7 +172,19 @@ export async function action({ request, context }: ActionFunctionArgs) {
       status,
       location: location || null,
       salaryExpectation,
+      jobPostingUrl: jobPostingData.url || null,
+      notes: jobPostingData.jobDescription || null,
     });
+
+    if (typeof importId === 'string' && importId) {
+      const importedJob = await CareerImportRepository.getById(db, user.id, importId);
+      if (importedJob) {
+        await CareerImportRepository.update(db, importedJob.id, {
+          status: 'resolved',
+          resolvedAt: new Date().toISOString(),
+        });
+      }
+    }
 
     return redirect(`/applications/${application.id}`);
   } catch (error) {
@@ -83,11 +200,99 @@ export default function CreateJobApplication() {
   const [url, setUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [scrapingError, setScrapingError] = useState<string | null>(null);
+  const [importId, setImportId] = useState<string | null>(null);
+  const [importJob, setImportJob] = useState<CareerImportDto | null>(null);
 
-  const handleScrapedData = (data: JobPosting) => {
-    setScrapedData(data);
-    setInputMethod('manual');
+  const applyImport = (job: CareerImportDto) => {
+    setImportId(job.id);
+    setImportJob(job);
+    if (job.status === 'ready' && job.draft) {
+      setScrapedData(toJobPosting(job.draft));
+      setInputMethod('manual');
+      setIsScraping(false);
+    }
   };
+
+  const refreshImport = async (id: string) => {
+    const response = await fetch(`/api/job/import?importId=${encodeURIComponent(id)}`);
+    if (!response.ok) return;
+    const result = (await response.json()) as { import?: CareerImportDto | null };
+    if (result.import) applyImport(result.import);
+  };
+
+  useEffect(() => {
+    void fetch('/api/job/import')
+      .then((response) => response.json() as Promise<{ imports?: CareerImportDto[] }>)
+      .then((result) => {
+        const latest = result.imports?.[0];
+        if (latest) applyImport(latest);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (
+      !importJob ||
+      !importId ||
+      ['ready', 'failed', 'dismissed', 'resolved'].includes(importJob.status)
+    ) {
+      return;
+    }
+    const interval = window.setInterval(() => void refreshImport(importId), 2500);
+    return () => window.clearInterval(interval);
+  }, [importId, importJob]);
+
+  useEffect(() => {
+    if (
+      !importJob ||
+      !importId ||
+      ['ready', 'failed', 'dismissed', 'resolved'].includes(importJob.status)
+    ) {
+      return;
+    }
+    const apiUrl = new URL('/api/finance/import/ws', serverEnv.VITE_PUBLIC_API_URL);
+    apiUrl.protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(apiUrl);
+    socket.onopen = () => socket.send(JSON.stringify({ type: 'subscribe' }));
+    socket.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data) as {
+          data?: Array<{
+            jobId: string;
+            status: CareerImportDto['status'];
+            stage: string;
+            progress?: number;
+            errorCode?: string;
+            error?: string;
+            draft?: CareerImportDraft;
+          }>;
+        };
+        const job = parsed.data?.find((entry) => entry.jobId === importJob.queueJobId);
+        if (!job) return;
+        setImportJob((current) =>
+          current
+            ? {
+                ...current,
+                status: job.status,
+                stage: job.stage,
+                progress: job.progress ?? current.progress,
+                errorCode: job.errorCode || current.errorCode,
+                errorMessage: job.error || current.errorMessage,
+                draft: job.draft,
+              }
+            : current,
+        );
+        if (job.status === 'ready' && job.draft) {
+          setScrapedData(toJobPosting(job.draft));
+          setInputMethod('manual');
+          setIsScraping(false);
+        }
+      } catch {
+        // The HTTP snapshot remains authoritative after a malformed event.
+      }
+    };
+    return () => socket.close();
+  }, [importId, importJob]);
 
   const handleScrape = async () => {
     if (!url.trim()) return;
@@ -95,18 +300,19 @@ export default function CreateJobApplication() {
     setScrapingError(null);
 
     try {
-      const response = await fetch('/api/job/scrape', {
+      const response = await fetch('/api/job/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url } satisfies JobScrapeApiRequest),
+        body: JSON.stringify({ action: 'start', url }),
       });
 
-      const result: JobScrapeApiResponse = await response.json();
+      const result = (await response.json()) as { import?: CareerImportDto; message?: string };
 
-      if (result.job_posting) {
-        handleScrapedData(result.job_posting);
+      if (result.import) {
+        applyImport(result.import);
       } else {
-        setScrapingError(result.error || 'Failed to scrape job posting.');
+        setScrapingError(result.message || 'We couldn’t start the job import. Please try again.');
+        setIsScraping(false);
       }
     } catch {
       setScrapingError('An unexpected error occurred.');
@@ -204,6 +410,56 @@ export default function CreateJobApplication() {
                 </button>
               </p>
             </>
+          )}
+
+          {importJob && !['ready', 'resolved'].includes(importJob.status) && (
+            <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              {importJob.status === 'failed' ? (
+                <>
+                  <p className="text-destructive">{getImportErrorMessage(importJob)}</p>
+                  <div className="mt-2 flex gap-3">
+                    {importJob.errorCode !== 'POSTING_EMPTY' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={async () => {
+                          const response = await fetch('/api/job/import', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'retry', importId: importJob.id }),
+                          });
+                          const result = (await response.json()) as { import?: CareerImportDto };
+                          if (result.import) {
+                            setIsScraping(true);
+                            applyImport(result.import);
+                          }
+                        }}
+                      >
+                        Retry
+                      </Button>
+                    )}
+                    <button
+                      type="button"
+                      className="underline"
+                      onClick={() => {
+                        setImportJob(null);
+                        setInputMethod('paste');
+                      }}
+                    >
+                      Paste the description instead
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p>Importing job details… {importJob.progress}%</p>
+                  <progress className="mt-2 h-2 w-full" value={importJob.progress} max="100" />
+                  <p className="mt-1 text-muted-foreground">
+                    {importJob.stage.replaceAll('-', ' ')}
+                  </p>
+                </>
+              )}
+            </div>
           )}
 
           {/* Paste Description */}
@@ -390,6 +646,7 @@ export default function CreateJobApplication() {
                 {scrapedData && (
                   <input type="hidden" name="jobPostingData" value={JSON.stringify(scrapedData)} />
                 )}
+                {importId && <input type="hidden" name="importId" value={importId} />}
               </div>
 
               <div className="space-y-2">

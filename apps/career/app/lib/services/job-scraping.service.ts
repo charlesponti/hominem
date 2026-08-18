@@ -118,35 +118,59 @@ export function parseScrapedJobPostingContent(content: string, jobUrl: string): 
   const trimmed = content.trim();
   const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
   const jsonString = jsonMatch ? jsonMatch[1].trim() : trimmed;
-  const parsed = JSON.parse(jsonString) as Record<string, unknown>;
-  const extractedData = extractedJobSchema.parse(parsed);
-  const fullText = extractedData.fullText ?? '';
+  let parsed: Record<string, unknown>;
+  try {
+    const value = JSON.parse(jsonString) as unknown;
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+      throw new Error('not an object');
+    parsed = value as Record<string, unknown>;
+  } catch {
+    throw new Error(
+      'We couldn’t read the job details from this posting. You can retry or paste the description.',
+    );
+  }
+
+  const extractedData = extractedJobSchema.safeParse(parsed);
+  if (!extractedData.success) {
+    throw new Error(
+      'We couldn’t read the job details from this posting. You can retry or paste the description.',
+    );
+  }
+  const fullText = extractedData.data.fullText ?? extractedData.data.jobDescription ?? '';
   const normalizedFullText = fullText.trim();
 
+  if (
+    !extractedData.data.job_title?.trim() ||
+    !extractedData.data.companyName?.trim() ||
+    !normalizedFullText
+  ) {
+    throw new Error('The page opened, but no complete job description was available.');
+  }
+
   return {
-    job_title: extractedData.job_title || 'Unknown Position',
-    companyName: extractedData.companyName || 'Unknown Company',
-    companyDescription: extractedData.companyDescription || '',
-    jobDescription: extractedData.jobDescription || normalizedFullText,
-    location: extractedData.location || '',
-    salaryRange: extractedData.salaryRange || '',
-    salaryDetails: extractedData.salaryDetails || '',
-    employmentType: extractedData.employmentType || '',
-    experienceLevel: extractedData.experienceLevel || '',
-    education: extractedData.education || '',
-    requirements: extractedData.requirements || [],
-    skills: extractedData.skills || [],
-    benefits: extractedData.benefits || [],
-    responsibilities: extractedData.responsibilities || [],
-    industry: extractedData.industry || '',
-    postedDate: extractedData.postedDate || '',
-    applicationDeadline: extractedData.applicationDeadline || '',
-    department: extractedData.department || '',
-    hiringManager: extractedData.hiringManager || '',
-    companySize: extractedData.companySize || '',
-    fundingStage: extractedData.fundingStage || '',
-    technologyStack: extractedData.technologyStack || [],
-    cultureAspects: extractedData.cultureAspects || [],
+    job_title: extractedData.data.job_title,
+    companyName: extractedData.data.companyName,
+    companyDescription: extractedData.data.companyDescription || '',
+    jobDescription: extractedData.data.jobDescription || normalizedFullText,
+    location: extractedData.data.location || '',
+    salaryRange: extractedData.data.salaryRange || '',
+    salaryDetails: extractedData.data.salaryDetails || '',
+    employmentType: extractedData.data.employmentType || '',
+    experienceLevel: extractedData.data.experienceLevel || '',
+    education: extractedData.data.education || '',
+    requirements: extractedData.data.requirements || [],
+    skills: extractedData.data.skills || [],
+    benefits: extractedData.data.benefits || [],
+    responsibilities: extractedData.data.responsibilities || [],
+    industry: extractedData.data.industry || '',
+    postedDate: extractedData.data.postedDate || '',
+    applicationDeadline: extractedData.data.applicationDeadline || '',
+    department: extractedData.data.department || '',
+    hiringManager: extractedData.data.hiringManager || '',
+    companySize: extractedData.data.companySize || '',
+    fundingStage: extractedData.data.fundingStage || '',
+    technologyStack: extractedData.data.technologyStack || [],
+    cultureAspects: extractedData.data.cultureAspects || [],
     fullText: normalizedFullText,
     url: jobUrl,
     scrapedAt: new Date().toISOString(),

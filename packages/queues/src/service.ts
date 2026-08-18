@@ -58,7 +58,7 @@ export async function removeJobFromQueue(jobId: string, userId?: string) {
  * @param limit - Number of jobs per page
  * @returns Array of job objects and pagination metadata
  */
-export async function getUserJobs<T extends BaseJob>(
+export async function getUserJobs<T extends BaseJob<string>>(
   userId: string,
   page = 1,
   limit = 20,
@@ -160,11 +160,14 @@ export async function deletePreflight(preflightId: string, userId: string): Prom
   return true;
 }
 
-export async function updateImportJob<T extends BaseJob>(jobId: string, job: T): Promise<void> {
+export async function updateImportJob<T extends BaseJob<string>>(
+  jobId: string,
+  job: T,
+): Promise<void> {
   await redis.set(`${IMPORT_JOB_PREFIX}${jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME);
 }
 
-export async function createImportJob<T extends BaseJob>(job: T): Promise<void> {
+export async function createImportJob<T extends BaseJob<string>>(job: T): Promise<void> {
   const pipeline = redis.pipeline();
   pipeline.set(`${IMPORT_JOB_PREFIX}${job.jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME);
   pipeline.zadd(`${USER_JOBS_PREFIX}${job.userId}`, Date.now(), job.jobId);
@@ -221,7 +224,7 @@ export async function publishImportProgress<T>(data: T): Promise<void> {
 /**
  * Get all active import jobs
  */
-export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
+export async function getActiveJobs<T extends BaseJob<string>>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY);
     if (!jobIds.length) {
@@ -249,7 +252,7 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
   }
 }
 
-export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise<T[]> {
+export async function getJobsByIds<T extends BaseJob<string>>(jobIds: string[]): Promise<T[]> {
   try {
     const jobs = await Promise.all(
       jobIds.map(async (jobId) => {
@@ -266,7 +269,7 @@ export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise
 /**
  * Get all queued import jobs
  */
-export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
+export async function getQueuedJobs<T extends BaseJob<string>>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY);
     if (!jobIds.length) {

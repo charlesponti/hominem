@@ -18,6 +18,7 @@ export default [
   route('api/skills/search', 'routes/api.skills.search.ts'),
   route('api/validate-slug', 'routes/api.validate-slug.ts'),
   route('api/job/scrape', 'routes/api.job.scrape.ts'),
+  route('api/job/import', 'routes/api.job.import.ts'),
   route('p/:slug', 'routes/p.$slug.tsx'),
   layout('routes/_authenticated.tsx', [
     route('onboarding', 'routes/onboarding.tsx'),

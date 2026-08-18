@@ -1,4 +1,4 @@
-import { getUserJobs, redis, type ImportTransactionsJob } from '@hominem/queues';
+import { getUserJobs, redis, type BaseJob } from '@hominem/queues';
 import { upgradeWebSocket } from '@hono/node-server';
 import { Hono } from 'hono';
 
@@ -22,7 +22,7 @@ export const importWebSocketRoutes = new Hono<AppContext>().get(
           try {
             const parsed = JSON.parse(message) as {
               type: string;
-              data?: ImportTransactionsJob[];
+              data?: BaseJob[];
             };
             const jobs = (parsed.data ?? []).filter((job) => job.userId === userId);
             if (jobs.length > 0) ws.send(JSON.stringify({ type: parsed.type, data: jobs }));
@@ -36,7 +36,7 @@ export const importWebSocketRoutes = new Hono<AppContext>().get(
         try {
           const message = JSON.parse(String(event.data)) as { type?: string };
           if (message.type === 'subscribe') {
-            const snapshot = await getUserJobs<ImportTransactionsJob>(userId);
+            const snapshot = await getUserJobs<BaseJob>(userId);
             ws.send(JSON.stringify({ type: 'subscribed', data: snapshot.jobs }));
           }
         } catch {

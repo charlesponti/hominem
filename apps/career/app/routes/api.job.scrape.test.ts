@@ -102,7 +102,8 @@ describe('job scrape action', () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
-      error: 'Failed to parse model response as JSON',
+      error:
+        'We couldn’t read the job details from this posting. You can retry or paste the description.',
     });
     expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
       expect.objectContaining({

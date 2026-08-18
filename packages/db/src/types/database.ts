@@ -164,7 +164,7 @@ export interface AppCareerApplications {
 }
 
 export interface AppCareerApplicationsOffers {
-  applicationId: string;
+  applicationId: string | null;
   baseSalary: number | null;
   bonus: number | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -244,6 +244,25 @@ export interface AppCareerEngagements {
   title: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   url: string | null;
+}
+
+export interface AppCareerImportJobs {
+  attempts: Generated<number>;
+  completedAt: ColumnType<string, Date | string, Date | string> | null;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  draft: Json | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  id: Generated<string>;
+  ownerUserid: string;
+  progress: Generated<number>;
+  queueJobId: string;
+  resolvedAt: ColumnType<string, Date | string, Date | string> | null;
+  sourceHost: string;
+  sourceUrl: string;
+  stage: Generated<string>;
+  status: Generated<string>;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
 export interface AppCareerProfile {
@@ -990,7 +1009,6 @@ export interface AppSocialThreadParticipants {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   id: Generated<string>;
   joinedAt: ColumnType<string, Date | string, Date | string>;
-  ownerUserid: string;
   personId: string;
   threadId: string;
 }
@@ -1373,6 +1391,7 @@ export interface DB {
   'app.careerCertifications': AppCareerCertifications;
   'app.careerEducation': AppCareerEducation;
   'app.careerEngagements': AppCareerEngagements;
+  'app.careerImportJobs': AppCareerImportJobs;
   'app.careerProfile': AppCareerProfile;
   'app.careerProjectEngagements': AppCareerProjectEngagements;
   'app.careerProjects': AppCareerProjects;

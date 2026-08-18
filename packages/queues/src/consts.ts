@@ -6,6 +6,7 @@ export const QUEUE_NAMES = {
   FILE_PROCESSING: 'file-processing',
   EMBEDDING_GENERATION: 'embedding-generation',
   RESUME_ANALYSIS: 'resume-analysis',
+  CAREER_JOB_IMPORT: 'career-job-import',
 } as const;
 
 export const REDIS_CHANNELS = {

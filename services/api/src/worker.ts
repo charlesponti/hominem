@@ -8,6 +8,7 @@ import { logger } from '@hominem/telemetry';
 
 import { env } from './env';
 import { initRuntime } from './runtime';
+import { startCareerJobImportWorker } from './workers/career-job-import';
 import { startEmbeddingGenerationWorker } from './workers/embedding-generation';
 import { startFileProcessingWorker } from './workers/file-processing';
 import { startImportTransactionsWorker } from './workers/import-transactions';
@@ -17,9 +18,13 @@ const fileProcessingWorker = startFileProcessingWorker();
 const embeddingGenerationWorker = startEmbeddingGenerationWorker();
 const importTransactionsWorker = startImportTransactionsWorker();
 const resumeAnalysisWorker = startResumeAnalysisWorker();
+// Start career imports from the worker entrypoint so dev watchers reload queue handlers.
+const careerJobImportWorker = startCareerJobImportWorker();
+const workerVersion = 'career-import-v2';
 
 const healthServer = createServer((req, res) => {
   if (req.url === '/health' && req.method === 'GET') {
+    res.setHeader('x-worker-version', workerVersion);
     res.writeHead(200);
     res.end('ok');
   } else {
@@ -27,7 +32,7 @@ const healthServer = createServer((req, res) => {
     res.end();
   }
 });
-healthServer.listen(env.WORKER_PORT ?? env.PORT ?? 4041);
+healthServer.listen(env.WORKER_PORT ?? 4041);
 
 initRuntime('worker').installSignalHandlers(
   async () => {
@@ -36,6 +41,7 @@ initRuntime('worker').installSignalHandlers(
       embeddingGenerationWorker.close(),
       importTransactionsWorker.close(),
       resumeAnalysisWorker.close(),
+      careerJobImportWorker.close(),
     ]);
   },
   () => new Promise<void>((resolve) => healthServer.close(() => resolve())),
@@ -45,3 +51,4 @@ logger.info('worker_started', { queue: 'file-processing' });
 logger.info('worker_started', { queue: 'embedding-generation' });
 logger.info('worker_started', { queue: QUEUE_NAMES.IMPORT_TRANSACTIONS });
 logger.info('worker_started', { queue: QUEUE_NAMES.RESUME_ANALYSIS });
+logger.info('worker_started', { queue: QUEUE_NAMES.CAREER_JOB_IMPORT });

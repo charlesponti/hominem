@@ -32,3 +32,7 @@ export const embeddingQueue: Queue = new BullQueue(QUEUE_NAMES.EMBEDDING_GENERAT
 export const resumeAnalysisQueue: Queue = new BullQueue(QUEUE_NAMES.RESUME_ANALYSIS, {
   connection: redis,
 });
+
+export const careerJobImportQueue: Queue = new BullQueue(QUEUE_NAMES.CAREER_JOB_IMPORT, {
+  connection: redis,
+});
