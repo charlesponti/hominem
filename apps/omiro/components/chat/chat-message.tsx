@@ -1,11 +1,17 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import AppIcon from '~/components/ui/icon';
-import { nativeMotionTiming } from '~/services/motion/native-motion';
+import { useReducedMotion } from '~/hooks/use-reduced-motion';
+import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';
 
 import { ActiveMessageActions } from './chat-message-actions';
@@ -55,6 +61,7 @@ export const ChatMessage = memo(function ChatMessage({
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
+  const reducedMotion = useReducedMotion();
   const overlay = useChatMotionOverlay();
   const inFlight = isUser && overlay.isInFlight(message.renderKey ?? message.id);
   const revealOpacity = useSharedValue(inFlight ? 0 : 1);
@@ -72,6 +79,14 @@ export const ChatMessage = memo(function ChatMessage({
   }, [inFlight, revealOpacity]);
 
   const revealStyle = useAnimatedStyle(() => ({ opacity: revealOpacity.value }));
+  // The assistant printer surface settles its own height when the indicator
+  // is removed, Markdown reflows, or a failure banner appears, instead of
+  // jumping. Scoped to assistant rows only -- user rows never grow/shrink
+  // after landing, so there is nothing to settle there.
+  const rowLayout =
+    !isUser && !reducedMotion
+      ? LinearTransition.duration(nativeMotionContracts.duration.quick)
+      : undefined;
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
   const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
@@ -103,7 +118,7 @@ export const ChatMessage = memo(function ChatMessage({
   };
 
   return (
-    <Animated.View style={revealStyle}>
+    <Animated.View layout={rowLayout} style={revealStyle}>
       <Pressable
         onPress={isStreaming ? undefined : onActivate}
         className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}

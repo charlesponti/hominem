@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
+  FadeOut,
+  FadeOutUp,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -59,7 +61,15 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
   const dot3Style = usePrinterDot(DOT_STAGGER_MS * 2, reducedMotion);
 
   return (
-    <View className={compact ? 'pt-1' : 'px-4 py-2'} testID="chat-assistant-activity">
+    <Animated.View
+      className={compact ? 'pt-1' : 'px-4 py-2'}
+      exiting={
+        reducedMotion
+          ? FadeOut.duration(nativeMotionContracts.duration.quick)
+          : FadeOutUp.duration(nativeMotionContracts.duration.quick)
+      }
+      testID="chat-assistant-activity"
+    >
       <View className="gap-2 w-full">
         <View className="flex-row items-center gap-2">
           <Animated.View
@@ -79,6 +89,6 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
           ) : null}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
