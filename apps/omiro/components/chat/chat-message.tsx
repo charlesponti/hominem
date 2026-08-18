@@ -1,9 +1,11 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import AppIcon from '~/components/ui/icon';
+import { nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';
 
 import { ActiveMessageActions } from './chat-message-actions';
@@ -13,7 +15,14 @@ import { MessageEditModal } from './chat-message-edit-modal';
 import { FocusItems } from './chat-message-focus-items';
 import { ReferencedNotes } from './chat-message-referenced-notes';
 import { MessageToolCalls } from './chat-message-tool-calls';
+import { useChatMotionOverlay } from './chat-motion-overlay';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
+
+// Generous multiple of the toast flight's own duration (nativeMotionTiming
+// quick/enter, both well under 300ms). If the overlay never calls dismiss --
+// a measurement failure, a stuck animation -- the row must still reveal
+// itself rather than stay invisible forever.
+const HANDOFF_REVEAL_FALLBACK_MS = 1500;
 
 type ChatMessageProps = {
   message: ChatMessageItem;
@@ -46,6 +55,23 @@ export const ChatMessage = memo(function ChatMessage({
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
+  const overlay = useChatMotionOverlay();
+  const inFlight = isUser && overlay.isInFlight(message.renderKey ?? message.id);
+  const revealOpacity = useSharedValue(inFlight ? 0 : 1);
+
+  useEffect(() => {
+    if (!inFlight) {
+      revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
+      return;
+    }
+    // Safety net for a flight that never calls dismiss -- see the constant.
+    const fallback = setTimeout(() => {
+      revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
+    }, HANDOFF_REVEAL_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [inFlight, revealOpacity]);
+
+  const revealStyle = useAnimatedStyle(() => ({ opacity: revealOpacity.value }));
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
   const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
@@ -77,12 +103,13 @@ export const ChatMessage = memo(function ChatMessage({
   };
 
   return (
-    <Pressable
-      onPress={isStreaming ? undefined : onActivate}
-      className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}
-      style={isUser ? { borderCurve: 'continuous' } : undefined}
-      testID={`chat-message-${message.id}`}
-    >
+    <Animated.View style={revealStyle}>
+      <Pressable
+        onPress={isStreaming ? undefined : onActivate}
+        className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}
+        style={isUser ? { borderCurve: 'continuous' } : undefined}
+        testID={`chat-message-${message.id}`}
+      >
       <MessageEditModal
         content={content}
         draftMessage={draftMessage}
@@ -149,6 +176,7 @@ export const ChatMessage = memo(function ChatMessage({
           timestamp={timestamp}
         />
       </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 });

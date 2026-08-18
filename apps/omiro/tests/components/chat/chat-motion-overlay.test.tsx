@@ -22,10 +22,15 @@ function Consumer({ id, label }: { id: string; label: string }) {
 }
 
 describe('ChatMotionOverlayProvider', () => {
-  it('throws when useChatMotionOverlay is used outside the provider', () => {
-    expect(() => render(<Consumer id="a" label="A" />)).toThrow(
-      'useChatMotionOverlay must be used within a ChatMotionOverlayProvider',
-    );
+  it('no-ops when useChatMotionOverlay is used outside the provider', () => {
+    render(<Consumer id="a" label="A" />);
+
+    expect(() => {
+      act(() => {
+        screen.getByText('present-a').click();
+      });
+    }).not.toThrow();
+    expect(screen.queryByTestId('flight-a')).toBeNull();
   });
 
   it('mounts a presented flight node into the overlay', () => {

@@ -17,6 +17,9 @@ export interface ComposerChatSend {
     fileIds?: string[];
     noteIds?: string[];
     responseModality?: 'text' | 'audio';
+    // See `SendInput.messageId` in use-send-message.ts -- lets the toast
+    // handoff's flight and the real optimistic row share one id.
+    messageId?: string;
   }) => Promise<void>;
   isChatSending: boolean;
 }

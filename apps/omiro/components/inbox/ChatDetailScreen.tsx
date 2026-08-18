@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
+import { ChatMotionOverlayProvider } from '~/components/chat/chat-motion-overlay';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
@@ -253,6 +254,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
         />
       </Stack.Toolbar>
 
+      <ChatMotionOverlayProvider>
       <View className="flex-1">
         <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
         <ChatSearchModal
@@ -317,6 +319,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
           </>
         ) : null}
       </View>
+      </ChatMotionOverlayProvider>
     </>
   );
 }

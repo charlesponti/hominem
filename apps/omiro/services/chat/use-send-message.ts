@@ -37,6 +37,14 @@ export interface SendInput {
   fileIds?: string[];
   noteIds?: string[];
   responseModality?: 'text' | 'audio';
+  /**
+   * Pre-generated id for the optimistic user message, so a caller that
+   * already started a visual flight for this send (the composer-to-toast
+   * handoff) can hand off to the real transcript row under the same id
+   * instead of racing a second, independently-generated one. Falls back to
+   * a fresh id when omitted -- existing callers are unaffected.
+   */
+  messageId?: string;
 }
 
 export function useSendMessage({ chatId }: { chatId: string }) {
@@ -141,12 +149,12 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     SendInput,
     { previousMessages: MessageOutput[]; userMsgId: string; assistantMsgId: string }
   >({
-    onMutate: async ({ message }) => {
+    onMutate: async ({ message, messageId }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
       const previousMessages =
         queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
 
-      const userMsgId = randomUUID();
+      const userMsgId = messageId ?? randomUUID();
       const assistantMsgId = randomUUID();
       streamingIdRef.current = assistantMsgId;
       chunkBufferRef.current = '';

@@ -16,6 +16,8 @@ interface ComposerSubmitInput {
   fileIds: string[];
   message: string;
   responseModality?: 'text' | 'audio';
+  /** See `SendInput.messageId` -- threaded through for the toast handoff. */
+  messageId?: string;
 }
 
 const EMPTY_CHAT_SEND = {
@@ -46,7 +48,7 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const submit = useCallback(
     async (
-      { canSubmit, clearComposer, fileIds, message, responseModality }: ComposerSubmitInput,
+      { canSubmit, clearComposer, fileIds, message, messageId, responseModality }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
       if (!canSubmit) return;
@@ -74,6 +76,7 @@ export function useComposerSubmission(props: ComposerProps) {
         fileIds,
         noteIds: [],
         responseModality,
+        messageId,
       });
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
       clearComposer();
