@@ -50,14 +50,3 @@ export const authDb = new Kysely<Database>({
     pool,
   }),
 });
-
-// Health check
-export async function healthCheck(): Promise<boolean> {
-  try {
-    await pool.query('SELECT 1');
-    return true;
-  } catch (error) {
-    console.error('Database health check failed:', error);
-    return false;
-  }
-}

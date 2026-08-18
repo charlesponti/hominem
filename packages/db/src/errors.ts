@@ -10,7 +10,6 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
-  | 'CONFLICT'
   | 'INTERNAL_ERROR'
   | 'UNAVAILABLE';
 
@@ -19,7 +18,6 @@ const ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'NOT_FOUND',
   'UNAUTHORIZED',
   'FORBIDDEN',
-  'CONFLICT',
   'INTERNAL_ERROR',
   'UNAVAILABLE',
 ]);
@@ -69,13 +67,6 @@ export class ForbiddenError extends ServiceError {
   constructor(message = 'Forbidden', details?: Record<string, unknown>) {
     super(message, 'FORBIDDEN', 403, details);
     Object.setPrototypeOf(this, ForbiddenError.prototype);
-  }
-}
-
-export class ConflictError extends ServiceError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'CONFLICT', 409, details);
-    Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
 

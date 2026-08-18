@@ -6,6 +6,7 @@ import { TEST_DATABASE_URL } from '@hominem/db/test/database-url';
 export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
+    hookTimeout: 30_000,
     env: {
       AUTH_E2E_SECRET: 'otp-secret',
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',

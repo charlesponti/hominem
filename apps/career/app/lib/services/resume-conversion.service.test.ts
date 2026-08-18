@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { authDb, db } from '@hominem/db';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -64,33 +66,31 @@ describe('resume conversion slug generation', () => {
   });
 
   it('handles the case where the first 99 suffixes are all taken', async () => {
-    try {
-      for (let i = 1; i <= 100; i++) {
-        await authDb
-          .insertInto('user')
-          .values({
-            id: `slug-overflow-${i}`,
-            email: `overflow-${i}@test.com`,
-            name: `Overflow ${i}`,
-          })
-          .execute();
-        await db
-          .insertInto('app.careerProfile')
-          .values({
-            ownerUserid: `slug-overflow-${i}`,
-            slug: `overflow${i === 1 ? '' : `-${i}`}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-          .execute();
-      }
+    const overflowPrefix = `slug-overflow-${randomUUID()}`;
+    const overflowSlug = `overflow-${randomUUID()}`;
 
-      await expect(generateUniqueSlug(db, 'overflow')).rejects.toThrow(
+    try {
+      const overflowUsers = Array.from({ length: 100 }, (_, index) => {
+        const i = index + 1;
+        const userId = `${overflowPrefix}-${i}`;
+        return { id: userId, email: `${userId}@test.com`, name: `Overflow ${i}` };
+      });
+      const overflowProfiles = overflowUsers.map((user, index) => ({
+        ownerUserid: user.id,
+        slug: `${overflowSlug}${index === 0 ? '' : `-${index + 1}`}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+
+      await authDb.insertInto('user').values(overflowUsers).execute();
+      await db.insertInto('app.careerProfile').values(overflowProfiles).execute();
+
+      await expect(generateUniqueSlug(db, overflowSlug)).rejects.toThrow(
         'Could not generate a unique profile slug',
       );
     } finally {
-      await db.deleteFrom('app.careerProfile').where('slug', 'like', 'overflow%').execute();
-      await authDb.deleteFrom('user').where('id', 'like', 'slug-overflow-%').execute();
+      await db.deleteFrom('app.careerProfile').where('slug', 'like', `${overflowSlug}%`).execute();
+      await authDb.deleteFrom('user').where('id', 'like', `${overflowPrefix}%`).execute();
     }
   });
 });

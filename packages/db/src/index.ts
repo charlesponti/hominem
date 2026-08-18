@@ -5,7 +5,7 @@
  */
 
 export type { Selectable } from 'kysely';
-export { authDb, db, healthCheck, pool, sql } from './db';
+export { authDb, db, pool, sql } from './db';
 export type { Database } from './db';
 export type { DB, Json, JsonArray, JsonObject, JsonValue } from './types/database';
 
@@ -17,7 +17,6 @@ export type { DbHandle, TransactionHandle } from './transaction';
 export type * from './types/database';
 
 export {
-  ConflictError,
   ForbiddenError,
   InternalError,
   isServiceError,
@@ -147,9 +146,6 @@ export type {
   CareerTestimonialInput,
   CareerTestimonialRecord,
 } from './services/career/testimonial.repository';
-
-export { UserRepository } from './services/users/user.repository';
-export type { FindUserInput, UserRecord } from './services/users/user.repository';
 
 export { FinanceQueryRepository } from './services/finance/finance-query.repository';
 export type { FinanceMonthlyTransactionRecord } from './services/finance/finance-query.repository';

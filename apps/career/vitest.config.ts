@@ -10,12 +10,14 @@ export default defineConfig({
   test: {
     env: {
       DATABASE_URL: TEST_DATABASE_URL,
+      VITE_PUBLIC_API_URL: 'http://localhost:3000',
       NODE_ENV: 'test',
     },
     globals: true,
     environment: 'jsdom',
     setupFiles: [fileURLToPath(new URL('vitest.setup.ts', import.meta.url))],
     include: ['**/*.test.{ts,tsx,js,jsx}'],
+    fileParallelism: false,
 
     clearMocks: true,
     coverage: {

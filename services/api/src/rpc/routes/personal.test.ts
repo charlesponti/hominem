@@ -39,7 +39,6 @@ const errorClasses = vi.hoisted(() => {
 });
 
 vi.mock('@hominem/db', () => ({
-  ConflictError: errorClasses.MockServiceError,
   ForbiddenError: errorClasses.MockServiceError,
   InternalError: errorClasses.MockServiceError,
   NotFoundError: errorClasses.MockServiceError,
