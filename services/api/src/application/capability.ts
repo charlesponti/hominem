@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
-export type CapabilityTransport = 'rpc' | 'mcp';
-export type Sensitivity = 'standard' | 'sensitive' | 'highly_sensitive' | 'public';
+type CapabilityTransport = 'rpc' | 'mcp';
+type Sensitivity = 'standard' | 'sensitive' | 'highly_sensitive' | 'public';
 
 export interface CapabilityDefinition<
   Name extends string = string,

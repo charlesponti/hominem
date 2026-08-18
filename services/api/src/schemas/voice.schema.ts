@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const VoiceCleanupSourceSchema = z.enum(['apple-on-device']);
+const VoiceCleanupSourceSchema = z.enum(['apple-on-device']);
 
 export const VoiceCleanupInputSchema = z.object({
   rawText: z.string().min(1).max(8000),

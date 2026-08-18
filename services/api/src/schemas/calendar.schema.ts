@@ -24,7 +24,7 @@ function fromBeforeTo(value: { from?: string; to?: string }, context: z.Refineme
 
 // ── calendar_search / calendar_upcoming ─────────────────────────────
 
-export const calendarEventSchema = z.object({
+const calendarEventSchema = z.object({
   id: z.string(),
   title: z.string(),
   startsAt: z.string(),
@@ -64,7 +64,7 @@ export const calendarUpcomingOutputSchema = z.object({
 
 // ── trip_history ─────────────────────────────────────────────────────
 
-export const tripSummarySchema = z.object({
+const tripSummarySchema = z.object({
   id: z.string(),
   city: z.string().nullable(),
   state: z.string().nullable(),

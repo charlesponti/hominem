@@ -1,6 +1,5 @@
 import { logger } from '@hominem/telemetry';
 import type { Context } from 'hono';
-import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { isServiceError, type ErrorCode, type ServiceError } from '../errors';
@@ -81,13 +80,3 @@ export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
     500,
   );
 }
-
-/**
- * Legacy error middleware
- *
- * Hono does not route async handler exceptions through middleware reliably.
- * Register `apiErrorHandler` with `.onError(...)` for real application error handling.
- *
- * This export remains as a pass-through for backwards compatibility in tests.
- */
-export const errorMiddleware = createMiddleware<AppContext>(async (_c, next) => next());

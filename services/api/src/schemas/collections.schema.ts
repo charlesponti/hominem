@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 import { entityTypeSchema } from './tags.schema';
 
-export const collectionSummarySchema = z.object({
+const collectionSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -12,14 +12,14 @@ export const collectionSummarySchema = z.object({
   updatedAt: z.string(),
 });
 
-export const collectionMemberSchema = z.object({
+const collectionMemberSchema = z.object({
   personId: z.string(),
   role: z.enum(['owner', 'editor', 'viewer']),
   invitedAt: z.string(),
   acceptedAt: z.string().nullable(),
 });
 
-export const collectionItemSchema = z.object({
+const collectionItemSchema = z.object({
   id: z.string(),
   entityType: entityTypeSchema,
   entityId: z.string(),
@@ -28,7 +28,7 @@ export const collectionItemSchema = z.object({
   addedAt: z.string(),
 });
 
-export const collectionDetailSchema = z.object({
+const collectionDetailSchema = z.object({
   collection: collectionSummarySchema.nullable(),
   items: z.array(collectionItemSchema),
   members: z.array(collectionMemberSchema),

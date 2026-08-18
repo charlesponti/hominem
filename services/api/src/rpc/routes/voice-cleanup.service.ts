@@ -18,7 +18,7 @@ const VOICE_CLEANUP_MIN_WORDS = 2;
 const VOICE_CLEANUP_MIN_LENGTH_RATIO = 0.45;
 const VOICE_CLEANUP_MAX_LENGTH_RATIO = 2.5;
 
-export type VoiceCleanupProviderError = {
+type VoiceCleanupProviderError = {
   kind: 'provider-error';
   message: string;
   status: 401 | 429;
@@ -42,7 +42,7 @@ const DEFAULT_DEPS: VoiceCleanupDependencies = {
   logError: (message, context) => logger.error(message, context),
 };
 
-export function countTranscriptWords(text: string) {
+function countTranscriptWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
@@ -92,7 +92,7 @@ export function buildFallbackOutput(rawText: string) {
   });
 }
 
-export function getVoiceCleanupErrorStatus(error: unknown) {
+function getVoiceCleanupErrorStatus(error: unknown) {
   if (error instanceof OpenRouterRequestError) {
     return error.status;
   }

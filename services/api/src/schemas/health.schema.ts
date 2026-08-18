@@ -24,7 +24,7 @@ function fromBeforeTo(value: { from?: string; to?: string }, context: z.Refineme
 
 // ── health_daily_summary ────────────────────────────────────────────
 
-export const healthDailyMetricSchema = z.object({
+const healthDailyMetricSchema = z.object({
   date: z.string(),
   steps: z.number().int().nullable(),
   distanceM: z.number().nullable(),
@@ -50,7 +50,7 @@ export const healthDailySummaryOutputSchema = z.object({
 
 // ── health_recent_workouts ──────────────────────────────────────────
 
-export const healthWorkoutSchema = z.object({
+const healthWorkoutSchema = z.object({
   id: z.string(),
   activityType: z.string(),
   startedAt: z.string(),
@@ -80,7 +80,7 @@ export const healthRecentWorkoutsOutputSchema = z.object({
 
 // ── health_sleep_summary ────────────────────────────────────────────
 
-export const healthSleepSessionSchema = z.object({
+const healthSleepSessionSchema = z.object({
   id: z.string(),
   startedAt: z.string(),
   endedAt: z.string(),
@@ -110,9 +110,6 @@ export const healthSleepSummaryOutputSchema = z.object({
 });
 
 // Types
-export type HealthDailySummaryInput = z.output<typeof healthDailySummaryInputSchema>;
 export type HealthDailySummaryOutput = z.output<typeof healthDailySummaryOutputSchema>;
-export type HealthRecentWorkoutsInput = z.output<typeof healthRecentWorkoutsInputSchema>;
 export type HealthRecentWorkoutsOutput = z.output<typeof healthRecentWorkoutsOutputSchema>;
-export type HealthSleepSummaryInput = z.output<typeof healthSleepSummaryInputSchema>;
 export type HealthSleepSummaryOutput = z.output<typeof healthSleepSummaryOutputSchema>;

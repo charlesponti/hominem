@@ -15,11 +15,11 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
-export async function getPersonById(personId: string) {
+async function getPersonById(personId: string) {
   return db.selectFrom('app.people').selectAll().where('id', '=', personId).executeTakeFirst();
 }
 
-export async function getPersonEmails(personId: string) {
+async function getPersonEmails(personId: string) {
   return db
     .selectFrom('app.personContactMethods')
     .select(['value as email', 'isPrimary', 'source'])
@@ -28,7 +28,7 @@ export async function getPersonEmails(personId: string) {
     .execute();
 }
 
-export async function getPersonPhoneNumbers(personId: string) {
+async function getPersonPhoneNumbers(personId: string) {
   return db
     .selectFrom('app.personContactMethods')
     .select(['value as phoneNumber', 'isPrimary'])
@@ -37,7 +37,7 @@ export async function getPersonPhoneNumbers(personId: string) {
     .execute();
 }
 
-export async function getPersonMemberships(personId: string) {
+async function getPersonMemberships(personId: string) {
   return db
     .selectFrom('app.organizationMemberships as membership')
     .innerJoin('app.organizations as organization', 'organization.id', 'membership.organizationId')
@@ -46,7 +46,7 @@ export async function getPersonMemberships(personId: string) {
     .execute();
 }
 
-export async function getPersonTags(personId: string) {
+async function getPersonTags(personId: string) {
   return (
     db
       .selectFrom('app.tagAssignments as assignment')
@@ -167,7 +167,7 @@ export async function createPerson({
   return result;
 }
 
-export async function getPersonPickerRecord({
+async function getPersonPickerRecord({
   ownerUserId,
   personId,
 }: {

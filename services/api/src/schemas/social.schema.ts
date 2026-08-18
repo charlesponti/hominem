@@ -23,7 +23,7 @@ const fromToSchema = z
 
 export const socialEngagementSummaryInputSchema = fromToSchema;
 
-export const socialEngagementCountSchema = z.object({
+const socialEngagementCountSchema = z.object({
   platform: z.string(),
   type: z.string(),
   count: z.number().int().min(0),
@@ -40,7 +40,7 @@ export const socialEngagementSummaryOutputSchema = z.object({
 
 export const socialConversationActivityInputSchema = fromToSchema;
 
-export const socialConversationActivityItemSchema = z.object({
+const socialConversationActivityItemSchema = z.object({
   conversationId: z.string(),
   platform: z.string().nullable(),
   title: z.string().nullable(),

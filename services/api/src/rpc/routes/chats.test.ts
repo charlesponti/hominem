@@ -25,12 +25,14 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@hominem/ai', () => ({
+  CHAT_MODEL: 'test-chat-model',
   getChatCompletionUsage: vi.fn((chunk: { usage?: unknown }) => chunk.usage ?? null),
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
 vi.mock('@hominem/db', () => ({
   db: {},
+  isServiceError: () => false,
   ChatRepository: {
     create: mocks.createChat,
     getOwnedOrThrow: mocks.getOwnedOrThrow,

@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const careerApplicationStatusSchema = z.enum([
+const careerApplicationStatusSchema = z.enum([
   'WISHLIST',
   'APPLIED',
   'SCREENING',
@@ -10,7 +10,7 @@ export const careerApplicationStatusSchema = z.enum([
   'WITHDRAWN',
 ]);
 
-export const careerOfferDecisionSchema = z.enum(['PENDING', 'NEGOTIATING', 'ACCEPTED', 'DECLINED']);
+const careerOfferDecisionSchema = z.enum(['PENDING', 'NEGOTIATING', 'ACCEPTED', 'DECLINED']);
 
 export const careerProjectStatusSchema = z.enum(['BACKLOG', 'IN_PROGRESS', 'DONE', 'CANCELED']);
 
@@ -29,7 +29,7 @@ export const careerProfileSchema = z.object({
   twitterHandles: z.string().nullable(),
 });
 
-export const careerEngagementKindSchema = z.enum([
+const careerEngagementKindSchema = z.enum([
   'EMPLOYMENT',
   'CONTRACT',
   'FREELANCE',
@@ -452,16 +452,6 @@ export const careerSocialLinksSaveSchema = z.object({
 
 // -- Application notes --
 
-export const careerApplicationNoteSchema = z.object({
-  id: z.string().uuid(),
-  content: z.string(),
-  createdAt: z.string(),
-});
-
-export const careerApplicationNotesSchema = z.object({
-  notes: z.array(careerApplicationNoteSchema),
-});
-
 export const careerApplicationNoteCreateSchema = z.object({
   content: z.string().min(1),
 });
@@ -477,18 +467,6 @@ export const careerApplicationNoteRemoveSchema = z.object({
 });
 
 // -- Application files --
-
-export const careerApplicationFileSchema = z.object({
-  id: z.string().uuid(),
-  fileName: z.string(),
-  fileUrl: z.string(),
-  fileType: z.string().nullable(),
-  createdAt: z.string(),
-});
-
-export const careerApplicationFilesSchema = z.object({
-  files: z.array(careerApplicationFileSchema),
-});
 
 export const careerApplicationFileCreateSchema = z.object({
   fileName: z.string().min(1),

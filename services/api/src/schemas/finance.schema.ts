@@ -34,8 +34,6 @@ export const financeMonthlySummarySchema = z.object({
   ),
 });
 
-export type FinanceMonthlySummaryQuery = z.infer<typeof financeMonthlySummaryQuerySchema>;
-
 // ── MCP tools ────────────────────────────────────────────────────────
 
 function isIsoDate(value: string): boolean {
@@ -52,7 +50,7 @@ const mcpLimitSchema = z.number().int().min(1).max(50);
 
 // -- finance_net_worth --
 
-export const financeAccountBalanceSchema = z.object({
+const financeAccountBalanceSchema = z.object({
   accountId: z.string(),
   name: z.string(),
   institution: z.string().nullable(),
@@ -82,7 +80,7 @@ export const financeNetWorthOutputSchema = z.object({
 
 // -- finance_recent_transactions --
 
-export const financeTransactionSchema = z.object({
+const financeTransactionSchema = z.object({
   id: z.string(),
   accountId: z.string(),
   accountName: z.string(),

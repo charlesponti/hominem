@@ -19,10 +19,6 @@ export function enableTestOtpStore(): void {
   storeEnabled = true;
 }
 
-export function disableTestOtpStore(): void {
-  storeEnabled = false;
-}
-
 export function getLatestTestOtp(input: { email: string; type?: string }): TestOtpRecord | null {
   if (!storeEnabled) return null;
 

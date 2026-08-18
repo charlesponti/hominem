@@ -9,7 +9,7 @@ import * as z from 'zod';
 // regclass.
 export const entityTypeSchema = z.enum(['people', 'places', 'possessions']);
 
-export const tagSchema = z.object({
+const tagSchema = z.object({
   id: z.string(),
   name: z.string(),
 });

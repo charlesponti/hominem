@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const TaskPriority = z.enum(['low', 'medium', 'high']);
+const TaskPriority = z.enum(['low', 'medium', 'high']);
 
 const TaskParticipantSchema = z.uuid();
 

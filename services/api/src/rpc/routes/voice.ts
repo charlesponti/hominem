@@ -13,7 +13,7 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { cleanupVoiceInput, shouldBypassVoiceCleanup } from './voice-cleanup.service';
 
-export const authenticatedVoiceRoutes = new Hono<AppContext>()
+const authenticatedVoiceRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   .use('/cleanup', rateLimitMiddleware({ bucket: 'voice-cleanup', windowSec: 60, max: 30 }))
   .post('/cleanup', zValidator('json', VoiceCleanupInputSchema), async (c) => {

@@ -23,7 +23,6 @@ import { transactionsRoutes } from './finance.transactions';
  * - /accounts/* - Account operations
  * - /analyze/* - Analytics and reporting
  * - /tags/* - Tag taxonomy operations
- * - /plaid/* - Plaid integration
  * - /budget/* - Budget management
  * - /institutions/* - Financial institutions
  * - /runway/* - Runway calculations

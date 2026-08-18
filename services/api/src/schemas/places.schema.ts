@@ -14,7 +14,7 @@ const limitSchema = z.number().int().min(1).max(50);
 
 // ── place_visit_history ─────────────────────────────────────────────
 
-export const placeVisitSchema = z.object({
+const placeVisitSchema = z.object({
   id: z.string(),
   placeName: z.string().nullable(),
   address: z.string().nullable(),

@@ -4,7 +4,7 @@ import type { AuthContext, AuthUser } from '../../auth/types';
 
 export type RpcUser = AuthUser & { isAdmin: boolean };
 
-import { ForbiddenError, UnauthorizedError } from '../errors';
+import { UnauthorizedError } from '../errors';
 
 /**
  * Application Context
@@ -44,37 +44,6 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
     throw new UnauthorizedError('Authentication required', authError ? { authError } : undefined);
   }
 
-  return await next();
-});
-
-/**
- * Admin Middleware
- *
- * Requires the authenticated user to have isAdmin = true.
- * Must be used after the context middleware that sets auth.
- */
-export const adminMiddleware = createMiddleware<AppContext>(async (c, next) => {
-  const user = c.get('auth')?.user;
-  const userId = c.get('auth')?.userId;
-
-  if (!user || !userId) {
-    throw new UnauthorizedError('Authentication required');
-  }
-
-  if (!user.isAdmin) {
-    throw new ForbiddenError('Admin access required');
-  }
-
-  return await next();
-});
-
-/**
- * Public Middleware
- *
- * For routes that don't require authentication.
- */
-export const publicMiddleware = createMiddleware<AppContext>(async (_c, next) => {
-  // Public routes - no auth check
   return await next();
 });
 
