@@ -135,9 +135,20 @@ message.
 - The activity carriage uses opacity and vertical transform only. It remains
   compact, never claims false percentage progress, and settles when the stream
   settles. Reduced Motion keeps the state indication but removes travel.
-- Historical messages are static when a chat opens. Scrolling, editing,
-  retrying, copying, searching, deleting, and error recovery remain direct;
-  motion cannot block the action or move the content being read.
+- Historical messages are static when a chat opens; opening, scrolling, and
+  reading never animate.
+- Message action controls (edit, retry, copy, delete) emerge from and retract
+  into the selected message. They are not a separate menu that appears
+  elsewhere on screen.
+- Retry replaces the failed message with an active printer surface — the
+  retried reply prints in like a fresh turn, not a static re-render.
+- Editing, searching, delete confirmation, and error recovery use brief,
+  interruptible transitions scoped to the affected message. They must never
+  block the action, delay input, or move content the user is currently
+  reading.
+- Auto-scroll follows an active reply only while the user is already at the
+  bottom of the transcript. It never pulls the reader away from history they
+  scrolled up to read.
 - Motion timing, easing, and reduced-motion behavior resolve through the
   portable `@ponti-studios/ui` motion contract and Omiro's Reanimated adapter.
   Do not introduce a chat-local motion token system or experimental shared
