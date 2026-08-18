@@ -1,14 +1,14 @@
 import { AUDIO_TTS_MODEL, createOpenRouterClient, normalizeOpenRouterError } from './shared';
 import type { OpenRouterClientOptions } from './shared';
 
-export type SynthesizeSpeechInput = OpenRouterClientOptions & {
+type SynthesizeSpeechInput = OpenRouterClientOptions & {
   text: string;
   model?: string;
   voice?: string;
   responseFormat?: 'mp3' | 'pcm';
 };
 
-export type SynthesizeSpeechResult = {
+type SynthesizeSpeechResult = {
   buffer: Buffer;
   mimeType: string;
 };
@@ -20,9 +20,6 @@ const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
 
 // Kokoro-82m (and TTS-only models generally) aren't chat models, so this goes
 // through the SDK's dedicated `tts.createSpeech` client rather than `chat()` —
-// see packages/ai/src/text.ts's postChatCompletion for the (unused-by-this-
-// feature) audio-modality-via-chat-completions path used by audio-native
-// audio-capable speech models.
 export async function synthesizeSpeech(
   input: SynthesizeSpeechInput,
 ): Promise<SynthesizeSpeechResult> {

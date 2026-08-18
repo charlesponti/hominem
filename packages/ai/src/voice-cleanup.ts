@@ -10,7 +10,7 @@ import {
   StructuredOutputError as AITextStructuredOutputError,
 } from './text';
 
-export type VoiceTranscriptCleanupInput = OpenRouterClientOptions & {
+type VoiceTranscriptCleanupInput = OpenRouterClientOptions & {
   rawText: string;
   locale?: string;
   model?: string;
@@ -20,7 +20,7 @@ export type VoiceTranscriptCleanupOutput = {
   cleanedText: string;
 };
 
-export type VoiceTranscriptCleanupResult = VoiceTranscriptCleanupOutput & {
+type VoiceTranscriptCleanupResult = VoiceTranscriptCleanupOutput & {
   usage: import('./shared').AIUsageMetrics | null;
 };
 

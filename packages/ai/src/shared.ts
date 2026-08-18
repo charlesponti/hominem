@@ -7,12 +7,10 @@ export const DEFAULT_HTTP_REFERER = 'https://hominem.app';
 export const DEFAULT_APP_TITLE = 'Hominem';
 
 export const CHAT_MODEL = env.CHAT_MODEL;
-export const AUDIO_STT_MODEL = env.AUDIO_STT_MODEL;
 export const AUDIO_TTS_MODEL = env.AUDIO_TTS_MODEL;
 export const EMBEDDING_MODEL = env.EMBEDDING_MODEL;
 export const ENHANCE_MODEL = env.ENHANCE_MODEL;
 export const JOB_EXTRACTION_MODEL = env.JOB_EXTRACTION_MODEL;
-export const IMAGE_MODEL = env.IMAGE_MODEL;
 export const TASK_EXTRACTION_MODEL = env.TASK_EXTRACTION_MODEL;
 export const TIME_BLOCK_EXTRACTION_MODEL = env.TIME_BLOCK_EXTRACTION_MODEL;
 export const VOICE_CLEANUP_MODEL = env.VOICE_CLEANUP_MODEL;
@@ -24,32 +22,8 @@ export type OpenRouterClientOptions = {
   client?: OpenRouterClientLike;
 };
 
-export type EmbeddingOptions = OpenRouterClientOptions & {
-  model?: string;
-  inputType?: string;
-  dimensions?: number;
-};
-
-export type TranscriptionOptions = OpenRouterClientOptions & {
-  model?: string;
-  language?: string;
-};
-
-export type ImageGenerationOptions = OpenRouterClientOptions & {
-  model?: string;
-  imageModel?: string;
-  aspectRatio?: string;
-  background?: string;
-  moderation?: string;
-  outputCompression?: number;
-  outputFormat?: string;
-  partialImages?: number;
-  quality?: string;
-  size?: string;
-};
-
-export type JsonObject = Record<string, unknown>;
-export type OpenRouterClientLike = Pick<OpenRouter, 'chat' | 'embeddings' | 'tts'>;
+type JsonObject = Record<string, unknown>;
+type OpenRouterClientLike = Pick<OpenRouter, 'chat' | 'embeddings' | 'tts'>;
 
 export type AIUsageMetrics = {
   provider: 'openrouter';
@@ -63,7 +37,7 @@ export type AIUsageMetrics = {
   reasoningTokens: number | null;
 };
 
-export function isJsonObject(value: unknown): value is JsonObject {
+function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 

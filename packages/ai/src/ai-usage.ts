@@ -13,7 +13,7 @@ import type { AIUsageMetrics } from './shared';
 // Free-tier monthly cap on AI usage cost. Once a user's `cost_usd` sum for
 // the current calendar month reaches this, AI-cost-incurring routes refuse
 // new requests until the next month (see assertUnderMonthlyUsageLimit).
-export const MONTHLY_AI_USAGE_LIMIT_USD = 10;
+const MONTHLY_AI_USAGE_LIMIT_USD = 10;
 
 type RecordAIUsageEventInput = {
   eventId: string;
@@ -30,7 +30,7 @@ type RecordAIUsageEventInput = {
   errorStatus?: number | null;
 };
 
-export type AIUsageFailureDetails = {
+type AIUsageFailureDetails = {
   errorCode: string | null;
   errorStatus: number | null;
 };

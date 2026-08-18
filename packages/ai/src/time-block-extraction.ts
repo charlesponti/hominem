@@ -11,7 +11,7 @@ import {
   StructuredOutputError as AITextStructuredOutputError,
 } from './text';
 
-export const TimeBlockIntent = z.enum([
+const TimeBlockIntent = z.enum([
   'add_task',
   'add_event',
   'add_recurring_event',
@@ -41,9 +41,9 @@ const RawTimeBlockSchema = z.object({
   recurrence_rule: RecurrenceRule,
 });
 
-export type TimeBlock = z.infer<typeof RawTimeBlockSchema>;
+type TimeBlock = z.infer<typeof RawTimeBlockSchema>;
 
-export type TimeBlockExtractionInput = OpenRouterClientOptions & {
+type TimeBlockExtractionInput = OpenRouterClientOptions & {
   transcript: string;
   referenceDate: string;
   timezone?: string;
@@ -52,7 +52,7 @@ export type TimeBlockExtractionInput = OpenRouterClientOptions & {
   model?: string;
 };
 
-export type TimeBlockExtractionResult = {
+type TimeBlockExtractionResult = {
   block: TimeBlock;
   usage: AIUsageMetrics | null;
 };

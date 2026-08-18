@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run src",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
@@ -28,7 +28,6 @@
     "@hominem/utils": "workspace:*",
     "@openrouter/sdk": "^0.12.35",
     "@tanstack/ai": "^0.22.1",
-    "@tanstack/ai-openrouter": "^0.9.8",
     "zod": "catalog:"
   },
   "devDependencies": {}

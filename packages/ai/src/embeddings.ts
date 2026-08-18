@@ -5,8 +5,14 @@ import {
   createOpenRouterClient,
   normalizeOpenRouterEmbeddingUsage,
   normalizeOpenRouterError,
-  type EmbeddingOptions,
+  type OpenRouterClientOptions,
 } from './shared';
+
+type EmbeddingOptions = OpenRouterClientOptions & {
+  model?: string;
+  inputType?: string;
+  dimensions?: number;
+};
 
 export async function generateEmbedding(content: string, options: EmbeddingOptions = {}) {
   try {

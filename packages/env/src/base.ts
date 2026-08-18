@@ -23,12 +23,10 @@ export const baseSchema = z.object({
   REDIS_URL: z.url().default('redis://localhost:6379'),
 
   // Models
-  AUDIO_STT_MODEL: z.string().default('mistralai/voxtral-mini-transcribe'),
   AUDIO_TTS_MODEL: z.string().default('hexgrad/kokoro-82m'),
   CHAT_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
   EMBEDDING_MODEL: z.string().default('google/gemini-embedding-2'),
   ENHANCE_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
-  IMAGE_MODEL: z.string().default('x-ai/grok-imagine-image-quality'),
   JOB_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
   TASK_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
   TIME_BLOCK_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),

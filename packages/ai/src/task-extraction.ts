@@ -10,21 +10,21 @@ import {
   StructuredOutputError as AITextStructuredOutputError,
 } from './text';
 
-export type TaskExtractionInput = OpenRouterClientOptions & {
+type TaskExtractionInput = OpenRouterClientOptions & {
   transcript: string;
   model?: string;
 };
 
-export type ExtractedTask = {
+type ExtractedTask = {
   title: string;
   description?: string;
 };
 
-export type TaskExtractionOutput = {
+type TaskExtractionOutput = {
   tasks: ExtractedTask[];
 };
 
-export type TaskExtractionResult = {
+type TaskExtractionResult = {
   tasks: ExtractedTask[];
   usage: import('./shared').AIUsageMetrics | null;
 };
@@ -43,7 +43,7 @@ const RawTaskExtractionOutputSchema = z.object({
     .max(10),
 });
 
-export function parseTaskExtractionOutput(value: unknown): TaskExtractionOutput {
+function parseTaskExtractionOutput(value: unknown): TaskExtractionOutput {
   const parsed = RawTaskExtractionOutputSchema.parse(value);
   return {
     tasks: parsed.tasks.map((task) => ({
@@ -87,25 +87,25 @@ export async function extractTasks(
   }
 }
 
-export type VoiceTaskExtractionInput = OpenRouterClientOptions & {
+type VoiceTaskExtractionInput = OpenRouterClientOptions & {
   transcript: string;
   referenceDate: string;
   timezone?: string;
   model?: string;
 };
 
-export type ExtractedVoiceTask = {
+type ExtractedVoiceTask = {
   title: string;
   description?: string;
   priority?: 'low' | 'medium' | 'high';
   dueAt?: string;
 };
 
-export type VoiceTaskExtractionOutput = {
+type VoiceTaskExtractionOutput = {
   tasks: ExtractedVoiceTask[];
 };
 
-export type VoiceTaskExtractionResult = {
+type VoiceTaskExtractionResult = {
   tasks: ExtractedVoiceTask[];
   usage: import('./shared').AIUsageMetrics | null;
 };
