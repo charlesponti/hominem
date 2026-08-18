@@ -20,17 +20,30 @@ import { ComposerToastFlight } from './ComposerToastFlight';
  */
 export function useComposerToastHandoff(enabled: boolean) {
   const { ref, measure } = useMeasuredElement<View>();
-  const { present, dismiss, toLocalRect } = useChatMotionOverlay();
+  const { reserve, release, present, dismiss, toLocalRect } = useChatMotionOverlay();
 
   const beginHandoff = useCallback(
     (message: string): string => {
       const messageId = randomUUID();
       if (!enabled) return messageId;
 
+      // Reserve synchronously, before the async measurement below: the
+      // optimistic transcript row for this id mounts synchronously right
+      // after this function returns (via the mutation's onMutate), and it
+      // needs `isInFlight` to already read true on its very first render or
+      // it locks in fully visible and the flight becomes invisible/moot.
+      reserve(messageId);
+
       measure((sourceRect) => {
-        if (!sourceRect) return;
+        if (!sourceRect) {
+          release(messageId);
+          return;
+        }
         const local = toLocalRect(sourceRect);
-        if (!local) return;
+        if (!local) {
+          release(messageId);
+          return;
+        }
 
         present(
           messageId,
@@ -40,7 +53,7 @@ export function useComposerToastHandoff(enabled: boolean) {
 
       return messageId;
     },
-    [enabled, measure, present, dismiss, toLocalRect],
+    [enabled, measure, reserve, release, present, dismiss, toLocalRect],
   );
 
   return { beginHandoff, ref };
