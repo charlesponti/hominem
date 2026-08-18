@@ -2,7 +2,6 @@ import { LOG_MESSAGES, logger } from '@hominem/telemetry';
 import { Scalar } from '@scalar/hono-api-reference';
 import * as Sentry from '@sentry/node';
 import { Hono, type MiddlewareHandler } from 'hono';
-import { openAPIRouteHandler } from 'hono-openapi';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -77,28 +76,6 @@ function createRootStatusPayload() {
   };
 }
 
-function createOpenApiDocumentation() {
-  return {
-    openapi: '3.1.0',
-    info: {
-      title: API_BRAND.api.title,
-      version: '1.0.0',
-      description: API_BRAND.api.description,
-      contact: {
-        name: API_BRAND.api.contactName,
-        email: 'code@hominem.io',
-      },
-    },
-    servers: [
-      {
-        url: env.API_URL,
-        description: 'Production API server',
-      },
-      ...(env.NODE_ENV !== 'production' ? [DEV_OPENAPI_SERVER] : []),
-    ],
-  };
-}
-
 function registerBaseMiddleware(app: Hono<AppEnv>) {
   app.use('*', blockMaliciousProbes());
   app.use('*', requestLogger());
@@ -129,13 +106,6 @@ function registerApiRoutes(app: Hono<AppEnv>) {
 }
 
 function registerDocumentationRoutes(app: Hono<AppEnv>) {
-  app.get(
-    '/openapi.json',
-    openAPIRouteHandler(app, {
-      documentation: createOpenApiDocumentation(),
-    }),
-  );
-
   app.get(
     '/docs',
     Scalar({

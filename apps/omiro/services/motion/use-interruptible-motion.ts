@@ -3,6 +3,7 @@ import { cancelAnimation, runOnJS, useSharedValue, withTiming } from 'react-nati
 import type { SharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
+
 import { nativeMotionTiming } from './native-motion';
 
 export type MotionPhase = 'idle' | 'active' | 'done';

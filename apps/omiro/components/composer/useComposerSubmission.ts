@@ -48,7 +48,14 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const submit = useCallback(
     async (
-      { canSubmit, clearComposer, fileIds, message, messageId, responseModality }: ComposerSubmitInput,
+      {
+        canSubmit,
+        clearComposer,
+        fileIds,
+        message,
+        messageId,
+        responseModality,
+      }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
       if (!canSubmit) return;

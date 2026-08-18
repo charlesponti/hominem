@@ -255,70 +255,77 @@ export function ChatDetailScreen({ id }: { id: string }) {
       </Stack.Toolbar>
 
       <ChatMotionOverlayProvider>
-      <View className="flex-1">
-        <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
-        <ChatSearchModal
-          visible={search.showSearch}
-          searchQuery={search.searchQuery}
-          resultCount={search.displayMessages.length}
-          searchInputRef={search.searchInputRef}
-          onClose={search.handleCloseSearch}
-          onChangeSearchQuery={search.handleSearchQueryChange}
-        />
-        {!isOnline ? (
-          <View
-            accessibilityLiveRegion="polite"
-            accessibilityRole="alert"
-            className="bg-muted border-b border-border px-4 py-2"
-            testID="chat-offline-indicator"
-          >
-            <Text className="text-center text-footnote text-muted-foreground">
-              {t.chat.offlineIndicator}
-            </Text>
-          </View>
-        ) : null}
-        <ChatMessageList
-          bottomInset={composerInset}
-          isMessagesLoading={isMessagesLoading}
-          displayMessages={search.displayMessages}
-          showSearch={search.showSearch}
-          searchQuery={search.searchQuery}
-          showDebug={showDebug}
-          onEdit={handleEditMessage}
-          onRetry={retryFailedMessage}
-          formatTimestamp={formatRelativeAge}
-          emptyState={
-            isConversationGone ? missingConversationState : messagesError ? errorState : emptyState
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={isMessagesRefreshing}
-              onRefresh={() => {
-                void refetchMessages();
-              }}
-            />
-          }
-        />
-        {!isConversationGone ? (
-          <>
-            <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
-              <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
-            </ComposerDock>
-            <View className="absolute inset-0" pointerEvents="box-none">
-              <ChatReviewOverlay
-                pendingReview={transform.pendingReview}
-                isVisible={transform.isReviewVisible}
-                onAccept={() => {
-                  void transform.handleAcceptReview();
-                }}
-                onReject={() => {
-                  void transform.handleRejectReview();
+        <View className="flex-1">
+          <ChatSettingsSheet
+            visible={showChatSettings}
+            onClose={() => setShowChatSettings(false)}
+          />
+          <ChatSearchModal
+            visible={search.showSearch}
+            searchQuery={search.searchQuery}
+            resultCount={search.displayMessages.length}
+            searchInputRef={search.searchInputRef}
+            onClose={search.handleCloseSearch}
+            onChangeSearchQuery={search.handleSearchQueryChange}
+          />
+          {!isOnline ? (
+            <View
+              accessibilityLiveRegion="polite"
+              accessibilityRole="alert"
+              className="bg-muted border-b border-border px-4 py-2"
+              testID="chat-offline-indicator"
+            >
+              <Text className="text-center text-footnote text-muted-foreground">
+                {t.chat.offlineIndicator}
+              </Text>
+            </View>
+          ) : null}
+          <ChatMessageList
+            bottomInset={composerInset}
+            isMessagesLoading={isMessagesLoading}
+            displayMessages={search.displayMessages}
+            showSearch={search.showSearch}
+            searchQuery={search.searchQuery}
+            showDebug={showDebug}
+            onEdit={handleEditMessage}
+            onRetry={retryFailedMessage}
+            formatTimestamp={formatRelativeAge}
+            emptyState={
+              isConversationGone
+                ? missingConversationState
+                : messagesError
+                  ? errorState
+                  : emptyState
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={isMessagesRefreshing}
+                onRefresh={() => {
+                  void refetchMessages();
                 }}
               />
-            </View>
-          </>
-        ) : null}
-      </View>
+            }
+          />
+          {!isConversationGone ? (
+            <>
+              <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
+                <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
+              </ComposerDock>
+              <View className="absolute inset-0" pointerEvents="box-none">
+                <ChatReviewOverlay
+                  pendingReview={transform.pendingReview}
+                  isVisible={transform.isReviewVisible}
+                  onAccept={() => {
+                    void transform.handleAcceptReview();
+                  }}
+                  onReject={() => {
+                    void transform.handleRejectReview();
+                  }}
+                />
+              </View>
+            </>
+          ) : null}
+        </View>
       </ChatMotionOverlayProvider>
     </>
   );

@@ -20,6 +20,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "build:worker": "node build.mjs worker",
     "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
     "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",
     "format": "oxfmt src --write",
@@ -51,7 +52,6 @@
     "@hominem/storage": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hono/node-server": "^2.0.10",
-    "@hono/standard-validator": "^0.3.0",
     "@hono/zod-validator": "^0.7.6",
     "@modelcontextprotocol/server": "2.0.0",
     "@ponti-studios/auth": "workspace:*",
@@ -61,7 +61,6 @@
     "bullmq": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",
-    "hono-openapi": "^1.3.0",
     "pg": "catalog:",
     "resend": "catalog:",
     "ws": "^8.21.1",

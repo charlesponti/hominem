@@ -149,76 +149,76 @@ export const ChatMessage = memo(function ChatMessage({
         style={isUser ? { borderCurve: 'continuous' } : undefined}
         testID={`chat-message-${message.id}`}
       >
-      <MessageEditModal
-        content={content}
-        draftMessage={draftMessage}
-        onCancel={closeEdit}
-        onChangeDraft={setDraftMessage}
-        onSave={saveEdit}
-        visible={isEditing}
-      />
-
-      <View className="gap-2 w-full">
-        {!isUser && hasReasoning ? (
-          <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
-            <Text className="text-mono text-foreground opacity-80">{message.reasoning}</Text>
-          </View>
-        ) : null}
-
-        <MessageToolCalls toolCalls={renderedToolCalls} />
-
-        <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
-          {!isUser && isStreaming ? <ChatThinkingIndicator compact /> : null}
-          {isUser ? <ReferencedNotes message={message} /> : null}
-        </MessageContent>
-
-        {failed && isUser ? (
-          <Animated.View entering={bannerEntering} exiting={bannerExiting}>
-            <Pressable
-              accessibilityLabel={t.chat.retryMessageA11y}
-              accessibilityRole="button"
-              className="flex-row items-center gap-1 self-end"
-              onPress={() => onRetry?.(message.id)}
-            >
-              <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
-              <Text style={{ color: destructive, fontSize: 12 }}>
-                {message.error || t.chat.failedToSend} · {t.chat.tapToRetry}
-              </Text>
-            </Pressable>
-          </Animated.View>
-        ) : null}
-
-        {failed && !isUser ? (
-          <Animated.View entering={bannerEntering} exiting={bannerExiting}>
-            <View className="flex-row items-center gap-1">
-              <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
-              <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
-            </View>
-          </Animated.View>
-        ) : null}
-
-        {showDebug && !isStreaming ? (
-          <MessageDebug hasReasoning={hasReasoning} message={message} />
-        ) : null}
-
-        {!isStreaming ? <FocusItems message={message} /> : null}
-
-        <ActiveMessageActions
-          canDelete={canDelete}
-          canEdit={canEdit}
-          canRegenerate={canRegenerate}
-          isActive={isActive}
-          isUser={isUser}
-          message={message}
-          onDelete={onDelete}
-          onEdit={() => {
-            setDraftMessage(content);
-            setIsEditing(true);
-          }}
-          onRegenerate={onRegenerate}
-          timestamp={timestamp}
+        <MessageEditModal
+          content={content}
+          draftMessage={draftMessage}
+          onCancel={closeEdit}
+          onChangeDraft={setDraftMessage}
+          onSave={saveEdit}
+          visible={isEditing}
         />
-      </View>
+
+        <View className="gap-2 w-full">
+          {!isUser && hasReasoning ? (
+            <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
+              <Text className="text-mono text-foreground opacity-80">{message.reasoning}</Text>
+            </View>
+          ) : null}
+
+          <MessageToolCalls toolCalls={renderedToolCalls} />
+
+          <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
+            {!isUser && isStreaming ? <ChatThinkingIndicator compact /> : null}
+            {isUser ? <ReferencedNotes message={message} /> : null}
+          </MessageContent>
+
+          {failed && isUser ? (
+            <Animated.View entering={bannerEntering} exiting={bannerExiting}>
+              <Pressable
+                accessibilityLabel={t.chat.retryMessageA11y}
+                accessibilityRole="button"
+                className="flex-row items-center gap-1 self-end"
+                onPress={() => onRetry?.(message.id)}
+              >
+                <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
+                <Text style={{ color: destructive, fontSize: 12 }}>
+                  {message.error || t.chat.failedToSend} · {t.chat.tapToRetry}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          ) : null}
+
+          {failed && !isUser ? (
+            <Animated.View entering={bannerEntering} exiting={bannerExiting}>
+              <View className="flex-row items-center gap-1">
+                <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
+                <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
+              </View>
+            </Animated.View>
+          ) : null}
+
+          {showDebug && !isStreaming ? (
+            <MessageDebug hasReasoning={hasReasoning} message={message} />
+          ) : null}
+
+          {!isStreaming ? <FocusItems message={message} /> : null}
+
+          <ActiveMessageActions
+            canDelete={canDelete}
+            canEdit={canEdit}
+            canRegenerate={canRegenerate}
+            isActive={isActive}
+            isUser={isUser}
+            message={message}
+            onDelete={onDelete}
+            onEdit={() => {
+              setDraftMessage(content);
+              setIsEditing(true);
+            }}
+            onRegenerate={onRegenerate}
+            timestamp={timestamp}
+          />
+        </View>
       </Pressable>
     </Animated.View>
   );

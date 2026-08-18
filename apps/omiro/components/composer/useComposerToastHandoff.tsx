@@ -34,11 +34,7 @@ export function useComposerToastHandoff(enabled: boolean) {
 
         present(
           messageId,
-          <ComposerToastFlight
-            onSettled={() => dismiss(messageId)}
-            rect={local}
-            text={message}
-          />,
+          <ComposerToastFlight onSettled={() => dismiss(messageId)} rect={local} text={message} />,
         );
       });
 

@@ -32,7 +32,7 @@ const healthServer = createServer((req, res) => {
     res.end();
   }
 });
-healthServer.listen(env.WORKER_PORT ?? 4041);
+healthServer.listen(env.PORT ?? env.WORKER_PORT ?? 4041);
 
 initRuntime('worker').installSignalHandlers(
   async () => {

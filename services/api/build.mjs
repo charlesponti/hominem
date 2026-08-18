@@ -1,18 +1,5 @@
 import { build } from 'rolldown';
 
-// hono-openapi@1.3.0 statically imports @hono/standard-validator (optional peer dep
-// we don't install — we use @hono/zod-validator instead). Stub it so the bundle
-// doesn't emit an unresolvable import that crashes Node.js at startup.
-const stubMissingPeerDeps = {
-  name: 'stub-missing-peer-deps',
-  resolveId(id) {
-    if (id === '@hono/standard-validator') return '\0stub:' + id;
-  },
-  load(id) {
-    if (id.startsWith('\0stub:')) return 'export const sValidator = undefined;';
-  },
-};
-
 const sharedConfig = {
   tsconfig: './tsconfig.json',
   platform: 'node',
@@ -20,18 +7,24 @@ const sharedConfig = {
   // Node.js builtins are automatically external via platform: 'node'.
   // Exclude optional native add-ons that are try/catch required by pg and ws.
   external: ['pg-native', 'bufferutil', 'utf-8-validate'],
-  plugins: [stubMissingPeerDeps],
 };
 
-await Promise.all([
-  build({
-    ...sharedConfig,
-    input: 'src/index.ts',
-    output: { file: 'dist/index.mjs', format: 'esm', codeSplitting: false },
-  }),
-  build({
-    ...sharedConfig,
-    input: 'src/worker.ts',
-    output: { file: 'dist/worker.mjs', format: 'esm', codeSplitting: false },
-  }),
-]);
+const target = process.argv[2] ?? 'all';
+
+const entries =
+  target === 'worker'
+    ? [['src/worker.ts', 'dist/worker.mjs']]
+    : [
+        ['src/index.ts', 'dist/index.mjs'],
+        ['src/worker.ts', 'dist/worker.mjs'],
+      ];
+
+await Promise.all(
+  entries.map(([input, file]) =>
+    build({
+      ...sharedConfig,
+      input,
+      output: { file, format: 'esm', codeSplitting: false },
+    }),
+  ),
+);

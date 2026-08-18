@@ -53,10 +53,7 @@ export function ComposerToastFlight({
   return (
     <Animated.View
       pointerEvents="none"
-      style={[
-        { left: rect.left, position: 'absolute', top: rect.top, width: rect.width },
-        style,
-      ]}
+      style={[{ left: rect.left, position: 'absolute', top: rect.top, width: rect.width }, style]}
     >
       <View
         className="bg-popover rounded-lg px-2 py-2"
