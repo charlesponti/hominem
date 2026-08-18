@@ -1,7 +1,11 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  FadeOutUp,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
@@ -68,7 +72,11 @@ export const ChatMessage = memo(function ChatMessage({
 
   useEffect(() => {
     if (!inFlight) {
-      revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
+      // Historical messages start at opacity 1 and were never in flight --
+      // skip scheduling a no-op 1-to-1 animation for every row on mount.
+      if (revealOpacity.value !== 1) {
+        revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
+      }
       return;
     }
     // Safety net for a flight that never calls dismiss -- see the constant.
@@ -79,14 +87,30 @@ export const ChatMessage = memo(function ChatMessage({
   }, [inFlight, revealOpacity]);
 
   const revealStyle = useAnimatedStyle(() => ({ opacity: revealOpacity.value }));
-  // The assistant printer surface settles its own height when the indicator
-  // is removed, Markdown reflows, or a failure banner appears, instead of
-  // jumping. Scoped to assistant rows only -- user rows never grow/shrink
-  // after landing, so there is nothing to settle there.
-  const rowLayout =
-    !isUser && !reducedMotion
-      ? LinearTransition.duration(nativeMotionContracts.duration.quick)
-      : undefined;
+  // The row settles its own height when the printer indicator is removed,
+  // Markdown reflows in, or a failure/retry banner appears or clears,
+  // instead of jumping. A no-op for rows whose height never changes.
+  const rowLayout = reducedMotion
+    ? undefined
+    : LinearTransition.duration(nativeMotionContracts.duration.quick);
+  // A message that's already failed the moment this row first mounts is
+  // historical (loaded on chat open, or a background/foreground reconcile),
+  // not a failure the user just watched happen -- it must appear static,
+  // never animate in. Flips to false after the first commit, so a *later*
+  // failure (this row's own stream interrupting, or a retry failing again)
+  // still animates normally.
+  const skipInitialBannerEntranceRef = useRef(failed);
+  useEffect(() => {
+    skipInitialBannerEntranceRef.current = false;
+  }, []);
+  const bannerEntering = skipInitialBannerEntranceRef.current
+    ? undefined
+    : reducedMotion
+      ? FadeIn.duration(nativeMotionContracts.duration.quick)
+      : FadeInDown.duration(nativeMotionContracts.duration.quick);
+  const bannerExiting = reducedMotion
+    ? FadeOut.duration(nativeMotionContracts.duration.quick)
+    : FadeOutUp.duration(nativeMotionContracts.duration.quick);
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
   const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
@@ -149,24 +173,28 @@ export const ChatMessage = memo(function ChatMessage({
         </MessageContent>
 
         {failed && isUser ? (
-          <Pressable
-            accessibilityLabel={t.chat.retryMessageA11y}
-            accessibilityRole="button"
-            className="flex-row items-center gap-1 self-end"
-            onPress={() => onRetry?.(message.id)}
-          >
-            <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
-            <Text style={{ color: destructive, fontSize: 12 }}>
-              {message.error || t.chat.failedToSend} · {t.chat.tapToRetry}
-            </Text>
-          </Pressable>
+          <Animated.View entering={bannerEntering} exiting={bannerExiting}>
+            <Pressable
+              accessibilityLabel={t.chat.retryMessageA11y}
+              accessibilityRole="button"
+              className="flex-row items-center gap-1 self-end"
+              onPress={() => onRetry?.(message.id)}
+            >
+              <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
+              <Text style={{ color: destructive, fontSize: 12 }}>
+                {message.error || t.chat.failedToSend} · {t.chat.tapToRetry}
+              </Text>
+            </Pressable>
+          </Animated.View>
         ) : null}
 
         {failed && !isUser ? (
-          <View className="flex-row items-center gap-1">
-            <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
-            <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
-          </View>
+          <Animated.View entering={bannerEntering} exiting={bannerExiting}>
+            <View className="flex-row items-center gap-1">
+              <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
+              <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
+            </View>
+          </Animated.View>
         ) : null}
 
         {showDebug && !isStreaming ? (
