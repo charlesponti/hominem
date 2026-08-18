@@ -29,7 +29,7 @@ vi.mock('@hominem/rpc/react', async (importOriginal) => {
   };
 });
 
-const { useChatMessages, useActiveChat, toMessageOutput } =
+const { useChatMessages, useActiveChat, preserveRenderKeys, toMessageOutput } =
   await import('~/services/chat/use-chat-messages');
 
 const CHAT_ID = 'chat-1';
@@ -101,6 +101,33 @@ describe('useChatMessages', () => {
       param: { id: CHAT_ID },
       query: { limit: '50' },
     });
+  });
+
+  it('keeps the optimistic render key when the server assigns a message id', () => {
+    const previous = {
+      ...toMessageOutput({
+        id: 'optimistic-assistant',
+        role: 'assistant',
+        content: 'hi',
+        createdAt: new Date().toISOString(),
+        chatId: CHAT_ID,
+      } as RpcChatMessageFixture),
+      renderKey: 'optimistic-assistant',
+    };
+    const next = toMessageOutput({
+      id: 'server-assistant',
+      role: 'assistant',
+      content: 'hi',
+      createdAt: new Date().toISOString(),
+      chatId: CHAT_ID,
+    } as RpcChatMessageFixture);
+
+    expect(preserveRenderKeys([next!], [previous])).toMatchObject([
+      {
+        id: 'server-assistant',
+        renderKey: 'optimistic-assistant',
+      },
+    ]);
   });
 
   it('does not fetch when chatId is empty', async () => {

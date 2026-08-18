@@ -15,7 +15,7 @@ import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.25;
-const keyExtractor = (item: ChatMessageItem) => item.id;
+const keyExtractor = (item: ChatMessageItem) => item.renderKey ?? item.id;
 type AccessibleChatMessage = ChatMessageItem & {
   errorMessage?: string | null;
   status?: string | null;

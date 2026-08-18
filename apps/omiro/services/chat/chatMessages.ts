@@ -19,6 +19,7 @@ export function createOptimisticMessage(
 ): ChatMessageItem {
   return {
     id,
+    renderKey: id,
     role: 'user',
     message: messageText,
     created_at: new Date().toISOString(),
@@ -40,6 +41,7 @@ export function createStreamingPlaceholder(
 ): ChatMessageItem {
   return {
     id,
+    renderKey: id,
     role: 'assistant',
     message,
     created_at: new Date().toISOString(),

@@ -17,6 +17,8 @@ export interface ChatMessageToolCall {
 
 export interface ChatMessageItem {
   id: string;
+  /** Stable client-side identity for list rendering across server reconciliation. */
+  renderKey?: string;
   role: 'user' | 'assistant' | 'system';
   message: string;
   created_at: string;

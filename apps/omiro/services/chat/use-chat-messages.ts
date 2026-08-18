@@ -1,6 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessageDto as RpcChatMessage } from '@hominem/rpc/types';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatKeys } from '../notes/query-keys';
 import { selectChat } from './chat-activity';
@@ -17,6 +17,7 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
 
   return {
     id: message.id,
+    renderKey: message.id,
     role: message.role,
     message: message.content,
     created_at: message.createdAt,
@@ -35,8 +36,27 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
   };
 }
 
+export function preserveRenderKeys(messages: MessageOutput[], previousMessages: MessageOutput[]) {
+  const usedPreviousIndexes = new Set<number>();
+
+  return messages.map((message) => {
+    const previousIndex = previousMessages.findIndex(
+      (previous, index) =>
+        !usedPreviousIndexes.has(index) &&
+        previous.role === message.role &&
+        previous.message === message.message,
+    );
+
+    if (previousIndex === -1) return message;
+
+    usedPreviousIndexes.add(previousIndex);
+    return { ...message, renderKey: previousMessages[previousIndex]?.renderKey };
+  });
+}
+
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const client = useApiClient();
+  const queryClient = useQueryClient();
   return useQuery<MessageOutput[]>({
     queryKey: chatKeys.messages(chatId),
     queryFn: async () => {
@@ -50,7 +70,10 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
         const output = toMessageOutput(message as RpcChatMessage);
         return output ? [output] : [];
       });
-      return nextMessages;
+      return preserveRenderKeys(
+        nextMessages,
+        queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [],
+      );
     },
     enabled: Boolean(chatId),
     refetchOnWindowFocus: false,
