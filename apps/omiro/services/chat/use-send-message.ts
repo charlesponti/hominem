@@ -28,6 +28,27 @@ import { streamSSE } from './stream-sse';
 // Batch chunk writes at ~2 frames (60 fps) to avoid a setQueryData per token.
 const FLUSH_INTERVAL_MS = 32;
 
+// Approximates production pacing for the dev/E2E mock stream. The real
+// endpoint (services/api's chats.ts stream route) forwards raw OpenRouter
+// deltas as they arrive with no server-side batching or delay -- each chunk
+// event is a few characters wide, not a single character. ~4-char chunks
+// every ~20ms targets ~200 chars/sec, in range for the fast model chat is
+// configured with (see CHAT_MODEL in packages/env).
+const MOCK_CHUNK_DELAY_MS = 20;
+const MOCK_CHUNK_MIN_SIZE = 2;
+const MOCK_CHUNK_MAX_SIZE = 6;
+
+function* mockStreamChunks(text: string): Generator<string> {
+  let index = 0;
+  while (index < text.length) {
+    const size =
+      MOCK_CHUNK_MIN_SIZE +
+      Math.floor(Math.random() * (MOCK_CHUNK_MAX_SIZE - MOCK_CHUNK_MIN_SIZE + 1));
+    yield text.slice(index, index + size);
+    index += size;
+  }
+}
+
 function triggerAssistantCompletionHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
 }
@@ -172,10 +193,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
     mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
       if (isTestMode()) {
-        // Simulate streaming token-by-token without hitting the real API.
-        for (const char of MOCK_AI_RESPONSE) {
-          onEvent({ type: 'chunk', chunk: char });
-          await new Promise((r) => setTimeout(r, 60));
+        for (const chunk of mockStreamChunks(MOCK_AI_RESPONSE)) {
+          onEvent({ type: 'chunk', chunk });
+          await new Promise((r) => setTimeout(r, MOCK_CHUNK_DELAY_MS));
         }
         flushNow();
         return;
