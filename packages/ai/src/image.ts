@@ -1,5 +1,5 @@
 import {
-  DEFAULT_IMAGE_MODEL,
+  IMAGE_MODEL,
   createOpenRouterClient,
   normalizeOpenRouterError,
   type ImageGenerationOptions,
@@ -50,7 +50,7 @@ export async function generateImageFromPrompt(
       appTitle: options.appTitle,
       appCategories: options.appCategories,
       chatRequest: {
-        model: options.imageModel ?? options.model ?? DEFAULT_IMAGE_MODEL,
+        model: options.imageModel ?? options.model ?? IMAGE_MODEL,
         messages: [{ role: 'user', content: prompt }],
         modalities: ['image'],
         stream: false,

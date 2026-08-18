@@ -12,9 +12,6 @@ export const baseSchema = z.object({
   DB_IDLE_TIMEOUT: z.coerce.number().int().positive().optional(),
   DB_MAX_LIFETIME: z.coerce.number().int().positive().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
-  AI_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
-  OPENROUTER_VOICE_CLEANUP_MODEL: z.string().default('qwen/qwen3.5-flash-02-23'),
-  OPENROUTER_TASK_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_FROM_NAME: z.string().optional(),
@@ -24,6 +21,18 @@ export const baseSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1).default('minioadmin'),
   R2_PUBLIC_URL: z.url().default('http://localhost:9000'),
   REDIS_URL: z.url().default('redis://localhost:6379'),
+
+  // Models
+  AUDIO_STT_MODEL: z.string().default('mistralai/voxtral-mini-transcribe'),
+  AUDIO_TTS_MODEL: z.string().default('hexgrad/kokoro-82m'),
+  CHAT_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+  EMBEDDING_MODEL: z.string().default('google/gemini-embedding-2'),
+  ENHANCE_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+  IMAGE_MODEL: z.string().default('x-ai/grok-imagine-image-quality'),
+  JOB_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+  TASK_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+  TIME_BLOCK_EXTRACTION_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+  VOICE_CLEANUP_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
 });
 
 export type BaseEnv = z.infer<typeof baseSchema>;

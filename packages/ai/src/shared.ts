@@ -6,18 +6,16 @@ import { env } from './env';
 export const DEFAULT_HTTP_REFERER = 'https://hominem.app';
 export const DEFAULT_APP_TITLE = 'Hominem';
 
-export const DEFAULT_TEXT_MODEL = env.AI_MODEL;
-export const DEFAULT_IMAGE_MODEL = 'x-ai/grok-imagine-image-quality';
-export const DEFAULT_EMBEDDING_MODEL = 'google/gemini-embedding-2';
-export const DEFAULT_TRANSCRIPTION_MODEL = 'mistralai/voxtral-mini-transcribe';
-export const DEFAULT_ENHANCE_MODEL = 'google/gemini-2.5-flash-lite';
-export const DEFAULT_SPEECH_MODEL = 'openai/gpt-audio-mini';
-// Dedicated TTS-only model used for the walkie-talkie speech leg (packages/ai/src/speech.ts).
-// Distinct from DEFAULT_SPEECH_MODEL, which is for chat-completions audio-output modalities —
-// kokoro-82m isn't a chat model and can't go through that path.
-export const DEFAULT_TTS_MODEL = 'hexgrad/kokoro-82m';
-export const DEFAULT_VOICE_CLEANUP_MODEL = env.OPENROUTER_VOICE_CLEANUP_MODEL;
-export const DEFAULT_TASK_EXTRACTION_MODEL = env.OPENROUTER_TASK_EXTRACTION_MODEL;
+export const CHAT_MODEL = env.CHAT_MODEL;
+export const AUDIO_STT_MODEL = env.AUDIO_STT_MODEL;
+export const AUDIO_TTS_MODEL = env.AUDIO_TTS_MODEL;
+export const EMBEDDING_MODEL = env.EMBEDDING_MODEL;
+export const ENHANCE_MODEL = env.ENHANCE_MODEL;
+export const JOB_EXTRACTION_MODEL = env.JOB_EXTRACTION_MODEL;
+export const IMAGE_MODEL = env.IMAGE_MODEL;
+export const TASK_EXTRACTION_MODEL = env.TASK_EXTRACTION_MODEL;
+export const TIME_BLOCK_EXTRACTION_MODEL = env.TIME_BLOCK_EXTRACTION_MODEL;
+export const VOICE_CLEANUP_MODEL = env.VOICE_CLEANUP_MODEL;
 
 export type OpenRouterClientOptions = {
   httpReferer?: string;

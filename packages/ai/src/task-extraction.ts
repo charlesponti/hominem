@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  DEFAULT_TASK_EXTRACTION_MODEL,
+  TASK_EXTRACTION_MODEL,
   normalizeOpenRouterError,
   type OpenRouterClientOptions,
 } from './shared';
@@ -57,7 +57,7 @@ export async function extractTasks(
   input: TaskExtractionInput,
   systemPrompt: string,
 ): Promise<TaskExtractionResult> {
-  const model = input.model ?? DEFAULT_TASK_EXTRACTION_MODEL;
+  const model = input.model ?? TASK_EXTRACTION_MODEL;
 
   try {
     const { output, usage } = await createStructuredChatCompletion(
@@ -275,7 +275,7 @@ export async function extractVoiceTasks(
   input: VoiceTaskExtractionInput,
   systemPrompt: string,
 ): Promise<VoiceTaskExtractionResult> {
-  const model = input.model ?? DEFAULT_TASK_EXTRACTION_MODEL;
+  const model = input.model ?? TASK_EXTRACTION_MODEL;
 
   const contextHeader = `Reference date/time: ${formatVoiceTaskReferenceDate(
     input.referenceDate,

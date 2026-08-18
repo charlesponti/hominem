@@ -2,6 +2,7 @@ import { get } from 'node:https';
 
 import {
   createChatCompletion,
+  JOB_EXTRACTION_MODEL,
   getChatCompletionText,
   getChatCompletionUsage,
   type AIUsageMetrics,
@@ -301,7 +302,7 @@ export async function importJobPosting(
   try {
     const postingText = await fetchJobPostingText(sourceUrl);
     const response = await createChatCompletion({
-      model: 'qwen/qwen3.5-flash-02-23',
+      model: JOB_EXTRACTION_MODEL,
       responseFormat: { type: 'json_object' },
       messages: [
         {

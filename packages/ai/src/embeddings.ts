@@ -1,7 +1,7 @@
 import { type CreateEmbeddingsResponseBody } from '@openrouter/sdk/models/operations';
 
 import {
-  DEFAULT_EMBEDDING_MODEL,
+  EMBEDDING_MODEL,
   createOpenRouterClient,
   normalizeOpenRouterEmbeddingUsage,
   normalizeOpenRouterError,
@@ -10,7 +10,7 @@ import {
 
 export async function generateEmbedding(content: string, options: EmbeddingOptions = {}) {
   try {
-    const model = options.model ?? DEFAULT_EMBEDDING_MODEL;
+    const model = options.model ?? EMBEDDING_MODEL;
     const client = createOpenRouterClient(options);
     const response = await client.embeddings.generate({
       httpReferer: options.httpReferer,

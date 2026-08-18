@@ -1,5 +1,6 @@
 import {
   createChatCompletion,
+  JOB_EXTRACTION_MODEL,
   getChatCompletionText,
   getChatCompletionUsage,
   type AIUsageMetrics,
@@ -82,7 +83,7 @@ export async function scrapeJobPosting(
 
   try {
     const response = await createChatCompletion({
-      model: 'qwen/qwen3.5-flash-02-23',
+      model: JOB_EXTRACTION_MODEL,
       responseFormat: { type: 'json_object' },
       messages: [
         {

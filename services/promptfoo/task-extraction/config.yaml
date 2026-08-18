@@ -1,26 +1,14 @@
 description: 'Task extraction from a chat transcript — task discrimination + JSON shape'
 
 providers:
-  - id: ollama:chat:gemma4:e2b-mlx
-    label: gemma4-e2b-mlx (local)
-    config:
-      temperature: 0
-  - id: openrouter:qwen/qwen3.5-flash-02-23
-    label: gpt-4o (current production default)
-    config:
-      temperature: 0
   - id: openrouter:google/gemini-2.5-flash-lite
-    label: gemini-2.5-flash-lite (current production enhance model)
+    label: gemini-2.5-flash-lite (production task extraction model)
     config:
       temperature: 0
 
 prompts:
-  - id: file://prompt-v1.json
-    label: v1-production
-  - id: file://prompt-v2.json
-    label: v2-candidate
   - id: file://prompt-v3.json
-    label: v3-candidate
+    label: v3-production
 
 tests:
   - vars:

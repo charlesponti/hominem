@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  DEFAULT_TASK_EXTRACTION_MODEL,
+  TIME_BLOCK_EXTRACTION_MODEL,
   normalizeOpenRouterError,
   type AIUsageMetrics,
   type OpenRouterClientOptions,
@@ -119,7 +119,7 @@ export async function extractTimeBlock(
   input: TimeBlockExtractionInput,
   systemPrompt: string,
 ): Promise<TimeBlockExtractionResult> {
-  const model = input.model ?? DEFAULT_TASK_EXTRACTION_MODEL;
+  const model = input.model ?? TIME_BLOCK_EXTRACTION_MODEL;
   const context = [
     `Current date and time: ${input.referenceDate}`,
     input.timezone ? `Timezone: ${input.timezone}` : null,

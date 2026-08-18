@@ -17,11 +17,9 @@ import { env } from './env';
 import {
   createOpenRouterClient,
   DEFAULT_APP_TITLE,
-  DEFAULT_ENHANCE_MODEL,
+  ENHANCE_MODEL,
   DEFAULT_HTTP_REFERER,
-  DEFAULT_SPEECH_MODEL,
-  DEFAULT_TEXT_MODEL,
-  DEFAULT_TRANSCRIPTION_MODEL,
+  CHAT_MODEL,
   normalizeOpenRouterChatUsage,
   normalizeOpenRouterError,
   type AIUsageMetrics,
@@ -87,7 +85,7 @@ export function createOpenRouterTextAdapter(options: OpenRouterTextAdapterOption
     return options.adapter;
   }
 
-  const model = (options.model ?? DEFAULT_TEXT_MODEL) as Parameters<typeof createOpenRouterText>[0];
+  const model = (options.model ?? CHAT_MODEL) as Parameters<typeof createOpenRouterText>[0];
 
   return createOpenRouterText(model, env.OPENROUTER_API_KEY ?? '', {
     httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
@@ -98,16 +96,6 @@ export function createOpenRouterTextAdapter(options: OpenRouterTextAdapterOption
 
 export function getSharedTextModel() {
   return createOpenRouterTextAdapter();
-}
-
-export function getSharedAiModelConfig() {
-  return {
-    provider: 'openrouter' as const,
-    modelId: DEFAULT_TEXT_MODEL,
-    enhanceModel: DEFAULT_ENHANCE_MODEL,
-    transcriptionModel: DEFAULT_TRANSCRIPTION_MODEL,
-    speechModel: DEFAULT_SPEECH_MODEL,
-  };
 }
 
 function getSharedTextAdapterForModel(model?: string, options: OpenRouterClientOptions = {}) {
@@ -288,7 +276,7 @@ export async function postChatCompletion(
   body: RawChatBody,
   options: OpenRouterTextAdapterOptions = {},
 ): Promise<Response> {
-  const model = body.model ?? DEFAULT_TEXT_MODEL;
+  const model = body.model ?? CHAT_MODEL;
   const { systemPrompts, modelMessages } = normalizeLegacyMessages(body.messages);
   const adapter = getSharedTextAdapterForModel(model, options);
   const modelOptions: Record<string, unknown> = {
@@ -480,7 +468,7 @@ export async function enhanceText(
   systemPrompt: string,
 ) {
   const response = await createChatCompletion({
-    model: DEFAULT_ENHANCE_MODEL,
+    model: ENHANCE_MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
       {

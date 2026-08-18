@@ -1,4 +1,4 @@
-import { createOpenRouterClient, DEFAULT_TTS_MODEL, normalizeOpenRouterError } from './shared';
+import { AUDIO_TTS_MODEL, createOpenRouterClient, normalizeOpenRouterError } from './shared';
 import type { OpenRouterClientOptions } from './shared';
 
 export type SynthesizeSpeechInput = OpenRouterClientOptions & {
@@ -22,12 +22,12 @@ const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
 // through the SDK's dedicated `tts.createSpeech` client rather than `chat()` —
 // see packages/ai/src/text.ts's postChatCompletion for the (unused-by-this-
 // feature) audio-modality-via-chat-completions path used by audio-native
-// models like DEFAULT_SPEECH_MODEL.
+// audio-capable speech models.
 export async function synthesizeSpeech(
   input: SynthesizeSpeechInput,
 ): Promise<SynthesizeSpeechResult> {
   const client = createOpenRouterClient(input);
-  const model = input.model ?? DEFAULT_TTS_MODEL;
+  const model = input.model ?? AUDIO_TTS_MODEL;
   const responseFormat = input.responseFormat ?? 'mp3';
 
   let stream: ReadableStream<Uint8Array>;

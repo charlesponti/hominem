@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { getChatCompletionUsage, streamChatCompletion } from '@hominem/ai';
+import { CHAT_MODEL, getChatCompletionUsage, streamChatCompletion } from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, db, runInTransaction } from '@hominem/db';
 import { embeddingQueue } from '@hominem/queues';
@@ -321,6 +321,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
     const completion = streamChatCompletion({
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: getSystemPrompt(responseLength) },
         { role: 'user', content: prompt },
@@ -456,6 +457,7 @@ export const chatsRoutes = new Hono<AppContext>()
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
     const completion = streamChatCompletion({
+      model: CHAT_MODEL,
       messages: [
         { role: 'system', content: getSystemPrompt(responseLength) },
         { role: 'user', content: prompt },

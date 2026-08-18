@@ -164,7 +164,7 @@ export interface AppCareerApplications {
 }
 
 export interface AppCareerApplicationsOffers {
-  applicationId: string | null;
+  applicationId: string;
   baseSalary: number | null;
   bonus: number | null;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1009,6 +1009,7 @@ export interface AppSocialThreadParticipants {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   id: Generated<string>;
   joinedAt: ColumnType<string, Date | string, Date | string>;
+  ownerUserid: string;
   personId: string;
   threadId: string;
 }

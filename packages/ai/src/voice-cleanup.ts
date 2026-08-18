@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  DEFAULT_VOICE_CLEANUP_MODEL,
+  VOICE_CLEANUP_MODEL,
   normalizeOpenRouterError,
   type OpenRouterClientOptions,
 } from './shared';
@@ -44,7 +44,7 @@ export function parseVoiceTranscriptCleanupOutput(value: unknown): VoiceTranscri
 export async function cleanupVoiceTranscript(
   input: VoiceTranscriptCleanupInput,
 ): Promise<VoiceTranscriptCleanupResult> {
-  const model = input.model ?? DEFAULT_VOICE_CLEANUP_MODEL;
+  const model = input.model ?? VOICE_CLEANUP_MODEL;
 
   try {
     const { output, usage } = await createStructuredChatCompletion(

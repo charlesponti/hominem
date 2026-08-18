@@ -1,0 +1,22 @@
+description: 'Career job import benchmark — Ashby Whatnot posting'
+
+# Production model. Keep temperature at zero for repeatable benchmark results.
+providers:
+  - id: openrouter:google/gemini-2.5-flash-lite
+    label: gemini-2.5-flash-lite
+    config:
+      temperature: 0
+      max_tokens: 4096
+      response_format:
+        type: json_object
+
+prompts:
+  - id: file://prompt.json
+    label: career-job-import-contract
+
+tests:
+  - vars:
+      postingText: file:///tmp/hominem-career-job-import.html
+    assert:
+      - type: javascript
+        value: file://assertions.ts

@@ -6,7 +6,7 @@
 // caught the incident where a locally-run "production" build silently
 // shipped the dev app identity (com.pontistudios.hakumi.dev) to Apple.
 //
-// Keep these in sync with app.config.ts's PRODUCTION_APP_CONFIG.
+// Keep these in sync with app.config.js's PRODUCTION_APP_CONFIG.
 const EXPECTED = {
   bundleIdentifier: 'com.pontistudios.hakumi',
   name: 'Omiro',
