@@ -76,10 +76,6 @@ export const ChatMessage = memo(function ChatMessage({
     setIsEditing(false);
   };
 
-  if (isStreaming && !content) {
-    return <ChatThinkingIndicator />;
-  }
-
   return (
     <Pressable
       onPress={isStreaming ? undefined : onActivate}
@@ -106,6 +102,7 @@ export const ChatMessage = memo(function ChatMessage({
         <MessageToolCalls toolCalls={renderedToolCalls} />
 
         <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
+          {!isUser && isStreaming ? <ChatThinkingIndicator compact /> : null}
           {isUser ? <ReferencedNotes message={message} /> : null}
         </MessageContent>
 

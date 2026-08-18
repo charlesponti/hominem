@@ -60,8 +60,9 @@ interface ChatMessageListProps {
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
   /**
-   * Extra bottom space to reserve so the newest messages don't render
-   * underneath the floating, absolutely-positioned composer dock.
+   * Extra bottom space to reserve while the keyboard is open and the
+   * composer lifts above its normal column position. Zero at rest, since
+   * the composer occupies real layout space there.
    */
   bottomInset?: number;
 }
@@ -222,11 +223,10 @@ export function ChatMessageList({
         { flexGrow: 1, paddingHorizontal: 16, paddingTop: 4, rowGap: 20 },
         Platform.OS === 'android' ? { paddingBottom: bottomInset } : undefined,
       ]}
-      // Content flows full-bleed behind the glass composer on iOS so it can
-      // blur/refract it; contentInset just caps where scrolling rests, unlike
-      // contentContainerStyle padding which would carve out dead space with
-      // nothing behind the glass to blur (Android's composer is opaque, so it
-      // uses real padding instead since there's no glass to see through).
+      // The composer sits in normal column flow at rest, so bottomInset is 0
+      // and this reserves nothing extra. While the keyboard is open the
+      // composer lifts by translating above its resting position instead of
+      // resizing, so bottomInset carries just that transient overlap amount.
       contentInset={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
       scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
       data={displayMessages}

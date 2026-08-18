@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
-import { StreamingRevealText } from './chat-streaming-text';
-
 async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
   return mod.default as MarkdownComponent;
@@ -49,15 +47,10 @@ export function MessageContent({
 }) {
   const Markdown = useMarkdownComponent();
   const isStreaming = !enableMarkdown;
-  const [revealing, setRevealing] = useState(isStreaming);
   const [textPrimary, popover] = useCSSVariable([
     '--color-foreground',
     '--color-popover',
   ]) as string[];
-
-  useEffect(() => {
-    if (isStreaming) setRevealing(true);
-  }, [isStreaming]);
 
   const markdownStyle = useMemo(
     () => ({
@@ -89,17 +82,10 @@ export function MessageContent({
 
   return (
     <View className="gap-2 w-full">
-      {revealing ? (
-        <StreamingRevealText
-          content={content}
-          isStreaming={isStreaming}
-          onRevealComplete={() => setRevealing(false)}
-          textStyle={textStyle}
-        />
-      ) : Markdown ? (
-        <Markdown style={markdownStyle}>{content}</Markdown>
-      ) : (
+      {isStreaming || !Markdown ? (
         <Text style={textStyle}>{content}</Text>
+      ) : (
+        <Markdown style={markdownStyle}>{content}</Markdown>
       )}
       {children}
     </View>

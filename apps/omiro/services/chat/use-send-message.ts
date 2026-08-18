@@ -167,7 +167,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         // Simulate streaming token-by-token without hitting the real API.
         for (const char of MOCK_AI_RESPONSE) {
           onEvent({ type: 'chunk', chunk: char });
-          await new Promise((r) => setTimeout(r, 2));
+          await new Promise((r) => setTimeout(r, 60));
         }
         flushNow();
         return;

@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,9 +11,9 @@ interface ComposerDockProps {
   children: ReactNode;
   testID?: string;
   /**
-   * Reports the space a scroll surface must reserve for this floating dock.
-   * This includes its rendered height and, while the keyboard is open, the
-   * portion of the screen the keyboard occupies above the safe area.
+   * Reports the extra space a scroll surface must reserve while the keyboard
+   * is open, since this dock lifts above the keyboard by translating out of
+   * its normal column position rather than resizing it.
    */
   onInsetChange?: (inset: number) => void;
 }
@@ -22,28 +21,15 @@ interface ComposerDockProps {
 export function ComposerDock({ children, testID, onInsetChange }: ComposerDockProps) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardState((state) => state.height);
-  const [dockHeight, setDockHeight] = useState(0);
-
-  const handleLayout = (event: LayoutChangeEvent) => {
-    setDockHeight(event.nativeEvent.layout.height);
-  };
 
   useEffect(() => {
-    onInsetChange?.(
-      getFloatingDockInset({
-        dockHeight,
-        keyboardHeight,
-        safeAreaBottom: insets.bottom,
-      }),
-    );
-  }, [dockHeight, insets.bottom, keyboardHeight, onInsetChange]);
+    onInsetChange?.(getFloatingDockInset({ keyboardHeight, safeAreaBottom: insets.bottom }));
+  }, [insets.bottom, keyboardHeight, onInsetChange]);
 
   return (
     <KeyboardStickyView
       offset={{ closed: 0, opened: insets.bottom }}
-      onLayout={handleLayout}
-      pointerEvents="box-none"
-      style={{ bottom: 0, left: 0, paddingBottom: insets.bottom, position: 'absolute', right: 0 }}
+      style={{ paddingBottom: insets.bottom }}
       testID={testID}
       className="px-4"
     >

@@ -118,6 +118,31 @@ Use one input boundary. Do not show the same request in a text field, a chip car
 
 Motion should explain continuity, not compete for attention. It should preserve spatial relationships, keep controls stable while a gesture is active, and respect reduced-motion settings.
 
+### Chat conversation motion
+
+Chat uses **kinetic correspondence**: the composer is the physical source of a
+new turn, and the transcript is the durable record. Motion may explain that
+handoff, but it must never delay reading, typing, scrolling, or recovering a
+message.
+
+- A submitted user message may travel from the composer and settle in its
+  transcript position as a short, upward "toast" handoff. The handoff is
+  acknowledgement and spatial continuity, not a second copy of the message.
+- An active assistant reply is a printer surface. Before text arrives, an
+  in-surface activity carriage signals that the reply is being produced. Once
+  text arrives, render it immediately as stream data is received; do not batch,
+  pace, fade, typewrite, or otherwise withhold readable text.
+- The activity carriage uses opacity and vertical transform only. It remains
+  compact, never claims false percentage progress, and settles when the stream
+  settles. Reduced Motion keeps the state indication but removes travel.
+- Historical messages are static when a chat opens. Scrolling, editing,
+  retrying, copying, searching, deleting, and error recovery remain direct;
+  motion cannot block the action or move the content being read.
+- Motion timing, easing, and reduced-motion behavior resolve through the
+  portable `@ponti-studios/ui` motion contract and Omiro's Reanimated adapter.
+  Do not introduce a chat-local motion token system or experimental shared
+  element transitions.
+
 ### Composition
 
 The screen has three regions, in this order:

@@ -49,6 +49,10 @@ export const nativeMotionContracts = {
 } as const;
 
 export const nativeMotionTiming = {
+  quick: {
+    duration: nativeMotionContracts.duration.quick,
+    easing: nativeMotionContracts.easing.enter,
+  } satisfies WithTimingConfig,
   enter: {
     duration: nativeMotionContracts.duration.standard,
     easing: nativeMotionContracts.easing.enter,
