@@ -131,7 +131,12 @@ export async function createCareerApplication(
   ownerUserId: string,
   input: z.infer<typeof careerApplicationCreateSchema>,
 ) {
-  return toApplicationDto(await CareerRepository.createApplication(db, ownerUserId, input));
+  return toApplicationDto(
+    await CareerRepository.createApplication(db, ownerUserId, {
+      ...input,
+      status: input.status ?? 'WISHLIST',
+    }),
+  );
 }
 
 export async function updateCareerApplication(

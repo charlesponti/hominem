@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-04
 title: Add career RPC routes
-status: ready
+status: done
 priority: medium
 team: api
 project: career-mcp

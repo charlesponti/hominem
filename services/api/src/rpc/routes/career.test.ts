@@ -227,6 +227,119 @@ describe('career engagement routes', () => {
 
     await db.deleteFrom('app.careerEngagements').where('id', '=', engagement.id).execute();
   });
+
+  it('creates an engagement via the create route', async () => {
+    const app = createApp(userId);
+
+    const created = await postJson(app, '/career/engagements/create', {
+      company: 'New Co',
+      title: 'Staff Engineer',
+    });
+    expect(created.status).toBe(201);
+    const body = (await created.json()) as { id: string; company: string; title: string };
+    expect(body).toMatchObject({ company: 'New Co', title: 'Staff Engineer' });
+
+    await postJson(app, '/career/engagements/delete', { id: body.id });
+  });
+});
+
+describe('career application create/update/delete routes', () => {
+  it('round-trips create -> update -> delete', async () => {
+    const app = createApp(userId);
+
+    const created = await postJson(app, '/career/applications/create', {
+      company: 'Round Trip Co',
+      title: 'Backend Engineer',
+    });
+    expect(created.status).toBe(201);
+    const createdBody = (await created.json()) as { id: string; company: string; title: string };
+    expect(createdBody).toMatchObject({ company: 'Round Trip Co', title: 'Backend Engineer' });
+
+    const listed = await app.request('/career/applications');
+    const listedBody = (await listed.json()) as { applications: { id: string }[] };
+    expect(listedBody.applications.some((a) => a.id === createdBody.id)).toBe(true);
+
+    const updated = await postJson(app, '/career/applications/update', {
+      id: createdBody.id,
+      data: { status: 'REJECTED' },
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({ status: 'REJECTED' });
+
+    const deleted = await postJson(app, '/career/applications/delete', { id: createdBody.id });
+    expect(deleted.status).toBe(200);
+    await expect(deleted.json()).resolves.toEqual({ removed: true });
+  });
+
+  it('returns 404 when updating or deleting another owner application', async () => {
+    const owner = createApp(userId);
+    const intruder = createApp(otherUserId);
+    const created = await postJson(owner, '/career/applications/create', {
+      company: 'Private App Co',
+      title: 'Private role',
+    });
+    const { id } = (await created.json()) as { id: string };
+
+    const update = await postJson(intruder, '/career/applications/update', {
+      id,
+      data: { status: 'SCREENING' },
+    });
+    expect(update.status).toBe(404);
+
+    const remove = await postJson(intruder, '/career/applications/delete', { id });
+    expect(remove.status).toBe(404);
+
+    await postJson(owner, '/career/applications/delete', { id });
+  });
+});
+
+describe('career education create/update/delete routes', () => {
+  it('round-trips create -> list -> update -> delete', async () => {
+    const app = createApp(userId);
+
+    const created = await postJson(app, '/career/education/create', {
+      school: 'State University',
+      degree: 'B.S. Computer Science',
+    });
+    expect(created.status).toBe(201);
+    const createdBody = (await created.json()) as { id: string; school: string };
+    expect(createdBody.school).toBe('State University');
+
+    const listed = await app.request('/career/education');
+    const listedBody = (await listed.json()) as { education: { id: string }[] };
+    expect(listedBody.education.some((e) => e.id === createdBody.id)).toBe(true);
+
+    const updated = await postJson(app, '/career/education/update', {
+      id: createdBody.id,
+      data: { degree: 'M.S. Computer Science' },
+    });
+    expect(updated.status).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({ degree: 'M.S. Computer Science' });
+
+    const deleted = await postJson(app, '/career/education/delete', { id: createdBody.id });
+    expect(deleted.status).toBe(200);
+    await expect(deleted.json()).resolves.toEqual({ removed: true });
+  });
+
+  it('returns 404 when updating or deleting another owner education entry', async () => {
+    const owner = createApp(userId);
+    const intruder = createApp(otherUserId);
+    const created = await postJson(owner, '/career/education/create', {
+      school: 'Private University',
+    });
+    const { id } = (await created.json()) as { id: string };
+
+    const update = await postJson(intruder, '/career/education/update', {
+      id,
+      data: { degree: 'Leaked degree' },
+    });
+    expect(update.status).toBe(404);
+
+    const remove = await postJson(intruder, '/career/education/delete', { id });
+    expect(remove.status).toBe(404);
+
+    await postJson(owner, '/career/education/delete', { id });
+  });
 });
 
 describe('career projects, testimonials, certifications, social-links', () => {

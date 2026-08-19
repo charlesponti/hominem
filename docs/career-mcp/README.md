@@ -1,6 +1,6 @@
 ---
 type: project-index
-status: proposed
+status: done
 priority: high
 team: api
 project: career-mcp

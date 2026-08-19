@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-05
 title: Write failing MCP and RPC integration tests (TDD red)
-status: in_progress
+status: done
 priority: high
 team: api
 project: career-mcp

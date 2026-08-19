@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-02
 title: Career service functions for create/update/delete
-status: ready
+status: done
 priority: high
 team: api
 project: career-mcp

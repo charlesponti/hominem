@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-00
 title: Repository layer boolean delete returns and education methods
-status: ready
+status: done
 priority: high
 team: api
 project: career-mcp
@@ -35,10 +35,10 @@ Give every career delete path a boolean result so MCP delete tools can report `{
 ## Implementation steps
 
 - [x] Change the return type of `CareerRepository.delete*` functions to `Promise<boolean>`.
-- [ ] Add `CareerRepository.updateEducation(handle, ownerUserId, id, data)` — `updateTable('app.careerEducation')` scoped by `id` and `ownerUserid`, `.returningAll().executeTakeFirst()`, null-safe return of `CareerEducationRecord | null`.
-- [ ] Add `CareerRepository.deleteEducation(handle, ownerUserId, id)` — `deleteFrom('app.careerEducation')` scoped by `id` and `ownerUserid`, `.returning('id').executeTakeFirst()`, return `Promise<boolean>`.
-- [ ] `SkillRepository.remove`, `TestimonialRepository.remove`, `CertificationRepository.remove` — change return type to `Promise<boolean>` using the same `.returning('id').executeTakeFirst()` pattern.
-- [ ] Rebuild: `pnpm --filter @hominem/db build` so `apps/career` resolves fresh declaration output.
+- [x] Add `CareerRepository.updateEducation(handle, ownerUserId, id, data)` — `updateTable('app.careerEducation')` scoped by `id` and `ownerUserid`, `.returningAll().executeTakeFirst()`, null-safe return of `CareerEducationRecord | null`.
+- [x] Add `CareerRepository.deleteEducation(handle, ownerUserId, id)` — `deleteFrom('app.careerEducation')` scoped by `id` and `ownerUserid`, `.returning('id').executeTakeFirst()`, return `Promise<boolean>`.
+- [x] `SkillRepository.remove`, `TestimonialRepository.remove`, `CertificationRepository.remove` — change return type to `Promise<boolean>` using the same `.returning('id').executeTakeFirst()` pattern.
+- [x] Rebuild: `pnpm --filter @hominem/db build` so `apps/career` resolves fresh declaration output.
 
 ## Acceptance criteria
 

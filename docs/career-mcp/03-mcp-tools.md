@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-03
 title: Register 22 career write MCP tools
-status: ready
+status: done
 priority: high
 team: api
 project: career-mcp

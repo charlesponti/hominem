@@ -2,7 +2,7 @@
 type: task
 id: CAREER-MCP-01
 title: Shared Zod schemas for career create/update/delete
-status: ready
+status: done
 priority: high
 team: api
 project: career-mcp
