@@ -31,16 +31,18 @@ async function main() {
   const { values } = parseArgs({
     options: {
       userId: { type: 'string' },
+      userEmail: { type: 'string' },
       env: { type: 'string', default: 'development' },
       from: { type: 'string' },
       to: { type: 'string' },
       includeCancelled: { type: 'boolean', default: false },
-      out: { type: 'string', default: 'calendar.ics' },
+      out: { type: 'string' },
       yes: { type: 'boolean', default: false },
     },
   });
 
-  if (!values.userId) die('--userId is required.');
+  if (!values.userId && !values.userEmail) die('--userId or --userEmail is required.');
+  if (values.userId && values.userEmail) die('Use only one of --userId or --userEmail.');
   if (values.env !== 'development' && values.env !== 'production') {
     die('--env must be "development" or "production".');
   }
@@ -54,6 +56,15 @@ async function main() {
   process.env.DATABASE_URL = databaseUrl;
 
   const { pool } = await import('@hominem/db');
+  const userId =
+    values.userId ??
+    (
+      await pool.query<{ id: string }>('SELECT id FROM "user" WHERE lower(email) = lower($1)', [
+        values.userEmail,
+      ])
+    ).rows[0]?.id;
+  if (!userId) die(`No user found for ${values.userEmail ?? values.userId} in ${values.env}.`);
+  const outputPath = values.out ?? `calendar-${new Date().toISOString().replace(/[:.]/g, '-')}.ics`;
   const result = await pool.query<CalendarExportEvent>(
     `
       SELECT
@@ -95,11 +106,11 @@ async function main() {
       GROUP BY e.id, p.name, p.formatted_address
       ORDER BY e.starts_at ASC, e.id ASC
     `,
-    [values.userId, from ?? null, to ?? null, values.includeCancelled],
+    [userId, from ?? null, to ?? null, values.includeCancelled],
   );
 
-  await writeFile(values.out, createIcal(result.rows), 'utf8');
-  console.log(`✓ exported ${result.rowCount ?? 0} event(s) to ${values.out}`);
+  await writeFile(outputPath, createIcal(result.rows), 'utf8');
+  console.log(`✓ exported ${result.rowCount ?? 0} event(s) to ${outputPath}`);
   await pool.end();
 }
 
