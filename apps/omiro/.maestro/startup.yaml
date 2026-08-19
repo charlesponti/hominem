@@ -23,8 +23,10 @@ appId: com.pontistudios.hakumi.dev
     optional: true
 # The app persists a "resume target" (writeResumeTarget in
 # ChatDetailScreen.tsx, and the equivalent for notes) and relaunches straight
-# into the last-viewed chat or note instead of the inbox. This isn't
-# hypothetical: chat-send-message.yaml, notes-create.yaml (and manual
+# into the last-viewed chat or note instead of the inbox. The target is
+# cleared when the detail screen unmounts (leaving the chat), so this only
+# happens when the app was killed while still on the detail screen. This
+# isn't hypothetical: chat-send-message.yaml, notes-create.yaml (and manual
 # exploration) can each leave their detail screen as the last route, so a
 # later flow's launchApp lands there, not on the inbox. Wait (boot can take
 # a few seconds) to see if that's where we landed, then back out explicitly

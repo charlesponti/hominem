@@ -203,133 +203,20 @@ function ResultSurface({
 }: ResultSurfaceProps) {
   const reducedMotion = useReducedMotion();
   const { height: screenHeight } = useWindowDimensions();
-  const isSimple = !state || state.kind === 'parsing';
-
-  const inner = isSimple ? (
-    children
-  ) : state.kind === 'answer' ? (
-    <Text className="text-body text-foreground">{state.answer}</Text>
-  ) : state.kind === 'event-choice' ? (
-    <>
-      <Text className="text-headline">Which event did you mean?</Text>
-      {state.candidates.map((event) => (
-        <Pressable
-          key={`${event.id}:${event.startDate}`}
-          accessibilityLabel={`${event.title}, ${new Date(event.startDate).toLocaleString()}`}
-          onPress={() => onChooseEvent?.(event.id)}
-          className="gap-1 py-2 min-h-11"
-          testID="time-event-choice"
-        >
-          <Text className="text-body">{event.title}</Text>
-          <Text className="text-muted-foreground">
-            {new Date(event.startDate).toLocaleString(undefined, {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
-        </Pressable>
-      ))}
-      <View className="flex-row items-center justify-end gap-2">
-        <IconButton
-          accessibilityLabel="Cancel"
-          testID="time-event-choice-cancel"
-          onPress={onCancel}
-        >
-          <AppIcon name="xmark" size={20} />
-        </IconButton>
-      </View>
-    </>
-  ) : state.kind === 'availability' ? (
-    <>
-      <Text className="text-headline">Possible times</Text>
-      {state.openings.slice(0, 3).map((opening) => (
-        <Pressable
-          key={opening.start}
-          accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
-          onPress={() => onChooseOpening?.(opening)}
-          className="gap-1 py-2 min-h-11"
-          testID="time-availability-opening"
-        >
-          <Text className="text-body">
-            {new Date(opening.start).toLocaleString(undefined, {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
-          <Text className="text-muted-foreground">
-            until{' '}
-            {new Date(opening.end).toLocaleTimeString(undefined, {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
-        </Pressable>
-      ))}
-      <View className="flex-row items-center justify-end gap-2">
-        <IconButton
-          accessibilityLabel="Cancel"
-          testID="time-availability-cancel"
-          onPress={onCancel}
-        >
-          <AppIcon name="xmark" size={20} />
-        </IconButton>
-      </View>
-    </>
-  ) : (
-    (() => {
-      const draft = state as Extract<TimeInteractionState, { kind: 'draft' }>;
-      const { block } = draft;
-      const canSubmit =
-        block.primary_intent === 'add_task' ||
-        ((block.primary_intent === 'add_event' || block.primary_intent === 'add_recurring_event') &&
-          !!block.start_time &&
-          !!block.end_time);
-      const intentLabel = {
-        add_task: 'Task',
-        add_event: 'Event',
-        add_recurring_event: 'Recurring event',
-        edit_event: 'Edit event',
-        cancel_event: 'Cancel event',
-        search: 'Search',
-        schedule_gap_fill: 'Find time',
-      }[block.primary_intent];
-      const details = formatDraftDetails(block);
-
-      return (
-        <>
-          <Text className="text-muted-foreground text-caption1">{intentLabel}</Text>
-          <TextField
-            accessibilityLabel="Edit title"
-            autoFocus
-            onChangeText={(value) => onEditField?.('title', value)}
-            placeholder={t.timeResult.fieldLabels.title}
-            testID="time-draft-edit-title"
-            value={block.title ?? ''}
-          />
-          {details ? <Text className="text-muted-foreground text-body">{details}</Text> : null}
-          <View className="flex-row items-center justify-between gap-2">
-            <IconButton accessibilityLabel="Cancel" testID="time-draft-cancel" onPress={onCancel}>
-              <AppIcon name="xmark" size={20} />
-            </IconButton>
-            <IconButton
-              accessibilityLabel="Confirm"
-              disabled={isSaving || !canSubmit}
-              testID="time-draft-submit"
-              onPress={onSubmitDraft}
-            >
-              <AppIcon name="arrow.up" size={20} />
-            </IconButton>
-          </View>
-        </>
-      );
-    })()
-  );
+  let inner = children;
+  if (isResultState(state)) {
+    inner = (
+      <ResultContent
+        isSaving={isSaving}
+        onCancel={onCancel}
+        onChooseEvent={onChooseEvent}
+        onChooseOpening={onChooseOpening}
+        onEditField={onEditField}
+        onSubmitDraft={onSubmitDraft}
+        state={state}
+      />
+    );
+  }
 
   return (
     <Animated.View
@@ -343,16 +230,195 @@ function ResultSurface({
       }
       entering={reducedMotion ? FadeIn.duration(180) : FadeInUp.duration(220)}
       exiting={reducedMotion ? FadeOut.duration(140) : FadeOutDown.duration(180)}
-      className="w-full gap-3 px-1"
+      className="w-full"
       testID={testID}
     >
-      <ScrollView
-        contentContainerStyle={{ gap: 12 }}
-        showsVerticalScrollIndicator={false}
-        style={{ maxHeight: screenHeight * 0.4 }}
+      <Card
+        className="gap-2 p-3"
+        style={{ borderCurve: 'continuous', borderRadius: 24, boxShadow: nativeShadows.sm }}
       >
-        {inner}
-      </ScrollView>
+        <ScrollView
+          contentContainerStyle={{ gap: 12 }}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: screenHeight * 0.4 }}
+        >
+          {inner}
+        </ScrollView>
+      </Card>
     </Animated.View>
   );
+}
+
+type ResultState = Extract<
+  TimeInteractionState,
+  { kind: 'answer' | 'event-choice' | 'availability' | 'draft' }
+>;
+
+function isResultState(state: TimeInteractionState | undefined): state is ResultState {
+  return state !== undefined && state.kind !== 'idle' && state.kind !== 'parsing';
+}
+
+type ResultContentProps = Pick<
+  ResultSurfaceProps,
+  'isSaving' | 'onCancel' | 'onChooseEvent' | 'onChooseOpening' | 'onEditField' | 'onSubmitDraft'
+> & {
+  state: ResultState;
+};
+
+function ResultContent({ state, ...actions }: ResultContentProps) {
+  switch (state.kind) {
+    case 'answer':
+      return <Text className="text-body text-foreground">{state.answer}</Text>;
+    case 'event-choice':
+      return <EventChoiceResult candidates={state.candidates} {...actions} />;
+    case 'availability':
+      return <AvailabilityResult openings={state.openings} {...actions} />;
+    case 'draft':
+      return <DraftResult block={state.block} {...actions} />;
+  }
+}
+
+function EventChoiceResult({
+  candidates,
+  onCancel,
+  onChooseEvent,
+}: Pick<ResultContentProps, 'onCancel' | 'onChooseEvent'> & {
+  candidates: Extract<TimeInteractionState, { kind: 'event-choice' }>['candidates'];
+}) {
+  return (
+    <>
+      <Text className="text-headline">Which event did you mean?</Text>
+      {candidates.map((event) => (
+        <Pressable
+          key={`${event.id}:${event.startDate}`}
+          accessibilityLabel={`${event.title}, ${new Date(event.startDate).toLocaleString()}`}
+          onPress={() => onChooseEvent?.(event.id)}
+          className="gap-1 py-2 min-h-11"
+          testID="time-event-choice"
+        >
+          <Text className="text-body">{event.title}</Text>
+          <Text className="text-muted-foreground">{formatDateTime(event.startDate)}</Text>
+        </Pressable>
+      ))}
+      <CancelRow testID="time-event-choice-cancel" onCancel={onCancel} />
+    </>
+  );
+}
+
+function AvailabilityResult({
+  openings,
+  onCancel,
+  onChooseOpening,
+}: Pick<ResultContentProps, 'onCancel' | 'onChooseOpening'> & {
+  openings: TimeOpening[];
+}) {
+  return (
+    <>
+      <Text className="text-headline">Possible times</Text>
+      {openings.slice(0, 3).map((opening) => (
+        <Pressable
+          key={opening.start}
+          accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
+          onPress={() => onChooseOpening?.(opening)}
+          className="gap-1 py-2 min-h-11"
+          testID="time-availability-opening"
+        >
+          <Text className="text-body">{formatDateTime(opening.start)}</Text>
+          <Text className="text-muted-foreground">
+            until{' '}
+            {new Date(opening.end).toLocaleTimeString(undefined, {
+              hour: 'numeric',
+              minute: '2-digit',
+            })}
+          </Text>
+        </Pressable>
+      ))}
+      <CancelRow testID="time-availability-cancel" onCancel={onCancel} />
+    </>
+  );
+}
+
+function DraftResult({
+  block,
+  isSaving,
+  onCancel,
+  onEditField,
+  onSubmitDraft,
+}: Pick<ResultContentProps, 'isSaving' | 'onCancel' | 'onEditField' | 'onSubmitDraft'> & {
+  block: Extract<TimeInteractionState, { kind: 'draft' }>['block'];
+}) {
+  const canSubmit =
+    block.primary_intent === 'add_task' ||
+    ((block.primary_intent === 'add_event' || block.primary_intent === 'add_recurring_event') &&
+      !!block.start_time &&
+      !!block.end_time);
+  const details = formatDraftDetails(block);
+
+  return (
+    <>
+      <Text className="text-muted-foreground text-caption1">
+        {getIntentLabel(block.primary_intent)}
+      </Text>
+      <TextField
+        accessibilityLabel="Edit title"
+        autoFocus
+        onChangeText={(value) => onEditField?.('title', value)}
+        placeholder={t.timeResult.fieldLabels.title}
+        testID="time-draft-edit-title"
+        value={block.title ?? ''}
+      />
+      {details ? <Text className="text-muted-foreground text-body">{details}</Text> : null}
+      <View className="flex-row items-center justify-between gap-2">
+        <CancelButton testID="time-draft-cancel" onCancel={onCancel} />
+        <IconButton
+          accessibilityLabel="Confirm"
+          disabled={isSaving || !canSubmit}
+          testID="time-draft-submit"
+          onPress={onSubmitDraft}
+        >
+          <AppIcon name="arrow.up" size={20} />
+        </IconButton>
+      </View>
+    </>
+  );
+}
+
+function CancelRow({ onCancel, testID }: { onCancel?: () => void; testID: string }) {
+  return (
+    <View className="flex-row items-center justify-end gap-2">
+      <CancelButton testID={testID} onCancel={onCancel} />
+    </View>
+  );
+}
+
+function CancelButton({ onCancel, testID }: { onCancel?: () => void; testID: string }) {
+  return (
+    <IconButton accessibilityLabel="Cancel" testID={testID} onPress={onCancel}>
+      <AppIcon name="xmark" size={20} />
+    </IconButton>
+  );
+}
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function getIntentLabel(
+  intent: Extract<ResultState, { kind: 'draft' }>['block']['primary_intent'],
+) {
+  return {
+    add_task: 'Task',
+    add_event: 'Event',
+    add_recurring_event: 'Recurring event',
+    edit_event: 'Edit event',
+    cancel_event: 'Cancel event',
+    search: 'Search',
+    schedule_gap_fill: 'Find time',
+  }[intent];
 }

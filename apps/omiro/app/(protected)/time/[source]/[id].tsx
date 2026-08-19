@@ -17,7 +17,7 @@ export default function TimeBlockDetailRoute() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: 'Time block' }} />
+      <Stack.Screen options={{ title: 'Time block' }} />
       <TimeBlockDetail
         id={id}
         initialActiveField={mode === 'schedule' ? 'time' : undefined}

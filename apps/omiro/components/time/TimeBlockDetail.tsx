@@ -1,13 +1,17 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
-import { TextField } from '@ponti-studios/ui/native';
+import type { SFSymbol } from 'expo-symbols';
 import { Stack } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { Text } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useCSSVariable } from 'uniwind';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
 import { Button } from '~/components/ui/button';
+import AppIcon from '~/components/ui/icon';
+import { TextField } from '~/components/ui/text-field';
+import { LocationSearchField } from '~/components/time/LocationSearchField';
 import type { CalendarEventPatch, CalendarRecurrenceScope } from '~/modules/on-device-ai';
 import {
   useCalendarEvent,
@@ -27,34 +31,39 @@ function formatInterval(start: Date, end: Date) {
   return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}–${end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-function DetailBlock({
+function FieldCard({
+  align = 'center',
   children,
+  icon,
+  iconColor,
   label,
   onPress,
   testID,
 }: {
+  align?: 'center' | 'flex-start';
   children: React.ReactNode;
+  icon: SFSymbol;
+  iconColor: string;
   label: string;
   onPress?: () => void;
   testID?: string;
 }) {
-  const content = (
-    <>
-      <Text className="text-muted-foreground text-overline">{label}</Text>
-      {children}
-    </>
-  );
-
   return (
     <Pressable
-      accessibilityLabel={`Edit ${label}`}
-      className="gap-2 py-3"
+      accessibilityLabel={label}
+      className="flex-row gap-3 rounded-3xl bg-card px-4 py-3.5"
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => pressed && { opacity: 0.7 }}
+      style={({ pressed }) => [{ alignItems: align }, pressed && { opacity: 0.7 }]}
       testID={testID}
     >
-      {content}
+      <View
+        className="h-9 w-9 items-center justify-center rounded-xl"
+        style={{ backgroundColor: iconColor }}
+      >
+        <AppIcon name={icon} size={18} tintColor="#ffffff" />
+      </View>
+      <View className="flex-1 gap-1">{children}</View>
     </Pressable>
   );
 }
@@ -143,6 +152,13 @@ function TimeBlockEditor({
   const [draftPeople, setDraftPeople] = useState<PersonPickerRecord[]>([]);
   const [activeField, setActiveField] = useState<ActiveField>(initialActiveField);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useCSSVariable([
+    '--color-chart-1',
+    '--color-chart-2',
+    '--color-chart-3',
+    '--color-chart-4',
+    '--color-chart-5',
+  ]) as string[];
 
   const task = taskQuery.data?.task;
   const isTask = source === 'task';
@@ -368,6 +384,7 @@ function TimeBlockEditor({
 
   const readOnlyEvent = !isTask && !event?.isEditable;
   const saving = isSavingTask || updateEvent.isPending;
+  const intentColor = isTask ? chartTeal : chartBlue;
 
   return (
     <>
@@ -380,7 +397,7 @@ function TimeBlockEditor({
           </Stack.Toolbar.Menu>
         </Stack.Toolbar>
       ) : null}
-      <KeyboardAvoidingView behavior="padding" className="flex-1" testID="time-block-editor">
+      <View className="flex-1" testID="time-block-editor">
         <ScrollView
           contentContainerStyle={{ gap: 16, padding: 16 }}
           contentInsetAdjustmentBehavior="automatic"
@@ -388,8 +405,22 @@ function TimeBlockEditor({
           className="flex-1"
         >
           <View className="gap-3">
-            <DetailBlock
-              label={isTask ? 'Task' : (event?.calendarTitle ?? 'Calendar')}
+            <View
+              className="flex-row items-center gap-1.5 self-start rounded-full px-3 py-1"
+              style={{ backgroundColor: intentColor }}
+            >
+              <AppIcon
+                name={isTask ? 'checkmark.circle.fill' : 'calendar'}
+                size={12}
+                tintColor="#ffffff"
+              />
+              <Text className="text-caption1 font-semibold" style={{ color: '#ffffff' }}>
+                {isTask ? 'Task' : (event?.calendarTitle ?? 'Event')}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityLabel="Edit title"
+              disabled={readOnlyEvent}
               onPress={() => setActiveField('title')}
               testID="time-block-edit-title"
             >
@@ -397,13 +428,14 @@ function TimeBlockEditor({
                 <TextField
                   autoFocus
                   onChangeText={setDraftTitle}
+                  style={{ fontSize: 26, fontWeight: '700', paddingHorizontal: 0 }}
                   testID="time-block-title"
                   value={draftTitle}
                 />
               ) : (
                 <Text className="text-display">{draftTitle}</Text>
               )}
-            </DetailBlock>
+            </Pressable>
             {isTask && task?.status === 'completed' ? (
               <Text className="text-muted-foreground">Completed</Text>
             ) : null}
@@ -412,8 +444,11 @@ function TimeBlockEditor({
             ) : null}
           </View>
 
-          <View className="gap-2">
-            <DetailBlock
+          <View className="gap-2.5">
+            <FieldCard
+              align={activeField === 'time' ? 'flex-start' : 'center'}
+              icon="clock.fill"
+              iconColor={chartBlue}
               label="When"
               onPress={
                 readOnlyEvent
@@ -451,31 +486,37 @@ function TimeBlockEditor({
                   />
                 </View>
               ) : draftStart && draftEnd ? (
-                <Text className="text-title2">{formatInterval(draftStart, draftEnd)}</Text>
+                <Text className="text-body">{formatInterval(draftStart, draftEnd)}</Text>
               ) : (
-                <Text className="text-muted-foreground">Set a time</Text>
+                <Text className="text-muted-foreground text-body">Set a time</Text>
               )}
-            </DetailBlock>
-            <DetailBlock
+            </FieldCard>
+            <FieldCard
+              align={activeField === 'location' ? 'flex-start' : 'center'}
+              icon="mappin.and.ellipse"
+              iconColor={chartTeal}
               label="Location"
               onPress={readOnlyEvent ? undefined : () => setActiveField('location')}
               testID="time-block-edit-location"
             >
               {activeField === 'location' ? (
-                <TextField
-                  autoFocus
-                  onChangeText={setDraftLocation}
-                  placeholder="Add location"
+                <LocationSearchField
+                  onChange={setDraftLocation}
                   testID="time-block-location"
                   value={draftLocation}
                 />
               ) : (
-                <Text className={draftLocation ? 'text-foreground' : 'text-muted-foreground'}>
+                <Text
+                  className={`text-body ${draftLocation ? 'text-foreground' : 'text-muted-foreground'}`}
+                >
                   {draftLocation || 'Add location'}
                 </Text>
               )}
-            </DetailBlock>
-            <DetailBlock
+            </FieldCard>
+            <FieldCard
+              align={activeField === 'notes' ? 'flex-start' : 'center'}
+              icon="note.text"
+              iconColor={chartOrange}
               label="Notes"
               onPress={readOnlyEvent ? undefined : () => setActiveField('notes')}
               testID="time-block-edit-notes"
@@ -490,13 +531,18 @@ function TimeBlockEditor({
                   value={draftNotes}
                 />
               ) : (
-                <Text className={draftNotes ? 'text-foreground' : 'text-muted-foreground'}>
+                <Text
+                  className={`text-body ${draftNotes ? 'text-foreground' : 'text-muted-foreground'}`}
+                >
                   {draftNotes || 'Add notes'}
                 </Text>
               )}
-            </DetailBlock>
+            </FieldCard>
             {isTask ? (
-              <DetailBlock
+              <FieldCard
+                align={activeField === 'people' ? 'flex-start' : 'center'}
+                icon="person.2.fill"
+                iconColor={chartPurple}
                 label="People"
                 onPress={() => setActiveField('people')}
                 testID="time-block-edit-people"
@@ -505,47 +551,54 @@ function TimeBlockEditor({
                   <TaskPeoplePicker selected={draftPeople} onChange={setDraftPeople} />
                 ) : (
                   <Text
-                    className={draftPeople.length > 0 ? 'text-foreground' : 'text-muted-foreground'}
+                    className={`text-body ${draftPeople.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
                   >
                     {draftPeople.map((person) => person.displayName).join(', ') || 'Add people'}
                   </Text>
                 )}
-              </DetailBlock>
+              </FieldCard>
             ) : null}
             {!isTask && event?.participants.length ? (
-              <DetailBlock label="People">
-                <Text>{event.participants.join(', ')}</Text>
-              </DetailBlock>
+              <FieldCard icon="person.2.fill" iconColor={chartPurple} label="People">
+                <Text className="text-body">{event.participants.join(', ')}</Text>
+              </FieldCard>
             ) : null}
             {!isTask && event?.recurrenceDescription ? (
-              <DetailBlock label="Repeats">
-                <Text>Recurring event</Text>
-              </DetailBlock>
+              <FieldCard icon="arrow.triangle.2.circlepath" iconColor={chartGray} label="Repeats">
+                <Text className="text-body">Recurring event</Text>
+              </FieldCard>
             ) : null}
           </View>
         </ScrollView>
         {!readOnlyEvent && (isDirty || isTask) ? (
-          <View className="border-t border-border bg-background px-4 pt-3 pb-4">
-            {isTask ? (
-              <Button
-                disabled={isTogglingTask}
-                label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
-                onPress={() =>
-                  task && toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
-                }
-                testID="time-block-complete"
-                variant="secondary"
-              />
-            ) : null}
-            <Button
-              label="Save changes"
-              loading={saving}
-              onPress={() => void saveChanges()}
-              testID="time-block-save"
-            />
-          </View>
+          <KeyboardStickyView>
+            <View className="border-t border-border bg-background px-4 pt-3 pb-4">
+              <View className="flex-row justify-end gap-2">
+                {isTask ? (
+                  <Button
+                    disabled={isTogglingTask}
+                    label={task?.status === 'completed' ? 'Reopen' : 'Complete'}
+                    onPress={() =>
+                      task &&
+                      toggleTask({ taskId: task.id, completed: task.status !== 'completed' })
+                    }
+                    style={{ borderRadius: 999 }}
+                    testID="time-block-complete"
+                    variant="secondary"
+                  />
+                ) : null}
+                <Button
+                  label="Save changes"
+                  loading={saving}
+                  onPress={() => void saveChanges()}
+                  style={{ borderRadius: 999 }}
+                  testID="time-block-save"
+                />
+              </View>
+            </View>
+          </KeyboardStickyView>
         ) : null}
-      </KeyboardAvoidingView>
+      </View>
     </>
   );
 }

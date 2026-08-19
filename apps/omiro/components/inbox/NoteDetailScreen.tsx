@@ -26,7 +26,7 @@ import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
 import { normalizeChatTitle, useStartChat } from '~/services/chat';
-import { writeResumeTarget } from '~/services/navigation/launch-state';
+import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import { useNoteQuery } from '~/services/notes/use-note-query';
@@ -228,6 +228,12 @@ function NoteEditorBody({
       updatedAt: note.updatedAt ?? null,
     });
   }, [draft.title, note.id, note.updatedAt]);
+
+  useEffect(() => {
+    return () => {
+      clearResumeTarget();
+    };
+  }, []);
 
   const fileIds = note.files.map((file) => file.id);
 

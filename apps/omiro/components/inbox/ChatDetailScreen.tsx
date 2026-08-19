@@ -27,7 +27,7 @@ import {
 import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
-import { writeResumeTarget } from '~/services/navigation/launch-state';
+import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE, getContentRoute } from '~/services/navigation/routes';
 import t from '~/translations';
 
@@ -131,6 +131,12 @@ export function ChatDetailScreen({ id }: { id: string }) {
       updatedAt: activeChat?.updatedAt ?? null,
     });
   }, [activeChat?.updatedAt, chatId, displayTitle]);
+
+  useEffect(() => {
+    return () => {
+      clearResumeTarget();
+    };
+  }, []);
 
   const [showChatSettings, setShowChatSettings] = useState(false);
 
