@@ -23,3 +23,38 @@ export function enableTestMode(): void {
     // MMKV unavailable — no-op
   }
 }
+
+// Markers a Maestro flow embeds in the sent message text to steer the
+// test-mode mock stream in use-send-message.ts. Kept out of production
+// message content by construction -- these strings are only ever recognized
+// when isTestMode() is true.
+export const MAESTRO_TRIGGERS = {
+  slowStream: '__MAESTRO_SLOW_STREAM__',
+  longResponse: '__MAESTRO_LONG_RESPONSE__',
+  failOnce: '__MAESTRO_FAIL_ONCE__',
+} as const;
+
+// Per-message attempt counts for __MAESTRO_FAIL_ONCE__. Keyed by the exact
+// message string (not a single flag) so unrelated flows each get their own
+// one-time failure regardless of run order -- e.g. an app relaunch via
+// `launchApp` isn't guaranteed to be a fresh JS process (Fast Refresh/Metro
+// can preserve module state across it), so a single shared counter would
+// let an earlier flow's consumption silently defeat a later one.
+const failOnceAttempts = new Map<string, number>();
+
+// mobileQueryDefaultOptions (services/query-client-config.ts) sets
+// `mutations: { retry: 1 }`, so react-query itself silently retries a
+// failed mutation once, on the same mutationFn, before ever calling
+// onError. Failing only the first attempt gets absorbed by that internal
+// retry and never reaches the UI's failed-banner path -- fail both the
+// original attempt and react-query's automatic retry; only the user's own
+// manual "Tap to retry" (the 3rd occurrence of this exact message) sees a
+// successful send.
+const ATTEMPTS_TO_FAIL = 2;
+
+export function shouldFailOnce(message: string): boolean {
+  if (!message.includes(MAESTRO_TRIGGERS.failOnce)) return false;
+  const attempts = (failOnceAttempts.get(message) ?? 0) + 1;
+  failOnceAttempts.set(message, attempts);
+  return attempts <= ATTEMPTS_TO_FAIL;
+}

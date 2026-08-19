@@ -11,7 +11,12 @@ import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
-import { isTestMode, MOCK_AI_RESPONSE } from '~/services/testing/test-mode';
+import {
+  isTestMode,
+  MAESTRO_TRIGGERS,
+  MOCK_AI_RESPONSE,
+  shouldFailOnce,
+} from '~/services/testing/test-mode';
 
 import {
   type AssistantCompletionHapticGate,
@@ -37,6 +42,20 @@ const FLUSH_INTERVAL_MS = 32;
 const MOCK_CHUNK_DELAY_MS = 20;
 const MOCK_CHUNK_MIN_SIZE = 2;
 const MOCK_CHUNK_MAX_SIZE = 6;
+
+// __MAESTRO_SLOW_STREAM__ pacing -- slow enough for a flow to reliably
+// observe the activity carriage mid-stream instead of racing straight to
+// the flush at the end of a ~20ms-per-chunk response. Paired with a
+// shortened response text (below) so the whole exchange still finishes in
+// single-digit seconds instead of the ~40s the full MOCK_AI_RESPONSE would
+// take at this pace.
+const MOCK_SLOW_CHUNK_DELAY_MS = 350;
+const MOCK_SLOW_AI_RESPONSE = MOCK_AI_RESPONSE.slice(0, 120);
+
+// __MAESTRO_LONG_RESPONSE__ text -- several screens tall on a phone, to
+// exercise the printer-surface growth and completion settle without a
+// visible layout jump on a response long enough to require scrolling.
+const MOCK_LONG_AI_RESPONSE = Array(6).fill(MOCK_AI_RESPONSE).join('\n\n');
 
 function* mockStreamChunks(text: string): Generator<string> {
   let index = 0;
@@ -193,9 +212,24 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
     mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
       if (isTestMode()) {
-        for (const chunk of mockStreamChunks(MOCK_AI_RESPONSE)) {
+        if (shouldFailOnce(message)) {
+          // No partial chunks: react-query retries this mutationFn itself
+          // (mutations.retry: 1) before ever calling onError, and shouldFailOnce
+          // fails that retry too -- emitting content on both attempts would
+          // double-write into the same streaming placeholder's buffer.
+          throw new Error('mock_stream_interrupted');
+        }
+
+        const isSlow = message.includes(MAESTRO_TRIGGERS.slowStream);
+        const text = isSlow
+          ? MOCK_SLOW_AI_RESPONSE
+          : message.includes(MAESTRO_TRIGGERS.longResponse)
+            ? MOCK_LONG_AI_RESPONSE
+            : MOCK_AI_RESPONSE;
+        const delay = isSlow ? MOCK_SLOW_CHUNK_DELAY_MS : MOCK_CHUNK_DELAY_MS;
+        for (const chunk of mockStreamChunks(text)) {
           onEvent({ type: 'chunk', chunk });
-          await new Promise((r) => setTimeout(r, MOCK_CHUNK_DELAY_MS));
+          await new Promise((r) => setTimeout(r, delay));
         }
         flushNow();
         return;

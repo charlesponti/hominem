@@ -1,0 +1,87 @@
+appId: com.pontistudios.hakumi.dev
+---
+# NOT a real VoiceOver test -- turning system VoiceOver on changes iOS's
+# gesture model itself (single-tap selects/announces instead of activating,
+# swipe navigates instead of scrolling), which breaks Maestro's own tap/
+# scroll automation. There is no way to drive a real VoiceOver session from
+# a Maestro flow.
+#
+# What this flow does instead: confirms the controls a VoiceOver user
+# depends on most in a chat turn -- the composer, the send action, and the
+# failed-message retry control -- expose a reachable accessible name, by
+# using that name as the sole way to find and activate each one (no
+# testID/coordinate fallback). If any of these regress to an unlabeled
+# icon-only control, this flow fails to find it.
+#
+# For real VoiceOver rotor/gesture verification, use the iOS Simulator's
+# Accessibility Inspector (Xcode > Open Developer Tool) or a manual pass
+# with VoiceOver enabled on a device.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro accessibility-labels test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Accessibility labels probe __MAESTRO_FAIL_ONCE__'
+- tapOn:
+    id: composer-submit-message
+# The failed-message Pressable (chat-message.tsx) sets an explicit
+# accessibilityLabel="Retry sending message", which on iOS overrides the
+# accessibility tree's exposed name for the control entirely -- VoiceOver
+# announces this label, not the visible "Tap to retry" text underneath, so
+# that's the name a VoiceOver user (and this flow) actually navigates by.
+- extendedWaitUntil:
+    visible: 'Retry sending message'
+    timeout: 5000
+# The banner's row shifts vertically as the list settles, so a tap timed
+# against a stale layout snapshot can land beside the control instead of on
+# it -- retry the tap itself if the banner is still there a beat later
+# (mirrors the long-press retry in inbox-chat-archive.yaml).
+- repeat:
+    while:
+      visible: 'Retry sending message'
+    times: 3
+    commands:
+      - tapOn: 'Retry sending message'
+      - extendedWaitUntil:
+          notVisible: 'Retry sending message'
+          timeout: 3000
+          optional: true
+- assertNotVisible: 'Retry sending message'
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 15000
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

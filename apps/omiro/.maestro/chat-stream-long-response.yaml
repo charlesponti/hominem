@@ -1,0 +1,59 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Sends a message that triggers the __MAESTRO_LONG_RESPONSE__ mock (six
+# repeats of the standard mock paragraph -- several screens tall on a
+# phone). Exercises the assistant printer-surface growth and completion
+# settle on a response long enough to require scrolling, and confirms the
+# stream completes without stalling or leaving the list stuck mid-print.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro long-response test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Long response probe __MAESTRO_LONG_RESPONSE__'
+- tapOn:
+    id: composer-submit-message
+# Worst-case chunking (mockStreamChunks' random 2-6 char chunks skewing to
+# the small end) can push a ~2600-char response past 25s at 20ms/chunk.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 35000
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
+# Manual review target: confirm no layout jump/reanimation of already
+# -printed lines and that the response reads as one continuous surface,
+# not several stacked bubbles -- Maestro can't assert motion itself.
+- takeScreenshot: /tmp/omiro_chat_long_response
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

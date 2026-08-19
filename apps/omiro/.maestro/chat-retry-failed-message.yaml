@@ -1,0 +1,87 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Sends a message with the __MAESTRO_FAIL_ONCE__ marker. The test-mode mock
+# (shouldFailOnce in services/testing/test-mode.ts) fails the send -- mirrors
+# the real "Failed to send" path in use-send-message.ts's mutation onError.
+# It fails the first two attempts, not one: mobileQueryDefaultOptions sets
+# `mutations: { retry: 1 }`, so react-query itself silently retries the
+# mutationFn once before ever calling onError, and failing only the first
+# attempt would get absorbed by that internal retry with no banner ever
+# appearing. Verifies the failed user-message retry banner appears, and
+# that tapping it (retryFailedMessage resends the exact original message
+# text) re-enters an active assistant-printing state and completes.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro retry test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Retry probe __MAESTRO_FAIL_ONCE__'
+- tapOn:
+    id: composer-submit-message
+- extendedWaitUntil:
+    visible: 'Retry sending message'
+    timeout: 5000
+# The banner's row shifts vertically as the list settles, so a tap timed
+# against a stale layout snapshot can land beside the control instead of on
+# it -- retry the tap itself if the banner is still there a beat later
+# (mirrors the long-press retry in inbox-chat-archive.yaml).
+- repeat:
+    while:
+      visible: 'Retry sending message'
+    times: 3
+    commands:
+      - tapOn: 'Retry sending message'
+      - extendedWaitUntil:
+          notVisible: 'Retry sending message'
+          timeout: 3000
+          optional: true
+# Retry re-enters an active stream -- the failed banner should clear and
+# completion should follow. The retry's response is the full-length mock at
+# default pacing (fast enough to finish inside this check's own polling
+# window), so the activity carriage's reappearance is best-effort, not a
+# hard requirement -- the completion assertions below are what matters.
+- assertNotVisible: 'Retry sending message'
+- extendedWaitUntil:
+    visible:
+      id: chat-assistant-activity
+    timeout: 3000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 15000
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
+- assertNotVisible: 'Retry sending message'
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

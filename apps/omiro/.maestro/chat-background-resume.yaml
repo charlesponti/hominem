@@ -1,0 +1,73 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Starts a slow-paced stream (__MAESTRO_SLOW_STREAM__), backgrounds the app
+# mid-stream, then foregrounds it again. Exercises the AppState listener in
+# use-send-message.ts that marks a stream backgrounded, and on return to
+# 'active' calls reconcileBackgroundedAssistantStream (chat-stream-cache.ts)
+# to reconcile a stream that kept running -- or finished -- while suspended,
+# rather than leaving the row stuck mid-print or duplicated.
+#
+# `launchApp` on an already-running process foregrounds it rather than cold
+# -starting it, which is what this flow relies on to simulate resume; if a
+# future Maestro/simulator version always cold starts, this flow will need
+# a different background/foreground primitive.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro background-resume test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Background resume probe __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: composer-submit-message
+- extendedWaitUntil:
+    visible:
+      id: chat-assistant-activity
+    timeout: 3000
+
+- pressKey: Home
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp:
+    appId: com.pontistudios.hakumi.dev
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: chat-composer-input
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 20000
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

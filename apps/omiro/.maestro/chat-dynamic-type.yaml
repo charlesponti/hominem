@@ -1,0 +1,70 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Runs the ordinary send/stream/complete path at a large accessibility text
+# size. Must be launched via scripts/run-accessibility-flows.sh (or an
+# equivalent `xcrun simctl ui <device> content_size
+# extra-extra-extra-large` before `launchApp`) -- Maestro drives the app's
+# UI, not simulator system settings, so this flow alone doesn't change text
+# size.
+#
+# Verifies the composer, activity indicator, and message content are still
+# visible and reachable by testID at this size -- i.e. nothing clips,
+# overlaps, or falls off screen -- and captures a screenshot for the
+# reflow/truncation check a flow assertion can't make on its own.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro dynamic-type test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Dynamic type probe'
+- tapOn:
+    id: composer-submit-message
+# Default-pace mock response can finish inside this check's own polling
+# window, so the indicator's appearance is best-effort; completion below is
+# the hard requirement.
+- extendedWaitUntil:
+    visible:
+      id: chat-assistant-activity
+    timeout: 3000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: chat-message-list-bottom-sentinel
+    timeout: 5000
+- takeScreenshot: /tmp/omiro_chat_dynamic_type
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

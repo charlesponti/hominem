@@ -1,0 +1,72 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Runs the ordinary send/stream/complete path while the simulator's system
+# Reduce Motion setting is on. Must be launched via
+# scripts/run-accessibility-flows.sh (or an equivalent `xcrun simctl spawn
+# <device> defaults write com.apple.Accessibility ReduceMotionEnabled -bool
+# true` before `launchApp`) -- Maestro drives the app's UI, not simulator
+# system settings, so this flow alone doesn't turn Reduce Motion on.
+#
+# Maestro can't assert that travel/bounce/printing motion was skipped in
+# favor of the useReducedMotion() (hooks/use-reduced-motion.ts) opacity-only
+# path -- that needs a screenshot/video review. What this flow does verify:
+# the send, activity indicator, and completion states all still work and
+# communicate clearly with motion suppressed, i.e. nothing depends on the
+# suppressed animation to function (get unstuck, become tappable, etc).
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro reduce-motion test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Reduce motion probe'
+- tapOn:
+    id: composer-submit-message
+# Default-pace mock response can finish inside this check's own polling
+# window, so the indicator's appearance is best-effort; completion below is
+# the hard requirement.
+- extendedWaitUntil:
+    visible:
+      id: chat-assistant-activity
+    timeout: 3000
+    optional: true
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: chat-message-list-bottom-sentinel
+    timeout: 5000
+- takeScreenshot: /tmp/omiro_chat_reduce_motion
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true

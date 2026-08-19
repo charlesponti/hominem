@@ -1,0 +1,66 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Sends a message that the test-mode mock stream (mutationFn in
+# use-send-message.ts) recognizes via the __MAESTRO_SLOW_STREAM__ marker
+# and paces a shortened response at MOCK_SLOW_CHUNK_DELAY_MS (350ms/chunk)
+# instead of the default ~20ms. At the fast default pace a short mock
+# response can land before a flow assertion even gets a chance to observe
+# it, so this verifies the assistant activity carriage
+# (chat-assistant-activity, chat-thinking-indicator.tsx) is genuinely
+# visible mid-stream and that the stream still completes and renders the
+# full response.
+- runFlow: startup.yaml
+- openLink: 'hakumi-dev://enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: inbox-composer-input
+- tapOn:
+    id: inbox-composer-input
+- inputText: Maestro slow-stream test chat
+- tapOn:
+    id: composer-kind-chat
+- assertVisible:
+    id: composer-submit-chat
+- tapOn:
+    id: composer-submit-chat
+- assertVisible:
+    id: chat-composer-input
+
+# The classification/start-chat send (use-start-chat.ts) hits the real
+# backend, not the test-mode mock -- its response can resolve after this
+# flow's own mocked message if the real network happens to be slow,
+# reflowing the list out from under the completion checks below. Let it
+# settle first.
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 45000
+    optional: true
+
+- tapOn:
+    id: chat-composer-input
+- inputText: 'Slow stream probe __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: composer-submit-message
+# The shortened slow-stream response is ~30 chunks at 350ms (~10.5s
+# total); the activity carriage should still be visible here rather than
+# having already settled. extendedWaitUntil (not a bare assertVisible)
+# because the row's own mount/layout pass can lag a frame or two behind
+# the tap that triggered it.
+- extendedWaitUntil:
+    visible:
+      id: chat-assistant-activity
+    timeout: 3000
+- extendedWaitUntil:
+    notVisible:
+      id: chat-assistant-activity
+    timeout: 15000
+- assertVisible:
+    id: chat-message-list-bottom-sentinel
+- tapOn:
+    id: BackButton
+    optional: true
+- tapOn:
+    text: Inbox
+    optional: true
