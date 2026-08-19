@@ -35,6 +35,6 @@ release:
     cd apps/omiro && pnpm exec eas workflow:run .eas/workflows/production-release.yml
 
 # Runs apps/omiro/.eas/workflows/ota-update.yml to publish a JS-only update
-# to the production channel.
+# to the production EAS Update branch.
 update message:
     cd apps/omiro && pnpm exec eas workflow:run .eas/workflows/ota-update.yml -F message="{{ message }}"

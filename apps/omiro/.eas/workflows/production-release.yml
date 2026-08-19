@@ -52,6 +52,9 @@ jobs:
     name: Submit to TestFlight
     type: submit
     needs: [build_ios, approve]
+    environment: production
+    env:
+      APP_ENV: production
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production

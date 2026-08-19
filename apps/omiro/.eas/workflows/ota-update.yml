@@ -23,8 +23,14 @@ jobs:
     name: Publish to production channel
     type: update
     needs: [approve]
+    environment: production
+    env:
+      APP_ENV: production
     params:
-      channel: production
+      # Keep the publish target explicit. The production channel currently
+      # points at this branch, and manually-run workflows do not inherit a
+      # Git branch for EAS Update.
+      branch: production
       message: ${{ inputs.message }}
     hooks:
       # See production-release.yml's submit_ios job for why this is needed:

@@ -26,7 +26,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "update": "APP_ENV=production pnpm exec eas update --channel production",
+    "update": "APP_ENV=production pnpm exec eas update --branch production",
     "verify:release": "node scripts/verify-release-identity.mjs"
   },
   "dependencies": {
