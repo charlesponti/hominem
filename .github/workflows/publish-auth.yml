@@ -30,6 +30,9 @@ jobs:
           pnpm typecheck --filter @ponti-studios/auth...
           pnpm test --filter @ponti-studios/auth...
 
+      - name: update-npm-cli
+        run: npm install -g npm@latest
+
       - name: publish-to-npm
         working-directory: packages/auth
         run: npm publish --provenance --access public
