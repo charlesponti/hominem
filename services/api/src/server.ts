@@ -30,10 +30,6 @@ export type AppEnv = {
 };
 
 const ALLOWED_CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
-const DEV_OPENAPI_SERVER = {
-  url: 'http://localhost:4040',
-  description: 'Local development server',
-};
 function createAllowedOrigins() {
   return new Set([env.API_URL, env.WEB_URL, env.FINANCE_URL, env.CAREER_URL]);
 }
