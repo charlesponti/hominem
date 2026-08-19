@@ -30,6 +30,14 @@ jobs:
           pnpm typecheck --filter @ponti-studios/auth...
           pnpm test --filter @ponti-studios/auth...
 
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: use-npm-with-trusted-publishing-support
+        run: npm install -g npm@11
+
       - name: publish-to-npm
         working-directory: packages/auth
-        run: npx --yes npm@latest publish --provenance --access public
+        run: npm publish --provenance --access public
