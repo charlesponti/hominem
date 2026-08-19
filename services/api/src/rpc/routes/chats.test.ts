@@ -289,11 +289,7 @@ describe('chat message regenerate', () => {
     const body = await response.text();
     expect(body).toContain('Regenerated reply');
 
-    expect(mocks.getMessagesBefore).toHaveBeenCalledWith(
-      {},
-      'chat-id',
-      '2026-01-01T00:00:01.000Z',
-    );
+    expect(mocks.getMessagesBefore).toHaveBeenCalledWith({}, 'chat-id', '2026-01-01T00:00:01.000Z');
 
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
@@ -346,14 +342,11 @@ describe('chat message regenerate', () => {
   it('rejects regenerating a message that does not exist', async () => {
     mocks.getMessageById.mockResolvedValue(undefined);
 
-    const response = await createApp().request(
-      '/api/chats/chat-id/messages/missing/regenerate',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
-      },
-    );
+    const response = await createApp().request('/api/chats/chat-id/messages/missing/regenerate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
 
     expect(response.status).toBe(400);
     expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
