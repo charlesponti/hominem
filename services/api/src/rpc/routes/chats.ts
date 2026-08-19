@@ -18,6 +18,7 @@ import {
   ChatsCreateSchema,
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
+  ChatsRegenerateMessageSchema,
   ChatsSearchMessagesQuerySchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
@@ -283,6 +284,111 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     return c.json(toChatMessageDto(updated));
   })
+  .post(
+    '/messages/:messageId/regenerate',
+    zValidator('json', ChatsRegenerateMessageSchema),
+    async (c) => {
+      const userId = c.get('auth')!.userId;
+      const chatId = getChatId(c);
+      const messageId = getMessageId(c);
+      const { responseLength } = c.req.valid('json');
+
+      await assertUnderMonthlyUsageLimit(userId);
+      await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+
+      const target = await ChatRepository.getMessageById(db, chatId, messageId);
+      if (!target || target.role !== 'assistant') {
+        throw new ValidationError('Only a completed assistant message can be regenerated');
+      }
+
+      const priorMessages = await ChatRepository.getMessagesBefore(db, chatId, target.createdAt);
+      const parentIndex = [...priorMessages].reverse().findIndex((m) => m.role === 'user');
+      if (parentIndex === -1) {
+        throw new ValidationError('No prior message to regenerate a reply from');
+      }
+      const resolvedParentIndex = priorMessages.length - 1 - parentIndex;
+      const parentUserMessage = priorMessages[resolvedParentIndex]!;
+      const history = priorMessages.slice(0, resolvedParentIndex);
+
+      const resolvedNotes = await ChatRepository.resolveReferencedNotes(
+        db,
+        userId,
+        parentUserMessage.referencedNotes?.map((note) => note.id) ?? [],
+        parentUserMessage.content,
+      );
+      const resolvedFiles = parentUserMessage.files ?? [];
+
+      const prompt = buildPrompt(parentUserMessage.content, history, resolvedNotes, resolvedFiles);
+      const eventId = randomUUID();
+      const getDurationMs = startAIUsageTimer();
+      const completion = streamChatCompletion({
+        model: CHAT_MODEL,
+        messages: [
+          { role: 'system', content: getSystemPrompt(responseLength) },
+          { role: 'user', content: prompt },
+        ],
+        maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+        reasoning: getReasoningConfig(responseLength),
+      });
+
+      return streamSSE(c, async (stream) => {
+        let assistantText = '';
+        let usage: ReturnType<typeof getChatCompletionUsage> = null;
+        let streamError: unknown = null;
+
+        try {
+          for await (const chunk of completion) {
+            usage = getChatCompletionUsage(chunk) ?? usage;
+            const text = chunk.choices?.[0]?.delta?.content;
+            if (typeof text === 'string' && text.length > 0) {
+              assistantText += text;
+              await writeChunkEvent(stream, text);
+            }
+          }
+        } catch (error) {
+          streamError = error;
+        } finally {
+          await recordAIUsageEvent({
+            eventId,
+            userId,
+            feature: 'chat_stream',
+            operation: 'chat_completion',
+            usage,
+            status: streamError ? 'failed' : 'succeeded',
+            error: streamError,
+            durationMs: getDurationMs(),
+            metadata: { chatId, messageId, regenerate: true },
+          });
+        }
+
+        if (streamError) {
+          const message = streamError instanceof Error ? streamError.message : 'Stream error';
+          await writeErrorEvent(stream, message);
+          return;
+        }
+
+        try {
+          if (assistantText.trim().length > 0) {
+            await runInTransaction(async (trx) => {
+              await ChatRepository.replaceAssistantMessageContent(
+                trx,
+                chatId,
+                messageId,
+                assistantText,
+              );
+              await ChatRepository.touchLastMessage(trx, chatId);
+            });
+            await enqueueChatEmbedding(userId, chatId);
+          }
+
+          await stream.writeSSE({ data: '[DONE]' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Stream error';
+          await writeErrorEvent(stream, message);
+        }
+      });
+    },
+  )
   .post('/stream', zValidator('json', ChatsSendSchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);

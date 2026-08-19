@@ -21,6 +21,7 @@ import {
   updateChatTitleCaches,
   useActiveChat,
   useEditChatMessage,
+  useRegenerateMessage,
   useSendMessage,
 } from '~/services/chat';
 import { useCreateChat } from '~/services/chat/use-create-chat';
@@ -116,6 +117,8 @@ export function ChatDetailScreen({ id }: { id: string }) {
     },
     [editMessage],
   );
+
+  const { regenerateMessage } = useRegenerateMessage(chatId);
 
   const displayTitle = getChatTitle(activeChat?.title, transform.resolvedSource);
   const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
@@ -288,6 +291,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
             searchQuery={search.searchQuery}
             showDebug={showDebug}
             onEdit={handleEditMessage}
+            onRegenerate={regenerateMessage}
             onRetry={retryFailedMessage}
             formatTimestamp={formatRelativeAge}
             emptyState={

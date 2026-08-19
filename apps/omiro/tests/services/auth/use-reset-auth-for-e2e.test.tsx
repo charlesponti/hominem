@@ -32,6 +32,7 @@ const { useResetAuthForE2E } = await import('~/services/auth/hooks/use-reset-aut
 describe('useResetAuthForE2E', () => {
   afterEach(() => {
     mockE2ETesting.value = false;
+    vi.clearAllMocks();
   });
 
   it('is a no-op outside of e2e mode', async () => {
@@ -59,6 +60,21 @@ describe('useResetAuthForE2E', () => {
     });
 
     expect(mockSignOut).toHaveBeenCalledTimes(1);
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    expect(mockClearPersistedQueryCache).toHaveBeenCalledTimes(1);
+    expect(mockClearAllData).toHaveBeenCalledTimes(1);
+  });
+
+  it('still clears the query cache and local storage when the server sign-out call fails', async () => {
+    mockE2ETesting.value = true;
+    mockSignOut.mockRejectedValueOnce(new Error('network down'));
+    const { result, queryClient } = renderHookWithQueryClient(() => useResetAuthForE2E());
+    const clearSpy = vi.spyOn(queryClient, 'clear');
+
+    await act(async () => {
+      await result.current();
+    });
+
     expect(clearSpy).toHaveBeenCalledTimes(1);
     expect(mockClearPersistedQueryCache).toHaveBeenCalledTimes(1);
     expect(mockClearAllData).toHaveBeenCalledTimes(1);

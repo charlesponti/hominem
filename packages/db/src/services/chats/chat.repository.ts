@@ -282,6 +282,92 @@ export const ChatRepository = {
   },
 
   /**
+   * Fetch a single message by id, enriched with referenced note titles.
+   */
+  async getMessageById(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+  ): Promise<ChatMessageRecord | undefined> {
+    const row = (await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .executeTakeFirst()) as ChatMessageRow | undefined;
+
+    if (!row) return undefined;
+
+    const noteIds = Array.isArray(row.referencedNoteIds) ? (row.referencedNoteIds as string[]) : [];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return toChatMessageRecord(row, noteTitlesById);
+  },
+
+  /**
+   * Fetch the messages immediately preceding a given point in time (for
+   * regenerate), ordered oldest-first like getMessages.
+   */
+  async getMessagesBefore(
+    handle: DbHandle,
+    chatId: string,
+    beforeCreatedAt: string,
+    limit = 200,
+  ): Promise<ChatMessageRecord[]> {
+    const messages = (await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('createdat', '<', beforeCreatedAt)
+      .orderBy('createdat', 'desc')
+      .limit(limit)
+      .execute()) as ChatMessageRow[];
+    messages.reverse();
+
+    const noteIds = [
+      ...new Set(
+        messages.flatMap((m) =>
+          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
+        ),
+      ),
+    ];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+  },
+
+  /**
+   * Replace an assistant message's content (used for regenerate). Clears any
+   * attached audio file since it no longer matches the new text.
+   */
+  async replaceAssistantMessageContent(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+    content: string,
+  ): Promise<ChatMessageRecord> {
+    const updated = (await handle
+      .updateTable('app.chatMessages')
+      .set({ content, files: null, updatedat: new Date().toISOString() })
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('role', '=', 'assistant')
+      .returningAll()
+      .executeTakeFirst()) as ChatMessageRow | undefined;
+
+    if (!updated) {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const noteIds = Array.isArray(updated.referencedNoteIds)
+      ? (updated.referencedNoteIds as string[])
+      : [];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return toChatMessageRecord(updated, noteTitlesById);
+  },
+
+  /**
    * Touch lastMessageAt after sending messages.
    */
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {

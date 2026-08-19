@@ -112,7 +112,7 @@ export const ChatMessage = memo(function ChatMessage({
     ? FadeOut.duration(nativeMotionContracts.duration.quick)
     : FadeOutUp.duration(nativeMotionContracts.duration.quick);
   const timestamp = message.created_at ? formatTimestamp(message.created_at) : '';
-  const canRegenerate = !isUser && !isStreaming && onRegenerate !== undefined;
+  const canRegenerate = !isUser && !isStreaming && !failed && onRegenerate !== undefined;
   const canEdit = isUser && !isStreaming && onEdit !== undefined;
   const canDelete = !isStreaming && onDelete !== undefined;
   const hasReasoning = Boolean(message.reasoning && message.reasoning.trim().length > 0);

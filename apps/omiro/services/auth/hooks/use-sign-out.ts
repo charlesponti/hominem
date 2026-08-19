@@ -16,32 +16,40 @@ export function useSignOut(currentEmail: string | null | undefined) {
       email: currentEmail ?? undefined,
     });
 
+    let signOutError: Error | null = null;
     try {
       const result = await authClient.signOut();
       if (result.error) {
-        throw new Error(result.error.message ?? 'Failed to sign out. Please try again.');
+        signOutError = new Error(result.error.message ?? 'Failed to sign out. Please try again.');
       }
-
-      queryClient.clear();
-      await clearPersistedQueryCache();
-      await LocalStore.clearAllData();
-      captureAuthAnalyticsEvent('auth_sign_out_succeeded', {
-        phase: 'sign_out',
-        durationMs: Date.now() - startedAt,
-        email: currentEmail ?? undefined,
-        statusCode: 200,
-      });
     } catch (error) {
-      const resolvedError =
+      signOutError =
         error instanceof Error ? error : new Error('Failed to sign out. Please try again.');
+    }
+
+    // Always clear local state, even if the server-side sign-out request
+    // failed (e.g. API downtime) -- otherwise a stale, possibly
+    // wrong-account cache survives and gets shown after the next sign-in.
+    queryClient.clear();
+    await clearPersistedQueryCache();
+    await LocalStore.clearAllData();
+
+    if (signOutError) {
       captureAuthAnalyticsFailure('auth_sign_out_failed', {
         phase: 'sign_out',
         durationMs: Date.now() - startedAt,
         email: currentEmail ?? undefined,
-        error: resolvedError,
+        error: signOutError,
         failureStage: 'network',
       });
-      throw resolvedError;
+      throw signOutError;
     }
+
+    captureAuthAnalyticsEvent('auth_sign_out_succeeded', {
+      phase: 'sign_out',
+      durationMs: Date.now() - startedAt,
+      email: currentEmail ?? undefined,
+      statusCode: 200,
+    });
   }, [currentEmail, queryClient]);
 }

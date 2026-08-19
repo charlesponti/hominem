@@ -10,7 +10,9 @@ export function useResetAuthForE2E() {
   const queryClient = useQueryClient();
   return useCallback(async () => {
     if (!E2E_TESTING) return;
-    await authClient.signOut();
+    // Best-effort: even if the server-side sign-out fails, local state must
+    // still be wiped so a stale cache from a prior account never leaks in.
+    await authClient.signOut().catch(() => undefined);
     queryClient.clear();
     await clearPersistedQueryCache();
     await LocalStore.clearAllData();

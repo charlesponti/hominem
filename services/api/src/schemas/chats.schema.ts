@@ -53,6 +53,10 @@ export const ChatsEditMessageSchema = z.object({
   content: z.string().trim().min(1).max(20_000),
 });
 
+export const ChatsRegenerateMessageSchema = z.object({
+  responseLength: z.enum(['short', 'medium', 'long']).optional(),
+});
+
 export const ChatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),

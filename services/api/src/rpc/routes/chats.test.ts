@@ -10,9 +10,12 @@ const mocks = vi.hoisted(() => ({
   createChat: vi.fn(),
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
+  getMessageById: vi.fn(),
+  getMessagesBefore: vi.fn(),
   searchMessages: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
+  replaceAssistantMessageContent: vi.fn(),
   resolveReferencedNotes: vi.fn(),
   resolveChatFiles: vi.fn(),
   runInTransaction: vi.fn(),
@@ -30,21 +33,27 @@ vi.mock('@hominem/ai', () => ({
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
-vi.mock('@hominem/db', () => ({
-  db: {},
-  isServiceError: () => false,
-  ChatRepository: {
-    create: mocks.createChat,
-    getOwnedOrThrow: mocks.getOwnedOrThrow,
-    getMessages: mocks.getMessages,
-    searchMessages: mocks.searchMessages,
-    insertMessage: mocks.insertMessage,
-    touchLastMessage: mocks.touchLastMessage,
-    resolveReferencedNotes: mocks.resolveReferencedNotes,
-    resolveChatFiles: mocks.resolveChatFiles,
-  },
-  runInTransaction: mocks.runInTransaction,
-}));
+vi.mock('@hominem/db', async () => {
+  const actual = await vi.importActual<typeof import('@hominem/db')>('@hominem/db');
+  return {
+    ...actual,
+    db: {},
+    ChatRepository: {
+      create: mocks.createChat,
+      getOwnedOrThrow: mocks.getOwnedOrThrow,
+      getMessages: mocks.getMessages,
+      getMessageById: mocks.getMessageById,
+      getMessagesBefore: mocks.getMessagesBefore,
+      searchMessages: mocks.searchMessages,
+      insertMessage: mocks.insertMessage,
+      touchLastMessage: mocks.touchLastMessage,
+      replaceAssistantMessageContent: mocks.replaceAssistantMessageContent,
+      resolveReferencedNotes: mocks.resolveReferencedNotes,
+      resolveChatFiles: mocks.resolveChatFiles,
+    },
+    runInTransaction: mocks.runInTransaction,
+  };
+});
 
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {
@@ -221,6 +230,149 @@ describe('chat message search', () => {
 
     expect(response.status).toBe(400);
     expect(mocks.searchMessages).not.toHaveBeenCalled();
+  });
+});
+
+describe('chat message regenerate', () => {
+  const userMessage = {
+    id: 'user-1',
+    role: 'user',
+    content: 'Hello',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    referencedNotes: null,
+    files: null,
+  };
+  const assistantMessage = {
+    id: 'assistant-1',
+    role: 'assistant',
+    content: 'Hi',
+    createdAt: '2026-01-01T00:00:01.000Z',
+    referencedNotes: null,
+    files: null,
+  };
+
+  beforeEach(() => {
+    mocks.streamChatCompletion.mockClear();
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.resolveReferencedNotes.mockResolvedValue([]);
+    mocks.replaceAssistantMessageContent.mockReset();
+    mocks.replaceAssistantMessageContent.mockResolvedValue(undefined);
+    mocks.touchLastMessage.mockResolvedValue(undefined);
+    mocks.recordAIUsageEvent.mockResolvedValue(undefined);
+    mocks.assertUnderMonthlyUsageLimit.mockResolvedValue(undefined);
+    mocks.enqueueEmbedding.mockResolvedValue(undefined);
+    mocks.runInTransaction.mockImplementation(
+      async (callback: (trx: unknown) => Promise<unknown>) => callback({}),
+    );
+    mocks.getMessageById.mockReset();
+    mocks.getMessagesBefore.mockReset();
+    mocks.getMessageById.mockResolvedValue(assistantMessage);
+    mocks.getMessagesBefore.mockResolvedValue([userMessage]);
+    mocks.streamChatCompletion.mockReturnValue(
+      (async function* () {
+        yield { choices: [{ delta: { content: 'Regenerated reply' } }] };
+      })(),
+    );
+  });
+
+  it('regenerates an assistant message using the prior user turn', async () => {
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain('Regenerated reply');
+
+    expect(mocks.getMessagesBefore).toHaveBeenCalledWith(
+      {},
+      'chat-id',
+      '2026-01-01T00:00:01.000Z',
+    );
+
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
+
+    expect(mocks.replaceAssistantMessageContent).toHaveBeenCalledWith(
+      {},
+      'chat-id',
+      'assistant-1',
+      'Regenerated reply',
+    );
+    expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, 'chat-id');
+  });
+
+  it('finds the parent user turn even when it is not the most recent prior message', async () => {
+    mocks.getMessagesBefore.mockResolvedValue([
+      { ...userMessage, id: 'earlier-user', content: 'Earlier question' },
+      { ...assistantMessage, id: 'earlier-assistant', createdAt: '2026-01-01T00:00:00.500Z' },
+      { ...userMessage, content: 'Latest question', createdAt: '2026-01-01T00:00:00.800Z' },
+    ]);
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.messages[1].content).toContain('Latest question');
+    expect(completionOptions.messages[1].content).toContain('1. user: Earlier question');
+    expect(completionOptions.messages[1].content).toContain('2. assistant: Hi');
+  });
+
+  it('rejects regenerating a user message', async () => {
+    mocks.getMessageById.mockResolvedValue(userMessage);
+
+    const response = await createApp().request('/api/chats/chat-id/messages/user-1/regenerate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('rejects regenerating a message that does not exist', async () => {
+    mocks.getMessageById.mockResolvedValue(undefined);
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/missing/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('rejects regenerating an assistant message with no prior user turn', async () => {
+    mocks.getMessagesBefore.mockResolvedValue([]);
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
   });
 });
 
