@@ -30,16 +30,6 @@ jobs:
           pnpm typecheck --filter @ponti-studios/auth...
           pnpm test --filter @ponti-studios/auth...
 
-      - name: update-npm-cli
-        run: npm install -g npm@latest
-
-      - name: debug-oidc-context
-        run: |
-          echo "npm version: $(npm --version)"
-          echo "npm binary: $(which npm)"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
-
       - name: publish-to-npm
         working-directory: packages/auth
-        run: npm publish --provenance --access public --loglevel verbose
+        run: npx --yes npm@latest publish --provenance --access public
