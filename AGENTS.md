@@ -30,13 +30,16 @@ pnpm monorepo orchestrated with Turbo. Key directories:
 
 ## Commands
 
-Use `just` for `setup`, `check`, and `db`; use `pnpm` for dev/lint/format/typecheck/build/test. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives. `scripts/command` is a Bash command router invoked through `just`; use the `justfile` recipes as the public command interface.
+Use `just` for its domain modules (`db`, `career`, `mcp`, `mobile`, `ui` — run `just --list` for the current set); use `pnpm` for dev/lint/format/typecheck/build/test and the full pre-push gate. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives. `scripts/command` is a Bash command router invoked through `just`; use the `justfile` recipes as the public command interface.
+
+The full pre-push validation gate is `pnpm run check` (lint → typecheck → build → test via turbo, with `DATABASE_URL`/`AUTH_E2E_SECRET` set) — there is no `just check` or `just setup` recipe.
 
 ```bash
 pnpm --filter @hominem/api dev
 pnpm test --filter=@hominem/api...
 pnpm test --filter=@hominem/omiro...
 pnpm format
+pnpm run check
 just db backup
 just db migrate
 ```

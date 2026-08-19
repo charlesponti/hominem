@@ -15,6 +15,11 @@ duplicate or contradict it.
 - Job handlers live in `src/workers/` and register in `src/worker.ts`. The worker is a separate process and shares no HTTP-server memory.
 - From `services/api`, build with `node build.mjs`; standard Turbo build is not its build path. Use `pnpm test --filter=@hominem/api...` and `pnpm --filter @hominem/api dev` for its normal lanes.
 
+## Career domain
+
+- `app.career_applications.status` is `NOT NULL` with no column default, and a constraint trigger (`20260810150000_normalize_career_application_pipeline.sql`) rejects any status other than `WISHLIST`, `ACCEPTED`, `REJECTED`, or `WITHDRAWN` unless the application already has a matching active pipeline stage (`APPLIED` needs an `APPLICATION`-kind stage, `SCREENING` needs `SCREEN`, `OFFER` needs `OFFER`). A stage-less create must default to `status: 'WISHLIST'` — see `createCareerApplication` in `src/application/career.service.ts`. Any test or script inserting directly into `app.career_applications` needs an explicit `status` for the same reason.
+- MCP tools and RPC routes for a resource are thin adapters over one `src/application/<domain>.service.ts` implementation and one set of `src/schemas/<domain>.schema.ts` Zod schemas — never fork query logic or validation between the two surfaces. Follow the `kernel-hominem-resource` skill when adding or reviewing a resource.
+
 ## Production authentication
 
 - Better Auth is the sole authentication authority. Preserve its session database, signed cookies, and native client storage contract.
