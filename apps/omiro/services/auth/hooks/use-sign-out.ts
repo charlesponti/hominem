@@ -3,8 +3,7 @@ import { useCallback } from 'react';
 
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from '~/services/auth/analytics';
 import { authClient } from '~/services/auth/auth-client';
-import { clearPersistedQueryCache } from '~/services/query-persistence';
-import { LocalStore } from '~/services/storage/local-store';
+import { clearLocalSessionState } from '~/services/auth/clear-local-session-state';
 
 export function useSignOut(currentEmail: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -37,9 +36,7 @@ export function useSignOut(currentEmail: string | null | undefined) {
     // Always clear local state, even if the server-side sign-out request
     // failed (e.g. API downtime) -- otherwise a stale, possibly
     // wrong-account cache survives and gets shown after the next sign-in.
-    queryClient.clear();
-    await clearPersistedQueryCache();
-    await LocalStore.clearAllData();
+    await clearLocalSessionState(queryClient);
 
     if (signOutError) {
       captureAuthAnalyticsFailure('auth_sign_out_failed', {

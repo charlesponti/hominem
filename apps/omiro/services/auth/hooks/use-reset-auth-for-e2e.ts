@@ -4,8 +4,7 @@ import { useCallback } from 'react';
 
 import { E2E_TESTING } from '~/constants';
 import { authClient } from '~/services/auth/auth-client';
-import { clearPersistedQueryCache } from '~/services/query-persistence';
-import { LocalStore } from '~/services/storage/local-store';
+import { clearLocalSessionState } from '~/services/auth/clear-local-session-state';
 
 export function useResetAuthForE2E() {
   const queryClient = useQueryClient();
@@ -16,8 +15,6 @@ export function useResetAuthForE2E() {
     await authClient
       .signOut()
       .catch((error) => logger.warn('[useResetAuthForE2E] Best-effort sign-out failed', { error }));
-    queryClient.clear();
-    await clearPersistedQueryCache();
-    await LocalStore.clearAllData();
+    await clearLocalSessionState(queryClient);
   }, [queryClient]);
 }

@@ -14,19 +14,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
+import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
+import { Button } from '~/components/ui/button';
+import AppIcon from '~/components/ui/icon';
+import { IconChip } from '~/components/ui/icon-chip';
+import { OtpInput } from '~/components/ui/otp-input';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { OTP_EXPIRES_SECONDS } from '~/config/auth-protocol';
+import { useAuth } from '~/services/auth/auth-provider';
+import { useEmailAuth } from '~/services/auth/use-email-auth';
+import { normalizeOtp } from '~/services/auth/validation';
+import { posthog } from '~/services/posthog';
 import t from '~/translations';
-
-import { FeatureErrorBoundary } from '../../components/error-boundary/FeatureErrorBoundary';
-import { Button } from '../../components/ui/button';
-import AppIcon from '../../components/ui/icon';
-import { IconChip } from '../../components/ui/icon-chip';
-import { OtpInput } from '../../components/ui/otp-input';
-import { useAuth } from '../../services/auth/auth-provider';
-import { useEmailAuth } from '../../services/auth/use-email-auth';
-import { normalizeOtp } from '../../services/auth/validation';
-import { posthog } from '../../services/posthog';
 
 function countdownColor(
   secondsLeft: number,

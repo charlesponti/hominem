@@ -377,6 +377,9 @@ const t = {
       oneTimeVerificationCodeA11y: 'One-time verification code',
       timeRemainingA11y: (secondsLeft: number) =>
         `Time remaining: ${Math.floor(secondsLeft / 60)} minutes ${secondsLeft % 60} seconds`,
+      emailRequiredError: 'Email is required',
+      codeRequiredError: 'Verification code is required',
+      authFailedError: 'Authentication failed. Please try again.',
     },
   },
   onboarding: {

@@ -1,9 +1,8 @@
-import { normalizeEmail } from '@ponti-studios/auth/shared/validation';
-
 import { APP_ENV, RELEASE_CHANNEL } from '~/constants';
 import { posthog } from '~/services/posthog';
 
 import { getApiBaseOrigin } from './api-origin';
+import { normalizeEmail } from './validation';
 
 type AuthAnalyticsPhase =
   | 'boot'

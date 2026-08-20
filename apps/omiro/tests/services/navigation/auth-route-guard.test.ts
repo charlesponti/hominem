@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveAuthRedirect } from '~/navigation/auth-route-guard';
+import { resolveAuthRedirect } from '~/services/navigation/auth-route-guard';
 
 describe('resolveAuthRedirect', () => {
   it('redirects signed-out users away from protected routes', () => {

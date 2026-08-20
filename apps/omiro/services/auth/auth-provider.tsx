@@ -14,14 +14,13 @@ import React, {
 import { E2E_TESTING } from '~/constants';
 import { authClient } from '~/services/auth/auth-client';
 import { clearLegacyDataOnce } from '~/services/auth/boot-legacy-data';
+import { clearLocalSessionState } from '~/services/auth/clear-local-session-state';
 import { useAuthHeaders } from '~/services/auth/hooks/use-auth-headers';
 import { useEmailOtp } from '~/services/auth/hooks/use-email-otp';
 import { useResetAuthForE2E } from '~/services/auth/hooks/use-reset-auth-for-e2e';
 import { useSignOut } from '~/services/auth/hooks/use-sign-out';
 import { useUpdateProfile } from '~/services/auth/hooks/use-update-profile';
 import queryClient from '~/services/query-client';
-import { clearPersistedQueryCache } from '~/services/query-persistence';
-import { LocalStore } from '~/services/storage/local-store';
 
 type AuthContextType = {
   isPending: boolean;
@@ -105,9 +104,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await authClient
       .signOut()
       .catch((error) => logger.warn('[AuthProvider] Best-effort sign-out failed', { error }));
-    queryClient.clear();
-    await clearPersistedQueryCache();
-    await LocalStore.clearAllData();
+    await clearLocalSessionState(queryClient);
   }, []);
 
   const value = useMemo<AuthContextType>(

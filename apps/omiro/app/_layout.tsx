@@ -26,7 +26,7 @@ import { logError } from '~/components/error-boundary/log-error';
 import { RootErrorBoundary } from '~/components/error-boundary/RootErrorBoundary';
 import { E2E_TESTING } from '~/constants';
 import { useScreenCapture } from '~/hooks/use-screen-capture';
-import { resolveAuthRedirect } from '~/navigation/auth-route-guard';
+import { resolveAuthRedirect } from '~/services/navigation/auth-route-guard';
 import { AuthProvider, useAuth } from '~/services/auth/auth-provider';
 import { consumeRestoreAttempt, consumeResumeTarget } from '~/services/navigation/launch-state';
 import { getContentRoute } from '~/services/navigation/routes';

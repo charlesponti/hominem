@@ -1,5 +1,7 @@
-import { normalizeEmail, normalizeOtp } from '@ponti-studios/auth/shared/validation';
 import { useCallback, useState } from 'react';
+
+import { normalizeEmail, normalizeOtp } from '~/services/auth/validation';
+import t from '~/translations';
 
 type EmailAuthOperations = {
   verifyOtp: (email: string, otp: string) => Promise<void>;
@@ -22,9 +24,7 @@ export function useEmailAuth(ops: EmailAuthOperations) {
         setError(null);
         await action();
       } catch (cause) {
-        setError(
-          cause instanceof Error ? cause.message : 'Authentication failed. Please try again.',
-        );
+        setError(cause instanceof Error ? cause.message : t.auth.verify.authFailedError);
         if (opts.clearOtpOnError) setOtp('');
       } finally {
         setBusy(false);
@@ -43,7 +43,9 @@ export function useEmailAuth(ops: EmailAuthOperations) {
       const resolvedEmail = normalizeEmail(email);
       const resolvedOtp = normalizeOtp(otpOverride ?? otp);
       if (!resolvedEmail || !resolvedOtp) {
-        setError(!resolvedEmail ? 'Email is required' : 'Verification code is required');
+        setError(
+          !resolvedEmail ? t.auth.verify.emailRequiredError : t.auth.verify.codeRequiredError,
+        );
         return Promise.resolve();
       }
       return run(() => ops.verifyOtp(resolvedEmail, resolvedOtp), { clearOtpOnError: true });
@@ -58,7 +60,7 @@ export function useEmailAuth(ops: EmailAuthOperations) {
             },
             { resending: true },
           )
-        : (setError('Email is required'), Promise.resolve());
+        : (setError(t.auth.verify.emailRequiredError), Promise.resolve());
     },
   };
 }
