@@ -173,7 +173,6 @@ function ComposerContent(props: ComposerProps) {
         </Animated.View>
       ) : undefined}
       <Card
-        className="w-full gap-2 p-3"
         style={{
           borderColor,
           borderCurve: 'continuous',

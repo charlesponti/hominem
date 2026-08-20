@@ -29,9 +29,8 @@ export function ComposerDock({ children, testID, onInsetChange }: ComposerDockPr
   return (
     <KeyboardStickyView
       offset={{ closed: 0, opened: insets.bottom }}
-      style={{ paddingBottom: insets.bottom }}
+      style={{ paddingBottom: insets.bottom, paddingHorizontal: 8 }}
       testID={testID}
-      className="px-4"
     >
       <View>{children}</View>
     </KeyboardStickyView>
