@@ -11,8 +11,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
@@ -57,8 +58,9 @@ export const ChatMessage = memo(function ChatMessage({
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const [textPrimary, destructive, tertiary] = useCSSVariable([
+  const [textPrimary, primaryForeground, destructive, tertiary] = useThemeColor([
     '--color-foreground',
+    '--color-primary-foreground',
     '--color-destructive',
     '--color-tertiary',
   ]) as string[];
@@ -122,11 +124,11 @@ export const ChatMessage = memo(function ChatMessage({
 
   const textStyle = useMemo(
     () => ({
-      color: textPrimary,
+      color: isUser ? primaryForeground : textPrimary,
       fontSize: 16,
       lineHeight: isUser ? 24 : 25.6,
     }),
-    [textPrimary, isUser],
+    [isUser, primaryForeground, textPrimary],
   );
 
   const closeEdit = () => {
@@ -142,11 +144,13 @@ export const ChatMessage = memo(function ChatMessage({
   };
 
   return (
-    <Animated.View layout={rowLayout} style={revealStyle}>
+    <Animated.View
+      layout={rowLayout}
+      style={[styles.message, isUser ? styles.messageUser : styles.messageAssistant, revealStyle]}
+    >
       <Pressable
         onPress={isStreaming ? undefined : onActivate}
-        className={isUser ? 'bg-popover rounded-lg px-2 py-2 w-full' : 'py-2 w-full'}
-        style={isUser ? { borderCurve: 'continuous' } : undefined}
+        style={[isUser ? styles.userBubble : styles.assistantBubble, isUser && styles.continuous]}
         testID={`chat-message-${message.id}`}
       >
         <MessageEditModal
@@ -158,10 +162,10 @@ export const ChatMessage = memo(function ChatMessage({
           visible={isEditing}
         />
 
-        <View className="gap-2 w-full">
+        <View style={styles.s0}>
           {!isUser && hasReasoning ? (
-            <View className="bg-background border border-border rounded-md gap-1 px-3 py-3 w-full">
-              <Text className="text-mono text-foreground opacity-80">{message.reasoning}</Text>
+            <View style={styles.s1}>
+              <Text style={styles.s2}>{message.reasoning}</Text>
             </View>
           ) : null}
 
@@ -177,7 +181,7 @@ export const ChatMessage = memo(function ChatMessage({
               <Pressable
                 accessibilityLabel={t.chat.retryMessageA11y}
                 accessibilityRole="button"
-                className="flex-row items-center gap-1 self-end"
+                style={styles.s3}
                 onPress={() => onRetry?.(message.id)}
               >
                 <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
@@ -190,7 +194,7 @@ export const ChatMessage = memo(function ChatMessage({
 
           {failed && !isUser ? (
             <Animated.View entering={bannerEntering} exiting={bannerExiting}>
-              <View className="flex-row items-center gap-1">
+              <View style={styles.s4}>
                 <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
                 <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
               </View>
@@ -202,24 +206,60 @@ export const ChatMessage = memo(function ChatMessage({
           ) : null}
 
           {!isStreaming ? <FocusItems message={message} /> : null}
-
-          <ActiveMessageActions
-            canDelete={canDelete}
-            canEdit={canEdit}
-            canRegenerate={canRegenerate}
-            isActive={isActive}
-            isUser={isUser}
-            message={message}
-            onDelete={onDelete}
-            onEdit={() => {
-              setDraftMessage(content);
-              setIsEditing(true);
-            }}
-            onRegenerate={onRegenerate}
-            timestamp={timestamp}
-          />
         </View>
       </Pressable>
+      <ActiveMessageActions
+        canDelete={canDelete}
+        canEdit={canEdit}
+        canRegenerate={canRegenerate}
+        isActive={isActive}
+        isUser={isUser}
+        message={message}
+        onDelete={onDelete}
+        onEdit={() => {
+          setDraftMessage(content);
+          setIsEditing(true);
+        }}
+        onRegenerate={onRegenerate}
+        timestamp={timestamp}
+      />
     </Animated.View>
   );
 });
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8, width: '100%' },
+  s1: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    width: '100%',
+  },
+  s2: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
+  s3: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+  s4: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  message: { width: '100%' },
+  messageUser: { alignItems: 'flex-end' },
+  messageAssistant: { alignItems: 'flex-start' },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 16,
+    borderBottomRightRadius: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: '85%',
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.muted,
+    borderRadius: 16,
+    borderBottomLeftRadius: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: '85%',
+  },
+  continuous: { borderCurve: 'continuous' },
+}));

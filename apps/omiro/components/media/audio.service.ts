@@ -5,6 +5,8 @@ import AudioModule from 'expo-audio/build/AudioModule';
 import { File } from 'expo-file-system';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
+import { createStore, type Listener } from './create-store';
+
 export type RecorderState =
   | 'IDLE'
   | 'REQUESTING_PERMISSION'
@@ -41,39 +43,6 @@ type RecordingSnapshot = {
 export type RecordingCoreSnapshot = Omit<RecordingSnapshot, 'meterings'>;
 
 type AudioRecorder = InstanceType<typeof AudioModule.AudioRecorder>;
-
-type Listener<T> = (snapshot: T) => void;
-
-function createStore<T>(initialValue: T) {
-  let snapshot = initialValue;
-  const listeners = new Set<Listener<T>>();
-
-  const emit = () => {
-    for (const listener of listeners) {
-      listener(snapshot);
-    }
-  };
-
-  return {
-    getSnapshot: () => snapshot,
-    setSnapshot: (next: T) => {
-      snapshot = next;
-      emit();
-    },
-    updateSnapshot: (updater: (current: T) => T) => {
-      snapshot = updater(snapshot);
-      emit();
-    },
-    subscribe: (listener: Listener<T>) => {
-      listeners.add(listener);
-      listener(snapshot);
-
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
 
 function createRecordingController() {
   const store = createStore<RecordingSnapshot>({
@@ -174,12 +143,9 @@ function createRecordingController() {
 
       setState('PREPARING');
 
-      await Audio.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      activateKeepAwakeAsync().catch((error: Error) =>
-        logger.error('[recorder] keep-awake activation failed', error),
-      );
-
       try {
+        await Audio.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await activateKeepAwakeAsync();
         const nextRecorder = ensureRecorder();
         await nextRecorder.prepareToRecordAsync();
         nextRecorder.record();

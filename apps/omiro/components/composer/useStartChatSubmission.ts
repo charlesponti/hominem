@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import { normalizeChatTitle, useStartChat } from '~/services/chat';
+import { isOfflineUnavailable } from '~/services/chat/chat-errors';
 
 interface StartChatSubmissionInput {
   clearComposer: () => void;
@@ -29,10 +30,9 @@ export function useStartChatSubmission() {
           },
         });
       } catch (error) {
-        const alertMessage =
-          error instanceof Error && error.message === 'offline_unavailable'
-            ? 'You appear to be offline. Please reconnect and try again.'
-            : 'We could not start that chat right now. Please try again.';
+        const alertMessage = isOfflineUnavailable(error)
+          ? 'You appear to be offline. Please reconnect and try again.'
+          : 'We could not start that chat right now. Please try again.';
         Alert.alert('Could not start chat', alertMessage, [{ text: 'OK' }]);
       }
     },

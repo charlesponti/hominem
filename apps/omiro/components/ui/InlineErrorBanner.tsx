@@ -1,8 +1,9 @@
-import { IconButton, nativeShadows } from '@ponti-studios/ui/native';
 import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { IconButton, nativeShadows } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -13,11 +14,8 @@ interface InlineErrorBannerProps {
 
 export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps) {
   return (
-    <View
-      className="bg-card border border-border rounded-lg flex-row items-center justify-between gap-2 pl-3 pr-1 py-1"
-      style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
-    >
-      <Text className="flex-1 text-destructive text-footnote">{message}</Text>
+    <View style={[styles.s0, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
+      <Text style={styles.s1}>{message}</Text>
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.dismissErrorHint}
         onPress={onDismiss}
@@ -27,3 +25,20 @@ export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+  },
+  s1: { ...theme.typography.footnote, flex: 1, color: theme.colors.destructive },
+}));

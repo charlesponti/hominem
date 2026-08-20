@@ -1,11 +1,13 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { useApiClient } from '@hominem/rpc/react';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import type { TextInput } from 'react-native';
 
 import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { chatKeys } from '~/services/notes/query-keys';
+
+import { useDebouncedValue } from './use-debounced-value';
 
 interface ChatSearchState {
   showSearch: boolean;
@@ -40,14 +42,22 @@ export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
   const client = useApiClient();
   const [state, dispatch] = useReducer(chatSearchReducer, initialChatSearchState);
   const searchInputRef = useRef<TextInput | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
+    };
+  }, []);
 
   const searchQuery = state.searchQuery.trim();
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 200);
   const searchResults = useQuery({
-    queryKey: chatKeys.messageSearch(chatId, searchQuery),
+    queryKey: chatKeys.messageSearch(chatId, debouncedSearchQuery),
     queryFn: async () => {
       const res = await client.api.chats[':id'].messages.search.$get({
         param: { id: chatId },
-        query: { query: searchQuery },
+        query: { query: debouncedSearchQuery },
       });
       const result = await res.json();
       return result.flatMap((message) => {
@@ -55,7 +65,7 @@ export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
         return output ? [output] : [];
       });
     },
-    enabled: state.showSearch && searchQuery.length > 0,
+    enabled: state.showSearch && debouncedSearchQuery.length > 0,
   });
 
   const displayMessages = useMemo(
@@ -65,7 +75,9 @@ export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
 
   const handleOpenSearch = useCallback(() => {
     dispatch({ type: 'open-search' });
-    setTimeout(() => {
+    if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
+    focusTimerRef.current = setTimeout(() => {
+      focusTimerRef.current = null;
       searchInputRef.current?.focus();
     }, 50);
   }, []);

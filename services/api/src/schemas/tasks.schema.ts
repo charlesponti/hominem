@@ -6,10 +6,10 @@ const TaskParticipantSchema = z.uuid();
 
 const TaskTimeFields = {
   durationMinutes: z.number().int().positive().nullable().optional(),
-  schedulingWindowStartAt: z.iso.datetime().nullable().optional(),
-  schedulingWindowEndAt: z.iso.datetime().nullable().optional(),
-  scheduledStartAt: z.iso.datetime().nullable().optional(),
-  scheduledEndAt: z.iso.datetime().nullable().optional(),
+  schedulingWindowStartAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  schedulingWindowEndAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  scheduledStartAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  scheduledEndAt: z.iso.datetime({ offset: true }).nullable().optional(),
   timeZone: z.string().trim().min(1).nullable().optional(),
   location: z.string().trim().min(1).max(500).nullable().optional(),
 };
@@ -51,7 +51,7 @@ export const CreateTaskSchema = z
     description: z.string().trim().optional().nullable(),
     artifactType: z.enum(['task', 'task_list']),
     priority: TaskPriority.optional(),
-    dueAt: z.iso.datetime().nullable().optional(),
+    dueAt: z.iso.datetime({ offset: true }).nullable().optional(),
     parentTaskId: z.uuid().nullable().optional(),
     participants: z.array(TaskParticipantSchema).max(20).optional(),
     ...TaskTimeFields,
@@ -97,7 +97,7 @@ export const UpdateTaskSchema = z
     title: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(2000).nullable().optional(),
     priority: TaskPriority.optional(),
-    dueAt: z.iso.datetime().nullable().optional(),
+    dueAt: z.iso.datetime({ offset: true }).nullable().optional(),
     participants: z.array(TaskParticipantSchema).max(20).optional(),
     ...TaskTimeFields,
   })

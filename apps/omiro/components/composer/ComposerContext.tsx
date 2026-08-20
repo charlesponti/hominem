@@ -73,8 +73,7 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
 
   const setAttachments = useCallback((next: SetStateAction<ComposerAttachment[]>) => {
     setAttachmentsState((currentAttachments) => {
-      const resolvedAttachments =
-        typeof next === 'function' ? next(currentAttachments) : next;
+      const resolvedAttachments = typeof next === 'function' ? next(currentAttachments) : next;
       attachmentsRef.current = resolvedAttachments;
       return resolvedAttachments;
     });
@@ -84,7 +83,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     (fileId: string) => {
       void client.api.files[':fileId']
         .$delete({ param: { fileId } })
-        .catch((error) => logger.warn('[ComposerContext] Failed to delete orphaned file', { error, fileId }));
+        .catch((error) =>
+          logger.warn('[ComposerContext] Failed to delete orphaned file', { error, fileId }),
+        );
     },
     [client],
   );

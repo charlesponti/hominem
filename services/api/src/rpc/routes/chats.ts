@@ -198,11 +198,11 @@ function getMessageId(c: { req: { param: (name: string) => string | undefined } 
   return messageId;
 }
 
-function writeChunkEvent(
+function writeGenerationEvent(
   stream: { writeSSE: (input: { data: string }) => Promise<void> },
-  chunk: string,
+  event: Record<string, unknown>,
 ) {
-  return stream.writeSSE({ data: JSON.stringify({ type: 'chunk', chunk }) });
+  return stream.writeSSE({ data: JSON.stringify(event) });
 }
 
 function writeErrorEvent(
@@ -267,6 +267,28 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     return c.json(messages.map(toChatMessageDto));
   })
+  .get('/generations/:generationId', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const generationId = c.req.param('generationId');
+    if (!generationId) throw new ValidationError('Generation id is required');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const run = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+    if (!run) throw new ValidationError('Generation run not found');
+    return c.json(run);
+  })
+  .post('/generations/:generationId/cancel', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const generationId = c.req.param('generationId');
+    if (!generationId) throw new ValidationError('Generation id is required');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const run = await ChatRepository.cancelGenerationRun(db, generationId, userId);
+    if (!run) throw new ValidationError('Generation cannot be cancelled');
+    return c.json(run);
+  })
   .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
@@ -291,7 +313,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       const userId = c.get('auth')!.userId;
       const chatId = getChatId(c);
       const messageId = getMessageId(c);
-      const { responseLength } = c.req.valid('json');
+      const { generationId, responseLength } = c.req.valid('json');
 
       await assertUnderMonthlyUsageLimit(userId);
       await ChatRepository.getOwnedOrThrow(db, chatId, userId);
@@ -317,6 +339,41 @@ const chatByIdRoutes = new Hono<AppContext>()
         parentUserMessage.content,
       );
       const resolvedFiles = parentUserMessage.files ?? [];
+      const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+      if (existingRun) {
+        return streamSSE(c, async (stream) => {
+          if (existingRun.status === 'committed' && existingRun.assistantMessageId) {
+            const committed = await ChatRepository.getMessageById(
+              db,
+              chatId,
+              existingRun.assistantMessageId,
+            );
+            if (committed) {
+              await writeGenerationEvent(stream, {
+                type: 'committed',
+                generationId,
+                message: toChatMessageDto(committed),
+              });
+            }
+          } else if (existingRun.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          } else {
+            await writeGenerationEvent(stream, {
+              type: 'status',
+              generationId,
+              status: existingRun.status === 'saving' ? 'saving' : 'preparing',
+            });
+          }
+          await stream.writeSSE({ data: '[DONE]' });
+        });
+      }
+      await ChatRepository.createGenerationRun(db, {
+        id: generationId,
+        chatId,
+        ownerUserId: userId,
+        kind: 'regenerate',
+        targetAssistantMessageId: messageId,
+      });
 
       const prompt = buildPrompt(parentUserMessage.content, history, resolvedNotes, resolvedFiles);
       const eventId = randomUUID();
@@ -336,13 +393,21 @@ const chatByIdRoutes = new Hono<AppContext>()
         let usage: ReturnType<typeof getChatCompletionUsage> = null;
         let streamError: unknown = null;
 
+        await writeGenerationEvent(stream, {
+          type: 'accepted',
+          generationId,
+          chatId,
+          chat: toChatDto(await ChatRepository.getOwnedOrThrow(db, chatId, userId)),
+          userMessage: null,
+        });
+        await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
+
         try {
           for await (const chunk of completion) {
             usage = getChatCompletionUsage(chunk) ?? usage;
             const text = chunk.choices?.[0]?.delta?.content;
             if (typeof text === 'string' && text.length > 0) {
               assistantText += text;
-              await writeChunkEvent(stream, text);
             }
           }
         } catch (error) {
@@ -363,27 +428,71 @@ const chatByIdRoutes = new Hono<AppContext>()
 
         if (streamError) {
           const message = streamError instanceof Error ? streamError.message : 'Stream error';
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'failed',
+            errorMessage: message,
+          });
           await writeErrorEvent(stream, message);
           return;
         }
 
         try {
-          if (assistantText.trim().length > 0) {
-            await runInTransaction(async (trx) => {
-              await ChatRepository.replaceAssistantMessageContent(
-                trx,
-                chatId,
-                messageId,
-                assistantText,
-              );
-              await ChatRepository.touchLastMessage(trx, chatId);
-            });
-            await enqueueChatEmbedding(userId, chatId);
+          if (!assistantText.trim()) throw new Error('No reply was generated');
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'saving',
+          });
+          await writeGenerationEvent(stream, { type: 'status', generationId, status: 'saving' });
+          const beforeCommit = await ChatRepository.getGenerationRun(
+            db,
+            chatId,
+            generationId,
+            userId,
+          );
+          if (beforeCommit?.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+            return;
           }
+          const committed = await runInTransaction(async (trx) => {
+            const updated = await ChatRepository.replaceAssistantMessageContent(
+              trx,
+              chatId,
+              messageId,
+              assistantText,
+            );
+            await ChatRepository.touchLastMessage(trx, chatId);
+            await ChatRepository.updateGenerationRun(trx, {
+              id: generationId,
+              ownerUserId: userId,
+              status: 'committed',
+              assistantMessageId: updated.id,
+            });
+            return updated;
+          });
+          await enqueueChatEmbedding(userId, chatId);
 
+          await writeGenerationEvent(stream, {
+            type: 'committed',
+            generationId,
+            message: toChatMessageDto(committed),
+          });
           await stream.writeSSE({ data: '[DONE]' });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Stream error';
+          const run = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+          if (run?.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+            return;
+          }
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'failed',
+            errorMessage: message,
+          });
           await writeErrorEvent(stream, message);
         }
       });
@@ -396,6 +505,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     await assertUnderMonthlyUsageLimit(userId);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
     const {
+      generationId,
       message,
       fileIds = [],
       noteIds = [],
@@ -412,8 +522,37 @@ const chatByIdRoutes = new Hono<AppContext>()
       throw new ValidationError('Message, notes, or files are required');
     }
 
-    await runInTransaction(async (trx) => {
-      await ChatRepository.insertMessage(trx, {
+    const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+    if (existingRun) {
+      return streamSSE(c, async (stream) => {
+        if (existingRun.status === 'committed' && existingRun.assistantMessageId) {
+          const committed = await ChatRepository.getMessageById(
+            db,
+            chatId,
+            existingRun.assistantMessageId,
+          );
+          if (committed) {
+            await writeGenerationEvent(stream, {
+              type: 'committed',
+              generationId,
+              message: toChatMessageDto(committed),
+            });
+          }
+        } else if (existingRun.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+        } else {
+          await writeGenerationEvent(stream, {
+            type: 'status',
+            generationId,
+            status: existingRun.status === 'saving' ? 'saving' : 'preparing',
+          });
+        }
+        await stream.writeSSE({ data: '[DONE]' });
+      });
+    }
+
+    const userMessageId = await runInTransaction(async (trx) => {
+      const userMessage = await ChatRepository.insertMessage(trx, {
         chatId,
         authorUserId: userId,
         role: 'user',
@@ -422,7 +561,16 @@ const chatByIdRoutes = new Hono<AppContext>()
         referencedNoteIds: resolvedNotes.length > 0 ? resolvedNotes.map((n) => n.id) : null,
       });
       await ChatRepository.touchLastMessage(trx, chatId);
+      await ChatRepository.createGenerationRun(trx, {
+        id: generationId,
+        chatId,
+        ownerUserId: userId,
+        kind: 'send',
+        userMessageId: userMessage.id,
+      });
+      return userMessage.id;
     });
+    const userMessage = await ChatRepository.getMessageById(db, chatId, userMessageId);
     const prompt = buildPrompt(message, history, resolvedNotes, resolvedFiles);
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
@@ -441,13 +589,21 @@ const chatByIdRoutes = new Hono<AppContext>()
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
+      await writeGenerationEvent(stream, {
+        type: 'accepted',
+        generationId,
+        chatId,
+        chat: toChatDto(await ChatRepository.getOwnedOrThrow(db, chatId, userId)),
+        userMessage: userMessage ? toChatMessageDto(userMessage) : null,
+      });
+      await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
+
       try {
         for await (const chunk of completion) {
           usage = getChatCompletionUsage(chunk) ?? usage;
           const text = chunk.choices?.[0]?.delta?.content;
           if (typeof text === 'string' && text.length > 0) {
             assistantText += text;
-            await writeChunkEvent(stream, text);
           }
         }
       } catch (error) {
@@ -472,11 +628,34 @@ const chatByIdRoutes = new Hono<AppContext>()
 
       if (streamError) {
         const message = streamError instanceof Error ? streamError.message : 'Stream error';
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'failed',
+          errorMessage: message,
+        });
         await writeErrorEvent(stream, message);
         return;
       }
 
       try {
+        if (!assistantText.trim()) throw new Error('No reply was generated');
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'saving',
+        });
+        await writeGenerationEvent(stream, { type: 'status', generationId, status: 'saving' });
+        const beforeCommit = await ChatRepository.getGenerationRun(
+          db,
+          chatId,
+          generationId,
+          userId,
+        );
+        if (beforeCommit?.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          return;
+        }
         let audioFile: ChatMessageFileRecord | null = null;
         if (responseModality === 'audio' && assistantText.trim().length > 0) {
           // Best-effort: the text reply already succeeded, so a speech
@@ -485,33 +664,45 @@ const chatByIdRoutes = new Hono<AppContext>()
           audioFile = await synthesizeReplyAudioFile(userId, assistantText).catch(() => null);
         }
 
-        if (assistantText.trim().length > 0) {
-          await runInTransaction(async (trx) => {
-            await ChatRepository.insertMessage(trx, {
-              chatId,
-              authorUserId: userId,
-              role: 'assistant',
-              content: assistantText,
-              files: audioFile ? [audioFile] : null,
-            });
-            await ChatRepository.touchLastMessage(trx, chatId);
+        const committed = await runInTransaction(async (trx) => {
+          const assistantMessage = await ChatRepository.insertMessage(trx, {
+            chatId,
+            authorUserId: userId,
+            role: 'assistant',
+            content: assistantText,
+            files: audioFile ? [audioFile] : null,
           });
-          await enqueueChatEmbedding(userId, chatId);
-        }
+          await ChatRepository.touchLastMessage(trx, chatId);
+          await ChatRepository.updateGenerationRun(trx, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'committed',
+            assistantMessageId: assistantMessage.id,
+          });
+          return ChatRepository.getMessageById(trx, chatId, assistantMessage.id);
+        });
+        await enqueueChatEmbedding(userId, chatId);
 
+        if (!committed) throw new Error('Saved reply could not be loaded');
+        await writeGenerationEvent(stream, {
+          type: 'committed',
+          generationId,
+          message: toChatMessageDto(committed),
+        });
         await stream.writeSSE({ data: '[DONE]' });
-
-        if (audioFile?.url && audioFile.mimeType) {
-          await stream.writeSSE({
-            data: JSON.stringify({
-              type: 'audio',
-              url: audioFile.url,
-              mimeType: audioFile.mimeType,
-            }),
-          });
-        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Stream error';
+        const run = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+        if (run?.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          return;
+        }
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'failed',
+          errorMessage: message,
+        });
         await writeErrorEvent(stream, message);
       }
     });
@@ -532,7 +723,14 @@ export const chatsRoutes = new Hono<AppContext>()
   })
   .post('/start-stream', zValidator('json', ChatsStartStreamSchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const { title, message, fileIds = [], noteIds = [], responseLength } = c.req.valid('json');
+    const {
+      generationId,
+      title,
+      message,
+      fileIds = [],
+      noteIds = [],
+      responseLength,
+    } = c.req.valid('json');
 
     const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
     const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
@@ -541,13 +739,13 @@ export const chatsRoutes = new Hono<AppContext>()
       throw new ValidationError('Message, notes, or files are required');
     }
 
-    const chat = await runInTransaction(async (trx) => {
+    const chatWithUserMessage = await runInTransaction(async (trx) => {
       const createdChat = await ChatRepository.create(trx, {
         userId,
         title,
         noteId: resolvedNotes.length === 1 ? resolvedNotes[0].id : null,
       });
-      await ChatRepository.insertMessage(trx, {
+      const userMessage = await ChatRepository.insertMessage(trx, {
         chatId: createdChat.id,
         authorUserId: userId,
         role: 'user',
@@ -556,8 +754,21 @@ export const chatsRoutes = new Hono<AppContext>()
         referencedNoteIds: resolvedNotes.length > 0 ? resolvedNotes.map((note) => note.id) : null,
       });
       await ChatRepository.touchLastMessage(trx, createdChat.id);
-      return createdChat;
+      await ChatRepository.createGenerationRun(trx, {
+        id: generationId,
+        chatId: createdChat.id,
+        ownerUserId: userId,
+        kind: 'start',
+        userMessageId: userMessage.id,
+      });
+      return { chat: createdChat, userMessageId: userMessage.id };
     });
+    const chat = chatWithUserMessage.chat;
+    const userMessage = await ChatRepository.getMessageById(
+      db,
+      chat.id,
+      chatWithUserMessage.userMessageId,
+    );
 
     const prompt = buildPrompt(message, [], resolvedNotes, resolvedFiles);
     const eventId = randomUUID();
@@ -577,13 +788,14 @@ export const chatsRoutes = new Hono<AppContext>()
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
-      await stream.writeSSE({
-        data: JSON.stringify({
-          type: 'ready',
-          chatId: chat.id,
-          chat: toChatDto(chat),
-        }),
+      await writeGenerationEvent(stream, {
+        type: 'accepted',
+        generationId,
+        chatId: chat.id,
+        chat: toChatDto(chat),
+        userMessage: userMessage ? toChatMessageDto(userMessage) : null,
       });
+      await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
       try {
         for await (const chunk of completion) {
@@ -591,7 +803,6 @@ export const chatsRoutes = new Hono<AppContext>()
           const text = chunk.choices?.[0]?.delta?.content;
           if (typeof text === 'string' && text.length > 0) {
             assistantText += text;
-            await writeChunkEvent(stream, text);
           }
         }
       } catch (error) {
@@ -616,27 +827,72 @@ export const chatsRoutes = new Hono<AppContext>()
 
       if (streamError) {
         const message = streamError instanceof Error ? streamError.message : 'Stream error';
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'failed',
+          errorMessage: message,
+        });
         await writeErrorEvent(stream, message);
         return;
       }
 
       try {
-        if (assistantText.trim().length > 0) {
-          await runInTransaction(async (trx) => {
-            await ChatRepository.insertMessage(trx, {
-              chatId: chat.id,
-              authorUserId: userId,
-              role: 'assistant',
-              content: assistantText,
-            });
-            await ChatRepository.touchLastMessage(trx, chat.id);
-          });
-          await enqueueChatEmbedding(userId, chat.id);
+        if (!assistantText.trim()) throw new Error('No reply was generated');
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'saving',
+        });
+        await writeGenerationEvent(stream, { type: 'status', generationId, status: 'saving' });
+        const beforeCommit = await ChatRepository.getGenerationRun(
+          db,
+          chat.id,
+          generationId,
+          userId,
+        );
+        if (beforeCommit?.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          return;
         }
+        const committed = await runInTransaction(async (trx) => {
+          const assistantMessage = await ChatRepository.insertMessage(trx, {
+            chatId: chat.id,
+            authorUserId: userId,
+            role: 'assistant',
+            content: assistantText,
+          });
+          await ChatRepository.touchLastMessage(trx, chat.id);
+          await ChatRepository.updateGenerationRun(trx, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'committed',
+            assistantMessageId: assistantMessage.id,
+          });
+          return ChatRepository.getMessageById(trx, chat.id, assistantMessage.id);
+        });
+        await enqueueChatEmbedding(userId, chat.id);
 
+        if (!committed) throw new Error('Saved reply could not be loaded');
+        await writeGenerationEvent(stream, {
+          type: 'committed',
+          generationId,
+          message: toChatMessageDto(committed),
+        });
         await stream.writeSSE({ data: '[DONE]' });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Stream error';
+        const run = await ChatRepository.getGenerationRun(db, chat.id, generationId, userId);
+        if (run?.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          return;
+        }
+        await ChatRepository.updateGenerationRun(db, {
+          id: generationId,
+          ownerUserId: userId,
+          status: 'failed',
+          errorMessage: message,
+        });
         await writeErrorEvent(stream, message);
       }
     });

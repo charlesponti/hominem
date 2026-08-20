@@ -1,9 +1,10 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -39,14 +40,13 @@ function LevelBar({ db, tintColor }: LevelBarProps) {
 
   return (
     <Animated.View
-      className="flex-1 rounded-sm"
-      style={[{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]}
+      style={[styles.s0, [{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]]}
     />
   );
 }
 
 export function RecordingLevelMeter() {
-  const primaryColor = useCSSVariable('--color-primary') as string;
+  const primaryColor = useThemeColor('--color-primary') as string;
   const meterings = useSyncExternalStore(
     subscribeRecording,
     () => getRecordingSnapshot().meterings,
@@ -59,13 +59,21 @@ export function RecordingLevelMeter() {
   });
 
   return (
-    <View
-      className="flex-row items-center justify-between gap-0.5 w-full"
-      style={{ height: BAR_MAX_HEIGHT }}
-    >
+    <View style={[styles.s1, { height: BAR_MAX_HEIGHT }]}>
       {bars.map((db, index) => (
         <LevelBar key={index} db={db} tintColor={primaryColor} />
       ))}
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, borderRadius: 2 },
+  s1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 2,
+    width: '100%',
+  },
+}));

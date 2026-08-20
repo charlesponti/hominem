@@ -1,6 +1,5 @@
 import { parseInboxTimestamp } from '@hominem/chat';
 import type { Note } from '@hominem/rpc/types';
-import { TextField } from '@ponti-studios/ui/native';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,16 +15,19 @@ import {
 } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Markdown from 'react-native-markdown-display';
-import { useCSSVariable } from 'uniwind';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
 import { normalizeChatTitle, useStartChat } from '~/services/chat';
+import { isOfflineUnavailable } from '~/services/chat/chat-errors';
 import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
@@ -60,19 +62,22 @@ function formatNoteDateline(
 function NoteDetailPlaceholder() {
   return (
     <ScrollView
-      className="flex-1"
+      style={styles.s0}
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
       keyboardDismissMode="interactive"
       showsVerticalScrollIndicator={false}
     >
-      <View className="self-stretch rounded-sm h-8 mb-3 w-[72%]" />
-      <View className="bg-border rounded-sm h-3 mb-3.5 w-[36%]" />
-      <View className="h-px bg-border mb-5" />
-      <View className="gap-3.5 pt-1">
+      <View style={styles.s1} />
+      <View style={styles.s2} />
+      <View style={styles.s3} />
+      <View style={styles.s4}>
         {Array.from({ length: 6 }, (_, index) => (
           <View
             key={`note-placeholder-line-${index.toString()}`}
-            className={`bg-border rounded-sm h-4 ${index === 5 ? 'w-[58%]' : 'w-full'}`}
+            style={[
+              styles.placeholderLine,
+              index === 5 ? styles.placeholderShort : styles.placeholderFull,
+            ]}
           />
         ))}
       </View>
@@ -124,7 +129,7 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
     return (
       <>
         <ScrollView
-          className="flex-1"
+          style={styles.s5}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
           refreshControl={
             <RefreshControl
@@ -203,7 +208,7 @@ function NoteEditorBody({
   const { startChat, isStartingChat } = useStartChat();
 
   const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
-    useCSSVariable([
+    useThemeColor([
       '--color-tertiary',
       '--color-primary',
       '--color-foreground',
@@ -291,10 +296,9 @@ function NoteEditorBody({
         noteIds: [note.id],
       });
     } catch (error) {
-      const message =
-        error instanceof Error && error.message === 'offline_unavailable'
-          ? t.notes.editor.startChatErrorOffline
-          : t.notes.editor.startChatErrorGeneric;
+      const message = isOfflineUnavailable(error)
+        ? t.notes.editor.startChatErrorOffline
+        : t.notes.editor.startChatErrorGeneric;
       Alert.alert(t.notes.editor.startChatErrorTitle, message, [{ text: 'OK' }]);
     }
   }, [
@@ -336,7 +340,7 @@ function NoteEditorBody({
       </Stack.Toolbar>
 
       <ScrollView
-        className="flex-1"
+        style={styles.s6}
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
         keyboardDismissMode="interactive"
         refreshControl={
@@ -373,15 +377,15 @@ function NoteEditorBody({
           textAlignVertical="top"
         />
 
-        <Text className="text-overline text-tertiary mb-3.5">{dateline}</Text>
+        <Text style={styles.s7}>{dateline}</Text>
 
-        <View className="h-px bg-border mb-5" />
+        <View style={styles.s8} />
 
         {isPreviewing ? (
           draft.content.trim().length > 0 ? (
             <Markdown style={markdownStyles(mdColors)}>{draft.content}</Markdown>
           ) : (
-            <Text className="text-tertiary italic min-h-60">{t.notes.editor.previewEmpty}</Text>
+            <Text style={styles.s9}>{t.notes.editor.previewEmpty}</Text>
           )
         ) : (
           <TextField
@@ -414,24 +418,18 @@ function NoteEditorBody({
         )}
 
         {note.files.length > 0 ? (
-          <View className="mt-6 gap-2">
-            <Text className="text-xs font-medium tracking-[0.4px] text-tertiary uppercase">
-              {t.notes.editor.attachments}
-            </Text>
-            <View className="gap-1.5">
+          <View style={styles.s10}>
+            <Text style={styles.s11}>{t.notes.editor.attachments}</Text>
+            <View style={styles.s12}>
               {note.files.map((file) => (
-                <View
-                  key={file.id}
-                  className="flex-row items-center gap-2 px-3 py-2 bg-popover rounded-[10px]"
-                  style={{ borderCurve: 'continuous' }}
-                >
+                <View key={file.id} style={[styles.s13, { borderCurve: 'continuous' }]}>
                   <Image
                     source="sf:paperclip"
-                    className="w-3.5 h-3.5 shrink-0"
+                    style={styles.s14}
                     tintColor={textSecondary}
                     contentFit="contain"
                   />
-                  <Text className="flex-1 text-[13px] text-muted-foreground" numberOfLines={1}>
+                  <Text style={styles.s15} numberOfLines={1}>
                     {file.originalName}
                   </Text>
                   <Pressable
@@ -439,7 +437,7 @@ function NoteEditorBody({
                     accessibilityRole="button"
                     hitSlop={6}
                     onPress={() => void handleDetach(file.id)}
-                    className="items-center justify-center w-6 h-6 active:opacity-65"
+                    style={styles.s16}
                   >
                     <AppIcon name="xmark" size={12} tintColor={tertiary} />
                   </Pressable>
@@ -451,7 +449,7 @@ function NoteEditorBody({
       </ScrollView>
 
       {isEnhanceOpen ? (
-        <KeyboardStickyView className="bg-background pt-4 pb-12 px-4 border-t border-muted-foreground/10">
+        <KeyboardStickyView style={styles.s17}>
           <InlineEnhanceTray
             instruction={enhanceInstruction}
             onInstructionChange={setEnhanceInstruction}
@@ -531,3 +529,53 @@ function markdownStyles(mdColors: Record<string, string>) {
     hr: { backgroundColor: mdColors['border'], height: 1, marginVertical: 12 },
   };
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1 },
+  s1: { alignSelf: 'stretch', borderRadius: 2, height: 32, marginBottom: 12, width: '72%' },
+  s2: {
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    height: 12,
+    marginBottom: 14,
+    width: '36%',
+  },
+  s3: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+  s4: { gap: 14, paddingTop: 4 },
+  s5: { flex: 1 },
+  s6: { flex: 1 },
+  s7: { ...theme.typography.overline, color: theme.colors.tertiary, marginBottom: 14 },
+  s8: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+  s9: { color: theme.colors.tertiary, fontStyle: 'italic', minHeight: 240 },
+  s10: { marginTop: 24, gap: 8 },
+  s11: {
+    fontWeight: '500',
+    letterSpacing: 0.4,
+    color: theme.colors.tertiary,
+    textTransform: 'uppercase',
+  },
+  s12: { gap: 6 },
+  s13: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: theme.colors.popover,
+    borderRadius: 10,
+  },
+  s14: { width: 14, height: 14 },
+  s15: { flex: 1, fontSize: 13, color: theme.colors.mutedForeground },
+  s16: { alignItems: 'center', justifyContent: 'center', width: 24, height: 24 },
+  s17: {
+    backgroundColor: theme.colors.background,
+    paddingTop: 16,
+    paddingBottom: 48,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderColor: withAlpha(theme.colors.mutedForeground, 0.1),
+  },
+  placeholderLine: { backgroundColor: theme.colors.border, borderRadius: 2, height: 16 },
+  placeholderShort: { width: '58%' },
+  placeholderFull: { width: '100%' },
+}));

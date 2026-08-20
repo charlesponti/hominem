@@ -2,38 +2,12 @@ import { logger } from '@hominem/telemetry';
 import * as Audio from 'expo-audio';
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 
+import { createStore, type Listener } from './create-store';
+
 type PlaybackSnapshot = {
   activeMessageId: string | null;
   playing: boolean;
 };
-
-type Listener<T> = (snapshot: T) => void;
-
-function createStore<T>(initialValue: T) {
-  let snapshot = initialValue;
-  const listeners = new Set<Listener<T>>();
-
-  const emit = () => {
-    for (const listener of listeners) {
-      listener(snapshot);
-    }
-  };
-
-  return {
-    getSnapshot: () => snapshot,
-    setSnapshot: (next: T) => {
-      snapshot = next;
-      emit();
-    },
-    subscribe: (listener: Listener<T>) => {
-      listeners.add(listener);
-      listener(snapshot);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
 
 // Sibling to audio.service.ts, but for playback: a single-active-player
 // singleton (only one reply plays at a time — starting a new one stops
@@ -120,8 +94,4 @@ export function subscribePlayback(listener: Listener<PlaybackSnapshot>) {
 
 export function playAudioReply(messageId: string, url: string) {
   playback.play(messageId, url);
-}
-
-export function stopAudioReply() {
-  playback.stop();
 }

@@ -11,7 +11,7 @@ interface ComposerInboxProps {
   testID?: string;
 }
 
-export interface ComposerChatSend {
+interface ComposerChatSend {
   sendChatMessage: (input: {
     message: string;
     fileIds?: string[];

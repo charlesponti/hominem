@@ -1,7 +1,8 @@
 import type { SFSymbol } from 'expo-symbols';
 import { Pressable } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 
 interface ComposerSendButtonProps {
@@ -22,7 +23,7 @@ export function ComposerSendButton({
   onPress,
   testID,
 }: ComposerSendButtonProps) {
-  const [primary, primaryForeground] = useCSSVariable([
+  const [primary, primaryForeground] = useThemeColor([
     '--color-primary',
     '--color-primary-foreground',
   ]) as string[];
@@ -34,8 +35,8 @@ export function ComposerSendButton({
       disabled={disabled}
       onPress={onPress}
       testID={testID}
-      className="w-9 h-9 rounded-full items-center justify-center"
       style={({ pressed }) => [
+        styles.s0,
         { backgroundColor: primary },
         pressed && { opacity: 0.8 },
         disabled && { opacity: 0.4 },
@@ -45,3 +46,7 @@ export function ComposerSendButton({
     </Pressable>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+}));

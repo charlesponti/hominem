@@ -1,10 +1,11 @@
-import { nativeShadows } from '@ponti-studios/ui/native';
-import { TextField } from '@ponti-studios/ui/native';
 import type React from 'react';
 import { Pressable, View, type TextInput } from 'react-native';
 import { Text } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { nativeShadows } from '~/components/ui';
+import { TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';
@@ -26,7 +27,7 @@ export function ChatSearchModal({
   onClose,
   onChangeSearchQuery,
 }: ChatSearchModalProps) {
-  const [card, textPrimary, textSecondary] = useCSSVariable([
+  const [card, textPrimary, textSecondary] = useThemeColor([
     '--color-card',
     '--color-foreground',
     '--color-muted-foreground',
@@ -34,19 +35,12 @@ export function ChatSearchModal({
 
   return (
     <ModalOverlay visible={visible} onClose={onClose} position="top">
-      <View className="px-4 pt-7">
-        <View
-          className="bg-card border border-border rounded-3xl px-1 py-4"
-          style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
-        >
-          <View className="gap-3 px-4 py-1">
-            <View className="items-center flex-row gap-2 justify-between">
-              <Text className="text-foreground flex-1 text-headline">{t.chat.search.title}</Text>
-              <Pressable
-                hitSlop={8}
-                onPress={onClose}
-                className="items-center justify-center h-8 w-8"
-              >
+      <View style={styles.s0}>
+        <View style={[styles.s1, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
+          <View style={styles.s2}>
+            <View style={styles.s3}>
+              <Text style={styles.s4}>{t.chat.search.title}</Text>
+              <Pressable hitSlop={8} onPress={onClose} style={styles.s5}>
                 <AppIcon name="xmark" size={16} tintColor={textSecondary} />
               </Pressable>
             </View>
@@ -70,7 +64,7 @@ export function ChatSearchModal({
               onChangeText={onChangeSearchQuery}
             />
 
-            <Text className="text-muted-foreground text-caption1">
+            <Text style={styles.s6}>
               {searchQuery.trim().length > 0
                 ? t.chat.search.results(resultCount)
                 : t.chat.search.emptyCaption}
@@ -81,3 +75,20 @@ export function ChatSearchModal({
     </ModalOverlay>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { paddingHorizontal: 16, paddingTop: 28 },
+  s1: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 24,
+    paddingHorizontal: 4,
+    paddingVertical: 16,
+  },
+  s2: { gap: 12, paddingHorizontal: 16, paddingVertical: 4 },
+  s3: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
+  s4: { ...theme.typography.headline, color: theme.colors.foreground, flex: 1 },
+  s5: { alignItems: 'center', justifyContent: 'center', height: 32, width: 32 },
+  s6: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+}));

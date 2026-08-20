@@ -1,10 +1,11 @@
-import { TextField } from '@ponti-studios/ui/native';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { useAuth } from '~/services/auth/auth-provider';
 import { HOME_ROUTE } from '~/services/navigation/routes';
@@ -12,7 +13,7 @@ import t from '~/translations';
 
 const Onboarding = () => {
   const { isSignedIn, currentUser, updateProfile, signOut } = useAuth();
-  const [destructive, textPrimary, borderDefault] = useCSSVariable([
+  const [destructive, textPrimary, borderDefault] = useThemeColor([
     '--color-destructive',
     '--color-foreground',
     '--color-border',
@@ -81,17 +82,13 @@ const Onboarding = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full max-w-[480px] self-center gap-6">
-          <View className="gap-2.5">
-            <Text className="text-[28px] font-bold leading-[34px] text-foreground">
-              {t.onboarding.title}
-            </Text>
-            <Text className="text-base leading-[22px] text-muted-foreground">
-              {t.onboarding.subtitle}
-            </Text>
+        <View style={styles.s0}>
+          <View style={styles.s1}>
+            <Text style={styles.s2}>{t.onboarding.title}</Text>
+            <Text style={styles.s3}>{t.onboarding.subtitle}</Text>
           </View>
 
-          <View className="gap-3">
+          <View style={styles.s4}>
             <TextField
               value={name}
               placeholder={t.onboarding.namePlaceholder}
@@ -101,18 +98,20 @@ const Onboarding = () => {
               returnKeyType="done"
               cursorColor={textPrimary}
               selectionColor={textPrimary}
-              className="bg-card text-foreground"
               style={[
-                {
-                  minHeight: 48,
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  fontSize: 16,
-                  borderColor: hasError ? destructive : borderDefault,
-                  opacity: isSubmitting ? 0.6 : 1,
-                },
+                styles.s5,
+                [
+                  {
+                    minHeight: 48,
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    fontSize: 16,
+                    borderColor: hasError ? destructive : borderDefault,
+                    opacity: isSubmitting ? 0.6 : 1,
+                  },
+                ],
               ]}
               onChangeText={(text) => {
                 setName(text);
@@ -121,11 +120,7 @@ const Onboarding = () => {
               onSubmitEditing={() => void onButtonPress()}
             />
 
-            {hasError ? (
-              <Text className="text-[13px] leading-[18px] text-destructive">
-                {t.onboarding.nameError}
-              </Text>
-            ) : null}
+            {hasError ? <Text style={styles.s6}>{t.onboarding.nameError}</Text> : null}
 
             <Button
               label={t.onboarding.start}
@@ -156,3 +151,13 @@ const Onboarding = () => {
 };
 
 export default Onboarding;
+
+const styles = makeStyles((theme) => ({
+  s0: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: 24 },
+  s1: { gap: 10 },
+  s2: { fontSize: 28, fontWeight: '700', lineHeight: 34, color: theme.colors.foreground },
+  s3: { lineHeight: 22, color: theme.colors.mutedForeground },
+  s4: { gap: 12 },
+  s5: { backgroundColor: theme.colors.card, color: theme.colors.foreground },
+  s6: { fontSize: 13, lineHeight: 18, color: theme.colors.destructive },
+}));

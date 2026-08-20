@@ -1,4 +1,3 @@
-import { ListRow } from '@ponti-studios/ui/native';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { Alert, Text, View } from 'react-native';
@@ -8,8 +7,10 @@ import Reanimated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { useChatArchive } from '~/services/chat/use-chat-archive';
@@ -39,9 +40,9 @@ export const InboxStreamItem = memo(
     const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
     const timestamp = formatInboxTimestamp(item.updatedAt);
     const isChat = item.kind === 'chat';
-    const primaryColor = useCSSVariable('--color-primary') as string;
-    const chart2Color = useCSSVariable('--color-chart-2') as string;
-    const tertiaryColor = useCSSVariable('--color-tertiary') as string;
+    const primaryColor = useThemeColor('--color-primary') as string;
+    const chart2Color = useThemeColor('--color-chart-2') as string;
+    const tertiaryColor = useThemeColor('--color-tertiary') as string;
     const accent = isChat ? primaryColor : chart2Color;
     const shouldAnimateIn = animateOnMount || isNew;
     const entranceOffset = reducedMotion || !shouldAnimateIn ? 0 : animateOnMount ? 8 : -8;
@@ -112,10 +113,7 @@ export const InboxStreamItem = memo(
           accessibilityLabel={primaryText}
           actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
           leading={
-            <View
-              className="items-center justify-center rounded-md"
-              style={{ backgroundColor: `${accent}${BADGE_TINT_ALPHA}`, height: 26, width: 26 }}
-            >
+            <View style={[styles.s0, { backgroundColor: `${accent}${BADGE_TINT_ALPHA}` }]}>
               <AppIcon
                 name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
                 size={14}
@@ -128,13 +126,8 @@ export const InboxStreamItem = memo(
           subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
           title={primaryText}
           trailing={
-            <View className="items-end gap-1">
-              <Text
-                className="text-caption2 text-tertiary"
-                style={{ fontVariant: ['tabular-nums'] }}
-              >
-                {timestamp}
-              </Text>
+            <View style={styles.s1}>
+              <Text style={[styles.s2, { fontVariant: ['tabular-nums'] }]}>{timestamp}</Text>
               <AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />
             </View>
           }
@@ -150,3 +143,9 @@ function cleanText(value: string | null): string | null {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : null;
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
+  s1: { alignItems: 'flex-end', gap: 4 },
+  s2: { ...theme.typography.caption2, color: theme.colors.tertiary },
+}));

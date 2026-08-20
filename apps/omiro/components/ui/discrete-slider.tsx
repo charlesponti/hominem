@@ -7,7 +7,9 @@ import Reanimated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 const THUMB_SIZE = 24;
 const TRACK_HEIGHT = 4;
@@ -33,7 +35,7 @@ export function DiscreteSlider({
   onValueChange,
   accessibilityLabel,
 }: DiscreteSliderProps) {
-  const [borderDefault, textPrimary] = useCSSVariable(['--color-border', '--color-foreground']) as [
+  const [borderDefault, textPrimary] = useThemeColor(['--color-border', '--color-foreground']) as [
     string,
     string,
   ];
@@ -95,7 +97,7 @@ export function DiscreteSlider({
 
   return (
     <View
-      className="h-6 justify-center"
+      style={styles.s0}
       onLayout={handleLayout}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="adjustable"
@@ -103,13 +105,12 @@ export function DiscreteSlider({
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      <View
-        className="absolute left-3 right-3 h-1 rounded-full"
-        style={{ backgroundColor: borderDefault }}
-      />
+      <View style={[styles.s1, { backgroundColor: borderDefault }]} />
       <Reanimated.View
-        className="absolute left-3 h-1 rounded-full"
-        style={[{ backgroundColor: textPrimary, top: (THUMB_SIZE - TRACK_HEIGHT) / 2 }, fillStyle]}
+        style={[
+          styles.s2,
+          [{ backgroundColor: textPrimary, top: (THUMB_SIZE - TRACK_HEIGHT) / 2 }, fillStyle],
+        ]}
       />
       {Array.from({ length: steps }, (_, index) => (
         <Pressable
@@ -133,11 +134,15 @@ export function DiscreteSlider({
         />
       ))}
       <GestureDetector gesture={pan}>
-        <Reanimated.View
-          className="h-6 w-6 rounded-full"
-          style={[{ backgroundColor: textPrimary }, thumbStyle]}
-        />
+        <Reanimated.View style={[styles.s3, [{ backgroundColor: textPrimary }, thumbStyle]]} />
       </GestureDetector>
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { height: 24, justifyContent: 'center' },
+  s1: { position: 'absolute', left: 12, right: 12, height: 4, borderRadius: 999 },
+  s2: { position: 'absolute', left: 12, height: 4, borderRadius: 999 },
+  s3: { height: 24, width: 24, borderRadius: 999 },
+}));

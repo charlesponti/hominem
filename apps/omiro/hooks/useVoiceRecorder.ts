@@ -30,6 +30,13 @@ interface UseVoiceRecorderOptions<TError> {
   onError?: (error: TError) => void;
 }
 
+function discardIfOwned(ownerId: string, reason: VoiceDiscardReason) {
+  const snapshot = getRecordingSnapshot();
+  if (snapshot.ownerId === ownerId && isRecorderActive(snapshot.state)) {
+    void discardRecording(ownerId, reason);
+  }
+}
+
 export function useVoiceRecorder<TError>({
   onRecordingStopped,
   createPermissionDeniedError,
@@ -161,20 +168,14 @@ export function useVoiceRecorder<TError>({
   // user intent to submit.
   useEffect(() => {
     return () => {
-      const snapshot = getRecordingSnapshot();
-      if (snapshot.ownerId === ownerId && isRecorderActive(snapshot.state)) {
-        void discardRecording(ownerId, 'unmounted');
-      }
+      discardIfOwned(ownerId, 'unmounted');
     };
   }, [ownerId]);
 
   useFocusEffect(
     useCallback(() => {
       return () => {
-        const snapshot = getRecordingSnapshot();
-        if (snapshot.ownerId === ownerId && isRecorderActive(snapshot.state)) {
-          void discardRecording(ownerId, 'navigated-away');
-        }
+        discardIfOwned(ownerId, 'navigated-away');
       };
     }, [ownerId]),
   );

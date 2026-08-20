@@ -12,9 +12,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
 import { TextField } from '~/components/ui/text-field';
@@ -36,7 +37,7 @@ function AuthScreen() {
   const [buttonWidth, setButtonWidth] = useState(0);
   const normalizedEmail = normalizeEmail(email);
 
-  const [textPrimary, mutedForeground, primaryColor] = useCSSVariable([
+  const [textPrimary, mutedForeground, primaryColor] = useThemeColor([
     '--color-foreground',
     '--color-muted-foreground',
     '--color-primary',
@@ -150,7 +151,7 @@ function AuthScreen() {
 
   return (
     <>
-      <KeyboardAvoidingView className="flex-1 bg-background" behavior="padding">
+      <KeyboardAvoidingView style={styles.s0} behavior="padding">
         <ScrollView
           testID="auth-screen"
           contentInsetAdjustmentBehavior="automatic"
@@ -163,21 +164,17 @@ function AuthScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="w-full items-center">
-            <View className="w-full max-w-105 gap-4.5">
+          <View style={styles.s1}>
+            <View style={styles.s2}>
               <IconChip icon="envelope" />
 
-              <View className="gap-2">
-                <Text className="text-title1 text-foreground">{t.auth.emailEntry.title}</Text>
-                {isProbing && (
-                  <Text className="text-subhead text-muted-foreground">
-                    {t.auth.restoringSignIn}
-                  </Text>
-                )}
+              <View style={styles.s3}>
+                <Text style={styles.s4}>{t.auth.emailEntry.title}</Text>
+                {isProbing && <Text style={styles.s5}>{t.auth.restoringSignIn}</Text>}
               </View>
 
               {!isProbing ? (
-                <View className="gap-3">
+                <View style={styles.s6}>
                   <Animated.View style={shakeStyle}>
                     <TextField
                       testID="auth-email-input"
@@ -216,7 +213,7 @@ function AuthScreen() {
                     <Text
                       testID="auth-email-message"
                       accessibilityLiveRegion="polite"
-                      className="text-footnote text-destructive"
+                      style={styles.s7}
                     >
                       {displayError}
                     </Text>
@@ -224,8 +221,7 @@ function AuthScreen() {
 
                   {/* Animated border + button container */}
                   <View
-                    className="relative w-full items-center justify-center"
-                    style={{ height: BUTTON_HEIGHT }}
+                    style={[styles.s8, { height: BUTTON_HEIGHT }]}
                     onLayout={(e) => setButtonWidth(e.nativeEvent.layout.width)}
                   >
                     {/* Clockwise-drawing border (stages 0-4) */}
@@ -253,13 +249,9 @@ function AuthScreen() {
 
                     {/* Helper text, centered inside the animating border (stages 0-4) */}
                     {progress.stage < 5 && !displayError && (
-                      <View className="flex-row items-center justify-center gap-1.5 px-4">
-                        {progress.stage > 0 ? (
-                          <Text className="text-footnote text-muted-foreground">↑</Text>
-                        ) : null}
-                        <Text className="text-footnote text-muted-foreground text-center">
-                          {progress.message}
-                        </Text>
+                      <View style={styles.s9}>
+                        {progress.stage > 0 ? <Text style={styles.s10}>↑</Text> : null}
+                        <Text style={styles.s11}>{progress.message}</Text>
                       </View>
                     )}
 
@@ -293,3 +285,24 @@ const AuthWithErrorBoundary = () => (
 );
 
 export default AuthWithErrorBoundary;
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, backgroundColor: theme.colors.background },
+  s1: { width: '100%', alignItems: 'center' },
+  s2: { width: '100%', maxWidth: 420, gap: 18 },
+  s3: { gap: 8 },
+  s4: { ...theme.typography.title1, color: theme.colors.foreground },
+  s5: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
+  s6: { gap: 12 },
+  s7: { ...theme.typography.footnote, color: theme.colors.destructive },
+  s8: { position: 'relative', width: '100%', alignItems: 'center', justifyContent: 'center' },
+  s9: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+  },
+  s10: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  s11: { ...theme.typography.footnote, color: theme.colors.mutedForeground, textAlign: 'center' },
+}));

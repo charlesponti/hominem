@@ -2,7 +2,7 @@ import type { ArtifactType } from '@hominem/rpc/types';
 
 import { ClassificationReview } from './classification-review';
 
-export interface ChatPendingReview {
+interface ChatPendingReview {
   proposedType: ArtifactType;
   proposedTitle: string;
   proposedChanges: string[];

@@ -49,7 +49,7 @@ interface SerializedUploadedFile extends Omit<UploadedFile, 'uploadedAt'> {
   uploadedAt: string;
 }
 
-export interface ChatComposerAttachment {
+interface ChatComposerAttachment {
   id: string;
   name: string;
   type: string;

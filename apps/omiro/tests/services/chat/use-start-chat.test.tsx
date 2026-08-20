@@ -4,218 +4,69 @@ import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { MessageOutput } from '~/services/chat/chatMessages';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { mockMmkvModule } from '../../mocks/mmkv';
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
 const mockRandomUUID = vi.fn();
+const mockPush = vi.fn();
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({});
-const mockNetInfoFetch = vi.fn().mockResolvedValue({ isConnected: true });
 const mockStreamSSE = vi.fn();
-const mockRouterPush = vi.fn();
 
 vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
-
 vi.mock('expo-crypto', () => ({ randomUUID: mockRandomUUID }));
-
-vi.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockRouterPush }),
-}));
-
+vi.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 vi.mock('~/services/auth/auth-provider', () => ({
   useAuth: () => ({ getAuthHeaders: mockGetAuthHeaders }),
 }));
-
 vi.mock('@react-native-community/netinfo', () => ({
-  default: { fetch: mockNetInfoFetch },
+  default: { fetch: vi.fn().mockResolvedValue({ isConnected: true }) },
 }));
-
 vi.mock('~/services/chat/stream-sse', () => ({ streamSSE: mockStreamSSE }));
-
+vi.mock('~/services/chat/use-chat-messages', () => ({
+  toMessageOutput: (message: { id: string; role: 'user'; content: string }) => ({
+    id: message.id,
+    role: message.role,
+    message: message.content,
+  }),
+}));
+vi.mock('~/services/inbox/inbox-refresh', () => ({ invalidateInboxQueries: vi.fn() }));
 vi.mock('~/constants', () => ({ API_BASE_URL: 'http://localhost:4040' }));
 
 const { useStartChat } = await import('~/services/chat/use-start-chat');
 
-interface PendingStreamCall {
-  onEvent: (event: ChatsStartStreamEvent) => void;
-  onDone?: () => void;
-  resolve: () => void;
-  reject: (error: unknown) => void;
-}
-
-let pendingStreamCalls: PendingStreamCall[] = [];
-
-function nextStreamCall(): PendingStreamCall {
-  const call = pendingStreamCalls.shift();
-  if (!call) throw new Error('Expected a pending streamSSE call');
-  return call;
-}
-
-function fakeChat(id: string) {
-  return {
-    id,
-    title: 'New conversation',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    archivedAt: null,
-  };
-}
-
 describe('useStartChat', () => {
   beforeEach(() => {
-    let uuidCount = 0;
-    mockRandomUUID.mockImplementation(() => `uuid-${++uuidCount}`);
+    mockRandomUUID.mockReturnValue('generation-1');
     mockStreamSSE.mockImplementation(
-      ({ onEvent, onDone }: { onEvent: (e: ChatsStartStreamEvent) => void; onDone?: () => void }) =>
-        new Promise<void>((resolve, reject) => {
-          pendingStreamCalls.push({ onEvent, onDone, resolve, reject });
-        }),
+      ({ onEvent }: { onEvent: (event: ChatsStartStreamEvent) => void }) => {
+        onEvent({
+          type: 'accepted',
+          generationId: 'generation-1',
+          chatId: 'chat-1',
+          chat: { id: 'chat-1' } as never,
+          userMessage: { id: 'user-1', role: 'user', content: 'Hello' } as never,
+        });
+        return Promise.resolve();
+      },
     );
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-    pendingStreamCalls = [];
-  });
+  afterEach(() => vi.clearAllMocks());
 
-  it('throws before streaming when the device is offline', async () => {
-    mockNetInfoFetch.mockResolvedValueOnce({ isConnected: false });
-    const { result } = renderHookWithQueryClient(() => useStartChat());
-
-    await act(async () => {
-      await expect(result.current.startChat({ message: 'Hello there' } as never)).rejects.toThrow(
-        'offline_unavailable',
-      );
-    });
-
-    expect(mockStreamSSE).not.toHaveBeenCalled();
-  });
-
-  it('seeds the chat cache, navigates, and invokes onReady when the stream becomes ready', async () => {
+  it('navigates only after the durable user message is accepted', async () => {
+    const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
     const onReady = vi.fn();
-    const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
-
-    let startPromise: Promise<void> | undefined;
-    act(() => {
-      startPromise = result.current.startChat({
-        message: 'Hello there',
-        onReady,
-      } as never);
-    });
-
-    await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledTimes(1));
-    const call = nextStreamCall();
-
-    act(() => {
-      call.onEvent({ type: 'ready', chatId: 'chat-1', chat: fakeChat('chat-1') } as never);
-    });
-
-    expect(onReady).toHaveBeenCalledTimes(1);
-    expect(mockRouterPush).toHaveBeenCalledWith('/(protected)/inbox/chat/chat-1');
-
-    const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages('chat-1'));
-    expect(messages).toEqual([
-      expect.objectContaining({ role: 'user', message: 'Hello there' }),
-      expect.objectContaining({ role: 'assistant', message: '', isStreaming: true }),
-    ]);
-
-    act(() => {
-      call.onEvent({ type: 'chunk', chunk: 'Hi!' } as never);
-      call.onDone?.();
-      call.resolve();
-    });
 
     await act(async () => {
-      await startPromise;
+      await result.current.startChat({ title: 'Test', message: 'Hello', onReady });
     });
 
-    const finalMessages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages('chat-1'));
-    expect(finalMessages).toEqual([
-      expect.objectContaining({ role: 'user', message: 'Hello there' }),
-      expect.objectContaining({ role: 'assistant', message: 'Hi!', isStreaming: false }),
+    await waitFor(() => expect(onReady).toHaveBeenCalledOnce());
+    expect(mockPush).toHaveBeenCalledWith('/(protected)/inbox/chat/chat-1');
+    expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toEqual([
+      expect.objectContaining({ id: 'user-1', message: 'Hello' }),
     ]);
-  });
-
-  it('ignores chunk events that arrive before the ready event', async () => {
-    const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
-
-    act(() => {
-      void result.current.startChat({ message: 'Hello there' } as never);
-    });
-
-    await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledTimes(1));
-    const call = nextStreamCall();
-
-    act(() => {
-      call.onEvent({ type: 'chunk', chunk: 'too early' } as never);
-    });
-
-    expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toBeUndefined();
-  });
-
-  it('marks the assistant message failed and rethrows when the stream errors after ready', async () => {
-    const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
-
-    let startPromise: Promise<void> | undefined;
-    let caughtError: unknown;
-    act(() => {
-      startPromise = result.current
-        .startChat({ message: 'Hello there' } as never)
-        .catch((error) => {
-          caughtError = error;
-        });
-    });
-
-    await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledTimes(1));
-    const call = nextStreamCall();
-
-    act(() => {
-      call.onEvent({ type: 'ready', chatId: 'chat-1', chat: fakeChat('chat-1') } as never);
-    });
-
-    act(() => {
-      call.reject(new Error('stream dropped'));
-    });
-
-    await act(async () => {
-      await startPromise;
-    });
-
-    expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError as Error).message).toBe('stream dropped');
-
-    const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages('chat-1'));
-    expect(messages?.at(-1)).toEqual(
-      expect.objectContaining({
-        role: 'assistant',
-        isStreaming: false,
-        message: expect.stringContaining('stream dropped'),
-      }),
-    );
-  });
-
-  it('rethrows the error without touching the cache when the stream fails before ready', async () => {
-    const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
-
-    let startPromise: Promise<void> | undefined;
-    act(() => {
-      startPromise = result.current
-        .startChat({ message: 'Hello there' } as never)
-        .catch((error) => {
-          throw error;
-        });
-    });
-
-    await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledTimes(1));
-    const call = nextStreamCall();
-
-    act(() => {
-      call.reject(new Error('never became ready'));
-    });
-
-    await expect(startPromise).rejects.toThrow('never became ready');
-    expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toBeUndefined();
   });
 });

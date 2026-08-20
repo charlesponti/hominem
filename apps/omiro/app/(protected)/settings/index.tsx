@@ -1,11 +1,12 @@
-import { TextField } from '@ponti-studios/ui/native';
 import { useRouter } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import React, { useEffect, useReducer, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
@@ -66,7 +67,7 @@ function SettingsRow({
   destructive?: boolean;
   testID?: string;
 }) {
-  const [destructiveColor, textPrimaryColor, tertiaryColor] = useCSSVariable([
+  const [destructiveColor, textPrimaryColor, tertiaryColor] = useThemeColor([
     '--color-destructive',
     '--color-foreground',
     '--color-tertiary',
@@ -75,16 +76,12 @@ function SettingsRow({
   const labelColor = destructive ? destructiveColor : textPrimaryColor;
 
   const content = (
-    <View className="flex-row items-center justify-between gap-3" style={{ minHeight: 44 }}>
-      <View className="flex-1 flex-row items-center gap-2.5">
+    <View style={[styles.s0, { minHeight: 44 }]}>
+      <View style={styles.s1}>
         <AppIcon name={icon} size={18} tintColor={destructive ? destructiveColor : tertiaryColor} />
-        <View className="flex-1 gap-0.5">
-          <Text className="text-base" style={{ color: labelColor }}>
-            {label}
-          </Text>
-          {description ? (
-            <Text className="text-[13px] text-muted-foreground">{description}</Text>
-          ) : null}
+        <View style={styles.s2}>
+          <Text style={[styles.s3, { color: labelColor }]}>{label}</Text>
+          {description ? <Text style={styles.s4}>{description}</Text> : null}
         </View>
       </View>
       {accessory}
@@ -93,7 +90,7 @@ function SettingsRow({
 
   if (!onPress) {
     return (
-      <View testID={testID} className="px-4">
+      <View testID={testID} style={styles.s5}>
         {content}
       </View>
     );
@@ -103,8 +100,7 @@ function SettingsRow({
     <Pressable
       testID={testID}
       onPress={onPress}
-      className="px-4"
-      style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+      style={({ pressed }) => [styles.s6, pressed ? { opacity: 0.6 } : undefined]}
     >
       {content}
     </Pressable>
@@ -112,7 +108,7 @@ function SettingsRow({
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <Text className="text-[13px] font-semibold text-muted-foreground px-4">{children}</Text>;
+  return <Text style={styles.s7}>{children}</Text>;
 }
 
 function Settings() {
@@ -129,7 +125,7 @@ function Settings() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const [popoverColor, textPrimaryColor, tertiaryColor, borderDefaultColor, destructiveColor] =
-    useCSSVariable([
+    useThemeColor([
       '--color-popover',
       '--color-foreground',
       '--color-tertiary',
@@ -213,16 +209,11 @@ function Settings() {
       showsVerticalScrollIndicator={false}
     >
       {/* Identity */}
-      <View className="flex-row items-center gap-3 px-4">
-        <View
-          className="items-center justify-center rounded-xl h-[52px] w-[52px]"
-          style={{ backgroundColor: popoverColor }}
-        >
-          <Text className="text-[19px] font-bold text-foreground">
-            {getInitials(state.name, currentUser?.email ?? '?')}
-          </Text>
+      <View style={styles.s8}>
+        <View style={[styles.s9, { backgroundColor: popoverColor }]}>
+          <Text style={styles.s10}>{getInitials(state.name, currentUser?.email ?? '?')}</Text>
         </View>
-        <View className="flex-1 gap-0.5">
+        <View style={styles.s11}>
           <TextField
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
@@ -230,8 +221,7 @@ function Settings() {
             returnKeyType="done"
             selectionColor={textPrimaryColor}
             cursorColor={textPrimaryColor}
-            className="text-[20px] font-bold tracking-[-0.2px] p-0"
-            style={{ borderWidth: 0, color: textPrimaryColor }}
+            style={[styles.s12, { borderWidth: 0, color: textPrimaryColor }]}
             onChangeText={(text) => {
               dispatch({ type: 'set-name', name: text });
               setSaveError(null);
@@ -243,14 +233,12 @@ function Settings() {
               }
             }}
           />
-          <Text className="text-[13px] text-muted-foreground">
-            {currentUser?.email ?? t.settings.emailMissing}
-          </Text>
+          <Text style={styles.s13}>{currentUser?.email ?? t.settings.emailMissing}</Text>
         </View>
       </View>
 
       {nameChanged ? (
-        <View className="items-start px-4">
+        <View style={styles.s14}>
           <Button
             label={saveStatus === 'saving' ? t.settings.name.saving : t.settings.name.save}
             onPress={() => void onSavePress()}
@@ -260,42 +248,33 @@ function Settings() {
           />
         </View>
       ) : null}
-      {saveStatus === 'saved' ? (
-        <Text className="text-[13px] text-muted-foreground px-4">{t.settings.name.saved}</Text>
-      ) : null}
-      {saveError ? <Text className="text-[13px] text-destructive px-4">{saveError}</Text> : null}
+      {saveStatus === 'saved' ? <Text style={styles.s15}>{t.settings.name.saved}</Text> : null}
+      {saveError ? <Text style={styles.s16}>{saveError}</Text> : null}
 
       {/* Usage */}
       {monthlyUsage ? (
-        <View testID="settings-usage-section" className="gap-2">
+        <View testID="settings-usage-section" style={styles.s17}>
           <SectionLabel>AI usage this month</SectionLabel>
-          <View className="flex-row items-baseline gap-2 px-4">
-            <Text
-              className="text-[28px] font-bold tracking-[-0.4px] text-foreground"
-              style={{ fontVariant: ['tabular-nums'] }}
-            >
+          <View style={styles.s18}>
+            <Text style={[styles.s19, { fontVariant: ['tabular-nums'] }]}>
               {formatUsd(monthlyUsage.totalCostUsd)}
             </Text>
-            <Text
-              className="text-sm text-muted-foreground"
-              style={{ fontVariant: ['tabular-nums'] }}
-            >
+            <Text style={[styles.s20, { fontVariant: ['tabular-nums'] }]}>
               of {formatUsd(monthlyUsage.limitUsd)} · {usagePercent.toFixed(0)}%
             </Text>
           </View>
-          <View
-            className="rounded h-1 mx-1 overflow-hidden"
-            style={{ backgroundColor: borderDefaultColor }}
-          >
+          <View style={[styles.s21, { backgroundColor: borderDefaultColor }]}>
             <View
-              className="rounded h-1"
-              style={{
-                width: `${usagePercent}%`,
-                backgroundColor: monthlyUsage.isOverLimit ? destructiveColor : textPrimaryColor,
-              }}
+              style={[
+                styles.s22,
+                {
+                  width: `${usagePercent}%`,
+                  backgroundColor: monthlyUsage.isOverLimit ? destructiveColor : textPrimaryColor,
+                },
+              ]}
             />
           </View>
-          <Text className="text-xs text-tertiary px-4">
+          <Text style={styles.s23}>
             {monthlyUsage.isOverLimit
               ? "You've reached this month's free AI usage limit. It resets at the start of next month."
               : 'Resets at the start of next month.'}
@@ -304,7 +283,7 @@ function Settings() {
       ) : null}
 
       {/* Privacy */}
-      <View className="gap-2">
+      <View style={styles.s24}>
         <SectionLabel>{t.settings.sections.privacy}</SectionLabel>
         <SettingsRow
           icon="faceid"
@@ -335,7 +314,7 @@ function Settings() {
       </View>
 
       {/* Chats */}
-      <View className="gap-2">
+      <View style={styles.s25}>
         <SectionLabel>{t.settings.sections.chats}</SectionLabel>
         <SettingsRow
           icon="archivebox"
@@ -346,7 +325,7 @@ function Settings() {
       </View>
 
       {__DEV__ ? (
-        <View className="gap-2">
+        <View style={styles.s26}>
           <SectionLabel>Development</SectionLabel>
           <SettingsRow
             icon="rectangle.3.group"
@@ -359,7 +338,7 @@ function Settings() {
       ) : null}
 
       {/* Danger zone */}
-      <View className="gap-2">
+      <View style={styles.s27}>
         <SettingsRow
           icon="rectangle.portrait.and.arrow.right"
           label={t.settings.signOut.label}
@@ -377,3 +356,39 @@ function Settings() {
 }
 
 export default Settings;
+
+const styles = makeStyles((theme) => ({
+  s0: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  s1: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  s2: { flex: 1, gap: 2 },
+  s3: {},
+  s4: { fontSize: 13, color: theme.colors.mutedForeground },
+  s5: { paddingHorizontal: 16 },
+  s6: { paddingHorizontal: 16 },
+  s7: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.mutedForeground,
+    paddingHorizontal: 16,
+  },
+  s8: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+  s9: { alignItems: 'center', justifyContent: 'center', borderRadius: 12, height: 52, width: 52 },
+  s10: { fontSize: 19, fontWeight: '700', color: theme.colors.foreground },
+  s11: { flex: 1, gap: 2 },
+  s12: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, padding: 0 },
+  s13: { fontSize: 13, color: theme.colors.mutedForeground },
+  s14: { alignItems: 'flex-start', paddingHorizontal: 16 },
+  s15: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
+  s16: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
+  s17: { gap: 8 },
+  s18: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
+  s19: { fontSize: 28, fontWeight: '700', letterSpacing: -0.4, color: theme.colors.foreground },
+  s20: { color: theme.colors.mutedForeground },
+  s21: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
+  s22: { borderRadius: 4, height: 4 },
+  s23: { color: theme.colors.tertiary, paddingHorizontal: 16 },
+  s24: { gap: 8 },
+  s25: { gap: 8 },
+  s26: { gap: 8 },
+  s27: { gap: 8 },
+}));

@@ -3,6 +3,7 @@ import type { Task, TaskDetailOutput, TaskListItem } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { taskKeys } from './query-keys';
+import { mapTaskDetail, mapTaskList } from './task-cache';
 
 interface UseTaskCompleteOptions {
   parentId?: string;
@@ -37,30 +38,18 @@ export function useTaskComplete({ parentId }: UseTaskCompleteOptions = {}) {
         ? queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail(parentId))
         : undefined;
 
-      queryClient.setQueryData<TaskListItem[] | undefined>(
-        taskKeys.all,
-        (current: TaskListItem[] | undefined) =>
-          current?.map((task) => (task.id === taskId ? applyCompleted(task, completed) : task)),
+      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
+        mapTaskList(current, taskId, (task) => applyCompleted(task, completed)),
       );
 
       if (parentId) {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(parentId),
-          (current: TaskDetailOutput | undefined) =>
-            current
-              ? {
-                  ...current,
-                  children: current.children.map((child) =>
-                    child.id === taskId ? applyCompleted(child, completed) : child,
-                  ),
-                }
-              : current,
+          (current) => mapTaskDetail(current, taskId, (task) => applyCompleted(task, completed)),
         );
       } else {
-        queryClient.setQueryData<TaskDetailOutput | undefined>(
-          taskKeys.detail(taskId),
-          (current: TaskDetailOutput | undefined) =>
-            current ? { ...current, task: applyCompleted(current.task, completed) } : current,
+        queryClient.setQueryData<TaskDetailOutput | undefined>(taskKeys.detail(taskId), (current) =>
+          mapTaskDetail(current, taskId, (task) => applyCompleted(task, completed)),
         );
       }
 
@@ -75,30 +64,21 @@ export function useTaskComplete({ parentId }: UseTaskCompleteOptions = {}) {
       }
     },
     onSuccess: (updatedTask) => {
-      queryClient.setQueryData<TaskListItem[] | undefined>(
-        taskKeys.all,
-        (current: TaskListItem[] | undefined) =>
-          current?.map((task) => (task.id === updatedTask.id ? { ...task, ...updatedTask } : task)),
+      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
+        mapTaskList(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
       );
 
       if (parentId) {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(parentId),
-          (current: TaskDetailOutput | undefined) =>
-            current
-              ? {
-                  ...current,
-                  children: current.children.map((child) =>
-                    child.id === updatedTask.id ? { ...child, ...updatedTask } : child,
-                  ),
-                }
-              : current,
+          (current) =>
+            mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
         );
       } else {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(updatedTask.id),
-          (current: TaskDetailOutput | undefined) =>
-            current ? { ...current, task: { ...current.task, ...updatedTask } } : current,
+          (current) =>
+            mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
         );
       }
     },

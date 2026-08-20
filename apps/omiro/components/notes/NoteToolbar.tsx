@@ -1,9 +1,10 @@
-import { IconButton, nativeShadows } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 import React from 'react';
 import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { IconButton, nativeShadows } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -29,7 +30,7 @@ function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButton
 }
 
 function ToolbarDivider() {
-  return <View className="bg-border h-5 mx-4 w-px" />;
+  return <View style={styles.s0} />;
 }
 
 function ToolbarButtons({ onAction }: NoteToolbarProps) {
@@ -40,9 +41,9 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
         contentContainerStyle={{ alignItems: 'center', flexDirection: 'row', gap: 8 }}
-        className="flex-1"
+        style={styles.s1}
       >
-        <View className="items-center flex-row gap-2">
+        <View style={styles.s2}>
           <ToolbarButton
             icon="bold"
             label={t.notes.toolbar.bold}
@@ -67,7 +68,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View className="items-center flex-row gap-2">
+        <View style={styles.s3}>
           <ToolbarButton
             icon="textformat.size.larger"
             label={t.notes.toolbar.heading}
@@ -82,7 +83,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View className="items-center flex-row gap-2">
+        <View style={styles.s4}>
           <ToolbarButton
             icon="checklist"
             label={t.notes.toolbar.checklist}
@@ -102,7 +103,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View className="items-center flex-row gap-2">
+        <View style={styles.s5}>
           <ToolbarButton
             icon="increase.indent"
             label={t.notes.toolbar.indent}
@@ -130,14 +131,37 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 export function NoteToolbar(props: NoteToolbarProps) {
   return (
     <InputAccessoryView nativeID={NOTE_TOOLBAR_ID} backgroundColor="transparent">
-      <View
-        className="bg-card border border-border rounded-lg self-stretch flex-row h-12 mx-4"
-        style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
-      >
-        <View className="items-center flex-row flex-1 px-0 py-0">
+      <View style={[styles.s6, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
+        <View style={styles.s7}>
           <ToolbarButtons {...props} />
         </View>
       </View>
     </InputAccessoryView>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
+  s1: { flex: 1 },
+  s2: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  s3: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  s4: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  s5: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  s6: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 8,
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    height: 48,
+    marginHorizontal: 16,
+  },
+  s7: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flex: 1,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+}));

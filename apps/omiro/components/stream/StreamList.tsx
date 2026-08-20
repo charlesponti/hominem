@@ -1,7 +1,6 @@
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import { type ReactElement, useEffect, useRef } from 'react';
 import {
-  Platform,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type RefreshControlProps,
@@ -58,10 +57,9 @@ export function StreamList<T>({
     <FlashList
       ref={listRef}
       contentContainerStyle={{
-        paddingBottom: Platform.OS === 'android' ? contentPaddingBottom : undefined,
         paddingTop: contentPaddingTop,
       }}
-      contentInset={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
+      contentInset={{ bottom: contentPaddingBottom }}
       contentInsetAdjustmentBehavior="automatic"
       data={data}
       keyboardDismissMode="on-drag"
@@ -75,7 +73,7 @@ export function StreamList<T>({
       refreshControl={refreshControl}
       renderItem={renderItem}
       scrollEventThrottle={16}
-      scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: contentPaddingBottom } : undefined}
+      scrollIndicatorInsets={{ bottom: contentPaddingBottom }}
       showsVerticalScrollIndicator={false}
       testID={testID}
     />

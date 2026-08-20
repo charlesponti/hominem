@@ -29,6 +29,7 @@ export function getTrustedOrigins() {
     env.WEB_URL,
     env.LABS_URL,
     ...(env.LABS_APEX_URL ? [env.LABS_APEX_URL] : []),
+    env.WHAT_URL,
     'hakumi://',
     'hakumi-dev://',
     'hakumi-e2e://',

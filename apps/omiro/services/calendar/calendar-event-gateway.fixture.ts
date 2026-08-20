@@ -8,7 +8,7 @@ import type {
 
 import type { CalendarEventGateway } from './calendar-event-gateway';
 
-export type TimeFixtureScenario = 'authorized' | 'denied' | 'error' | 'loading' | 'notDetermined';
+type TimeFixtureScenario = 'authorized' | 'denied' | 'error' | 'loading' | 'notDetermined';
 
 const fixtureEvents: CalendarEvent[] = [
   {
@@ -52,10 +52,6 @@ const fixtureEvents: CalendarEvent[] = [
   },
 ];
 let scenario: TimeFixtureScenario = 'authorized';
-
-export function setTimeFixtureScenario(nextScenario: TimeFixtureScenario) {
-  scenario = nextScenario;
-}
 
 function permission(): CalendarPermissionStatus {
   if (scenario === 'denied') return 'denied';

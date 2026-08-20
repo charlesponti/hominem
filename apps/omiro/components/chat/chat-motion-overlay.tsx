@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
 import type { MeasuredRect } from '~/services/motion/use-measured-element';
 
 export interface LocalRect {
@@ -140,7 +141,7 @@ export function ChatMotionOverlayProvider({ children }: { children: ReactNode })
     <ChatMotionOverlayContext.Provider value={value}>
       {children}
       <View
-        className="absolute inset-0"
+        style={styles.s0}
         onLayout={captureOrigin}
         pointerEvents="box-none"
         ref={overlayRef}
@@ -157,3 +158,7 @@ export function ChatMotionOverlayProvider({ children }: { children: ReactNode })
 export function useChatMotionOverlay(): ChatMotionOverlayContextValue {
   return useContext(ChatMotionOverlayContext);
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+}));

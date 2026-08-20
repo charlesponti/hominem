@@ -6,25 +6,7 @@ import {
   type TimeBlockSource,
 } from '~/services/navigation/routes';
 
-/**
- * +native-intent.ts
- *
- * Rewrites incoming deep links before Expo Router processes them.
- * Called for every incoming URL on native (iOS/Android).
- *
- * Supported deep link patterns:
- *   hakumi://verify?token=<otp>        -> /(auth)/verify?token=<otp>
- *   hakumi://chat/<id>                 -> /(protected)/inbox/chat/<id>
- *   hakumi://chat?seed=<text>          -> /(protected)/inbox?seed=<text>
- *   hakumi://notes                     -> /(protected)/inbox
- *   hakumi://notes/<id>                -> /(protected)/inbox/note/<id>
- *   hakumi://focus                     -> /(protected)/inbox
- *   hakumi://focus/<id>                -> /(protected)/inbox/note/<id>
- *   hakumi://account                   -> /(protected)/settings
- *   hakumi://note/add                  -> /(protected)/inbox
- *   hakumi://time/task/<id>             -> /(protected)/time/task/<id>
- *   hakumi://time/event/<id>            -> /(protected)/time/event/<id>
- */
+// Rewrites incoming iOS deep links before Expo Router processes them.
 export function redirectSystemPath({
   path,
   initial: _initial,

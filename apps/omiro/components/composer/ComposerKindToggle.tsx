@@ -1,3 +1,4 @@
+import type { SFSymbol } from 'expo-symbols';
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
@@ -6,10 +7,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
-import type { SFSymbol } from 'expo-symbols';
-
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -24,15 +24,16 @@ interface ComposerKindToggleProps {
   onSelect: (kind: ComposerEntryKind) => void;
 }
 
-const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFilled: SFSymbol }[] = [
-  {
-    kind: 'chat',
-    label: 'Conversation',
-    icon: 'bubble.left.and.bubble.right',
-    iconFilled: 'bubble.left.and.bubble.right.fill',
-  },
-  { kind: 'note', label: 'Document', icon: 'doc.text', iconFilled: 'doc.text.fill' },
-];
+const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFilled: SFSymbol }[] =
+  [
+    {
+      kind: 'chat',
+      label: 'Conversation',
+      icon: 'bubble.left.and.bubble.right',
+      iconFilled: 'bubble.left.and.bubble.right.fill',
+    },
+    { kind: 'note', label: 'Document', icon: 'doc.text', iconFilled: 'doc.text.fill' },
+  ];
 
 // A single mutually-exclusive control (not two independent buttons) so the
 // chat/note choice reads as one state with two positions, the same way an
@@ -40,7 +41,7 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
 // makes switching legible -- see ComposerKindToggle in the /animate skill
 // output for the reasoning.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
-  const [primary, mutedForeground, muted] = useCSSVariable([
+  const [primary, mutedForeground, muted] = useThemeColor([
     '--color-primary',
     '--color-muted-foreground',
     '--color-muted',
@@ -61,8 +62,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
 
   return (
     <View
-      className="flex-row items-center"
-      style={{ backgroundColor: muted, borderRadius: 999 }}
+      style={[styles.s0, { backgroundColor: muted, borderRadius: 999 }]}
       testID="composer-kind-control"
     >
       <Animated.View
@@ -109,3 +109,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flexDirection: 'row', alignItems: 'center' },
+}));

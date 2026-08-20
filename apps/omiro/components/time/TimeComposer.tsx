@@ -1,4 +1,3 @@
-import { Card, IconButton, nativeShadows, TextField } from '@ponti-studios/ui/native';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { TextInput as RNTextInput } from 'react-native';
@@ -10,13 +9,16 @@ import Animated, {
   FadeOutDown,
   useReducedMotion,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { Card, IconButton, nativeShadows, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
+import { formatClockTime } from '~/services/date/format-date';
 import t from '~/translations';
 
 import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
@@ -24,12 +26,12 @@ import { formatDraftDetails } from './time-utils';
 import { useTimeComposer } from './use-time-composer';
 
 interface TimeComposerProps {
-  onError: (message: string) => void;
   onOpenEvent: (event: { id: string }) => void;
 }
 
-export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
-  const controller = useTimeComposer({ onError, onOpenEvent });
+export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const controller = useTimeComposer({ onError: setComposerError, onOpenEvent });
   const {
     ask,
     cancelResult,
@@ -43,13 +45,8 @@ export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
     updateDraft,
   } = controller;
   const disabled = state.kind === 'parsing' || isSaving;
-  const [primaryColor, destructiveColor, borderDefaultColor] = useCSSVariable([
-    '--color-primary',
-    '--color-destructive',
-    '--color-border',
-  ]) as [string, string, string];
+  const [primaryColor] = useThemeColor(['--color-primary']) as [string];
   const inputRef = useRef<RNTextInput>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const valueRef = useRef(value);
@@ -97,17 +94,15 @@ export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
           exiting={FadeOut.duration(120)}
         >
           <Card
-            className="w-full gap-2 p-3"
-            style={{
-              borderColor: isFocused
-                ? primaryColor
-                : voice.isRecording
-                  ? destructiveColor
-                  : borderDefaultColor,
-              borderCurve: 'continuous',
-              borderRadius: 24,
-              boxShadow: nativeShadows.sm,
-            }}
+            style={[
+              styles.s0,
+              {
+                borderCurve: 'continuous',
+                borderRadius: 24,
+                borderWidth: 0,
+                boxShadow: nativeShadows.none,
+              },
+            ]}
             testID="time-composer"
           >
             {voiceErrorBanner}
@@ -118,56 +113,59 @@ export function TimeComposer({ onError, onOpenEvent }: TimeComposerProps) {
                 onDone={() => void voice.handleVoicePress()}
               />
             ) : (
-              <TextField
-                editable={!disabled}
-                ref={inputRef}
-                onBlur={() => setIsFocused(false)}
-                onChangeText={setPrompt}
-                onFocus={() => setIsFocused(true)}
-                onSubmitEditing={ask}
-                placeholder="Add or search anything..."
-                returnKeyType="send"
-                submitBehavior="submit"
-                testID="time-composer-input"
-                value={value}
-                multiline
-                numberOfLines={5}
-                style={{
-                  borderRadius: 0,
-                  borderWidth: 0,
-                  minHeight: 0,
-                  paddingHorizontal: 0,
-                  paddingVertical: 0,
-                }}
-              />
+              <View style={styles.s16}>
+                <TextField
+                  editable={!disabled}
+                  focusBorder={false}
+                  ref={inputRef}
+                  onChangeText={setPrompt}
+                  onSubmitEditing={ask}
+                  placeholder="Add or search anything..."
+                  returnKeyType="send"
+                  submitBehavior="submit"
+                  testID="time-composer-input"
+                  value={value}
+                  multiline
+                  numberOfLines={5}
+                  style={styles.s17}
+                />
+              </View>
             )}
             {voice.isRecording ? null : (
-              <View className="flex-row items-center justify-end gap-2">
-                <IconButton
-                  accessibilityLabel="Start voice input"
-                  disabled={voice.isRecordingElsewhere}
-                  testID="time-composer-mic-button"
-                  onPress={() => void voice.handleVoicePress()}
-                >
-                  <AppIcon name="mic.fill" size={20} />
-                </IconButton>
-                <IconButton
-                  accessibilityLabel={
-                    isParsing ? 'Interpreting time request' : 'Interpret time request'
-                  }
-                  disabled={disabled || !canSubmit || voice.isBusy}
-                  testID="time-composer-submit"
-                  onPress={ask}
-                >
-                  <AppIcon name="arrow.up" size={20} />
-                </IconButton>
-              </View>
+              <>
+                {composerError ? (
+                  <InlineErrorBanner
+                    message={composerError}
+                    onDismiss={() => setComposerError(null)}
+                  />
+                ) : null}
+                <View style={styles.s1}>
+                  <IconButton
+                    accessibilityLabel="Start voice input"
+                    disabled={voice.isRecordingElsewhere}
+                    testID="time-composer-mic-button"
+                    onPress={() => void voice.handleVoicePress()}
+                  >
+                    <AppIcon name="mic.fill" size={20} />
+                  </IconButton>
+                  <IconButton
+                    accessibilityLabel={
+                      isParsing ? 'Interpreting time request' : 'Interpret time request'
+                    }
+                    disabled={disabled || !canSubmit || voice.isBusy}
+                    testID="time-composer-submit"
+                    onPress={ask}
+                  >
+                    <AppIcon name="arrow.up" size={20} />
+                  </IconButton>
+                </View>
+              </>
             )}
           </Card>
         </Animated.View>
       ) : isParsing ? (
         <ResultSurface accessibilityLabel="Interpreting time request" testID="time-result-parsing">
-          <View className="items-center justify-center min-h-11">
+          <View style={styles.s2}>
             <ActivityIndicator color={primaryColor} />
           </View>
         </ResultSurface>
@@ -230,12 +228,19 @@ function ResultSurface({
       }
       entering={reducedMotion ? FadeIn.duration(180) : FadeInUp.duration(220)}
       exiting={reducedMotion ? FadeOut.duration(140) : FadeOutDown.duration(180)}
-      className="w-full"
+      style={styles.s3}
       testID={testID}
     >
       <Card
-        className="gap-2 p-3"
-        style={{ borderCurve: 'continuous', borderRadius: 24, boxShadow: nativeShadows.sm }}
+        style={[
+          styles.s4,
+          {
+            borderCurve: 'continuous',
+            borderRadius: 24,
+            borderWidth: 0,
+            boxShadow: nativeShadows.none,
+          },
+        ]}
       >
         <ScrollView
           contentContainerStyle={{ gap: 12 }}
@@ -268,7 +273,7 @@ type ResultContentProps = Pick<
 function ResultContent({ state, ...actions }: ResultContentProps) {
   switch (state.kind) {
     case 'answer':
-      return <Text className="text-body text-foreground">{state.answer}</Text>;
+      return <Text style={styles.s5}>{state.answer}</Text>;
     case 'event-choice':
       return <EventChoiceResult candidates={state.candidates} {...actions} />;
     case 'availability':
@@ -287,17 +292,17 @@ function EventChoiceResult({
 }) {
   return (
     <>
-      <Text className="text-headline">Which event did you mean?</Text>
+      <Text style={styles.s6}>Which event did you mean?</Text>
       {candidates.map((event) => (
         <Pressable
           key={`${event.id}:${event.startDate}`}
           accessibilityLabel={`${event.title}, ${new Date(event.startDate).toLocaleString()}`}
           onPress={() => onChooseEvent?.(event.id)}
-          className="gap-1 py-2 min-h-11"
+          style={styles.s7}
           testID="time-event-choice"
         >
-          <Text className="text-body">{event.title}</Text>
-          <Text className="text-muted-foreground">{formatDateTime(event.startDate)}</Text>
+          <Text style={styles.s8}>{event.title}</Text>
+          <Text style={styles.s9}>{formatDateTime(event.startDate)}</Text>
         </Pressable>
       ))}
       <CancelRow testID="time-event-choice-cancel" onCancel={onCancel} />
@@ -314,23 +319,17 @@ function AvailabilityResult({
 }) {
   return (
     <>
-      <Text className="text-headline">Possible times</Text>
+      <Text style={styles.s10}>Possible times</Text>
       {openings.slice(0, 3).map((opening) => (
         <Pressable
           key={opening.start}
           accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
           onPress={() => onChooseOpening?.(opening)}
-          className="gap-1 py-2 min-h-11"
+          style={styles.s11}
           testID="time-availability-opening"
         >
-          <Text className="text-body">{formatDateTime(opening.start)}</Text>
-          <Text className="text-muted-foreground">
-            until{' '}
-            {new Date(opening.end).toLocaleTimeString(undefined, {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
+          <Text style={styles.s12}>{formatDateTime(opening.start)}</Text>
+          <Text style={styles.s13}>until {formatClockTime(opening.end)}</Text>
         </Pressable>
       ))}
       <CancelRow testID="time-availability-cancel" onCancel={onCancel} />
@@ -356,19 +355,23 @@ function DraftResult({
 
   return (
     <>
-      <Text className="text-muted-foreground text-caption1">
-        {getIntentLabel(block.primary_intent)}
-      </Text>
-      <TextField
-        accessibilityLabel="Edit title"
-        autoFocus
-        onChangeText={(value) => onEditField?.('title', value)}
-        placeholder={t.timeResult.fieldLabels.title}
-        testID="time-draft-edit-title"
-        value={block.title ?? ''}
-      />
-      {details ? <Text className="text-muted-foreground text-body">{details}</Text> : null}
-      <View className="flex-row items-center justify-between gap-2">
+      <View style={styles.s14}>
+        <Text style={styles.s15}>{getIntentLabel(block.primary_intent)}</Text>
+      </View>
+      <View style={styles.s16}>
+        <TextField
+          accessibilityLabel="Edit title"
+          autoFocus
+          focusBorder={false}
+          onChangeText={(value) => onEditField?.('title', value)}
+          placeholder={t.timeResult.fieldLabels.title}
+          testID="time-draft-edit-title"
+          value={block.title ?? ''}
+          style={styles.s17}
+        />
+      </View>
+      {details ? <Text style={styles.s18}>{details}</Text> : null}
+      <View style={styles.s19}>
         <CancelButton testID="time-draft-cancel" onCancel={onCancel} />
         <IconButton
           accessibilityLabel="Confirm"
@@ -385,7 +388,7 @@ function DraftResult({
 
 function CancelRow({ onCancel, testID }: { onCancel?: () => void; testID: string }) {
   return (
-    <View className="flex-row items-center justify-end gap-2">
+    <View style={styles.s19}>
       <CancelButton testID={testID} onCancel={onCancel} />
     </View>
   );
@@ -422,3 +425,41 @@ function getIntentLabel(
     schedule_gap_fill: 'Find time',
   }[intent];
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { width: '100%', gap: 8, padding: 12 },
+  s1: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  s2: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  s3: { width: '100%' },
+  s4: { gap: 8, padding: 12 },
+  s5: { ...theme.typography.body, color: theme.colors.foreground },
+  s6: { ...theme.typography.headline },
+  s7: { gap: 4, paddingVertical: 8, minHeight: 44 },
+  s8: { ...theme.typography.body },
+  s9: { color: theme.colors.mutedForeground },
+  s10: { ...theme.typography.headline },
+  s11: { gap: 4, paddingVertical: 8, minHeight: 44 },
+  s12: { ...theme.typography.body },
+  s13: { color: theme.colors.mutedForeground },
+  s14: {
+    alignSelf: 'flex-start',
+    backgroundColor: withAlpha(theme.colors.muted, 0.7),
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  s15: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+  s16: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  s17: {
+    borderRadius: 0,
+    borderWidth: 0,
+    minHeight: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  s18: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  s19: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+}));

@@ -1,9 +1,10 @@
-import { IconButton, ListRow } from '@ponti-studios/ui/native';
 import { Stack, useRouter } from 'expo-router';
 import { RefreshControl, Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
 import { StreamList } from '~/components/stream/StreamList';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { IconButton, ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { getTaskDetailRoute, getTaskScheduleRoute } from '~/services/navigation/routes';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
@@ -12,12 +13,12 @@ import { getUnscheduledTasks } from './time-utils';
 
 export function TasksScreen() {
   const router = useRouter();
-  const successColor = useCSSVariable('--color-success') as string;
+  const successColor = useThemeColor('--color-success') as string;
   const { data: tasks = [], isFetching, refetch } = useTasksQuery();
   const unscheduledTasks = getUnscheduledTasks(tasks);
 
   return (
-    <View className="flex-1 bg-background" testID="unscheduled-tasks-screen">
+    <View style={styles.s0} testID="unscheduled-tasks-screen">
       <Stack.Screen options={{ headerShown: true, title: 'Tasks' }} />
       <StreamList
         contentPaddingTop={16}
@@ -25,9 +26,7 @@ export function TasksScreen() {
         keyExtractor={(task) => task.id}
         ListEmptyComponent={
           !isFetching ? (
-            <Text className="text-muted-foreground px-4 pt-6">
-              Every open task has a time or deadline.
-            </Text>
+            <Text style={styles.s1}>Every open task has a time or deadline.</Text>
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />}
@@ -55,3 +54,8 @@ export function TasksScreen() {
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, backgroundColor: theme.colors.background },
+  s1: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+}));

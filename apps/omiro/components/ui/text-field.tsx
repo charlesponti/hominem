@@ -1,35 +1,32 @@
 import { forwardRef, useState } from 'react';
-import { TextInput, type TextInputProps } from 'react-native';
+import { TextInput, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
+
+import { fontFamilies, makeStyles, useTheme } from '~/components/theme';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 interface TextFieldProps extends TextInputProps {
+  focusBorder?: boolean;
   hasError?: boolean;
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { style, hasError = false, onFocus, onBlur, ...props },
+  { style, focusBorder = true, hasError = false, onFocus, onBlur, ...props },
   ref,
 ) {
+  const styles = useStyles;
   const [focused, setFocused] = useState(false);
-  const [border, ring, destructive, foreground, mutedForeground] = useCSSVariable([
-    '--color-border',
-    '--color-ring',
-    '--color-destructive',
-    '--color-foreground',
-    '--color-muted-foreground',
-  ]) as string[];
+  const { colors } = useTheme();
 
-  const borderColor = hasError ? destructive : focused ? ring : border;
+  const borderColor = hasError ? colors.destructive : focused ? colors.ring : colors.border;
 
   const focusStyle = useAnimatedStyle(
     () => ({
-      borderColor,
-      borderWidth: withTiming(focused || hasError ? 1.5 : 1, { duration: 150 }),
+      borderColor: focusBorder ? borderColor : 'transparent',
+      borderWidth: focusBorder ? withTiming(focused || hasError ? 1.5 : 1, { duration: 150 }) : 0,
     }),
-    [borderColor, focused, hasError],
+    [borderColor, focusBorder, focused, hasError],
   );
 
   return (
@@ -44,20 +41,20 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         setFocused(false);
         onBlur?.(event);
       }}
-      placeholderTextColor={props.placeholderTextColor ?? mutedForeground}
-      className="rounded-md text-lg"
-      style={[
-        {
-          // minHeight (not height) so real font metrics can exceed the 24pt
-          // line-height number without the box clipping descenders.
-          minHeight: 50,
-          paddingHorizontal: 16,
-          borderCurve: 'continuous',
-          color: foreground,
-        },
-        focusStyle,
-        style,
-      ]}
+      placeholderTextColor={props.placeholderTextColor ?? colors.mutedForeground}
+      style={[styles.input, focusStyle, style]}
     />
   );
 });
+
+const useStyles = makeStyles((theme) => ({
+  input: {
+    minHeight: 50,
+    paddingHorizontal: 16,
+    borderCurve: 'continuous',
+    borderRadius: 6,
+    fontFamily: fontFamilies.sans,
+    fontSize: 18,
+    color: theme.colors.foreground,
+  } satisfies TextStyle & ViewStyle,
+}));

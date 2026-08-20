@@ -8,7 +8,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 interface OtpInputProps {
   length?: number;
@@ -37,12 +39,7 @@ function Caret({ color }: { color: string }) {
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
-  return (
-    <Animated.View
-      className="rounded-[1px] h-6 w-0.5"
-      style={[{ backgroundColor: color }, style]}
-    />
-  );
+  return <Animated.View style={[styles.s0, [{ backgroundColor: color }, style]]} />;
 }
 
 function OtpCell({
@@ -88,14 +85,9 @@ function OtpCell({
       : borderColor;
 
   return (
-    <Animated.View
-      className="items-center rounded-md border h-14 justify-center w-12"
-      style={[{ borderColor: resolvedBorderColor }, animatedStyle]}
-    >
+    <Animated.View style={[styles.s1, [{ borderColor: resolvedBorderColor }, animatedStyle]]}>
       {digit ? (
-        <Text className="tabular-nums font-bold text-2xl" style={{ color: textColor }}>
-          {digit}
-        </Text>
+        <Text style={[styles.s2, { color: textColor }]}>{digit}</Text>
       ) : isActive ? (
         <Caret color={activeBorderColor} />
       ) : null}
@@ -114,7 +106,7 @@ export function OtpInput({
   testID,
   accessibilityLabel,
 }: OtpInputProps) {
-  const [borderDefault, primary, destructive, textPrimary] = useCSSVariable([
+  const [borderDefault, primary, destructive, textPrimary] = useThemeColor([
     '--color-border',
     '--color-primary',
     '--color-destructive',
@@ -143,13 +135,12 @@ export function OtpInput({
   return (
     <Pressable
       testID={testID ? `${testID}-container` : undefined}
-      className="self-center"
+      style={styles.s3}
       onPress={() => inputRef.current?.focus()}
       accessibilityRole="none"
     >
       <Animated.View
-        className="flex-row gap-2"
-        style={shakeStyle}
+        style={[styles.s4, shakeStyle]}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
@@ -184,8 +175,24 @@ export function OtpInput({
         returnKeyType="done"
         maxLength={length}
         caretHidden
-        className="h-full left-0 opacity-0 absolute top-0 w-full"
+        style={styles.s5}
       />
     </Pressable>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { borderRadius: 1, height: 24, width: 2 },
+  s1: {
+    alignItems: 'center',
+    borderRadius: 6,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: 'center',
+    width: 48,
+  },
+  s2: { fontWeight: '700', fontSize: 16 },
+  s3: { alignSelf: 'center' },
+  s4: { flexDirection: 'row', gap: 8 },
+  s5: { height: '100%', left: 0, opacity: 0, position: 'absolute', top: 0, width: '100%' },
+}));

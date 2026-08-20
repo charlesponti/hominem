@@ -1,23 +1,25 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
-import type { SFSymbol } from 'expo-symbols';
 import { Stack } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { SFSymbol } from 'expo-symbols';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { Text } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import { useCSSVariable } from 'uniwind';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { LocationSearchField } from '~/components/time/LocationSearchField';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { TextField } from '~/components/ui/text-field';
-import { LocationSearchField } from '~/components/time/LocationSearchField';
 import type { CalendarEventPatch, CalendarRecurrenceScope } from '~/modules/on-device-ai';
 import {
   useCalendarEvent,
   useDeleteCalendarEvent,
   useUpdateCalendarEvent,
 } from '~/services/calendar/calendar-queries';
+import { formatClockTime } from '~/services/date/format-date';
 import type { PersonPickerRecord } from '~/services/people/use-people';
 import { useTaskComplete } from '~/services/tasks/use-task-complete';
 import { useTaskDelete } from '~/services/tasks/use-task-delete';
@@ -28,7 +30,7 @@ export type TimeBlockDetailSource = 'task' | 'event';
 type ActiveField = 'location' | 'notes' | 'people' | 'time' | 'title' | null;
 
 function formatInterval(start: Date, end: Date) {
-  return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}–${end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+  return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${formatClockTime(start)}–${formatClockTime(end)}`;
 }
 
 function FieldCard({
@@ -51,19 +53,13 @@ function FieldCard({
   return (
     <Pressable
       accessibilityLabel={label}
-      className="flex-row gap-3 rounded-3xl bg-card px-4 py-3.5"
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => [{ alignItems: align }, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [styles.s0, { alignItems: align }, pressed && { opacity: 0.7 }]}
       testID={testID}
     >
-      <View
-        className="h-9 w-9 items-center justify-center rounded-xl"
-        style={{ backgroundColor: iconColor }}
-      >
+      <View style={[styles.s1, { backgroundColor: iconColor }]}>
         <AppIcon name={icon} size={18} tintColor="#ffffff" />
       </View>
-      <View className="flex-1 gap-1">{children}</View>
+      <View style={styles.s2}>{children}</View>
     </Pressable>
   );
 }
@@ -152,7 +148,8 @@ function TimeBlockEditor({
   const [draftPeople, setDraftPeople] = useState<PersonPickerRecord[]>([]);
   const [activeField, setActiveField] = useState<ActiveField>(initialActiveField);
   const [isScheduling, setIsScheduling] = useState(false);
-  const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useCSSVariable([
+  const initializedBlockKeyRef = useRef<string | null>(null);
+  const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useThemeColor([
     '--color-chart-1',
     '--color-chart-2',
     '--color-chart-3',
@@ -174,6 +171,10 @@ function TimeBlockEditor({
   const originalPeople = taskQuery.data?.participants ?? [];
   useEffect(() => {
     if (!block) return;
+    const blockKey = `${source}:${id}`;
+    if (initializedBlockKeyRef.current === blockKey) return;
+    initializedBlockKeyRef.current = blockKey;
+
     const start = isTask ? task?.scheduledStartAt : event?.startDate;
     const end = isTask ? task?.scheduledEndAt : event?.endDate;
     const duration = isTask
@@ -371,16 +372,16 @@ function TimeBlockEditor({
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 p-4">
-        <Text className="text-muted-foreground">Loading time block…</Text>
+      <View style={styles.s3}>
+        <Text style={styles.s4}>Loading time block…</Text>
       </View>
     );
   }
 
   if (!block || error) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 p-4">
-        <Text className="text-destructive">{error || 'This time block is unavailable.'}</Text>
+      <View style={styles.s5}>
+        <Text style={styles.s6}>{error || 'This time block is unavailable.'}</Text>
         <Button label="Close" onPress={onClose} variant="secondary" />
       </View>
     );
@@ -401,24 +402,21 @@ function TimeBlockEditor({
           </Stack.Toolbar.Menu>
         </Stack.Toolbar>
       ) : null}
-      <View className="flex-1" testID="time-block-editor">
+      <View style={styles.s7} testID="time-block-editor">
         <ScrollView
           contentContainerStyle={{ gap: 16, padding: 16 }}
           contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
-          className="flex-1"
+          style={styles.s8}
         >
-          <View className="gap-3">
-            <View
-              className="flex-row items-center gap-1.5 self-start rounded-full px-3 py-1"
-              style={{ backgroundColor: intentColor }}
-            >
+          <View style={styles.s9}>
+            <View style={[styles.s10, { backgroundColor: intentColor }]}>
               <AppIcon
                 name={isTask ? 'checkmark.circle.fill' : 'calendar'}
                 size={12}
                 tintColor="#ffffff"
               />
-              <Text className="text-caption1 font-semibold" style={{ color: '#ffffff' }}>
+              <Text style={[styles.s11, { color: '#ffffff' }]}>
                 {isTask ? 'Task' : (event?.calendarTitle ?? 'Event')}
               </Text>
             </View>
@@ -437,18 +435,18 @@ function TimeBlockEditor({
                   value={draftTitle}
                 />
               ) : (
-                <Text className="text-display">{draftTitle}</Text>
+                <Text style={styles.s12}>{draftTitle}</Text>
               )}
             </Pressable>
             {isTask && task?.status === 'completed' ? (
-              <Text className="text-muted-foreground">Completed</Text>
+              <Text style={styles.s13}>Completed</Text>
             ) : null}
             {readOnlyEvent ? (
-              <Text className="text-muted-foreground">This calendar is read-only in Omiro.</Text>
+              <Text style={styles.s14}>This calendar is read-only in Omiro.</Text>
             ) : null}
           </View>
 
-          <View className="gap-2.5">
+          <View style={styles.s15}>
             <FieldCard
               align={activeField === 'time' ? 'flex-start' : 'center'}
               icon="clock.fill"
@@ -465,7 +463,7 @@ function TimeBlockEditor({
               testID="time-block-edit-time"
             >
               {activeField === 'time' && draftStart && draftEnd ? (
-                <View className="gap-2">
+                <View style={styles.s16}>
                   <DateTimePicker
                     display="compact"
                     mode="datetime"
@@ -490,9 +488,9 @@ function TimeBlockEditor({
                   />
                 </View>
               ) : draftStart && draftEnd ? (
-                <Text className="text-body">{formatInterval(draftStart, draftEnd)}</Text>
+                <Text style={styles.s17}>{formatInterval(draftStart, draftEnd)}</Text>
               ) : (
-                <Text className="text-muted-foreground text-body">Set a time</Text>
+                <Text style={styles.s18}>Set a time</Text>
               )}
             </FieldCard>
             <FieldCard
@@ -511,7 +509,7 @@ function TimeBlockEditor({
                 />
               ) : (
                 <Text
-                  className={`text-body ${draftLocation ? 'text-foreground' : 'text-muted-foreground'}`}
+                  style={[styles.s20, draftLocation ? styles.foreground : styles.mutedForeground]}
                 >
                   {draftLocation || 'Add location'}
                 </Text>
@@ -535,9 +533,7 @@ function TimeBlockEditor({
                   value={draftNotes}
                 />
               ) : (
-                <Text
-                  className={`text-body ${draftNotes ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
+                <Text style={[styles.s20, draftNotes ? styles.foreground : styles.mutedForeground]}>
                   {draftNotes || 'Add notes'}
                 </Text>
               )}
@@ -555,7 +551,10 @@ function TimeBlockEditor({
                   <TaskPeoplePicker selected={draftPeople} onChange={setDraftPeople} />
                 ) : (
                   <Text
-                    className={`text-body ${draftPeople.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}
+                    style={[
+                      styles.s20,
+                      draftPeople.length > 0 ? styles.foreground : styles.mutedForeground,
+                    ]}
                   >
                     {draftPeople.map((person) => person.displayName).join(', ') || 'Add people'}
                   </Text>
@@ -564,20 +563,20 @@ function TimeBlockEditor({
             ) : null}
             {!isTask && event?.participants.length ? (
               <FieldCard icon="person.2.fill" iconColor={chartPurple} label="People">
-                <Text className="text-body">{event.participants.join(', ')}</Text>
+                <Text style={styles.s19}>{event.participants.join(', ')}</Text>
               </FieldCard>
             ) : null}
             {!isTask && event?.recurrenceDescription ? (
               <FieldCard icon="arrow.triangle.2.circlepath" iconColor={chartGray} label="Repeats">
-                <Text className="text-body">Recurring event</Text>
+                <Text style={styles.s20}>Recurring event</Text>
               </FieldCard>
             ) : null}
           </View>
         </ScrollView>
         {!readOnlyEvent && (isDirty || isTask) ? (
           <KeyboardStickyView>
-            <View className="border-t border-border bg-background px-4 pt-3 pb-4">
-              <View className="flex-row justify-end gap-2">
+            <View style={styles.s21}>
+              <View style={styles.s22}>
                 {isTask ? (
                   <Button
                     disabled={isTogglingTask}
@@ -606,3 +605,53 @@ function TimeBlockEditor({
     </>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    flexDirection: 'row',
+    gap: 12,
+    borderRadius: 24,
+    backgroundColor: theme.colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  s1: { height: 36, width: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  s2: { flex: 1, gap: 4 },
+  s3: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+  s4: { color: theme.colors.mutedForeground },
+  s5: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+  s6: { color: theme.colors.destructive },
+  s7: { flex: 1 },
+  s8: { flex: 1 },
+  s9: { gap: 12 },
+  s10: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  s11: { ...theme.typography.caption1, fontWeight: '600' },
+  s12: { ...theme.typography.display },
+  s13: { color: theme.colors.mutedForeground },
+  s14: { color: theme.colors.mutedForeground },
+  s15: { gap: 10 },
+  s16: { gap: 8 },
+  s17: { ...theme.typography.body },
+  s18: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  s19: { ...theme.typography.body },
+  s20: { ...theme.typography.body },
+  s21: {
+    borderTopWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  s22: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  foreground: { color: theme.colors.foreground },
+  mutedForeground: { color: theme.colors.mutedForeground },
+}));

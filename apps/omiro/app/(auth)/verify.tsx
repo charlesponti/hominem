@@ -12,9 +12,10 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconChip } from '~/components/ui/icon-chip';
@@ -144,7 +145,7 @@ function VerifyScreen() {
     return () => clearTimeout(id);
   }, [verifySucceeded, router]);
 
-  const [primary, destructive, warning, textSecondary, success] = useCSSVariable([
+  const [primary, destructive, warning, textSecondary, success] = useThemeColor([
     '--color-primary',
     '--color-destructive',
     '--color-warning',
@@ -234,8 +235,8 @@ function VerifyScreen() {
 
   if (verifySucceeded) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Animated.View entering={FadeIn.duration(300)} className="items-center gap-4">
+      <View style={styles.s0}>
+        <Animated.View entering={FadeIn.duration(300)} style={styles.s1}>
           <IconChip
             icon="checkmark.circle.fill"
             size={72}
@@ -243,14 +244,14 @@ function VerifyScreen() {
             iconSize={32}
             tintColor={success}
           />
-          <Text className="text-title2 text-foreground">{t.auth.verify.signedIn}</Text>
+          <Text style={styles.s2}>{t.auth.verify.signedIn}</Text>
         </Animated.View>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-background" behavior="padding">
+    <KeyboardAvoidingView style={styles.s3} behavior="padding">
       <ScrollView
         testID="auth-verify-screen"
         contentInsetAdjustmentBehavior="automatic"
@@ -264,37 +265,29 @@ function VerifyScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full items-center">
-          <View className="w-full max-w-105 gap-4.5">
+        <View style={styles.s4}>
+          <View style={styles.s5}>
             <Animated.View entering={FadeIn.duration(400)}>
               <IconChip icon="lock.shield" />
             </Animated.View>
 
-            <Animated.View entering={FadeIn.duration(400).delay(60)} className="gap-2">
-              <Text className="text-title1 text-foreground">{t.auth.verify.title}</Text>
-              <View className="flex-row items-center flex-wrap gap-1.5">
-                <Text className="text-subhead text-muted-foreground">
-                  {t.auth.verify.codeSentTo}
-                </Text>
+            <Animated.View entering={FadeIn.duration(400).delay(60)} style={styles.s6}>
+              <Text style={styles.s7}>{t.auth.verify.title}</Text>
+              <View style={styles.s8}>
+                <Text style={styles.s9}>{t.auth.verify.codeSentTo}</Text>
                 <Pressable
                   hitSlop={8}
                   onPress={handleChangeEmail}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}
-                  className="flex-row items-center gap-1 px-2 py-0.75 rounded-lg bg-card"
+                  style={({ pressed }) => [styles.s10, { opacity: pressed ? 0.65 : 1 }]}
                 >
-                  <Text className="text-body font-medium text-foreground">
-                    {maskEmail(resolvedEmail)}
-                  </Text>
+                  <Text style={styles.s11}>{maskEmail(resolvedEmail)}</Text>
                   <AppIcon name="pencil" size={11} tintColor={textSecondary} />
                 </Pressable>
               </View>
             </Animated.View>
 
-            <Animated.View
-              entering={FadeIn.duration(400).delay(120)}
-              className="gap-4 items-center"
-            >
-              <View className={isBusy ? 'opacity-60' : ''}>
+            <Animated.View entering={FadeIn.duration(400).delay(120)} style={styles.s12}>
+              <View style={isBusy ? styles.busy : undefined}>
                 <OtpInput
                   testID="auth-otp-input"
                   value={normalizedOtp}
@@ -316,7 +309,7 @@ function VerifyScreen() {
                   <Text
                     testID="auth-otp-message"
                     accessibilityLiveRegion="polite"
-                    className="text-footnote text-center text-destructive"
+                    style={styles.s13}
                   >
                     {authError}
                   </Text>
@@ -326,8 +319,7 @@ function VerifyScreen() {
               {/* Clockwise-drawing border fills in as digits are entered, then fades
                   into the Verify button once all 6 are present — zero layout shift. */}
               <View
-                className="relative w-full items-center justify-center"
-                style={{ height: VERIFY_BUTTON_HEIGHT }}
+                style={[styles.s14, { height: VERIFY_BUTTON_HEIGHT }]}
                 onLayout={(e) => setVerifyButtonWidth(e.nativeEvent.layout.width)}
               >
                 {normalizedOtp.length < 6 && verifyBorderPath && (
@@ -357,13 +349,9 @@ function VerifyScreen() {
                 )}
 
                 {normalizedOtp.length < 6 && !authError && (
-                  <View className="flex-row items-center justify-center gap-1.5 px-4">
-                    {normalizedOtp.length > 0 ? (
-                      <Text className="text-footnote text-muted-foreground">↑</Text>
-                    ) : null}
-                    <Text className="text-footnote text-muted-foreground text-center">
-                      {getOtpProgressMessage(normalizedOtp.length)}
-                    </Text>
+                  <View style={styles.s15}>
+                    {normalizedOtp.length > 0 ? <Text style={styles.s16}>↑</Text> : null}
+                    <Text style={styles.s17}>{getOtpProgressMessage(normalizedOtp.length)}</Text>
                   </View>
                 )}
 
@@ -386,8 +374,10 @@ function VerifyScreen() {
                 onPress={() => void handleResendPress()}
                 disabled={isBusy || secondsLeft > 0}
                 hitSlop={8}
-                style={({ pressed }) => [{ opacity: pressed && secondsLeft === 0 ? 0.65 : 1 }]}
-                className="flex-row items-center self-center gap-1 px-2.5 py-1 rounded-full bg-card"
+                style={({ pressed }) => [
+                  styles.s18,
+                  { opacity: pressed && secondsLeft === 0 ? 0.65 : 1 },
+                ]}
               >
                 <AppIcon
                   name={secondsLeft === 0 ? 'arrow.clockwise' : 'clock'}
@@ -399,13 +389,15 @@ function VerifyScreen() {
                   }
                 />
                 <Text
-                  className="text-caption1 font-semibold tabular-nums"
-                  style={{
-                    color:
-                      secondsLeft === 0
-                        ? primary
-                        : countdownColor(secondsLeft, destructive, warning, textSecondary),
-                  }}
+                  style={[
+                    styles.s19,
+                    {
+                      color:
+                        secondsLeft === 0
+                          ? primary
+                          : countdownColor(secondsLeft, destructive, warning, textSecondary),
+                    },
+                  ]}
                   accessibilityLabel={
                     secondsLeft === 0
                       ? t.auth.verify.resendButton
@@ -430,3 +422,55 @@ const VerifyWithErrorBoundary = () => (
 );
 
 export default VerifyWithErrorBoundary;
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background,
+  },
+  s1: { alignItems: 'center', gap: 16 },
+  s2: { ...theme.typography.title2, color: theme.colors.foreground },
+  s3: { flex: 1, backgroundColor: theme.colors.background },
+  s4: { width: '100%', alignItems: 'center' },
+  s5: { width: '100%', maxWidth: 420, gap: 18 },
+  s6: { gap: 8 },
+  s7: { ...theme.typography.title1, color: theme.colors.foreground },
+  s8: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  s9: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
+  s10: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: theme.colors.card,
+  },
+  s11: { ...theme.typography.body, fontWeight: '500', color: theme.colors.foreground },
+  s12: { gap: 16, alignItems: 'center' },
+  s13: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.destructive },
+  s14: { position: 'relative', width: '100%', alignItems: 'center', justifyContent: 'center' },
+  s15: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+  },
+  s16: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  s17: { ...theme.typography.footnote, color: theme.colors.mutedForeground, textAlign: 'center' },
+  s18: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: theme.colors.card,
+  },
+  s19: { ...theme.typography.caption1, fontWeight: '600' },
+  busy: { opacity: 0.6 },
+}));

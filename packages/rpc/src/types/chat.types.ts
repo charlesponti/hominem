@@ -47,30 +47,43 @@ export type ChatsCreateOutput = InferResponseType<_ChatsCreateEndpoint, 201>;
 
 type _ChatsStartStreamEndpoint = HonoClient['api']['chats']['start-stream']['$post'];
 export type ChatsStartStreamInput = InferRequestType<_ChatsStartStreamEndpoint>['json'];
-export interface ChatStreamChunkEvent {
-  type: 'chunk';
-  chunk: string;
-}
-
 export interface ChatStreamErrorEvent {
   type: 'error';
   message: string;
 }
 
-export interface ChatStreamAudioEvent {
-  type: 'audio';
-  url: string;
-  mimeType: string;
+export interface ChatGenerationStatusEvent {
+  type: 'status';
+  generationId: string;
+  status: 'preparing' | 'saving';
 }
 
-export interface ChatsStartStreamReadyEvent {
-  type: 'ready';
+export interface ChatGenerationAcceptedEvent {
+  type: 'accepted';
+  generationId: string;
   chatId: string;
   chat: Chat;
+  userMessage: ChatMessageDto | null;
 }
 
-export type ChatStreamEvent = ChatStreamChunkEvent | ChatStreamErrorEvent | ChatStreamAudioEvent;
-export type ChatsStartStreamEvent = ChatsStartStreamReadyEvent | ChatStreamEvent;
+export interface ChatGenerationCommittedEvent {
+  type: 'committed';
+  generationId: string;
+  message: ChatMessageDto;
+}
+
+export interface ChatGenerationCancelledEvent {
+  type: 'cancelled';
+  generationId: string;
+}
+
+export type ChatStreamEvent =
+  | ChatGenerationStatusEvent
+  | ChatGenerationAcceptedEvent
+  | ChatGenerationCommittedEvent
+  | ChatGenerationCancelledEvent
+  | ChatStreamErrorEvent;
+export type ChatsStartStreamEvent = ChatStreamEvent;
 
 // ============================================================================
 // GET (with messages)

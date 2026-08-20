@@ -1,8 +1,9 @@
-import { IconButton } from '@ponti-studios/ui/native';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 
 import type { TimeItem } from './time-types';
@@ -21,7 +22,7 @@ export const TimeRow = memo(function TimeRow({
   onToggleTask,
   showDayLabel,
 }: TimeRowProps) {
-  const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useCSSVariable([
+  const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useThemeColor([
     '--color-chart-1',
     '--color-chart-2',
     '--color-chart-3',
@@ -44,11 +45,9 @@ export const TimeRow = memo(function TimeRow({
   return (
     <View>
       {showDayLabel ? (
-        <View className="flex-row items-baseline gap-2 px-4 pb-2 pt-5">
-          <Text className="text-caption2 font-semibold uppercase tracking-wider text-foreground">
-            {dayLabel(item)}
-          </Text>
-          <Text className="text-caption2 uppercase tracking-wider text-muted-foreground">
+        <View style={styles.s0}>
+          <Text style={styles.s1}>{dayLabel(item)}</Text>
+          <Text style={styles.s2}>
             {new Date(itemDate(item) ?? 0).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -59,38 +58,31 @@ export const TimeRow = memo(function TimeRow({
       <Pressable
         accessibilityLabel={item.value.title}
         accessibilityRole="button"
-        className="flex-row gap-3 border-b border-border px-4 py-3"
-        onPress={onOpen}
-        style={({ pressed }) => pressed && { backgroundColor: muted }}
+        style={({ pressed }) => [styles.s3, pressed && { backgroundColor: muted }]}
         testID={`time-item-${item.kind}-${item.value.id}`}
       >
-        <View className="w-16 items-end pt-0.5">
-          <Text
-            className="font-mono text-caption2 tracking-tight text-muted-foreground"
-            numberOfLines={1}
-          >
+        <View style={styles.s4}>
+          <Text style={styles.s5} numberOfLines={1}>
             {timeParts.primary}
           </Text>
           {timeParts.secondary ? (
-            <Text
-              className="font-mono text-caption2 tracking-tight text-muted-foreground opacity-60"
-              numberOfLines={1}
-            >
+            <Text style={styles.s6} numberOfLines={1}>
               {timeParts.secondary}
             </Text>
           ) : null}
         </View>
-        <View className="w-1 rounded-full" style={{ backgroundColor: accentColor }} />
-        <View className="min-w-0 flex-1 gap-0.5 pt-0.5">
+        <View style={[styles.s7, { backgroundColor: accentColor }]} />
+        <View style={styles.s8}>
           <Text
-            className="text-body text-foreground"
-            numberOfLines={2}
-            style={completed ? { opacity: 0.5, textDecorationLine: 'line-through' } : undefined}
+            style={[
+              styles.s9,
+              completed ? { opacity: 0.5, textDecorationLine: 'line-through' } : undefined,
+            ]}
           >
             {item.value.title}
           </Text>
           {supportingText ? (
-            <Text className="text-caption2 text-muted-foreground" numberOfLines={1}>
+            <Text style={styles.s10} numberOfLines={1}>
               {supportingText}
             </Text>
           ) : null}
@@ -113,3 +105,53 @@ export const TimeRow = memo(function TimeRow({
     </View>
   );
 });
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    paddingTop: 20,
+  },
+  s1: {
+    ...theme.typography.caption2,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0,
+    color: theme.colors.foreground,
+  },
+  s2: {
+    ...theme.typography.caption2,
+    textTransform: 'uppercase',
+    letterSpacing: 0,
+    color: theme.colors.mutedForeground,
+  },
+  s3: {
+    flexDirection: 'row',
+    gap: 12,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  s4: { width: 64, alignItems: 'flex-end', paddingTop: 2 },
+  s5: {
+    ...theme.typography.caption2,
+    fontFamily: 'Menlo',
+    letterSpacing: 0,
+    color: theme.colors.mutedForeground,
+  },
+  s6: {
+    ...theme.typography.caption2,
+    fontFamily: 'Menlo',
+    letterSpacing: 0,
+    color: theme.colors.mutedForeground,
+    opacity: 0.6,
+  },
+  s7: { width: 4, borderRadius: 999 },
+  s8: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
+  s9: { ...theme.typography.body, color: theme.colors.foreground },
+  s10: { ...theme.typography.caption2, color: theme.colors.mutedForeground },
+}));

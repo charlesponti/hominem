@@ -17,6 +17,17 @@ describe('task time fields', () => {
     expect(result.scheduledStartAt).toBeUndefined();
   });
 
+  it('accepts timezone-offset timestamps from time block extraction', () => {
+    const result = CreateTaskSchema.parse({
+      artifactType: 'task',
+      title: 'Write pitch deck',
+      schedulingWindowStartAt: '2026-07-29T08:00:00-07:00',
+      schedulingWindowEndAt: '2026-07-29T18:00:00-07:00',
+    });
+
+    expect(result.schedulingWindowStartAt).toBe('2026-07-29T08:00:00-07:00');
+  });
+
   it('accepts a fixed task when both scheduled timestamps are present', () => {
     const result = CreateTaskSchema.parse({
       artifactType: 'task',
@@ -38,6 +49,15 @@ describe('task time fields', () => {
 
     expect(result.participants).toHaveLength(2);
     expect(result.participants?.[1]).toBe('00000000-0000-4000-8000-000000000002');
+  });
+
+  it('accepts timezone-offset timestamps when updating a task', () => {
+    const result = UpdateTaskSchema.parse({
+      schedulingWindowStartAt: '2026-07-29T08:00:00-07:00',
+      schedulingWindowEndAt: '2026-07-29T18:00:00-07:00',
+    });
+
+    expect(result.schedulingWindowEndAt).toBe('2026-07-29T18:00:00-07:00');
   });
 
   it('rejects a partial or reversed scheduled interval', () => {

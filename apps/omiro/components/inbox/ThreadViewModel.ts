@@ -1,6 +1,6 @@
 import type { InboxStreamItem } from '@hominem/rpc/types';
 
-export type ThreadCommon = {
+type ThreadCommon = {
   id: string;
   entityId: string;
   title: string | null;

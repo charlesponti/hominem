@@ -1,5 +1,3 @@
-import { Card, nativeShadows } from '@ponti-studios/ui/native';
-import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { useCallback, useRef } from 'react';
 import Animated, {
   FadeIn,
@@ -8,9 +6,12 @@ import Animated, {
   FadeOutUp,
   LinearTransition,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { transitionDurations } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { Card, nativeShadows } from '~/components/ui';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -108,7 +109,7 @@ function ComposerContent(props: ComposerProps) {
     [controller.voice],
   );
 
-  const [primary, destructive, borderDefault] = useCSSVariable([
+  const [primary, destructive, borderDefault] = useThemeColor([
     '--color-primary',
     '--color-destructive',
     '--color-border',
@@ -142,7 +143,7 @@ function ComposerContent(props: ComposerProps) {
 
   return (
     <Animated.View
-      className="w-full gap-3"
+      style={styles.s0}
       layout={bannerLayout}
       ref={toastHandoff.ref}
       testID={presentation.shellTestID}
@@ -232,3 +233,7 @@ function ComposerContent(props: ComposerProps) {
     </Animated.View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { width: '100%', gap: 12 },
+}));

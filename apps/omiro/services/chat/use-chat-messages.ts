@@ -66,7 +66,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
       const messages = (await res.json()) as RpcChatMessage[];
 
       const nextMessages = messages.flatMap((message: RpcChatMessage) => {
-        const output = toMessageOutput(message as RpcChatMessage);
+        const output = toMessageOutput(message);
         return output ? [output] : [];
       });
       return preserveRenderKeys(

@@ -2,28 +2,20 @@ import type { ChatMessageItem } from '@hominem/chat';
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Platform,
-  Pressable,
-  type RefreshControlProps,
-  Text,
-  View,
-} from 'react-native';
+import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import type { ChatGenerationState } from '~/services/chat/chat-generation';
+
+import { ChatActivityTimeline } from './chat-activity-timeline';
 import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.25;
 const keyExtractor = (item: ChatMessageItem) => item.renderKey ?? item.id;
-type AccessibleChatMessage = ChatMessageItem & {
-  errorMessage?: string | null;
-  status?: string | null;
-};
-
-function announceMessage(message: AccessibleChatMessage, previous?: AccessibleChatMessage) {
-  const failed = message.status === 'failed' || Boolean(message.errorMessage);
-  const wasFailed = previous?.status === 'failed' || Boolean(previous?.errorMessage);
+function announceMessage(message: ChatMessageItem, previous?: ChatMessageItem) {
+  const failed = Boolean(message.failed || message.error);
+  const wasFailed = Boolean(previous?.failed || previous?.error);
 
   if (failed && !wasFailed) {
     AccessibilityInfo.announceForAccessibility('Message failed to send. Tap retry.');
@@ -65,6 +57,9 @@ interface ChatMessageListProps {
    * the composer occupies real layout space there.
    */
   bottomInset?: number;
+  generation?: ChatGenerationState | null;
+  onCancelGeneration?: () => void;
+  onRetryGeneration?: () => void;
 }
 
 export function ChatMessageList({
@@ -81,13 +76,23 @@ export function ChatMessageList({
   emptyState,
   refreshControl,
   bottomInset = 0,
+  generation,
+  onCancelGeneration,
+  onRetryGeneration,
 }: ChatMessageListProps) {
+  const renderedMessages = useMemo(
+    () =>
+      generation?.targetMessageId
+        ? displayMessages.filter((message) => message.id !== generation.targetMessageId)
+        : displayMessages,
+    [displayMessages, generation?.targetMessageId],
+  );
   const hasSearchQuery = showSearch && searchQuery.length > 0;
   const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null);
   const listRef = useRef<FlashListRef<ChatMessageItem> | null>(null);
-  const prevCountRef = useRef(displayMessages.length);
-  const prevLastMessageIdRef = useRef(displayMessages.at(-1)?.id ?? null);
-  const announcedMessagesRef = useRef(new Map<string, AccessibleChatMessage>());
+  const prevCountRef = useRef(renderedMessages.length);
+  const prevLastMessageIdRef = useRef(renderedMessages.at(-1)?.id ?? null);
+  const announcedMessagesRef = useRef(new Map<string, ChatMessageItem>());
   const didInitializeAnnouncementsRef = useRef(false);
   const didInitialScrollRef = useRef(false);
 
@@ -102,43 +107,45 @@ export function ChatMessageList({
     }
 
     if (!didInitializeAnnouncementsRef.current) {
-      for (const message of displayMessages) {
+      for (const message of renderedMessages) {
         previousMessages.set(message.id, message);
       }
       didInitializeAnnouncementsRef.current = true;
       return;
     }
 
-    for (const message of displayMessages) {
+    for (const message of renderedMessages) {
       const previous = previousMessages.get(message.id);
       announceMessage(message, previous);
       previousMessages.set(message.id, message);
     }
-  }, [displayMessages, isMessagesLoading]);
+  }, [isMessagesLoading, renderedMessages]);
 
   // Force-scroll to the bottom when the user sends a new message, even if they'd
   // scrolled up. Auto-follow while already near the bottom (including while a
   // reply streams in) is handled natively by FlashList's maintainVisibleContentPosition
   // below, which avoids the flash-then-jump of an imperative scrollToEnd.
   useEffect(() => {
-    const lastMessage = displayMessages.at(-1) ?? null;
-    const countChanged = displayMessages.length !== prevCountRef.current;
+    const lastMessage = renderedMessages.at(-1) ?? null;
+    const countChanged = renderedMessages.length !== prevCountRef.current;
     const lastMessageIdChanged = lastMessage?.id !== prevLastMessageIdRef.current;
     const shouldScrollForNewUserMessage =
       countChanged && lastMessageIdChanged && lastMessage?.role === 'user';
 
-    prevCountRef.current = displayMessages.length;
+    prevCountRef.current = renderedMessages.length;
     prevLastMessageIdRef.current = lastMessage?.id ?? null;
 
     if (showSearch || !shouldScrollForNewUserMessage) return;
 
-    requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: true });
     });
-  }, [displayMessages, showSearch]);
+
+    return () => cancelAnimationFrame(frame);
+  }, [renderedMessages, showSearch]);
 
   useEffect(() => {
-    if (hasSearchQuery || didInitialScrollRef.current || displayMessages.length === 0) return;
+    if (hasSearchQuery || didInitialScrollRef.current || renderedMessages.length === 0) return;
 
     const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: false });
@@ -146,7 +153,23 @@ export function ChatMessageList({
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [displayMessages.length, hasSearchQuery]);
+  }, [hasSearchQuery, renderedMessages.length]);
+
+  const activationHandlers = useMemo(
+    () =>
+      new Map(
+        renderedMessages
+          .filter((message) => !message.isStreaming)
+          .map((message) => [
+            message.id,
+            () =>
+              setActiveActionMessageId((currentMessageId) =>
+                currentMessageId === message.id ? null : message.id,
+              ),
+          ]),
+      ),
+    [renderedMessages],
+  );
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
     ({ item }) => (
@@ -155,12 +178,7 @@ export function ChatMessageList({
         message={item}
         {...{
           isActive: !item.isStreaming && activeActionMessageId === item.id,
-          onActivate: item.isStreaming
-            ? undefined
-            : () =>
-                setActiveActionMessageId((currentMessageId) =>
-                  currentMessageId === item.id ? null : item.id,
-                ),
+          onActivate: activationHandlers.get(item.id),
           onEdit: item.isStreaming ? undefined : onEdit,
           onRegenerate: item.isStreaming ? undefined : onRegenerate,
           onDelete: item.isStreaming ? undefined : onDelete,
@@ -169,25 +187,32 @@ export function ChatMessageList({
         }}
       />
     ),
-    [activeActionMessageId, formatTimestamp, onDelete, onEdit, onRegenerate, onRetry, showDebug],
+    [
+      activeActionMessageId,
+      activationHandlers,
+      formatTimestamp,
+      onDelete,
+      onEdit,
+      onRegenerate,
+      onRetry,
+      showDebug,
+    ],
   );
 
   const emptySearch = useMemo(() => {
     if (!hasSearchQuery) return null;
 
     return (
-      <View className="items-center pt-7">
-        <Text className="font-mono text-sm text-tertiary">
-          No messages matching &ldquo;{searchQuery}&rdquo;
-        </Text>
+      <View style={styles.s0}>
+        <Text style={styles.s1}>No messages matching &ldquo;{searchQuery}&rdquo;</Text>
       </View>
     );
   }, [hasSearchQuery, searchQuery]);
 
   const listEmptyComponent = hasSearchQuery ? emptySearch : (emptyState ?? null);
-  if (isMessagesLoading && displayMessages.length === 0) {
+  if (isMessagesLoading && renderedMessages.length === 0) {
     return (
-      <View className="flex-1 pt-3">
+      <View style={styles.s2}>
         <ChatShimmerMessage />
         <ChatShimmerMessage variant="user" />
         <ChatShimmerMessage />
@@ -195,41 +220,34 @@ export function ChatMessageList({
     );
   }
 
-  if (!hasSearchQuery && displayMessages.length === 0 && emptyState) {
-    return (
-      <View className="flex-1" style={{ paddingBottom: bottomInset }}>
-        {emptyState}
-      </View>
-    );
+  if (!hasSearchQuery && renderedMessages.length === 0 && emptyState) {
+    return <View style={[styles.s3, { paddingBottom: bottomInset }]}>{emptyState}</View>;
   }
 
   return (
     <FlashList
       ref={listRef}
-      className="flex-1"
+      style={styles.s4}
       contentInsetAdjustmentBehavior="automatic"
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
-        displayMessages.length > 0 ? (
+        renderedMessages.length > 0 ? (
           <Pressable
             accessibilityLabel="Chat message list bottom"
             onPress={() => setActiveActionMessageId(null)}
-            className="grow min-h-8"
+            style={styles.s6}
             testID="chat-message-list-bottom-sentinel"
           />
         ) : null
       }
-      contentContainerStyle={[
-        { flexGrow: 1, paddingHorizontal: 16, paddingTop: 4, rowGap: 20 },
-        Platform.OS === 'android' ? { paddingBottom: bottomInset } : undefined,
-      ]}
+      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 4, rowGap: 20 }}
       // The composer sits in normal column flow at rest, so bottomInset is 0
       // and this reserves nothing extra. While the keyboard is open the
       // composer lifts by translating above its resting position instead of
       // resizing, so bottomInset carries just that transient overlap amount.
-      contentInset={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
-      scrollIndicatorInsets={Platform.OS === 'ios' ? { bottom: bottomInset } : undefined}
-      data={displayMessages}
+      contentInset={{ bottom: bottomInset }}
+      scrollIndicatorInsets={{ bottom: bottomInset }}
+      data={renderedMessages}
       keyExtractor={keyExtractor}
       maintainVisibleContentPosition={{
         startRenderingFromBottom: true,
@@ -238,8 +256,18 @@ export function ChatMessageList({
       onScrollBeginDrag={() => setActiveActionMessageId(null)}
       renderItem={renderItem}
       refreshControl={refreshControl}
-      scrollEnabled={displayMessages.length > 0 || refreshControl !== undefined}
+      scrollEnabled={renderedMessages.length > 0 || refreshControl !== undefined}
       testID="chat-message-list"
     />
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { alignItems: 'center', paddingTop: 28 },
+  s1: { fontFamily: 'Menlo', color: theme.colors.tertiary },
+  s2: { flex: 1, paddingTop: 12 },
+  s3: { flex: 1 },
+  s4: { flex: 1 },
+  s5: { flexGrow: 1, minHeight: 32 },
+  s6: { flexGrow: 1, minHeight: 32 },
+}));

@@ -1,7 +1,7 @@
 import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/community/menu';
-import { IconButton } from '@ponti-studios/ui/native';
 import { useRouter, useSegments } from 'expo-router';
 
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { HOME_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 

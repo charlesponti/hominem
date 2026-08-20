@@ -30,7 +30,7 @@ describe('mobile query persistence', () => {
     expect(mobilePersistOptions.maxAge).toBe(7 * 24 * 60 * 60_000);
   });
 
-  it('persists successful application data but excludes in-flight streams', () => {
+  it('persists successful application data without client-only generation placeholders', () => {
     expect(shouldPersistQuery(query({ key: ['notes', 'detail', 'note-1'], data: {} }))).toBe(true);
     expect(shouldPersistQuery(query({ key: ['calendar', 'events'], data: {} }))).toBe(false);
     expect(
@@ -40,7 +40,7 @@ describe('mobile query persistence', () => {
           data: [{ id: 'message-1', isStreaming: true }],
         }),
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(shouldPersistQuery(query({ key: ['notes'], data: {}, status: 'pending' }))).toBe(false);
   });
 

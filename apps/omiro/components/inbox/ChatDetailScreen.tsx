@@ -10,6 +10,7 @@ import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
+import { makeStyles, withAlpha } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
@@ -105,7 +106,14 @@ export function ChatDetailScreen({ id }: { id: string }) {
   // Owned here (rather than inside Composer) so the composer's send and the
   // message list's retry-a-failed-message action share one mutation instead
   // of racing two independent streams.
-  const { sendChatMessage, isChatSending, retryFailedMessage } = useSendMessage({ chatId });
+  const {
+    cancelGeneration,
+    generation,
+    sendChatMessage,
+    isChatSending,
+    retryFailedMessage,
+    retryLastGeneration,
+  } = useSendMessage({ chatId });
   const chatSend = useMemo(
     () => ({ sendChatMessage, isChatSending }),
     [sendChatMessage, isChatSending],
@@ -118,7 +126,15 @@ export function ChatDetailScreen({ id }: { id: string }) {
     [editMessage],
   );
 
-  const { regenerateMessage } = useRegenerateMessage(chatId);
+  const {
+    cancelGeneration: cancelRegeneration,
+    generation: regeneration,
+    regenerateMessage,
+    retryGeneration,
+  } = useRegenerateMessage(chatId);
+  const activeGeneration = generation ?? regeneration;
+  const cancelActiveGeneration = generation ? cancelGeneration : cancelRegeneration;
+  const retryActiveGeneration = generation ? retryLastGeneration : retryGeneration;
 
   const displayTitle = getChatTitle(activeChat?.title, transform.resolvedSource);
   const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
@@ -264,7 +280,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
       </Stack.Toolbar>
 
       <ChatMotionOverlayProvider>
-        <View className="flex-1">
+        <View style={styles.s0}>
           <ChatSettingsSheet
             visible={showChatSettings}
             onClose={() => setShowChatSettings(false)}
@@ -281,12 +297,10 @@ export function ChatDetailScreen({ id }: { id: string }) {
             <View
               accessibilityLiveRegion="polite"
               accessibilityRole="alert"
-              className="bg-muted border-b border-border px-4 py-2"
+              style={styles.s1}
               testID="chat-offline-indicator"
             >
-              <Text className="text-center text-footnote text-muted-foreground">
-                {t.chat.offlineIndicator}
-              </Text>
+              <Text style={styles.s2}>{t.chat.offlineIndicator}</Text>
             </View>
           ) : null}
           <ChatMessageList
@@ -299,6 +313,11 @@ export function ChatDetailScreen({ id }: { id: string }) {
             onEdit={handleEditMessage}
             onRegenerate={regenerateMessage}
             onRetry={retryFailedMessage}
+            generation={activeGeneration}
+            onCancelGeneration={() => {
+              void cancelActiveGeneration();
+            }}
+            onRetryGeneration={retryActiveGeneration}
             formatTimestamp={formatRelativeAge}
             emptyState={
               isConversationGone
@@ -321,7 +340,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
               <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
                 <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
               </ComposerDock>
-              <View className="absolute inset-0" pointerEvents="box-none">
+              <View style={styles.s3} pointerEvents="box-none">
                 <ChatReviewOverlay
                   pendingReview={transform.pendingReview}
                   isVisible={transform.isReviewVisible}
@@ -340,3 +359,16 @@ export function ChatDetailScreen({ id }: { id: string }) {
     </>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1 },
+  s1: {
+    backgroundColor: theme.colors.muted,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  s2: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.mutedForeground },
+  s3: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+}));

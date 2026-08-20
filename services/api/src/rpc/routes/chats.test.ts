@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => ({
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
   replaceAssistantMessageContent: vi.fn(),
+  createGenerationRun: vi.fn(),
+  getGenerationRun: vi.fn(),
+  updateGenerationRun: vi.fn(),
+  cancelGenerationRun: vi.fn(),
   resolveReferencedNotes: vi.fn(),
   resolveChatFiles: vi.fn(),
   runInTransaction: vi.fn(),
@@ -48,6 +52,10 @@ vi.mock('@hominem/db', async () => {
       insertMessage: mocks.insertMessage,
       touchLastMessage: mocks.touchLastMessage,
       replaceAssistantMessageContent: mocks.replaceAssistantMessageContent,
+      createGenerationRun: mocks.createGenerationRun,
+      getGenerationRun: mocks.getGenerationRun,
+      updateGenerationRun: mocks.updateGenerationRun,
+      cancelGenerationRun: mocks.cancelGenerationRun,
       resolveReferencedNotes: mocks.resolveReferencedNotes,
       resolveChatFiles: mocks.resolveChatFiles,
     },
@@ -99,7 +107,7 @@ vi.mock('@hominem/services/redis', () => ({
 
 vi.mock('./chats.mapper', () => ({
   toChatDto: vi.fn((chat: { id: string }) => ({ id: chat.id })),
-  toChatMessageDto: vi.fn(),
+  toChatMessageDto: vi.fn((message: unknown) => message),
   toStoredUserMessageContent: vi.fn((message: string) => message),
 }));
 
@@ -140,7 +148,11 @@ describe('chat stream accounting', () => {
     mocks.streamChatCompletion.mockClear();
     mocks.createChat.mockResolvedValue({ id: 'chat-id' });
     mocks.getMessages.mockResolvedValue([]);
-    mocks.insertMessage.mockResolvedValue(undefined);
+    mocks.insertMessage.mockResolvedValue({ id: 'message-id' });
+    mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.getGenerationRun.mockResolvedValue(null);
+    mocks.updateGenerationRun.mockResolvedValue(undefined);
+    mocks.getMessageById.mockResolvedValue({ id: 'message-id' });
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.resolveReferencedNotes.mockResolvedValue([]);
     mocks.resolveChatFiles.mockResolvedValue([]);
@@ -176,7 +188,11 @@ describe('chat stream accounting', () => {
     const response = await createApp().request('/api/chats/start-stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title: 'Test', message: 'Hello' }),
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111112',
+        title: 'Test',
+        message: 'Hello',
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -194,7 +210,12 @@ describe('chat stream accounting', () => {
     const response = await createApp().request('/api/chats/start-stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title: 'Test', message: 'Hello', responseLength: 'long' }),
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111113',
+        title: 'Test',
+        message: 'Hello',
+        responseLength: 'long',
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -256,7 +277,13 @@ describe('chat message regenerate', () => {
     mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
     mocks.resolveReferencedNotes.mockResolvedValue([]);
     mocks.replaceAssistantMessageContent.mockReset();
-    mocks.replaceAssistantMessageContent.mockResolvedValue(undefined);
+    mocks.replaceAssistantMessageContent.mockResolvedValue({
+      ...assistantMessage,
+      content: 'Regenerated reply',
+    });
+    mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.getGenerationRun.mockResolvedValue(null);
+    mocks.updateGenerationRun.mockResolvedValue(undefined);
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
     mocks.assertUnderMonthlyUsageLimit.mockResolvedValue(undefined);
@@ -281,7 +308,7 @@ describe('chat message regenerate', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111114' }),
       },
     );
 
@@ -315,7 +342,7 @@ describe('chat message regenerate', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111115' }),
       },
     );
 
@@ -332,7 +359,7 @@ describe('chat message regenerate', () => {
     const response = await createApp().request('/api/chats/chat-id/messages/user-1/regenerate', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111116' }),
     });
 
     expect(response.status).toBe(400);
@@ -345,7 +372,7 @@ describe('chat message regenerate', () => {
     const response = await createApp().request('/api/chats/chat-id/messages/missing/regenerate', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111117' }),
     });
 
     expect(response.status).toBe(400);
@@ -360,7 +387,7 @@ describe('chat message regenerate', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111118' }),
       },
     );
 
@@ -376,7 +403,15 @@ describe('chat stream walkie-talkie audio leg', () => {
     mocks.insertMessage.mockReset();
     mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
     mocks.getMessages.mockResolvedValue([]);
-    mocks.insertMessage.mockResolvedValue(undefined);
+    mocks.insertMessage.mockResolvedValue({ id: 'assistant-id' });
+    mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.getGenerationRun.mockResolvedValue(null);
+    mocks.updateGenerationRun.mockResolvedValue(undefined);
+    mocks.getMessageById.mockResolvedValue({
+      id: 'assistant-id',
+      content: 'Hi there',
+      files: null,
+    });
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.resolveReferencedNotes.mockResolvedValue([]);
     mocks.resolveChatFiles.mockResolvedValue([]);
@@ -393,7 +428,7 @@ describe('chat stream walkie-talkie audio leg', () => {
     );
   });
 
-  it('synthesizes and attaches audio, emitting a trailing audio event after [DONE]', async () => {
+  it('synthesizes and attaches audio before committing the durable reply', async () => {
     mocks.synthesizeChatReplySpeech.mockResolvedValue({
       kind: 'success',
       buffer: Buffer.from('fake-mp3-bytes'),
@@ -412,26 +447,17 @@ describe('chat stream walkie-talkie audio leg', () => {
     const response = await createApp().request('/api/chats/chat-id/stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message: 'Hello', responseModality: 'audio' }),
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111119',
+        message: 'Hello',
+        responseModality: 'audio',
+      }),
     });
 
     expect(response.status).toBe(200);
     const body = await response.text();
-    const frames = body
-      .split(/\n\n/)
-      .map((frame) => frame.replace(/^data: /, ''))
-      .filter(Boolean);
-
-    const doneIndex = frames.indexOf('[DONE]');
-    const audioFrameIndex = frames.findIndex((frame) => frame.includes('"type":"audio"'));
-
-    expect(doneIndex).toBeGreaterThanOrEqual(0);
-    expect(audioFrameIndex).toBeGreaterThan(doneIndex);
-    expect(JSON.parse(frames[audioFrameIndex])).toEqual({
-      type: 'audio',
-      url: 'https://files.example.com/reply.mp3',
-      mimeType: 'audio/mpeg',
-    });
+    expect(body).toContain('"type":"committed"');
+    expect(body).not.toContain('"type":"audio"');
 
     expect(mocks.synthesizeChatReplySpeech).toHaveBeenCalledWith('Hi there');
     expect(mocks.storeFile).toHaveBeenCalledWith(
@@ -467,7 +493,11 @@ describe('chat stream walkie-talkie audio leg', () => {
     const response = await createApp().request('/api/chats/chat-id/stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message: 'Hello', responseModality: 'audio' }),
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111120',
+        message: 'Hello',
+        responseModality: 'audio',
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -490,7 +520,10 @@ describe('chat stream walkie-talkie audio leg', () => {
     const response = await createApp().request('/api/chats/chat-id/stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message: 'Hello' }),
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111121',
+        message: 'Hello',
+      }),
     });
 
     expect(response.status).toBe(200);

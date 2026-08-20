@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { useInterruptibleMotion } from '~/services/motion/use-interruptible-motion';
 
@@ -28,7 +29,7 @@ export function ComposerToastFlight({
   onSettled: () => void;
 }) {
   const motion = useInterruptibleMotion();
-  const textPrimary = useCSSVariable('--color-foreground') as string;
+  const textPrimary = useThemeColor('--color-foreground') as string;
 
   useEffect(() => {
     motion.start();
@@ -55,13 +56,18 @@ export function ComposerToastFlight({
       pointerEvents="none"
       style={[{ left: rect.left, position: 'absolute', top: rect.top, width: rect.width }, style]}
     >
-      <View
-        className="bg-popover rounded-lg px-2 py-2"
-        style={{ borderCurve: 'continuous' }}
-        testID="composer-toast-flight"
-      >
+      <View style={[styles.s0, { borderCurve: 'continuous' }]} testID="composer-toast-flight">
         <Text style={{ color: textPrimary, fontSize: 16, lineHeight: 24 }}>{text}</Text>
       </View>
     </Animated.View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    backgroundColor: theme.colors.popover,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+}));

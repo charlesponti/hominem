@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { inboxDayGroupKey, inboxDayGroupLabel } from '~/components/inbox/format-inbox-date';
 import { InboxStreamItem } from '~/components/inbox/InboxStreamItem';
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
+import { makeStyles, withAlpha } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
   clearInboxDraft,
@@ -34,20 +35,14 @@ export function HomeScreen() {
   const { isFetching: isFetchingTasks, refetch: refetchTasks } = useTasksQuery();
   const recentItems = inbox.items.slice(0, 6);
   const dayGroups = useMemo(() => groupByDay(recentItems), [recentItems]);
-  const inset = useMemo(
-    () => (Platform.OS === 'ios' ? { bottom: composerInset } : undefined),
-    [composerInset],
-  );
+  const inset = useMemo(() => ({ bottom: composerInset }), [composerInset]);
 
   return (
-    <View className="flex-1 bg-background" testID="home-screen">
+    <View style={styles.s0} testID="home-screen">
       <ScrollView
         contentInset={inset}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={
-          Platform.OS === 'android' ? { paddingBottom: composerInset + 20 } : undefined
-        }
-        className="gap-4"
+        style={styles.s1}
         scrollIndicatorInsets={inset}
         refreshControl={
           <RefreshControl
@@ -60,21 +55,17 @@ export function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View className="gap-2">
+        <View style={styles.s2}>
           {dayGroups.map((group) => (
             <View key={group.key}>
-              <Text className="text-caption1 text-tertiary px-4 pb-2 pt-1 font-semibold uppercase tracking-wide">
-                {group.label}
-              </Text>
+              <Text style={styles.s3}>{group.label}</Text>
               {group.items.map((item) => (
                 <InboxStreamItem item={item} key={item.id} />
               ))}
             </View>
           ))}
           {!inbox.isInitialLoading && recentItems.length === 0 ? (
-            <Text className="px-4 text-muted-foreground">
-              Capture a thought to start your inbox.
-            </Text>
+            <Text style={styles.s4}>Capture a thought to start your inbox.</Text>
           ) : null}
         </View>
       </ScrollView>
@@ -90,3 +81,20 @@ export function HomeScreen() {
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, backgroundColor: theme.colors.background },
+  s1: { gap: 16 },
+  s2: { gap: 8 },
+  s3: {
+    ...theme.typography.caption1,
+    color: theme.colors.tertiary,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    paddingTop: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0,
+  },
+  s4: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
+}));

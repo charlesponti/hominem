@@ -35,9 +35,7 @@
     "services/**/*.ts",
     "constants/**/*.ts",
     "tests/**/*.ts",
-    "app.config.js",
-    "./uniwind-types.d.ts",
-    "./css-modules.d.ts"
+    "app.config.js"
   ],
   "exclude": [
     "node_modules",

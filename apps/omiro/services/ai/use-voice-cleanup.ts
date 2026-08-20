@@ -3,6 +3,8 @@ import type { VoiceCleanupInput, VoiceCleanupOutput } from '@hominem/rpc/types';
 import { emitVoiceEvent } from '@hominem/rpc/voice-events';
 import { useCallback, useState } from 'react';
 
+import { parseApiError } from '~/services/api/parse-api-error';
+
 export function useVoiceCleanup() {
   const client = useApiClient();
   const [isCleaningVoice, setIsCleaningVoice] = useState(false);
@@ -22,7 +24,7 @@ export function useVoiceCleanup() {
           json: locale ? { rawText, locale, source } : { rawText, source },
         });
         if (!response.ok) {
-          const error = (await response.json().catch(() => ({}))) as { message?: unknown };
+          const error = await parseApiError(response);
           throw new Error(
             typeof error.message === 'string'
               ? error.message

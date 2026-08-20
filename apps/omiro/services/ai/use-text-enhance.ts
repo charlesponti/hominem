@@ -2,6 +2,8 @@ import { useApiClient } from '@hominem/rpc/react';
 import type { EnhanceTextInput, EnhanceTextOutput } from '@hominem/rpc/types';
 import { useCallback, useState } from 'react';
 
+import { parseApiError } from '~/services/api/parse-api-error';
+
 export function useTextEnhance() {
   const client = useApiClient();
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -14,7 +16,7 @@ export function useTextEnhance() {
           json: instruction ? { text, instruction } : { text },
         });
         if (!response.ok) {
-          const error = (await response.json().catch(() => ({}))) as { message?: unknown };
+          const error = await parseApiError(response);
           throw new Error(
             typeof error.message === 'string'
               ? error.message

@@ -74,7 +74,7 @@ export function deriveComposerContentCapabilities({
   const canOpenEnhance = hasContent && !isInteractionBusy && !voice.isCleaningVoice;
 
   // The transcription-failed error no longer counts here -- it renders as a popover
-  // above the composer (ComposerShell's errorBanner slot), not as inline body content,
+  // above the composer (Composer's errorBanner slot), not as inline body content,
   // so it shouldn't force the composer itself into column layout.
   const isInlinePanelOpen = voice.isRecording || enhance.isEnhanceOpen;
   const isColumnLayout = isFocused || hasContent || showAttachments || isInlinePanelOpen;

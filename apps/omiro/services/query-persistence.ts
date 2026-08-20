@@ -12,20 +12,7 @@ export function shouldPersistQuery(query: Query<unknown, Error, unknown, QueryKe
   const [namespace] = query.queryKey;
   if (!['inbox', 'notes', 'chats', 'tasks'].includes(String(namespace))) return false;
 
-  // Streaming placeholders are intentionally process-local. Persisting one would
-  // restore a permanently unfinished answer after a relaunch.
-  return !(
-    namespace === 'chats' &&
-    query.queryKey[1] === 'messages' &&
-    Array.isArray(query.state.data) &&
-    query.state.data.some(
-      (message) =>
-        typeof message === 'object' &&
-        message !== null &&
-        'isStreaming' in message &&
-        message.isStreaming === true,
-    )
-  );
+  return true;
 }
 
 const queryStorage = {
@@ -34,7 +21,7 @@ const queryStorage = {
   setItem: (key: string, value: string) => storage.set(key, value),
 };
 
-export const queryPersister = createSyncStoragePersister({
+const queryPersister = createSyncStoragePersister({
   key: QUERY_CACHE_KEY,
   storage: queryStorage,
 });

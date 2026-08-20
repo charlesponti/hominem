@@ -4,6 +4,7 @@ import { Text } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { makeStyles, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';
@@ -46,40 +47,36 @@ export function ClassificationReview({
     >
       <Animated.View
         entering={FadeInUp.duration(150)}
-        style={{ paddingBottom: insets.bottom + 16 }}
-        className="bg-background border-t border-border rounded-t-md gap-6 p-8"
+        style={[{ paddingBottom: insets.bottom + 16 }, styles.s0]}
       >
-        <View className="self-center bg-border rounded-sm h-1 mb-2 w-9" />
-        <View className="gap-2">
-          <Text className="text-muted-foreground text-caption1 font-medium tracking-[1] uppercase">
+        <View style={styles.s1} />
+        <View style={styles.s2}>
+          <Text style={styles.s3}>
             {t.chat.classification.saveAsPrefix} {t.chat.classification.typeLabel[proposedType]}
           </Text>
-          <Text className="text-base font-medium">{proposedTitle}</Text>
+          <Text style={styles.s4}>{proposedTitle}</Text>
         </View>
 
         {proposedChanges.length > 0 ? (
-          <View className="gap-2">
+          <View style={styles.s5}>
             {proposedChanges.map((change, index) => (
-              <View key={`${change}-${index}`} className="flex-row items-start gap-3">
-                <Text className="text-muted-foreground mt-[1px] opacity-40">-</Text>
-                <Text className="text-muted-foreground flex-1">{change}</Text>
+              <View key={`${change}-${index}`} style={styles.s6}>
+                <Text style={styles.s7}>-</Text>
+                <Text style={styles.s8}>{change}</Text>
               </View>
             ))}
           </View>
         ) : null}
 
         {items === undefined ? (
-          <ScrollView
-            nestedScrollEnabled
-            className="bg-muted border border-border rounded-md max-h-[120px] p-4"
-          >
-            <Text className="text-muted-foreground font-mono">{previewContent}</Text>
+          <ScrollView nestedScrollEnabled style={styles.s9}>
+            <Text style={styles.s10}>{previewContent}</Text>
           </ScrollView>
         ) : null}
 
-        <View className="flex-row gap-3">
+        <View style={styles.s11}>
           {isEmptyExtraction ? null : (
-            <View className="flex-1">
+            <View style={styles.s12}>
               <Button
                 testID="classification-review-accept"
                 label={acceptLabel}
@@ -88,7 +85,7 @@ export function ClassificationReview({
               />
             </View>
           )}
-          <View className="flex-1">
+          <View style={styles.s13}>
             <Button
               testID="classification-review-reject"
               label={t.chat.classification.discard}
@@ -101,3 +98,46 @@ export function ClassificationReview({
     </ModalOverlay>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: {
+    backgroundColor: theme.colors.background,
+    borderTopWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 24,
+    padding: 32,
+  },
+  s1: {
+    alignSelf: 'center',
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    height: 4,
+    marginBottom: 8,
+    width: 36,
+  },
+  s2: { gap: 8 },
+  s3: {
+    ...theme.typography.caption1,
+    color: theme.colors.mutedForeground,
+    fontWeight: '500',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+  },
+  s4: { fontWeight: '500' },
+  s5: { gap: 8 },
+  s6: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  s7: { color: theme.colors.mutedForeground, marginTop: 1, opacity: 0.4 },
+  s8: { color: theme.colors.mutedForeground, flex: 1 },
+  s9: {
+    backgroundColor: theme.colors.muted,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    maxHeight: 120,
+    padding: 16,
+  },
+  s10: { color: theme.colors.mutedForeground, fontFamily: 'Menlo' },
+  s11: { flexDirection: 'row', gap: 12 },
+  s12: { flex: 1 },
+  s13: { flex: 1 },
+}));

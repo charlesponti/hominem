@@ -8,6 +8,7 @@ import {
   useCalendarPermission,
   useCreateCalendarEvent,
 } from '~/services/calendar/calendar-queries';
+import { localTimeZone } from '~/services/date/format-date';
 import { useTaskCreate } from '~/services/tasks/use-task-create';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 import { useTimeBlockParse } from '~/services/tasks/use-time-block-parse';
@@ -143,7 +144,7 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
           scheduledEndAt: block.end_time,
           schedulingWindowStartAt: block.scheduling_window_start,
           schedulingWindowEndAt: block.scheduling_window_end,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timeZone: localTimeZone(),
         });
       } else if (
         block.primary_intent === 'add_event' ||

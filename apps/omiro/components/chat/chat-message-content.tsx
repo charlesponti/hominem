@@ -3,7 +3,9 @@ import { logger } from '@hominem/telemetry';
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
@@ -52,7 +54,7 @@ export function MessageContent({
 }) {
   const Markdown = useMarkdownComponent();
   const isStreaming = !enableMarkdown;
-  const [textPrimary, popover] = useCSSVariable([
+  const [textPrimary, popover] = useThemeColor([
     '--color-foreground',
     '--color-popover',
   ]) as string[];
@@ -86,7 +88,7 @@ export function MessageContent({
   );
 
   return (
-    <View className="gap-2 w-full">
+    <View style={styles.s0}>
       {isStreaming || !Markdown ? (
         <Text style={textStyle}>{content}</Text>
       ) : (
@@ -96,3 +98,7 @@ export function MessageContent({
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8, width: '100%' },
+}));

@@ -3,70 +3,19 @@ import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
 
 import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
-import {
-  isTestMode,
-  MAESTRO_TRIGGERS,
-  MOCK_AI_RESPONSE,
-  shouldFailOnce,
-} from '~/services/testing/test-mode';
 
-import {
-  type AssistantCompletionHapticGate,
-  createAssistantCompletionHapticGate,
-} from './assistant-completion-haptic-gate';
-import { reconcileBackgroundedAssistantStream } from './chat-stream-cache';
-import {
-  createOptimisticMessage,
-  createStreamingPlaceholder,
-  type MessageOutput,
-} from './chatMessages';
+import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
+import type { ChatGenerationState } from './chat-generation';
+import { createOptimisticMessage, type MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
-
-// Batch chunk writes at ~2 frames (60 fps) to avoid a setQueryData per token.
-const FLUSH_INTERVAL_MS = 32;
-
-// Approximates production pacing for the dev/E2E mock stream. The real
-// endpoint (services/api's chats.ts stream route) forwards raw OpenRouter
-// deltas as they arrive with no server-side batching or delay -- each chunk
-// event is a few characters wide, not a single character. ~4-char chunks
-// every ~20ms targets ~200 chars/sec, in range for the fast model chat is
-// configured with (see CHAT_MODEL in packages/env).
-const MOCK_CHUNK_DELAY_MS = 20;
-const MOCK_CHUNK_MIN_SIZE = 2;
-const MOCK_CHUNK_MAX_SIZE = 6;
-
-// __MAESTRO_SLOW_STREAM__ pacing -- slow enough for a flow to reliably
-// observe the activity carriage mid-stream instead of racing straight to
-// the flush at the end of a ~20ms-per-chunk response. Paired with a
-// shortened response text (below) so the whole exchange still finishes in
-// single-digit seconds instead of the ~40s the full MOCK_AI_RESPONSE would
-// take at this pace.
-const MOCK_SLOW_CHUNK_DELAY_MS = 350;
-const MOCK_SLOW_AI_RESPONSE = MOCK_AI_RESPONSE.slice(0, 120);
-
-// __MAESTRO_LONG_RESPONSE__ text -- several screens tall on a phone, to
-// exercise the printer-surface growth and completion settle without a
-// visible layout jump on a response long enough to require scrolling.
-const MOCK_LONG_AI_RESPONSE = Array(6).fill(MOCK_AI_RESPONSE).join('\n\n');
-
-function* mockStreamChunks(text: string): Generator<string> {
-  let index = 0;
-  while (index < text.length) {
-    const size =
-      MOCK_CHUNK_MIN_SIZE +
-      Math.floor(Math.random() * (MOCK_CHUNK_MAX_SIZE - MOCK_CHUNK_MIN_SIZE + 1));
-    yield text.slice(index, index + size);
-    index += size;
-  }
-}
+import { toMessageOutput } from './use-chat-messages';
 
 function triggerAssistantCompletionHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
@@ -77,170 +26,48 @@ export interface SendInput {
   fileIds?: string[];
   noteIds?: string[];
   responseModality?: 'text' | 'audio';
-  /**
-   * Pre-generated id for the optimistic user message, so a caller that
-   * already started a visual flight for this send (the composer-to-toast
-   * handoff) can hand off to the real transcript row under the same id
-   * instead of racing a second, independently-generated one. Falls back to
-   * a fresh id when omitted -- existing callers are unaffected.
-   */
   messageId?: string;
 }
+
+type MutationInput = SendInput & { generationId: string };
+type SendContext = { userMessageId: string };
 
 export function useSendMessage({ chatId }: { chatId: string }) {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const generationRef = useRef<ChatGenerationState | null>(null);
+  const lastInputRef = useRef<SendInput | null>(null);
+  const [generation, setGeneration] = useState<ChatGenerationState | null>(null);
 
-  const streamingIdRef = useRef<string | null>(null);
-  const chunkBufferRef = useRef('');
-  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeStreamRef = useRef<{
-    assistantMessageId: string;
-    message: string;
-    localMessages: MessageOutput[];
-  } | null>(null);
-  const wasBackgroundedRef = useRef(false);
-  const hapticGateRef = useRef<AssistantCompletionHapticGate>(
-    createAssistantCompletionHapticGate(),
-  );
+  const setCurrentGeneration = useCallback((next: ChatGenerationState | null) => {
+    generationRef.current = next;
+    setGeneration(next);
+  }, []);
 
-  const writeBuffer = useCallback(() => {
-    const id = streamingIdRef.current;
-    const buffer = chunkBufferRef.current;
-    if (!id || !buffer) return;
-    chunkBufferRef.current = '';
-    queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-      prev?.map((m) => (m.id === id ? { ...m, message: m.message + buffer } : m)),
-    );
-  }, [chatId, queryClient]);
-
-  const scheduleFlush = useCallback(() => {
-    if (flushTimerRef.current !== null) return;
-    flushTimerRef.current = setTimeout(() => {
-      flushTimerRef.current = null;
-      writeBuffer();
-    }, FLUSH_INTERVAL_MS);
-  }, [writeBuffer]);
-
-  const flushNow = useCallback(() => {
-    if (flushTimerRef.current !== null) {
-      clearTimeout(flushTimerRef.current);
-      flushTimerRef.current = null;
-    }
-    writeBuffer();
-  }, [writeBuffer]);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState !== 'active') {
-        if (activeStreamRef.current) {
-          wasBackgroundedRef.current = true;
-        }
-        return;
-      }
-
-      if (!wasBackgroundedRef.current || !activeStreamRef.current) return;
-      wasBackgroundedRef.current = false;
-      const stream = activeStreamRef.current;
-
-      void (async () => {
-        await queryClient.refetchQueries({ queryKey: chatKeys.messages(chatId), exact: true });
-        const result = reconcileBackgroundedAssistantStream(queryClient, {
-          chatId,
-          ...stream,
-        });
-        if (result === 'completed') {
-          hapticGateRef.current.markCompletedViaBackgroundReconcile(stream.assistantMessageId);
-          triggerAssistantCompletionHaptic();
-        }
-      })();
-    });
-
-    return () => subscription.remove();
-  }, [chatId, queryClient]);
-
-  const onEvent = useCallback(
-    (event: ChatStreamEvent) => {
-      if (event.type === 'audio') {
-        const id = streamingIdRef.current;
-        if (!id) return;
-        queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-          prev?.map((m) =>
-            m.id === id ? { ...m, audio: { url: event.url, mimeType: event.mimeType } } : m,
-          ),
-        );
-        playAudioReply(id, event.url);
-        return;
-      }
-
-      if (event.type !== 'chunk') {
-        return;
-      }
-
-      chunkBufferRef.current += event.chunk;
-      scheduleFlush();
-    },
-    [chatId, queryClient, scheduleFlush],
-  );
-
-  const mutation = useMutation<
-    void,
-    Error,
-    SendInput,
-    { previousMessages: MessageOutput[]; userMsgId: string; assistantMsgId: string }
-  >({
-    onMutate: async ({ message, messageId }) => {
+  const mutation = useMutation<void, Error, MutationInput, SendContext>({
+    mutationKey: ['chat-generation', chatId],
+    retry: false,
+    onMutate: async ({ message, messageId, generationId }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
-      const previousMessages =
-        queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
-
-      const userMsgId = messageId ?? randomUUID();
-      const assistantMsgId = randomUUID();
-      streamingIdRef.current = assistantMsgId;
-      chunkBufferRef.current = '';
-
-      const localMessages = [
-        ...previousMessages,
-        createOptimisticMessage(chatId, message, null, userMsgId),
-        createStreamingPlaceholder(chatId, assistantMsgId),
-      ].slice(-50);
-      activeStreamRef.current = { assistantMessageId: assistantMsgId, localMessages, message };
-
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), localMessages);
-      return { previousMessages, userMsgId, assistantMsgId };
+      const userMessageId = messageId ?? randomUUID();
+      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (previous = []) => [
+        ...previous,
+        createOptimisticMessage(chatId, message, null, userMessageId),
+      ]);
+      setCurrentGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
+      return { userMessageId };
     },
-
-    mutationFn: async ({ message, fileIds, noteIds, responseModality }) => {
-      if (isTestMode()) {
-        if (shouldFailOnce(message)) {
-          // No partial chunks: react-query retries this mutationFn itself
-          // (mutations.retry: 1) before ever calling onError, and shouldFailOnce
-          // fails that retry too -- emitting content on both attempts would
-          // double-write into the same streaming placeholder's buffer.
-          throw new Error('mock_stream_interrupted');
-        }
-
-        const isSlow = message.includes(MAESTRO_TRIGGERS.slowStream);
-        const text = isSlow
-          ? MOCK_SLOW_AI_RESPONSE
-          : message.includes(MAESTRO_TRIGGERS.longResponse)
-            ? MOCK_LONG_AI_RESPONSE
-            : MOCK_AI_RESPONSE;
-        const delay = isSlow ? MOCK_SLOW_CHUNK_DELAY_MS : MOCK_CHUNK_DELAY_MS;
-        for (const chunk of mockStreamChunks(text)) {
-          onEvent({ type: 'chunk', chunk });
-          await new Promise((r) => setTimeout(r, delay));
-        }
-        flushNow();
-        return;
-      }
-
+    mutationFn: async ({ generationId, message, fileIds, noteIds, responseModality }) => {
       const net = await NetInfo.fetch();
-      if (net.isConnected === false) throw new Error('offline_unavailable');
+      if (net.isConnected === false) throw new Error(OFFLINE_UNAVAILABLE_ERROR);
 
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       await streamSSE<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
         payload: {
+          generationId,
           message: message.trim(),
           fileIds,
           noteIds,
@@ -248,81 +75,107 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           responseLength: getChatResponseLength(),
         },
         getHeaders: getAuthHeaders,
-        onEvent,
-        onDone: flushNow,
+        signal: controller.signal,
+        onEvent: (event) => {
+          if (event.type === 'accepted' && event.userMessage) {
+            const userMessage = toMessageOutput(event.userMessage);
+            if (userMessage) {
+              queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (current = []) =>
+                current.map((item) =>
+                  item.id === generationRef.current?.userMessageId ? userMessage : item,
+                ),
+              );
+            }
+            return;
+          }
+          if (event.type === 'status') {
+            const current = generationRef.current;
+            if (current?.id === event.generationId) {
+              setCurrentGeneration({ ...current, stage: event.status });
+            }
+            return;
+          }
+          if (event.type === 'committed') {
+            const committed = toMessageOutput(event.message);
+            if (committed) {
+              queryClient.setQueryData<MessageOutput[]>(
+                chatKeys.messages(chatId),
+                (current = []) => [
+                  ...current.filter((item) => item.id !== committed.id),
+                  committed,
+                ],
+              );
+              if (committed.audio?.url) playAudioReply(committed.id, committed.audio.url);
+            }
+            setCurrentGeneration(null);
+            triggerAssistantCompletionHaptic();
+            void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
+            return;
+          }
+          if (event.type === 'cancelled') {
+            const current = generationRef.current;
+            if (current?.id === event.generationId) {
+              setCurrentGeneration({ ...current, stage: 'cancelled' });
+            }
+          }
+        },
       });
-
-      flushNow();
     },
-
-    onSuccess: (_data, _input, context) => {
-      streamingIdRef.current = null;
-      activeStreamRef.current = null;
-      if (hapticGateRef.current.consumeForMutationSettle(context?.assistantMsgId)) {
-        triggerAssistantCompletionHaptic();
-      }
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-        prev?.map((m) => (m.id === context?.assistantMsgId ? { ...m, isStreaming: false } : m)),
-      );
-      // In test mode the mock never writes to the server, so a background refetch
-      // would overwrite the local optimistic data with an empty array.
-      if (!isTestMode()) {
-        void queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
-        void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
-      }
-    },
-
-    onError: (_error, _input, context) => {
-      streamingIdRef.current = null;
-      activeStreamRef.current = null;
-      hapticGateRef.current.consumeForMutationSettle(context?.assistantMsgId);
-      flushNow();
+    onError: (error, _input, context) => {
+      abortControllerRef.current = null;
+      if (generationRef.current?.stage === 'stopping' || error.name === 'AbortError') return;
+      const current = generationRef.current;
+      if (current) setCurrentGeneration({ ...current, stage: 'failed', error: error.message });
       if (!context) return;
-
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-        (prev ?? context.previousMessages).flatMap((m) => {
-          if (m.id === context.assistantMsgId) {
-            if (!m.message) return [];
-            return [{ ...m, isStreaming: false, failed: true, error: 'Response interrupted.' }];
-          }
-          if (m.id === context.userMsgId) {
-            return [{ ...m, failed: true, error: 'Failed to send.' }];
-          }
-          return [m];
-        }),
+      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (messages = []) =>
+        messages.filter(
+          (item) => item.id !== context.userMessageId || item.message.trim().length > 0,
+        ),
       );
+    },
+    onSettled: () => {
+      abortControllerRef.current = null;
     },
   });
 
   const sendChatMessage = useCallback(
-    async (input: SendInput): Promise<void> => {
-      if (!input.message.trim()) return;
-      await mutation.mutateAsync(input);
+    async (input: SendInput) => {
+      lastInputRef.current = input;
+      await mutation.mutateAsync({ ...input, generationId: randomUUID() });
     },
     [mutation],
   );
 
-  const retryFailedMessage = useCallback(
-    async (messageId: string) => {
-      const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
-      const index = messages.findIndex((m) => m.id === messageId);
-      const failedMessage = messages[index];
-      if (!failedMessage || failedMessage.role !== 'user' || !failedMessage.failed) return;
+  const cancelGeneration = useCallback(async () => {
+    const current = generationRef.current;
+    if (!current || current.stage === 'stopping') return;
+    setCurrentGeneration({ ...current, stage: 'stopping' });
+    const headers = await getAuthHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/cancel`,
+      {
+        method: 'POST',
+        headers,
+      },
+    );
+    if (!response.ok) {
+      setCurrentGeneration({ ...current, stage: 'failed', error: 'Unable to stop reply.' });
+      return;
+    }
+    abortControllerRef.current?.abort();
+    setCurrentGeneration({ ...current, stage: 'cancelled' });
+  }, [chatId, getAuthHeaders, setCurrentGeneration]);
 
-      const next = messages.filter((m, i) => {
-        if (i === index) return false;
-        if (i === index + 1 && m.role === 'assistant' && m.failed) return false;
-        return true;
-      });
-      queryClient.setQueryData(chatKeys.messages(chatId), next);
-      await sendChatMessage({ message: failedMessage.message }).catch(() => {});
-    },
-    [chatId, queryClient, sendChatMessage],
-  );
+  const retryLastGeneration = useCallback(() => {
+    if (lastInputRef.current) void sendChatMessage(lastInputRef.current);
+  }, [sendChatMessage]);
 
   return {
+    cancelGeneration,
+    generation,
     isChatSending: mutation.isPending,
+    retryFailedMessage: retryLastGeneration,
+    retryLastGeneration,
     sendChatMessage,
-    retryFailedMessage,
   };
 }

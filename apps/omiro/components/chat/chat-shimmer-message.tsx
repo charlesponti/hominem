@@ -1,4 +1,3 @@
-import { transitionDurations } from '@ponti-studios/ui/tokens';
 import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +6,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, withAlpha } from '~/components/theme';
+import { transitionDurations } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 const SHIMMER_DURATION = transitionDurations[150] * 5;
 
@@ -32,34 +34,40 @@ interface ChatShimmerMessageProps {
 }
 
 export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
-  const cardBg = useCSSVariable('--color-card') as string;
-  const popoverBg = useCSSVariable('--color-popover') as string;
+  const cardBg = useThemeColor('--color-card') as string;
+  const popoverBg = useThemeColor('--color-popover') as string;
   const animatedStyle = usePulse();
 
   if (variant === 'user') {
     return (
       <Animated.View
-        className="px-4 py-3 w-full rounded-lg gap-2"
-        style={[{ borderCurve: 'continuous', backgroundColor: popoverBg }, animatedStyle]}
+        style={[
+          styles.s0,
+          [{ borderCurve: 'continuous', backgroundColor: popoverBg }, animatedStyle],
+        ]}
       >
-        <View className="rounded-md h-4 w-full" style={{ backgroundColor: cardBg }} />
-        <View className="rounded-md h-4 w-2/3" style={{ backgroundColor: cardBg }} />
+        <View style={[styles.s1, { backgroundColor: cardBg }]} />
+        <View style={[styles.s2, { backgroundColor: cardBg }]} />
       </Animated.View>
     );
   }
 
   return (
-    <View className="px-4 py-3 w-full">
-      <View className="flex-1 gap-2">
-        <Animated.View
-          className="rounded-md h-4 w-full"
-          style={[{ backgroundColor: cardBg }, animatedStyle]}
-        />
-        <Animated.View
-          className="rounded-md h-4 w-2/3"
-          style={[{ backgroundColor: cardBg }, animatedStyle]}
-        />
+    <View style={styles.s3}>
+      <View style={styles.s4}>
+        <Animated.View style={[styles.s5, [{ backgroundColor: cardBg }, animatedStyle]]} />
+        <Animated.View style={[styles.s6, [{ backgroundColor: cardBg }, animatedStyle]]} />
       </View>
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { paddingHorizontal: 16, paddingVertical: 12, width: '100%', borderRadius: 8, gap: 8 },
+  s1: { borderRadius: 6, height: 16, width: '100%' },
+  s2: { borderRadius: 6, height: 16, width: 1 },
+  s3: { paddingHorizontal: 16, paddingVertical: 12, width: '100%' },
+  s4: { flex: 1, gap: 8 },
+  s5: { borderRadius: 6, height: 16, width: '100%' },
+  s6: { borderRadius: 6, height: 16, width: 1 },
+}));

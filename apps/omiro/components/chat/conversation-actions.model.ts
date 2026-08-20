@@ -2,16 +2,11 @@ import type { ArtifactType } from '@hominem/rpc/types';
 
 import t from '~/translations';
 
-export type ConversationActionType = ArtifactType;
+type ConversationActionType = ArtifactType;
 
-export type ConversationActionKind =
-  | 'search'
-  | 'toggle-debug'
-  | 'settings'
-  | 'transform'
-  | 'archive';
+type ConversationActionKind = 'search' | 'toggle-debug' | 'settings' | 'transform' | 'archive';
 
-export interface ConversationActionItem {
+interface ConversationActionItem {
   kind: ConversationActionKind;
   label: string;
   type?: Exclude<ConversationActionType, 'tracker'>;

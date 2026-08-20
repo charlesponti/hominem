@@ -1,8 +1,9 @@
-import { TextField } from '@ponti-studios/ui/native';
 import { memo, useCallback } from 'react';
 import { Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import t from '~/translations';
 
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
@@ -92,7 +93,7 @@ function ComposerActiveAreaComponent({
   const hasContent =
     useComposerMessageSelector(messageStore, (value) => value.trim().length > 0) ||
     uploadedAttachmentCount > 0;
-  const [destructive, tertiary] = useCSSVariable([
+  const [destructive, tertiary] = useThemeColor([
     '--color-destructive',
     '--color-tertiary',
   ]) as string[];
@@ -124,7 +125,7 @@ function ComposerActiveAreaComponent({
     ) : null;
 
   return (
-    <View className="gap-2">
+    <View style={styles.s0}>
       <TextField
         value={message}
         onChangeText={handleChangeMessage}
@@ -154,8 +155,8 @@ function ComposerActiveAreaComponent({
           {message.length}/{MAX_MESSAGE_LENGTH}
         </Text>
       ) : null}
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
+      <View style={styles.s1}>
+        <View style={styles.s2}>
           <ComposerAttachButton disabled={!canPickMedia} />
         </View>
         {kindControl}
@@ -184,3 +185,9 @@ function ComposerActiveAreaComponent({
 }
 
 export const ComposerActiveArea = memo(ComposerActiveAreaComponent);
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8 },
+  s1: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  s2: { flexDirection: 'row', alignItems: 'center' },
+}));

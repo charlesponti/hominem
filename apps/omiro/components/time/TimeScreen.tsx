@@ -1,11 +1,12 @@
 import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/community/menu';
-import { IconButton, nativeShadows } from '@ponti-studios/ui/native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { ComposerDock } from '~/components/composer/ComposerDock';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { IconButton, nativeShadows } from '~/components/ui';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
 
 import AppIcon from '../ui/icon';
@@ -35,24 +36,20 @@ export function TimeScreen() {
   );
 
   return (
-    <View className="bg-background flex-1" testID="time-screen">
+    <View style={styles.s0} testID="time-screen">
       <TimeStream contentPaddingBottom={composerInset} onError={showError} onOpenItem={openItem} />
       {errorToast !== null ? (
         <View
           key={toastKey}
-          className="flex-row items-start gap-1 mx-4 mb-1 p-2 border-destructive"
-          style={{ borderCurve: 'continuous', boxShadow: nativeShadows.md }}
+          style={[styles.s1, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
         >
           <Pressable
             accessibilityLabel={`Error: ${errorToast}`}
             accessibilityRole="button"
             onPress={() => setToastExpanded((expanded) => !expanded)}
-            className="flex-1 flex-row items-center gap-1"
+            style={styles.s2}
           >
-            <Text
-              className="text-destructive flex-1 text-footnote"
-              numberOfLines={toastExpanded ? undefined : 1}
-            >
+            <Text style={styles.s3} numberOfLines={toastExpanded ? undefined : 1}>
               {errorToast}
             </Text>
             <IconButton
@@ -74,7 +71,7 @@ export function TimeScreen() {
         </View>
       ) : null}
       <ComposerDock onInsetChange={setComposerInset} testID="time-composer-dock">
-        <TimeComposer onError={showError} onOpenEvent={openEvent} />
+        <TimeComposer onOpenEvent={openEvent} />
       </ComposerDock>
     </View>
   );
@@ -134,3 +131,18 @@ function TimePreviewMenuButton() {
     </MenuView>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { backgroundColor: theme.colors.background, flex: 1 },
+  s1: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginHorizontal: 16,
+    marginBottom: 4,
+    padding: 8,
+    borderColor: theme.colors.destructive,
+  },
+  s2: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  s3: { ...theme.typography.footnote, color: theme.colors.destructive, flex: 1 },
+}));

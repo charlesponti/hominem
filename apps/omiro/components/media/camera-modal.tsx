@@ -11,8 +11,9 @@ import {
   useCameraPermission,
   usePhotoOutput,
 } from 'react-native-vision-camera';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -39,7 +40,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const photoOutput = usePhotoOutput();
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
-  const [borderDefault, background, primaryForeground] = useCSSVariable([
+  const [borderDefault, background, primaryForeground] = useThemeColor([
     '--color-border',
     '--color-background',
     '--color-primary-foreground',
@@ -117,20 +118,17 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
     >
       <BottomSheetView style={{ flex: 1, backgroundColor: background }}>
         {hasPermission && device ? (
-          <View className="flex-1">
+          <View style={styles.s0}>
             <Camera
               style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
               device={device}
               isActive={visible}
               outputs={[photoOutput]}
             />
-            <View
-              className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between px-6"
-              style={{ paddingBottom: insets.bottom + 24 }}
-            >
+            <View style={[styles.s1, { paddingBottom: insets.bottom + 24 }]}>
               <Pressable
                 onPress={handleDismiss}
-                className="items-center justify-center w-12 h-12 rounded-md bg-overlay-scrim"
+                style={styles.s2}
                 accessibilityLabel={t.camera.closeA11y}
               >
                 <AppIcon name="xmark" size={20} tintColor={primaryForeground} />
@@ -139,15 +137,15 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
               <Pressable
                 onPress={() => void handleCapture()}
                 disabled={isTakingPhoto}
-                className={`w-[72px] h-[72px] rounded-sm border-4 border-primary-foreground items-center justify-center ${isTakingPhoto ? 'opacity-50' : ''}`}
+                style={[styles.captureButton, isTakingPhoto && styles.captureButtonDisabled]}
                 accessibilityLabel={t.camera.takePhotoA11y}
               >
-                <View className="w-14 h-14 rounded-md bg-primary-foreground" />
+                <View style={styles.s3} />
               </Pressable>
 
               <Pressable
                 onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-                className="items-center justify-center w-12 h-12 rounded-md bg-overlay-scrim"
+                style={styles.s4}
                 accessibilityLabel={t.camera.flipCameraA11y}
               >
                 <AppIcon name="camera.rotate" size={20} tintColor={primaryForeground} />
@@ -155,24 +153,21 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
             </View>
           </View>
         ) : (
-          <View className="flex-1 items-center justify-center gap-4 px-6">
-            <Text className="text-body text-foreground">
+          <View style={styles.s5}>
+            <Text style={styles.s6}>
               {canRequestPermission
                 ? t.camera.permission.message
                 : t.camera.permission.deniedMessage}
             </Text>
-            <Pressable
-              onPress={() => void handleRequestPermissions()}
-              className="border border-border rounded-md px-4 py-2"
-            >
-              <Text className="text-body text-foreground">
+            <Pressable onPress={() => void handleRequestPermissions()} style={styles.s7}>
+              <Text style={styles.s8}>
                 {canRequestPermission
                   ? t.camera.permission.grant
                   : t.camera.permission.openSettings}
               </Text>
             </Pressable>
-            <Pressable onPress={handleDismiss} className="px-4 py-2">
-              <Text className="text-body text-muted-foreground">{t.camera.permission.cancel}</Text>
+            <Pressable onPress={handleDismiss} style={styles.s9}>
+              <Text style={styles.s10}>{t.camera.permission.cancel}</Text>
             </Pressable>
           </View>
         )}
@@ -180,3 +175,56 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
     </BottomSheetModal>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1 },
+  s1: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+  },
+  s2: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    backgroundColor: theme.colors.overlayScrim,
+  },
+  s3: { width: 56, height: 56, borderRadius: 6, backgroundColor: theme.colors.primaryForeground },
+  s4: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    backgroundColor: theme.colors.overlayScrim,
+  },
+  s5: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
+  s6: { ...theme.typography.body, color: theme.colors.foreground },
+  s7: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  s8: { ...theme.typography.body, color: theme.colors.foreground },
+  s9: { paddingHorizontal: 16, paddingVertical: 8 },
+  s10: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  captureButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 2,
+    borderWidth: 4,
+    borderColor: theme.colors.primaryForeground,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureButtonDisabled: { opacity: 0.5 },
+}));

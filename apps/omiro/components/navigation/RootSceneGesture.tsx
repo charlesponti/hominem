@@ -9,6 +9,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { makeStyles, withAlpha } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { HOME_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
@@ -124,16 +125,29 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
   const adjacentScene = scene === 'all' ? 'Time' : 'All';
   return (
     <GestureDetector gesture={gesture}>
-      <View className="flex-1 overflow-hidden" testID={`root-scene-${scene}`}>
-        <Reanimated.View className="absolute inset-0 bg-secondary" style={previewStyle}>
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-title2 text-secondary-foreground">{adjacentScene}</Text>
+      <View style={styles.s0} testID={`root-scene-${scene}`}>
+        <Reanimated.View style={[styles.s1, previewStyle]}>
+          <View style={styles.s2}>
+            <Text style={styles.s3}>{adjacentScene}</Text>
           </View>
         </Reanimated.View>
-        <Reanimated.View className="flex-1" style={contentStyle}>
-          {children}
-        </Reanimated.View>
+        <Reanimated.View style={[styles.s4, contentStyle]}>{children}</Reanimated.View>
       </View>
     </GestureDetector>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, overflow: 'hidden' },
+  s1: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: theme.colors.secondary,
+  },
+  s2: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  s3: { ...theme.typography.title2, color: theme.colors.secondaryForeground },
+  s4: { flex: 1 },
+}));

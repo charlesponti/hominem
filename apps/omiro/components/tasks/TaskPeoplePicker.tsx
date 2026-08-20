@@ -1,8 +1,9 @@
-import { TextField } from '@ponti-studios/ui/native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import {
   type PersonPickerRecord,
@@ -57,18 +58,18 @@ export function TaskPeoplePicker({
   };
 
   return (
-    <View className="gap-3" testID="time-block-people">
-      <View className="flex-row flex-wrap gap-2">
+    <View style={styles.s0} testID="time-block-people">
+      <View style={styles.s1}>
         {selected.map((person) => (
           <Pressable
             key={person.id}
             accessibilityLabel={`Remove ${person.displayName}`}
-            className="bg-primary/15 flex-row items-center gap-2 rounded-full px-3 py-2"
+            style={styles.s2}
             onPress={() => removePerson(person.id)}
             testID={`task-person-selected-${person.id}`}
           >
-            <Text className="text-foreground text-footnote">{person.displayName}</Text>
-            <Text className="text-muted-foreground text-footnote">×</Text>
+            <Text style={styles.s3}>{person.displayName}</Text>
+            <Text style={styles.s4}>×</Text>
           </Pressable>
         ))}
       </View>
@@ -84,12 +85,12 @@ export function TaskPeoplePicker({
           {availableResults.map((person) => (
             <Pressable
               key={person.id}
-              className="border-border rounded-md border px-3 py-2"
+              style={styles.s5}
               onPress={() => addPerson(person)}
               testID={`task-person-result-${person.id}`}
             >
-              <Text className="text-foreground">{person.displayName}</Text>
-              {person.email ? <Text className="text-muted-foreground">{person.email}</Text> : null}
+              <Text style={styles.s6}>{person.displayName}</Text>
+              {person.email ? <Text style={styles.s7}>{person.email}</Text> : null}
             </Pressable>
           ))}
           {query.trim() ? (
@@ -105,7 +106,7 @@ export function TaskPeoplePicker({
           ) : null}
         </>
       ) : (
-        <View className="gap-3">
+        <View style={styles.s8}>
           <TextField
             autoFocus
             onChangeText={setDisplayName}
@@ -122,15 +123,15 @@ export function TaskPeoplePicker({
             value={email}
           />
           {createError ? (
-            <Text className="text-destructive text-footnote" testID="task-person-create-error">
+            <Text style={styles.s9} testID="task-person-create-error">
               {createError}
             </Text>
           ) : null}
-          <View className="flex-row gap-2">
-            <View className="flex-1">
+          <View style={styles.s10}>
+            <View style={styles.s11}>
               <Button label="Cancel" onPress={() => setIsCreating(false)} variant="secondary" />
             </View>
-            <View className="flex-1">
+            <View style={styles.s12}>
               <Button
                 disabled={!displayName.trim() || createPerson.isPending}
                 label="Create person"
@@ -145,3 +146,33 @@ export function TaskPeoplePicker({
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 12 },
+  s1: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  s2: {
+    backgroundColor: withAlpha(theme.colors.primary, 0.15),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  s3: { ...theme.typography.footnote, color: theme.colors.foreground },
+  s4: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  s5: {
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  s6: { color: theme.colors.foreground },
+  s7: { color: theme.colors.mutedForeground },
+  s8: { gap: 12 },
+  s9: { ...theme.typography.footnote, color: theme.colors.destructive },
+  s10: { flexDirection: 'row', gap: 8 },
+  s11: { flex: 1 },
+  s12: { flex: 1 },
+}));

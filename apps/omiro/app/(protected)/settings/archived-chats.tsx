@@ -3,8 +3,9 @@ import type { RelativePathString } from 'expo-router';
 import { Stack, useIsFocused, useRouter } from 'expo-router';
 import { memo, useCallback, useMemo } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useArchivedChats } from '~/hooks/useArchivedChats';
@@ -58,17 +59,15 @@ function ArchivedChatsSwiftUI({
 }) {
   const header = useMemo(
     () => (
-      <View className="pb-2 px-4 pt-2">
-        <Text className="text-[15px] leading-[22px] text-muted-foreground">
-          {t.settings.archivedChatsScreen.description}
-        </Text>
+      <View style={styles.s0}>
+        <Text style={styles.s1}>{t.settings.archivedChatsScreen.description}</Text>
       </View>
     ),
     [],
   );
   const empty = useMemo(
     () => (
-      <View className="pt-8">
+      <View style={styles.s2}>
         {error ? (
           <EmptyState
             action={{ label: t.settings.archivedChatsScreen.loadErrorRetry, onPress: onRefresh }}
@@ -76,13 +75,9 @@ function ArchivedChatsSwiftUI({
             title={t.settings.archivedChatsScreen.loadErrorTitle}
           />
         ) : (
-          <View className="gap-0.5 py-0.5">
-            <Text className="text-[15px] text-foreground">
-              {t.settings.archivedChatsScreen.emptyTitle}
-            </Text>
-            <Text className="text-sm leading-5 text-muted-foreground">
-              {t.settings.archivedChatsScreen.emptyCopy}
-            </Text>
+          <View style={styles.s3}>
+            <Text style={styles.s4}>{t.settings.archivedChatsScreen.emptyTitle}</Text>
+            <Text style={styles.s5}>{t.settings.archivedChatsScreen.emptyCopy}</Text>
           </View>
         )}
       </View>
@@ -116,24 +111,21 @@ const ArchivedChatRow = memo(
     chat: NonNullable<ReturnType<typeof useArchivedChats>['data']>[number];
     onPressChat: (chatId: string) => void;
   }) => {
-    const [textSecondary, tertiary] = useCSSVariable([
+    const [textSecondary, tertiary] = useThemeColor([
       '--color-muted-foreground',
       '--color-tertiary',
     ]) as string[];
 
     return (
-      <View className="px-4">
+      <View style={styles.s6}>
         <Pressable
           onPress={() => onPressChat(chat.id)}
-          className="items-center flex-row gap-2.5 min-h-[52px] py-3"
-          style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+          style={({ pressed }) => [styles.s7, pressed ? { opacity: 0.6 } : undefined]}
         >
           <AppIcon name="tray" size={14} tintColor={textSecondary} />
-          <View className="flex-1 gap-0.5">
-            <Text className="text-[15px] text-foreground">
-              {chat.title ?? t.inbox.item.untitledChat}
-            </Text>
-            <Text className="text-xs text-muted-foreground">
+          <View style={styles.s8}>
+            <Text style={styles.s9}>{chat.title ?? t.inbox.item.untitledChat}</Text>
+            <Text style={styles.s10}>
               Archived {formatRelativeAge(chat.archivedAt ?? chat.activityAt)}
             </Text>
           </View>
@@ -145,3 +137,17 @@ const ArchivedChatRow = memo(
 );
 
 ArchivedChatRow.displayName = 'ArchivedChatRow';
+
+const styles = makeStyles((theme) => ({
+  s0: { paddingBottom: 8, paddingHorizontal: 16, paddingTop: 8 },
+  s1: { fontSize: 15, lineHeight: 22, color: theme.colors.mutedForeground },
+  s2: { paddingTop: 32 },
+  s3: { gap: 2, paddingVertical: 2 },
+  s4: { fontSize: 15, color: theme.colors.foreground },
+  s5: { lineHeight: 20, color: theme.colors.mutedForeground },
+  s6: { paddingHorizontal: 16 },
+  s7: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 52, paddingVertical: 12 },
+  s8: { flex: 1, gap: 2 },
+  s9: { fontSize: 15, color: theme.colors.foreground },
+  s10: { color: theme.colors.mutedForeground },
+}));

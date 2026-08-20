@@ -1,9 +1,9 @@
-import { IconButton } from '@ponti-studios/ui/native';
 import { useCallback, useState } from 'react';
 import { ActionSheetIOS } from 'react-native';
 
 import { useComposerContext } from '~/components/composer/ComposerContext';
 import { CameraModal } from '~/components/media/camera-modal';
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 

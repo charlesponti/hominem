@@ -1,7 +1,9 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 
 import { ActionIconButton } from './chat-action-icon-button';
 import { ChatCopyButton } from './chat-copy-button';
@@ -35,7 +37,7 @@ export function ActiveMessageActions({
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
 }) {
-  const [tertiary] = useCSSVariable(['--color-tertiary']) as string[];
+  const [tertiary] = useThemeColor(['--color-tertiary']) as string[];
 
   if (!isActive) {
     return null;
@@ -46,9 +48,9 @@ export function ActiveMessageActions({
       entering={ACTIONS_ENTERING}
       exiting={ACTIONS_EXITING}
       layout={ACTIONS_LAYOUT}
-      className="mt-1"
+      style={styles.s0}
     >
-      <View className={`items-center flex-row gap-2 ${isUser ? 'justify-end' : ''}`}>
+      <View style={[styles.actions, isUser && styles.actionsEnd]}>
         {timestamp ? <Text style={{ color: tertiary, fontSize: 12 }}>{timestamp}</Text> : null}
         <ChatCopyButton message={message} />
         <ChatSpeakButton message={message} />
@@ -64,3 +66,9 @@ export function ActiveMessageActions({
     </Reanimated.View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { marginTop: 4 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  actionsEnd: { justifyContent: 'flex-end' },
+}));

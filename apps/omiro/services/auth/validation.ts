@@ -1,6 +1,1 @@
-export {
-  isValidEmail,
-  isValidOtp,
-  normalizeEmail,
-  normalizeOtp,
-} from '@ponti-studios/auth/shared/validation';
+export { isValidEmail, normalizeEmail, normalizeOtp } from '@ponti-studios/auth/shared/validation';

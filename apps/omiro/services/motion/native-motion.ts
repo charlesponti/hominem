@@ -1,20 +1,17 @@
-import { nativeMotion } from '@ponti-studios/ui/native';
-import type { WithSpringConfig, WithTimingConfig } from 'react-native-reanimated';
+import type { WithTimingConfig } from 'react-native-reanimated';
 import { Easing } from 'react-native-reanimated';
 
-const portableMotion =
-  nativeMotion ??
-  ({
-    distance: { rowEnter: '0.5rem', sceneReveal: '2rem' },
-    duration: { deliberate: '500ms', quick: '150ms', standard: '300ms' },
-    easing: {
-      enter: [0, 0, 0.2, 1],
-      exit: [0.4, 0, 1, 1],
-      inOut: [0.4, 0, 0.2, 1],
-    },
-    interruption: { policy: 'cancel-and-settle' },
-    reducedMotion: { policy: 'replace-transform-with-opacity' },
-  } as const);
+const portableMotion = {
+  distance: { rowEnter: '0.5rem', sceneReveal: '2rem' },
+  duration: { deliberate: '500ms', quick: '150ms', standard: '300ms' },
+  easing: {
+    enter: [0, 0, 0.2, 1],
+    exit: [0.4, 0, 1, 1],
+    inOut: [0.4, 0, 0.2, 1],
+  },
+  interruption: { policy: 'cancel-and-settle' },
+  reducedMotion: { policy: 'replace-transform-with-opacity' },
+} as const;
 
 function milliseconds(value: string) {
   return Number.parseFloat(value);
@@ -62,10 +59,3 @@ export const nativeMotionTiming = {
     easing: nativeMotionContracts.easing.exit,
   } satisfies WithTimingConfig,
 };
-
-export const nativeMotionSpring = {
-  damping: 18,
-  mass: 0.8,
-  stiffness: 200,
-  overshootClamping: false,
-} satisfies WithSpringConfig;

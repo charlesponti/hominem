@@ -4,6 +4,8 @@ Better Auth on `api.ponti.io` is the sole authority for web sessions. Career and
 Finance use the same browser session cookie; neither application creates,
 translates, or stores its own end-user credential.
 
+WH?T uses the same hosted login and session cookie through `what.ponti.io`.
+
 ## Network boundary
 
 Use two API URLs with distinct owners, and keep the API's hosted login as the only first-party web OTP surface:
@@ -13,6 +15,7 @@ Use two API URLs with distinct owners, and keep the API's hosted login as the on
 | Browser                  | `VITE_PUBLIC_API_URL` (`https://api.ponti.io`) | Hosted login redirects, public API, and Better Auth browser client requests |
 | Career or Finance server | `HOMINEM_INTERNAL_API_URL`                     | Session resolution and server-side Hono/RPC data calls                      |
 | Career or Finance server | `PUBLIC_APP_URL`                               | Explicit public origin used for hosted-login return URLs                    |
+| WH?T browser/server      | `https://what.ponti.io`                        | Shared-cookie game origin and hosted-login return URL                       |
 
 `HOMINEM_INTERNAL_API_URL` is server-only. In Railway production it resolves
 to the API service's private address and port, currently
@@ -49,6 +52,7 @@ Each deployed web app needs these values:
 VITE_PUBLIC_API_URL=https://api.ponti.io
 HOMINEM_INTERNAL_API_URL=http://hominem-api-production.railway.internal:8080
 PUBLIC_APP_URL=https://career.ponti.io # Finance uses https://finance.ponti.io
+WHAT_URL=https://what.ponti.io
 ```
 
 `HOMINEM_INTERNAL_API_URL` is required. Local development sets it to the

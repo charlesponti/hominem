@@ -2,6 +2,7 @@ import * as z from 'zod';
 
 export const ChatsSendSchema = z
   .object({
+    generationId: z.uuid(),
     message: z.string(),
     fileIds: z.array(z.uuid()).max(5).optional(),
     noteIds: z.array(z.uuid()).max(10).optional(),
@@ -27,6 +28,7 @@ export const ChatsCreateSchema = z.object({
 });
 
 export const ChatsStartStreamSchema = ChatsCreateSchema.extend({
+  generationId: z.uuid(),
   message: z.string(),
   fileIds: z.array(z.uuid()).max(5).optional(),
   noteIds: z.array(z.uuid()).max(10).optional(),
@@ -54,6 +56,7 @@ export const ChatsEditMessageSchema = z.object({
 });
 
 export const ChatsRegenerateMessageSchema = z.object({
+  generationId: z.uuid(),
   responseLength: z.enum(['short', 'medium', 'long']).optional(),
 });
 

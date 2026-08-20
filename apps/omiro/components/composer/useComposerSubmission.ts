@@ -21,19 +21,14 @@ interface ComposerSubmitInput {
   messageId?: string;
 }
 
-const EMPTY_CHAT_SEND = {
-  sendChatMessage: async () => {},
-  isChatSending: false,
-};
-
 // Coordinates the composer's mode-specific submission workflows and draft
 // state. Chat transport and stream lifecycle remain owned by useSendMessage.
 export function useComposerSubmission(props: ComposerProps) {
   const { isSaving, submitNote } = useNoteSubmission();
   const { isStartingChat, submitStartChat } = useStartChatSubmission();
   const chatId = props.mode === 'chat' ? props.chatId : '';
-  const chatSend = props.mode === 'chat' ? props.chatSend : EMPTY_CHAT_SEND;
-  const { sendChatMessage, isChatSending } = chatSend;
+  const sendChatMessage = props.mode === 'chat' ? props.chatSend.sendChatMessage : undefined;
+  const isChatSending = props.mode === 'chat' ? props.chatSend.isChatSending : false;
   const autoUpdateChatTitle = useAutoUpdateChatTitle(chatId);
 
   const isInbox = props.mode === 'inbox';
@@ -77,6 +72,7 @@ export function useComposerSubmission(props: ComposerProps) {
       }
 
       if (isChatSending) return;
+      if (!sendChatMessage) return;
 
       const trimmedMessage = message.trim();
       const sendPromise = sendChatMessage({

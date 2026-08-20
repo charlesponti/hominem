@@ -18,8 +18,6 @@ import type {
 import { calendarEventGateway } from './calendar-event-gateway';
 import { CALENDAR_PAGE_DAYS, getCalendarPage, mergeCalendarEvents } from './calendar-utils';
 
-export { CALENDAR_PAGE_DAYS, getCalendarPage, mergeCalendarEvents } from './calendar-utils';
-
 interface CalendarPage {
   end: string;
   events: CalendarEvent[];

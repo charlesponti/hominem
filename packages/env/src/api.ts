@@ -24,6 +24,9 @@ export const apiSchema = baseSchema.extend({
   // labs also serves the same app at the apex domain (ponti.io) alongside
   // labs.ponti.io — optional second trusted origin for that redirect target.
   LABS_APEX_URL: z.url().optional(),
+  // WH?T is a separate game service that uses the shared Hominem session
+  // cookie and hosted login redirect.
+  WHAT_URL: z.url().default('http://localhost:3000'),
   DATABASE_URL: z.url(),
   // No default — a missing secret must fail loudly at boot, not silently run
   // with a hardcoded, publicly-known value.

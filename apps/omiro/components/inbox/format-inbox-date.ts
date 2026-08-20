@@ -1,3 +1,4 @@
+import { formatClockTime } from '~/services/date/format-date';
 import t from '~/translations';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -33,7 +34,7 @@ function isValidDate(date: Date): boolean {
 export function formatInboxTimestamp(rawDate: string): string {
   const date = parsePgDate(rawDate);
   if (!isValidDate(date)) return '';
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return formatClockTime(date);
 }
 
 export function inboxDayGroupKey(rawDate: string): string {

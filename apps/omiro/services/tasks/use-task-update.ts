@@ -3,6 +3,7 @@ import type { Task, TaskDetailOutput, TaskListItem } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { taskKeys } from './query-keys';
+import { mapTaskDetail, mapTaskList } from './task-cache';
 
 interface UseTaskUpdateOptions {
   parentId?: string;
@@ -68,30 +69,19 @@ export function useTaskUpdate({ parentId }: UseTaskUpdateOptions = {}) {
         ? queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail(parentId))
         : undefined;
 
-      queryClient.setQueryData<TaskListItem[] | undefined>(
-        taskKeys.all,
-        (current: TaskListItem[] | undefined) =>
-          current?.map((task) => (task.id === input.taskId ? applyPatch(task, input) : task)),
+      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
+        mapTaskList(current, input.taskId, (task) => applyPatch(task, input)),
       );
 
       if (parentId) {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(parentId),
-          (current: TaskDetailOutput | undefined) =>
-            current
-              ? {
-                  ...current,
-                  children: current.children.map((child) =>
-                    child.id === input.taskId ? applyPatch(child, input) : child,
-                  ),
-                }
-              : current,
+          (current) => mapTaskDetail(current, input.taskId, (task) => applyPatch(task, input)),
         );
       } else {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(input.taskId),
-          (current: TaskDetailOutput | undefined) =>
-            current ? { ...current, task: applyPatch(current.task, input) } : current,
+          (current) => mapTaskDetail(current, input.taskId, (task) => applyPatch(task, input)),
         );
       }
 
@@ -106,28 +96,19 @@ export function useTaskUpdate({ parentId }: UseTaskUpdateOptions = {}) {
       }
     },
     onSuccess: (updatedTask) => {
-      queryClient.setQueryData<TaskListItem[] | undefined>(
-        taskKeys.all,
-        (current: TaskListItem[] | undefined) =>
-          current?.map((task) => (task.id === updatedTask.id ? { ...task, ...updatedTask } : task)),
+      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
+        mapTaskList(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
       );
       queryClient.setQueryData<TaskDetailOutput | undefined>(
         taskKeys.detail(updatedTask.id),
-        (current: TaskDetailOutput | undefined) =>
-          current ? { ...current, task: { ...current.task, ...updatedTask } } : current,
+        (current) =>
+          mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
       );
       if (parentId) {
         queryClient.setQueryData<TaskDetailOutput | undefined>(
           taskKeys.detail(parentId),
-          (current: TaskDetailOutput | undefined) =>
-            current
-              ? {
-                  ...current,
-                  children: current.children.map((child) =>
-                    child.id === updatedTask.id ? { ...child, ...updatedTask } : child,
-                  ),
-                }
-              : current,
+          (current) =>
+            mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
         );
       }
     },

@@ -1,5 +1,11 @@
 import { View } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+
 export function ProtectedRouteFallback() {
-  return <View testID="protected-route-fallback" className="flex-1 bg-background" />;
+  return <View testID="protected-route-fallback" style={styles.s0} />;
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, backgroundColor: theme.colors.background },
+}));

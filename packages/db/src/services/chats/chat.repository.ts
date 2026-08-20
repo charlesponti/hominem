@@ -9,12 +9,13 @@ import {
   type ChatMessageToolCallRecord,
 } from '../../guards';
 import type { DbHandle } from '../../transaction';
-import type { AppChatMessages, AppChats } from '../../types/database';
+import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
 
 export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '../../guards';
 
 type ChatRow = Selectable<AppChats>;
 type ChatMessageRow = Selectable<AppChatMessages>;
+type ChatGenerationRunRow = Selectable<AppChatGenerationRuns>;
 
 export interface ChatRecord {
   id: string;
@@ -60,6 +61,32 @@ export interface InsertChatMessageInput {
   parentMessageId?: string | null;
 }
 
+export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
+export type ChatGenerationStatus = 'preparing' | 'saving' | 'committed' | 'cancelled' | 'failed';
+
+export interface ChatGenerationRunRecord {
+  id: string;
+  chatId: string;
+  ownerUserId: string;
+  kind: ChatGenerationKind;
+  status: ChatGenerationStatus;
+  userMessageId: string | null;
+  targetAssistantMessageId: string | null;
+  assistantMessageId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChatGenerationRunInput {
+  id: string;
+  chatId: string;
+  ownerUserId: string;
+  kind: ChatGenerationKind;
+  userMessageId?: string | null;
+  targetAssistantMessageId?: string | null;
+}
+
 function toChatRecord(row: ChatRow): ChatRecord {
   return {
     id: row.id,
@@ -102,11 +129,107 @@ function toChatMessageRecord(
   };
 }
 
+function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRunRecord {
+  return {
+    id: row.id,
+    chatId: row.chatId,
+    ownerUserId: row.ownerUserId,
+    kind: row.kind as ChatGenerationKind,
+    status: row.status as ChatGenerationStatus,
+    userMessageId: row.userMessageId,
+    targetAssistantMessageId: row.targetAssistantMessageId,
+    assistantMessageId: row.assistantMessageId,
+    errorMessage: row.errorMessage,
+    createdAt: new Date(row.createdAt).toISOString(),
+    updatedAt: new Date(row.updatedAt).toISOString(),
+  };
+}
+
 function toJsonColumnValue(value: unknown[] | null | undefined): string | null {
   return value ? JSON.stringify(value) : null;
 }
 
 export const ChatRepository = {
+  async getGenerationRun(
+    handle: DbHandle,
+    chatId: string,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('id', '=', generationId)
+      .where('chatId', '=', chatId)
+      .where('ownerUserId', '=', ownerUserId)
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async createGenerationRun(
+    handle: DbHandle,
+    input: CreateChatGenerationRunInput,
+  ): Promise<ChatGenerationRunRecord> {
+    const row = (await handle
+      .insertInto('app.chatGenerationRuns')
+      .values({
+        id: input.id,
+        chatId: input.chatId,
+        ownerUserId: input.ownerUserId,
+        kind: input.kind,
+        status: 'preparing',
+        userMessageId: input.userMessageId ?? null,
+        targetAssistantMessageId: input.targetAssistantMessageId ?? null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()) as ChatGenerationRunRow;
+
+    return toChatGenerationRunRecord(row);
+  },
+
+  async updateGenerationRun(
+    handle: DbHandle,
+    input: {
+      id: string;
+      ownerUserId: string;
+      status: ChatGenerationStatus;
+      assistantMessageId?: string | null;
+      errorMessage?: string | null;
+    },
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .updateTable('app.chatGenerationRuns')
+      .set({
+        status: input.status,
+        assistantMessageId: input.assistantMessageId,
+        errorMessage: input.errorMessage,
+      })
+      .where('id', '=', input.id)
+      .where('ownerUserId', '=', input.ownerUserId)
+      .returningAll()
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async cancelGenerationRun(
+    handle: DbHandle,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'cancelled' })
+      .where('id', '=', generationId)
+      .where('ownerUserId', '=', ownerUserId)
+      .where('status', 'in', ['preparing', 'saving'])
+      .returningAll()
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
   /**
    * Get a chat by ID with ownership enforcement. Throws if not found.
    */

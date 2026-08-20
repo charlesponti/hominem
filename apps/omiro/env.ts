@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const APP_ENVIRONMENTS = ['development', 'e2e', 'production', 'screenshots'] as const;
 
-export const appEnvironmentSchema = z.enum(APP_ENVIRONMENTS);
+const appEnvironmentSchema = z.enum(APP_ENVIRONMENTS);
 
 const omiroEnvironmentSchema = z.object({
   EXPO_PUBLIC_API_BASE_URL: z

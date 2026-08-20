@@ -1,8 +1,9 @@
-import { IconButton } from '@ponti-studios/ui/native';
 import { View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
 import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -25,10 +26,10 @@ interface ComposerToolbarProps {
 }
 
 export function ComposerToolbar(props: ComposerToolbarProps) {
-  const [primary] = useCSSVariable(['--color-primary']) as string[];
+  const [primary] = useThemeColor(['--color-primary']) as string[];
 
   return (
-    <View className="flex-row items-center gap-1">
+    <View style={styles.s0}>
       {props.hasContent ? (
         <IconButton
           accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
@@ -83,3 +84,7 @@ export function ComposerToolbar(props: ComposerToolbarProps) {
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+}));

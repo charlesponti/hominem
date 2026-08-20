@@ -1,4 +1,3 @@
-import { IconButton } from '@ponti-studios/ui/native';
 import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native';
@@ -8,8 +7,10 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
 import { useElapsedTimer } from '~/components/voice/useElapsedTimer';
@@ -33,7 +34,7 @@ export function VoiceRecordingPanel({
   doneAccessibilityLabel,
   phase = 'recording',
 }: VoiceRecordingPanelProps) {
-  const [cardColor, destructiveColor, textSecondaryColor] = useCSSVariable([
+  const [cardColor, destructiveColor, textSecondaryColor] = useThemeColor([
     '--color-card',
     '--color-destructive',
     '--color-muted-foreground',
@@ -49,20 +50,19 @@ export function VoiceRecordingPanel({
 
   if (phase === 'sending') {
     return (
-      <View className="flex-row items-center gap-2 w-full">
+      <View style={styles.s0}>
         <View
-          className="flex-1 flex-row items-center gap-2"
-          style={{
-            height: 44,
-            paddingHorizontal: 16,
-            borderRadius: 22,
-            backgroundColor: cardColor,
-          }}
+          style={[
+            styles.s1,
+            {
+              height: 44,
+              paddingHorizontal: 16,
+              borderRadius: 22,
+              backgroundColor: cardColor,
+            },
+          ]}
         >
-          <Animated.View
-            className="w-2 h-2 rounded-full"
-            style={[{ backgroundColor: destructiveColor }, dotOpacity]}
-          />
+          <Animated.View style={[styles.s2, [{ backgroundColor: destructiveColor }, dotOpacity]]} />
           <Text
             style={{
               color: textSecondaryColor,
@@ -79,7 +79,7 @@ export function VoiceRecordingPanel({
   }
 
   return (
-    <View className="flex-row items-center gap-2 w-full">
+    <View style={styles.s3}>
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.cancelRecordingA11y}
         testID="composer-cancel-recording-button"
@@ -90,18 +90,17 @@ export function VoiceRecordingPanel({
       {/* Fills the entire row between the cancel and stop buttons, mirroring the
           idle row's [attach] [text, flex-1] [mic] geometry. */}
       <View
-        className="flex-1 flex-row items-center gap-2"
-        style={{
-          height: 44,
-          paddingHorizontal: 16,
-          borderRadius: 22,
-          backgroundColor: cardColor,
-        }}
+        style={[
+          styles.s4,
+          {
+            height: 44,
+            paddingHorizontal: 16,
+            borderRadius: 22,
+            backgroundColor: cardColor,
+          },
+        ]}
       >
-        <Animated.View
-          className="w-2 h-2 rounded-full"
-          style={[{ backgroundColor: destructiveColor }, dotOpacity]}
-        />
+        <Animated.View style={[styles.s5, [{ backgroundColor: destructiveColor }, dotOpacity]]} />
         <Text
           style={{
             color: textSecondaryColor,
@@ -112,7 +111,7 @@ export function VoiceRecordingPanel({
         >
           {elapsed}
         </Text>
-        <View className="flex-1">
+        <View style={styles.s6}>
           <RecordingLevelMeter />
         </View>
       </View>
@@ -128,3 +127,13 @@ export function VoiceRecordingPanel({
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
+  s1: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  s2: { width: 8, height: 8, borderRadius: 999 },
+  s3: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
+  s4: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  s5: { width: 8, height: 8, borderRadius: 999 },
+  s6: { flex: 1 },
+}));

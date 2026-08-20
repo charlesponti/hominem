@@ -1,12 +1,13 @@
 import { Host, Picker, Label as SwiftUILabel } from '@expo/ui/swift-ui';
 import { environment, labelStyle, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
-import { TextField, useColorMode } from '@ponti-studios/ui/native';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import { Text, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
+import { TextField, useColorMode } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import t from '~/translations';
 
@@ -39,7 +40,7 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const [popover, textPrimary] = useCSSVariable([
+  const [popover, textPrimary] = useThemeColor([
     '--color-popover',
     '--color-foreground',
   ]) as string[];
@@ -68,7 +69,7 @@ export function InlineEnhanceTray({
   };
 
   return (
-    <View className="gap-2">
+    <View style={styles.s0}>
       <View style={{ flex: 1 }}>
         <Host style={{ flex: 1, height: 44 }}>
           <Picker
@@ -119,7 +120,7 @@ export function InlineEnhanceTray({
       ) : null}
 
       {isCustomOpen ? (
-        <View className="flex-row justify-end gap-2">
+        <View style={styles.s1}>
           <Button label={t.enhance.cancel} onPress={onCancel} variant="outline" size="sm" />
           <Button
             label={t.enhance.confirm}
@@ -131,7 +132,13 @@ export function InlineEnhanceTray({
         </View>
       ) : null}
 
-      {error ? <Text className="text-destructive text-xs leading-4">{error}</Text> : null}
+      {error ? <Text style={styles.s2}>{error}</Text> : null}
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8 },
+  s1: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  s2: { color: theme.colors.destructive, lineHeight: 16 },
+}));

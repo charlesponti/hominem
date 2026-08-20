@@ -8,6 +8,7 @@ import { getFileExtension, getmimeTypeFromExtension } from '@hominem/utils/files
 import { useCallback, useState } from 'react';
 
 import { API_BASE_URL } from '~/constants';
+import { parseApiError } from '~/services/api/parse-api-error';
 import { useAuth } from '~/services/auth/auth-provider';
 import type { UploadedFile } from '~/types/upload';
 interface UploadClient {
@@ -214,7 +215,7 @@ export function useFileUpload(fetchImpl: typeof fetch = fetch) {
             });
 
             if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
+              const error = await parseApiError(response);
               throw new Error(
                 typeof error.message === 'string'
                   ? error.message

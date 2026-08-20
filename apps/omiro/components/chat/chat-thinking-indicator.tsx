@@ -11,8 +11,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';
@@ -54,7 +55,7 @@ function usePrinterDot(delayMs: number, reducedMotion: boolean) {
 }
 
 export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }) {
-  const textPrimary = useCSSVariable('--color-foreground') as string;
+  const textPrimary = useThemeColor('--color-foreground') as string;
   const reducedMotion = useReducedMotion();
   const dot1Style = usePrinterDot(0, reducedMotion);
   const dot2Style = usePrinterDot(DOT_STAGGER_MS, reducedMotion);
@@ -62,7 +63,7 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
 
   return (
     <Animated.View
-      className={compact ? 'pt-1' : 'px-4 py-2'}
+      style={[styles.container, compact ? styles.compact : styles.spacious]}
       exiting={
         reducedMotion
           ? FadeOut.duration(nativeMotionContracts.duration.quick)
@@ -70,25 +71,26 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
       }
       testID="chat-assistant-activity"
     >
-      <View className="gap-2 w-full">
-        <View className="flex-row items-center gap-2">
-          <Animated.View
-            className="rounded-md h-2 w-2"
-            style={[{ backgroundColor: textPrimary }, dot1Style]}
-          />
-          <Animated.View
-            className="rounded-md h-2 w-2"
-            style={[{ backgroundColor: textPrimary }, dot2Style]}
-          />
-          <Animated.View
-            className="rounded-md h-2 w-2"
-            style={[{ backgroundColor: textPrimary }, dot3Style]}
-          />
-          {!compact ? (
-            <Text className="text-xs ml-1 text-tertiary">{t.chat.thinkingIndicator}</Text>
-          ) : null}
+      <View style={styles.s0}>
+        <View style={styles.s1}>
+          <Animated.View style={[styles.s2, [{ backgroundColor: textPrimary }, dot1Style]]} />
+          <Animated.View style={[styles.s3, [{ backgroundColor: textPrimary }, dot2Style]]} />
+          <Animated.View style={[styles.s4, [{ backgroundColor: textPrimary }, dot3Style]]} />
+          {!compact ? <Text style={styles.s5}>{t.chat.thinkingIndicator}</Text> : null}
         </View>
       </View>
     </Animated.View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8, width: '100%' },
+  s1: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  s2: { borderRadius: 6, height: 8, width: 8 },
+  s3: { borderRadius: 6, height: 8, width: 8 },
+  s4: { borderRadius: 6, height: 8, width: 8 },
+  s5: { marginLeft: 4, color: theme.colors.tertiary },
+  container: {},
+  compact: { paddingTop: 4 },
+  spacious: { paddingHorizontal: 16, paddingVertical: 8 },
+}));

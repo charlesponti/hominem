@@ -1,6 +1,5 @@
 const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 const path = require("node:path");
-const { withUniwindConfig } = require("uniwind/metro");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getSentryExpoConfig(__dirname);
@@ -30,6 +29,4 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
-module.exports = withUniwindConfig(config, {
-  cssEntryFile: "./global.css",
-});
+module.exports = config;

@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
+import { makeStyles, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import {
   useCalendarEvents,
@@ -98,19 +99,12 @@ export const TimeStream = memo(function TimeStream({
   const scheduledRows = renderRows;
 
   return (
-    <View className="flex-1">
+    <View style={styles.s0}>
       {calendar.hasLoadedEvents ? <View testID="time-events-ready" /> : null}
       {permission && permission !== 'authorized' ? (
-        <View
-          className="border border-border rounded-md gap-2 m-4 px-4 py-3"
-          testID="time-calendar-permission-notice"
-        >
-          <Text className="text-subhead text-foreground">
-            Connect your iOS Calendar to include scheduled events.
-          </Text>
-          <Text className="text-muted-foreground">
-            Tasks and flexible planning remain available in Time.
-          </Text>
+        <View style={styles.s1} testID="time-calendar-permission-notice">
+          <Text style={styles.s2}>Connect your iOS Calendar to include scheduled events.</Text>
+          <Text style={styles.s3}>Tasks and flexible planning remain available in Time.</Text>
           <Button
             label={permission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
             onPress={() => connectCalendar.mutate()}
@@ -129,19 +123,19 @@ export const TimeStream = memo(function TimeStream({
         }
         ListEmptyComponent={
           !isLoadingEvents && scheduledRows.length === 0 ? (
-            <Text className="text-muted-foreground px-4 pt-6">
+            <Text style={styles.s4}>
               {unscheduledTaskCount > 0
-                ? 'Nothing scheduled yet. Tasks are waiting to be placed \u2014 check Tasks.'
+                ? 'Nothing scheduled yet. Tasks are waiting to be placed — check Tasks.'
                 : 'Nothing scheduled yet. Add a time block or plan one from your tasks.'}
             </Text>
           ) : null
         }
         ListFooterComponent={
           isLoadingEvents ? (
-            <View className="gap-2 p-4" testID="time-loading-state">
-              <View className="bg-muted rounded-lg h-14" />
-              <View className="bg-muted rounded-lg h-14" />
-              <View className="bg-muted rounded-lg h-14" />
+            <View style={styles.s5} testID="time-loading-state">
+              <View style={styles.s6} />
+              <View style={styles.s6} />
+              <View style={styles.s6} />
             </View>
           ) : null
         }
@@ -166,3 +160,23 @@ export const TimeStream = memo(function TimeStream({
     </View>
   );
 });
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1 },
+  s1: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    gap: 8,
+    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  s2: { ...theme.typography.subhead, color: theme.colors.foreground },
+  s3: { color: theme.colors.mutedForeground },
+  s4: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+  s5: { gap: 8, padding: 16 },
+  s6: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
+  s7: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
+  s8: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
+}));

@@ -8,7 +8,8 @@ import {
   type ViewStyle,
   type PressableStateCallbackType,
 } from 'react-native';
-import { useCSSVariable } from 'uniwind';
+
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 /**
  * shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
@@ -33,17 +34,6 @@ const PRESSED_OPACITY = 0.7;
 const LOADING_OPACITY = 0.7;
 const DISABLED_OPACITY = 0.5;
 
-const sizeClasses: Record<'sm' | 'md', { container: string; text: string }> = {
-  sm: {
-    container: 'py-2 px-4 h-9',
-    text: 'text-footnote font-semibold',
-  },
-  md: {
-    container: 'py-3 px-4 h-11',
-    text: 'text-base font-semibold leading-5',
-  },
-};
-
 export function Button({
   label,
   onPress,
@@ -55,7 +45,7 @@ export function Button({
   testID,
 }: ButtonProps) {
   const [primary, primaryForeground, muted, destructive, borderDefault, textPrimary] =
-    useCSSVariable([
+    useThemeColor([
       '--color-primary',
       '--color-primary-foreground',
       '--color-muted',
@@ -76,36 +66,33 @@ export function Button({
     [primary, primaryForeground, muted, destructive, borderDefault, textPrimary],
   );
 
-  const variantStyles: Record<
-    ButtonVariant,
-    { backgroundColor?: string; borderWidth?: number; borderColor?: string }
-  > = {
-    primary: {
-      backgroundColor: colorTokens.primary,
-    },
-    secondary: {
-      backgroundColor: colorTokens['muted'],
-    },
-    destructive: {
-      backgroundColor: colorTokens.destructive,
-    },
-    outline: {
-      backgroundColor: 'transparent',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colorTokens['border'],
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-    },
-  };
+  const variantStyles = useMemo<
+    Record<ButtonVariant, { backgroundColor?: string; borderWidth?: number; borderColor?: string }>
+  >(
+    () => ({
+      primary: { backgroundColor: colorTokens.primary },
+      secondary: { backgroundColor: colorTokens.muted },
+      destructive: { backgroundColor: colorTokens.destructive },
+      outline: {
+        backgroundColor: 'transparent',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colorTokens.border,
+      },
+      ghost: { backgroundColor: 'transparent' },
+    }),
+    [colorTokens],
+  );
 
-  const textColor: Record<ButtonVariant, string> = {
-    primary: colorTokens['primary-foreground'],
-    secondary: colorTokens['foreground'],
-    destructive: colorTokens['primary-foreground'],
-    outline: colorTokens['foreground'],
-    ghost: colorTokens['foreground'],
-  };
+  const textColor = useMemo<Record<ButtonVariant, string>>(
+    () => ({
+      primary: colorTokens['primary-foreground'],
+      secondary: colorTokens.foreground,
+      destructive: colorTokens['primary-foreground'],
+      outline: colorTokens.foreground,
+      ghost: colorTokens.foreground,
+    }),
+    [colorTokens],
+  );
 
   const resolvedContainerStyle = useMemo(
     () => ({
@@ -140,16 +127,32 @@ export function Button({
       testID={testID}
       onPress={onPress}
       disabled={isInteractionDisabled}
-      className={`items-center justify-center self-stretch rounded-md ${sizeClasses[size].container}`}
-      style={pressableStyle}
+      style={({ pressed }) => [
+        styles.button,
+        size === 'sm' ? styles.smallButton : styles.mediumButton,
+        ...pressableStyle({ pressed }),
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={textColor[variant]} size="small" />
       ) : (
-        <Text className={sizeClasses[size].text} style={resolvedTextStyle}>
+        <Text style={[size === 'sm' ? styles.smallText : styles.mediumText, resolvedTextStyle]}>
           {label}
         </Text>
       )}
     </Pressable>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    borderRadius: theme.radius.md,
+  },
+  smallButton: { paddingVertical: 8, paddingHorizontal: 16, height: 36 },
+  mediumButton: { paddingVertical: 12, paddingHorizontal: 16, height: 44 },
+  smallText: { ...theme.typography.footnote, fontWeight: '600' },
+  mediumText: { ...theme.typography.body, fontWeight: '600', lineHeight: 20 },
+}));

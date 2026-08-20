@@ -369,6 +369,20 @@ export interface AppCareerTestimonials {
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppChatGenerationRuns {
+  assistantMessageId: string | null;
+  chatId: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  errorMessage: string | null;
+  id: string;
+  kind: string;
+  ownerUserId: string;
+  status: string;
+  targetAssistantMessageId: string | null;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  userMessageId: string | null;
+}
+
 export interface AppChatMessages {
   authorUserid: string | null;
   chatId: string;
@@ -1399,6 +1413,7 @@ export interface DB {
   'app.careerSkills': AppCareerSkills;
   'app.careerSocialLinks': AppCareerSocialLinks;
   'app.careerTestimonials': AppCareerTestimonials;
+  'app.chatGenerationRuns': AppChatGenerationRuns;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;
   'app.collectionItems': AppCollectionItems;

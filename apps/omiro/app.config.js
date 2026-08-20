@@ -112,6 +112,22 @@ function createConfig({ config }) {
   const runtimeVersion = getRuntimeVersion(appEnvironment);
   const plugins = [
     'expo-router',
+    [
+      'expo-font',
+      {
+        fonts: [
+          './assets/fonts/Geist-Regular.otf',
+          './assets/fonts/Geist-SemiBold.otf',
+          './assets/fonts/Geist-Bold.otf',
+          './assets/fonts/GeistMono-Regular.otf',
+          './assets/fonts/GeistPixel-Circle.otf',
+          './assets/fonts/GeistPixel-Grid.otf',
+          './assets/fonts/GeistPixel-Line.otf',
+          './assets/fonts/GeistPixel-Square.otf',
+          './assets/fonts/GeistPixel-Triangle.otf',
+        ],
+      },
+    ],
     '@sentry/react-native',
     './plugins/withPrivacyManifest',
     [

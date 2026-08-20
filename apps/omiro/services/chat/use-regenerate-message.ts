@@ -1,129 +1,116 @@
 import type { ChatStreamEvent } from '@hominem/rpc/types';
-import { logger } from '@hominem/telemetry';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef } from 'react';
+import { randomUUID } from 'expo-crypto';
+import { useCallback, useRef, useState } from 'react';
 
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
+import type { ChatGenerationState } from './chat-generation';
 import type { MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
+import { toMessageOutput } from './use-chat-messages';
 
-// Batch chunk writes at ~2 frames (60 fps) to avoid a setQueryData per token.
-const FLUSH_INTERVAL_MS = 32;
+type RegenerateInput = { messageId: string; generationId: string };
 
 export function useRegenerateMessage(chatId: string) {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const generationRef = useRef<ChatGenerationState | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
+  const [generation, setGeneration] = useState<ChatGenerationState | null>(null);
 
-  const streamingIdRef = useRef<string | null>(null);
-  const chunkBufferRef = useRef('');
-  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setCurrentGeneration = useCallback((next: ChatGenerationState | null) => {
+    generationRef.current = next;
+    setGeneration(next);
+  }, []);
 
-  const writeBuffer = useCallback(() => {
-    const id = streamingIdRef.current;
-    const buffer = chunkBufferRef.current;
-    if (!id || !buffer) return;
-    chunkBufferRef.current = '';
-    queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-      prev?.map((m) => (m.id === id ? { ...m, message: m.message + buffer } : m)),
-    );
-  }, [chatId, queryClient]);
-
-  const scheduleFlush = useCallback(() => {
-    if (flushTimerRef.current !== null) return;
-    flushTimerRef.current = setTimeout(() => {
-      flushTimerRef.current = null;
-      writeBuffer();
-    }, FLUSH_INTERVAL_MS);
-  }, [writeBuffer]);
-
-  const flushNow = useCallback(() => {
-    if (flushTimerRef.current !== null) {
-      clearTimeout(flushTimerRef.current);
-      flushTimerRef.current = null;
-    }
-    writeBuffer();
-  }, [writeBuffer]);
-
-  const onEvent = useCallback(
-    (event: ChatStreamEvent) => {
-      if (event.type !== 'chunk') return;
-      chunkBufferRef.current += event.chunk;
-      scheduleFlush();
-    },
-    [scheduleFlush],
-  );
-
-  const mutation = useMutation<void, Error, string, { previousMessages: MessageOutput[] }>({
-    onMutate: async (messageId) => {
-      await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
-      const previousMessages =
-        queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [];
-
-      streamingIdRef.current = messageId;
-      chunkBufferRef.current = '';
-
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-        prev?.map((m) =>
-          m.id === messageId
-            ? { ...m, message: '', isStreaming: true, failed: false, error: null, audio: null }
-            : m,
-        ),
-      );
-
-      return { previousMessages };
-    },
-
-    mutationFn: async (messageId) => {
+  const mutation = useMutation<void, Error, RegenerateInput>({
+    retry: false,
+    mutationFn: async ({ messageId, generationId }) => {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       await streamSSE<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
-        payload: { responseLength: getChatResponseLength() },
+        payload: { generationId, responseLength: getChatResponseLength() },
         getHeaders: getAuthHeaders,
-        onEvent,
-        onDone: flushNow,
+        signal: controller.signal,
+        onEvent: (event) => {
+          const current = generationRef.current;
+          if (!current || (event.type !== 'error' && event.generationId !== current.id)) return;
+          if (event.type === 'status') {
+            setCurrentGeneration({ ...current, stage: event.status });
+            return;
+          }
+          if (event.type === 'committed') {
+            const message = toMessageOutput(event.message);
+            if (message) {
+              queryClient.setQueryData<MessageOutput[]>(
+                chatKeys.messages(chatId),
+                (messages = []) =>
+                  messages.map((item) => (item.id === current.targetMessageId ? message : item)),
+              );
+            }
+            setCurrentGeneration(null);
+            return;
+          }
+          if (event.type === 'cancelled') {
+            setCurrentGeneration({ ...current, stage: 'cancelled' });
+          }
+        },
       });
-
-      flushNow();
     },
-
-    onSuccess: (_data, messageId) => {
-      streamingIdRef.current = null;
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-        prev?.map((m) => (m.id === messageId ? { ...m, isStreaming: false } : m)),
-      );
-      void queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
+    onError: (error) => {
+      if (error.name === 'AbortError') return;
+      const current = generationRef.current;
+      if (current) setCurrentGeneration({ ...current, stage: 'failed', error: error.message });
     },
-
-    onError: (_error, messageId, context) => {
-      streamingIdRef.current = null;
-      flushNow();
-      if (!context) return;
-
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
-        (prev ?? context.previousMessages).map((m) =>
-          m.id === messageId
-            ? { ...m, isStreaming: false, failed: true, error: 'Failed to regenerate.' }
-            : m,
-        ),
-      );
+    onSettled: () => {
+      abortControllerRef.current = null;
     },
   });
 
   const regenerateMessage = useCallback(
-    async (messageId: string) => {
-      // onError above already rolls back the cache; this only prevents an
-      // unhandled rejection since callers invoke this as a fire-and-forget handler.
-      await mutation.mutateAsync(messageId).catch((error) => {
-        logger.warn('[useRegenerateMessage] regenerate failed', { error, messageId });
+    (messageId: string) => {
+      lastMessageIdRef.current = messageId;
+      const generationId = randomUUID();
+      setCurrentGeneration({
+        id: generationId,
+        chatId,
+        stage: 'preparing',
+        targetMessageId: messageId,
       });
+      void mutation.mutateAsync({ messageId, generationId });
     },
-    [mutation],
+    [chatId, mutation, setCurrentGeneration],
   );
 
-  return {
-    regenerateMessage,
-  };
+  const cancelGeneration = useCallback(async () => {
+    const current = generationRef.current;
+    if (!current || current.stage === 'stopping') return;
+    setCurrentGeneration({ ...current, stage: 'stopping' });
+    const headers = await getAuthHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/cancel`,
+      {
+        method: 'POST',
+        headers,
+      },
+    );
+    if (!response.ok) {
+      setCurrentGeneration({ ...current, stage: 'failed', error: 'Unable to stop reply.' });
+      return;
+    }
+    abortControllerRef.current?.abort();
+    setCurrentGeneration({ ...current, stage: 'cancelled' });
+  }, [chatId, getAuthHeaders, setCurrentGeneration]);
+
+  const retryGeneration = useCallback(() => {
+    if (lastMessageIdRef.current) regenerateMessage(lastMessageIdRef.current);
+  }, [regenerateMessage]);
+
+  return { cancelGeneration, generation, regenerateMessage, retryGeneration };
 }

@@ -1,7 +1,6 @@
-import '../global.css';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import * as Sentry from '@sentry/react-native';
 import { logger } from '@hominem/telemetry';
+import * as Sentry from '@sentry/react-native';
 import { useIsRestoring } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import {
@@ -20,14 +19,14 @@ import { Pressable, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useCSSVariable, withUniwind } from 'uniwind';
 
 import { logError } from '~/components/error-boundary/log-error';
 import { RootErrorBoundary } from '~/components/error-boundary/RootErrorBoundary';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { E2E_TESTING } from '~/constants';
 import { useScreenCapture } from '~/hooks/use-screen-capture';
-import { resolveAuthRedirect } from '~/services/navigation/auth-route-guard';
 import { AuthProvider, useAuth } from '~/services/auth/auth-provider';
+import { resolveAuthRedirect } from '~/services/navigation/auth-route-guard';
 import { consumeRestoreAttempt, consumeResumeTarget } from '~/services/navigation/launch-state';
 import { getContentRoute } from '~/services/navigation/routes';
 import { initObservability, isSentryEnabled } from '~/services/observability';
@@ -37,15 +36,6 @@ import { mobilePersistOptions } from '~/services/query-persistence';
 import { recordActiveDay } from '~/services/review-prompt/review-prompt';
 
 SplashScreen.preventAutoHideAsync();
-
-// react-native-safe-area-context isn't one of the packages uniwind's Metro
-// plugin auto-patches for className support (only "react-native" itself
-// is), so this component needs the withUniwind HOC applied manually.
-const UniwindSafeAreaView = withUniwind(SafeAreaView);
-
-const e2eIndicatorClass = 'absolute top-2 left-2 w-0.5 h-0.5 opacity-[0.02]';
-const e2eActionClass = 'absolute top-2 right-2 w-4 h-4 opacity-[0.02]';
-const e2eActionAltClass = 'absolute top-6 right-2 w-4 h-4 opacity-[0.02]';
 
 function InnerRootLayout() {
   const router = useRouter();
@@ -62,7 +52,9 @@ function InnerRootLayout() {
         return;
       }
       hasHidden = true;
-      SplashScreen.hideAsync().catch((error) => logger.warn('[RootLayout] hideAsync failed', { error }));
+      SplashScreen.hideAsync().catch((error) =>
+        logger.warn('[RootLayout] hideAsync failed', { error }),
+      );
     };
 
     // Boot resolution decides whether we land on (auth) or (protected); hiding
@@ -130,31 +122,31 @@ function InnerRootLayout() {
     <RootErrorBoundary
       onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}
     >
-      <UniwindSafeAreaView className="flex-1 bg-background" edges={['left', 'right']}>
+      <SafeAreaView style={styles.s0} edges={['left', 'right']}>
         <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack>
-      </UniwindSafeAreaView>
+      </SafeAreaView>
       {E2E_TESTING ? (
         <>
-          {isPending ? <View testID="auth-state-booting" className={e2eIndicatorClass} /> : null}
+          {isPending ? <View testID="auth-state-booting" style={styles.e2eIndicator} /> : null}
           {!isPending && !isSignedIn && !isSigningOut ? (
-            <View testID="auth-state-signed-out" className={e2eIndicatorClass} />
+            <View testID="auth-state-signed-out" style={styles.e2eIndicator} />
           ) : null}
           {isSignedIn || isSigningOut ? (
-            <View testID="auth-state-signed-in" className={e2eIndicatorClass} />
+            <View testID="auth-state-signed-in" style={styles.e2eIndicator} />
           ) : null}
           <Pressable
             testID="auth-e2e-reset"
-            className={e2eActionClass}
+            style={styles.e2eAction}
             onPress={() => {
               void resetAuthForE2E();
             }}
           />
           <Pressable
             testID="auth-e2e-sign-out"
-            className={e2eActionAltClass}
+            style={styles.e2eActionAlt}
             onPress={() => {
               void signOut();
             }}
@@ -168,7 +160,7 @@ function InnerRootLayout() {
 function RootLayout() {
   useScreenCapture();
 
-  const [background, border, card, notification, primary, text] = useCSSVariable([
+  const [background, border, card, notification, primary, text] = useThemeColor([
     '--color-background',
     '--color-border',
     '--color-card',
@@ -227,3 +219,10 @@ function RootLayout() {
 }
 
 export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;
+
+const styles = makeStyles((theme) => ({
+  s0: { flex: 1, backgroundColor: theme.colors.background },
+  e2eIndicator: { position: 'absolute', top: 8, left: 8, width: 2, height: 2, opacity: 0.02 },
+  e2eAction: { position: 'absolute', top: 8, right: 8, width: 16, height: 16, opacity: 0.02 },
+  e2eActionAlt: { position: 'absolute', top: 24, right: 8, width: 16, height: 16, opacity: 0.02 },
+}));

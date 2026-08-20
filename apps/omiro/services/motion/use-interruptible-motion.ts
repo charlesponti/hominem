@@ -6,7 +6,7 @@ import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 import { nativeMotionTiming } from './native-motion';
 
-export type MotionPhase = 'idle' | 'active' | 'done';
+type MotionPhase = 'idle' | 'active' | 'done';
 
 export interface InterruptibleMotion {
   /** JS-thread phase for conditional rendering; do not use it to drive style. */

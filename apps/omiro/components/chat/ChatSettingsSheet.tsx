@@ -3,8 +3,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCSSVariable } from 'uniwind';
 
+import { makeStyles, withAlpha } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { DiscreteSlider } from '~/components/ui/discrete-slider';
 import {
@@ -21,7 +22,7 @@ interface ChatSettingsSheetProps {
 
 export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) {
   const insets = useSafeAreaInsets();
-  const [borderDefault, background, textPrimary, textSecondary] = useCSSVariable([
+  const [borderDefault, background, textPrimary, textSecondary] = useThemeColor([
     '--color-border',
     '--color-background',
     '--color-foreground',
@@ -62,16 +63,14 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
       backgroundStyle={{ backgroundColor: background }}
       onDismiss={handleDismiss}
     >
-      <BottomSheetView className="gap-6 px-6" style={{ paddingBottom: insets.bottom + 24 }}>
-        <Text className="text-title2 font-bold" style={{ color: textPrimary }}>
-          {t.chat.settings.title}
-        </Text>
+      <BottomSheetView style={[styles.s0, { paddingBottom: insets.bottom + 24 }]}>
+        <Text style={[styles.s1, { color: textPrimary }]}>{t.chat.settings.title}</Text>
 
-        <View className="gap-2">
-          <Text className="text-base font-semibold" style={{ color: textPrimary }}>
+        <View style={styles.s2}>
+          <Text style={[styles.s3, { color: textPrimary }]}>
             {t.chat.settings.responseLengthLabel}
           </Text>
-          <Text className="text-footnote" style={{ color: textSecondary }}>
+          <Text style={[styles.s4, { color: textSecondary }]}>
             {t.chat.settings.responseLengthDescription}
           </Text>
 
@@ -79,18 +78,14 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
             key={responseLength}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}
-            className="items-center gap-0.5 py-2"
+            style={styles.s5}
           >
-            <Text className="text-[40px]">{selectedOption.emoji}</Text>
-            <Text className="text-lg font-bold" style={{ color: textPrimary }}>
-              {selectedOption.name}
-            </Text>
-            <Text className="text-footnote" style={{ color: textSecondary }}>
-              {selectedOption.caption}
-            </Text>
+            <Text style={styles.s6}>{selectedOption.emoji}</Text>
+            <Text style={[styles.s7, { color: textPrimary }]}>{selectedOption.name}</Text>
+            <Text style={[styles.s8, { color: textSecondary }]}>{selectedOption.caption}</Text>
           </Animated.View>
 
-          <View className="px-2">
+          <View style={styles.s9}>
             <DiscreteSlider
               value={Math.max(0, selectedIndex)}
               steps={CHAT_RESPONSE_LENGTHS.length}
@@ -99,12 +94,11 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
             />
           </View>
 
-          <View className="flex-row justify-between px-2">
+          <View style={styles.s10}>
             {CHAT_RESPONSE_LENGTHS.map((length) => (
               <Text
                 key={length}
-                className="text-lg"
-                style={{ opacity: length === responseLength ? 1 : 0.4 }}
+                style={[styles.s11, { opacity: length === responseLength ? 1 : 0.4 }]}
               >
                 {t.chat.settings.responseLengthOptions[length].emoji}
               </Text>
@@ -117,3 +111,18 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
     </BottomSheetModal>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 24, paddingHorizontal: 24 },
+  s1: { ...theme.typography.title2, fontWeight: '700' },
+  s2: { gap: 8 },
+  s3: { fontWeight: '600' },
+  s4: { ...theme.typography.footnote },
+  s5: { alignItems: 'center', gap: 2, paddingVertical: 8 },
+  s6: { fontSize: 40 },
+  s7: { fontWeight: '700' },
+  s8: { ...theme.typography.footnote },
+  s9: { paddingHorizontal: 8 },
+  s10: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8 },
+  s11: {},
+}));

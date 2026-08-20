@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { makeStyles, withAlpha } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { TextField } from '~/components/ui/text-field';
 
@@ -65,7 +66,7 @@ export function LocationSearchField({
   }, [query, value]);
 
   return (
-    <View className="gap-2">
+    <View style={styles.s0}>
       <TextField
         autoFocus
         onChangeText={(next) => {
@@ -77,28 +78,22 @@ export function LocationSearchField({
         value={query}
       />
       {isSearching ? (
-        <View className="flex-row items-center gap-2 px-1">
+        <View style={styles.s1}>
           <ActivityIndicator size="small" />
-          <Text className="text-muted-foreground text-footnote">Searching…</Text>
+          <Text style={styles.s2}>Searching…</Text>
         </View>
       ) : null}
       {suggestions.length > 0 ? (
-        <View className="gap-1">
+        <View style={styles.s3}>
           {suggestions.map((suggestion) => (
             <Pressable
               key={suggestion}
               accessibilityLabel={`Use location ${suggestion}`}
-              className="flex-row items-center gap-2 rounded-2xl bg-card px-3 py-2.5"
-              onPress={() => {
-                setQuery(suggestion);
-                onChange(suggestion);
-                setSuggestions([]);
-              }}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
+              style={({ pressed }) => [styles.s4, pressed && { opacity: 0.7 }]}
               testID="time-block-location-suggestion"
             >
               <AppIcon name="mappin.and.ellipse" size={16} />
-              <Text className="text-body flex-1">{suggestion}</Text>
+              <Text style={styles.s5}>{suggestion}</Text>
             </Pressable>
           ))}
         </View>
@@ -106,3 +101,20 @@ export function LocationSearchField({
     </View>
   );
 }
+
+const styles = makeStyles((theme) => ({
+  s0: { gap: 8 },
+  s1: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
+  s2: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  s3: { gap: 4 },
+  s4: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 16,
+    backgroundColor: theme.colors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  s5: { ...theme.typography.body, flex: 1 },
+}));

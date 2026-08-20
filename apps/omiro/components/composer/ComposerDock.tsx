@@ -5,8 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getFloatingDockInset } from './composerDock.helpers';
 
-export { getFloatingDockInset } from './composerDock.helpers';
-
 interface ComposerDockProps {
   children: ReactNode;
   testID?: string;

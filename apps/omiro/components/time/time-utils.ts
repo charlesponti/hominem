@@ -1,12 +1,13 @@
 import type { TaskListItem } from '@hominem/rpc/types';
 
 import type { CalendarEvent } from '~/modules/on-device-ai';
+import { formatClockTime } from '~/services/date/format-date';
 
 import type { TimeBlock, TimeItem, TimeOpening, TimeStreamRow } from './time-types';
 
 const DEFAULT_AVAILABILITY_DAYS = 7;
 
-export function startOfToday() {
+function startOfToday() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
@@ -43,14 +44,8 @@ export interface TimeColumnParts {
 export function eventTimeParts(event: CalendarEvent): TimeColumnParts {
   if (event.isAllDay) return { primary: 'All day' };
   return {
-    primary: new Date(event.startDate).toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
-    secondary: new Date(event.endDate).toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
+    primary: formatClockTime(event.startDate),
+    secondary: formatClockTime(event.endDate),
   };
 }
 
@@ -58,10 +53,7 @@ export function taskTimeParts(task: TaskListItem): TimeColumnParts {
   const date = task.scheduledStartAt ?? task.dueAt;
   if (!date) return { primary: '—' };
   return {
-    primary: new Date(date).toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-    }),
+    primary: formatClockTime(date),
   };
 }
 
@@ -75,7 +67,7 @@ export function accentTokenIndex(seed: string): number {
   return hash % ACCENT_TOKEN_COUNT;
 }
 
-export function getScheduledTimeItems({
+function getScheduledTimeItems({
   events,
   loadedUntil,
   tasks,
@@ -211,10 +203,7 @@ export function formatDraftDetails(timeBlock: TimeBlock | null) {
           day: 'numeric',
           hour: 'numeric',
           minute: '2-digit',
-        })} – ${new Date(timeBlock.end_time).toLocaleTimeString(undefined, {
-          hour: 'numeric',
-          minute: '2-digit',
-        })}`
+        })} – ${formatClockTime(timeBlock.end_time)}`
       : timeBlock.scheduling_window_start
         ? `${new Date(timeBlock.scheduling_window_start).toLocaleDateString(undefined, {
             weekday: 'long',

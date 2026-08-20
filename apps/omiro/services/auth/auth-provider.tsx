@@ -1,5 +1,5 @@
-import type { AuthUser as User } from '@ponti-studios/auth/types';
 import { logger } from '@hominem/telemetry';
+import type { AuthUser as User } from '@ponti-studios/auth/types';
 import React, {
   createContext,
   useCallback,

@@ -2,6 +2,9 @@ import { useApiClient } from '@hominem/rpc/react';
 import type { TasksParseInput, TasksParseOutput } from '@hominem/rpc/types';
 import { useMutation } from '@tanstack/react-query';
 
+import { parseApiError } from '~/services/api/parse-api-error';
+import { localTimeZone } from '~/services/date/format-date';
+
 function localISOString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   const y = date.getFullYear();
@@ -26,7 +29,7 @@ export function useTimeBlockParse() {
     Pick<TasksParseInput, 'transcript' | 'conversationContext' | 'calendarContext'>
   >({
     mutationFn: async ({ transcript, conversationContext, calendarContext }) => {
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const timeZone = localTimeZone();
       const res = await client.api.tasks.parse.$post({
         json: {
           transcript,
@@ -37,7 +40,7 @@ export function useTimeBlockParse() {
         },
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: unknown };
+        const body = await parseApiError(res);
         throw new Error(
           typeof body.error === 'string' ? body.error : `Time block parsing failed (${res.status})`,
         );

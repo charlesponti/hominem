@@ -95,7 +95,7 @@ describe('useChatSearch', () => {
       result.current.handleSearchQueryChange('found');
     });
 
-    await waitFor(() => expect(result.current.isSearching).toBe(false));
+    await waitFor(() => expect(mockMessagesSearchGet).toHaveBeenCalled());
 
     expect(mockMessagesSearchGet).toHaveBeenCalledWith({
       param: { id: CHAT_ID },
