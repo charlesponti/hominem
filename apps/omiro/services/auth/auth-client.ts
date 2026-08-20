@@ -9,15 +9,6 @@ function getAuthOriginHeader() {
   return new URL(API_BASE_URL).origin;
 }
 
-type AuthError = {
-  message?: string;
-};
-
-export type AuthResult<TData = never> = {
-  data?: TData | null;
-  error?: AuthError | null;
-};
-
 export const authClient = createAuthClient({
   baseURL: API_BASE_URL,
   fetchOptions: {

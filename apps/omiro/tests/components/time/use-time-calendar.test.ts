@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCalendarPage, mergeCalendarEvents } from '~/components/time/use-time-calendar';
+import { getCalendarPage, mergeCalendarEvents } from '~/services/calendar/calendar-utils';
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({

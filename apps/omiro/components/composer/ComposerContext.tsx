@@ -73,11 +73,7 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
   const setAttachments = useCallback((next: SetStateAction<ComposerAttachment[]>) => {
     setAttachmentsState((currentAttachments) => {
       const resolvedAttachments =
-        typeof next === 'function'
-          ? (next as (currentAttachments: ComposerAttachment[]) => ComposerAttachment[])(
-              currentAttachments,
-            )
-          : next;
+        typeof next === 'function' ? next(currentAttachments) : next;
       attachmentsRef.current = resolvedAttachments;
       return resolvedAttachments;
     });

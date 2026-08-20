@@ -32,8 +32,8 @@ interface ChatShimmerMessageProps {
 }
 
 export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
-  const cardBg = useCSSVariable('color-card') as string;
-  const popoverBg = useCSSVariable('color-popover') as string;
+  const cardBg = useCSSVariable('--color-card') as string;
+  const popoverBg = useCSSVariable('--color-popover') as string;
   const animatedStyle = usePulse();
 
   if (variant === 'user') {

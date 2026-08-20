@@ -4,7 +4,6 @@ import type { CalendarEvent } from '~/modules/on-device-ai';
 
 import type { TimeBlock, TimeItem, TimeOpening, TimeStreamRow } from './time-types';
 
-export const PAGE_DAYS = 30;
 const DEFAULT_AVAILABILITY_DAYS = 7;
 
 export function startOfToday() {
@@ -119,15 +118,7 @@ export function buildTimeStreamRows({
     if (item.kind === 'event') return new Date(item.value.endDate) <= now;
     return item.value.status === 'completed' || new Date(date) < now;
   };
-  const visibleItems = scheduledItems.filter((item) => !isPast(item));
-  const firstFutureIndex = visibleItems.findIndex((item) => {
-    const date = itemDate(item);
-    return date ? new Date(date) >= now : false;
-  });
-  return [
-    ...visibleItems.slice(0, firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
-    ...visibleItems.slice(firstFutureIndex === -1 ? visibleItems.length : firstFutureIndex),
-  ];
+  return scheduledItems.filter((item) => !isPast(item));
 }
 
 export function getUnscheduledTasks(tasks: TaskListItem[]) {

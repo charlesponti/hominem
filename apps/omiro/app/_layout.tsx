@@ -53,7 +53,6 @@ function InnerRootLayout() {
   const segmentKey = segments.join('/');
   const { isPending, isSignedIn, isSigningOut, currentUser, resetAuthForE2E, signOut } = useAuth();
   const isRestoring = useIsRestoring();
-  const hasMarkedShellReady = React.useRef(false);
   const lastRedirectSignatureRef = React.useRef<string | null>(null);
   useEffect(() => {
     let hasHidden = false;
@@ -86,10 +85,6 @@ function InnerRootLayout() {
   }, [currentUser, isPending, isSignedIn]);
 
   useEffect(() => {
-    if (!hasMarkedShellReady.current && !isPending && !isRestoring) {
-      hasMarkedShellReady.current = true;
-    }
-
     const target = resolveAuthRedirect({
       isPending: isPending || isRestoring,
       isSignedIn,
@@ -107,9 +102,7 @@ function InnerRootLayout() {
     }
 
     lastRedirectSignatureRef.current = redirectSignature;
-    if (target) {
-      router.replace(target as RelativePathString);
-    }
+    router.replace(target as RelativePathString);
   }, [isPending, isRestoring, isSignedIn, isSigningOut, router, segmentKey, segments]);
 
   useEffect(() => {
@@ -177,7 +170,7 @@ function RootLayout() {
   const [background, border, card, notification, primary, text] = useCSSVariable([
     '--color-background',
     '--color-border',
-    '--color-background',
+    '--color-card',
     '--color-primary',
     '--color-primary',
     '--color-foreground',

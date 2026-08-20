@@ -2,13 +2,11 @@ import { normalizeEmail, normalizeOtp } from '@ponti-studios/auth/shared/validat
 import { useCallback, useState } from 'react';
 
 type EmailAuthOperations = {
-  sendOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, otp: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
 };
 
 export function useEmailAuth(ops: EmailAuthOperations) {
-  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,22 +33,14 @@ export function useEmailAuth(ops: EmailAuthOperations) {
     [],
   );
   return {
-    email,
-    setEmail,
     otp,
     setOtp,
     error,
     setError,
     isSubmitting,
     isResending,
-    handleSendOtp: (emailOverride?: string) => {
-      const resolved = normalizeEmail(emailOverride ?? email);
-      return resolved
-        ? run(() => ops.sendOtp(resolved))
-        : (setError('Email is required'), Promise.resolve());
-    },
-    handleVerifyOtp: (emailOverride?: string, otpOverride?: string) => {
-      const resolvedEmail = normalizeEmail(emailOverride ?? email);
+    handleVerifyOtp: (email: string, otpOverride?: string) => {
+      const resolvedEmail = normalizeEmail(email);
       const resolvedOtp = normalizeOtp(otpOverride ?? otp);
       if (!resolvedEmail || !resolvedOtp) {
         setError(!resolvedEmail ? 'Email is required' : 'Verification code is required');
@@ -58,8 +48,8 @@ export function useEmailAuth(ops: EmailAuthOperations) {
       }
       return run(() => ops.verifyOtp(resolvedEmail, resolvedOtp), { clearOtpOnError: true });
     },
-    handleResendOtp: (emailOverride?: string) => {
-      const resolved = normalizeEmail(emailOverride ?? email);
+    handleResendOtp: (email: string) => {
+      const resolved = normalizeEmail(email);
       return resolved
         ? run(
             async () => {

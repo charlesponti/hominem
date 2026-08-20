@@ -1,7 +1,7 @@
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { TimeBlockDetail } from '~/components/time/TimeBlockDetail';
-import { TIME_ROUTE, type TimeBlockSource } from '~/services/navigation/routes';
+import { TIME_ROUTE } from '~/services/navigation/routes';
 
 export default function TimeBlockDetailRoute() {
   const { id, mode, source } = useLocalSearchParams<{
@@ -22,7 +22,7 @@ export default function TimeBlockDetailRoute() {
         id={id}
         initialActiveField={mode === 'schedule' ? 'time' : undefined}
         onClose={() => router.back()}
-        source={source as TimeBlockSource}
+        source={source}
       />
     </>
   );

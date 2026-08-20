@@ -86,7 +86,7 @@ export function TimeBlockDetail({
   );
 }
 
-export function TaskDetailEditor({
+function TaskDetailEditor({
   id,
   initialActiveField = null,
   onClose,
@@ -105,7 +105,7 @@ export function TaskDetailEditor({
   );
 }
 
-export function CalendarEventDetailEditor({
+function CalendarEventDetailEditor({
   id,
   initialActiveField = null,
   onClose,

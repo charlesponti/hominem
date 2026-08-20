@@ -20,16 +20,6 @@ interface AuthAnalyticsContext {
   statusCode?: number;
 }
 
-interface AuthEventLogEntry {
-  event: string;
-  phase: string;
-  timestamp: number;
-  durationMs: number | null;
-}
-
-const events: AuthEventLogEntry[] = [];
-const phaseStartTimes = new Map<string, number>();
-
 function getApiBaseOrigin() {
   try {
     return new URL(API_BASE_URL).origin;
@@ -61,8 +51,9 @@ function buildAuthAnalyticsProperties(context: AuthAnalyticsContext) {
     errorMessage: context.error?.message ?? null,
     errorName: context.error?.name ?? null,
     failureStage: context.failureStage ?? null,
-    isTimeout:
-      context.error?.name === 'AbortError' || context.error?.message.includes('timed out') === true,
+    isTimeout: Boolean(
+      context.error?.name === 'AbortError' || context.error?.message.includes('timed out'),
+    ),
     phase: context.phase,
     releaseChannel: RELEASE_CHANNEL,
     source: context.source ?? 'auth_provider',
@@ -82,21 +73,4 @@ export function captureAuthAnalyticsFailure(event: string, context: AuthAnalytic
   if (context.error) {
     posthog.captureException(context.error, properties);
   }
-}
-
-export function recordAuthEvent(
-  event: string,
-  phase: string,
-  nowMs: number = Date.now(),
-): AuthEventLogEntry {
-  const phaseStart = phaseStartTimes.get(phase);
-  const durationMs = phaseStart !== undefined ? nowMs - phaseStart : null;
-
-  const entry: AuthEventLogEntry = { event, phase, timestamp: nowMs, durationMs };
-  events.push(entry);
-  return entry;
-}
-
-export function markAuthPhaseStart(phase: string, nowMs: number = Date.now()): void {
-  phaseStartTimes.set(phase, nowMs);
 }

@@ -202,10 +202,6 @@ export function consumeChatComposerHandoff(chatId: string): ChatComposerHandoff 
   return handoff;
 }
 
-export function clearChatComposerHandoff(chatId: string) {
-  getStorage().remove(getChatComposerHandoffKey(chatId));
-}
-
 export function writeResumeTarget(target: ResumeTarget) {
   writeJSONValue(RESUME_TARGET_KEY, target);
 }

@@ -13,7 +13,7 @@ export const HOME_ROUTE = '/(protected)' as RelativePathString;
 export const TIME_ROUTE = '/(protected)/time' as RelativePathString;
 export const UNSCHEDULED_ROUTE = '/(protected)/time/unscheduled' as RelativePathString;
 export const SETTINGS_ROUTE = '/(protected)/settings' as RelativePathString;
-export const ARCHIVED_CHATS_ROUTE = '/(protected)/settings/archived-chats';
+export const ARCHIVED_CHATS_ROUTE = '/(protected)/settings/archived-chats' as RelativePathString;
 
 export type TimeBlockSource = 'task' | 'event';
 
@@ -36,5 +36,3 @@ export function getContentRoute(kind: ContentKind, id: string) {
 
   return `/(protected)/inbox/${kind}/${id}`;
 }
-
-export const getThreadRoute = getContentRoute;

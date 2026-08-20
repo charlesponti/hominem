@@ -8,6 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
+import type { SFSymbol } from 'expo-symbols';
+
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -22,7 +24,7 @@ interface ComposerKindToggleProps {
   onSelect: (kind: ComposerEntryKind) => void;
 }
 
-const options: { kind: ComposerEntryKind; label: string; icon: string; iconFilled: string }[] = [
+const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFilled: SFSymbol }[] = [
   {
     kind: 'chat',
     label: 'Conversation',
@@ -97,7 +99,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
             testID={`composer-kind-${option.kind}`}
           >
             <AppIcon
-              name={(isSelected ? option.iconFilled : option.icon) as never}
+              name={isSelected ? option.iconFilled : option.icon}
               size={18}
               tintColor={isSelected ? primary : mutedForeground}
             />

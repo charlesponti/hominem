@@ -11,7 +11,6 @@ import AppIcon from '~/components/ui/icon';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
 import { getPreventScreenshots, setPreventScreenshots } from '~/hooks/use-screen-capture';
 import { useAuth } from '~/services/auth/auth-provider';
-import { resolveProtectedRouteState } from '~/services/auth/protected-route-state';
 import { ARCHIVED_CHATS_ROUTE } from '~/services/navigation/routes';
 import { useMonthlyUsage } from '~/services/usage/use-usage-query';
 import t from '~/translations';
@@ -199,9 +198,7 @@ function Settings() {
     router.push('/(protected)/dev/ui-lab' as never);
   };
 
-  const protectedRouteState = resolveProtectedRouteState({ isPending, isSignedIn });
-
-  if (protectedRouteState.showFallback) {
+  if (isPending || !isSignedIn) {
     return <ProtectedRouteFallback />;
   }
 

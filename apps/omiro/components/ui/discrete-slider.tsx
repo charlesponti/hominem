@@ -54,20 +54,13 @@ export function DiscreteSlider({
     [trackWidth],
   );
 
-  const commitStep = useCallback(
-    (index: number) => {
-      onValueChange(index);
-    },
-    [onValueChange],
-  );
-
   const setStepFromFraction = useCallback(
     (fraction: number) => {
       const index = nearestStep(fraction, steps);
       position.value = withTiming(steps > 1 ? index / (steps - 1) : 0, { duration: 150 });
-      commitStep(index);
+      onValueChange(index);
     },
-    [commitStep, position, steps],
+    [onValueChange, position, steps],
   );
 
   const pan = Gesture.Pan()

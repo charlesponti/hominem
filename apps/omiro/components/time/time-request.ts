@@ -1,6 +1,6 @@
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 
-import type { TimeBlock, TimeInteractionState, TimeOpening } from './time-types';
+import type { TimeBlock, TimeOpening } from './time-types';
 import { findEventCandidates, findOpenings, getAvailabilityRange } from './time-utils';
 
 type RequestResult =
@@ -109,25 +109,3 @@ export async function resolveTimeRequest({
   }
 }
 
-export function applyRequestResult(
-  result: RequestResult,
-  setInteraction: (state: TimeInteractionState) => void,
-  onOpenEvent: (event: CalendarEvent) => void,
-  setPrompt: (prompt: string) => void,
-  showError: (message: string, submittedPrompt: string) => void,
-) {
-  if (result.kind === 'error') {
-    showError(result.message, result.submittedPrompt);
-    return;
-  }
-  if (result.kind === 'open-event') {
-    onOpenEvent(result.event);
-    setInteraction({ kind: 'idle' });
-    return;
-  }
-  setPrompt('');
-  if (result.kind === 'answer') setInteraction(result);
-  if (result.kind === 'availability') setInteraction(result);
-  if (result.kind === 'draft') setInteraction(result);
-  if (result.kind === 'event-choice') setInteraction(result);
-}

@@ -22,6 +22,7 @@ function mockTask(
 ): TaskListItem {
   return {
     artifactType: 'task',
+    childCount: 0,
     completedAt: null,
     createdAt: at(-24),
     description: null,
@@ -39,7 +40,7 @@ function mockTask(
     timeZone: null,
     updatedAt: at(-24),
     ...overrides,
-  } as TaskListItem;
+  };
 }
 
 function mockEvent(

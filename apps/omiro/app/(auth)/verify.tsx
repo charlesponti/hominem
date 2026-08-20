@@ -111,7 +111,6 @@ function VerifyScreen() {
     handleVerifyOtp,
     handleResendOtp,
   } = useEmailAuth({
-    sendOtp: async () => {},
     verifyOtp: async (email, code) => {
       await verifyEmailOtp({ email, otp: normalizeOtp(code) });
       setVerifySucceeded(true);
