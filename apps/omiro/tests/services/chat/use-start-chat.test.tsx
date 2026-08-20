@@ -155,14 +155,17 @@ describe('useStartChat', () => {
     expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toBeUndefined();
   });
 
-  it('marks the assistant message failed when the stream errors after ready', async () => {
+  it('marks the assistant message failed and rethrows when the stream errors after ready', async () => {
     const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
 
     let startPromise: Promise<void> | undefined;
+    let caughtError: unknown;
     act(() => {
       startPromise = result.current
         .startChat({ message: 'Hello there' } as never)
-        .catch(() => undefined);
+        .catch((error) => {
+          caughtError = error;
+        });
     });
 
     await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledTimes(1));
@@ -179,6 +182,9 @@ describe('useStartChat', () => {
     await act(async () => {
       await startPromise;
     });
+
+    expect(caughtError).toBeInstanceOf(Error);
+    expect((caughtError as Error).message).toBe('stream dropped');
 
     const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages('chat-1'));
     expect(messages?.at(-1)).toEqual(

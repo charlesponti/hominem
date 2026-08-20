@@ -24,16 +24,11 @@ interface CreateTaskInput {
   parentTaskId?: string | null;
 }
 
-function buildOptimisticTask(input: CreateTaskInput, optimisticId: string): Task {
-  const now = new Date().toISOString();
-
+function buildCreateTaskPayload(input: CreateTaskInput, parentId: string | undefined) {
   return {
-    id: optimisticId,
-    ownerUserId: '',
     title: input.title.trim(),
-    description: input.description?.trim() || null,
-    parentTaskId: input.parentTaskId ?? null,
-    status: 'pending',
+    description: input.description ?? null,
+    artifactType: 'task' as const,
     priority: input.priority ?? 'medium',
     dueAt: input.dueAt ?? null,
     durationMinutes: input.durationMinutes ?? null,
@@ -43,6 +38,33 @@ function buildOptimisticTask(input: CreateTaskInput, optimisticId: string): Task
     scheduledEndAt: input.scheduledEndAt ?? null,
     timeZone: input.timeZone ?? null,
     location: input.location ?? null,
+    participants: input.participants,
+    parentTaskId: parentId ?? input.parentTaskId ?? null,
+  };
+}
+
+function buildOptimisticTask(
+  payload: ReturnType<typeof buildCreateTaskPayload>,
+  optimisticId: string,
+): Task {
+  const now = new Date().toISOString();
+
+  return {
+    id: optimisticId,
+    ownerUserId: '',
+    title: payload.title,
+    description: payload.description,
+    parentTaskId: payload.parentTaskId,
+    status: 'pending',
+    priority: payload.priority,
+    dueAt: payload.dueAt,
+    durationMinutes: payload.durationMinutes,
+    schedulingWindowStartAt: payload.schedulingWindowStartAt,
+    schedulingWindowEndAt: payload.schedulingWindowEndAt,
+    scheduledStartAt: payload.scheduledStartAt,
+    scheduledEndAt: payload.scheduledEndAt,
+    timeZone: payload.timeZone,
+    location: payload.location,
     completedAt: null,
     createdAt: now,
     updatedAt: now,
@@ -57,22 +79,7 @@ export function useTaskCreate({ parentId }: UseTaskCreateOptions = {}) {
   return useMutation({
     mutationFn: async (input: CreateTaskInput) => {
       const res = await client.api.tasks.$post({
-        json: {
-          title: input.title.trim(),
-          description: input.description ?? null,
-          artifactType: 'task',
-          priority: input.priority,
-          dueAt: input.dueAt ?? null,
-          durationMinutes: input.durationMinutes ?? null,
-          schedulingWindowStartAt: input.schedulingWindowStartAt ?? null,
-          schedulingWindowEndAt: input.schedulingWindowEndAt ?? null,
-          scheduledStartAt: input.scheduledStartAt ?? null,
-          scheduledEndAt: input.scheduledEndAt ?? null,
-          timeZone: input.timeZone ?? null,
-          location: input.location ?? null,
-          participants: input.participants,
-          parentTaskId: parentId ?? input.parentTaskId ?? null,
-        },
+        json: buildCreateTaskPayload(input, parentId),
       });
       return res.json();
     },
@@ -81,7 +88,7 @@ export function useTaskCreate({ parentId }: UseTaskCreateOptions = {}) {
 
       const optimisticId = `optimistic-task-${Date.now().toString()}`;
       const optimisticTask = buildOptimisticTask(
-        { ...input, parentTaskId: parentId },
+        buildCreateTaskPayload(input, parentId),
         optimisticId,
       );
 

@@ -150,12 +150,11 @@ export function findOpenings({
 }): TimeOpening[] {
   const busy = [
     ...events.map((event) => ({ end: new Date(event.endDate), start: new Date(event.startDate) })),
-    ...tasks
-      .filter((task) => task.scheduledStartAt && task.scheduledEndAt)
-      .map((task) => ({
-        end: new Date(task.scheduledEndAt!),
-        start: new Date(task.scheduledStartAt!),
-      })),
+    ...tasks.flatMap((task) =>
+      task.scheduledStartAt && task.scheduledEndAt
+        ? [{ end: new Date(task.scheduledEndAt), start: new Date(task.scheduledStartAt) }]
+        : [],
+    ),
   ]
     .map(({ start, end }) => ({
       start: new Date(Math.max(start.getTime(), range.start.getTime())),

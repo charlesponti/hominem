@@ -195,7 +195,7 @@ function Settings() {
   };
 
   const onUiLabPress = () => {
-    router.push('/(protected)/dev/ui-lab' as never);
+    router.push('/(protected)/dev/ui-lab');
   };
 
   if (isPending || !isSignedIn) {

@@ -1,7 +1,9 @@
 import { normalizeEmail } from '@ponti-studios/auth/shared/validation';
 
-import { API_BASE_URL, APP_ENV, RELEASE_CHANNEL } from '~/constants';
+import { APP_ENV, RELEASE_CHANNEL } from '~/constants';
 import { posthog } from '~/services/posthog';
+
+import { getApiBaseOrigin } from './api-origin';
 
 type AuthAnalyticsPhase =
   | 'boot'
@@ -18,14 +20,6 @@ interface AuthAnalyticsContext {
   failureStage?: 'network' | 'response' | 'validation' | 'storage' | 'unknown';
   source?: 'auth_provider';
   statusCode?: number;
-}
-
-function getApiBaseOrigin() {
-  try {
-    return new URL(API_BASE_URL).origin;
-  } catch {
-    return API_BASE_URL;
-  }
 }
 
 function getEmailDomain(email?: string | null) {

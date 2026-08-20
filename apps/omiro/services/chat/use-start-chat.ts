@@ -106,6 +106,7 @@ export function useStartChat() {
           errorMessage: error instanceof Error ? error.message : 'Stream error',
         });
         void invalidateInboxQueries(queryClient);
+        throw error;
       }
     },
   });

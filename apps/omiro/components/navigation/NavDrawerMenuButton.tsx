@@ -55,7 +55,7 @@ export function NavDrawerMenuButton() {
   const onPressAction = (event: NativeActionEvent) => {
     const destination = event.nativeEvent.event as Destination;
     if (destination === 'settings') {
-      router.push(SETTINGS_ROUTE as never);
+      router.push(SETTINGS_ROUTE);
       return;
     }
 

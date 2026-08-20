@@ -5,15 +5,13 @@ import * as SecureStore from 'expo-secure-store';
 
 import { API_BASE_URL, APP_SCHEME } from '~/constants';
 
-function getAuthOriginHeader() {
-  return new URL(API_BASE_URL).origin;
-}
+import { getApiBaseOrigin } from './api-origin';
 
 export const authClient = createAuthClient({
   baseURL: API_BASE_URL,
   fetchOptions: {
     headers: {
-      Origin: getAuthOriginHeader(),
+      Origin: getApiBaseOrigin(),
     },
   },
   plugins: [
