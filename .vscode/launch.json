@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API dev server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "runtimeArgs": ["watch", "--tsconfig", "tsconfig.dev.json", "src/index.ts"],
+      "cwd": "${workspaceFolder}/services/api",
+      "env": {
+        "SERVICE_NAME": "api"
+      },
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "API worker",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "runtimeArgs": ["watch", "--tsconfig", "tsconfig.dev.json", "src/worker.ts"],
+      "cwd": "${workspaceFolder}/services/api",
+      "env": {
+        "SERVICE_NAME": "api-worker"
+      },
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Career dev server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["./node_modules/.bin/react-router", "dev"],
+      "cwd": "${workspaceFolder}/apps/career",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
