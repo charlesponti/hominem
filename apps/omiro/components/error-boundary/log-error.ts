@@ -2,10 +2,8 @@ import { logger } from '@hominem/telemetry';
 import * as Sentry from '@sentry/react-native';
 import type { ErrorInfo } from 'react';
 
-import { APP_ENV } from '~/constants';
+import { isSentryEnabled } from '~/services/observability';
 import { posthog } from '~/services/posthog';
-
-const isSentryEnabled = APP_ENV !== 'development';
 
 export function logError(
   error: Error,

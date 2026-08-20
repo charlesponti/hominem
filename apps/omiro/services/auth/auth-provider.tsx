@@ -1,4 +1,5 @@
 import type { AuthUser as User } from '@ponti-studios/auth/types';
+import { logger } from '@hominem/telemetry';
 import React, {
   createContext,
   useCallback,
@@ -101,7 +102,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [runSignOut]);
 
   const handleUnauthorized = useCallback(async () => {
-    await authClient.signOut().catch(() => undefined);
+    await authClient
+      .signOut()
+      .catch((error) => logger.warn('[AuthProvider] Best-effort sign-out failed', { error }));
     queryClient.clear();
     await clearPersistedQueryCache();
     await LocalStore.clearAllData();

@@ -1,6 +1,7 @@
 import '../global.css';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
+import { logger } from '@hominem/telemetry';
 import { useIsRestoring } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import {
@@ -61,7 +62,7 @@ function InnerRootLayout() {
         return;
       }
       hasHidden = true;
-      SplashScreen.hideAsync().catch(() => undefined);
+      SplashScreen.hideAsync().catch((error) => logger.warn('[RootLayout] hideAsync failed', { error }));
     };
 
     // Boot resolution decides whether we land on (auth) or (protected); hiding

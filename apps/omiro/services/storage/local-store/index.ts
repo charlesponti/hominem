@@ -40,13 +40,15 @@ const normalizeNull = <T>(value: T | null): T | null => {
   return value;
 };
 
+// Policy: corrupted local data is treated as absent rather than fatal --
+// callers fall back to defaults (e.g. getSettings returns null) instead of
+// throwing. Always log so the corruption is still visible in production,
+// not just __DEV__ builds.
 function validateOrNull<T>(schema: z.ZodType<T>, data: unknown): T | null {
   try {
     return schema.parse(data);
   } catch (error) {
-    if (__DEV__) {
-      logger.warn(LOG_MESSAGES.LOCAL_STORE_VALIDATION_FAILED, { error });
-    }
+    logger.warn(LOG_MESSAGES.LOCAL_STORE_VALIDATION_FAILED, { error });
     return null;
   }
 }
