@@ -1,5 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
 import { UPLOAD_MAX_FILE_COUNT } from '@hominem/storage/constants';
+import { logger } from '@hominem/telemetry';
 import {
   getFileExtension,
   classifyFileByMimeType,
@@ -81,7 +82,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
 
   const deleteUploadedFile = useCallback(
     (fileId: string) => {
-      void client.api.files[':fileId'].$delete({ param: { fileId } }).catch(() => undefined);
+      void client.api.files[':fileId']
+        .$delete({ param: { fileId } })
+        .catch((error) => logger.warn('[ComposerContext] Failed to delete orphaned file', { error, fileId }));
     },
     [client],
   );

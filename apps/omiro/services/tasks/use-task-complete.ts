@@ -29,6 +29,14 @@ export function useTaskComplete({ parentId }: UseTaskCompleteOptions = {}) {
       return res.json();
     },
     onMutate: async ({ taskId, completed }) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+
+      const previousAll = queryClient.getQueryData<TaskListItem[]>(taskKeys.all);
+      const previousDetail = queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail(taskId));
+      const previousParentDetail = parentId
+        ? queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail(parentId))
+        : undefined;
+
       queryClient.setQueryData<TaskListItem[] | undefined>(
         taskKeys.all,
         (current: TaskListItem[] | undefined) =>
@@ -54,6 +62,16 @@ export function useTaskComplete({ parentId }: UseTaskCompleteOptions = {}) {
           (current: TaskDetailOutput | undefined) =>
             current ? { ...current, task: applyCompleted(current.task, completed) } : current,
         );
+      }
+
+      return { previousAll, previousDetail, previousParentDetail };
+    },
+    onError: (_error, { taskId }, context) => {
+      if (!context) return;
+      queryClient.setQueryData(taskKeys.all, context.previousAll);
+      queryClient.setQueryData(taskKeys.detail(taskId), context.previousDetail);
+      if (parentId) {
+        queryClient.setQueryData(taskKeys.detail(parentId), context.previousParentDetail);
       }
     },
     onSuccess: (updatedTask) => {

@@ -21,6 +21,7 @@ export function TaskPeoplePicker({
   const [isCreating, setIsCreating] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [createError, setCreateError] = useState('');
   const peopleQuery = usePeopleSearch(query);
   const createPerson = useCreatePerson();
   const results = peopleQuery.data?.people ?? [];
@@ -40,14 +41,19 @@ export function TaskPeoplePicker({
   const create = async () => {
     const name = displayName.trim();
     if (!name) return;
-    const person = await createPerson.mutateAsync({
-      displayName: name,
-      email: email.trim() || null,
-    });
-    addPerson(person);
-    setDisplayName('');
-    setEmail('');
-    setIsCreating(false);
+    try {
+      const person = await createPerson.mutateAsync({
+        displayName: name,
+        email: email.trim() || null,
+      });
+      addPerson(person);
+      setDisplayName('');
+      setEmail('');
+      setIsCreating(false);
+      setCreateError('');
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : 'Unable to create person.');
+    }
   };
 
   return (
@@ -115,6 +121,11 @@ export function TaskPeoplePicker({
             testID="task-person-create-email"
             value={email}
           />
+          {createError ? (
+            <Text className="text-destructive text-footnote" testID="task-person-create-error">
+              {createError}
+            </Text>
+          ) : null}
           <View className="flex-row gap-2">
             <View className="flex-1">
               <Button label="Cancel" onPress={() => setIsCreating(false)} variant="secondary" />

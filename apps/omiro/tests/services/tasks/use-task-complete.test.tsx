@@ -101,6 +101,37 @@ describe('useTaskComplete', () => {
     });
   });
 
+  it('rolls back the list, detail, and parent detail caches when the request fails', async () => {
+    mockPatch.mockRejectedValueOnce(new Error('network error'));
+    const { result, queryClient } = renderHookWithQueryClient(() =>
+      useTaskComplete({ parentId: 'parent-1' }),
+    );
+    const originalList = [taskListItem('child-1')];
+    const originalDetail = {
+      task: taskListItem('child-1'),
+      participants: [],
+      children: [],
+    } as unknown as TaskDetailOutput;
+    const originalParentDetail = {
+      task: taskListItem('parent-1'),
+      participants: [],
+      children: [taskListItem('child-1')],
+    } as unknown as TaskDetailOutput;
+    queryClient.setQueryData(taskKeys.all, originalList);
+    queryClient.setQueryData(taskKeys.detail('child-1'), originalDetail);
+    queryClient.setQueryData(taskKeys.detail('parent-1'), originalParentDetail);
+
+    await act(async () => {
+      await result.current
+        .mutateAsync({ taskId: 'child-1', completed: true })
+        .catch(() => undefined);
+    });
+
+    expect(queryClient.getQueryData(taskKeys.all)).toEqual(originalList);
+    expect(queryClient.getQueryData(taskKeys.detail('child-1'))).toEqual(originalDetail);
+    expect(queryClient.getQueryData(taskKeys.detail('parent-1'))).toEqual(originalParentDetail);
+  });
+
   it('reconciles the list cache with the server response on success', async () => {
     mockPatch.mockResolvedValueOnce({
       json: async () => taskListItem('1', { status: 'completed', title: 'Server title' }),

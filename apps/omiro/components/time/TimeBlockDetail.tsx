@@ -166,9 +166,7 @@ function TimeBlockEditor({
   const block = isTask ? task : event;
   const isLoading = isTask ? taskQuery.isLoading : eventQuery.isLoading;
   const error = isTask
-    ? taskQuery.error instanceof Error
-      ? taskQuery.error.message
-      : ''
+    ? eventError || (taskQuery.error instanceof Error ? taskQuery.error.message : '')
     : eventError || (eventQuery.error instanceof Error ? eventQuery.error.message : '');
   const title = block?.title ?? 'Time block';
   const location = block?.location ?? null;
@@ -345,7 +343,13 @@ function TimeBlockEditor({
   const remove = useCallback(() => {
     const confirm = () => {
       if (isTask) {
-        void deleteTask(id).then(onClose);
+        void deleteTask(id)
+          .then(onClose)
+          .catch((deleteError) =>
+            setEventError(
+              deleteError instanceof Error ? deleteError.message : 'Unable to delete task.',
+            ),
+          );
         return;
       }
       withRecurrenceScope((scope) => {

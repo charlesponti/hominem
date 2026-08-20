@@ -1,3 +1,4 @@
+import { logger } from '@hominem/telemetry';
 import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
 
@@ -91,8 +92,11 @@ export function useComposerSubmission(props: ComposerProps) {
       try {
         await sendPromise;
         void autoUpdateChatTitle(trimmedMessage);
-      } catch {
-        // Failure is surfaced inline in the transcript.
+      } catch (error) {
+        // The mutation's onError already marks the message failed inline in
+        // the transcript; this only prevents an unhandled rejection from the
+        // fire-and-forget `void submission.submit(...)` call sites.
+        logger.warn('[useComposerSubmission] sendChatMessage failed', { error });
       }
     },
     [autoUpdateChatTitle, isChatSending, onComplete, sendChatMessage, submitNote, submitStartChat],

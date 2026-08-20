@@ -1,3 +1,5 @@
+import { logger } from '@hominem/telemetry';
+
 export interface StreamSSEOptions<TEvent> {
   url: string;
   payload: unknown;
@@ -91,8 +93,8 @@ export async function streamSSE<TEvent>({
           return;
         }
         onEvent(parsed as TEvent);
-      } catch {
-        // Invalid non-terminal frames are ignored to preserve existing comment tolerance.
+      } catch (error) {
+        logger.warn('[streamSSE] Dropped malformed SSE frame', { data, error });
       }
     };
     const processBufferedFrames = () => {

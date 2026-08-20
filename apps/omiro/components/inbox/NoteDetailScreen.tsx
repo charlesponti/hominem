@@ -53,7 +53,7 @@ function formatNoteDateline(
       year: 'numeric',
     });
   } catch {
-    return '';
+    return timestamp;
   }
 }
 

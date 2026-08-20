@@ -1,4 +1,5 @@
 import type { ChatStreamEvent } from '@hominem/rpc/types';
+import { logger } from '@hominem/telemetry';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 
@@ -113,7 +114,11 @@ export function useRegenerateMessage(chatId: string) {
 
   const regenerateMessage = useCallback(
     async (messageId: string) => {
-      await mutation.mutateAsync(messageId).catch(() => {});
+      // onError above already rolls back the cache; this only prevents an
+      // unhandled rejection since callers invoke this as a fire-and-forget handler.
+      await mutation.mutateAsync(messageId).catch((error) => {
+        logger.warn('[useRegenerateMessage] regenerate failed', { error, messageId });
+      });
     },
     [mutation],
   );

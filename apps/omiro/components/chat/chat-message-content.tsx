@@ -1,4 +1,5 @@
 import type { MarkdownComponent } from '@hominem/chat';
+import { logger } from '@hominem/telemetry';
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -13,7 +14,11 @@ let markdownPromise: Promise<MarkdownComponent | null> | null = null;
 
 function getMarkdownComponent(): Promise<MarkdownComponent | null> {
   if (!markdownPromise) {
-    markdownPromise = loadMarkdown().catch(() => null);
+    markdownPromise = loadMarkdown().catch((error) => {
+      markdownPromise = null;
+      logger.warn('[MessageContent] Failed to load react-native-markdown-display', { error });
+      return null;
+    });
   }
   return markdownPromise;
 }
