@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import {
   createComposerMessageStore,
   useComposerMessageSelector,
-  useComposerMessageValue,
 } from '~/components/composer/useComposerMessageStore';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
@@ -38,18 +37,6 @@ describe('createComposerMessageStore', () => {
     unsubscribe();
     store.setMessage('another value');
     expect(notifications).toBe(1);
-  });
-});
-
-describe('useComposerMessageValue', () => {
-  it('re-renders with the latest message on every change', () => {
-    const store = createComposerMessageStore('initial');
-    const { result } = renderHookWithQueryClient(() => useComposerMessageValue(store));
-
-    expect(result.current).toBe('initial');
-
-    act(() => store.setMessage('updated'));
-    expect(result.current).toBe('updated');
   });
 });
 

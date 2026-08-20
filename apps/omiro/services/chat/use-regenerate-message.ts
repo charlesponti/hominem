@@ -119,7 +119,6 @@ export function useRegenerateMessage(chatId: string) {
   );
 
   return {
-    isRegenerating: mutation.isPending,
     regenerateMessage,
   };
 }

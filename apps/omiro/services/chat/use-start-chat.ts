@@ -118,6 +118,5 @@ export function useStartChat() {
   return {
     isStartingChat: mutation.isPending,
     startChat,
-    startChatError: mutation.error,
   };
 }

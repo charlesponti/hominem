@@ -8,10 +8,6 @@ describe('composer submission config', () => {
       inputTestID: 'inbox-composer-input',
       primarySubmitKind: 'note',
       submitTestID: 'composer-submit-note',
-      secondaryAction: {
-        kind: 'start-chat',
-        testID: 'composer-start-chat',
-      },
       shellTestID: 'inbox-composer',
     });
   });
@@ -21,10 +17,6 @@ describe('composer submission config', () => {
       inputTestID: 'inbox-composer-input',
       primarySubmitKind: 'start-chat',
       submitTestID: 'composer-submit-chat',
-      secondaryAction: {
-        kind: 'note',
-        testID: 'composer-save-note',
-      },
       shellTestID: 'inbox-composer',
     });
   });
@@ -39,10 +31,8 @@ describe('composer submission config', () => {
       }),
     ).toMatchObject({
       inputTestID: 'chat-composer-input',
-      isChatMode: true,
       primarySubmitKind: 'message',
       submitTestID: 'composer-submit-message',
-      secondaryAction: undefined,
       shellTestID: 'custom-chat',
     });
   });

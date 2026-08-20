@@ -322,7 +322,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
   return {
     isChatSending: mutation.isPending,
-    sendChatError: mutation.isError,
     sendChatMessage,
     retryFailedMessage,
   };

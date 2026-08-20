@@ -3,7 +3,6 @@ import type { Chat, ChatMessageDto as RpcChatMessage } from '@hominem/rpc/types'
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatKeys } from '../notes/query-keys';
-import { selectChat } from './chat-activity';
 import { type MessageOutput } from './chatMessages';
 
 export const CHAT_MESSAGES_LIMIT = 50;
@@ -86,16 +85,10 @@ export const useActiveChat = (chatId?: string | null) => {
   return useQuery<Chat | null>({
     queryKey: chatKeys.activeChat(chatId ?? null),
     queryFn: async () => {
-      if (chatId) {
-        const res = await client.api.chats[':id'].$get({ param: { id: chatId } });
-        const chat = await res.json();
-        const { messages: _messages, ...chatRecord } = chat;
-        return chatRecord;
-      }
-
-      const listRes = await client.api.chats.$get({ query: { limit: '50' } });
-      const chats = await listRes.json();
-      return selectChat(chats, chatId);
+      const res = await client.api.chats[':id'].$get({ param: { id: chatId as string } });
+      const chat = await res.json();
+      const { messages: _messages, ...chatRecord } = chat;
+      return chatRecord;
     },
     enabled: Boolean(chatId),
   });

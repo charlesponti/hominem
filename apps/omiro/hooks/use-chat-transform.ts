@@ -19,7 +19,6 @@ interface UseChatTransformInput {
   chatId: string;
   source: SessionSource;
   messages: ChatMessageItem[];
-  onNoteCreated?: () => Promise<void>;
   onContentCreated?: (content: ChatContentCreated) => Promise<void>;
 }
 
@@ -45,7 +44,6 @@ export function useChatTransform({
   chatId,
   source,
   messages,
-  onNoteCreated,
   onContentCreated,
 }: UseChatTransformInput) {
   const client = useApiClient();
@@ -93,11 +91,6 @@ export function useChatTransform({
         json: { content: review.previewContent, title: review.proposedTitle, type: 'note' },
       });
       return res.json();
-    },
-    onSuccess: async () => {
-      if (onNoteCreated) {
-        await onNoteCreated();
-      }
     },
   });
 

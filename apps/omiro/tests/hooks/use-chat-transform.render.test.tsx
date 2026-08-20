@@ -57,19 +57,17 @@ function message(role: ChatMessageItem['role'], text: string): ChatMessageItem {
 const MESSAGES = [message('user', 'Let’s plan the launch'), message('assistant', 'Sure, on it')];
 
 function renderChatTransform(overrides: Partial<Parameters<typeof useChatTransform>[0]> = {}) {
-  const onNoteCreated = vi.fn().mockResolvedValue(undefined);
   const onContentCreated = vi.fn().mockResolvedValue(undefined);
   const hook = renderHookWithQueryClient(() =>
     useChatTransform({
       chatId: CHAT_ID,
       source: { kind: 'new' },
       messages: MESSAGES,
-      onNoteCreated,
       onContentCreated,
       ...overrides,
     }),
   );
-  return { ...hook, onNoteCreated, onContentCreated };
+  return { ...hook, onContentCreated };
 }
 
 describe('useChatTransform', () => {
@@ -129,11 +127,11 @@ describe('useChatTransform', () => {
     expect(mockAlert).toHaveBeenCalledWith('Could not prepare review', 'Please try again.');
   });
 
-  it('accepting a note review creates the note and notifies onNoteCreated', async () => {
+  it('accepting a note review creates the note and notifies onContentCreated', async () => {
     mockNotesPost.mockResolvedValue({
       json: async () => ({ id: 'note-1', title: 'Launch plan', updatedAt: '2026-01-01' }),
     });
-    const { result, onNoteCreated, onContentCreated } = renderChatTransform();
+    const { result, onContentCreated } = renderChatTransform();
 
     await act(async () => {
       await result.current.handleTransform('note');
@@ -143,7 +141,6 @@ describe('useChatTransform', () => {
     });
 
     expect(mockNotesPost).toHaveBeenCalledTimes(1);
-    expect(onNoteCreated).toHaveBeenCalledTimes(1);
     expect(onContentCreated).toHaveBeenCalledWith({
       source: { kind: 'artifact', id: 'note-1', title: 'Launch plan', type: 'note' },
       updatedAt: '2026-01-01',

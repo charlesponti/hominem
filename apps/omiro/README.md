@@ -89,7 +89,7 @@ Chat detail state is split into focused hooks:
 - `useChatTransform` owns chat-to-note/task actions and review.
 - `useMessageActions` owns copy and share.
 
-React-independent logic belongs in `services/chat/`, such as `filterMessagesByQuery` in `chat-search.ts`, and is unit-tested directly. `ChatDetailScreen` combines the hooks and owns only screen-local state such as composer height and the debug toggle. Do not replace these hooks with one `useChatController`.
+React-independent logic belongs in `services/chat/` and is unit-tested directly. `ChatDetailScreen` combines the hooks and owns only screen-local state such as composer height and the debug toggle. Do not replace these hooks with one `useChatController`.
 
 ## Product language
 

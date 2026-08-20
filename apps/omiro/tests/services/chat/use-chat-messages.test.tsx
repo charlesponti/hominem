@@ -162,25 +162,6 @@ describe('useActiveChat', () => {
     expect(result.current.data).toEqual({ id: CHAT_ID, title: 'A chat' });
   });
 
-  it('falls back to selecting from the chat list when the query is force-refetched with no chatId', async () => {
-    mockChatsListGet.mockResolvedValueOnce({
-      json: async () => [
-        { id: 'archived', archivedAt: new Date().toISOString() },
-        { id: 'active', archivedAt: null },
-      ],
-    });
-
-    const { result } = renderHookWithQueryClient(() => useActiveChat());
-    expect(result.current.fetchStatus).toBe('idle');
-
-    await act(async () => {
-      await result.current.refetch();
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual({ id: 'active', archivedAt: null });
-  });
-
   it('does not fetch when chatId is null', () => {
     const { result } = renderHookWithQueryClient(() => useActiveChat(null));
 

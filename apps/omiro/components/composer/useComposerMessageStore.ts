@@ -24,12 +24,6 @@ export function createComposerMessageStore(initialMessage = ''): ComposerMessage
   };
 }
 
-// Subscribes to the raw message on every keystroke -- only the component that
-// actually renders the live text (the TextField itself) should call this.
-export function useComposerMessageValue(store: ComposerMessageStore): string {
-  return useSyncExternalStore(store.subscribe, store.getMessage);
-}
-
 // Subscribes to a *derived* value instead of the raw message, so the caller
 // only re-renders when the selector's output changes (e.g. a boolean or an
 // inferred 'chat' | 'note' kind) rather than on every keystroke. This relies
