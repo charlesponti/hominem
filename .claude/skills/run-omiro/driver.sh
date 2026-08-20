@@ -13,7 +13,7 @@
 #   driver.sh all         # env -> boot -> build -> metro -> launch -> screenshot
 
 set -euo pipefail
-cd "$(dirname "$0")/../../.."   # -> apps/omiro
+cd "$(dirname "$0")/../../../apps/omiro"   # -> apps/omiro
 
 APP_DIR="$PWD"
 BUNDLE_ID="com.pontistudios.hakumi.dev"
