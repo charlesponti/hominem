@@ -32,6 +32,15 @@ export function useTaskDelete({ parentId }: UseTaskDeleteOptions = {}) {
               ? { ...current, children: current.children.filter((child) => child.id !== taskId) }
               : current,
         );
+        queryClient.setQueryData<TaskListItem[] | undefined>(
+          taskKeys.all,
+          (current: TaskListItem[] | undefined) =>
+            current?.map((task) =>
+              task.id === parentId
+                ? { ...task, childCount: Math.max(0, (task.childCount ?? 0) - 1) }
+                : task,
+            ),
+        );
       }
     },
   });

@@ -146,4 +146,44 @@ describe('useTaskComplete', () => {
     const tasks = queryClient.getQueryData<TaskListItem[]>(taskKeys.all);
     expect(tasks?.[0]?.title).toBe('Server title');
   });
+
+  it('reconciles the standalone detail cache with the server response on success', async () => {
+    mockPatch.mockResolvedValueOnce({
+      json: async () => taskListItem('1', { status: 'completed', title: 'Server title' }),
+    });
+    const { result, queryClient } = renderHookWithQueryClient(() => useTaskComplete());
+    queryClient.setQueryData<TaskDetailOutput>(taskKeys.detail('1'), {
+      task: taskListItem('1', { title: 'Old title' }),
+      participants: [],
+      children: [],
+    } as unknown as TaskDetailOutput);
+
+    await act(async () => {
+      await result.current.mutateAsync({ taskId: '1', completed: true });
+    });
+
+    const detail = queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail('1'));
+    expect((detail?.task as TaskListItem | undefined)?.title).toBe('Server title');
+  });
+
+  it('reconciles the parent detail children with the server response on success', async () => {
+    mockPatch.mockResolvedValueOnce({
+      json: async () => taskListItem('child-1', { status: 'completed', title: 'Server title' }),
+    });
+    const { result, queryClient } = renderHookWithQueryClient(() =>
+      useTaskComplete({ parentId: 'parent-1' }),
+    );
+    queryClient.setQueryData<TaskDetailOutput>(taskKeys.detail('parent-1'), {
+      task: taskListItem('parent-1'),
+      participants: [],
+      children: [taskListItem('child-1', { title: 'Old title' })],
+    } as unknown as TaskDetailOutput);
+
+    await act(async () => {
+      await result.current.mutateAsync({ taskId: 'child-1', completed: true });
+    });
+
+    const detail = queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail('parent-1'));
+    expect((detail?.children[0] as TaskListItem | undefined)?.title).toBe('Server title');
+  });
 });

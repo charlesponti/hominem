@@ -80,6 +80,27 @@ export function useTaskComplete({ parentId }: UseTaskCompleteOptions = {}) {
         (current: TaskListItem[] | undefined) =>
           current?.map((task) => (task.id === updatedTask.id ? { ...task, ...updatedTask } : task)),
       );
+
+      if (parentId) {
+        queryClient.setQueryData<TaskDetailOutput | undefined>(
+          taskKeys.detail(parentId),
+          (current: TaskDetailOutput | undefined) =>
+            current
+              ? {
+                  ...current,
+                  children: current.children.map((child) =>
+                    child.id === updatedTask.id ? { ...child, ...updatedTask } : child,
+                  ),
+                }
+              : current,
+        );
+      } else {
+        queryClient.setQueryData<TaskDetailOutput | undefined>(
+          taskKeys.detail(updatedTask.id),
+          (current: TaskDetailOutput | undefined) =>
+            current ? { ...current, task: { ...current.task, ...updatedTask } } : current,
+        );
+      }
     },
   });
 }

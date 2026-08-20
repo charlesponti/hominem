@@ -14,7 +14,10 @@ const { useTextEnhance } = await import('~/services/ai/use-text-enhance');
 
 describe('useTextEnhance', () => {
   it('posts the text without an instruction and returns the enhanced text', async () => {
-    mockEnhancePost.mockResolvedValueOnce({ json: async () => ({ text: 'Enhanced text' }) });
+    mockEnhancePost.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ text: 'Enhanced text' }),
+    });
     const { result } = renderHook(() => useTextEnhance());
 
     let enhanced: string | undefined;
@@ -27,7 +30,10 @@ describe('useTextEnhance', () => {
   });
 
   it('includes the instruction in the request payload when provided', async () => {
-    mockEnhancePost.mockResolvedValueOnce({ json: async () => ({ text: 'Enhanced text' }) });
+    mockEnhancePost.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ text: 'Enhanced text' }),
+    });
     const { result } = renderHook(() => useTextEnhance());
 
     await act(async () => {
@@ -37,6 +43,32 @@ describe('useTextEnhance', () => {
     expect(mockEnhancePost).toHaveBeenCalledWith({
       json: { text: 'raw text', instruction: 'make it formal' },
     });
+  });
+
+  it('throws the server error message when the response is not ok', async () => {
+    mockEnhancePost.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ message: 'Enhancement unavailable' }),
+    });
+    const { result } = renderHook(() => useTextEnhance());
+
+    await expect(result.current.enhance({ text: 'raw text' })).rejects.toThrow(
+      'Enhancement unavailable',
+    );
+  });
+
+  it('falls back to a status-based message when the error response has no message', async () => {
+    mockEnhancePost.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: async () => ({}),
+    });
+    const { result } = renderHook(() => useTextEnhance());
+
+    await expect(result.current.enhance({ text: 'raw text' })).rejects.toThrow(
+      'Text enhance failed (502)',
+    );
   });
 
   it('toggles isEnhancing around the request and resets it even when the request fails', async () => {

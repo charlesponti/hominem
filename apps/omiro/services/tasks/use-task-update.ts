@@ -111,6 +111,25 @@ export function useTaskUpdate({ parentId }: UseTaskUpdateOptions = {}) {
         (current: TaskListItem[] | undefined) =>
           current?.map((task) => (task.id === updatedTask.id ? { ...task, ...updatedTask } : task)),
       );
+      queryClient.setQueryData<TaskDetailOutput | undefined>(
+        taskKeys.detail(updatedTask.id),
+        (current: TaskDetailOutput | undefined) =>
+          current ? { ...current, task: { ...current.task, ...updatedTask } } : current,
+      );
+      if (parentId) {
+        queryClient.setQueryData<TaskDetailOutput | undefined>(
+          taskKeys.detail(parentId),
+          (current: TaskDetailOutput | undefined) =>
+            current
+              ? {
+                  ...current,
+                  children: current.children.map((child) =>
+                    child.id === updatedTask.id ? { ...child, ...updatedTask } : child,
+                  ),
+                }
+              : current,
+        );
+      }
     },
   });
 }

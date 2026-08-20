@@ -24,8 +24,8 @@ vi.mock('@hominem/rpc/react', async (importOriginal) => ({
 
 const { useTaskDelete } = await import('~/services/tasks/use-task-delete');
 
-function taskListItem(id: string): TaskListItem {
-  return { id, title: `Task ${id}`, childCount: 0 } as unknown as TaskListItem;
+function taskListItem(id: string, overrides: Partial<TaskListItem> = {}): TaskListItem {
+  return { id, title: `Task ${id}`, childCount: 0, ...overrides } as unknown as TaskListItem;
 }
 
 describe('useTaskDelete', () => {
@@ -68,6 +68,36 @@ describe('useTaskDelete', () => {
 
     const detail = queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail('parent-1'));
     expect(detail?.children).toEqual([taskListItem('child-2')]);
+  });
+
+  it('decrements the parent childCount in the list cache when a parentId is given', async () => {
+    mockDelete.mockResolvedValueOnce({ json: async () => ({ id: 'child-1' }) });
+    const { result, queryClient } = renderHookWithQueryClient(() =>
+      useTaskDelete({ parentId: 'parent-1' }),
+    );
+    queryClient.setQueryData(taskKeys.all, [taskListItem('parent-1', { childCount: 2 })]);
+
+    await act(async () => {
+      await result.current.mutateAsync('child-1');
+    });
+
+    const list = queryClient.getQueryData<TaskListItem[]>(taskKeys.all);
+    expect(list?.find((task) => task.id === 'parent-1')?.childCount).toBe(1);
+  });
+
+  it('does not let the parent childCount go below zero', async () => {
+    mockDelete.mockResolvedValueOnce({ json: async () => ({ id: 'child-1' }) });
+    const { result, queryClient } = renderHookWithQueryClient(() =>
+      useTaskDelete({ parentId: 'parent-1' }),
+    );
+    queryClient.setQueryData(taskKeys.all, [taskListItem('parent-1', { childCount: 0 })]);
+
+    await act(async () => {
+      await result.current.mutateAsync('child-1');
+    });
+
+    const list = queryClient.getQueryData<TaskListItem[]>(taskKeys.all);
+    expect(list?.find((task) => task.id === 'parent-1')?.childCount).toBe(0);
   });
 
   it('does not touch a parent detail cache when no parentId is given', async () => {

@@ -13,6 +13,15 @@ export function useTextEnhance() {
         const response = await client.api.enhance.enhance.$post({
           json: instruction ? { text, instruction } : { text },
         });
+        if (!response.ok) {
+          const error = (await response.json().catch(() => ({}))) as { message?: unknown };
+          throw new Error(
+            typeof error.message === 'string'
+              ? error.message
+              : `Text enhance failed (${response.status})`,
+          );
+        }
+
         const data = (await response.json()) as EnhanceTextOutput;
         return data.text;
       } finally {
