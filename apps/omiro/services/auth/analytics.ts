@@ -17,7 +17,6 @@ interface AuthAnalyticsContext {
   durationMs?: number;
   email?: string | null;
   error?: Error;
-  failureStage?: 'network' | 'response' | 'validation' | 'storage' | 'unknown';
   source?: 'auth_provider';
   statusCode?: number;
 }
@@ -44,7 +43,6 @@ function buildAuthAnalyticsProperties(context: AuthAnalyticsContext) {
     emailDomain: getEmailDomain(context.email),
     errorMessage: context.error?.message ?? null,
     errorName: context.error?.name ?? null,
-    failureStage: context.failureStage ?? null,
     isTimeout: Boolean(
       context.error?.name === 'AbortError' || context.error?.message.includes('timed out'),
     ),

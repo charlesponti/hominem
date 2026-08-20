@@ -10,6 +10,7 @@ export function useSignOut(currentEmail: string | null | undefined) {
   const queryClient = useQueryClient();
   return useCallback(async () => {
     const startedAt = Date.now();
+    let statusCode: number | undefined;
 
     captureAuthAnalyticsEvent('auth_sign_out_started', {
       phase: 'sign_out',
@@ -18,7 +19,13 @@ export function useSignOut(currentEmail: string | null | undefined) {
 
     let signOutError: Error | null = null;
     try {
-      const result = await authClient.signOut();
+      const result = await authClient.signOut({
+        fetchOptions: {
+          onResponse: ({ response }) => {
+            statusCode = response.status;
+          },
+        },
+      });
       if (result.error) {
         signOutError = new Error(result.error.message ?? 'Failed to sign out. Please try again.');
       }
@@ -40,7 +47,7 @@ export function useSignOut(currentEmail: string | null | undefined) {
         durationMs: Date.now() - startedAt,
         email: currentEmail ?? undefined,
         error: signOutError,
-        failureStage: 'network',
+        statusCode,
       });
       throw signOutError;
     }
@@ -49,7 +56,7 @@ export function useSignOut(currentEmail: string | null | undefined) {
       phase: 'sign_out',
       durationMs: Date.now() - startedAt,
       email: currentEmail ?? undefined,
-      statusCode: 200,
+      statusCode,
     });
   }, [currentEmail, queryClient]);
 }

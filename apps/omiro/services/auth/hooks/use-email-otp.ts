@@ -11,6 +11,7 @@ export function useEmailOtp() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), OTP_REQUEST_TIMEOUT_MS);
     const startedAt = Date.now();
+    let statusCode: number | undefined;
 
     captureAuthAnalyticsEvent('auth_email_otp_request_started', {
       phase: 'email_otp_request',
@@ -23,6 +24,9 @@ export function useEmailOtp() {
         type: 'sign-in',
         fetchOptions: {
           signal: controller.signal,
+          onResponse: ({ response }) => {
+            statusCode = response.status;
+          },
         },
       });
 
@@ -41,7 +45,7 @@ export function useEmailOtp() {
         durationMs: Date.now() - startedAt,
         email,
         error: resolvedError,
-        failureStage: 'network',
+        statusCode,
       });
       throw resolvedError;
     } finally {
@@ -52,7 +56,7 @@ export function useEmailOtp() {
       phase: 'email_otp_request',
       durationMs: Date.now() - startedAt,
       email,
-      statusCode: 200,
+      statusCode,
     });
   }, []);
 
@@ -61,6 +65,7 @@ export function useEmailOtp() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), OTP_VERIFY_TIMEOUT_MS);
       const startedAt = Date.now();
+      let statusCode: number | undefined;
 
       captureAuthAnalyticsEvent('auth_email_otp_verify_started', {
         phase: 'email_otp_verify',
@@ -74,6 +79,9 @@ export function useEmailOtp() {
           ...(input.name ? { name: input.name } : {}),
           fetchOptions: {
             signal: controller.signal,
+            onResponse: ({ response }: { response: Response }) => {
+              statusCode = response.status;
+            },
           },
         });
 
@@ -85,7 +93,7 @@ export function useEmailOtp() {
           phase: 'email_otp_verify',
           durationMs: Date.now() - startedAt,
           email: input.email,
-          statusCode: 200,
+          statusCode,
         });
       } catch (error) {
         const resolvedError = error instanceof Error ? error : new Error('Sign-in failed');
@@ -94,7 +102,7 @@ export function useEmailOtp() {
           durationMs: Date.now() - startedAt,
           email: input.email,
           error: resolvedError,
-          failureStage: 'unknown',
+          statusCode,
         });
         throw resolvedError;
       } finally {

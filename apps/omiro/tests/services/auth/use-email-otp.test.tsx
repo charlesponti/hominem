@@ -41,6 +41,23 @@ describe('useEmailOtp', () => {
       );
     });
 
+    it('records the real response status code instead of a hardcoded value', async () => {
+      mockSendVerificationOtp.mockImplementationOnce(async ({ fetchOptions }) => {
+        fetchOptions.onResponse({ response: { status: 201 } });
+        return { error: null };
+      });
+      const { result } = renderHook(() => useEmailOtp());
+
+      await act(async () => {
+        await result.current.requestEmailOtp('user@example.com');
+      });
+
+      expect(mockCaptureEvent).toHaveBeenCalledWith(
+        'auth_email_otp_request_succeeded',
+        expect.objectContaining({ statusCode: 201 }),
+      );
+    });
+
     it('throws and records failure when Better Auth returns an error', async () => {
       mockSendVerificationOtp.mockResolvedValueOnce({ error: { message: 'Rate limited' } });
       const { result } = renderHook(() => useEmailOtp());
@@ -54,6 +71,22 @@ describe('useEmailOtp', () => {
       expect(mockCaptureFailure).toHaveBeenCalledWith(
         'auth_email_otp_request_failed',
         expect.objectContaining({ email: 'user@example.com' }),
+      );
+    });
+
+    it('does not fabricate a status code when the request never got a response', async () => {
+      mockSendVerificationOtp.mockRejectedValueOnce(new Error('network down'));
+      const { result } = renderHook(() => useEmailOtp());
+
+      await act(async () => {
+        await expect(result.current.requestEmailOtp('user@example.com')).rejects.toThrow(
+          'network down',
+        );
+      });
+
+      expect(mockCaptureFailure).toHaveBeenCalledWith(
+        'auth_email_otp_request_failed',
+        expect.objectContaining({ statusCode: undefined }),
       );
     });
 
@@ -88,6 +121,23 @@ describe('useEmailOtp', () => {
       expect(mockCaptureEvent).toHaveBeenCalledWith(
         'auth_email_otp_verify_succeeded',
         expect.objectContaining({ email: 'user@example.com' }),
+      );
+    });
+
+    it('records the real response status code instead of a hardcoded value', async () => {
+      mockSignInEmailOtp.mockImplementationOnce(async ({ fetchOptions }) => {
+        fetchOptions.onResponse({ response: { status: 200 } });
+        return { data: { user: { id: 'user-1' } }, error: null };
+      });
+      const { result } = renderHook(() => useEmailOtp());
+
+      await act(async () => {
+        await result.current.verifyEmailOtp({ email: 'user@example.com', otp: '123456' });
+      });
+
+      expect(mockCaptureEvent).toHaveBeenCalledWith(
+        'auth_email_otp_verify_succeeded',
+        expect.objectContaining({ statusCode: 200 }),
       );
     });
 

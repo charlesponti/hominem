@@ -53,6 +53,23 @@ describe('useSignOut', () => {
     );
   });
 
+  it('records the real response status code instead of a hardcoded value', async () => {
+    mockSignOut.mockImplementationOnce(async ({ fetchOptions }) => {
+      fetchOptions.onResponse({ response: { status: 204 } });
+      return { error: null };
+    });
+    const { result } = renderHookWithQueryClient(() => useSignOut('user@example.com'));
+
+    await act(async () => {
+      await result.current();
+    });
+
+    expect(mockCaptureEvent).toHaveBeenCalledWith(
+      'auth_sign_out_succeeded',
+      expect.objectContaining({ statusCode: 204 }),
+    );
+  });
+
   it('still clears query cache and storage when Better Auth returns an error, then throws', async () => {
     mockSignOut.mockResolvedValueOnce({ error: { message: 'Session already expired' } });
     const { result, queryClient } = renderHookWithQueryClient(() => useSignOut('user@example.com'));
