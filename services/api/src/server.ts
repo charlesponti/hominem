@@ -31,8 +31,16 @@ export type AppEnv = {
 };
 
 const ALLOWED_CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
+const CHATGPT_ORIGINS = ['https://chatgpt.com', 'https://chat.openai.com'];
 function createAllowedOrigins() {
-  return new Set([env.API_URL, env.WEB_URL, env.FINANCE_URL, env.CAREER_URL, env.WHAT_URL]);
+  return new Set([
+    env.API_URL,
+    env.WEB_URL,
+    env.FINANCE_URL,
+    env.CAREER_URL,
+    env.WHAT_URL,
+    ...CHATGPT_ORIGINS,
+  ]);
 }
 
 // OAuth discovery/registration endpoints (RFC 8414/9728/7591) are meant to be
