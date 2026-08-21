@@ -47,8 +47,14 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
 
   useEffect(() => {
     if (visible) {
-      modalRef.current?.present();
-      return;
+      // The trigger is a Stack.Toolbar.Menu action (native iOS UIMenu). Its
+      // dismiss animation is still running when onPress fires, so presenting
+      // the bottom sheet synchronously gets silently dropped by UIKit. Defer
+      // until the menu has finished closing.
+      const timeout = setTimeout(() => {
+        modalRef.current?.present();
+      }, 100);
+      return () => clearTimeout(timeout);
     }
 
     modalRef.current?.dismiss();
