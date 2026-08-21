@@ -2,8 +2,8 @@ import { resolve } from 'node:path';
 
 import { describe, it } from 'vitest';
 
-import checkOffer from '../../offer-extraction/assertions';
-import { CASES } from '../../offer-extraction/cases';
+import checkOffer from '../offer-extraction/assertions';
+import { CASES } from '../offer-extraction/cases';
 import { chatComplete, type ModelConfig } from './lib/openrouter';
 import { loadTextPrompt, render } from './lib/prompt';
 

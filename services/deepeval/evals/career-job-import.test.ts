@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { describe, it } from 'vitest';
 
-import checkJobImport from '../../career-job-import/assertions';
+import checkJobImport from '../career-job-import/assertions';
 import { chatComplete, type ModelConfig } from './lib/openrouter';
 import { loadJsonPrompt, renderMessages } from './lib/prompt';
 

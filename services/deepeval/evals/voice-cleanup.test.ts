@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 
 import { describe, it } from 'vitest';
 
-import checkCleanup from '../../voice-cleanup/assertions';
+import checkCleanup from '../voice-cleanup/assertions';
 import { chatComplete, type ModelConfig } from './lib/openrouter';
 import { loadJsonPrompt, renderMessages } from './lib/prompt';
 
@@ -24,7 +24,8 @@ const CASES: Array<{ label: string; rawText: string; mustPreserve: string[] }> =
   },
   {
     label: 'invoice reminder with ordinal date',
-    rawText: "remind sarah that the invoice number is uh four five two one and it's due on the fifteenth",
+    rawText:
+      "remind sarah that the invoice number is uh four five two one and it's due on the fifteenth",
     mustPreserve: ['sarah', '4521', 'fifteenth'],
   },
   {

@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 
 import { describe, it } from 'vitest';
 
-import checkVoiceTasks from '../../voice-task-extraction/assertions';
+import checkVoiceTasks from '../voice-task-extraction/assertions';
 import { chatComplete, type ModelConfig } from './lib/openrouter';
 import { loadJsonPrompt, renderMessages } from './lib/prompt';
 
