@@ -2,6 +2,15 @@ export { CHAT_MODEL, JOB_EXTRACTION_MODEL, OpenRouterRequestError } from './shar
 
 export type { AIUsageMetrics } from './shared';
 
+export { convertSchemaToJsonSchema } from '@tanstack/ai';
+
+export type {
+  ChatFunctionTool,
+  ChatMessages,
+  ChatRequest,
+  ChatStreamToolCall,
+} from '@openrouter/sdk/models';
+
 export {
   createChatCompletion,
   enhanceText,

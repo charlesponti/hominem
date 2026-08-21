@@ -15,6 +15,12 @@
       "port": 4444
     },
     {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hominem/web", "dev"],
+      "port": 4445
+    },
+    {
       "name": "ui-storybook",
       "runtimeExecutable": "bash",
       "runtimeArgs": [

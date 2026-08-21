@@ -13,12 +13,15 @@ import {
 import { Message, MessageContent, MessageResponse } from '~/components/ai-elements/message';
 import {
   PromptInput,
+  PromptInputBody,
   PromptInputButton,
+  PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
 } from '~/components/ai-elements/prompt-input';
 import { Shimmer } from '~/components/ai-elements/shimmer';
+import { Tool, ToolContent, ToolHeader, ToolInput } from '~/components/ai-elements/tool';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
@@ -232,6 +235,18 @@ export default function ChatPage({
           {displayMessages.map((message) => (
             <Message key={message.id} from={toMessageRole(message.role)}>
               <MessageContent>
+                {message.toolCalls?.map((toolCall) => (
+                  <Tool defaultOpen={false} key={toolCall.toolCallId}>
+                    <ToolHeader
+                      state="output-available"
+                      toolName={toolCall.toolName}
+                      type="dynamic-tool"
+                    />
+                    <ToolContent>
+                      <ToolInput input={toolCall.args} />
+                    </ToolContent>
+                  </Tool>
+                ))}
                 <MessageResponse>{message.content}</MessageResponse>
               </MessageContent>
             </Message>
@@ -285,41 +300,45 @@ export default function ChatPage({
         ) : null}
 
         <PromptInput onSubmit={() => handleSend()}>
-          <PromptInputTextarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask anything"
-          />
-          <PromptInputTools>
-            <PromptInputButton asChild tooltip="Attach file">
-              <label className="cursor-pointer">
-                <Paperclip size={16} />
-                <input
-                  hidden
-                  multiple
-                  type="file"
-                  data-testid="chat-file-input"
-                  onChange={(event) => {
-                    void handleAttachFiles(event.target.files);
-                    event.currentTarget.value = '';
-                  }}
-                />
-              </label>
-            </PromptInputButton>
-            {speech.isSupported ? (
-              <PromptInputButton
-                onClick={() => speech.toggle(draft)}
-                tooltip={speech.isListening ? 'Stop voice input' : 'Voice input'}
-              >
-                {speech.isListening ? <Square size={14} /> : <Mic size={16} />}
+          <PromptInputBody>
+            <PromptInputTextarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Ask anything"
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools>
+              <PromptInputButton asChild tooltip="Attach file">
+                <label className="cursor-pointer">
+                  <Paperclip size={16} />
+                  <input
+                    hidden
+                    multiple
+                    type="file"
+                    data-testid="chat-file-input"
+                    onChange={(event) => {
+                      void handleAttachFiles(event.target.files);
+                      event.currentTarget.value = '';
+                    }}
+                  />
+                </label>
               </PromptInputButton>
-            ) : null}
-          </PromptInputTools>
-          <PromptInputSubmit
-            disabled={!hasContent}
-            onStop={streamMessage.isStreaming ? streamMessage.cancel : undefined}
-            status={streamMessage.isStreaming ? 'streaming' : 'ready'}
-          />
+              {speech.isSupported ? (
+                <PromptInputButton
+                  onClick={() => speech.toggle(draft)}
+                  tooltip={speech.isListening ? 'Stop voice input' : 'Voice input'}
+                >
+                  {speech.isListening ? <Square size={14} /> : <Mic size={16} />}
+                </PromptInputButton>
+              ) : null}
+            </PromptInputTools>
+            <PromptInputSubmit
+              disabled={!hasContent}
+              onStop={streamMessage.isStreaming ? streamMessage.cancel : undefined}
+              status={streamMessage.isStreaming ? 'streaming' : 'ready'}
+            />
+          </PromptInputFooter>
         </PromptInput>
         {uploadState.errors.length > 0 ? (
           <p className="mt-1.5 text-xs text-destructive">{uploadState.errors.join(', ')}</p>

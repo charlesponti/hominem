@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production';
@@ -15,6 +16,64 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     plugins: [
       tailwindcss(),
       reactRouter(),
+      VitePWA({
+        // The app maintains its own public/manifest.json and links it
+        // directly in root.tsx — let the plugin manage only the service
+        // worker, not the manifest.
+        manifest: false,
+        outDir: 'build/client',
+        registerType: 'prompt',
+        injectRegister: false,
+        devOptions: {
+          // Precached-hash service workers and Vite's dev-mode dependency
+          // optimizer (which reissues module URLs with new version hashes
+          // whenever it re-bundles) are fundamentally incompatible — a
+          // worker intercepting `script` requests in dev serves stale
+          // optimizer output and masks Vite's own reload signal. Only ever
+          // register in production, where workbox precaches a fixed,
+          // content-hashed build.
+          enabled: false,
+        },
+        workbox: {
+          skipWaiting: false,
+          clientsClaim: false,
+          cleanupOutdatedCaches: true,
+          navigateFallback: '/',
+          navigateFallbackDenylist: [/^\/api\//],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url, request }) =>
+                request.method === 'GET' && url.pathname.startsWith('/api/'),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                networkTimeoutSeconds: 5,
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: ({ request }) => request.destination === 'image',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'image-cache',
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
+      }),
       // Add bundle analyzer when ANALYZE flag is set
       isAnalyze &&
         visualizer({
@@ -44,6 +103,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         '@radix-ui/react-alert-dialog',
         '@radix-ui/react-dropdown-menu',
         '@radix-ui/react-slot',
+        'shiki',
       ],
     },
 

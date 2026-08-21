@@ -89,9 +89,29 @@ describe('chat message guards', () => {
           type: 'tool-call',
           toolName: 'search',
           toolCallId: 'call-1',
-          args: { limit: 10 },
+          args: 'not-a-record',
         },
       ]),
     ).toBeNull();
+  });
+
+  it('accepts non-string arg values, since MCP tool inputs are not all strings', () => {
+    expect(
+      parseChatMessageToolCalls([
+        {
+          type: 'tool-call',
+          toolName: 'calendar_search',
+          toolCallId: 'call-2',
+          args: { limit: 10, includeArchived: false, tags: ['work'] },
+        },
+      ]),
+    ).toEqual([
+      {
+        type: 'tool-call',
+        toolName: 'calendar_search',
+        toolCallId: 'call-2',
+        args: { limit: 10, includeArchived: false, tags: ['work'] },
+      },
+    ]);
   });
 });

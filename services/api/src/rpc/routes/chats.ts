@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { CHAT_MODEL, getChatCompletionUsage, streamChatCompletion } from '@hominem/ai';
+import {
+  CHAT_MODEL,
+  type ChatMessages,
+  getChatCompletionUsage,
+  streamChatCompletion,
+} from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, db, runInTransaction } from '@hominem/db';
 import { embeddingQueue } from '@hominem/queues';
@@ -14,6 +19,7 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
+import { getReadOnlyChatTools } from '../../mcp/llm-tools';
 import {
   ChatsCreateSchema,
   ChatsEditMessageSchema,
@@ -28,6 +34,7 @@ import { ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { CHAT_ASSISTANT_PROMPT, CHAT_RESPONSE_LENGTH_GUIDANCE } from '../prompts';
+import { runCompletionWithTools } from './chat-completion-loop';
 import { synthesizeChatReplySpeech } from './chat-speech.service';
 import { toChatDto, toChatMessageDto, toStoredUserMessageContent } from './chats.mapper';
 
@@ -141,6 +148,18 @@ function buildPrompt(
     );
   }
 
+  sections.push(formatUserContentWithContext(message, notes, files));
+
+  return sections.filter(Boolean).join('\n\n');
+}
+
+function formatUserContentWithContext(
+  message: string,
+  notes: NoteContext[],
+  files: ChatMessageFileRecord[],
+): string {
+  const sections = [];
+
   sections.push(message.trim());
 
   if (notes.length > 0) {
@@ -184,6 +203,23 @@ function buildPrompt(
   }
 
   return sections.filter(Boolean).join('\n\n');
+}
+
+function buildMessages(
+  history: ChatMessageRecord[],
+  currentUserContent: string,
+  systemPrompt: string,
+): ChatMessages[] {
+  return [
+    { role: 'system', content: systemPrompt },
+    ...history.map(
+      (entry): ChatMessages => ({
+        role: entry.role === 'assistant' ? 'assistant' : 'user',
+        content: entry.content,
+      }),
+    ),
+    { role: 'user', content: currentUserContent },
+  ];
 }
 
 function getChatId(c: { req: { param: (name: string) => string | undefined } }): string {
@@ -571,21 +607,21 @@ const chatByIdRoutes = new Hono<AppContext>()
       return userMessage.id;
     });
     const userMessage = await ChatRepository.getMessageById(db, chatId, userMessageId);
-    const prompt = buildPrompt(message, history, resolvedNotes, resolvedFiles);
+    const currentUserContent = formatUserContentWithContext(message, resolvedNotes, resolvedFiles);
+    const chatMessages = buildMessages(
+      history,
+      currentUserContent,
+      getSystemPrompt(responseLength),
+    );
+    const chatTools = await getReadOnlyChatTools();
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
-    const completion = streamChatCompletion({
-      model: CHAT_MODEL,
-      messages: [
-        { role: 'system', content: getSystemPrompt(responseLength) },
-        { role: 'user', content: prompt },
-      ],
-      maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
-      reasoning: getReasoningConfig(responseLength),
-    });
 
     return streamSSE(c, async (stream) => {
       let assistantText = '';
+      let reasoningText: string | null = null;
+      let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
+        [];
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
@@ -599,13 +635,18 @@ const chatByIdRoutes = new Hono<AppContext>()
       await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
       try {
-        for await (const chunk of completion) {
-          usage = getChatCompletionUsage(chunk) ?? usage;
-          const text = chunk.choices?.[0]?.delta?.content;
-          if (typeof text === 'string' && text.length > 0) {
-            assistantText += text;
-          }
-        }
+        const result = await runCompletionWithTools({
+          userId,
+          model: CHAT_MODEL,
+          messages: chatMessages,
+          tools: chatTools,
+          maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+          reasoning: getReasoningConfig(responseLength),
+        });
+        assistantText = result.assistantText;
+        reasoningText = result.reasoningText;
+        toolCallRecords = result.toolCallRecords;
+        usage = result.usage;
       } catch (error) {
         streamError = error;
       } finally {
@@ -622,6 +663,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             chatId,
             noteCount: resolvedNotes.length,
             fileCount: resolvedFiles.length,
+            toolCallCount: toolCallRecords.length,
           },
         });
       }
@@ -671,6 +713,8 @@ const chatByIdRoutes = new Hono<AppContext>()
             role: 'assistant',
             content: assistantText,
             files: audioFile ? [audioFile] : null,
+            reasoning: reasoningText,
+            toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
           });
           await ChatRepository.touchLastMessage(trx, chatId);
           await ChatRepository.updateGenerationRun(trx, {
@@ -712,7 +756,8 @@ export const chatsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   .get('/', async (c) => {
     const userId = c.get('auth')!.userId;
-    const chats = await ChatRepository.listForUser(db, userId, 100);
+    const includeArchived = c.req.query('includeArchived') === 'true';
+    const chats = await ChatRepository.listForUser(db, userId, 100, { includeArchived });
     return c.json(chats.map(toChatDto));
   })
   .post('/', zValidator('json', ChatsCreateSchema), async (c) => {

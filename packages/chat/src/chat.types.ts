@@ -12,7 +12,7 @@ export interface ChatMessageToolCall {
   toolName: string;
   type: 'tool-call';
   toolCallId: string;
-  args: Record<string, string>;
+  args: Record<string, unknown>;
 }
 
 export interface ChatMessageItem {

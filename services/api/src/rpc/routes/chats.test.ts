@@ -93,6 +93,10 @@ vi.mock('./chat-speech.service', () => ({
   synthesizeChatReplySpeech: mocks.synthesizeChatReplySpeech,
 }));
 
+vi.mock('../../mcp/llm-tools', () => ({
+  getReadOnlyChatTools: vi.fn().mockResolvedValue([]),
+}));
+
 // The `/:id/stream` route sits behind rateLimitMiddleware, which lazily
 // imports the real Redis client — mock it so tests hitting that route don't
 // attempt a real connection (rate-limit fails open on errors, but ioredis's

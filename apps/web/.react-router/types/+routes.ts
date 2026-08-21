@@ -28,6 +28,12 @@ type Pages = {
       "chatId": string;
     };
   };
+  "/settings": {
+    params: {};
+  };
+  "/settings/archived-chats": {
+    params: {};
+  };
   "/*": {
     params: {
       "*": string;
@@ -38,7 +44,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/*";
+    page: "/" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/*";
   };
   "routes/api/auth/google.ts": {
     id: "routes/api/auth/google";
@@ -54,11 +60,11 @@ type RouteFiles = {
   };
   "routes/_authenticated.tsx": {
     id: "routes/_authenticated";
-    page: "/" | "/chat/:chatId";
+    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats";
   };
   "routes/layout.tsx": {
     id: "routes/layout";
-    page: "/" | "/chat/:chatId";
+    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -67,6 +73,14 @@ type RouteFiles = {
   "routes/chat/chat.$chatId.tsx": {
     id: "routes/chat/chat.$chatId";
     page: "/chat/:chatId";
+  };
+  "routes/settings.tsx": {
+    id: "routes/settings";
+    page: "/settings";
+  };
+  "routes/settings.archived-chats.tsx": {
+    id: "routes/settings.archived-chats";
+    page: "/settings/archived-chats";
   };
   "routes/$.tsx": {
     id: "routes/$";
@@ -83,5 +97,7 @@ type RouteModules = {
   "routes/layout": typeof import("./app/routes/layout.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
   "routes/chat/chat.$chatId": typeof import("./app/routes/chat/chat.$chatId.tsx");
+  "routes/settings": typeof import("./app/routes/settings.tsx");
+  "routes/settings.archived-chats": typeof import("./app/routes/settings.archived-chats.tsx");
   "routes/$": typeof import("./app/routes/$.tsx");
 };

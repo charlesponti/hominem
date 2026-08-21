@@ -5,58 +5,13 @@ import { Hono, type Context, type Next } from 'hono';
 import { betterAuthServer } from '../auth/better-auth';
 import { env } from '../env';
 import { setMcpAuthContext } from '../middleware/auth';
-import { MCP_ENABLED_SCOPES, MCP_SCOPES } from '../scopes';
+import { MCP_SCOPES } from '../scopes';
 import { checkRateLimit } from './rate-limiter';
+import { ensureMcpToolsRegistered } from './register-tools';
 import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
 
-// Conditional imports — only register tools whose scope is in MCP_ENABLED_SCOPES
 // Use top-level await via ESM (services/api is ESM)
-const enabledScopes = new Set<string>(MCP_ENABLED_SCOPES);
-if (
-  enabledScopes.size === 0 ||
-  enabledScopes.has('calendar:read') ||
-  enabledScopes.has('travel:read')
-) {
-  await import('./tools/calendar');
-}
-if (
-  enabledScopes.size === 0 ||
-  enabledScopes.has('career:read') ||
-  enabledScopes.has('career:write')
-) {
-  await import('./tools/career');
-}
-if (
-  enabledScopes.size === 0 ||
-  enabledScopes.has('collections:read') ||
-  enabledScopes.has('collections:write')
-) {
-  await import('./tools/collections');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('finance:read')) {
-  await import('./tools/finance');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('health:read')) {
-  await import('./tools/health');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('media:read')) {
-  await import('./tools/media');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('people:read')) {
-  await import('./tools/people');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('places:read')) {
-  await import('./tools/places');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('tags:read') || enabledScopes.has('tags:write')) {
-  await import('./tools/tags');
-}
-if (enabledScopes.size === 0 || enabledScopes.has('services:read')) {
-  // services:read is gated for person_services table (no tools yet, but schema must be present)
-}
-if (enabledScopes.size === 0 || enabledScopes.has('social:read')) {
-  await import('./tools/social');
-}
+await ensureMcpToolsRegistered();
 
 export async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
   const verifiedHandler = requireMcpAuth(

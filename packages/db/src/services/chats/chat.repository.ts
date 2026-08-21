@@ -265,12 +265,19 @@ export const ChatRepository = {
   /**
    * List non-archived chats for a user, ordered by last message.
    */
-  async listForUser(handle: DbHandle, userId: string, limit = 100): Promise<ChatRecord[]> {
-    const chats = (await handle
-      .selectFrom('app.chats')
-      .selectAll()
-      .where('ownerUserid', '=', userId)
-      .where('archivedAt', 'is', null)
+  async listForUser(
+    handle: DbHandle,
+    userId: string,
+    limit = 100,
+    options: { includeArchived?: boolean } = {},
+  ): Promise<ChatRecord[]> {
+    let query = handle.selectFrom('app.chats').selectAll().where('ownerUserid', '=', userId);
+
+    if (!options.includeArchived) {
+      query = query.where('archivedAt', 'is', null);
+    }
+
+    const chats = (await query
       .orderBy('lastMessageAt', 'desc')
       .limit(limit)
       .execute()) as ChatRow[];
@@ -519,6 +526,11 @@ export const ChatRepository = {
 
   /**
    * Get messages for a chat, enriched with referenced note titles.
+   *
+   * Paginates from the most recent message backward: `offset=0` returns the
+   * latest `limit` messages (chronological order), `offset=limit` returns
+   * the `limit` messages before those, etc. Callers wanting "load older
+   * history" should increase `offset`, mirroring `getMessagesBefore`.
    */
   async getMessages(
     handle: DbHandle,
@@ -530,10 +542,11 @@ export const ChatRepository = {
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('chatId', '=', chatId)
-      .orderBy('createdat', 'asc')
+      .orderBy('createdat', 'desc')
       .limit(limit)
       .offset(offset)
       .execute()) as ChatMessageRow[];
+    messages.reverse();
 
     const noteIds = [
       ...new Set(

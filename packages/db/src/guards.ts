@@ -12,7 +12,7 @@ export interface ChatMessageToolCallRecord {
   toolName: string;
   type: 'tool-call';
   toolCallId: string;
-  args: Record<string, string>;
+  args: Record<string, unknown>;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -46,10 +46,6 @@ function isToolCallType(value: unknown): boolean {
   return value === 'tool-call';
 }
 
-function hasStringRecord(value: unknown): value is Record<string, string> {
-  return isRecord(value) && Object.values(value).every((item) => typeof item === 'string');
-}
-
 function hasValidFields(record: UnknownRecord, fields: readonly FieldValidator[]): boolean {
   return fields.every(([key, isValid]) => isValid(record[key]));
 }
@@ -68,7 +64,7 @@ const CHAT_MESSAGE_TOOL_CALL_FIELDS = [
   ['toolName', isString],
   ['type', isToolCallType],
   ['toolCallId', isString],
-  ['args', hasStringRecord],
+  ['args', isRecord],
 ] as const satisfies readonly FieldValidator[];
 
 function isChatMessageFileRecord(value: unknown): value is ChatMessageFileRecord {

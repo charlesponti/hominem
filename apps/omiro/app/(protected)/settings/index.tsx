@@ -15,8 +15,24 @@ import { ARCHIVED_CHATS_ROUTE } from '~/services/navigation/routes';
 import { useMonthlyUsage } from '~/services/usage/use-usage-query';
 import t from '~/translations';
 
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+const usagePeriodFormatter = new Intl.DateTimeFormat('en-US', {
+  month: '2-digit',
+  year: '2-digit',
+});
+
+function formatUsagePeriod(date: Date): string {
+  const parts = usagePeriodFormatter.formatToParts(date);
+  const month = parts.find((part) => part.type === 'month')?.value ?? '';
+  const year = parts.find((part) => part.type === 'year')?.value ?? '';
+  return `${month} '${year}`;
+}
+
 function formatUsd(amount: number): string {
-  return `$${amount.toFixed(2)}`;
+  return usdFormatter.format(amount);
 }
 
 function getInitials(name: string, fallback: string): string {
@@ -257,7 +273,7 @@ function Settings() {
       {/* Usage */}
       {monthlyUsage ? (
         <View testID="settings-usage-section" style={styles.usageSection}>
-          <SectionLabel>AI usage this month</SectionLabel>
+          <SectionLabel>{`AI usage · ${formatUsagePeriod(new Date())}`}</SectionLabel>
           <View style={styles.usageSummary}>
             <Text style={[styles.usageAmount, { fontVariant: ['tabular-nums'] }]}>
               {formatUsd(monthlyUsage.totalCostUsd)}
