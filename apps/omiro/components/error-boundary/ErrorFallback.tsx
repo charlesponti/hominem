@@ -1,7 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 
@@ -27,15 +26,15 @@ export function ErrorFallback({
   const [destructive] = useThemeColor(['--color-destructive']) as string[];
 
   return (
-    <View style={styles.s0}>
-      <View style={styles.s1}>
+    <View style={styles.container}>
+      <View style={styles.content}>
         <AppIcon name="exclamationmark.triangle.fill" size={32} tintColor={destructive} />
         <Text style={[styles.title, titleSize === 'title1' ? styles.title1 : styles.title2]}>
           {title}
         </Text>
-        <Text style={styles.s2}>{message}</Text>
+        <Text style={styles.message}>{message}</Text>
 
-        {__DEV__ && debugMessage ? <Text style={styles.s3}>{debugMessage}</Text> : null}
+        {__DEV__ && debugMessage ? <Text style={styles.debugMessage}>{debugMessage}</Text> : null}
 
         <Button label={actionLabel} onPress={onAction} variant={buttonVariant} />
       </View>
@@ -44,10 +43,10 @@ export function ErrorFallback({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  s1: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
-  s2: { lineHeight: 22, textAlign: 'center', color: theme.colors.mutedForeground },
-  s3: {
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
+  message: { lineHeight: 22, textAlign: 'center', color: theme.colors.mutedForeground },
+  debugMessage: {
     ...theme.typography.caption1,
     fontFamily: 'Menlo',
     lineHeight: 18,

@@ -2,8 +2,7 @@ import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 
 import { ActionIconButton } from './chat-action-icon-button';
 import { ChatCopyButton } from './chat-copy-button';
@@ -48,7 +47,7 @@ export function ActiveMessageActions({
       entering={ACTIONS_ENTERING}
       exiting={ACTIONS_EXITING}
       layout={ACTIONS_LAYOUT}
-      style={styles.s0}
+      style={styles.actionContainer}
     >
       <View style={[styles.actions, isUser && styles.actionsEnd]}>
         {timestamp ? <Text style={{ color: tertiary, fontSize: 12 }}>{timestamp}</Text> : null}
@@ -68,7 +67,7 @@ export function ActiveMessageActions({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { marginTop: 4 },
+  actionContainer: { marginTop: 4 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   actionsEnd: { justifyContent: 'flex-end' },
 }));

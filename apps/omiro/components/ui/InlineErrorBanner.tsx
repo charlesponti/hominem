@@ -1,6 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { makeStyles, withAlpha } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
@@ -14,8 +13,8 @@ interface InlineErrorBannerProps {
 
 export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps) {
   return (
-    <View style={[styles.s0, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
-      <Text style={styles.s1}>{message}</Text>
+    <View style={[styles.banner, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
+      <Text style={styles.message}>{message}</Text>
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.dismissErrorHint}
         onPress={onDismiss}
@@ -27,7 +26,7 @@ export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  banner: {
     backgroundColor: theme.colors.card,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -40,5 +39,5 @@ const styles = makeStyles((theme) => ({
     paddingRight: 4,
     paddingVertical: 4,
   },
-  s1: { ...theme.typography.footnote, flex: 1, color: theme.colors.destructive },
+  message: { ...theme.typography.footnote, flex: 1, color: theme.colors.destructive },
 }));

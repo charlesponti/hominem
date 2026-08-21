@@ -4,8 +4,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -76,12 +75,12 @@ function SettingsRow({
   const labelColor = destructive ? destructiveColor : textPrimaryColor;
 
   const content = (
-    <View style={[styles.s0, { minHeight: 44 }]}>
-      <View style={styles.s1}>
+    <View style={[styles.row, { minHeight: 44 }]}>
+      <View style={styles.rowContent}>
         <AppIcon name={icon} size={18} tintColor={destructive ? destructiveColor : tertiaryColor} />
-        <View style={styles.s2}>
-          <Text style={[styles.s3, { color: labelColor }]}>{label}</Text>
-          {description ? <Text style={styles.s4}>{description}</Text> : null}
+        <View style={styles.labelContent}>
+          <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+          {description ? <Text style={styles.description}>{description}</Text> : null}
         </View>
       </View>
       {accessory}
@@ -90,7 +89,7 @@ function SettingsRow({
 
   if (!onPress) {
     return (
-      <View testID={testID} style={styles.s5}>
+      <View testID={testID} style={styles.staticRow}>
         {content}
       </View>
     );
@@ -100,7 +99,7 @@ function SettingsRow({
     <Pressable
       testID={testID}
       onPress={onPress}
-      style={({ pressed }) => [styles.s6, pressed ? { opacity: 0.6 } : undefined]}
+      style={({ pressed }) => [styles.pressableRow, pressed ? { opacity: 0.6 } : undefined]}
     >
       {content}
     </Pressable>
@@ -108,7 +107,7 @@ function SettingsRow({
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <Text style={styles.s7}>{children}</Text>;
+  return <Text style={styles.sectionLabel}>{children}</Text>;
 }
 
 function Settings() {
@@ -209,11 +208,13 @@ function Settings() {
       showsVerticalScrollIndicator={false}
     >
       {/* Identity */}
-      <View style={styles.s8}>
-        <View style={[styles.s9, { backgroundColor: popoverColor }]}>
-          <Text style={styles.s10}>{getInitials(state.name, currentUser?.email ?? '?')}</Text>
+      <View style={styles.identityRow}>
+        <View style={[styles.avatar, { backgroundColor: popoverColor }]}>
+          <Text style={styles.avatarText}>
+            {getInitials(state.name, currentUser?.email ?? '?')}
+          </Text>
         </View>
-        <View style={styles.s11}>
+        <View style={styles.identityContent}>
           <TextField
             key={`name-${currentUser?.id ?? 'anonymous'}`}
             value={state.name}
@@ -221,7 +222,7 @@ function Settings() {
             returnKeyType="done"
             selectionColor={textPrimaryColor}
             cursorColor={textPrimaryColor}
-            style={[styles.s12, { borderWidth: 0, color: textPrimaryColor }]}
+            style={[styles.nameField, { borderWidth: 0, color: textPrimaryColor }]}
             onChangeText={(text) => {
               dispatch({ type: 'set-name', name: text });
               setSaveError(null);
@@ -233,12 +234,12 @@ function Settings() {
               }
             }}
           />
-          <Text style={styles.s13}>{currentUser?.email ?? t.settings.emailMissing}</Text>
+          <Text style={styles.email}>{currentUser?.email ?? t.settings.emailMissing}</Text>
         </View>
       </View>
 
       {nameChanged ? (
-        <View style={styles.s14}>
+        <View style={styles.saveRow}>
           <Button
             label={saveStatus === 'saving' ? t.settings.name.saving : t.settings.name.save}
             onPress={() => void onSavePress()}
@@ -248,25 +249,27 @@ function Settings() {
           />
         </View>
       ) : null}
-      {saveStatus === 'saved' ? <Text style={styles.s15}>{t.settings.name.saved}</Text> : null}
-      {saveError ? <Text style={styles.s16}>{saveError}</Text> : null}
+      {saveStatus === 'saved' ? (
+        <Text style={styles.savedMessage}>{t.settings.name.saved}</Text>
+      ) : null}
+      {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
 
       {/* Usage */}
       {monthlyUsage ? (
-        <View testID="settings-usage-section" style={styles.s17}>
+        <View testID="settings-usage-section" style={styles.usageSection}>
           <SectionLabel>AI usage this month</SectionLabel>
-          <View style={styles.s18}>
-            <Text style={[styles.s19, { fontVariant: ['tabular-nums'] }]}>
+          <View style={styles.usageSummary}>
+            <Text style={[styles.usageAmount, { fontVariant: ['tabular-nums'] }]}>
               {formatUsd(monthlyUsage.totalCostUsd)}
             </Text>
-            <Text style={[styles.s20, { fontVariant: ['tabular-nums'] }]}>
+            <Text style={[styles.usageLimit, { fontVariant: ['tabular-nums'] }]}>
               of {formatUsd(monthlyUsage.limitUsd)} · {usagePercent.toFixed(0)}%
             </Text>
           </View>
-          <View style={[styles.s21, { backgroundColor: borderDefaultColor }]}>
+          <View style={[styles.usageBar, { backgroundColor: borderDefaultColor }]}>
             <View
               style={[
-                styles.s22,
+                styles.usageBarFill,
                 {
                   width: `${usagePercent}%`,
                   backgroundColor: monthlyUsage.isOverLimit ? destructiveColor : textPrimaryColor,
@@ -274,7 +277,7 @@ function Settings() {
               ]}
             />
           </View>
-          <Text style={styles.s23}>
+          <Text style={styles.usageResetMessage}>
             {monthlyUsage.isOverLimit
               ? "You've reached this month's free AI usage limit. It resets at the start of next month."
               : 'Resets at the start of next month.'}
@@ -283,7 +286,7 @@ function Settings() {
       ) : null}
 
       {/* Privacy */}
-      <View style={styles.s24}>
+      <View style={styles.privacySection}>
         <SectionLabel>{t.settings.sections.privacy}</SectionLabel>
         <SettingsRow
           icon="faceid"
@@ -314,7 +317,7 @@ function Settings() {
       </View>
 
       {/* Chats */}
-      <View style={styles.s25}>
+      <View style={styles.chatsSection}>
         <SectionLabel>{t.settings.sections.chats}</SectionLabel>
         <SettingsRow
           icon="archivebox"
@@ -325,7 +328,7 @@ function Settings() {
       </View>
 
       {__DEV__ ? (
-        <View style={styles.s26}>
+        <View style={styles.developmentSection}>
           <SectionLabel>Development</SectionLabel>
           <SettingsRow
             icon="rectangle.3.group"
@@ -338,7 +341,7 @@ function Settings() {
       ) : null}
 
       {/* Danger zone */}
-      <View style={styles.s27}>
+      <View style={styles.dangerSection}>
         <SettingsRow
           icon="rectangle.portrait.and.arrow.right"
           label={t.settings.signOut.label}
@@ -358,37 +361,48 @@ function Settings() {
 export default Settings;
 
 const styles = makeStyles((theme) => ({
-  s0: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  s1: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  s2: { flex: 1, gap: 2 },
-  s3: {},
-  s4: { fontSize: 13, color: theme.colors.mutedForeground },
-  s5: { paddingHorizontal: 16 },
-  s6: { paddingHorizontal: 16 },
-  s7: {
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  labelContent: { flex: 1, gap: 2 },
+  label: {},
+  description: { fontSize: 13, color: theme.colors.mutedForeground },
+  staticRow: { paddingHorizontal: 16 },
+  pressableRow: { paddingHorizontal: 16 },
+  sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: theme.colors.mutedForeground,
     paddingHorizontal: 16,
   },
-  s8: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
-  s9: { alignItems: 'center', justifyContent: 'center', borderRadius: 12, height: 52, width: 52 },
-  s10: { fontSize: 19, fontWeight: '700', color: theme.colors.foreground },
-  s11: { flex: 1, gap: 2 },
-  s12: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, padding: 0 },
-  s13: { fontSize: 13, color: theme.colors.mutedForeground },
-  s14: { alignItems: 'flex-start', paddingHorizontal: 16 },
-  s15: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
-  s16: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
-  s17: { gap: 8 },
-  s18: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
-  s19: { fontSize: 28, fontWeight: '700', letterSpacing: -0.4, color: theme.colors.foreground },
-  s20: { color: theme.colors.mutedForeground },
-  s21: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
-  s22: { borderRadius: 4, height: 4 },
-  s23: { color: theme.colors.tertiary, paddingHorizontal: 16 },
-  s24: { gap: 8 },
-  s25: { gap: 8 },
-  s26: { gap: 8 },
-  s27: { gap: 8 },
+  identityRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+  avatar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    height: 52,
+    width: 52,
+  },
+  avatarText: { fontSize: 19, fontWeight: '700', color: theme.colors.foreground },
+  identityContent: { flex: 1, gap: 2 },
+  nameField: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, padding: 0 },
+  email: { fontSize: 13, color: theme.colors.mutedForeground },
+  saveRow: { alignItems: 'flex-start', paddingHorizontal: 16 },
+  savedMessage: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
+  saveError: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
+  usageSection: { gap: 8 },
+  usageSummary: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
+  usageAmount: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    color: theme.colors.foreground,
+  },
+  usageLimit: { color: theme.colors.mutedForeground },
+  usageBar: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
+  usageBarFill: { borderRadius: 4, height: 4 },
+  usageResetMessage: { color: theme.colors.tertiary, paddingHorizontal: 16 },
+  privacySection: { gap: 8 },
+  chatsSection: { gap: 8 },
+  developmentSection: { gap: 8 },
+  dangerSection: { gap: 8 },
 }));

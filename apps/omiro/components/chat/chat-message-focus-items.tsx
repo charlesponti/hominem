@@ -9,9 +9,9 @@ export function FocusItems({ message }: { message: ChatMessageItem }) {
   }
 
   return (
-    <View style={styles.s0}>
+    <View style={styles.focusItems}>
       {message.focus_items.map((focusItem) => (
-        <View key={focusItem.id} style={styles.s1}>
+        <View key={focusItem.id} style={styles.focusItem}>
           <Text>{focusItem.text}</Text>
         </View>
       ))}
@@ -20,8 +20,8 @@ export function FocusItems({ message }: { message: ChatMessageItem }) {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  s1: {
+  focusItems: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  focusItem: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,

@@ -4,7 +4,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 
 import { ChatActivityTimeline } from './chat-activity-timeline';
@@ -203,8 +203,8 @@ export function ChatMessageList({
     if (!hasSearchQuery) return null;
 
     return (
-      <View style={styles.s0}>
-        <Text style={styles.s1}>No messages matching &ldquo;{searchQuery}&rdquo;</Text>
+      <View style={styles.emptySearch}>
+        <Text style={styles.emptySearchText}>No messages matching &ldquo;{searchQuery}&rdquo;</Text>
       </View>
     );
   }, [hasSearchQuery, searchQuery]);
@@ -212,7 +212,7 @@ export function ChatMessageList({
   const listEmptyComponent = hasSearchQuery ? emptySearch : (emptyState ?? null);
   if (isMessagesLoading && renderedMessages.length === 0) {
     return (
-      <View style={styles.s2}>
+      <View style={styles.loadingState}>
         <ChatShimmerMessage />
         <ChatShimmerMessage variant="user" />
         <ChatShimmerMessage />
@@ -221,13 +221,13 @@ export function ChatMessageList({
   }
 
   if (!hasSearchQuery && renderedMessages.length === 0 && emptyState) {
-    return <View style={[styles.s3, { paddingBottom: bottomInset }]}>{emptyState}</View>;
+    return <View style={[styles.emptyState, { paddingBottom: bottomInset }]}>{emptyState}</View>;
   }
 
   return (
     <FlashList
       ref={listRef}
-      style={styles.s4}
+      style={styles.list}
       contentInsetAdjustmentBehavior="automatic"
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
@@ -235,12 +235,13 @@ export function ChatMessageList({
           <Pressable
             accessibilityLabel="Chat message list bottom"
             onPress={() => setActiveActionMessageId(null)}
-            style={styles.s6}
+            style={styles.bottomSentinel}
             testID="chat-message-list-bottom-sentinel"
           />
         ) : null
       }
-      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 4, rowGap: 20 }}
+      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 8 }}
+      ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
       // The composer sits in normal column flow at rest, so bottomInset is 0
       // and this reserves nothing extra. While the keyboard is open the
       // composer lifts by translating above its resting position instead of
@@ -263,11 +264,12 @@ export function ChatMessageList({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { alignItems: 'center', paddingTop: 28 },
-  s1: { fontFamily: 'Menlo', color: theme.colors.tertiary },
-  s2: { flex: 1, paddingTop: 12 },
-  s3: { flex: 1 },
-  s4: { flex: 1 },
-  s5: { flexGrow: 1, minHeight: 32 },
-  s6: { flexGrow: 1, minHeight: 32 },
+  emptySearch: { alignItems: 'center', paddingTop: 28 },
+  emptySearchText: { fontFamily: 'Menlo', color: theme.colors.tertiary },
+  loadingState: { flex: 1, paddingTop: 12 },
+  emptyState: { flex: 1 },
+  list: { flex: 1 },
+  topSentinel: { flexGrow: 1, minHeight: 32 },
+  bottomSentinel: { flexGrow: 1, minHeight: 32 },
+  itemSeparator: { height: 20 },
 }));

@@ -141,7 +141,7 @@ export function ChatMotionOverlayProvider({ children }: { children: ReactNode })
     <ChatMotionOverlayContext.Provider value={value}>
       {children}
       <View
-        style={styles.s0}
+        style={styles.overlay}
         onLayout={captureOrigin}
         pointerEvents="box-none"
         ref={overlayRef}
@@ -160,5 +160,5 @@ export function useChatMotionOverlay(): ChatMotionOverlayContextValue {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
 }));

@@ -113,9 +113,10 @@ export const InboxStreamItem = memo(
           actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
           leading={
             <AppIcon
-              name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
+              name={isChat ? 'bubble.left.fill' : 'note.text'}
               size={14}
               tintColor={mutedForegroundColor}
+              style={{ opacity: 0.35 }}
             />
           }
           onLongPress={handleLongPress}
@@ -136,7 +137,7 @@ function cleanText(value: string | null): string | null {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
-  s1: { alignItems: 'flex-end', gap: 4 },
-  s2: { ...theme.typography.caption2, color: theme.colors.tertiary },
+  badge: { alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
+  metadata: { alignItems: 'flex-end', gap: 4 },
+  timestamp: { ...theme.typography.caption2, color: theme.colors.tertiary },
 }));

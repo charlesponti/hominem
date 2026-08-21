@@ -14,8 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
 import { TextField } from '~/components/ui/text-field';
@@ -151,7 +150,7 @@ function AuthScreen() {
 
   return (
     <>
-      <KeyboardAvoidingView style={styles.s0} behavior="padding">
+      <KeyboardAvoidingView style={styles.container} behavior="padding">
         <ScrollView
           testID="auth-screen"
           contentInsetAdjustmentBehavior="automatic"
@@ -164,17 +163,17 @@ function AuthScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.s1}>
-            <View style={styles.s2}>
+          <View style={styles.content}>
+            <View style={styles.form}>
               <IconChip icon="envelope" />
 
-              <View style={styles.s3}>
-                <Text style={styles.s4}>{t.auth.emailEntry.title}</Text>
-                {isProbing && <Text style={styles.s5}>{t.auth.restoringSignIn}</Text>}
+              <View style={styles.header}>
+                <Text style={styles.title}>{t.auth.emailEntry.title}</Text>
+                {isProbing && <Text style={styles.restoringMessage}>{t.auth.restoringSignIn}</Text>}
               </View>
 
               {!isProbing ? (
-                <View style={styles.s6}>
+                <View style={styles.inputContainer}>
                   <Animated.View style={shakeStyle}>
                     <TextField
                       testID="auth-email-input"
@@ -213,7 +212,7 @@ function AuthScreen() {
                     <Text
                       testID="auth-email-message"
                       accessibilityLiveRegion="polite"
-                      style={styles.s7}
+                      style={styles.errorText}
                     >
                       {displayError}
                     </Text>
@@ -221,7 +220,7 @@ function AuthScreen() {
 
                   {/* Animated border + button container */}
                   <View
-                    style={[styles.s8, { height: BUTTON_HEIGHT }]}
+                    style={[styles.buttonContainer, { height: BUTTON_HEIGHT }]}
                     onLayout={(e) => setButtonWidth(e.nativeEvent.layout.width)}
                   >
                     {/* Clockwise-drawing border (stages 0-4) */}
@@ -249,9 +248,9 @@ function AuthScreen() {
 
                     {/* Helper text, centered inside the animating border (stages 0-4) */}
                     {progress.stage < 5 && !displayError && (
-                      <View style={styles.s9}>
-                        {progress.stage > 0 ? <Text style={styles.s10}>↑</Text> : null}
-                        <Text style={styles.s11}>{progress.message}</Text>
+                      <View style={styles.progressHelper}>
+                        {progress.stage > 0 ? <Text style={styles.progressArrow}>↑</Text> : null}
+                        <Text style={styles.progressMessage}>{progress.message}</Text>
                       </View>
                     )}
 
@@ -287,22 +286,31 @@ const AuthWithErrorBoundary = () => (
 export default AuthWithErrorBoundary;
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, backgroundColor: theme.colors.background },
-  s1: { width: '100%', alignItems: 'center' },
-  s2: { width: '100%', maxWidth: 420, gap: 18 },
-  s3: { gap: 8 },
-  s4: { ...theme.typography.title1, color: theme.colors.foreground },
-  s5: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
-  s6: { gap: 12 },
-  s7: { ...theme.typography.footnote, color: theme.colors.destructive },
-  s8: { position: 'relative', width: '100%', alignItems: 'center', justifyContent: 'center' },
-  s9: {
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { width: '100%', alignItems: 'center' },
+  form: { width: '100%', maxWidth: 420, gap: 18 },
+  header: { gap: 8 },
+  title: { ...theme.typography.title1, color: theme.colors.foreground },
+  restoringMessage: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
+  inputContainer: { gap: 12 },
+  errorText: { ...theme.typography.footnote, color: theme.colors.destructive },
+  buttonContainer: {
+    position: 'relative',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressHelper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingHorizontal: 16,
   },
-  s10: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  s11: { ...theme.typography.footnote, color: theme.colors.mutedForeground, textAlign: 'center' },
+  progressArrow: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  progressMessage: {
+    ...theme.typography.footnote,
+    color: theme.colors.mutedForeground,
+    textAlign: 'center',
+  },
 }));

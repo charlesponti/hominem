@@ -9,6 +9,7 @@ type AIUsageEventRow = Selectable<AppAiUsageEvents>;
 export type AIUsageFeature =
   | 'chat_stream'
   | 'text_enhance'
+  | 'note_generate'
   | 'task_extract'
   | 'voice_task_extract'
   | 'time_block_extract'

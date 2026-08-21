@@ -1,8 +1,7 @@
 import { getReferencedNoteLabel, type ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 
 export function ReferencedNotes({ message }: { message: ChatMessageItem }) {
   const [textSecondary] = useThemeColor(['--color-muted-foreground']) as string[];
@@ -12,9 +11,9 @@ export function ReferencedNotes({ message }: { message: ChatMessageItem }) {
   }
 
   return (
-    <View style={styles.s0}>
+    <View style={styles.referencedNotes}>
       {message.referencedNotes.map((note) => (
-        <View key={note.id} style={styles.s1}>
+        <View key={note.id} style={styles.referencedNote}>
           <Text style={{ color: textSecondary, fontSize: 12 }}>{getReferencedNoteLabel(note)}</Text>
         </View>
       ))}
@@ -23,8 +22,8 @@ export function ReferencedNotes({ message }: { message: ChatMessageItem }) {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  s1: {
+  referencedNotes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  referencedNote: {
     alignItems: 'center',
     backgroundColor: theme.colors.popover,
     borderWidth: 1,

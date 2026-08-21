@@ -9,8 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 
 interface OtpInputProps {
   length?: number;
@@ -39,7 +38,7 @@ function Caret({ color }: { color: string }) {
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
-  return <Animated.View style={[styles.s0, [{ backgroundColor: color }, style]]} />;
+  return <Animated.View style={[styles.caret, [{ backgroundColor: color }, style]]} />;
 }
 
 function OtpCell({
@@ -85,9 +84,9 @@ function OtpCell({
       : borderColor;
 
   return (
-    <Animated.View style={[styles.s1, [{ borderColor: resolvedBorderColor }, animatedStyle]]}>
+    <Animated.View style={[styles.cell, [{ borderColor: resolvedBorderColor }, animatedStyle]]}>
       {digit ? (
-        <Text style={[styles.s2, { color: textColor }]}>{digit}</Text>
+        <Text style={[styles.cellText, { color: textColor }]}>{digit}</Text>
       ) : isActive ? (
         <Caret color={activeBorderColor} />
       ) : null}
@@ -135,12 +134,12 @@ export function OtpInput({
   return (
     <Pressable
       testID={testID ? `${testID}-container` : undefined}
-      style={styles.s3}
+      style={styles.container}
       onPress={() => inputRef.current?.focus()}
       accessibilityRole="none"
     >
       <Animated.View
-        style={[styles.s4, shakeStyle]}
+        style={[styles.cellsRow, shakeStyle]}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
@@ -175,15 +174,15 @@ export function OtpInput({
         returnKeyType="done"
         maxLength={length}
         caretHidden
-        style={styles.s5}
+        style={styles.hiddenInput}
       />
     </Pressable>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { borderRadius: 1, height: 24, width: 2 },
-  s1: {
+  caret: { borderRadius: 1, height: 24, width: 2 },
+  cell: {
     alignItems: 'center',
     borderRadius: 6,
     borderWidth: 1,
@@ -191,8 +190,8 @@ const styles = makeStyles((theme) => ({
     justifyContent: 'center',
     width: 48,
   },
-  s2: { fontWeight: '700', fontSize: 16 },
-  s3: { alignSelf: 'center' },
-  s4: { flexDirection: 'row', gap: 8 },
-  s5: { height: '100%', left: 0, opacity: 0, position: 'absolute', top: 0, width: '100%' },
+  cellText: { fontWeight: '700', fontSize: 16 },
+  container: { alignSelf: 'center' },
+  cellsRow: { flexDirection: 'row', gap: 8 },
+  hiddenInput: { height: '100%', left: 0, opacity: 0, position: 'absolute', top: 0, width: '100%' },
 }));

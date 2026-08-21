@@ -30,7 +30,7 @@ function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButton
 }
 
 function ToolbarDivider() {
-  return <View style={styles.s0} />;
+  return <View style={styles.divider} />;
 }
 
 function ToolbarButtons({ onAction }: NoteToolbarProps) {
@@ -41,9 +41,9 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
         contentContainerStyle={{ alignItems: 'center', flexDirection: 'row', gap: 8 }}
-        style={styles.s1}
+        style={styles.scrollContainer}
       >
-        <View style={styles.s2}>
+        <View style={styles.inlineFormattingGroup}>
           <ToolbarButton
             icon="bold"
             label={t.notes.toolbar.bold}
@@ -68,7 +68,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.s3}>
+        <View style={styles.blockFormattingGroup}>
           <ToolbarButton
             icon="textformat.size.larger"
             label={t.notes.toolbar.heading}
@@ -83,7 +83,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.s4}>
+        <View style={styles.listFormattingGroup}>
           <ToolbarButton
             icon="checklist"
             label={t.notes.toolbar.checklist}
@@ -103,7 +103,7 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 
         <ToolbarDivider />
 
-        <View style={styles.s5}>
+        <View style={styles.indentGroup}>
           <ToolbarButton
             icon="increase.indent"
             label={t.notes.toolbar.indent}
@@ -131,8 +131,10 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 export function NoteToolbar(props: NoteToolbarProps) {
   return (
     <InputAccessoryView nativeID={NOTE_TOOLBAR_ID} backgroundColor="transparent">
-      <View style={[styles.s6, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
-        <View style={styles.s7}>
+      <View
+        style={[styles.toolbarCard, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
+      >
+        <View style={styles.toolbarContent}>
           <ToolbarButtons {...props} />
         </View>
       </View>
@@ -141,13 +143,13 @@ export function NoteToolbar(props: NoteToolbarProps) {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
-  s1: { flex: 1 },
-  s2: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  s3: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  s4: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  s5: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  s6: {
+  divider: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
+  scrollContainer: { flex: 1 },
+  inlineFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  blockFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  listFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  indentGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  toolbarCard: {
     backgroundColor: theme.colors.card,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -157,7 +159,7 @@ const styles = makeStyles((theme) => ({
     height: 48,
     marginHorizontal: 16,
   },
-  s7: {
+  toolbarContent: {
     alignItems: 'center',
     flexDirection: 'row',
     flex: 1,

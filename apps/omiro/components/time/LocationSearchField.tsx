@@ -66,7 +66,7 @@ export function LocationSearchField({
   }, [query, value]);
 
   return (
-    <View style={styles.s0}>
+    <View style={styles.field}>
       <TextField
         autoFocus
         onChangeText={(next) => {
@@ -78,22 +78,22 @@ export function LocationSearchField({
         value={query}
       />
       {isSearching ? (
-        <View style={styles.s1}>
+        <View style={styles.searchingState}>
           <ActivityIndicator size="small" />
-          <Text style={styles.s2}>Searching…</Text>
+          <Text style={styles.searchingText}>Searching…</Text>
         </View>
       ) : null}
       {suggestions.length > 0 ? (
-        <View style={styles.s3}>
+        <View style={styles.suggestions}>
           {suggestions.map((suggestion) => (
             <Pressable
               key={suggestion}
               accessibilityLabel={`Use location ${suggestion}`}
-              style={({ pressed }) => [styles.s4, pressed && { opacity: 0.7 }]}
+              style={({ pressed }) => [styles.suggestion, pressed && { opacity: 0.7 }]}
               testID="time-block-location-suggestion"
             >
               <AppIcon name="mappin.and.ellipse" size={16} />
-              <Text style={styles.s5}>{suggestion}</Text>
+              <Text style={styles.suggestionText}>{suggestion}</Text>
             </Pressable>
           ))}
         </View>
@@ -103,11 +103,11 @@ export function LocationSearchField({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 8 },
-  s1: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
-  s2: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  s3: { gap: 4 },
-  s4: {
+  field: { gap: 8 },
+  searchingState: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
+  searchingText: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  suggestions: { gap: 4 },
+  suggestion: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -116,5 +116,5 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  s5: { ...theme.typography.body, flex: 1 },
+  suggestionText: { ...theme.typography.body, flex: 1 },
 }));

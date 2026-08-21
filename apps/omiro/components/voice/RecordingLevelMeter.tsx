@@ -3,8 +3,7 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -40,7 +39,7 @@ function LevelBar({ db, tintColor }: LevelBarProps) {
 
   return (
     <Animated.View
-      style={[styles.s0, [{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]]}
+      style={[styles.bar, [{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]]}
     />
   );
 }
@@ -59,7 +58,7 @@ export function RecordingLevelMeter() {
   });
 
   return (
-    <View style={[styles.s1, { height: BAR_MAX_HEIGHT }]}>
+    <View style={[styles.meter, { height: BAR_MAX_HEIGHT }]}>
       {bars.map((db, index) => (
         <LevelBar key={index} db={db} tintColor={primaryColor} />
       ))}
@@ -68,8 +67,8 @@ export function RecordingLevelMeter() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, borderRadius: 2 },
-  s1: {
+  bar: { flex: 1, borderRadius: 2 },
+  meter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

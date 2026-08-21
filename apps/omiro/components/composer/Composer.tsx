@@ -141,7 +141,7 @@ function ComposerContent(props: ComposerProps) {
 
   return (
     <Animated.View
-      style={styles.s0}
+      style={styles.composer}
       layout={bannerLayout}
       ref={toastHandoff.ref}
       testID={presentation.shellTestID}
@@ -183,7 +183,7 @@ function ComposerContent(props: ComposerProps) {
             exiting={FadeOut.duration(transitionDurations[100])}
             key="composer-fields"
           >
-            <Animated.View style={styles.s1} layout={bannerLayout}>
+            <Animated.View style={styles.fields} layout={bannerLayout}>
               <ComposerInput
                 composerProps={props}
                 messageStore={controller.messageStore}
@@ -220,6 +220,6 @@ function ComposerContent(props: ComposerProps) {
 }
 
 const styles = makeStyles(() => ({
-  s0: { width: '100%', gap: 12 },
-  s1: { gap: 8 },
+  composer: { width: '100%', gap: 12 },
+  fields: { gap: 8 },
 }));

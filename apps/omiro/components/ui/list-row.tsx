@@ -65,11 +65,11 @@ const useStyles = makeStyles((currentTheme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     minHeight: 56,
     borderBottomWidth: 1,
     borderBottomColor: currentTheme.colors.border,
-    paddingHorizontal: 16,
+    paddingHorizontal: 2,
     paddingVertical: 8,
   } satisfies ViewStyle,
   pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,

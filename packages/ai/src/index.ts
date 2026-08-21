@@ -5,6 +5,7 @@ export type { AIUsageMetrics } from './shared';
 export {
   createChatCompletion,
   enhanceText,
+  generateNoteFromChat,
   getChatCompletionText,
   getChatCompletionUsage,
   getStructuredOutputUsage,

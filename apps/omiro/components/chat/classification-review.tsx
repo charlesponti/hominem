@@ -1,6 +1,5 @@
 import type { ArtifactType } from '@hominem/rpc/types';
-import { ScrollView, View } from 'react-native';
-import { Text } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -47,36 +46,36 @@ export function ClassificationReview({
     >
       <Animated.View
         entering={FadeInUp.duration(150)}
-        style={[{ paddingBottom: insets.bottom + 16 }, styles.s0]}
+        style={[{ paddingBottom: insets.bottom + 16 }, styles.container]}
       >
-        <View style={styles.s1} />
-        <View style={styles.s2}>
-          <Text style={styles.s3}>
+        <View style={styles.handleBar} />
+        <View style={styles.header}>
+          <Text style={styles.typeLabel}>
             {t.chat.classification.saveAsPrefix} {t.chat.classification.typeLabel[proposedType]}
           </Text>
-          <Text style={styles.s4}>{proposedTitle}</Text>
+          <Text style={styles.title}>{proposedTitle}</Text>
         </View>
 
         {proposedChanges.length > 0 ? (
-          <View style={styles.s5}>
+          <View style={styles.changesList}>
             {proposedChanges.map((change, index) => (
-              <View key={`${change}-${index}`} style={styles.s6}>
-                <Text style={styles.s7}>-</Text>
-                <Text style={styles.s8}>{change}</Text>
+              <View key={`${change}-${index}`} style={styles.changeItem}>
+                <Text style={styles.changeBullet}>-</Text>
+                <Text style={styles.changeText}>{change}</Text>
               </View>
             ))}
           </View>
         ) : null}
 
         {items === undefined ? (
-          <ScrollView nestedScrollEnabled style={styles.s9}>
-            <Text style={styles.s10}>{previewContent}</Text>
+          <ScrollView nestedScrollEnabled style={styles.previewScrollArea}>
+            <Text style={styles.previewText}>{previewContent}</Text>
           </ScrollView>
         ) : null}
 
-        <View style={styles.s11}>
+        <View style={styles.actions}>
           {isEmptyExtraction ? null : (
-            <View style={styles.s12}>
+            <View style={styles.acceptAction}>
               <Button
                 testID="classification-review-accept"
                 label={acceptLabel}
@@ -85,7 +84,7 @@ export function ClassificationReview({
               />
             </View>
           )}
-          <View style={styles.s13}>
+          <View style={styles.rejectAction}>
             <Button
               testID="classification-review-reject"
               label={t.chat.classification.discard}
@@ -100,14 +99,14 @@ export function ClassificationReview({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  container: {
     backgroundColor: theme.colors.background,
     borderTopWidth: 1,
     borderColor: theme.colors.border,
     gap: 24,
     padding: 32,
   },
-  s1: {
+  handleBar: {
     alignSelf: 'center',
     backgroundColor: theme.colors.border,
     borderRadius: 2,
@@ -115,20 +114,20 @@ const styles = makeStyles((theme) => ({
     marginBottom: 8,
     width: 36,
   },
-  s2: { gap: 8 },
-  s3: {
+  header: { gap: 8 },
+  typeLabel: {
     ...theme.typography.caption1,
     color: theme.colors.mutedForeground,
     fontWeight: '500',
     letterSpacing: 4,
     textTransform: 'uppercase',
   },
-  s4: { fontWeight: '500' },
-  s5: { gap: 8 },
-  s6: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  s7: { color: theme.colors.mutedForeground, marginTop: 1, opacity: 0.4 },
-  s8: { color: theme.colors.mutedForeground, flex: 1 },
-  s9: {
+  title: { fontWeight: '500' },
+  changesList: { gap: 8 },
+  changeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  changeBullet: { color: theme.colors.mutedForeground, marginTop: 1, opacity: 0.4 },
+  changeText: { color: theme.colors.mutedForeground, flex: 1 },
+  previewScrollArea: {
     backgroundColor: theme.colors.muted,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -136,8 +135,8 @@ const styles = makeStyles((theme) => ({
     maxHeight: 120,
     padding: 16,
   },
-  s10: { color: theme.colors.mutedForeground, fontFamily: 'Menlo' },
-  s11: { flexDirection: 'row', gap: 12 },
-  s12: { flex: 1 },
-  s13: { flex: 1 },
+  previewText: { color: theme.colors.mutedForeground, fontFamily: 'Menlo' },
+  actions: { flexDirection: 'row', gap: 12 },
+  acceptAction: { flex: 1 },
+  rejectAction: { flex: 1 },
 }));

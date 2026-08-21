@@ -38,11 +38,11 @@ export function HomeScreen() {
   const inset = useMemo(() => ({ bottom: composerInset }), [composerInset]);
 
   return (
-    <View style={styles.s0} testID="home-screen">
+    <View style={styles.container} testID="home-screen">
       <ScrollView
         contentInset={inset}
         contentInsetAdjustmentBehavior="automatic"
-        style={styles.s1}
+        style={styles.scrollView}
         scrollIndicatorInsets={inset}
         refreshControl={
           <RefreshControl
@@ -55,17 +55,17 @@ export function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.s2}>
+        <View style={styles.content}>
           {dayGroups.map((group) => (
             <View key={group.key}>
-              <Text style={styles.s3}>{group.label}</Text>
+              <Text style={styles.dayLabel}>{group.label}</Text>
               {group.items.map((item) => (
                 <InboxStreamItem item={item} key={item.id} />
               ))}
             </View>
           ))}
           {!inbox.isInitialLoading && recentItems.length === 0 ? (
-            <Text style={styles.s4}>Capture a thought to start your inbox.</Text>
+            <Text style={styles.emptyText}>Capture a thought to start your inbox.</Text>
           ) : null}
         </View>
       </ScrollView>
@@ -83,10 +83,10 @@ export function HomeScreen() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, backgroundColor: theme.colors.background },
-  s1: { gap: 16 },
-  s2: { gap: 8 },
-  s3: {
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  scrollView: { gap: 16 },
+  content: { gap: 8 },
+  dayLabel: {
     ...theme.typography.caption1,
     color: theme.colors.tertiary,
     paddingHorizontal: 16,
@@ -96,5 +96,5 @@ const styles = makeStyles((theme) => ({
     textTransform: 'uppercase',
     letterSpacing: 0,
   },
-  s4: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
+  emptyText: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
 }));

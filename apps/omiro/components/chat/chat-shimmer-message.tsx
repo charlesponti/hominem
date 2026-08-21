@@ -7,9 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { transitionDurations } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor, withAlpha } from '~/components/theme';
 
 const SHIMMER_DURATION = transitionDurations[150] * 5;
 
@@ -42,32 +40,42 @@ export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessage
     return (
       <Animated.View
         style={[
-          styles.s0,
+          styles.userShimmer,
           [{ borderCurve: 'continuous', backgroundColor: popoverBg }, animatedStyle],
         ]}
       >
-        <View style={[styles.s1, { backgroundColor: cardBg }]} />
-        <View style={[styles.s2, { backgroundColor: cardBg }]} />
+        <View style={[styles.userLine, { backgroundColor: cardBg }]} />
+        <View style={[styles.userLineShort, { backgroundColor: cardBg }]} />
       </Animated.View>
     );
   }
 
   return (
-    <View style={styles.s3}>
-      <View style={styles.s4}>
-        <Animated.View style={[styles.s5, [{ backgroundColor: cardBg }, animatedStyle]]} />
-        <Animated.View style={[styles.s6, [{ backgroundColor: cardBg }, animatedStyle]]} />
+    <View style={styles.assistantShimmer}>
+      <View style={styles.assistantContent}>
+        <Animated.View
+          style={[styles.assistantLine, [{ backgroundColor: cardBg }, animatedStyle]]}
+        />
+        <Animated.View
+          style={[styles.assistantLineShort, [{ backgroundColor: cardBg }, animatedStyle]]}
+        />
       </View>
     </View>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { paddingHorizontal: 16, paddingVertical: 12, width: '100%', borderRadius: 8, gap: 8 },
-  s1: { borderRadius: 6, height: 16, width: '100%' },
-  s2: { borderRadius: 6, height: 16, width: 1 },
-  s3: { paddingHorizontal: 16, paddingVertical: 12, width: '100%' },
-  s4: { flex: 1, gap: 8 },
-  s5: { borderRadius: 6, height: 16, width: '100%' },
-  s6: { borderRadius: 6, height: 16, width: 1 },
+  userShimmer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: '100%',
+    borderRadius: 8,
+    gap: 8,
+  },
+  userLine: { borderRadius: 6, height: 16, width: '100%' },
+  userLineShort: { borderRadius: 6, height: 16, width: 1 },
+  assistantShimmer: { paddingHorizontal: 16, paddingVertical: 12, width: '100%' },
+  assistantContent: { flex: 1, gap: 8 },
+  assistantLine: { borderRadius: 6, height: 16, width: '100%' },
+  assistantLineShort: { borderRadius: 6, height: 16, width: 1 },
 }));

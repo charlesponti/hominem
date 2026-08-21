@@ -15,6 +15,10 @@ interface InlineEnhanceTrayProps {
   onPresetSelect: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
+  // Only NoteDetailScreen's inline flow awaits the request here and needs
+  // these -- the composer's enhance-sheet route dismisses immediately and
+  // shows its own loading state back on the composer (see EnhanceParticles),
+  // so it leaves both unset.
   isEnhancing?: boolean;
   error?: string | null;
 }
@@ -71,8 +75,8 @@ export function InlineEnhanceTray({
   };
 
   return (
-    <View style={styles.s0}>
-      <View style={styles.s4}>
+    <View style={styles.container}>
+      <View style={styles.suggestionRow}>
         {t.enhance.suggestions.map((suggestion) => (
           <IconButton
             key={suggestion}
@@ -125,7 +129,7 @@ export function InlineEnhanceTray({
       ) : null}
 
       {isCustomOpen ? (
-        <View style={styles.s1}>
+        <View style={styles.actions}>
           <Button label={t.enhance.cancel} onPress={onCancel} variant="outline" size="sm" />
           <Button
             label={t.enhance.confirm}
@@ -137,14 +141,14 @@ export function InlineEnhanceTray({
         </View>
       ) : null}
 
-      {error ? <Text style={styles.s2}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 8, marginVertical: 16 },
-  s1: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  s2: { color: theme.colors.destructive, lineHeight: 16 },
-  s4: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  container: { gap: 8, marginVertical: 16 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  errorText: { color: theme.colors.destructive, lineHeight: 16 },
+  suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 }));

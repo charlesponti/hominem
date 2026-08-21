@@ -2,8 +2,7 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, View } from 'react-native';
-import { Text } from 'react-native';
+import { Alert, Linking, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Camera,
@@ -12,8 +11,7 @@ import {
   usePhotoOutput,
 } from 'react-native-vision-camera';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -118,17 +116,17 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
     >
       <BottomSheetView style={{ flex: 1, backgroundColor: background }}>
         {hasPermission && device ? (
-          <View style={styles.s0}>
+          <View style={styles.cameraContainer}>
             <Camera
               style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
               device={device}
               isActive={visible}
               outputs={[photoOutput]}
             />
-            <View style={[styles.s1, { paddingBottom: insets.bottom + 24 }]}>
+            <View style={[styles.controls, { paddingBottom: insets.bottom + 24 }]}>
               <Pressable
                 onPress={handleDismiss}
-                style={styles.s2}
+                style={styles.closeButton}
                 accessibilityLabel={t.camera.closeA11y}
               >
                 <AppIcon name="xmark" size={20} tintColor={primaryForeground} />
@@ -140,12 +138,12 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
                 style={[styles.captureButton, isTakingPhoto && styles.captureButtonDisabled]}
                 accessibilityLabel={t.camera.takePhotoA11y}
               >
-                <View style={styles.s3} />
+                <View style={styles.captureIndicator} />
               </Pressable>
 
               <Pressable
                 onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-                style={styles.s4}
+                style={styles.flipButton}
                 accessibilityLabel={t.camera.flipCameraA11y}
               >
                 <AppIcon name="camera.rotate" size={20} tintColor={primaryForeground} />
@@ -153,21 +151,21 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
             </View>
           </View>
         ) : (
-          <View style={styles.s5}>
-            <Text style={styles.s6}>
+          <View style={styles.permissionContainer}>
+            <Text style={styles.permissionMessage}>
               {canRequestPermission
                 ? t.camera.permission.message
                 : t.camera.permission.deniedMessage}
             </Text>
-            <Pressable onPress={() => void handleRequestPermissions()} style={styles.s7}>
-              <Text style={styles.s8}>
+            <Pressable onPress={() => void handleRequestPermissions()} style={styles.grantButton}>
+              <Text style={styles.grantButtonText}>
                 {canRequestPermission
                   ? t.camera.permission.grant
                   : t.camera.permission.openSettings}
               </Text>
             </Pressable>
-            <Pressable onPress={handleDismiss} style={styles.s9}>
-              <Text style={styles.s10}>{t.camera.permission.cancel}</Text>
+            <Pressable onPress={handleDismiss} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>{t.camera.permission.cancel}</Text>
             </Pressable>
           </View>
         )}
@@ -177,8 +175,8 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1 },
-  s1: {
+  cameraContainer: { flex: 1 },
+  controls: {
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -188,7 +186,7 @@ const styles = makeStyles((theme) => ({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
-  s2: {
+  closeButton: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 48,
@@ -196,8 +194,13 @@ const styles = makeStyles((theme) => ({
     borderRadius: 6,
     backgroundColor: theme.colors.overlayScrim,
   },
-  s3: { width: 56, height: 56, borderRadius: 6, backgroundColor: theme.colors.primaryForeground },
-  s4: {
+  captureIndicator: {
+    width: 56,
+    height: 56,
+    borderRadius: 6,
+    backgroundColor: theme.colors.primaryForeground,
+  },
+  flipButton: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 48,
@@ -205,18 +208,24 @@ const styles = makeStyles((theme) => ({
     borderRadius: 6,
     backgroundColor: theme.colors.overlayScrim,
   },
-  s5: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
-  s6: { ...theme.typography.body, color: theme.colors.foreground },
-  s7: {
+  permissionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingHorizontal: 24,
+  },
+  permissionMessage: { ...theme.typography.body, color: theme.colors.foreground },
+  grantButton: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  s8: { ...theme.typography.body, color: theme.colors.foreground },
-  s9: { paddingHorizontal: 16, paddingVertical: 8 },
-  s10: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  grantButtonText: { ...theme.typography.body, color: theme.colors.foreground },
+  cancelButton: { paddingHorizontal: 16, paddingVertical: 8 },
+  cancelButtonText: { ...theme.typography.body, color: theme.colors.mutedForeground },
   captureButton: {
     width: 72,
     height: 72,

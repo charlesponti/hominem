@@ -99,12 +99,16 @@ export const TimeStream = memo(function TimeStream({
   const scheduledRows = renderRows;
 
   return (
-    <View style={styles.s0}>
+    <View style={styles.stream}>
       {calendar.hasLoadedEvents ? <View testID="time-events-ready" /> : null}
       {permission && permission !== 'authorized' ? (
-        <View style={styles.s1} testID="time-calendar-permission-notice">
-          <Text style={styles.s2}>Connect your iOS Calendar to include scheduled events.</Text>
-          <Text style={styles.s3}>Tasks and flexible planning remain available in Time.</Text>
+        <View style={styles.permissionNotice} testID="time-calendar-permission-notice">
+          <Text style={styles.permissionTitle}>
+            Connect your iOS Calendar to include scheduled events.
+          </Text>
+          <Text style={styles.permissionDescription}>
+            Tasks and flexible planning remain available in Time.
+          </Text>
           <Button
             label={permission === 'denied' ? 'Open Settings' : 'Connect Calendar'}
             onPress={() => connectCalendar.mutate()}
@@ -123,7 +127,7 @@ export const TimeStream = memo(function TimeStream({
         }
         ListEmptyComponent={
           !isLoadingEvents && scheduledRows.length === 0 ? (
-            <Text style={styles.s4}>
+            <Text style={styles.emptyState}>
               {unscheduledTaskCount > 0
                 ? 'Nothing scheduled yet. Tasks are waiting to be placed — check Tasks.'
                 : 'Nothing scheduled yet. Add a time block or plan one from your tasks.'}
@@ -132,10 +136,10 @@ export const TimeStream = memo(function TimeStream({
         }
         ListFooterComponent={
           isLoadingEvents ? (
-            <View style={styles.s5} testID="time-loading-state">
-              <View style={styles.s6} />
-              <View style={styles.s6} />
-              <View style={styles.s6} />
+            <View style={styles.loadingState} testID="time-loading-state">
+              <View style={styles.skeletonBlock} />
+              <View style={styles.skeletonBlock} />
+              <View style={styles.skeletonBlock} />
             </View>
           ) : null
         }
@@ -162,8 +166,8 @@ export const TimeStream = memo(function TimeStream({
 });
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1 },
-  s1: {
+  stream: { flex: 1 },
+  permissionNotice: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 6,
@@ -172,11 +176,9 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  s2: { ...theme.typography.subhead, color: theme.colors.foreground },
-  s3: { color: theme.colors.mutedForeground },
-  s4: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
-  s5: { gap: 8, padding: 16 },
-  s6: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
-  s7: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
-  s8: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
+  permissionTitle: { ...theme.typography.subhead, color: theme.colors.foreground },
+  permissionDescription: { color: theme.colors.mutedForeground },
+  emptyState: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+  loadingState: { gap: 8, padding: 16 },
+  skeletonBlock: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
 }));

@@ -11,18 +11,18 @@ export function MessageDebug({
   hasReasoning: boolean;
 }) {
   return (
-    <View style={styles.s0}>
-      <Text style={styles.s1}>ID: {message.id}</Text>
-      <Text style={styles.s2}>Role: {message.role}</Text>
-      <Text style={styles.s3}>Created: {message.created_at || 'unknown'}</Text>
-      <Text style={styles.s4}>Reasoning: {hasReasoning ? 'present' : 'none'}</Text>
-      <Text style={styles.s5}>Tool calls: {message.toolCalls?.length ?? 0}</Text>
+    <View style={styles.debugPanel}>
+      <Text style={styles.debugText}>ID: {message.id}</Text>
+      <Text style={styles.debugText}>Role: {message.role}</Text>
+      <Text style={styles.debugText}>Created: {message.created_at || 'unknown'}</Text>
+      <Text style={styles.debugText}>Reasoning: {hasReasoning ? 'present' : 'none'}</Text>
+      <Text style={styles.debugText}>Tool calls: {message.toolCalls?.length ?? 0}</Text>
     </View>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  debugPanel: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -32,9 +32,5 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 12,
     width: '100%',
   },
-  s1: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  s2: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  s3: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  s4: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  s5: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
+  debugText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
 }));

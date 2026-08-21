@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { useInterruptibleMotion } from '~/services/motion/use-interruptible-motion';
 
@@ -56,7 +55,7 @@ export function ComposerToastFlight({
       pointerEvents="none"
       style={[{ left: rect.left, position: 'absolute', top: rect.top, width: rect.width }, style]}
     >
-      <View style={[styles.s0, { borderCurve: 'continuous' }]} testID="composer-toast-flight">
+      <View style={[styles.toast, { borderCurve: 'continuous' }]} testID="composer-toast-flight">
         <Text style={{ color: textPrimary, fontSize: 16, lineHeight: 24 }}>{text}</Text>
       </View>
     </Animated.View>
@@ -64,7 +63,7 @@ export function ComposerToastFlight({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  toast: {
     backgroundColor: theme.colors.popover,
     borderRadius: 8,
     paddingHorizontal: 8,

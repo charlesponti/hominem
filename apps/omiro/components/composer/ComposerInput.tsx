@@ -61,7 +61,7 @@ function ComposerInputComponent({
   const presentation = getComposerSubmissionConfig(composerProps, selectedEntryKind);
 
   return (
-    <View style={styles.s0}>
+    <View style={styles.container}>
       <TextField
         value={message}
         onChangeText={handleChangeMessage}
@@ -77,7 +77,7 @@ function ComposerInputComponent({
           borderWidth: 5,
           minHeight: 0,
           paddingHorizontal: 0,
-          paddingVertical: 0,
+          paddingVertical: 2,
         }}
       />
       {message.length >= LENGTH_WARNING_THRESHOLD ? (
@@ -99,5 +99,5 @@ function ComposerInputComponent({
 export const ComposerInput = memo(ComposerInputComponent);
 
 const styles = makeStyles(() => ({
-  s0: { gap: 16 },
+  container: { gap: 16 },
 }));

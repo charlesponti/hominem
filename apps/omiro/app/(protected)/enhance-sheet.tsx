@@ -41,8 +41,8 @@ export default function EnhanceSheetScreen() {
   );
 
   return (
-    <View style={styles.s0}>
-      <Text style={styles.s1}>{t.enhance.title}</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>{t.enhance.title}</Text>
       <InlineEnhanceTray
         instruction={instruction}
         onInstructionChange={setInstruction}
@@ -57,6 +57,6 @@ export default function EnhanceSheetScreen() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, paddingHorizontal: 16, paddingTop: 24 },
-  s1: { ...theme.typography.headline, color: theme.colors.foreground },
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 24 },
+  title: { ...theme.typography.headline, color: theme.colors.foreground },
 }));

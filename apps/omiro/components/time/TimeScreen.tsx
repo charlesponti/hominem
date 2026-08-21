@@ -36,20 +36,20 @@ export function TimeScreen() {
   );
 
   return (
-    <View style={styles.s0} testID="time-screen">
+    <View style={styles.container} testID="time-screen">
       <TimeStream contentPaddingBottom={composerInset} onError={showError} onOpenItem={openItem} />
       {errorToast !== null ? (
         <View
           key={toastKey}
-          style={[styles.s1, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
+          style={[styles.errorToast, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
         >
           <Pressable
             accessibilityLabel={`Error: ${errorToast}`}
             accessibilityRole="button"
             onPress={() => setToastExpanded((expanded) => !expanded)}
-            style={styles.s2}
+            style={styles.errorContent}
           >
-            <Text style={styles.s3} numberOfLines={toastExpanded ? undefined : 1}>
+            <Text style={styles.errorText} numberOfLines={toastExpanded ? undefined : 1}>
               {errorToast}
             </Text>
             <IconButton
@@ -133,8 +133,8 @@ function TimePreviewMenuButton() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { backgroundColor: theme.colors.background, flex: 1 },
-  s1: {
+  container: { backgroundColor: theme.colors.background, flex: 1 },
+  errorToast: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 4,
@@ -143,6 +143,6 @@ const styles = makeStyles((theme) => ({
     padding: 8,
     borderColor: theme.colors.destructive,
   },
-  s2: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  s3: { ...theme.typography.footnote, color: theme.colors.destructive, flex: 1 },
+  errorContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  errorText: { ...theme.typography.footnote, color: theme.colors.destructive, flex: 1 },
 }));

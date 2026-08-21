@@ -3,9 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { transitionDurations } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor, withAlpha } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
@@ -36,22 +34,26 @@ export function ComposerAttachmentRow() {
             return (
               <Pressable
                 key={a.id}
-                style={[styles.s0, { borderCurve: 'continuous' }]}
+                style={[styles.attachmentContainer, { borderCurve: 'continuous' }]}
                 onPress={() => onRemove(a.id)}
                 accessibilityLabel={t.notes.editor.removeFile(a.name)}
                 accessibilityRole="button"
               >
                 {a.localUri && (
-                  <Image source={{ uri: a.localUri }} style={styles.s1} contentFit="cover" />
+                  <Image
+                    source={{ uri: a.localUri }}
+                    style={styles.attachmentImage}
+                    contentFit="cover"
+                  />
                 )}
-                <View style={styles.s2} pointerEvents="none">
+                <View style={styles.removeBadge} pointerEvents="none">
                   <AppIcon name="xmark" size={BADGE_SIZE} tintColor={primaryForeground} />
                 </View>
                 {uploading && (
                   <>
-                    <View style={styles.s3} />
-                    <View style={styles.s4}>
-                      <View style={[styles.s5, { width: `${progress}%` }]} />
+                    <View style={styles.uploadOverlay} />
+                    <View style={styles.progressBarContainer}>
+                      <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
                     </View>
                   </>
                 )}
@@ -60,15 +62,22 @@ export function ComposerAttachmentRow() {
           })}
         </ScrollView>
       )}
-      {errors.length > 0 && <Animated.Text style={styles.s6}>{errors.join(' · ')}</Animated.Text>}
+      {errors.length > 0 && (
+        <Animated.Text style={styles.errorText}>{errors.join(' · ')}</Animated.Text>
+      )}
     </Animated.View>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { width: 48, height: 48, overflow: 'hidden', backgroundColor: theme.colors.card },
-  s1: { width: 48, height: 48 },
-  s2: {
+  attachmentContainer: {
+    width: 48,
+    height: 48,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.card,
+  },
+  attachmentImage: { width: 48, height: 48 },
+  removeBadge: {
     position: 'absolute',
     top: 4,
     right: 4,
@@ -78,7 +87,7 @@ const styles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  s3: {
+  uploadOverlay: {
     position: 'absolute',
     top: 0,
     right: 0,
@@ -86,7 +95,7 @@ const styles = makeStyles((theme) => ({
     left: 0,
     backgroundColor: theme.colors.overlayScrim,
   },
-  s4: {
+  progressBarContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -94,6 +103,6 @@ const styles = makeStyles((theme) => ({
     height: 4,
     backgroundColor: theme.colors.overlayScrim,
   },
-  s5: { backgroundColor: theme.colors.primary, height: '100%' },
-  s6: { ...theme.typography.caption1, color: theme.colors.destructive },
+  progressBarFill: { backgroundColor: theme.colors.primary, height: '100%' },
+  errorText: { ...theme.typography.caption1, color: theme.colors.destructive },
 }));

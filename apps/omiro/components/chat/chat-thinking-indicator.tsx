@@ -12,8 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';
@@ -71,12 +70,12 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
       }
       testID="chat-assistant-activity"
     >
-      <View style={styles.s0}>
-        <View style={styles.s1}>
-          <Animated.View style={[styles.s2, [{ backgroundColor: textPrimary }, dot1Style]]} />
-          <Animated.View style={[styles.s3, [{ backgroundColor: textPrimary }, dot2Style]]} />
-          <Animated.View style={[styles.s4, [{ backgroundColor: textPrimary }, dot3Style]]} />
-          {!compact ? <Text style={styles.s5}>{t.chat.thinkingIndicator}</Text> : null}
+      <View style={styles.indicatorContent}>
+        <View style={styles.indicatorRow}>
+          <Animated.View style={[styles.dot, [{ backgroundColor: textPrimary }, dot1Style]]} />
+          <Animated.View style={[styles.dot, [{ backgroundColor: textPrimary }, dot2Style]]} />
+          <Animated.View style={[styles.dot, [{ backgroundColor: textPrimary }, dot3Style]]} />
+          {!compact ? <Text style={styles.indicatorLabel}>{t.chat.thinkingIndicator}</Text> : null}
         </View>
       </View>
     </Animated.View>
@@ -84,12 +83,10 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 8, width: '100%' },
-  s1: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  s2: { borderRadius: 6, height: 8, width: 8 },
-  s3: { borderRadius: 6, height: 8, width: 8 },
-  s4: { borderRadius: 6, height: 8, width: 8 },
-  s5: { marginLeft: 4, color: theme.colors.tertiary },
+  indicatorContent: { gap: 8, width: '100%' },
+  indicatorRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dot: { borderRadius: 6, height: 8, width: 8 },
+  indicatorLabel: { marginLeft: 4, color: theme.colors.tertiary },
   container: {},
   compact: { paddingTop: 4 },
   spacious: { paddingHorizontal: 16, paddingVertical: 8 },

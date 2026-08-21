@@ -2,13 +2,11 @@ import DateTimePicker from '@expo/ui/community/datetime-picker';
 import { Stack } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
-import { Text } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { LocationSearchField } from '~/components/time/LocationSearchField';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -53,13 +51,17 @@ function FieldCard({
   return (
     <Pressable
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.s0, { alignItems: align }, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [
+        styles.fieldCard,
+        { alignItems: align },
+        pressed && { opacity: 0.7 },
+      ]}
       testID={testID}
     >
-      <View style={[styles.s1, { backgroundColor: iconColor }]}>
+      <View style={[styles.fieldIcon, { backgroundColor: iconColor }]}>
         <AppIcon name={icon} size={18} tintColor="#ffffff" />
       </View>
-      <View style={styles.s2}>{children}</View>
+      <View style={styles.fieldContent}>{children}</View>
     </Pressable>
   );
 }
@@ -372,16 +374,16 @@ function TimeBlockEditor({
 
   if (isLoading) {
     return (
-      <View style={styles.s3}>
-        <Text style={styles.s4}>Loading time block…</Text>
+      <View style={styles.loadingState}>
+        <Text style={styles.loadingText}>Loading time block…</Text>
       </View>
     );
   }
 
   if (!block || error) {
     return (
-      <View style={styles.s5}>
-        <Text style={styles.s6}>{error || 'This time block is unavailable.'}</Text>
+      <View style={styles.errorState}>
+        <Text style={styles.errorText}>{error || 'This time block is unavailable.'}</Text>
         <Button label="Close" onPress={onClose} variant="secondary" />
       </View>
     );
@@ -402,21 +404,21 @@ function TimeBlockEditor({
           </Stack.Toolbar.Menu>
         </Stack.Toolbar>
       ) : null}
-      <View style={styles.s7} testID="time-block-editor">
+      <View style={styles.editor} testID="time-block-editor">
         <ScrollView
           contentContainerStyle={{ gap: 16, padding: 16 }}
           contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
-          style={styles.s8}
+          style={styles.scrollView}
         >
-          <View style={styles.s9}>
-            <View style={[styles.s10, { backgroundColor: intentColor }]}>
+          <View style={styles.header}>
+            <View style={[styles.intentBadge, { backgroundColor: intentColor }]}>
               <AppIcon
                 name={isTask ? 'checkmark.circle.fill' : 'calendar'}
                 size={12}
                 tintColor="#ffffff"
               />
-              <Text style={[styles.s11, { color: '#ffffff' }]}>
+              <Text style={[styles.intentLabel, { color: '#ffffff' }]}>
                 {isTask ? 'Task' : (event?.calendarTitle ?? 'Event')}
               </Text>
             </View>
@@ -435,18 +437,18 @@ function TimeBlockEditor({
                   value={draftTitle}
                 />
               ) : (
-                <Text style={styles.s12}>{draftTitle}</Text>
+                <Text style={styles.title}>{draftTitle}</Text>
               )}
             </Pressable>
             {isTask && task?.status === 'completed' ? (
-              <Text style={styles.s13}>Completed</Text>
+              <Text style={styles.completedLabel}>Completed</Text>
             ) : null}
             {readOnlyEvent ? (
-              <Text style={styles.s14}>This calendar is read-only in Omiro.</Text>
+              <Text style={styles.readOnlyNotice}>This calendar is read-only in Omiro.</Text>
             ) : null}
           </View>
 
-          <View style={styles.s15}>
+          <View style={styles.fields}>
             <FieldCard
               align={activeField === 'time' ? 'flex-start' : 'center'}
               icon="clock.fill"
@@ -463,7 +465,7 @@ function TimeBlockEditor({
               testID="time-block-edit-time"
             >
               {activeField === 'time' && draftStart && draftEnd ? (
-                <View style={styles.s16}>
+                <View style={styles.timeEditor}>
                   <DateTimePicker
                     display="compact"
                     mode="datetime"
@@ -488,9 +490,9 @@ function TimeBlockEditor({
                   />
                 </View>
               ) : draftStart && draftEnd ? (
-                <Text style={styles.s17}>{formatInterval(draftStart, draftEnd)}</Text>
+                <Text style={styles.timeValue}>{formatInterval(draftStart, draftEnd)}</Text>
               ) : (
-                <Text style={styles.s18}>Set a time</Text>
+                <Text style={styles.unsetValue}>Set a time</Text>
               )}
             </FieldCard>
             <FieldCard
@@ -509,7 +511,10 @@ function TimeBlockEditor({
                 />
               ) : (
                 <Text
-                  style={[styles.s20, draftLocation ? styles.foreground : styles.mutedForeground]}
+                  style={[
+                    styles.fieldValue,
+                    draftLocation ? styles.foreground : styles.mutedForeground,
+                  ]}
                 >
                   {draftLocation || 'Add location'}
                 </Text>
@@ -533,7 +538,12 @@ function TimeBlockEditor({
                   value={draftNotes}
                 />
               ) : (
-                <Text style={[styles.s20, draftNotes ? styles.foreground : styles.mutedForeground]}>
+                <Text
+                  style={[
+                    styles.fieldValue,
+                    draftNotes ? styles.foreground : styles.mutedForeground,
+                  ]}
+                >
                   {draftNotes || 'Add notes'}
                 </Text>
               )}
@@ -552,7 +562,7 @@ function TimeBlockEditor({
                 ) : (
                   <Text
                     style={[
-                      styles.s20,
+                      styles.fieldValue,
                       draftPeople.length > 0 ? styles.foreground : styles.mutedForeground,
                     ]}
                   >
@@ -563,20 +573,20 @@ function TimeBlockEditor({
             ) : null}
             {!isTask && event?.participants.length ? (
               <FieldCard icon="person.2.fill" iconColor={chartPurple} label="People">
-                <Text style={styles.s19}>{event.participants.join(', ')}</Text>
+                <Text style={styles.participants}>{event.participants.join(', ')}</Text>
               </FieldCard>
             ) : null}
             {!isTask && event?.recurrenceDescription ? (
               <FieldCard icon="arrow.triangle.2.circlepath" iconColor={chartGray} label="Repeats">
-                <Text style={styles.s20}>Recurring event</Text>
+                <Text style={styles.fieldValue}>Recurring event</Text>
               </FieldCard>
             ) : null}
           </View>
         </ScrollView>
         {!readOnlyEvent && (isDirty || isTask) ? (
           <KeyboardStickyView>
-            <View style={styles.s21}>
-              <View style={styles.s22}>
+            <View style={styles.footer}>
+              <View style={styles.footerActions}>
                 {isTask ? (
                   <Button
                     disabled={isTogglingTask}
@@ -607,7 +617,7 @@ function TimeBlockEditor({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  fieldCard: {
     flexDirection: 'row',
     gap: 12,
     borderRadius: 24,
@@ -615,16 +625,22 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  s1: { height: 36, width: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
-  s2: { flex: 1, gap: 4 },
-  s3: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
-  s4: { color: theme.colors.mutedForeground },
-  s5: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
-  s6: { color: theme.colors.destructive },
-  s7: { flex: 1 },
-  s8: { flex: 1 },
-  s9: { gap: 12 },
-  s10: {
+  fieldIcon: {
+    height: 36,
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  fieldContent: { flex: 1, gap: 4 },
+  loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+  loadingText: { color: theme.colors.mutedForeground },
+  errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+  errorText: { color: theme.colors.destructive },
+  editor: { flex: 1 },
+  scrollView: { flex: 1 },
+  header: { gap: 12 },
+  intentBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -633,17 +649,17 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
-  s11: { ...theme.typography.caption1, fontWeight: '600' },
-  s12: { ...theme.typography.display },
-  s13: { color: theme.colors.mutedForeground },
-  s14: { color: theme.colors.mutedForeground },
-  s15: { gap: 10 },
-  s16: { gap: 8 },
-  s17: { ...theme.typography.body },
-  s18: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  s19: { ...theme.typography.body },
-  s20: { ...theme.typography.body },
-  s21: {
+  intentLabel: { ...theme.typography.caption1, fontWeight: '600' },
+  title: { ...theme.typography.display },
+  completedLabel: { color: theme.colors.mutedForeground },
+  readOnlyNotice: { color: theme.colors.mutedForeground },
+  fields: { gap: 10 },
+  timeEditor: { gap: 8 },
+  timeValue: { ...theme.typography.body },
+  unsetValue: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  participants: { ...theme.typography.body },
+  fieldValue: { ...theme.typography.body },
+  footer: {
     borderTopWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.background,
@@ -651,7 +667,7 @@ const styles = makeStyles((theme) => ({
     paddingTop: 12,
     paddingBottom: 16,
   },
-  s22: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  footerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   foreground: { color: theme.colors.foreground },
   mutedForeground: { color: theme.colors.mutedForeground },
 }));

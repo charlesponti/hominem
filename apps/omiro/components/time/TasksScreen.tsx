@@ -2,8 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { getTaskDetailRoute, getTaskScheduleRoute } from '~/services/navigation/routes';
@@ -18,7 +17,7 @@ export function TasksScreen() {
   const unscheduledTasks = getUnscheduledTasks(tasks);
 
   return (
-    <View style={styles.s0} testID="unscheduled-tasks-screen">
+    <View style={styles.container} testID="unscheduled-tasks-screen">
       <Stack.Screen options={{ headerShown: true, title: 'Tasks' }} />
       <StreamList
         contentPaddingTop={16}
@@ -26,7 +25,7 @@ export function TasksScreen() {
         keyExtractor={(task) => task.id}
         ListEmptyComponent={
           !isFetching ? (
-            <Text style={styles.s1}>Every open task has a time or deadline.</Text>
+            <Text style={styles.emptyStateText}>Every open task has a time or deadline.</Text>
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />}
@@ -56,6 +55,6 @@ export function TasksScreen() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, backgroundColor: theme.colors.background },
-  s1: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  emptyStateText: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
 }));

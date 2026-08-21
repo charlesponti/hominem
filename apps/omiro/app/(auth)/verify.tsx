@@ -14,8 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconChip } from '~/components/ui/icon-chip';
@@ -235,8 +234,8 @@ function VerifyScreen() {
 
   if (verifySucceeded) {
     return (
-      <View style={styles.s0}>
-        <Animated.View entering={FadeIn.duration(300)} style={styles.s1}>
+      <View style={styles.successContainer}>
+        <Animated.View entering={FadeIn.duration(300)} style={styles.successContent}>
           <IconChip
             icon="checkmark.circle.fill"
             size={72}
@@ -244,14 +243,14 @@ function VerifyScreen() {
             iconSize={32}
             tintColor={success}
           />
-          <Text style={styles.s2}>{t.auth.verify.signedIn}</Text>
+          <Text style={styles.successMessage}>{t.auth.verify.signedIn}</Text>
         </Animated.View>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView style={styles.s3} behavior="padding">
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
         testID="auth-verify-screen"
         contentInsetAdjustmentBehavior="automatic"
@@ -265,28 +264,28 @@ function VerifyScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.s4}>
-          <View style={styles.s5}>
+        <View style={styles.content}>
+          <View style={styles.form}>
             <Animated.View entering={FadeIn.duration(400)}>
               <IconChip icon="lock.shield" />
             </Animated.View>
 
-            <Animated.View entering={FadeIn.duration(400).delay(60)} style={styles.s6}>
-              <Text style={styles.s7}>{t.auth.verify.title}</Text>
-              <View style={styles.s8}>
-                <Text style={styles.s9}>{t.auth.verify.codeSentTo}</Text>
+            <Animated.View entering={FadeIn.duration(400).delay(60)} style={styles.header}>
+              <Text style={styles.title}>{t.auth.verify.title}</Text>
+              <View style={styles.emailRow}>
+                <Text style={styles.codeSentLabel}>{t.auth.verify.codeSentTo}</Text>
                 <Pressable
                   hitSlop={8}
                   onPress={handleChangeEmail}
-                  style={({ pressed }) => [styles.s10, { opacity: pressed ? 0.65 : 1 }]}
+                  style={({ pressed }) => [styles.emailChip, { opacity: pressed ? 0.65 : 1 }]}
                 >
-                  <Text style={styles.s11}>{maskEmail(resolvedEmail)}</Text>
+                  <Text style={styles.emailText}>{maskEmail(resolvedEmail)}</Text>
                   <AppIcon name="pencil" size={11} tintColor={textSecondary} />
                 </Pressable>
               </View>
             </Animated.View>
 
-            <Animated.View entering={FadeIn.duration(400).delay(120)} style={styles.s12}>
+            <Animated.View entering={FadeIn.duration(400).delay(120)} style={styles.otpContainer}>
               <View style={isBusy ? styles.busy : undefined}>
                 <OtpInput
                   testID="auth-otp-input"
@@ -309,7 +308,7 @@ function VerifyScreen() {
                   <Text
                     testID="auth-otp-message"
                     accessibilityLiveRegion="polite"
-                    style={styles.s13}
+                    style={styles.error}
                   >
                     {authError}
                   </Text>
@@ -319,7 +318,7 @@ function VerifyScreen() {
               {/* Clockwise-drawing border fills in as digits are entered, then fades
                   into the Verify button once all 6 are present — zero layout shift. */}
               <View
-                style={[styles.s14, { height: VERIFY_BUTTON_HEIGHT }]}
+                style={[styles.verifyButtonContainer, { height: VERIFY_BUTTON_HEIGHT }]}
                 onLayout={(e) => setVerifyButtonWidth(e.nativeEvent.layout.width)}
               >
                 {normalizedOtp.length < 6 && verifyBorderPath && (
@@ -349,9 +348,11 @@ function VerifyScreen() {
                 )}
 
                 {normalizedOtp.length < 6 && !authError && (
-                  <View style={styles.s15}>
-                    {normalizedOtp.length > 0 ? <Text style={styles.s16}>↑</Text> : null}
-                    <Text style={styles.s17}>{getOtpProgressMessage(normalizedOtp.length)}</Text>
+                  <View style={styles.progressHelper}>
+                    {normalizedOtp.length > 0 ? <Text style={styles.progressArrow}>↑</Text> : null}
+                    <Text style={styles.progressMessage}>
+                      {getOtpProgressMessage(normalizedOtp.length)}
+                    </Text>
                   </View>
                 )}
 
@@ -375,7 +376,7 @@ function VerifyScreen() {
                 disabled={isBusy || secondsLeft > 0}
                 hitSlop={8}
                 style={({ pressed }) => [
-                  styles.s18,
+                  styles.resendButton,
                   { opacity: pressed && secondsLeft === 0 ? 0.65 : 1 },
                 ]}
               >
@@ -390,7 +391,7 @@ function VerifyScreen() {
                 />
                 <Text
                   style={[
-                    styles.s19,
+                    styles.resendText,
                     {
                       color:
                         secondsLeft === 0
@@ -424,22 +425,22 @@ const VerifyWithErrorBoundary = () => (
 export default VerifyWithErrorBoundary;
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  successContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.background,
   },
-  s1: { alignItems: 'center', gap: 16 },
-  s2: { ...theme.typography.title2, color: theme.colors.foreground },
-  s3: { flex: 1, backgroundColor: theme.colors.background },
-  s4: { width: '100%', alignItems: 'center' },
-  s5: { width: '100%', maxWidth: 420, gap: 18 },
-  s6: { gap: 8 },
-  s7: { ...theme.typography.title1, color: theme.colors.foreground },
-  s8: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
-  s9: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
-  s10: {
+  successContent: { alignItems: 'center', gap: 16 },
+  successMessage: { ...theme.typography.title2, color: theme.colors.foreground },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { width: '100%', alignItems: 'center' },
+  form: { width: '100%', maxWidth: 420, gap: 18 },
+  header: { gap: 8 },
+  title: { ...theme.typography.title1, color: theme.colors.foreground },
+  emailRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  codeSentLabel: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
+  emailChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -448,20 +449,29 @@ const styles = makeStyles((theme) => ({
     borderRadius: 8,
     backgroundColor: theme.colors.card,
   },
-  s11: { ...theme.typography.body, fontWeight: '500', color: theme.colors.foreground },
-  s12: { gap: 16, alignItems: 'center' },
-  s13: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.destructive },
-  s14: { position: 'relative', width: '100%', alignItems: 'center', justifyContent: 'center' },
-  s15: {
+  emailText: { ...theme.typography.body, fontWeight: '500', color: theme.colors.foreground },
+  otpContainer: { gap: 16, alignItems: 'center' },
+  error: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.destructive },
+  verifyButtonContainer: {
+    position: 'relative',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressHelper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingHorizontal: 16,
   },
-  s16: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  s17: { ...theme.typography.footnote, color: theme.colors.mutedForeground, textAlign: 'center' },
-  s18: {
+  progressArrow: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  progressMessage: {
+    ...theme.typography.footnote,
+    color: theme.colors.mutedForeground,
+    textAlign: 'center',
+  },
+  resendButton: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
@@ -471,6 +481,6 @@ const styles = makeStyles((theme) => ({
     borderRadius: 999,
     backgroundColor: theme.colors.card,
   },
-  s19: { ...theme.typography.caption1, fontWeight: '600' },
+  resendText: { ...theme.typography.caption1, fontWeight: '600' },
   busy: { opacity: 0.6 },
 }));

@@ -8,8 +8,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 
 const THUMB_SIZE = 24;
 const TRACK_HEIGHT = 4;
@@ -97,7 +96,7 @@ export function DiscreteSlider({
 
   return (
     <View
-      style={styles.s0}
+      style={styles.slider}
       onLayout={handleLayout}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="adjustable"
@@ -105,10 +104,10 @@ export function DiscreteSlider({
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      <View style={[styles.s1, { backgroundColor: borderDefault }]} />
+      <View style={[styles.track, { backgroundColor: borderDefault }]} />
       <Reanimated.View
         style={[
-          styles.s2,
+          styles.fill,
           [{ backgroundColor: textPrimary, top: (THUMB_SIZE - TRACK_HEIGHT) / 2 }, fillStyle],
         ]}
       />
@@ -134,15 +133,15 @@ export function DiscreteSlider({
         />
       ))}
       <GestureDetector gesture={pan}>
-        <Reanimated.View style={[styles.s3, [{ backgroundColor: textPrimary }, thumbStyle]]} />
+        <Reanimated.View style={[styles.thumb, [{ backgroundColor: textPrimary }, thumbStyle]]} />
       </GestureDetector>
     </View>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { height: 24, justifyContent: 'center' },
-  s1: { position: 'absolute', left: 12, right: 12, height: 4, borderRadius: 999 },
-  s2: { position: 'absolute', left: 12, height: 4, borderRadius: 999 },
-  s3: { height: 24, width: 24, borderRadius: 999 },
+  slider: { height: 24, justifyContent: 'center' },
+  track: { position: 'absolute', left: 12, right: 12, height: 4, borderRadius: 999 },
+  fill: { position: 'absolute', left: 12, height: 4, borderRadius: 999 },
+  thumb: { height: 24, width: 24, borderRadius: 999 },
 }));

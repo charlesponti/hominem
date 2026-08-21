@@ -3,8 +3,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { useAuth } from '~/services/auth/auth-provider';
@@ -82,13 +81,13 @@ const Onboarding = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.s0}>
-          <View style={styles.s1}>
-            <Text style={styles.s2}>{t.onboarding.title}</Text>
-            <Text style={styles.s3}>{t.onboarding.subtitle}</Text>
+        <View style={styles.form}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{t.onboarding.title}</Text>
+            <Text style={styles.subtitle}>{t.onboarding.subtitle}</Text>
           </View>
 
-          <View style={styles.s4}>
+          <View style={styles.inputContainer}>
             <TextField
               value={name}
               placeholder={t.onboarding.namePlaceholder}
@@ -99,7 +98,7 @@ const Onboarding = () => {
               cursorColor={textPrimary}
               selectionColor={textPrimary}
               style={[
-                styles.s5,
+                styles.input,
                 [
                   {
                     minHeight: 48,
@@ -120,7 +119,7 @@ const Onboarding = () => {
               onSubmitEditing={() => void onButtonPress()}
             />
 
-            {hasError ? <Text style={styles.s6}>{t.onboarding.nameError}</Text> : null}
+            {hasError ? <Text style={styles.errorText}>{t.onboarding.nameError}</Text> : null}
 
             <Button
               label={t.onboarding.start}
@@ -153,11 +152,11 @@ const Onboarding = () => {
 export default Onboarding;
 
 const styles = makeStyles((theme) => ({
-  s0: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: 24 },
-  s1: { gap: 10 },
-  s2: { fontSize: 28, fontWeight: '700', lineHeight: 34, color: theme.colors.foreground },
-  s3: { lineHeight: 22, color: theme.colors.mutedForeground },
-  s4: { gap: 12 },
-  s5: { backgroundColor: theme.colors.card, color: theme.colors.foreground },
-  s6: { fontSize: 13, lineHeight: 18, color: theme.colors.destructive },
+  form: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: 24 },
+  header: { gap: 10 },
+  title: { fontSize: 28, fontWeight: '700', lineHeight: 34, color: theme.colors.foreground },
+  subtitle: { lineHeight: 22, color: theme.colors.mutedForeground },
+  inputContainer: { gap: 12 },
+  input: { backgroundColor: theme.colors.card, color: theme.colors.foreground },
+  errorText: { fontSize: 13, lineHeight: 18, color: theme.colors.destructive },
 }));

@@ -210,3 +210,33 @@ export async function enhanceText(
     usage: getChatCompletionUsage(response),
   };
 }
+
+export async function generateNoteFromChat(
+  input: { transcript: string; instruction?: string },
+  systemPrompt: string,
+) {
+  const response = await createChatCompletion({
+    model: ENHANCE_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: input.instruction
+          ? `Instruction: ${input.instruction}\n\nConversation transcript:\n${input.transcript}`
+          : `Conversation transcript:\n${input.transcript}`,
+      },
+    ],
+    temperature: 0.4,
+    maxCompletionTokens: 4000,
+  });
+
+  const text = getChatCompletionText(response).trim();
+  if (!text) {
+    throw new Error('Model returned an empty note');
+  }
+
+  return {
+    text,
+    usage: getChatCompletionUsage(response),
+  };
+}

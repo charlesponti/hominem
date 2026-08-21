@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { TextInput as RNTextInput } from 'react-native';
-import { Text } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -12,8 +18,7 @@ import Animated, {
 
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Card, IconButton, nativeShadows, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
@@ -95,7 +100,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
         >
           <Card
             style={[
-              styles.s0,
+              styles.composerCard,
               {
                 borderCurve: 'continuous',
                 borderRadius: 24,
@@ -113,7 +118,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
                 onDone={() => void voice.handleVoicePress()}
               />
             ) : (
-              <View style={styles.s16}>
+              <View style={styles.fieldEditor}>
                 <TextField
                   editable={!disabled}
                   focusBorder={false}
@@ -127,7 +132,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
                   value={value}
                   multiline
                   numberOfLines={5}
-                  style={styles.s17}
+                  style={styles.textField}
                 />
               </View>
             )}
@@ -139,7 +144,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
                     onDismiss={() => setComposerError(null)}
                   />
                 ) : null}
-                <View style={styles.s1}>
+                <View style={styles.actionRow}>
                   <IconButton
                     accessibilityLabel="Start voice input"
                     disabled={voice.isRecordingElsewhere}
@@ -165,7 +170,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
         </Animated.View>
       ) : isParsing ? (
         <ResultSurface accessibilityLabel="Interpreting time request" testID="time-result-parsing">
-          <View style={styles.s2}>
+          <View style={styles.loadingState}>
             <ActivityIndicator color={primaryColor} />
           </View>
         </ResultSurface>
@@ -228,12 +233,12 @@ function ResultSurface({
       }
       entering={reducedMotion ? FadeIn.duration(180) : FadeInUp.duration(220)}
       exiting={reducedMotion ? FadeOut.duration(140) : FadeOutDown.duration(180)}
-      style={styles.s3}
+      style={styles.resultSurface}
       testID={testID}
     >
       <Card
         style={[
-          styles.s4,
+          styles.resultCard,
           {
             borderCurve: 'continuous',
             borderRadius: 24,
@@ -273,7 +278,7 @@ type ResultContentProps = Pick<
 function ResultContent({ state, ...actions }: ResultContentProps) {
   switch (state.kind) {
     case 'answer':
-      return <Text style={styles.s5}>{state.answer}</Text>;
+      return <Text style={styles.answerText}>{state.answer}</Text>;
     case 'event-choice':
       return <EventChoiceResult candidates={state.candidates} {...actions} />;
     case 'availability':
@@ -292,17 +297,17 @@ function EventChoiceResult({
 }) {
   return (
     <>
-      <Text style={styles.s6}>Which event did you mean?</Text>
+      <Text style={styles.eventChoiceHeading}>Which event did you mean?</Text>
       {candidates.map((event) => (
         <Pressable
           key={`${event.id}:${event.startDate}`}
           accessibilityLabel={`${event.title}, ${new Date(event.startDate).toLocaleString()}`}
           onPress={() => onChooseEvent?.(event.id)}
-          style={styles.s7}
+          style={styles.eventChoice}
           testID="time-event-choice"
         >
-          <Text style={styles.s8}>{event.title}</Text>
-          <Text style={styles.s9}>{formatDateTime(event.startDate)}</Text>
+          <Text style={styles.eventTitle}>{event.title}</Text>
+          <Text style={styles.eventTime}>{formatDateTime(event.startDate)}</Text>
         </Pressable>
       ))}
       <CancelRow testID="time-event-choice-cancel" onCancel={onCancel} />
@@ -319,17 +324,17 @@ function AvailabilityResult({
 }) {
   return (
     <>
-      <Text style={styles.s10}>Possible times</Text>
+      <Text style={styles.availabilityHeading}>Possible times</Text>
       {openings.slice(0, 3).map((opening) => (
         <Pressable
           key={opening.start}
           accessibilityLabel={`Use ${new Date(opening.start).toLocaleString()}`}
           onPress={() => onChooseOpening?.(opening)}
-          style={styles.s11}
+          style={styles.openingOption}
           testID="time-availability-opening"
         >
-          <Text style={styles.s12}>{formatDateTime(opening.start)}</Text>
-          <Text style={styles.s13}>until {formatClockTime(opening.end)}</Text>
+          <Text style={styles.openingTime}>{formatDateTime(opening.start)}</Text>
+          <Text style={styles.openingEnd}>until {formatClockTime(opening.end)}</Text>
         </Pressable>
       ))}
       <CancelRow testID="time-availability-cancel" onCancel={onCancel} />
@@ -355,10 +360,10 @@ function DraftResult({
 
   return (
     <>
-      <View style={styles.s14}>
-        <Text style={styles.s15}>{getIntentLabel(block.primary_intent)}</Text>
+      <View style={styles.intentBadge}>
+        <Text style={styles.intentLabel}>{getIntentLabel(block.primary_intent)}</Text>
       </View>
-      <View style={styles.s16}>
+      <View style={styles.fieldEditor}>
         <TextField
           accessibilityLabel="Edit title"
           autoFocus
@@ -367,11 +372,11 @@ function DraftResult({
           placeholder={t.timeResult.fieldLabels.title}
           testID="time-draft-edit-title"
           value={block.title ?? ''}
-          style={styles.s17}
+          style={styles.textField}
         />
       </View>
-      {details ? <Text style={styles.s18}>{details}</Text> : null}
-      <View style={styles.s19}>
+      {details ? <Text style={styles.draftDetails}>{details}</Text> : null}
+      <View style={styles.resultActions}>
         <CancelButton testID="time-draft-cancel" onCancel={onCancel} />
         <IconButton
           accessibilityLabel="Confirm"
@@ -388,7 +393,7 @@ function DraftResult({
 
 function CancelRow({ onCancel, testID }: { onCancel?: () => void; testID: string }) {
   return (
-    <View style={styles.s19}>
+    <View style={styles.resultActions}>
       <CancelButton testID={testID} onCancel={onCancel} />
     </View>
   );
@@ -427,39 +432,44 @@ function getIntentLabel(
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { width: '100%', gap: 8, padding: 12 },
-  s1: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
-  s2: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
-  s3: { width: '100%' },
-  s4: { gap: 8, padding: 12 },
-  s5: { ...theme.typography.body, color: theme.colors.foreground },
-  s6: { ...theme.typography.headline },
-  s7: { gap: 4, paddingVertical: 8, minHeight: 44 },
-  s8: { ...theme.typography.body },
-  s9: { color: theme.colors.mutedForeground },
-  s10: { ...theme.typography.headline },
-  s11: { gap: 4, paddingVertical: 8, minHeight: 44 },
-  s12: { ...theme.typography.body },
-  s13: { color: theme.colors.mutedForeground },
-  s14: {
+  composerCard: { width: '100%', gap: 8, padding: 12 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  loadingState: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  resultSurface: { width: '100%' },
+  resultCard: { gap: 8, padding: 12 },
+  answerText: { ...theme.typography.body, color: theme.colors.foreground },
+  eventChoiceHeading: { ...theme.typography.headline },
+  eventChoice: { gap: 4, paddingVertical: 8, minHeight: 44 },
+  eventTitle: { ...theme.typography.body },
+  eventTime: { color: theme.colors.mutedForeground },
+  availabilityHeading: { ...theme.typography.headline },
+  openingOption: { gap: 4, paddingVertical: 8, minHeight: 44 },
+  openingTime: { ...theme.typography.body },
+  openingEnd: { color: theme.colors.mutedForeground },
+  intentBadge: {
     alignSelf: 'flex-start',
     backgroundColor: withAlpha(theme.colors.muted, 0.7),
     borderRadius: theme.radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  s15: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-  s16: {
+  intentLabel: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+  fieldEditor: {
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  s17: {
+  textField: {
     borderRadius: 0,
     borderWidth: 0,
     minHeight: 0,
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
-  s18: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  s19: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  draftDetails: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  resultActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
 }));

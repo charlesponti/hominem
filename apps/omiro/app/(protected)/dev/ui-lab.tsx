@@ -26,24 +26,24 @@ export default function UiLabRoute() {
         contentContainerStyle={{ gap: 16, padding: 16, paddingBottom: 40 }}
         testID="ui-lab"
       >
-        <View style={styles.s0}>
-          <Text style={styles.s1}>Native UI Lab</Text>
-          <Text style={styles.s2}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Native UI Lab</Text>
+          <Text style={styles.subtitle}>
             Deterministic Omiro composition fixtures for the smallest supported iPhone.
           </Text>
         </View>
         {sections.map(([id, title, description]) => (
-          <View style={styles.s3} key={id} testID={`ui-lab-${id}`}>
-            <Text style={styles.s4}>{title}</Text>
-            <Text style={styles.s5}>{description}</Text>
+          <View style={styles.sectionCard} key={id} testID={`ui-lab-${id}`}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <Text style={styles.sectionDescription}>{description}</Text>
             {id === 'tokens' ? (
-              <Text style={styles.s6}>
+              <Text style={styles.tokenDetails}>
                 Standard {nativeMotionContracts.duration.standard}ms · row enter{' '}
                 {nativeMotionContracts.distance.rowEnter}px
               </Text>
             ) : null}
             {id === 'reduced-motion' ? (
-              <Text style={styles.s7}>{nativeMotionContracts.reducedMotion}</Text>
+              <Text style={styles.reducedMotionNote}>{nativeMotionContracts.reducedMotion}</Text>
             ) : null}
           </View>
         ))}
@@ -53,12 +53,12 @@ export default function UiLabRoute() {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 4 },
-  s1: { ...theme.typography.title1, color: theme.colors.foreground },
-  s2: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  s3: { borderRadius: 16, backgroundColor: theme.colors.card, padding: 16, gap: 8 },
-  s4: { ...theme.typography.headline, color: theme.colors.foreground },
-  s5: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
-  s6: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-  s7: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+  header: { gap: 4 },
+  title: { ...theme.typography.title1, color: theme.colors.foreground },
+  subtitle: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  sectionCard: { borderRadius: 16, backgroundColor: theme.colors.card, padding: 16, gap: 8 },
+  sectionTitle: { ...theme.typography.headline, color: theme.colors.foreground },
+  sectionDescription: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
+  tokenDetails: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+  reducedMotionNote: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
 }));

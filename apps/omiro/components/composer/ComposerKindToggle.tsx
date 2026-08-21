@@ -60,7 +60,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
   }));
 
   return (
-    <View style={[styles.s0]} testID="composer-kind-control">
+    <View style={[styles.control]} testID="composer-kind-control">
       <Animated.View
         pointerEvents="none"
         style={[
@@ -107,7 +107,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
 }
 
 const styles = makeStyles(() => ({
-  s0: {
+  control: {
     flexDirection: 'row',
     alignItems: 'center',
     background: 'red',

@@ -1,8 +1,7 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 
@@ -45,9 +44,9 @@ export const TimeRow = memo(function TimeRow({
   return (
     <View>
       {showDayLabel ? (
-        <View style={styles.s0}>
-          <Text style={styles.s1}>{dayLabel(item)}</Text>
-          <Text style={styles.s2}>
+        <View style={styles.dayHeader}>
+          <Text style={styles.dayLabel}>{dayLabel(item)}</Text>
+          <Text style={styles.dayDate}>
             {new Date(itemDate(item) ?? 0).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -58,31 +57,31 @@ export const TimeRow = memo(function TimeRow({
       <Pressable
         accessibilityLabel={item.value.title}
         accessibilityRole="button"
-        style={({ pressed }) => [styles.s3, pressed && { backgroundColor: muted }]}
+        style={({ pressed }) => [styles.itemRow, pressed && { backgroundColor: muted }]}
         testID={`time-item-${item.kind}-${item.value.id}`}
       >
-        <View style={styles.s4}>
-          <Text style={styles.s5} numberOfLines={1}>
+        <View style={styles.timeColumn}>
+          <Text style={styles.timePrimary} numberOfLines={1}>
             {timeParts.primary}
           </Text>
           {timeParts.secondary ? (
-            <Text style={styles.s6} numberOfLines={1}>
+            <Text style={styles.timeSecondary} numberOfLines={1}>
               {timeParts.secondary}
             </Text>
           ) : null}
         </View>
-        <View style={[styles.s7, { backgroundColor: accentColor }]} />
-        <View style={styles.s8}>
+        <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
+        <View style={styles.itemContent}>
           <Text
             style={[
-              styles.s9,
+              styles.itemTitle,
               completed ? { opacity: 0.5, textDecorationLine: 'line-through' } : undefined,
             ]}
           >
             {item.value.title}
           </Text>
           {supportingText ? (
-            <Text style={styles.s10} numberOfLines={1}>
+            <Text style={styles.itemSupportingText} numberOfLines={1}>
               {supportingText}
             </Text>
           ) : null}
@@ -107,7 +106,7 @@ export const TimeRow = memo(function TimeRow({
 });
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  dayHeader: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 8,
@@ -115,20 +114,20 @@ const styles = makeStyles((theme) => ({
     paddingBottom: 8,
     paddingTop: 20,
   },
-  s1: {
+  dayLabel: {
     ...theme.typography.caption2,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0,
     color: theme.colors.foreground,
   },
-  s2: {
+  dayDate: {
     ...theme.typography.caption2,
     textTransform: 'uppercase',
     letterSpacing: 0,
     color: theme.colors.mutedForeground,
   },
-  s3: {
+  itemRow: {
     flexDirection: 'row',
     gap: 12,
     borderBottomWidth: 1,
@@ -136,22 +135,22 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  s4: { width: 64, alignItems: 'flex-end', paddingTop: 2 },
-  s5: {
+  timeColumn: { width: 64, alignItems: 'flex-end', paddingTop: 2 },
+  timePrimary: {
     ...theme.typography.caption2,
     fontFamily: 'Menlo',
     letterSpacing: 0,
     color: theme.colors.mutedForeground,
   },
-  s6: {
+  timeSecondary: {
     ...theme.typography.caption2,
     fontFamily: 'Menlo',
     letterSpacing: 0,
     color: theme.colors.mutedForeground,
     opacity: 0.6,
   },
-  s7: { width: 4, borderRadius: 999 },
-  s8: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
-  s9: { ...theme.typography.body, color: theme.colors.foreground },
-  s10: { ...theme.typography.caption2, color: theme.colors.mutedForeground },
+  accentBar: { width: 4, borderRadius: 999 },
+  itemContent: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
+  itemTitle: { ...theme.typography.body, color: theme.colors.foreground },
+  itemSupportingText: { ...theme.typography.caption2, color: theme.colors.mutedForeground },
 }));

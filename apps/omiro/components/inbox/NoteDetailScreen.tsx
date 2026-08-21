@@ -18,8 +18,7 @@ import Markdown from 'react-native-markdown-display';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
@@ -62,15 +61,15 @@ function formatNoteDateline(
 function NoteDetailPlaceholder() {
   return (
     <ScrollView
-      style={styles.s0}
+      style={styles.scrollContainer}
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
       keyboardDismissMode="interactive"
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.s1} />
-      <View style={styles.s2} />
-      <View style={styles.s3} />
-      <View style={styles.s4}>
+      <View style={styles.placeholderTitle} />
+      <View style={styles.placeholderDateline} />
+      <View style={styles.placeholderDivider} />
+      <View style={styles.placeholderLines}>
         {Array.from({ length: 6 }, (_, index) => (
           <View
             key={`note-placeholder-line-${index.toString()}`}
@@ -129,7 +128,7 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
     return (
       <>
         <ScrollView
-          style={styles.s5}
+          style={styles.errorContainer}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
           refreshControl={
             <RefreshControl
@@ -340,7 +339,7 @@ function NoteEditorBody({
       </Stack.Toolbar>
 
       <ScrollView
-        style={styles.s6}
+        style={styles.editorContainer}
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
         keyboardDismissMode="interactive"
         refreshControl={
@@ -377,15 +376,15 @@ function NoteEditorBody({
           textAlignVertical="top"
         />
 
-        <Text style={styles.s7}>{dateline}</Text>
+        <Text style={styles.dateline}>{dateline}</Text>
 
-        <View style={styles.s8} />
+        <View style={styles.divider} />
 
         {isPreviewing ? (
           draft.content.trim().length > 0 ? (
             <Markdown style={markdownStyles(mdColors)}>{draft.content}</Markdown>
           ) : (
-            <Text style={styles.s9}>{t.notes.editor.previewEmpty}</Text>
+            <Text style={styles.previewEmptyText}>{t.notes.editor.previewEmpty}</Text>
           )
         ) : (
           <TextField
@@ -418,18 +417,18 @@ function NoteEditorBody({
         )}
 
         {note.files.length > 0 ? (
-          <View style={styles.s10}>
-            <Text style={styles.s11}>{t.notes.editor.attachments}</Text>
-            <View style={styles.s12}>
+          <View style={styles.attachmentsSection}>
+            <Text style={styles.attachmentsHeader}>{t.notes.editor.attachments}</Text>
+            <View style={styles.attachmentsList}>
               {note.files.map((file) => (
-                <View key={file.id} style={[styles.s13, { borderCurve: 'continuous' }]}>
+                <View key={file.id} style={[styles.attachmentCard, { borderCurve: 'continuous' }]}>
                   <Image
                     source="sf:paperclip"
-                    style={styles.s14}
+                    style={styles.attachmentIcon}
                     tintColor={textSecondary}
                     contentFit="contain"
                   />
-                  <Text style={styles.s15} numberOfLines={1}>
+                  <Text style={styles.attachmentName} numberOfLines={1}>
                     {file.originalName}
                   </Text>
                   <Pressable
@@ -437,7 +436,7 @@ function NoteEditorBody({
                     accessibilityRole="button"
                     hitSlop={6}
                     onPress={() => void handleDetach(file.id)}
-                    style={styles.s16}
+                    style={styles.removeButton}
                   >
                     <AppIcon name="xmark" size={12} tintColor={tertiary} />
                   </Pressable>
@@ -449,7 +448,7 @@ function NoteEditorBody({
       </ScrollView>
 
       {isEnhanceOpen ? (
-        <KeyboardStickyView style={styles.s17}>
+        <KeyboardStickyView style={styles.enhanceTray}>
           <InlineEnhanceTray
             instruction={enhanceInstruction}
             onInstructionChange={setEnhanceInstruction}
@@ -531,31 +530,37 @@ function markdownStyles(mdColors: Record<string, string>) {
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1 },
-  s1: { alignSelf: 'stretch', borderRadius: 2, height: 32, marginBottom: 12, width: '72%' },
-  s2: {
+  scrollContainer: { flex: 1 },
+  placeholderTitle: {
+    alignSelf: 'stretch',
+    borderRadius: 2,
+    height: 32,
+    marginBottom: 12,
+    width: '72%',
+  },
+  placeholderDateline: {
     backgroundColor: theme.colors.border,
     borderRadius: 2,
     height: 12,
     marginBottom: 14,
     width: '36%',
   },
-  s3: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
-  s4: { gap: 14, paddingTop: 4 },
-  s5: { flex: 1 },
-  s6: { flex: 1 },
-  s7: { ...theme.typography.overline, color: theme.colors.tertiary, marginBottom: 14 },
-  s8: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
-  s9: { color: theme.colors.tertiary, fontStyle: 'italic', minHeight: 240 },
-  s10: { marginTop: 24, gap: 8 },
-  s11: {
+  placeholderDivider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+  placeholderLines: { gap: 14, paddingTop: 4 },
+  errorContainer: { flex: 1 },
+  editorContainer: { flex: 1 },
+  dateline: { ...theme.typography.overline, color: theme.colors.tertiary, marginBottom: 14 },
+  divider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+  previewEmptyText: { color: theme.colors.tertiary, fontStyle: 'italic', minHeight: 240 },
+  attachmentsSection: { marginTop: 24, gap: 8 },
+  attachmentsHeader: {
     fontWeight: '500',
     letterSpacing: 0.4,
     color: theme.colors.tertiary,
     textTransform: 'uppercase',
   },
-  s12: { gap: 6 },
-  s13: {
+  attachmentsList: { gap: 6 },
+  attachmentCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -564,10 +569,10 @@ const styles = makeStyles((theme) => ({
     backgroundColor: theme.colors.popover,
     borderRadius: 10,
   },
-  s14: { width: 14, height: 14 },
-  s15: { flex: 1, fontSize: 13, color: theme.colors.mutedForeground },
-  s16: { alignItems: 'center', justifyContent: 'center', width: 24, height: 24 },
-  s17: {
+  attachmentIcon: { width: 14, height: 14 },
+  attachmentName: { flex: 1, fontSize: 13, color: theme.colors.mutedForeground },
+  removeButton: { alignItems: 'center', justifyContent: 'center', width: 24, height: 24 },
+  enhanceTray: {
     backgroundColor: theme.colors.background,
     paddingTop: 16,
     paddingBottom: 48,

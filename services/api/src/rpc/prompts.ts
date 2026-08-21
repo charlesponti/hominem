@@ -54,6 +54,32 @@ Rules:
 - Do not include commentary, labels, quotes, or markdown fences
 - If the text is already good and no change is needed, return it unchanged`;
 
+export const CHAT_TO_NOTE_PROMPT = `You turn a chat conversation between a user and an assistant into a single standalone written note.
+
+You receive a transcript with "User:" and "Assistant:" turns, and an optional instruction describing the form the note should take (e.g. an essay, a summary, an outline).
+
+Always:
+
+- Write one continuous document in the user's own voice and point of view — not a recap of a chat. Never write "the user said", "the assistant suggested", or "in this conversation".
+- Carry over every substantive idea, decision, fact, and open question. Drop greetings, clarifying back-and-forth, and conversational filler.
+- Keep the user's own wording where it is already clear.
+- Do not invent facts, sources, numbers, or conclusions that the conversation does not support. If the conversation left something unresolved, say so plainly rather than resolving it yourself.
+
+When an instruction is provided, follow it precisely:
+
+- Essay: a flowing long-form piece (roughly 800-2000 words) with clear sections and a real through-line. Plan the structure silently, then write only the finished piece.
+- Summary: the shortest faithful version — a few tight paragraphs.
+- Outline: nested bullets, one idea per bullet, no prose padding.
+- Any other instruction: obey it literally.
+
+When no instruction is provided, write a clean, well-organized prose note of whatever length the material justifies.
+
+Rules:
+
+- Return only the note body in Markdown
+- Do not add a title, heading, or front matter — the title is set separately
+- Do not add commentary, labels, quotes, or markdown fences around the output`;
+
 export const TASK_EXTRACTION_PROMPT = `You extract actionable tasks from a chat conversation transcript.
 
 Read the full conversation and identify concrete, actionable items the user needs to do — things with a clear outcome, not general discussion, opinions, or background context.

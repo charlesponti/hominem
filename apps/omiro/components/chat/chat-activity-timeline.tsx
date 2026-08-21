@@ -1,7 +1,6 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Card, IconButton } from '~/components/ui';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 import t from '~/translations';
@@ -30,12 +29,12 @@ export function ChatActivityTimeline({
   const isStopping = generation.stage === 'stopping';
 
   return (
-    <Card accessibilityLiveRegion="polite" style={styles.s0} testID="chat-activity">
-      <View style={styles.s1}>
-        <View style={styles.s2}>
-          <Text style={styles.s3}>{stageCopy[generation.stage]}</Text>
+    <Card accessibilityLiveRegion="polite" style={styles.timeline} testID="chat-activity">
+      <View style={styles.timelineRow}>
+        <View style={styles.timelineContent}>
+          <Text style={styles.timelineTitle}>{stageCopy[generation.stage]}</Text>
           {generation.stage !== 'preparing' ? (
-            <Text style={styles.s4}>
+            <Text style={styles.timelineMeta}>
               {generation.stage === 'saving'
                 ? t.chat.generation.savingDetail
                 : generation.stage === 'failed'
@@ -56,15 +55,17 @@ export function ChatActivityTimeline({
             <AppIcon name="stop.fill" size={16} />
           </IconButton>
         ) : null}
-        {isStopping ? <Text style={styles.s5}>{t.chat.generation.stopping}</Text> : null}
+        {isStopping ? (
+          <Text style={styles.timelineDescription}>{t.chat.generation.stopping}</Text>
+        ) : null}
         {(generation.stage === 'failed' || generation.stage === 'cancelled') && onRetry ? (
           <Pressable
             accessibilityLabel={t.chat.generation.retryA11y}
             accessibilityRole="button"
-            style={styles.s6}
+            style={styles.timelineAction}
             onPress={onRetry}
           >
-            <Text style={styles.s7}>{t.chat.generation.retry}</Text>
+            <Text style={styles.timelineActionText}>{t.chat.generation.retry}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -73,7 +74,7 @@ export function ChatActivityTimeline({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  timeline: {
     backgroundColor: theme.colors.muted,
     borderWidth: 0,
     alignSelf: 'flex-start',
@@ -82,11 +83,11 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  s1: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  s2: { flexShrink: 1, gap: 4 },
-  s3: { ...theme.typography.footnote, color: theme.colors.foreground },
-  s4: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-  s5: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  s6: { paddingHorizontal: 8, paddingVertical: 4 },
-  s7: { ...theme.typography.footnote, color: theme.colors.primary },
+  timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  timelineContent: { flexShrink: 1, gap: 4 },
+  timelineTitle: { ...theme.typography.footnote, color: theme.colors.foreground },
+  timelineMeta: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
+  timelineDescription: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
+  timelineActionText: { ...theme.typography.footnote, color: theme.colors.primary },
 }));

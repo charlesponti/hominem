@@ -105,11 +105,11 @@ function ComposerToolbarComponent({
   };
 
   return (
-    <View style={styles.s1}>
-      <View style={styles.s2}>
+    <View style={styles.toolbar}>
+      <View style={styles.leadingActions}>
         <ComposerAttachButton disabled={!canPickMedia} />
       </View>
-      <View style={styles.s0}>
+      <View style={styles.trailingActions}>
         {kindControl}
         {hasContent ? (
           <IconButton
@@ -172,17 +172,17 @@ function ComposerToolbarComponent({
 export const ComposerToolbar = memo(ComposerToolbarComponent);
 
 const styles = makeStyles((theme) => ({
-  s0: {
+  trailingActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  s1: {
+  toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.card,
     paddingVertical: 4,
   },
-  s2: { flexDirection: 'row', alignItems: 'center' },
+  leadingActions: { flexDirection: 'row', alignItems: 'center' },
 }));

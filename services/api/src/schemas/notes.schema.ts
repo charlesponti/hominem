@@ -41,6 +41,11 @@ export const NotesFeedQuerySchema = z.object({
 
 export const NoteParamSchema = z.object({ id: z.uuid() });
 
+export const GenerateNoteFromChatInputSchema = z.object({
+  transcript: z.string().min(1).max(20000),
+  instruction: z.string().max(500).optional(),
+});
+
 export const NoteSearchQuerySchema = z.object({
   query: z.string().trim().min(1),
   limit: z.string().optional(),

@@ -17,7 +17,7 @@ const AppIcon = ({ name, size = 24, style, tintColor, ...rest }: IconProps) => {
       name={name}
       size={size}
       tintColor={tintColor ?? muted}
-      style={[styles.s0, [style, { height: size, width: size }]]}
+      style={[styles.container, [style, { height: size, width: size }]]}
       {...rest}
     />
   );
@@ -26,5 +26,5 @@ const AppIcon = ({ name, size = 24, style, tintColor, ...rest }: IconProps) => {
 export default AppIcon;
 
 const styles = makeStyles(() => ({
-  s0: { alignItems: 'center', justifyContent: 'center' },
+  container: { alignItems: 'center', justifyContent: 'center' },
 }));

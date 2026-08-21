@@ -1,7 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
@@ -35,8 +34,8 @@ export function MessageEditModal({
       dismissOnBackdropPress={false}
       position="center"
     >
-      <View style={styles.s0}>
-        <View style={styles.s1}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalCard}>
           <Text style={{ color: textPrimary, fontSize: 16 }}>{t.chat.messageEdit.title}</Text>
           <TextField
             multiline
@@ -58,11 +57,11 @@ export function MessageEditModal({
               color: textPrimary,
             }}
           />
-          <View style={styles.s2}>
-            <View style={styles.s3}>
+          <View style={styles.modalActions}>
+            <View style={styles.cancelAction}>
               <Button label={t.chat.messageEdit.cancel} onPress={onCancel} variant="secondary" />
             </View>
-            <View style={styles.s4}>
+            <View style={styles.saveAction}>
               <Button
                 label={t.chat.messageEdit.save}
                 onPress={onSave}
@@ -78,8 +77,8 @@ export function MessageEditModal({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { paddingHorizontal: 20, width: '100%' },
-  s1: {
+  modalContainer: { paddingHorizontal: 20, width: '100%' },
+  modalCard: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -89,7 +88,7 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 16,
     width: '100%',
   },
-  s2: { flexDirection: 'row', gap: 8 },
-  s3: { flex: 1 },
-  s4: { flex: 1 },
+  modalActions: { flexDirection: 'row', gap: 8 },
+  cancelAction: { flex: 1 },
+  saveAction: { flex: 1 },
 }));

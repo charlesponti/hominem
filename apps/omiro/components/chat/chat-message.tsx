@@ -12,8 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
@@ -162,10 +161,10 @@ export const ChatMessage = memo(function ChatMessage({
           visible={isEditing}
         />
 
-        <View style={styles.s0}>
+        <View style={styles.content}>
           {!isUser && hasReasoning ? (
-            <View style={styles.s1}>
-              <Text style={styles.s2}>{message.reasoning}</Text>
+            <View style={styles.reasoningPanel}>
+              <Text style={styles.reasoningText}>{message.reasoning}</Text>
             </View>
           ) : null}
 
@@ -181,7 +180,7 @@ export const ChatMessage = memo(function ChatMessage({
               <Pressable
                 accessibilityLabel={t.chat.retryMessageA11y}
                 accessibilityRole="button"
-                style={styles.s3}
+                style={styles.retryRow}
                 onPress={() => onRetry?.(message.id)}
               >
                 <AppIcon name="exclamationmark.circle.fill" size={13} tintColor={destructive} />
@@ -194,7 +193,7 @@ export const ChatMessage = memo(function ChatMessage({
 
           {failed && !isUser ? (
             <Animated.View entering={bannerEntering} exiting={bannerExiting}>
-              <View style={styles.s4}>
+              <View style={styles.interruptedRow}>
                 <AppIcon name="exclamationmark.circle" size={13} tintColor={tertiary} />
                 <Text style={{ color: tertiary, fontSize: 12 }}>{t.chat.responseInterrupted}</Text>
               </View>
@@ -228,8 +227,8 @@ export const ChatMessage = memo(function ChatMessage({
 });
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 8, width: '100%' },
-  s1: {
+  content: { gap: 8, width: '100%' },
+  reasoningPanel: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -239,9 +238,9 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 12,
     width: '100%',
   },
-  s2: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  s3: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
-  s4: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  reasoningText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
+  retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+  interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   message: { width: '100%' },
   messageUser: { alignItems: 'flex-end' },
   messageAssistant: { alignItems: 'flex-start' },

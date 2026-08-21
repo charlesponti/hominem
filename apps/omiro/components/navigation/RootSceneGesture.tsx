@@ -125,21 +125,21 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
   const adjacentScene = scene === 'all' ? 'Time' : 'All';
   return (
     <GestureDetector gesture={gesture}>
-      <View style={styles.s0} testID={`root-scene-${scene}`}>
-        <Reanimated.View style={[styles.s1, previewStyle]}>
-          <View style={styles.s2}>
-            <Text style={styles.s3}>{adjacentScene}</Text>
+      <View style={styles.container} testID={`root-scene-${scene}`}>
+        <Reanimated.View style={[styles.preview, previewStyle]}>
+          <View style={styles.previewContent}>
+            <Text style={styles.previewText}>{adjacentScene}</Text>
           </View>
         </Reanimated.View>
-        <Reanimated.View style={[styles.s4, contentStyle]}>{children}</Reanimated.View>
+        <Reanimated.View style={[styles.content, contentStyle]}>{children}</Reanimated.View>
       </View>
     </GestureDetector>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1, overflow: 'hidden' },
-  s1: {
+  container: { flex: 1, overflow: 'hidden' },
+  preview: {
     position: 'absolute',
     top: 0,
     right: 0,
@@ -147,7 +147,7 @@ const styles = makeStyles((theme) => ({
     left: 0,
     backgroundColor: theme.colors.secondary,
   },
-  s2: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  s3: { ...theme.typography.title2, color: theme.colors.secondaryForeground },
-  s4: { flex: 1 },
+  previewContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  previewText: { ...theme.typography.title2, color: theme.colors.secondaryForeground },
+  content: { flex: 1 },
 }));

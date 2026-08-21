@@ -1,12 +1,10 @@
 import { Stack } from 'expo-router';
 import { useMemo } from 'react';
-import { View } from 'react-native';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { APP_NAME } from '~/constants';
 import { useAppLock } from '~/hooks/use-app-lock';
@@ -58,15 +56,15 @@ function ProtectedShell() {
   }
 
   if (!isSignedIn) {
-    return <View testID="protected-bootstrap" style={styles.s0} />;
+    return <View testID="protected-bootstrap" style={styles.bootstrapContainer} />;
   }
 
   if (!isUnlocked) {
     return (
-      <View style={styles.s1}>
-        <Text style={styles.s2}>{APP_NAME}</Text>
-        <Text style={styles.s3}>{t.auth.unlockMessage}</Text>
-        <View style={styles.s4}>
+      <View style={styles.lockScreen}>
+        <Text style={styles.appTitle}>{APP_NAME}</Text>
+        <Text style={styles.lockMessage}>{t.auth.unlockMessage}</Text>
+        <View style={styles.unlockButtonContainer}>
           <Button
             label={t.auth.unlockButton}
             onPress={() => void authenticate()}
@@ -80,7 +78,7 @@ function ProtectedShell() {
   return (
     <FeatureErrorBoundary featureName="Protected">
       <ApiProvider queryClient={queryClient}>
-        <View style={styles.s5}>
+        <View style={styles.container}>
           <Stack
             initialRouteName="index"
             screenOptions={{
@@ -124,10 +122,10 @@ function ProtectedShell() {
 export default ProtectedShell;
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1 },
-  s1: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  s2: { ...theme.typography.title1, color: theme.colors.foreground },
-  s3: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  s4: { minWidth: 160 },
-  s5: { flex: 1 },
+  bootstrapContainer: { flex: 1 },
+  lockScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  appTitle: { ...theme.typography.title1, color: theme.colors.foreground },
+  lockMessage: { ...theme.typography.body, color: theme.colors.mutedForeground },
+  unlockButtonContainer: { minWidth: 160 },
+  container: { flex: 1 },
 }));

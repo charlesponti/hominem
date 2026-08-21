@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
-import { Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { makeStyles, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
@@ -58,18 +57,18 @@ export function TaskPeoplePicker({
   };
 
   return (
-    <View style={styles.s0} testID="time-block-people">
-      <View style={styles.s1}>
+    <View style={styles.container} testID="time-block-people">
+      <View style={styles.selectedList}>
         {selected.map((person) => (
           <Pressable
             key={person.id}
             accessibilityLabel={`Remove ${person.displayName}`}
-            style={styles.s2}
+            style={styles.personChip}
             onPress={() => removePerson(person.id)}
             testID={`task-person-selected-${person.id}`}
           >
-            <Text style={styles.s3}>{person.displayName}</Text>
-            <Text style={styles.s4}>×</Text>
+            <Text style={styles.personName}>{person.displayName}</Text>
+            <Text style={styles.removeIcon}>×</Text>
           </Pressable>
         ))}
       </View>
@@ -85,12 +84,12 @@ export function TaskPeoplePicker({
           {availableResults.map((person) => (
             <Pressable
               key={person.id}
-              style={styles.s5}
+              style={styles.resultRow}
               onPress={() => addPerson(person)}
               testID={`task-person-result-${person.id}`}
             >
-              <Text style={styles.s6}>{person.displayName}</Text>
-              {person.email ? <Text style={styles.s7}>{person.email}</Text> : null}
+              <Text style={styles.resultName}>{person.displayName}</Text>
+              {person.email ? <Text style={styles.resultEmail}>{person.email}</Text> : null}
             </Pressable>
           ))}
           {query.trim() ? (
@@ -106,7 +105,7 @@ export function TaskPeoplePicker({
           ) : null}
         </>
       ) : (
-        <View style={styles.s8}>
+        <View style={styles.createForm}>
           <TextField
             autoFocus
             onChangeText={setDisplayName}
@@ -123,15 +122,15 @@ export function TaskPeoplePicker({
             value={email}
           />
           {createError ? (
-            <Text style={styles.s9} testID="task-person-create-error">
+            <Text style={styles.createError} testID="task-person-create-error">
               {createError}
             </Text>
           ) : null}
-          <View style={styles.s10}>
-            <View style={styles.s11}>
+          <View style={styles.createActions}>
+            <View style={styles.cancelAction}>
               <Button label="Cancel" onPress={() => setIsCreating(false)} variant="secondary" />
             </View>
-            <View style={styles.s12}>
+            <View style={styles.submitAction}>
               <Button
                 disabled={!displayName.trim() || createPerson.isPending}
                 label="Create person"
@@ -148,9 +147,9 @@ export function TaskPeoplePicker({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 12 },
-  s1: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  s2: {
+  container: { gap: 12 },
+  selectedList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  personChip: {
     backgroundColor: withAlpha(theme.colors.primary, 0.15),
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,20 +158,20 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  s3: { ...theme.typography.footnote, color: theme.colors.foreground },
-  s4: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  s5: {
+  personName: { ...theme.typography.footnote, color: theme.colors.foreground },
+  removeIcon: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+  resultRow: {
     borderColor: theme.colors.border,
     borderRadius: 6,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  s6: { color: theme.colors.foreground },
-  s7: { color: theme.colors.mutedForeground },
-  s8: { gap: 12 },
-  s9: { ...theme.typography.footnote, color: theme.colors.destructive },
-  s10: { flexDirection: 'row', gap: 8 },
-  s11: { flex: 1 },
-  s12: { flex: 1 },
+  resultName: { color: theme.colors.foreground },
+  resultEmail: { color: theme.colors.mutedForeground },
+  createForm: { gap: 12 },
+  createError: { ...theme.typography.footnote, color: theme.colors.destructive },
+  createActions: { flexDirection: 'row', gap: 8 },
+  cancelAction: { flex: 1 },
+  submitAction: { flex: 1 },
 }));

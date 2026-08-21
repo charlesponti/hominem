@@ -1,8 +1,7 @@
 import type { SFSymbol } from 'expo-symbols';
 import { Pressable } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 
 interface ComposerSendButtonProps {
@@ -13,9 +12,11 @@ interface ComposerSendButtonProps {
   testID?: string;
 }
 
-// The always-visible filled circular action at the end of the composer row —
-// distinct from the plain/bordered IconButton so it reads as the primary,
-// terminal action (send) rather than one of several equal-weight controls.
+// A filled circular primary action -- distinct from the plain/bordered
+// IconButton so it reads as the primary, terminal action (send, or the
+// enhance sheet's accept checkmark) rather than one of several
+// equal-weight controls. Generic over its icon, so it's reused wherever a
+// screen needs exactly this shape.
 export function ComposerSendButton({
   accessibilityLabel,
   disabled = false,
@@ -36,17 +37,23 @@ export function ComposerSendButton({
       onPress={onPress}
       testID={testID}
       style={({ pressed }) => [
-        styles.s0,
+        styles.sendButton,
         { backgroundColor: primary },
         pressed && { opacity: 0.8 },
         disabled && { opacity: 0.4 },
       ]}
     >
-      <AppIcon name={icon} size={18} tintColor={primaryForeground} />
+      <AppIcon name={icon} size={16} tintColor={primaryForeground} />
     </Pressable>
   );
 }
 
-const styles = makeStyles((theme) => ({
-  s0: { width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+const styles = makeStyles(() => ({
+  sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 }));

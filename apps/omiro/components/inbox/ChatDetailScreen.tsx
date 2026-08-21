@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
-import { ChatMotionOverlayProvider } from '~/components/chat/chat-motion-overlay';
 import { ChatSettingsSheet } from '~/components/chat/ChatSettingsSheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
@@ -279,96 +278,91 @@ export function ChatDetailScreen({ id }: { id: string }) {
         />
       </Stack.Toolbar>
 
-      <ChatMotionOverlayProvider>
-        <View style={styles.s0}>
-          <ChatSettingsSheet
-            visible={showChatSettings}
-            onClose={() => setShowChatSettings(false)}
-          />
-          <ChatSearchModal
-            visible={search.showSearch}
-            searchQuery={search.searchQuery}
-            resultCount={search.displayMessages.length}
-            searchInputRef={search.searchInputRef}
-            onClose={search.handleCloseSearch}
-            onChangeSearchQuery={search.handleSearchQueryChange}
-          />
-          {!isOnline ? (
-            <View
-              accessibilityLiveRegion="polite"
-              accessibilityRole="alert"
-              style={styles.s1}
-              testID="chat-offline-indicator"
-            >
-              <Text style={styles.s2}>{t.chat.offlineIndicator}</Text>
-            </View>
-          ) : null}
-          <ChatMessageList
-            bottomInset={composerInset}
-            isMessagesLoading={isMessagesLoading}
-            displayMessages={search.displayMessages}
-            showSearch={search.showSearch}
-            searchQuery={search.searchQuery}
-            showDebug={showDebug}
-            onEdit={handleEditMessage}
-            onRegenerate={regenerateMessage}
-            onRetry={retryFailedMessage}
-            generation={activeGeneration}
-            onCancelGeneration={() => {
-              void cancelActiveGeneration();
-            }}
-            onRetryGeneration={retryActiveGeneration}
-            formatTimestamp={formatRelativeAge}
-            emptyState={
-              isConversationGone
-                ? missingConversationState
-                : messagesError
-                  ? errorState
-                  : emptyState
-            }
-            refreshControl={
-              <RefreshControl
-                refreshing={isMessagesRefreshing}
-                onRefresh={() => {
-                  void refetchMessages();
+      <View style={styles.container}>
+        <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
+        <ChatSearchModal
+          visible={search.showSearch}
+          searchQuery={search.searchQuery}
+          resultCount={search.displayMessages.length}
+          searchInputRef={search.searchInputRef}
+          onClose={search.handleCloseSearch}
+          onChangeSearchQuery={search.handleSearchQueryChange}
+        />
+        {!isOnline ? (
+          <View
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            style={styles.offlineIndicator}
+            testID="chat-offline-indicator"
+          >
+            <Text style={styles.offlineText}>{t.chat.offlineIndicator}</Text>
+          </View>
+        ) : null}
+        <ChatMessageList
+          bottomInset={composerInset}
+          isMessagesLoading={isMessagesLoading}
+          displayMessages={search.displayMessages}
+          showSearch={search.showSearch}
+          searchQuery={search.searchQuery}
+          showDebug={showDebug}
+          onEdit={handleEditMessage}
+          onRegenerate={regenerateMessage}
+          onRetry={retryFailedMessage}
+          generation={activeGeneration}
+          onCancelGeneration={() => {
+            void cancelActiveGeneration();
+          }}
+          onRetryGeneration={retryActiveGeneration}
+          formatTimestamp={formatRelativeAge}
+          emptyState={
+            isConversationGone ? missingConversationState : messagesError ? errorState : emptyState
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={isMessagesRefreshing}
+              onRefresh={() => {
+                void refetchMessages();
+              }}
+            />
+          }
+        />
+        {!isConversationGone ? (
+          <>
+            <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
+              <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
+            </ComposerDock>
+            <View style={styles.overlayContainer} pointerEvents="box-none">
+              <ChatReviewOverlay
+                pendingReview={transform.pendingReview}
+                isVisible={transform.isReviewVisible}
+                onAccept={() => {
+                  void transform.handleAcceptReview();
+                }}
+                onReject={() => {
+                  void transform.handleRejectReview();
                 }}
               />
-            }
-          />
-          {!isConversationGone ? (
-            <>
-              <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
-                <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
-              </ComposerDock>
-              <View style={styles.s3} pointerEvents="box-none">
-                <ChatReviewOverlay
-                  pendingReview={transform.pendingReview}
-                  isVisible={transform.isReviewVisible}
-                  onAccept={() => {
-                    void transform.handleAcceptReview();
-                  }}
-                  onReject={() => {
-                    void transform.handleRejectReview();
-                  }}
-                />
-              </View>
-            </>
-          ) : null}
-        </View>
-      </ChatMotionOverlayProvider>
+            </View>
+          </>
+        ) : null}
+      </View>
     </>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { flex: 1 },
-  s1: {
+  container: { flex: 1 },
+  offlineIndicator: {
     backgroundColor: theme.colors.muted,
     borderBottomWidth: 1,
     borderColor: theme.colors.border,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  s2: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.mutedForeground },
-  s3: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  offlineText: {
+    ...theme.typography.footnote,
+    textAlign: 'center',
+    color: theme.colors.mutedForeground,
+  },
+  overlayContainer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
 }));

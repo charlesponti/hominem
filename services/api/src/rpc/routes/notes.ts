@@ -1,11 +1,21 @@
+import { randomUUID } from 'node:crypto';
+
+import { generateNoteFromChat } from '@hominem/ai';
 import { db, NoteRepository, VectorDocumentRepository } from '@hominem/db';
 import { embeddingQueue } from '@hominem/queues';
+import { logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
+import {
+  assertUnderMonthlyUsageLimit,
+  recordAIUsageEvent,
+  startAIUsageTimer,
+} from '../../application/ai-usage.service';
 import { NoteService } from '../../application/notes.service';
 import {
   CreateNoteInputSchema,
+  GenerateNoteFromChatInputSchema,
   NoteParamSchema,
   NotesListQuerySchema,
   NotesFeedQuerySchema,
@@ -13,6 +23,8 @@ import {
   UpdateNoteInputSchema,
 } from '../../schemas/notes.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import { rateLimitMiddleware } from '../middleware/rate-limit';
+import { CHAT_TO_NOTE_PROMPT } from '../prompts';
 import { toNoteDto, toNoteFeedItemDto } from './notes.mapper';
 const noteService = new NoteService();
 
@@ -83,6 +95,48 @@ export const notesRoutes = new Hono<AppContext>()
     await enqueueNoteEmbedding(userId, note.id);
 
     return c.json(toNoteDto(note), 201);
+  })
+  .use('/generate', rateLimitMiddleware({ bucket: 'ai-note-generate', windowSec: 60, max: 20 }))
+  .post('/generate', zValidator('json', GenerateNoteFromChatInputSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const { transcript, instruction } = c.req.valid('json');
+
+    await assertUnderMonthlyUsageLimit(userId);
+
+    const eventId = randomUUID();
+    const getDurationMs = startAIUsageTimer();
+
+    try {
+      const generated = await generateNoteFromChat({ transcript, instruction }, CHAT_TO_NOTE_PROMPT);
+      await recordAIUsageEvent({
+        eventId,
+        userId,
+        feature: 'note_generate',
+        operation: 'chat_completion',
+        usage: generated.usage,
+        status: 'succeeded',
+        durationMs: getDurationMs(),
+        metadata: {
+          instructionProvided: Boolean(instruction),
+          transcriptLength: transcript.length,
+        },
+      });
+      return c.json({ text: generated.text });
+    } catch (error) {
+      await recordAIUsageEvent({
+        eventId,
+        userId,
+        feature: 'note_generate',
+        operation: 'chat_completion',
+        status: 'failed',
+        error,
+        durationMs: getDurationMs(),
+      });
+      logger.error('[ai/notes/generate] OpenRouter error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return c.json({ error: 'Note generation failed' }, 500);
+    }
   })
   .get('/:id', zValidator('param', NoteParamSchema), async (c) => {
     const userId = c.get('auth')!.userId;
