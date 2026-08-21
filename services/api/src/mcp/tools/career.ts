@@ -187,6 +187,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_application_delete',
     title: 'Delete a career application',
     description: 'Deletes a job application.',
@@ -215,6 +216,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_application_note_remove',
     title: 'Remove an application note',
     description: 'Removes an application note.',
@@ -251,6 +253,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_application_file_remove',
     title: 'Remove an application file',
     description: 'Removes an application file.',
@@ -288,6 +291,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_education_delete',
     title: 'Delete education',
     description: 'Deletes an education entry.',
@@ -323,6 +327,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_skill_delete',
     title: 'Delete a skill',
     description: 'Deletes a career skill.',
@@ -371,6 +376,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_testimonial_delete',
     title: 'Delete a testimonial',
     description: 'Deletes a career testimonial.',
@@ -408,6 +414,7 @@ registerTool(
 registerTool(
   {
     ...writeTool,
+    requiresConfirmation: true,
     name: 'career_certification_delete',
     title: 'Delete a certification',
     description: 'Deletes a career certification.',
