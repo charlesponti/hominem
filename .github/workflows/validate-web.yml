@@ -1,0 +1,38 @@
+name: validate-web
+
+on:
+  push:
+    branches: [main]
+    paths: &validation-paths
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig*.json'
+      - 'tsconfig.profiles/**'
+      - 'just/**'
+      - 'justfile'
+      - 'scripts/**'
+      - '.github/actions/setup-pnpm-workspace/**'
+      - '.github/workflows/validate-web.yml'
+      - '.github/workflows/_validate-app.yml'
+  pull_request:
+    branches: [main, preview]
+    paths: *validation-paths
+
+concurrency:
+  group: validate-web-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  validate-web:
+    uses: ./.github/workflows/_validate-app.yml
+    with:
+      package-filter: '@hominem/web'
+      public-app-url: 'http://localhost:4445'

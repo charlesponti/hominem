@@ -144,6 +144,27 @@ export type NotesPublishOutput = Note;
 export type NotesArchiveOutput = Note;
 export type NotesVersionsOutput = { versions: Note[] };
 
+export type NoteSearchResult = {
+  id: string;
+  title: string | null;
+  excerpt: string | null;
+};
+
+export type NoteFeedItem = {
+  id: string;
+  title: string | null;
+  contentPreview: string;
+  createdAt: string;
+  authorId: string;
+  metadata: {
+    hasAttachments: boolean;
+  };
+};
+
+export type NotesFeedOutput = { notes: NoteFeedItem[]; nextCursor: string | null };
+export type NotesFeedInput = { limit?: number; cursor?: string };
+export type NotesSearchOutput = { notes: NoteSearchResult[]; nextCursor: string | null };
+
 export type NotesListInput = {
   types?: NoteContentType[];
   status?: Array<'draft' | 'published' | 'archived'>;

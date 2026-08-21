@@ -103,6 +103,15 @@ function ProtectedShell() {
               }}
             />
             <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
+            <Stack.Screen
+              name="enhance-sheet"
+              options={{
+                headerShown: false,
+                presentation: 'formSheet',
+                sheetAllowedDetents: 'fitToContents',
+                sheetGrabberVisible: true,
+              }}
+            />
             <Stack.Screen name="onboarding" options={{ headerShown: true }} />
             <Stack.Screen name="dev/ui-lab" options={{ title: 'UI Lab' }} />
           </Stack>

@@ -16,7 +16,6 @@ import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
-import { ComposerEnhancePanel } from './ComposerEnhancePanel';
 import { ComposerInput } from './ComposerInput';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import { ComposerToolbar } from './ComposerToolbar';
@@ -194,12 +193,6 @@ function ComposerContent(props: ComposerProps) {
                 onBlur={controller.handleInputBlur}
                 onChangeMessage={controller.setMessage}
               />
-              <ComposerEnhancePanel
-                visible={!showVoicePanel && controller.enhance.isEnhanceOpen}
-                enhance={controller.enhance}
-                getMessage={controller.getMessage}
-                setMessage={controller.setMessage}
-              />
               <ComposerToolbar
                 composerProps={props}
                 messageStore={controller.messageStore}
@@ -214,7 +207,7 @@ function ComposerContent(props: ComposerProps) {
                 canPickMedia={controller.canPickMedia}
                 canToggleVoice={controller.canToggleVoice}
                 voice={controller.voice}
-                enhance={controller.enhance}
+                onChangeMessage={controller.setMessage}
                 onToggleWalkieTalkie={props.mode === 'chat' ? onToggleWalkieTalkie : undefined}
                 onSubmit={handleActiveAreaSubmit}
               />

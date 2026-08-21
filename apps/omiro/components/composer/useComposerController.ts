@@ -4,7 +4,6 @@ import { deriveComposerBusyCapabilities } from '~/components/composer/composerCa
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
 import { useComposerDraft } from '~/components/composer/useComposerDraft';
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
-import { useInlineEnhance } from '~/services/ai';
 
 import type { ComposerEntryKind } from './composer.types';
 
@@ -18,9 +17,10 @@ interface UseComposerControllerOptions {
 }
 
 // Composes the composer's independent concerns -- draft text, attachments,
-// voice input, inline enhance, and focus -- into the derived capabilities and
-// handlers Composer.tsx renders from. Submission itself (what happens on
-// save/send) lives in useComposerSubmission, not here.
+// voice input, and focus -- into the derived capabilities and handlers
+// Composer.tsx renders from. Submission itself (what happens on save/send)
+// lives in useComposerSubmission, not here. Enhance is a separate form-sheet
+// route (see active-enhance-session.ts), not part of this controller.
 //
 // Deliberately does NOT read the draft message reactively: draft.store is an
 // external store (see useComposerMessageStore.ts), and only the leaf
@@ -55,7 +55,6 @@ export function useComposerController({
     setMessage: draft.setMessage,
     onWalkieTalkieSend: onWalkieTalkieTranscript,
   });
-  const enhance = useInlineEnhance();
 
   const showAttachments = attachments.length > 0 || errors.length > 0 || isUploading;
 
@@ -72,16 +71,14 @@ export function useComposerController({
       isCleaningVoice: voice.isCleaningVoice,
       isRecordingElsewhere: voice.isRecordingElsewhere,
     },
-    enhance: { isEnhancing: enhance.isEnhancing },
   });
 
   const clearComposer = useCallback(() => {
     draft.clearDraft();
     clearAttachments();
-    enhance.closeEnhance();
     onClearDraft?.();
     setManualEntryKind(entryMode === 'mixed' ? null : entryMode);
-  }, [clearAttachments, draft.clearDraft, enhance.closeEnhance, entryMode, onClearDraft]);
+  }, [clearAttachments, draft.clearDraft, entryMode, onClearDraft]);
 
   return useMemo(
     () => ({
@@ -97,7 +94,6 @@ export function useComposerController({
       handleInputFocus,
       handleInputBlur,
       voice,
-      enhance,
       clearComposer,
       entryMode,
       manualEntryKind,
@@ -117,7 +113,6 @@ export function useComposerController({
       handleInputFocus,
       handleInputBlur,
       voice,
-      enhance,
       clearComposer,
       entryMode,
       manualEntryKind,

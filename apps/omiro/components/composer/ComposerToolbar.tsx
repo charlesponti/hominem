@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { memo } from 'react';
 import { View } from 'react-native';
 
@@ -5,13 +6,13 @@ import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
 import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
+import { setActiveEnhanceSession } from '~/services/ai/active-enhance-session';
 import t from '~/translations';
 
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
 import { ComposerAttachButton } from './ComposerAttachButton';
 import {
   deriveComposerContentCapabilities,
-  type ComposerCapabilitiesEnhanceInput,
   type ComposerCapabilitiesVoiceInput,
 } from './composerCapabilities.helpers';
 import type { ComposerEntryKind } from './composerInference';
@@ -42,7 +43,7 @@ interface ComposerToolbarProps {
     isWalkieTalkie: boolean;
     handleVoicePress: () => void | Promise<void>;
   };
-  enhance: ComposerCapabilitiesEnhanceInput & { toggleEnhance: () => void };
+  onChangeMessage: (message: string) => void;
   onToggleWalkieTalkie: (() => void) | undefined;
   onSubmit: (kind: ComposerSubmitKind, message: string, canSubmit: boolean) => void;
 }
@@ -65,10 +66,11 @@ function ComposerToolbarComponent({
   canPickMedia,
   canToggleVoice,
   voice,
-  enhance,
+  onChangeMessage,
   onToggleWalkieTalkie,
   onSubmit,
 }: ComposerToolbarProps) {
+  const router = useRouter();
   const inferredEntryKind = useComposerMessageSelector(messageStore, inferComposerEntryKind);
   const selectedEntryKind =
     manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
@@ -89,7 +91,6 @@ function ComposerToolbarComponent({
     showAttachments,
     isInteractionBusy,
     voice: voiceCapabilitiesInput,
-    enhance,
   });
 
   const presentation = getComposerSubmissionConfig(composerProps, selectedEntryKind);
@@ -97,6 +98,11 @@ function ComposerToolbarComponent({
     composerProps.mode === 'inbox' && composerProps.entryMode === 'mixed' ? (
       <ComposerKindToggle onSelect={onManualEntryKindChange} selected={selectedEntryKind} />
     ) : null;
+
+  const openEnhance = () => {
+    setActiveEnhanceSession({ getMessage: messageStore.getMessage, setMessage: onChangeMessage });
+    router.push('/enhance-sheet');
+  };
 
   return (
     <View style={styles.s1}>
@@ -110,7 +116,7 @@ function ComposerToolbarComponent({
             accessibilityLabel={t.inboxComposer.composer.enhanceTextA11y}
             disabled={!canOpenEnhance}
             variant="plain"
-            onPress={enhance.toggleEnhance}
+            onPress={openEnhance}
           >
             <AppIcon name="wand.and.sparkles" size={20} />
           </IconButton>

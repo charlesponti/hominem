@@ -12,16 +12,10 @@ const idleVoice = {
   isRecordingElsewhere: false,
 };
 
-const idleEnhance = {
-  isEnhancing: false,
-  isEnhanceOpen: false,
-};
-
 const baseBusyInput = {
   isSubmitting: false,
   isUploading: false,
   voice: idleVoice,
-  enhance: idleEnhance,
 };
 
 const baseContentInput = {
@@ -30,7 +24,6 @@ const baseContentInput = {
   showAttachments: false,
   isInteractionBusy: false,
   voice: idleVoice,
-  enhance: idleEnhance,
 };
 
 describe('deriveComposerBusyCapabilities', () => {
@@ -122,14 +115,6 @@ describe('deriveComposerContentCapabilities', () => {
     const result = deriveComposerContentCapabilities({
       ...baseContentInput,
       voice: { ...idleVoice, isRecording: true },
-    });
-    expect(result.isColumnLayout).toBe(true);
-  });
-
-  it('forces column layout while the enhance panel is open', () => {
-    const result = deriveComposerContentCapabilities({
-      ...baseContentInput,
-      enhance: { ...idleEnhance, isEnhanceOpen: true },
     });
     expect(result.isColumnLayout).toBe(true);
   });

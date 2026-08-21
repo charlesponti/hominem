@@ -5,16 +5,10 @@ export interface ComposerCapabilitiesVoiceInput {
   isRecordingElsewhere: boolean;
 }
 
-export interface ComposerCapabilitiesEnhanceInput {
-  isEnhancing: boolean;
-  isEnhanceOpen: boolean;
-}
-
 export interface ComposerBusyCapabilitiesInput {
   isSubmitting: boolean;
   isUploading: boolean;
   voice: ComposerCapabilitiesVoiceInput;
-  enhance: Pick<ComposerCapabilitiesEnhanceInput, 'isEnhancing'>;
 }
 
 export interface ComposerBusyCapabilities {
@@ -31,9 +25,8 @@ export function deriveComposerBusyCapabilities({
   isSubmitting,
   isUploading,
   voice,
-  enhance,
 }: ComposerBusyCapabilitiesInput): ComposerBusyCapabilities {
-  const isInteractionBusy = isSubmitting || isUploading || voice.isBusy || enhance.isEnhancing;
+  const isInteractionBusy = isSubmitting || isUploading || voice.isBusy;
   const canPickMedia = !isInteractionBusy;
   const canToggleVoice =
     voice.isRecording ||
@@ -48,7 +41,6 @@ export interface ComposerContentCapabilitiesInput {
   showAttachments: boolean;
   isInteractionBusy: boolean;
   voice: Pick<ComposerCapabilitiesVoiceInput, 'isRecording' | 'isCleaningVoice'>;
-  enhance: Pick<ComposerCapabilitiesEnhanceInput, 'isEnhanceOpen'>;
 }
 
 export interface ComposerContentCapabilities {
@@ -68,16 +60,15 @@ export function deriveComposerContentCapabilities({
   showAttachments,
   isInteractionBusy,
   voice,
-  enhance,
 }: ComposerContentCapabilitiesInput): ComposerContentCapabilities {
   const canSubmit = hasContent && !isInteractionBusy;
   const canOpenEnhance = hasContent && !isInteractionBusy && !voice.isCleaningVoice;
 
   // The transcription-failed error no longer counts here -- it renders as a popover
   // above the composer (Composer's errorBanner slot), not as inline body content,
-  // so it shouldn't force the composer itself into column layout.
-  const isInlinePanelOpen = voice.isRecording || enhance.isEnhanceOpen;
-  const isColumnLayout = isFocused || hasContent || showAttachments || isInlinePanelOpen;
+  // so it shouldn't force the composer itself into column layout. Enhance no
+  // longer has an inline state either -- it's a separate form-sheet route now.
+  const isColumnLayout = isFocused || hasContent || showAttachments || voice.isRecording;
 
   return { canSubmit, canOpenEnhance, isColumnLayout };
 }

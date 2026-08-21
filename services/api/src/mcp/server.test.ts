@@ -128,6 +128,17 @@ describe('mcp server transport', () => {
     });
   });
 
+  it('supports path-aware OAuth authorization server discovery', async () => {
+    const app = new Hono().route('/', oauthDiscoveryRoutes);
+    const response = await app.request('/.well-known/oauth-authorization-server/api/auth');
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      issuer: expect.stringContaining('/api/auth'),
+      code_challenge_methods_supported: ['S256'],
+    });
+  });
+
   it('requires authentication at the route boundary', async () => {
     const app = createApp();
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));

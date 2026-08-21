@@ -1,0 +1,35 @@
+export const UI_TRANSLATIONS_EN = {
+  auth: {
+    emailEntry: {
+      title: 'Remember everything.',
+      helper: 'Capture anything; Retrieve everything.',
+      emailPlaceholder: 'you@example.com',
+      emailLabel: 'Email address',
+      submitButton: 'Continue',
+      submitButtonLoading: 'Sending...',
+      passkeyButton: 'Use passkey',
+      passkeyLoadingButton: 'Connecting...',
+      emailRequiredError: 'Email is required.',
+      emailInvalidError: 'Enter a valid email address.',
+      sendFailedError: 'Unable to send verification code.',
+    },
+    otpVerification: {
+      title: 'Verify',
+      helper: 'Code sent to {{email}}.',
+      codeLabel: 'Verification code',
+      codePlaceholder: '123456',
+      verifyButton: 'Verify',
+      verifyButtonLoading: 'Verifying...',
+      resendButton: 'Resend code',
+      resendButtonLoading: 'Resending...',
+      changeEmailLink: 'Use a different email',
+      codeRequiredError: 'Code is required.',
+      codeLengthError: 'Code must be 6 digits.',
+      verifyFailedError: 'There was a problem signing in. Our team is working on it.',
+      resendFailedError: 'Unable to resend verification code.',
+    },
+    passkey: {
+      genericError: 'Passkey sign-in failed.',
+    },
+  },
+} as const;

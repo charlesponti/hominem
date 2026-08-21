@@ -1,0 +1,21 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@hominem/db", "@hominem/db/*"],
+            "message": "Web must not import persistence internals directly. Use RPC or domain-facing abstractions instead."
+          },
+          {
+            "group": ["@hominem/services", "@hominem/services/*"],
+            "message": "Web must not import server-side services directly. Use transport-safe abstractions instead."
+          }
+        ]
+      }
+    ]
+  },
+  "ignorePatterns": ["dist", "build", ".next", "node_modules", "*.config.ts", "*.config.js"]
+}

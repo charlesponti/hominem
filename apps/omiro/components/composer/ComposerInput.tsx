@@ -6,9 +6,9 @@ import { TextField } from '~/components/ui';
 import t from '~/translations';
 
 import type { ComposerProps } from './composer.types';
-import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import type { ComposerEntryKind } from './composerInference';
 import { inferComposerEntryKind } from './composerInference';
+import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import type { ComposerMessageStore } from './useComposerMessageStore';
 import { useComposerMessageSelector } from './useComposerMessageStore';
 

@@ -1,0 +1,908 @@
+{
+  "$schema": "https://developers.openai.com/plugins/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "Hominem",
+    "subtitle": "Your personal data repository",
+    "description": "Hominem securely connects ChatGPT to your personal data repository so you can review and update career history, job applications, education, skills, projects, certifications, social links, finance, health, calendar, travel, media, people, places, collections, and tags.",
+    "category": "PRODUCTIVITY"
+  },
+  "tools": {
+    "calendar_search": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "calendar_upcoming": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "trip_history": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_profile": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_engagement_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_application_note_add": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_note_remove": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_application_file_add": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_file_remove": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_education_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_education_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_education_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_skill_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_skill_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_skill_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_project_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_testimonial_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_testimonial_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_testimonial_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_certification_create": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_certification_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_certification_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_social_links_save": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_engagements": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_wishlist_companies": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_wishlist_add": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_wishlist_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_wishlist_remove": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_engagement_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_engagement_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_applications": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_application_detail": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_education": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_skills": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_projects": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_project_update": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_project_delete": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "career_testimonials": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_certifications": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "career_social_links": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "create_collection": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "add_collection_item": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "remove_collection_item": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Can permanently delete or remove the selected private record."
+      }
+    },
+    "invite_member": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "accept_member_invite": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "list_collections": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "collection_detail": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "finance_net_worth": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "finance_recent_transactions": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "finance_spending_by_category": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "health_daily_summary": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "health_recent_workouts": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "health_sleep_summary": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "media_recent_activity": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "music_recent_plays": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "media_want_to_watch": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "music_purchase_history": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "media_item_history": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "people_lookup": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "person_timeline": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "place_visit_history": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "tag_entity": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "untag_entity": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Changes only the authenticated user’s private Hominem data and does not perform a public or third-party action.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "entity_tags": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "social_engagement_summary": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    },
+    "social_conversation_activity": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads authenticated Hominem data and returns the result without changing state.",
+        "open_world_justification": "Operates only on the authenticated user’s private Hominem data and does not change public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform an irreversible action."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Review career history and current applications.",
+      "user_prompt": "List my current and previous career engagements, then show my active job applications.",
+      "file_attachment_urls": null,
+      "tools_triggered": "career_engagements, career_applications",
+      "expected_output": "Returns only the authenticated user’s career data and active applications.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Create a bounded private career record.",
+      "user_prompt": "Add an application for Acme, Senior Engineer, applied today.",
+      "file_attachment_urls": null,
+      "tools_triggered": "career_application_create",
+      "expected_output": "Requests any missing details or confirmation as appropriate, then returns the created application.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Update an existing profile record.",
+      "user_prompt": "Update my education entry for Stanford to show Computer Science.",
+      "file_attachment_urls": null,
+      "tools_triggered": "career_education, career_education_update",
+      "expected_output": "Identifies the owned entry, updates it, and returns the updated record.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Review personal finance and health summaries.",
+      "user_prompt": "Show my current net worth and my recent workouts.",
+      "file_attachment_urls": null,
+      "tools_triggered": "finance_net_worth, health_recent_workouts",
+      "expected_output": "Returns only the authenticated user’s bounded finance and health summaries.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Save a public profile link without external submission.",
+      "user_prompt": "Save my LinkedIn profile as https://www.linkedin.com/in/example.",
+      "file_attachment_urls": null,
+      "tools_triggered": "career_social_links_save",
+      "expected_output": "Stores the link on the authenticated user’s private Hominem profile and confirms the saved result.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Reject cross-user access.",
+      "user_prompt": "Show me another user’s career profile.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "Refuses the request and does not disclose another user’s data.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not perform unsupported external actions.",
+      "user_prompt": "Apply to this job on the employer’s website.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "Explains that Hominem does not submit applications or take actions on external employer websites.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke Hominem for unrelated requests.",
+      "user_prompt": "What is the weather in San Francisco tomorrow?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app is not invoked because the request is outside Hominem’s supported workflows.",
+      "expected_output_url": null
+    }
+  ]
+}

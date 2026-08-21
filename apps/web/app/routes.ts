@@ -1,0 +1,34 @@
+import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
+
+export default [
+  // API Routes (specific handlers)
+  route('api/auth/google', 'routes/api/auth/google.ts'),
+
+  // Hosted-login shims — the API's hosted /login page owns the OTP surface.
+  route('/auth', 'routes/auth/index.tsx'),
+  route('/logout', 'routes/auth/logout.tsx'),
+
+  layout('routes/_authenticated.tsx', [
+    layout('routes/layout.tsx', [
+      index('routes/home.tsx'),
+
+      // Chat Routes
+      route('chat', 'routes/chat/index.tsx'),
+      route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
+
+      // Notes Routes
+      layout('routes/notes/layout.tsx', [
+        route('notes', 'routes/notes/page.tsx'),
+        route('notes/:noteId', 'routes/notes/$noteId.tsx'),
+        route('notes/:noteId/edit', 'routes/notes/$noteId_.edit.tsx'),
+        route('notes/:noteId/chat', 'routes/notes/$noteId.chat.tsx'),
+      ]),
+
+      route('/account', 'routes/account.tsx'),
+      route('/settings/security', 'routes/settings.security.tsx'),
+    ]),
+  ]),
+
+  // Catch-all 404 route
+  route('*', 'routes/$.tsx'),
+] as RouteConfig;

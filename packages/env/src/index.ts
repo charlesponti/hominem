@@ -72,5 +72,5 @@ export { baseSchema } from './base';
 export type { BaseEnv } from './base';
 export { BRAND } from './brand';
 export type { Brand } from './brand';
-export { webSchema } from './web';
-export type { WebEnv } from './web';
+export { webClientSchema, webSchema } from './web';
+export type { WebClientEnv, WebEnv } from './web';

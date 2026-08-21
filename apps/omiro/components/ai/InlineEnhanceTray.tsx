@@ -1,13 +1,12 @@
-import { Host, Picker, Label as SwiftUILabel } from '@expo/ui/swift-ui';
-import { environment, labelStyle, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import { Text, View } from 'react-native';
 
 import { makeStyles, useThemeColor } from '~/components/theme';
-import { TextField, useColorMode } from '~/components/ui';
+import { IconButton, TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
+import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
 interface InlineEnhanceTrayProps {
@@ -39,13 +38,15 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const [popover, textPrimary] = useThemeColor([
+  const [primary, mutedForeground, popover, textPrimary] = useThemeColor([
+    '--color-primary',
+    '--color-muted-foreground',
     '--color-popover',
     '--color-foreground',
   ]) as string[];
-  const colorScheme = useColorMode();
   const customInputRef = useRef<TextInput>(null);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
 
   useEffect(() => {
     if (isCustomOpen) {
@@ -53,47 +54,52 @@ export function InlineEnhanceTray({
     }
   }, [isCustomOpen]);
 
-  const handleSuggestionChange = (selection: string | number) => {
+  const handleSelect = (selection: string) => {
     if (isEnhancing) {
       return;
     }
 
-    if (String(selection) === CUSTOM_SELECTION) {
+    if (selection === CUSTOM_SELECTION) {
+      setSelectedSuggestion(CUSTOM_SELECTION);
       setIsCustomOpen(true);
       return;
     }
 
+    setSelectedSuggestion(selection);
     setIsCustomOpen(false);
-    onPresetSelect(String(selection));
+    onPresetSelect(selection);
   };
 
   return (
     <View style={styles.s0}>
-      <View style={{ flex: 1 }}>
-        <Host style={{ flex: 1, height: 44 }}>
-          <Picker
-            selection={isCustomOpen ? CUSTOM_SELECTION : instruction}
-            modifiers={[
-              environment({ key: 'colorScheme', value: colorScheme }),
-              pickerStyle('segmented'),
-            ]}
-            onSelectionChange={handleSuggestionChange}
+      <View style={styles.s4}>
+        {t.enhance.suggestions.map((suggestion) => (
+          <IconButton
+            key={suggestion}
+            accessibilityLabel={suggestion}
+            disabled={isEnhancing}
+            variant="plain"
+            onPress={() => handleSelect(suggestion)}
           >
-            {t.enhance.suggestions.map((suggestion) => (
-              <SwiftUILabel
-                key={suggestion}
-                title={suggestion}
-                systemImage={suggestionIcons[suggestion]}
-                modifiers={[labelStyle('iconOnly'), tag(suggestion)]}
-              />
-            ))}
-            <SwiftUILabel
-              title="Custom"
-              systemImage="square.and.pencil"
-              modifiers={[labelStyle('iconOnly'), tag(CUSTOM_SELECTION)]}
+            <AppIcon
+              name={suggestionIcons[suggestion]}
+              size={20}
+              tintColor={selectedSuggestion === suggestion ? primary : mutedForeground}
             />
-          </Picker>
-        </Host>
+          </IconButton>
+        ))}
+        <IconButton
+          accessibilityLabel="Custom"
+          disabled={isEnhancing}
+          variant="plain"
+          onPress={() => handleSelect(CUSTOM_SELECTION)}
+        >
+          <AppIcon
+            name="square.and.pencil"
+            size={20}
+            tintColor={selectedSuggestion === CUSTOM_SELECTION ? primary : mutedForeground}
+          />
+        </IconButton>
       </View>
 
       {isCustomOpen ? (
@@ -140,4 +146,5 @@ const styles = makeStyles((theme) => ({
   s0: { gap: 8, marginVertical: 16 },
   s1: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   s2: { color: theme.colors.destructive, lineHeight: 16 },
+  s4: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 }));

@@ -6,7 +6,6 @@ import { renderHookWithQueryClient } from '../../utils/render-hook';
 
 const mockClearAttachments = vi.fn();
 const mockMarkAttachmentsSubmitted = vi.fn();
-const mockCloseEnhance = vi.fn();
 
 let mockAttachments: { id: string; uploadedFile?: { id: string } }[] = [];
 let mockErrors: string[] = [];
@@ -29,14 +28,6 @@ vi.mock('~/components/composer/useVoiceComposerInput', () => ({
     isRecording: false,
     isCleaningVoice: false,
     isRecordingElsewhere: false,
-  }),
-}));
-
-vi.mock('~/services/ai', () => ({
-  useInlineEnhance: () => ({
-    isEnhancing: false,
-    isEnhanceOpen: false,
-    closeEnhance: mockCloseEnhance,
   }),
 }));
 
@@ -107,7 +98,7 @@ describe('useComposerController', () => {
     expect(result.current.isFocused).toBe(false);
   });
 
-  it('clearComposer clears the draft, attachments, and enhance panel, and notifies onClearDraft', () => {
+  it('clearComposer clears the draft and attachments, and notifies onClearDraft', () => {
     const onClearDraft = vi.fn();
     const { result } = renderHookWithQueryClient(() =>
       useComposerController({ initialMessage: 'draft', onClearDraft }),
@@ -117,7 +108,6 @@ describe('useComposerController', () => {
 
     expect(result.current.getMessage()).toBe('');
     expect(mockClearAttachments).toHaveBeenCalledTimes(1);
-    expect(mockCloseEnhance).toHaveBeenCalledTimes(1);
     expect(onClearDraft).toHaveBeenCalledTimes(1);
   });
 

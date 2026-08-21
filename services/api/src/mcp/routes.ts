@@ -128,6 +128,13 @@ export const oauthDiscoveryRoutes = new Hono()
       new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
     );
   })
+  .get('/.well-known/oauth-authorization-server/*', (c) => {
+    const authUrl = new URL(c.req.url);
+    authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
+    return betterAuthServer.handler(
+      new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
+    );
+  })
   .get('/.well-known/oauth-protected-resource', (c) => {
     return c.json({
       resource: mcpResource,
