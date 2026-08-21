@@ -140,6 +140,19 @@ describe('mcp server transport', () => {
     });
   });
 
+  it.each([
+    '/.well-known/oauth-authorization-server',
+    '/.well-known/oauth-authorization-server/api/mcp',
+    '/api/auth/.well-known/oauth-authorization-server',
+  ])('supports HEAD authorization metadata discovery at %s', async (path) => {
+    const app = new Hono().route('/', oauthDiscoveryRoutes);
+    const response = await app.request(path, { method: 'HEAD' });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    await expect(response.text()).resolves.toBe('');
+  });
+
   it('requires authentication at the route boundary', async () => {
     const app = createApp();
     const response = await app.fetch(new Request('http://localhost/api/mcp', { method: 'GET' }));

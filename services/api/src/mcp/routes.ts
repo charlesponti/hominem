@@ -114,7 +114,26 @@ export const mcpRoutes = new Hono<McpHonoEnv>()
  */
 const mcpResource = new URL('/api/mcp', env.API_URL).toString();
 
+const getOAuthProtectedResourceResponse = (c: Context) => {
+  return c.json({
+    resource: mcpResource,
+    authorization_servers: [new URL('/api/auth', env.API_URL).toString()],
+    bearer_methods_supported: ['header'],
+    scopes_supported: [...MCP_SCOPES],
+  });
+};
+
 async function handleOAuthAuthorizationServerMetadata(c: Context) {
+  if (c.req.method === 'HEAD') {
+    // ChatGPT probes authorization-server metadata with HEAD before fetching it
+    // with GET. Do not delegate HEAD to Better Auth: its response has no body,
+    // so attempting to parse it produces a 500 and hides valid capabilities.
+    return new Response(null, {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
   const authUrl = new URL(c.req.url);
   authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
   const response = await betterAuthServer.handler(
@@ -135,28 +154,14 @@ export const oauthDiscoveryRoutes = new Hono()
     }
     return c.text(env.OPENAI_APPS_CHALLENGE);
   })
-  .get('/.well-known/oauth-authorization-server', (c) => {
-    return handleOAuthAuthorizationServerMetadata(c);
-  })
-  .get('/.well-known/oauth-authorization-server/*', (c) => {
-    return handleOAuthAuthorizationServerMetadata(c);
-  })
-  .get('/api/auth/.well-known/oauth-authorization-server', (c) => {
-    return handleOAuthAuthorizationServerMetadata(c);
-  })
+  .get('/.well-known/oauth-authorization-server', (c) => handleOAuthAuthorizationServerMetadata(c))
+  .get('/.well-known/oauth-authorization-server/*', (c) =>
+    handleOAuthAuthorizationServerMetadata(c),
+  )
+  .get('/api/auth/.well-known/oauth-authorization-server', (c) =>
+    handleOAuthAuthorizationServerMetadata(c),
+  )
   .get('/.well-known/oauth-protected-resource', (c) => {
-    return c.json({
-      resource: mcpResource,
-      authorization_servers: [new URL('/api/auth', env.API_URL).toString()],
-      bearer_methods_supported: ['header'],
-      scopes_supported: [...MCP_SCOPES],
-    });
+    return getOAuthProtectedResourceResponse(c);
   })
-  .get('/.well-known/oauth-protected-resource/*', (c) => {
-    return c.json({
-      resource: mcpResource,
-      authorization_servers: [new URL('/api/auth', env.API_URL).toString()],
-      bearer_methods_supported: ['header'],
-      scopes_supported: [...MCP_SCOPES],
-    });
-  });
+  .get('/.well-known/oauth-protected-resource/*', getOAuthProtectedResourceResponse);
