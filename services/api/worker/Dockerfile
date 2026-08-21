@@ -1,4 +1,4 @@
-FROM node:26.7.0-alpine AS builder
+FROM node:24.18.0-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN npm install -g pnpm@11.10.0 && \
 RUN pnpm --filter @ponti-studios/auth build
 RUN pnpm --filter @hominem/api run build:worker
 
-FROM node:26.7.0-alpine AS release
+FROM node:24.18.0-alpine AS release
 
 WORKDIR /app
 
