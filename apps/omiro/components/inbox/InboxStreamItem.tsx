@@ -8,8 +8,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -43,7 +42,7 @@ export const InboxStreamItem = memo(
     const primaryColor = useThemeColor('--color-primary') as string;
     const chart2Color = useThemeColor('--color-chart-2') as string;
     const tertiaryColor = useThemeColor('--color-tertiary') as string;
-    const accent = isChat ? primaryColor : chart2Color;
+    const mutedForegroundColor = useThemeColor('--color-muted-foreground') as string;
     const shouldAnimateIn = animateOnMount || isNew;
     const entranceOffset = reducedMotion || !shouldAnimateIn ? 0 : animateOnMount ? 8 : -8;
     const entrance = useSharedValue(entranceOffset === 0 ? 1 : 0);
@@ -113,24 +112,16 @@ export const InboxStreamItem = memo(
           accessibilityLabel={primaryText}
           actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
           leading={
-            <View style={[styles.s0, { backgroundColor: `${accent}${BADGE_TINT_ALPHA}` }]}>
-              <AppIcon
-                name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
-                size={14}
-                tintColor={accent}
-              />
-            </View>
+            <AppIcon
+              name={isChat ? 'bubble.left.and.bubble.right.fill' : 'note.text'}
+              size={14}
+              tintColor={mutedForegroundColor}
+            />
           }
           onLongPress={handleLongPress}
           onPress={onOpen}
           subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
           title={primaryText}
-          trailing={
-            <View style={styles.s1}>
-              <Text style={[styles.s2, { fontVariant: ['tabular-nums'] }]}>{timestamp}</Text>
-              <AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />
-            </View>
-          }
         />
       </Reanimated.View>
     );

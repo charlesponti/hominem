@@ -19,6 +19,7 @@ import { requestLogger } from './middleware/request-logger';
 import { securityHeadersMiddleware } from './middleware/security-headers';
 import { authRoutes } from './routes/auth';
 import { imagesRoutes } from './routes/images';
+import { legalRoutes } from './routes/legal';
 import { loginRoutes } from './routes/login';
 import { statusRoutes } from './routes/status';
 import { rpcApp } from './rpc/app';
@@ -40,6 +41,7 @@ function createAllowedOrigins() {
 function isPublicMcpAuthPath(path: string) {
   return (
     path.startsWith('/.well-known/') ||
+    path.startsWith('/api/auth/.well-known/') ||
     path.startsWith('/api/auth/oauth2/') ||
     path === '/api/auth/jwks'
   );
@@ -91,6 +93,7 @@ function registerApiRoutes(app: Hono<AppEnv>) {
   // OAuth discovery for MCP clients — must be at root per RFC 8414 / RFC 9728
   app.route('/', oauthDiscoveryRoutes);
   app.route('/', loginRoutes);
+  app.route('/', legalRoutes);
   // Custom auth extras first (session/logout reshape for apps/finance, e2e helpers).
   // Unmatched /api/auth/* falls through to the Better Auth catch-all handler.
   app.route('/api/auth', authRoutes);

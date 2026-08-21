@@ -315,4 +315,5 @@ export { nativeShadows } from './shadows';
 export const transitionDurations = {
   100: 100,
   150: 150,
+  350: 350,
 } as const;

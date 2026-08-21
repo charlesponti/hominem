@@ -8,8 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -61,10 +60,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
   }));
 
   return (
-    <View
-      style={[styles.s0, { backgroundColor: muted, borderRadius: 999 }]}
-      testID="composer-kind-control"
-    >
+    <View style={[styles.s0]} testID="composer-kind-control">
       <Animated.View
         pointerEvents="none"
         style={[
@@ -110,6 +106,12 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
   );
 }
 
-const styles = makeStyles((theme) => ({
-  s0: { flexDirection: 'row', alignItems: 'center' },
+const styles = makeStyles(() => ({
+  s0: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    background: 'red',
+    paddingHorizontal: 2,
+    paddingVertical: 2,
+  },
 }));

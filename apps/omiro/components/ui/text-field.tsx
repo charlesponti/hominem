@@ -19,15 +19,16 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   const [focused, setFocused] = useState(false);
   const { colors } = useTheme();
 
-  const borderColor = hasError ? colors.destructive : focused ? colors.ring : colors.border;
+  const focusStyle = useAnimatedStyle(() => {
+    if (!focusBorder) {
+      return { borderColor: 'transparent', borderWidth: 0 };
+    }
 
-  const focusStyle = useAnimatedStyle(
-    () => ({
-      borderColor: focusBorder ? borderColor : 'transparent',
-      borderWidth: focusBorder ? withTiming(focused || hasError ? 1.5 : 1, { duration: 150 }) : 0,
-    }),
-    [borderColor, focusBorder, focused, hasError],
-  );
+    return {
+      borderColor: hasError ? colors.destructive : focused ? colors.ring : colors.border,
+      borderWidth: withTiming(focused || hasError ? 1.5 : 1, { duration: 150 }),
+    };
+  });
 
   return (
     <AnimatedTextInput

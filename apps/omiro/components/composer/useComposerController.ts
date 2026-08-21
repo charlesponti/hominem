@@ -24,7 +24,7 @@ interface UseComposerControllerOptions {
 //
 // Deliberately does NOT read the draft message reactively: draft.store is an
 // external store (see useComposerMessageStore.ts), and only the leaf
-// component that actually needs per-keystroke text (ComposerActiveArea)
+// component that actually needs per-keystroke text (ComposerInput/ComposerToolbar)
 // subscribes to it. Reading draft.getMessage()'s value here via React state
 // would re-render every consumer of this hook -- the whole composer -- on
 // every keystroke.

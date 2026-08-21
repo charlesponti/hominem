@@ -7,20 +7,19 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 
-import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
-import { makeStyles, withAlpha } from '~/components/theme';
-import { transitionDurations } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
 import { Card, nativeShadows } from '~/components/ui';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 import type { ComposerProps, ComposerSubmitKind } from './composer.types';
-import { ComposerActiveArea } from './ComposerActiveArea';
 import { ComposerAttachmentRow } from './ComposerAttachmentRow';
 import { ComposerProvider } from './ComposerContext';
+import { ComposerEnhancePanel } from './ComposerEnhancePanel';
+import { ComposerInput } from './ComposerInput';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
+import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
 import { useComposerToastHandoff } from './useComposerToastHandoff';
@@ -67,7 +66,7 @@ function ComposerContent(props: ComposerProps) {
   clearComposerRef.current = controller.clearComposer;
   // Static (mode-only) fields for the outer shell -- the kind-dependent
   // fields (placeholder, submitTestID, ...) are recomputed inside
-  // ComposerActiveArea, which is the only thing that knows the live,
+  // ComposerInput/ComposerToolbar, the only things that know the live,
   // possibly-inferred entry kind without subscribing to the message store here.
   const presentation = getComposerSubmissionConfig(props);
 
@@ -149,36 +148,14 @@ function ComposerContent(props: ComposerProps) {
       testID={presentation.shellTestID}
     >
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
-      {!showVoicePanel && controller.enhance.isEnhanceOpen ? (
-        <Animated.View entering={bannerEntering} exiting={bannerExiting}>
-          <InlineEnhanceTray
-            instruction={controller.enhance.enhanceInstruction}
-            onInstructionChange={controller.enhance.setEnhanceInstruction}
-            onPresetSelect={(instruction) =>
-              void controller.enhance.runEnhance({
-                instruction,
-                text: controller.getMessage(),
-                onEnhanced: controller.setMessage,
-              })
-            }
-            onCancel={controller.enhance.closeEnhance}
-            onConfirm={() =>
-              void controller.enhance.runEnhance({
-                text: controller.getMessage(),
-                onEnhanced: controller.setMessage,
-              })
-            }
-            isEnhancing={controller.enhance.isEnhancing}
-            error={controller.enhance.enhanceError}
-          />
-        </Animated.View>
-      ) : undefined}
+
       <Card
         style={{
           borderColor,
           borderCurve: 'continuous',
           borderRadius: 24,
           boxShadow: nativeShadows.sm,
+          paddingBottom: 4,
         }}
         testID={`${presentation.shellTestID ?? 'composer'}-surface`}
       >
@@ -187,6 +164,7 @@ function ComposerContent(props: ComposerProps) {
             {errorBanner}
           </Animated.View>
         ) : undefined}
+
         {showVoicePanel ? (
           <Animated.View
             entering={FadeIn.duration(transitionDurations[150])}
@@ -206,27 +184,41 @@ function ComposerContent(props: ComposerProps) {
             exiting={FadeOut.duration(transitionDurations[100])}
             key="composer-fields"
           >
-            <ComposerActiveArea
-              composerProps={props}
-              messageStore={controller.messageStore}
-              entryMode={controller.entryMode}
-              manualEntryKind={controller.manualEntryKind}
-              onManualEntryKindChange={controller.setManualEntryKind}
-              uploadedAttachmentCount={controller.uploadedAttachmentIds.length}
-              isFocused={controller.isFocused}
-              showAttachments={controller.showAttachments}
-              isInteractionBusy={controller.isInteractionBusy}
-              isSubmitting={submission.isSubmitting}
-              canPickMedia={controller.canPickMedia}
-              canToggleVoice={controller.canToggleVoice}
-              voice={controller.voice}
-              enhance={controller.enhance}
-              onToggleWalkieTalkie={props.mode === 'chat' ? onToggleWalkieTalkie : undefined}
-              onFocus={controller.handleInputFocus}
-              onBlur={controller.handleInputBlur}
-              onSubmit={handleActiveAreaSubmit}
-              onChangeMessage={controller.setMessage}
-            />
+            <Animated.View style={styles.s1} layout={bannerLayout}>
+              <ComposerInput
+                composerProps={props}
+                messageStore={controller.messageStore}
+                entryMode={controller.entryMode}
+                manualEntryKind={controller.manualEntryKind}
+                onFocus={controller.handleInputFocus}
+                onBlur={controller.handleInputBlur}
+                onChangeMessage={controller.setMessage}
+              />
+              <ComposerEnhancePanel
+                visible={!showVoicePanel && controller.enhance.isEnhanceOpen}
+                enhance={controller.enhance}
+                getMessage={controller.getMessage}
+                setMessage={controller.setMessage}
+              />
+              <ComposerToolbar
+                composerProps={props}
+                messageStore={controller.messageStore}
+                entryMode={controller.entryMode}
+                manualEntryKind={controller.manualEntryKind}
+                onManualEntryKindChange={controller.setManualEntryKind}
+                uploadedAttachmentCount={controller.uploadedAttachmentIds.length}
+                isFocused={controller.isFocused}
+                showAttachments={controller.showAttachments}
+                isInteractionBusy={controller.isInteractionBusy}
+                isSubmitting={submission.isSubmitting}
+                canPickMedia={controller.canPickMedia}
+                canToggleVoice={controller.canToggleVoice}
+                voice={controller.voice}
+                enhance={controller.enhance}
+                onToggleWalkieTalkie={props.mode === 'chat' ? onToggleWalkieTalkie : undefined}
+                onSubmit={handleActiveAreaSubmit}
+              />
+            </Animated.View>
           </Animated.View>
         )}
       </Card>
@@ -234,6 +226,7 @@ function ComposerContent(props: ComposerProps) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   s0: { width: '100%', gap: 12 },
+  s1: { gap: 8 },
 }));

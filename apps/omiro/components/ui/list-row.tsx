@@ -13,7 +13,6 @@ import { makeStyles } from '~/components/theme';
 interface ListRowProps {
   accessibilityLabel: string;
   actionTestID?: string;
-  eyebrow?: string;
   leading?: ReactNode;
   onLongPress?: () => void;
   onPress: () => void;
@@ -27,7 +26,6 @@ interface ListRowProps {
 export function ListRow({
   accessibilityLabel,
   actionTestID,
-  eyebrow,
   leading,
   onLongPress,
   onPress,
@@ -49,7 +47,6 @@ export function ListRow({
     >
       {leading ? <View style={styles.leading}>{leading}</View> : null}
       <View style={styles.content}>
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
         <Text numberOfLines={2} style={[styles.title, titleStyle]}>
           {title}
         </Text>
@@ -78,11 +75,6 @@ const useStyles = makeStyles((currentTheme) => ({
   pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
   leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
   content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
-  eyebrow: {
-    ...currentTheme.typography.caption2,
-    color: currentTheme.colors.mutedForeground,
-    letterSpacing: 0.2,
-  } satisfies TextStyle,
   title: {
     ...currentTheme.typography.body,
     color: currentTheme.colors.foreground,

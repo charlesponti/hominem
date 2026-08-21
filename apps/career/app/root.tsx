@@ -14,10 +14,10 @@ import {
 
 import type { Route } from './+types/root';
 import Navigation from './components/Navigation';
-import { PwaStatus } from './components/PwaStatus';
+import { NavigationProgress } from './components/NavigationProgress';
 
 import './app.css';
-import { NavigationProgress } from './components/NavigationProgress';
+import { PwaStatus } from './components/PwaStatus';
 import { serverEnv } from './lib/env.server';
 import { sessionMiddleware, userContext } from './lib/middleware';
 

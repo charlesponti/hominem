@@ -59,7 +59,7 @@ export interface ComposerContentCapabilities {
 
 // The half that depends on `hasContent` -- draft text changes on every
 // keystroke, so this should only be called from the component that
-// subscribes to the message store (ComposerActiveArea), not from
+// subscribes to the message store (ComposerToolbar), not from
 // useComposerController itself, or every keystroke re-renders the whole
 // composer tree.
 export function deriveComposerContentCapabilities({

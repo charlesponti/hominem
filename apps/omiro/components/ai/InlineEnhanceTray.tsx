@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
-import { useThemeColor } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField, useColorMode } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import t from '~/translations';
@@ -138,7 +137,7 @@ export function InlineEnhanceTray({
 }
 
 const styles = makeStyles((theme) => ({
-  s0: { gap: 8 },
+  s0: { gap: 8, marginVertical: 16 },
   s1: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   s2: { color: theme.colors.destructive, lineHeight: 16 },
 }));

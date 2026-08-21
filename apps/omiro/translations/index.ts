@@ -328,7 +328,6 @@ const t = {
     },
     archivedChatsScreen: {
       title: 'Archived chats',
-      eyebrow: 'Archived chats',
       description: 'Archived chats are hidden from the main chat flow but remain available here.',
       emptyTitle: 'No archived chats yet',
       emptyCopy: 'Chats you archive will appear here for later reference.',
