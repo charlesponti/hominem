@@ -71,10 +71,7 @@ export function NoteDraftPreview({ text, isLoading, testID }: NoteDraftPreviewPr
       {isLoading ? (
         <View style={styles.skeleton}>
           {SKELETON_WIDTHS.map((width) => (
-            <View
-              key={width}
-              style={[styles.skeletonBar, { backgroundColor: muted, width }]}
-            />
+            <View key={width} style={[styles.skeletonBar, { backgroundColor: muted, width }]} />
           ))}
         </View>
       ) : (

@@ -121,8 +121,7 @@ async function streamOnce(opts: {
     reasoningText,
     requestedToolCalls,
     usage,
-    erroredEmpty:
-      sawError && assistantText.length === 0 && requestedToolCalls.length === 0,
+    erroredEmpty: sawError && assistantText.length === 0 && requestedToolCalls.length === 0,
   };
 }
 

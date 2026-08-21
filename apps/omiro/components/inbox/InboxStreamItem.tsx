@@ -2,10 +2,10 @@ import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import Reanimated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withDelay,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { useThemeColor } from '~/components/theme';

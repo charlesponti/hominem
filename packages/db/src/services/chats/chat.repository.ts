@@ -475,10 +475,17 @@ export const ChatRepository = {
     chatId: string,
     messageId: string,
     content: string,
+    options?: { reasoning?: string | null; toolCalls?: ChatMessageToolCallRecord[] | null },
   ): Promise<ChatMessageRecord> {
     const updated = (await handle
       .updateTable('app.chatMessages')
-      .set({ content, files: null, updatedat: new Date().toISOString() })
+      .set({
+        content,
+        files: null,
+        reasoning: options?.reasoning ?? null,
+        toolCalls: toJsonColumnValue(options?.toolCalls ?? null),
+        updatedat: new Date().toISOString(),
+      })
       .where('id', '=', messageId)
       .where('chatId', '=', chatId)
       .where('role', '=', 'assistant')

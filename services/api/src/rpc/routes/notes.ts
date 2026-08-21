@@ -107,7 +107,10 @@ export const notesRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
 
     try {
-      const generated = await generateNoteFromChat({ transcript, instruction }, CHAT_TO_NOTE_PROMPT);
+      const generated = await generateNoteFromChat(
+        { transcript, instruction },
+        CHAT_TO_NOTE_PROMPT,
+      );
       await recordAIUsageEvent({
         eventId,
         userId,

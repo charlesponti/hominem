@@ -44,7 +44,11 @@ describe('buildNoteDraft', () => {
     const filler: ChatMessageItem[] = [];
     for (let i = 0; i < 400; i++) {
       filler.push(
-        makeMessage({ id: `m${i}`, role: i % 2 === 0 ? 'user' : 'assistant', message: 'x'.repeat(60) }),
+        makeMessage({
+          id: `m${i}`,
+          role: i % 2 === 0 ? 'user' : 'assistant',
+          message: 'x'.repeat(60),
+        }),
       );
     }
     const last = makeMessage({ id: 'mLast', role: 'assistant', message: 'The final recent reply' });

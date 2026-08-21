@@ -45,9 +45,7 @@ export function buildNoteDraft(messages: ChatMessageItem[]): NoteDraft {
   const isTruncated = proposal.previewContent.length > NOTE_TRANSCRIPT_MAX_CHARS;
 
   return {
-    transcript: isTruncated
-      ? truncateTranscript(proposal.previewContent)
-      : proposal.previewContent,
+    transcript: isTruncated ? truncateTranscript(proposal.previewContent) : proposal.previewContent,
     title: proposal.proposedTitle,
     isTruncated,
   };

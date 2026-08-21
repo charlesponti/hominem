@@ -1,11 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-  CHAT_MODEL,
-  type ChatMessages,
-  getChatCompletionUsage,
-  streamChatCompletion,
-} from '@hominem/ai';
+import { CHAT_MODEL, type ChatMessages, getChatCompletionUsage } from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, db, runInTransaction } from '@hominem/db';
 import { embeddingQueue } from '@hominem/queues';
@@ -19,7 +14,7 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
-import { getReadOnlyChatTools } from '../../mcp/llm-tools';
+import { getChatTools } from '../../mcp/llm-tools';
 import {
   ChatsCreateSchema,
   ChatsEditMessageSchema,
@@ -129,28 +124,6 @@ async function enqueueChatEmbedding(userId: string, chatId: string) {
     { jobId: `chat-${chatId}`, userId, entityType: 'chat' as const, entityId: chatId },
     { jobId: `chat-${chatId}`, removeOnComplete: true, removeOnFail: false },
   );
-}
-
-function buildPrompt(
-  message: string,
-  history: ChatMessageRecord[],
-  notes: NoteContext[],
-  files: ChatMessageFileRecord[],
-): string {
-  const sections = [];
-
-  if (history.length > 0) {
-    sections.push(
-      [
-        'Conversation history:',
-        ...history.map((entry, index) => `${index + 1}. ${entry.role}: ${entry.content}`),
-      ].join('\n'),
-    );
-  }
-
-  sections.push(formatUserContentWithContext(message, notes, files));
-
-  return sections.filter(Boolean).join('\n\n');
 }
 
 function formatUserContentWithContext(
@@ -411,21 +384,25 @@ const chatByIdRoutes = new Hono<AppContext>()
         targetAssistantMessageId: messageId,
       });
 
-      const prompt = buildPrompt(parentUserMessage.content, history, resolvedNotes, resolvedFiles);
+      const currentUserContent = formatUserContentWithContext(
+        parentUserMessage.content,
+        resolvedNotes,
+        resolvedFiles,
+      );
+      const chatMessages = buildMessages(
+        history,
+        currentUserContent,
+        getSystemPrompt(responseLength),
+      );
+      const chatTools = await getChatTools();
       const eventId = randomUUID();
       const getDurationMs = startAIUsageTimer();
-      const completion = streamChatCompletion({
-        model: CHAT_MODEL,
-        messages: [
-          { role: 'system', content: getSystemPrompt(responseLength) },
-          { role: 'user', content: prompt },
-        ],
-        maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
-        reasoning: getReasoningConfig(responseLength),
-      });
 
       return streamSSE(c, async (stream) => {
         let assistantText = '';
+        let reasoningText: string | null = null;
+        let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
+          [];
         let usage: ReturnType<typeof getChatCompletionUsage> = null;
         let streamError: unknown = null;
 
@@ -439,13 +416,18 @@ const chatByIdRoutes = new Hono<AppContext>()
         await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
         try {
-          for await (const chunk of completion) {
-            usage = getChatCompletionUsage(chunk) ?? usage;
-            const text = chunk.choices?.[0]?.delta?.content;
-            if (typeof text === 'string' && text.length > 0) {
-              assistantText += text;
-            }
-          }
+          const result = await runCompletionWithTools({
+            userId,
+            model: CHAT_MODEL,
+            messages: chatMessages,
+            tools: chatTools,
+            maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+            reasoning: getReasoningConfig(responseLength),
+          });
+          assistantText = result.assistantText;
+          reasoningText = result.reasoningText;
+          toolCallRecords = result.toolCallRecords;
+          usage = result.usage;
         } catch (error) {
           streamError = error;
         } finally {
@@ -458,7 +440,12 @@ const chatByIdRoutes = new Hono<AppContext>()
             status: streamError ? 'failed' : 'succeeded',
             error: streamError,
             durationMs: getDurationMs(),
-            metadata: { chatId, messageId, regenerate: true },
+            metadata: {
+              chatId,
+              messageId,
+              regenerate: true,
+              toolCallCount: toolCallRecords.length,
+            },
           });
         }
 
@@ -498,6 +485,10 @@ const chatByIdRoutes = new Hono<AppContext>()
               chatId,
               messageId,
               assistantText,
+              {
+                reasoning: reasoningText,
+                toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
+              },
             );
             await ChatRepository.touchLastMessage(trx, chatId);
             await ChatRepository.updateGenerationRun(trx, {
@@ -613,7 +604,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       currentUserContent,
       getSystemPrompt(responseLength),
     );
-    const chatTools = await getReadOnlyChatTools();
+    const chatTools = await getChatTools();
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
 
@@ -815,21 +806,17 @@ export const chatsRoutes = new Hono<AppContext>()
       chatWithUserMessage.userMessageId,
     );
 
-    const prompt = buildPrompt(message, [], resolvedNotes, resolvedFiles);
+    const currentUserContent = formatUserContentWithContext(message, resolvedNotes, resolvedFiles);
+    const chatMessages = buildMessages([], currentUserContent, getSystemPrompt(responseLength));
+    const chatTools = await getChatTools();
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
-    const completion = streamChatCompletion({
-      model: CHAT_MODEL,
-      messages: [
-        { role: 'system', content: getSystemPrompt(responseLength) },
-        { role: 'user', content: prompt },
-      ],
-      maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
-      reasoning: getReasoningConfig(responseLength),
-    });
 
     return streamSSE(c, async (stream) => {
       let assistantText = '';
+      let reasoningText: string | null = null;
+      let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
+        [];
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
@@ -843,13 +830,18 @@ export const chatsRoutes = new Hono<AppContext>()
       await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
       try {
-        for await (const chunk of completion) {
-          usage = getChatCompletionUsage(chunk) ?? usage;
-          const text = chunk.choices?.[0]?.delta?.content;
-          if (typeof text === 'string' && text.length > 0) {
-            assistantText += text;
-          }
-        }
+        const result = await runCompletionWithTools({
+          userId,
+          model: CHAT_MODEL,
+          messages: chatMessages,
+          tools: chatTools,
+          maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+          reasoning: getReasoningConfig(responseLength),
+        });
+        assistantText = result.assistantText;
+        reasoningText = result.reasoningText;
+        toolCallRecords = result.toolCallRecords;
+        usage = result.usage;
       } catch (error) {
         streamError = error;
       } finally {
@@ -866,6 +858,7 @@ export const chatsRoutes = new Hono<AppContext>()
             chatId: chat.id,
             noteCount: resolvedNotes.length,
             fileCount: resolvedFiles.length,
+            toolCallCount: toolCallRecords.length,
           },
         });
       }
@@ -906,6 +899,8 @@ export const chatsRoutes = new Hono<AppContext>()
             authorUserId: userId,
             role: 'assistant',
             content: assistantText,
+            reasoning: reasoningText,
+            toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
           });
           await ChatRepository.touchLastMessage(trx, chat.id);
           await ChatRepository.updateGenerationRun(trx, {

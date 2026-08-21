@@ -22,6 +22,12 @@ export interface McpToolDefinition<
   openWorld?: boolean;
   invoking?: string;
   invoked?: string;
+  /**
+   * Gates in-app chat execution behind an explicit user approve/reject step
+   * (see chat-completion-loop.ts). Independent of `destructive`, which is a
+   * display annotation for the external MCP-over-HTTP surface.
+   */
+  requiresConfirmation?: boolean;
 }
 
 export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
@@ -65,6 +71,10 @@ const tools = new Map<string, RegisteredTool>();
 
 export function listTools(): McpToolDefinition[] {
   return [...tools.values()].map((t) => t.definition);
+}
+
+export function getToolDefinition(name: string): McpToolDefinition | undefined {
+  return tools.get(name)?.definition;
 }
 
 export function registerTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodType>(
