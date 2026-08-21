@@ -114,6 +114,20 @@ export const mcpRoutes = new Hono<McpHonoEnv>()
  */
 const mcpResource = new URL('/api/mcp', env.API_URL).toString();
 
+async function handleOAuthAuthorizationServerMetadata(c: Context) {
+  const authUrl = new URL(c.req.url);
+  authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
+  const response = await betterAuthServer.handler(
+    new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
+  );
+  const metadata = (await response.json()) as Record<string, unknown>;
+
+  return c.json({
+    ...metadata,
+    authorization_response_iss_parameter_supported: false,
+  });
+}
+
 export const oauthDiscoveryRoutes = new Hono()
   .get('/.well-known/openai-apps-challenge', (c) => {
     if (!env.OPENAI_APPS_CHALLENGE) {
@@ -122,18 +136,13 @@ export const oauthDiscoveryRoutes = new Hono()
     return c.text(env.OPENAI_APPS_CHALLENGE);
   })
   .get('/.well-known/oauth-authorization-server', (c) => {
-    const authUrl = new URL(c.req.url);
-    authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
-    return betterAuthServer.handler(
-      new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
-    );
+    return handleOAuthAuthorizationServerMetadata(c);
   })
   .get('/.well-known/oauth-authorization-server/*', (c) => {
-    const authUrl = new URL(c.req.url);
-    authUrl.pathname = '/api/auth/.well-known/oauth-authorization-server';
-    return betterAuthServer.handler(
-      new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
-    );
+    return handleOAuthAuthorizationServerMetadata(c);
+  })
+  .get('/api/auth/.well-known/oauth-authorization-server', (c) => {
+    return handleOAuthAuthorizationServerMetadata(c);
   })
   .get('/.well-known/oauth-protected-resource', (c) => {
     return c.json({

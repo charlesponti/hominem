@@ -123,6 +123,7 @@ describe('mcp server transport', () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
+      authorization_response_iss_parameter_supported: false,
       code_challenge_methods_supported: ['S256'],
       scopes_supported: expect.arrayContaining(['career:read']),
     });
