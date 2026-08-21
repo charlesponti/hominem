@@ -4,7 +4,7 @@ set -euo pipefail
 service_name="${1:-}"
 CONFIG="${2:-}"
 
-case "$service_name" in api|career|workers) ;; *) echo "error: unknown Railway service '$service_name'" >&2; exit 1 ;; esac
+case "$service_name" in api|career|web|workers) ;; *) echo "error: unknown Railway service '$service_name'" >&2; exit 1 ;; esac
 [[ -n "${CONFIG:-}" ]] || { echo 'error: config path required' >&2; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
