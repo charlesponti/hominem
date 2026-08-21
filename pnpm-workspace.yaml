@@ -128,3 +128,4 @@ minimumReleaseAgeExclude:
   - '@expo/local-build-cache-provider@57.0.6'
   - expo-server@57.0.2
   - fast-uri@3.1.5
+  - deepeval@0.9.11

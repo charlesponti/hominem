@@ -1,0 +1,23 @@
+{
+  "name": "@hominem/deepeval",
+  "private": true,
+  "scripts": {
+    "eval:chat-assistant": "npx deepeval test run tests/evals/chat-assistant.test.ts",
+    "eval:offer-extraction": "npx deepeval test run tests/evals/offer-extraction.test.ts",
+    "eval:task-extraction": "npx deepeval test run tests/evals/task-extraction.test.ts",
+    "eval:voice-cleanup": "npx deepeval test run tests/evals/voice-cleanup.test.ts",
+    "eval:voice-task-extraction": "npx deepeval test run tests/evals/voice-task-extraction.test.ts",
+    "eval:time-block-regression": "npx deepeval test run tests/evals/time-block-regression.test.ts",
+    "eval:time-block-holdout": "npx deepeval test run tests/evals/time-block-holdout.test.ts",
+    "eval:mcp-tool-selection": "npx deepeval test run tests/evals/mcp-tool-selection.test.ts",
+    "eval:career-job-import": "npx deepeval test run tests/evals/career-job-import.test.ts",
+    "eval:all": "npx deepeval test run tests/evals",
+    "typecheck": "tsc",
+    "view": "npx deepeval view"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "deepeval": "0.9.9",
+    "jiti": "catalog:"
+  }
+}

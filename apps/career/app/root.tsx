@@ -14,6 +14,7 @@ import {
 
 import type { Route } from './+types/root';
 import Navigation from './components/Navigation';
+import { PwaStatus } from './components/PwaStatus';
 
 import './app.css';
 import { NavigationProgress } from './components/NavigationProgress';
@@ -159,6 +160,7 @@ export default function App() {
           <Outlet />
         </main>
       </div>
+      <PwaStatus />
     </QueryClientProvider>
   );
 }

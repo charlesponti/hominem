@@ -1,9 +1,19 @@
 import 'dotenv/config'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+import { VitePWA } from 'vite-plugin-pwa'
 import { TEST_DATABASE_URL } from '@hominem/db/test/database-url'
 
 export default defineConfig({
+  plugins: [
+    VitePWA({
+      registerType: 'prompt',
+      injectRegister: false,
+      devOptions: {
+        enabled: false,
+      },
+    }),
+  ],
   resolve: {
     tsconfigPaths: true,
   },
