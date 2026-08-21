@@ -1,25 +1,20 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
 import { slugifyText } from '@hominem/utils/text';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Link, data } from 'react-router';
+import { ArrowUp, Loader2, Mic, Paperclip, Square, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { data } from 'react-router';
 
-import { Button } from '~/components/button';
-import { useArchiveChat } from '~/hooks/use-chats';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
+import { useSpeechToText } from '~/lib/hooks/use-speech-to-text';
 import { useStreamMessage } from '~/lib/hooks/use-stream-message';
 
 import type { Route } from './+types/chat.$chatId';
 
 type SelectedNote = NoteSearchResult;
-
-type ChatLoaderData = {
-  id: string;
-  title?: string | null;
-};
 
 type ChatMessageLoaderData = ChatMessageDto[];
 
@@ -37,11 +32,6 @@ function getMentionQuery(value: string) {
 export async function loader({ request, params }: Route.LoaderArgs) {
   const cookie = request.headers.get('cookie');
   const headers = cookie ? { cookie } : undefined;
-  const chatResponse = await fetch(
-    new URL(`/api/chats/${params.chatId}`, serverEnv.HOMINEM_INTERNAL_API_URL).toString(),
-    { headers },
-  );
-  const chat = chatResponse.ok ? ((await chatResponse.json()) as ChatLoaderData) : null;
 
   const messagesResponse = await fetch(
     new URL(
@@ -64,7 +54,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     seedNote = noteResponse.ok ? ((await noteResponse.json()) as NoteLoaderData) : null;
   }
 
-  return data({ chat, seedNote, messages });
+  return data({ seedNote, messages });
 }
 
 export default function ChatPage({
@@ -72,18 +62,17 @@ export default function ChatPage({
   params,
 }: {
   loaderData: {
-    chat: ChatLoaderData | null;
     seedNote: NoteLoaderData | null;
     messages: ChatMessageLoaderData;
   };
   params: { chatId: string };
 }) {
-  const { chat, seedNote, messages: initialMessages } = loaderData;
+  const { seedNote, messages: initialMessages } = loaderData;
   const { chatId } = params;
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const { messages } = useChatMessages({ chatId, initialData: initialMessages });
   const streamMessage = useStreamMessage({ chatId });
-  const archiveChat = useArchiveChat({ chatId });
   const { uploadFiles, uploadState } = useFileUpload();
 
   const [draft, setDraft] = useState('');
@@ -91,6 +80,47 @@ export default function ChatPage({
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ id: string; originalName: string; url: string; textContent?: string; content?: string }>
   >([]);
+  const [optimisticUserMessage, setOptimisticUserMessage] = useState<ChatMessageDto | null>(null);
+  const [pendingAssistantMessage, setPendingAssistantMessage] = useState<ChatMessageDto | null>(
+    null,
+  );
+
+  const displayMessages = useMemo(() => {
+    const list = [...messages];
+    if (optimisticUserMessage && !list.some((m) => m.id === optimisticUserMessage.id)) {
+      list.push(optimisticUserMessage);
+    }
+    if (pendingAssistantMessage && !list.some((m) => m.id === pendingAssistantMessage.id)) {
+      list.push(pendingAssistantMessage);
+    }
+    return list;
+  }, [messages, optimisticUserMessage, pendingAssistantMessage]);
+
+  const isThinking = optimisticUserMessage !== null && pendingAssistantMessage === null;
+  const isFirstRenderRef = useRef(true);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior =
+      isFirstRenderRef.current || prefersReducedMotion ? 'auto' : 'smooth';
+
+    container.scrollTo({ top: container.scrollHeight, behavior });
+    isFirstRenderRef.current = false;
+  }, [displayMessages.length, isThinking]);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  }, [draft]);
+
+  const speech = useSpeechToText({ onTranscript: setDraft });
 
   const seededNote = useMemo(
     () => (seedNote ? [{ id: seedNote.id, title: seedNote.title, excerpt: seedNote.excerpt }] : []),
@@ -149,203 +179,181 @@ export default function ChatPage({
     setAttachedFiles((current) => [...current, ...uploaded]);
   }
 
+  const hasContent =
+    draftWithSeed.trim().length > 0 || attachedFiles.length > 0 || selectedNotesForSend.length > 0;
+
   async function handleSend() {
-    if (!draftWithSeed.trim() && attachedFiles.length === 0 && selectedNotesForSend.length === 0) {
+    if (!hasContent) {
       return;
     }
+    if (speech.isListening) {
+      speech.stop();
+    }
 
-    await streamMessage.stream({
-      message: draftWithSeed,
-      fileIds: attachedFiles.map((file) => file.id),
-      noteIds: selectedNotesForSend.map((note) => note.id),
-    });
+    const messageToSend = draftWithSeed;
+    const filesToSend = attachedFiles;
+    const notesToSend = selectedNotesForSend;
+
+    setOptimisticUserMessage({
+      id: `optimistic-${crypto.randomUUID()}`,
+      chatId,
+      userId: '',
+      role: 'user',
+      content: messageToSend,
+      files: null,
+      referencedNotes: notesToSend.length
+        ? notesToSend.map((note) => ({ id: note.id, title: note.title ?? null }))
+        : null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as ChatMessageDto);
+    setPendingAssistantMessage(null);
 
     setDraft('');
     setAttachedFiles([]);
+    setSelectedNotes([]);
+
+    try {
+      await streamMessage.stream({
+        message: messageToSend,
+        fileIds: filesToSend.map((file) => file.id),
+        noteIds: notesToSend.map((note) => note.id),
+        onAccepted: (userMessage) => {
+          if (userMessage) setOptimisticUserMessage(userMessage);
+        },
+        onCommitted: (message) => {
+          setPendingAssistantMessage(message);
+        },
+      });
+    } finally {
+      setOptimisticUserMessage(null);
+      setPendingAssistantMessage(null);
+    }
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="space-y-4">
-        <div className="rounded-2xl border border-border-subtle bg-surface p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary">Current chat</p>
-          <h2 className="mt-2 text-xl font-semibold text-foreground">{chat?.title || 'Chat'}</h2>
-          <p className="mt-2 text-sm text-text-secondary">
-            Explicitly selected notes and uploaded files are the only extra context sent with each
-            turn.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link to="/chat" className="text-sm text-text-secondary underline">
-              Back to chats
-            </Link>
-            <button
-              type="button"
-              className="text-sm text-text-secondary underline"
-              onClick={() => archiveChat.mutate({ chatId })}
+    <div className="mx-auto flex h-full w-full max-w-2xl min-h-0 flex-1 flex-col">
+      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
+        {displayMessages.map((message) => (
+          <div
+            key={message.id}
+            className={`${message.role === 'user' ? 'flex justify-end' : 'flex justify-start'} ${
+              message.id === pendingAssistantMessage?.id ? 'chat-message-enter' : ''
+            }`}
+          >
+            <p
+              className={`max-w-[80%] whitespace-pre-wrap text-sm leading-6 ${
+                message.role === 'user'
+                  ? 'rounded-2xl bg-emphasis-faint px-4 py-2 text-foreground'
+                  : 'text-foreground'
+              }`}
             >
-              Archive chat
-            </button>
+              {message.content}
+            </p>
           </div>
-        </div>
+        ))}
+        {isThinking ? (
+          <div className="flex items-center gap-2 text-sm text-text-tertiary">
+            <Loader2 size={14} className="animate-spin" />
+            <span className="animate-pulse">Thinking</span>
+          </div>
+        ) : null}
+      </div>
 
-        <div className="rounded-2xl border border-border-subtle bg-surface p-4">
-          <h3 className="text-sm font-semibold text-foreground">Selected notes</h3>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedNotesForSend.length === 0 ? (
-              <p className="text-sm text-text-secondary">
-                Type <code>#</code> in the composer to search notes.
-              </p>
-            ) : null}
+      <div className="px-4 pb-4">
+        {suggestions.length > 0 || selectedNotesForSend.length > 0 || attachedFiles.length > 0 ? (
+          <div className="mb-2 flex flex-wrap gap-1.5">
             {selectedNotesForSend.map((note) => (
               <span
                 key={note.id}
-                className="rounded-full border border-border-subtle px-3 py-1 text-xs text-text-secondary"
+                className="rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
               >
-                {note.title || 'Untitled note'}
+                {note.title || 'Untitled'}
               </span>
             ))}
+            {attachedFiles.map((file) => (
+              <button
+                key={file.id}
+                type="button"
+                className="flex items-center gap-1 rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
+                onClick={() =>
+                  setAttachedFiles((current) => current.filter((item) => item.id !== file.id))
+                }
+              >
+                {file.originalName}
+                <X size={12} />
+              </button>
+            ))}
+            {suggestions.map((note) => (
+              <button
+                key={note.id}
+                type="button"
+                className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
+                onClick={() => handleSelectSuggestion(note)}
+              >
+                {note.title || 'Untitled'}
+              </button>
+            ))}
           </div>
-        </div>
-      </aside>
+        ) : null}
 
-      <div className="flex min-h-[70vh] flex-col rounded-2xl border border-border-subtle bg-surface">
-        <div className="flex-1 space-y-3 overflow-y-auto p-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-background' : 'bg-muted/30'}`}
+        <div className="flex items-center gap-1 rounded-[28px] border border-border-subtle bg-surface p-1.5 pl-2 shadow-sm">
+          <label className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-tertiary hover:bg-emphasis-faint hover:text-foreground">
+            <Paperclip size={18} />
+            <input
+              hidden
+              multiple
+              type="file"
+              data-testid="chat-file-input"
+              onChange={(event) => {
+                void handleAttachFiles(event.target.files);
+                event.currentTarget.value = '';
+              }}
+            />
+          </label>
+          <textarea
+            ref={inputRef}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                void handleSend();
+              }
+            }}
+            rows={1}
+            placeholder="Ask anything"
+            className="max-h-40 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm leading-6 outline-none placeholder:text-text-tertiary"
+          />
+          {hasContent ? (
+            <button
+              type="button"
+              disabled={streamMessage.isStreaming}
+              onClick={() => void handleSend()}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background disabled:opacity-40"
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs uppercase tracking-[0.2em] text-text-tertiary">
-                  {message.role}
-                </span>
-              </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">
-                {message.content}
-              </p>
-              {message.referencedNotes?.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {message.referencedNotes.map((note) => (
-                    <span
-                      key={note.id}
-                      className="rounded-full border border-border-subtle px-3 py-1 text-xs text-text-secondary"
-                    >
-                      {note.title || note.id}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {message.files?.length ? (
-                <div className="mt-3 space-y-2">
-                  {message.files.map((file, index) => (
-                    <div
-                      key={`${message.id}-${index}`}
-                      className="rounded-xl border border-border-subtle p-3 text-xs text-text-secondary"
-                    >
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-foreground underline"
-                      >
-                        {file.filename || 'Attachment'}
-                      </a>
-                      {file.metadata && 'extractedText' in file.metadata ? (
-                        <p className="mt-2 whitespace-pre-wrap">
-                          {String(file.metadata.extractedText)}
-                        </p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-          {messages.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border-subtle p-8 text-center">
-              <p className="text-base text-foreground">No messages yet.</p>
-              <p className="mt-2 text-sm text-text-secondary">
-                Ask a question, mention notes with <code>#</code>, or attach a file.
-              </p>
-            </div>
+              <ArrowUp size={18} />
+            </button>
+          ) : speech.isSupported ? (
+            <button
+              type="button"
+              onClick={() => speech.toggle(draft)}
+              className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+                speech.isListening
+                  ? 'bg-destructive text-destructive-foreground'
+                  : 'text-text-tertiary hover:bg-emphasis-faint hover:text-foreground'
+              }`}
+            >
+              {speech.isListening ? <Square size={16} /> : <Mic size={18} />}
+            </button>
           ) : null}
         </div>
-
-        <div
-          className="border-t border-border-subtle p-4"
-          data-upload-state={uploadState.state}
-          data-upload-progress={uploadState.progress}
-        >
-          <div className="space-y-3">
-            {suggestions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((note) => (
-                  <button
-                    key={note.id}
-                    type="button"
-                    className="rounded-full border border-border-subtle px-3 py-1 text-xs text-text-secondary"
-                    onClick={() => handleSelectSuggestion(note)}
-                  >
-                    {note.title || 'Untitled note'}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            {attachedFiles.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {attachedFiles.map((file) => (
-                  <button
-                    key={file.id}
-                    type="button"
-                    className="rounded-full border border-border-subtle px-3 py-1 text-xs text-text-secondary"
-                    onClick={() =>
-                      setAttachedFiles((current) => current.filter((item) => item.id !== file.id))
-                    }
-                  >
-                    {file.originalName} x
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <textarea
-              ref={inputRef}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask something, mention a note with #, or paste text from a file."
-              className="min-h-[120px] w-full rounded-2xl border border-border-subtle bg-background px-4 py-3 text-sm outline-none"
-            />
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <label className="inline-flex cursor-pointer items-center rounded-full border border-border-subtle px-4 py-2 text-sm text-text-secondary">
-                  Attach files
-                  <input
-                    hidden
-                    multiple
-                    type="file"
-                    data-testid="chat-file-input"
-                    onChange={(event) => {
-                      void handleAttachFiles(event.target.files);
-                      event.currentTarget.value = '';
-                    }}
-                  />
-                </label>
-                {uploadState.errors.length > 0 ? (
-                  <span className="text-xs text-destructive">{uploadState.errors.join(', ')}</span>
-                ) : null}
-              </div>
-              <Button
-                type="button"
-                disabled={streamMessage.isStreaming}
-                onClick={() => void handleSend()}
-              >
-                {streamMessage.isStreaming ? 'Streaming...' : 'Send'}
-              </Button>
-            </div>
-          </div>
-        </div>
+        {uploadState.errors.length > 0 ? (
+          <p className="mt-1.5 text-xs text-destructive">{uploadState.errors.join(', ')}</p>
+        ) : null}
       </div>
     </div>
   );

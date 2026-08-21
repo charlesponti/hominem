@@ -23,37 +23,10 @@ type Pages = {
   "/logout": {
     params: {};
   };
-  "/chat": {
-    params: {};
-  };
   "/chat/:chatId": {
     params: {
       "chatId": string;
     };
-  };
-  "/notes": {
-    params: {};
-  };
-  "/notes/:noteId": {
-    params: {
-      "noteId": string;
-    };
-  };
-  "/notes/:noteId/edit": {
-    params: {
-      "noteId": string;
-    };
-  };
-  "/notes/:noteId/chat": {
-    params: {
-      "noteId": string;
-    };
-  };
-  "/account": {
-    params: {};
-  };
-  "/settings/security": {
-    params: {};
   };
   "/*": {
     params: {
@@ -65,7 +38,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/api/auth/google" | "/auth" | "/logout" | "/chat" | "/chat/:chatId" | "/notes" | "/notes/:noteId" | "/notes/:noteId/edit" | "/notes/:noteId/chat" | "/account" | "/settings/security" | "/*";
+    page: "/" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/*";
   };
   "routes/api/auth/google.ts": {
     id: "routes/api/auth/google";
@@ -81,51 +54,19 @@ type RouteFiles = {
   };
   "routes/_authenticated.tsx": {
     id: "routes/_authenticated";
-    page: "/" | "/chat" | "/chat/:chatId" | "/notes" | "/notes/:noteId" | "/notes/:noteId/edit" | "/notes/:noteId/chat" | "/account" | "/settings/security";
+    page: "/" | "/chat/:chatId";
   };
   "routes/layout.tsx": {
     id: "routes/layout";
-    page: "/" | "/chat" | "/chat/:chatId" | "/notes" | "/notes/:noteId" | "/notes/:noteId/edit" | "/notes/:noteId/chat" | "/account" | "/settings/security";
+    page: "/" | "/chat/:chatId";
   };
   "routes/home.tsx": {
     id: "routes/home";
     page: "/";
   };
-  "routes/chat/index.tsx": {
-    id: "routes/chat/index";
-    page: "/chat";
-  };
   "routes/chat/chat.$chatId.tsx": {
     id: "routes/chat/chat.$chatId";
     page: "/chat/:chatId";
-  };
-  "routes/notes/layout.tsx": {
-    id: "routes/notes/layout";
-    page: "/notes" | "/notes/:noteId" | "/notes/:noteId/edit" | "/notes/:noteId/chat";
-  };
-  "routes/notes/page.tsx": {
-    id: "routes/notes/page";
-    page: "/notes";
-  };
-  "routes/notes/$noteId.tsx": {
-    id: "routes/notes/$noteId";
-    page: "/notes/:noteId";
-  };
-  "routes/notes/$noteId_.edit.tsx": {
-    id: "routes/notes/$noteId_.edit";
-    page: "/notes/:noteId/edit";
-  };
-  "routes/notes/$noteId.chat.tsx": {
-    id: "routes/notes/$noteId.chat";
-    page: "/notes/:noteId/chat";
-  };
-  "routes/account.tsx": {
-    id: "routes/account";
-    page: "/account";
-  };
-  "routes/settings.security.tsx": {
-    id: "routes/settings.security";
-    page: "/settings/security";
   };
   "routes/$.tsx": {
     id: "routes/$";
@@ -141,14 +82,6 @@ type RouteModules = {
   "routes/_authenticated": typeof import("./app/routes/_authenticated.tsx");
   "routes/layout": typeof import("./app/routes/layout.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
-  "routes/chat/index": typeof import("./app/routes/chat/index.tsx");
   "routes/chat/chat.$chatId": typeof import("./app/routes/chat/chat.$chatId.tsx");
-  "routes/notes/layout": typeof import("./app/routes/notes/layout.tsx");
-  "routes/notes/page": typeof import("./app/routes/notes/page.tsx");
-  "routes/notes/$noteId": typeof import("./app/routes/notes/$noteId.tsx");
-  "routes/notes/$noteId_.edit": typeof import("./app/routes/notes/$noteId_.edit.tsx");
-  "routes/notes/$noteId.chat": typeof import("./app/routes/notes/$noteId.chat.tsx");
-  "routes/account": typeof import("./app/routes/account.tsx");
-  "routes/settings.security": typeof import("./app/routes/settings.security.tsx");
   "routes/$": typeof import("./app/routes/$.tsx");
 };

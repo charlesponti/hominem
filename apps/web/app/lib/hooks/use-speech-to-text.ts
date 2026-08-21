@@ -1,0 +1,109 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  [index: number]: { transcript: string };
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface SpeechRecognitionLike extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+function getSpeechRecognitionConstructor(): SpeechRecognitionConstructor | null {
+  if (typeof window === 'undefined') return null;
+  const withSpeech = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  };
+  return withSpeech.SpeechRecognition ?? withSpeech.webkitSpeechRecognition ?? null;
+}
+
+interface UseSpeechToTextOptions {
+  /** Called with the full dictated text (seed + everything transcribed so far) on every update. */
+  onTranscript: (fullText: string) => void;
+}
+
+export function useSpeechToText({ onTranscript }: UseSpeechToTextOptions) {
+  const [isSupported] = useState(() => getSpeechRecognitionConstructor() !== null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const seedRef = useRef('');
+  const finalTextRef = useRef('');
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  const stop = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  }, []);
+
+  const start = useCallback(
+    (seed = '') => {
+      const Recognition = getSpeechRecognitionConstructor();
+      if (!Recognition) return;
+
+      seedRef.current = seed;
+      finalTextRef.current = '';
+
+      const recognition = new Recognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTextRef.current += `${result[0].transcript} `;
+          } else {
+            interimText += result[0].transcript;
+          }
+        }
+        const combined = [seedRef.current, finalTextRef.current + interimText]
+          .filter((part) => part.trim().length > 0)
+          .join(' ')
+          .trim();
+        onTranscript(combined);
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+    },
+    [onTranscript],
+  );
+
+  const toggle = useCallback(
+    (seed = '') => {
+      if (isListening) {
+        stop();
+      } else {
+        start(seed);
+      }
+    },
+    [isListening, start, stop],
+  );
+
+  return { isSupported, isListening, start, stop, toggle };
+}

@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
 import { useSignal } from '@preact/signals-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
@@ -22,6 +22,8 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       fileIds?: string[];
       noteIds?: string[];
       onChunk?: (chunk: string) => void;
+      onAccepted?: (userMessage: ChatMessageDto | null) => void;
+      onCommitted?: (message: ChatMessageDto) => void;
     }) => {
       text.value = '';
       status.value = 'streaming';
@@ -57,9 +59,13 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
             return;
           }
           if (event.type === 'error') throw new Error(event.message);
+          if (event.type === 'accepted') {
+            input.onAccepted?.(event.userMessage);
+          }
           if (event.type === 'committed') {
             text.value = event.message.content;
             input.onChunk?.(event.message.content);
+            input.onCommitted?.(event.message);
           }
         };
 

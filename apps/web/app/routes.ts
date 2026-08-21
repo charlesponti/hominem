@@ -11,21 +11,7 @@ export default [
   layout('routes/_authenticated.tsx', [
     layout('routes/layout.tsx', [
       index('routes/home.tsx'),
-
-      // Chat Routes
-      route('chat', 'routes/chat/index.tsx'),
       route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
-
-      // Notes Routes
-      layout('routes/notes/layout.tsx', [
-        route('notes', 'routes/notes/page.tsx'),
-        route('notes/:noteId', 'routes/notes/$noteId.tsx'),
-        route('notes/:noteId/edit', 'routes/notes/$noteId_.edit.tsx'),
-        route('notes/:noteId/chat', 'routes/notes/$noteId.chat.tsx'),
-      ]),
-
-      route('/account', 'routes/account.tsx'),
-      route('/settings/security', 'routes/settings.security.tsx'),
     ]),
   ]),
 
