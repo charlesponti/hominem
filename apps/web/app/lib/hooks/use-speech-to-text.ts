@@ -38,13 +38,16 @@ interface UseSpeechToTextOptions {
 }
 
 export function useSpeechToText({ onTranscript }: UseSpeechToTextOptions) {
-  const [isSupported] = useState(() => getSpeechRecognitionConstructor() !== null);
+  // Starts false on both server and client so hydration matches; flips after
+  // mount once we can safely check for the browser API.
+  const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const seedRef = useRef('');
   const finalTextRef = useRef('');
 
   useEffect(() => {
+    setIsSupported(getSpeechRecognitionConstructor() !== null);
     return () => {
       recognitionRef.current?.stop();
     };

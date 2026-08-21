@@ -1,10 +1,24 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
 import { slugifyText } from '@hominem/utils/text';
-import { ArrowUp, Loader2, Mic, Paperclip, Square, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Mic, Paperclip, Square, X } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { data } from 'react-router';
 
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from '~/components/ai-elements/conversation';
+import { Message, MessageContent, MessageResponse } from '~/components/ai-elements/message';
+import {
+  PromptInput,
+  PromptInputButton,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from '~/components/ai-elements/prompt-input';
+import { Shimmer } from '~/components/ai-elements/shimmer';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
@@ -27,6 +41,10 @@ type NoteLoaderData = {
 function getMentionQuery(value: string) {
   const match = value.match(/#([a-z0-9-]*)$/i);
   return match?.[1] ?? '';
+}
+
+function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
+  return role === 'assistant' ? 'assistant' : 'user';
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -69,8 +87,6 @@ export default function ChatPage({
 }) {
   const { seedNote, messages: initialMessages } = loaderData;
   const { chatId } = params;
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const { messages } = useChatMessages({ chatId, initialData: initialMessages });
   const streamMessage = useStreamMessage({ chatId });
   const { uploadFiles, uploadState } = useFileUpload();
@@ -97,28 +113,6 @@ export default function ChatPage({
   }, [messages, optimisticUserMessage, pendingAssistantMessage]);
 
   const isThinking = optimisticUserMessage !== null && pendingAssistantMessage === null;
-  const isFirstRenderRef = useRef(true);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const behavior: ScrollBehavior =
-      isFirstRenderRef.current || prefersReducedMotion ? 'auto' : 'smooth';
-
-    container.scrollTo({ top: container.scrollHeight, behavior });
-    isFirstRenderRef.current = false;
-  }, [displayMessages.length, isThinking]);
-
-  useEffect(() => {
-    const textarea = inputRef.current;
-    if (!textarea) return;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
-  }, [draft]);
 
   const speech = useSpeechToText({ onTranscript: setDraft });
 
@@ -163,9 +157,6 @@ export default function ChatPage({
     setSelectedNotes((current) =>
       current.some((selected) => selected.id === note.id) ? current : [...current, note],
     );
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
   }, []);
 
   async function handleAttachFiles(fileList: FileList | null) {
@@ -236,32 +227,25 @@ export default function ChatPage({
 
   return (
     <div className="mx-auto flex h-full w-full max-w-2xl min-h-0 flex-1 flex-col">
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
-        {displayMessages.map((message) => (
-          <div
-            key={message.id}
-            className={`${message.role === 'user' ? 'flex justify-end' : 'flex justify-start'} ${
-              message.id === pendingAssistantMessage?.id ? 'chat-message-enter' : ''
-            }`}
-          >
-            <p
-              className={`max-w-[80%] whitespace-pre-wrap text-sm leading-6 ${
-                message.role === 'user'
-                  ? 'rounded-2xl bg-emphasis-faint px-4 py-2 text-foreground'
-                  : 'text-foreground'
-              }`}
-            >
-              {message.content}
-            </p>
-          </div>
-        ))}
-        {isThinking ? (
-          <div className="flex items-center gap-2 text-sm text-text-tertiary">
-            <Loader2 size={14} className="animate-spin" />
-            <span className="animate-pulse">Thinking</span>
-          </div>
-        ) : null}
-      </div>
+      <Conversation>
+        <ConversationContent>
+          {displayMessages.map((message) => (
+            <Message key={message.id} from={toMessageRole(message.role)}>
+              <MessageContent>
+                <MessageResponse>{message.content}</MessageResponse>
+              </MessageContent>
+            </Message>
+          ))}
+          {isThinking ? (
+            <Message from="assistant">
+              <MessageContent>
+                <Shimmer>Thinking</Shimmer>
+              </MessageContent>
+            </Message>
+          ) : null}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
       <div className="px-4 pb-4">
         {suggestions.length > 0 || selectedNotesForSend.length > 0 || attachedFiles.length > 0 ? (
@@ -300,57 +284,43 @@ export default function ChatPage({
           </div>
         ) : null}
 
-        <div className="flex items-center gap-1 rounded-[28px] border border-border-subtle bg-surface p-1.5 pl-2 shadow-sm">
-          <label className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-tertiary hover:bg-emphasis-faint hover:text-foreground">
-            <Paperclip size={18} />
-            <input
-              hidden
-              multiple
-              type="file"
-              data-testid="chat-file-input"
-              onChange={(event) => {
-                void handleAttachFiles(event.target.files);
-                event.currentTarget.value = '';
-              }}
-            />
-          </label>
-          <textarea
-            ref={inputRef}
+        <PromptInput onSubmit={() => handleSend()}>
+          <PromptInputTextarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                void handleSend();
-              }
-            }}
-            rows={1}
             placeholder="Ask anything"
-            className="max-h-40 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm leading-6 outline-none placeholder:text-text-tertiary"
           />
-          {hasContent ? (
-            <button
-              type="button"
-              disabled={streamMessage.isStreaming}
-              onClick={() => void handleSend()}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background disabled:opacity-40"
-            >
-              <ArrowUp size={18} />
-            </button>
-          ) : speech.isSupported ? (
-            <button
-              type="button"
-              onClick={() => speech.toggle(draft)}
-              className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
-                speech.isListening
-                  ? 'bg-destructive text-destructive-foreground'
-                  : 'text-text-tertiary hover:bg-emphasis-faint hover:text-foreground'
-              }`}
-            >
-              {speech.isListening ? <Square size={16} /> : <Mic size={18} />}
-            </button>
-          ) : null}
-        </div>
+          <PromptInputTools>
+            <PromptInputButton asChild tooltip="Attach file">
+              <label className="cursor-pointer">
+                <Paperclip size={16} />
+                <input
+                  hidden
+                  multiple
+                  type="file"
+                  data-testid="chat-file-input"
+                  onChange={(event) => {
+                    void handleAttachFiles(event.target.files);
+                    event.currentTarget.value = '';
+                  }}
+                />
+              </label>
+            </PromptInputButton>
+            {speech.isSupported ? (
+              <PromptInputButton
+                onClick={() => speech.toggle(draft)}
+                tooltip={speech.isListening ? 'Stop voice input' : 'Voice input'}
+              >
+                {speech.isListening ? <Square size={14} /> : <Mic size={16} />}
+              </PromptInputButton>
+            ) : null}
+          </PromptInputTools>
+          <PromptInputSubmit
+            disabled={!hasContent}
+            onStop={streamMessage.isStreaming ? streamMessage.cancel : undefined}
+            status={streamMessage.isStreaming ? 'streaming' : 'ready'}
+          />
+        </PromptInput>
         {uploadState.errors.length > 0 ? (
           <p className="mt-1.5 text-xs text-destructive">{uploadState.errors.join(', ')}</p>
         ) : null}
