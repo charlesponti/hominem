@@ -9,6 +9,7 @@ import { noteKeys } from './query-keys';
 
 interface CreateNoteInput {
   text: string;
+  title?: string;
   fileIds?: string[];
 }
 
@@ -16,13 +17,13 @@ interface CreateNoteContext {
   optimisticId: string;
 }
 
-function buildOptimisticNote(text: string, optimisticId: string): Note {
+function buildOptimisticNote(text: string, title: string | undefined, optimisticId: string): Note {
   const now = new Date().toISOString();
   const trimmed = text.trim();
 
   return {
     id: optimisticId,
-    title: null,
+    title: title ?? null,
     content: trimmed,
     excerpt: buildContentPreview(null, trimmed) || null,
     status: 'draft',
@@ -58,6 +59,7 @@ export const useCreateNote = (): UseMutationResult<
       const res = await client.api.notes.$post({
         json: {
           content: input.text.trim(),
+          ...(input.title ? { title: input.title } : {}),
           ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
           type: 'note',
         },
@@ -66,7 +68,7 @@ export const useCreateNote = (): UseMutationResult<
     },
     onMutate: async (input) => {
       const optimisticId = `optimistic-note-${Date.now().toString()}`;
-      const optimisticNote = buildOptimisticNote(input.text, optimisticId);
+      const optimisticNote = buildOptimisticNote(input.text, input.title, optimisticId);
 
       queryClient.setQueryData(noteKeys.detail(optimisticId), optimisticNote);
 

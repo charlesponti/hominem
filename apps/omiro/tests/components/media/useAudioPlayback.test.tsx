@@ -3,8 +3,10 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockPlayAudioReply = vi.fn();
-let listeners: Array<(snapshot: { activeMessageId: string | null; playing: boolean }) => void> = [];
-let snapshot: { activeMessageId: string | null; playing: boolean } = {
+type TestPlaybackSnapshot = { activeMessageId: string | null; playing: boolean };
+
+let listeners: Array<(snapshot: TestPlaybackSnapshot) => void> = [];
+let snapshot: TestPlaybackSnapshot = {
   activeMessageId: null,
   playing: false,
 };
@@ -12,7 +14,7 @@ let snapshot: { activeMessageId: string | null; playing: boolean } = {
 vi.mock('~/components/media/audio-playback.service', () => ({
   playAudioReply: mockPlayAudioReply,
   getPlaybackSnapshot: () => snapshot,
-  subscribePlayback: (listener: (snapshot: typeof snapshot) => void) => {
+  subscribePlayback: (listener: (snapshot: TestPlaybackSnapshot) => void) => {
     listeners.push(listener);
     return () => {
       listeners = listeners.filter((registered) => registered !== listener);
@@ -22,7 +24,7 @@ vi.mock('~/components/media/audio-playback.service', () => ({
 
 const { useAudioPlayback } = await import('~/components/media/useAudioPlayback');
 
-function emitSnapshot(next: typeof snapshot) {
+function emitSnapshot(next: TestPlaybackSnapshot) {
   snapshot = next;
   for (const listener of listeners) listener(next);
 }

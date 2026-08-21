@@ -4,7 +4,7 @@ import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
@@ -98,6 +98,6 @@ export function MessageContent({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   content: { gap: 8, width: '100%' },
 }));

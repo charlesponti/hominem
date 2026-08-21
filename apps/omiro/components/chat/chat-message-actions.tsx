@@ -2,9 +2,9 @@ import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
-import { ActionIconButton } from './chat-action-icon-button';
+import { ActionIconButton } from '../ui/action-icon-button';
 import { ChatCopyButton } from './chat-copy-button';
 import { ChatShareButton } from './chat-share-button';
 import { ChatSpeakButton } from './chat-speak-button';
@@ -66,7 +66,7 @@ export function ActiveMessageActions({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   actionContainer: { marginTop: 4 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   actionsEnd: { justifyContent: 'flex-end' },

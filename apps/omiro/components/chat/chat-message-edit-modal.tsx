@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';

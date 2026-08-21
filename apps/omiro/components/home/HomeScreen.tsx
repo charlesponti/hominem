@@ -6,7 +6,7 @@ import { ComposerDock } from '~/components/composer/ComposerDock';
 import { inboxDayGroupKey, inboxDayGroupLabel } from '~/components/inbox/format-inbox-date';
 import { InboxStreamItem } from '~/components/inbox/InboxStreamItem';
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
   clearInboxDraft,

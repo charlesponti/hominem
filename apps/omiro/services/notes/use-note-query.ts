@@ -21,12 +21,12 @@ export const useNoteQuery = ({ noteId, enabled = true }: { noteId: string; enabl
     data: noteQuery.data,
     isPending: noteQuery.isPending,
     isFetching: noteQuery.isFetching,
-    hasUsableData: hasDefinedData,
+    isReady: hasDefinedData,
   });
 
   return {
     ...noteQuery,
-    hasUsableData: restoredState.hasUsableData,
+    isReady: restoredState.isReady,
     isInitialLoading: restoredState.isInitialLoading,
     isRefreshing: restoredState.isRefreshing,
   };

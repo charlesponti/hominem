@@ -13,10 +13,10 @@ describe('resolveRestoredQueryState', () => {
         data: [{ id: 'msg-1' }],
         isPending: false,
         isFetching: true,
-        hasUsableData: hasNonEmptyListData,
+        isReady: hasNonEmptyListData,
       }),
     ).toEqual({
-      hasUsableData: true,
+      isReady: true,
       isInitialLoading: false,
       isRefreshing: true,
     });
@@ -28,10 +28,10 @@ describe('resolveRestoredQueryState', () => {
         data: undefined,
         isPending: true,
         isFetching: true,
-        hasUsableData: hasNonEmptyListData,
+        isReady: hasNonEmptyListData,
       }),
     ).toEqual({
-      hasUsableData: false,
+      isReady: false,
       isInitialLoading: true,
       isRefreshing: false,
     });
@@ -43,10 +43,10 @@ describe('resolveRestoredQueryState', () => {
         data: { id: 'note-1', title: 'Draft' },
         isPending: false,
         isFetching: true,
-        hasUsableData: hasDefinedData,
+        isReady: hasDefinedData,
       }),
     ).toEqual({
-      hasUsableData: true,
+      isReady: true,
       isInitialLoading: false,
       isRefreshing: true,
     });

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -66,7 +66,7 @@ export function RecordingLevelMeter() {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   bar: { flex: 1, borderRadius: 2 },
   meter: {
     flexDirection: 'row',

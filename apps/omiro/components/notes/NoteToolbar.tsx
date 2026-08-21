@@ -3,7 +3,7 @@ import React from 'react';
 import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';

@@ -67,7 +67,7 @@ export function useInboxStreamItems({ enabled = true }: UseInboxStreamItemsOptio
     data: items,
     isPending: inboxQuery.isPending,
     isFetching: inboxQuery.isFetching,
-    hasUsableData: hasNonEmptyListData,
+    isReady: hasNonEmptyListData,
   });
 
   return {

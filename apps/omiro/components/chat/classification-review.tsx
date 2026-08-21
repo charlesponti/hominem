@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';

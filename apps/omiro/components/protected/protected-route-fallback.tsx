@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 export function ProtectedRouteFallback() {
   return <View testID="protected-route-fallback" style={styles.container} />;

@@ -14,11 +14,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconChip } from '~/components/ui/icon-chip';
-import { OtpInput } from '~/components/ui/otp-input';
+import { OtpInput } from '~/components/ui/otp-field';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { OTP_EXPIRES_SECONDS } from '~/config/auth-protocol';
 import { useAuth } from '~/services/auth/auth-provider';

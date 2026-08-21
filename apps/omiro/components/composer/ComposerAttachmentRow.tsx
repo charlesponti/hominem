@@ -3,7 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { useComposerAttachments } from '~/components/composer/ComposerContext';
-import { makeStyles, transitionDurations, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';

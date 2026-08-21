@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { DiscreteSlider } from '~/components/ui/discrete-slider';
 import {

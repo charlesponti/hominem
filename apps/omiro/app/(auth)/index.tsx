@@ -14,7 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
 import { TextField } from '~/components/ui/text-field';

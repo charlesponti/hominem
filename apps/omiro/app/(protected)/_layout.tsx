@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { APP_NAME } from '~/constants';
 import { useAppLock } from '~/hooks/use-app-lock';
@@ -108,6 +108,16 @@ function ProtectedShell() {
                 presentation: 'formSheet',
                 sheetAllowedDetents: 'fitToContents',
                 sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
+              name="note-draft-sheet"
+              options={{
+                headerShown: false,
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+                sheetAllowedDetents: [0.6, 0.95],
+                sheetInitialDetentIndex: 0,
               }}
             />
             <Stack.Screen name="onboarding" options={{ headerShown: true }} />

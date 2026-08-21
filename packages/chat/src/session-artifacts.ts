@@ -13,7 +13,7 @@ export interface NoteProposal {
 }
 
 export interface ArtifactProposal {
-  proposedType: Exclude<ArtifactType, 'tracker'>;
+  proposedType: ArtifactType;
   proposedTitle: string;
   proposedChanges: string[];
   previewContent: string;
@@ -34,7 +34,7 @@ function truncate(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
-function getArtifactTitlePrefix(type: Exclude<ArtifactType, 'tracker'>): string {
+function getArtifactTitlePrefix(type: ArtifactType): string {
   switch (type) {
     case 'task':
       return 'Untitled task';
@@ -45,7 +45,7 @@ function getArtifactTitlePrefix(type: Exclude<ArtifactType, 'tracker'>): string 
   }
 }
 
-function getArtifactChangeLabel(type: Exclude<ArtifactType, 'tracker'>): string {
+function getArtifactChangeLabel(type: ArtifactType): string {
   switch (type) {
     case 'task':
       return 'task';
@@ -138,7 +138,7 @@ export function buildNoteProposal(messages: SessionArtifactMessage[]): NotePropo
 
 export function buildArtifactProposal(
   messages: SessionArtifactMessage[],
-  type: Exclude<ArtifactType, 'tracker'>,
+  type: ArtifactType,
 ): ArtifactProposal {
   const previewContent = toTranscript(messages);
   const capturePreview = getCapturePreview(messages);

@@ -1,14 +1,14 @@
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert } from 'react-native';
 import Reanimated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useThemeColor } from '~/components/theme';
 import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -17,11 +17,8 @@ import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import t from '~/translations';
 
-import { formatInboxTimestamp } from './format-inbox-date';
 import type { InboxStreamItemData } from './InboxStreamItem.types';
 import { stripPreviewMarkdown } from './strip-preview-markdown';
-
-const BADGE_TINT_ALPHA = '26';
 
 interface InboxStreamItemProps {
   animateOnMount?: boolean;
@@ -37,11 +34,7 @@ export const InboxStreamItem = memo(
     const titleText = cleanText(item.title);
     const previewText = cleanText(item.preview ? stripPreviewMarkdown(item.preview) : item.preview);
     const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
-    const timestamp = formatInboxTimestamp(item.updatedAt);
     const isChat = item.kind === 'chat';
-    const primaryColor = useThemeColor('--color-primary') as string;
-    const chart2Color = useThemeColor('--color-chart-2') as string;
-    const tertiaryColor = useThemeColor('--color-tertiary') as string;
     const mutedForegroundColor = useThemeColor('--color-muted-foreground') as string;
     const shouldAnimateIn = animateOnMount || isNew;
     const entranceOffset = reducedMotion || !shouldAnimateIn ? 0 : animateOnMount ? 8 : -8;
@@ -135,9 +128,3 @@ function cleanText(value: string | null): string | null {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : null;
 }
-
-const styles = makeStyles((theme) => ({
-  badge: { alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
-  metadata: { alignItems: 'flex-end', gap: 4 },
-  timestamp: { ...theme.typography.caption2, color: theme.colors.tertiary },
-}));

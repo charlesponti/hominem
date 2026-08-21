@@ -27,11 +27,11 @@ describe('useVoiceCleanup', () => {
 
     let data: unknown;
     await act(async () => {
-      data = await result.current.cleanup({ rawText: 'raw', source: 'dictation' });
+      data = await result.current.cleanup({ rawText: 'raw', source: 'apple-on-device' });
     });
 
     expect(mockCleanupPost).toHaveBeenCalledWith({
-      json: { rawText: 'raw', source: 'dictation' },
+      json: { rawText: 'raw', source: 'apple-on-device' },
     });
     expect(data).toEqual({ text: 'cleaned text' });
     expect(mockEmitVoiceEvent).toHaveBeenCalledWith(
@@ -49,11 +49,11 @@ describe('useVoiceCleanup', () => {
     const { result } = renderHook(() => useVoiceCleanup());
 
     await act(async () => {
-      await result.current.cleanup({ rawText: 'raw', locale: 'en-US', source: 'dictation' });
+      await result.current.cleanup({ rawText: 'raw', locale: 'en-US', source: 'apple-on-device' });
     });
 
     expect(mockCleanupPost).toHaveBeenCalledWith({
-      json: { rawText: 'raw', locale: 'en-US', source: 'dictation' },
+      json: { rawText: 'raw', locale: 'en-US', source: 'apple-on-device' },
     });
   });
 
@@ -66,9 +66,9 @@ describe('useVoiceCleanup', () => {
     const { result } = renderHook(() => useVoiceCleanup());
 
     await act(async () => {
-      await expect(result.current.cleanup({ rawText: 'raw', source: 'dictation' })).rejects.toThrow(
-        'cleanup broke',
-      );
+      await expect(
+        result.current.cleanup({ rawText: 'raw', source: 'apple-on-device' }),
+      ).rejects.toThrow('cleanup broke');
     });
 
     expect(mockEmitVoiceEvent).toHaveBeenCalledWith(
@@ -86,9 +86,9 @@ describe('useVoiceCleanup', () => {
     const { result } = renderHook(() => useVoiceCleanup());
 
     await act(async () => {
-      await expect(result.current.cleanup({ rawText: 'raw', source: 'dictation' })).rejects.toThrow(
-        'Voice cleanup failed (503)',
-      );
+      await expect(
+        result.current.cleanup({ rawText: 'raw', source: 'apple-on-device' }),
+      ).rejects.toThrow('Voice cleanup failed (503)');
     });
   });
 
@@ -98,7 +98,7 @@ describe('useVoiceCleanup', () => {
 
     let cleanupPromise: Promise<unknown> | undefined;
     act(() => {
-      cleanupPromise = result.current.cleanup({ rawText: 'raw', source: 'dictation' });
+      cleanupPromise = result.current.cleanup({ rawText: 'raw', source: 'apple-on-device' });
     });
 
     await waitFor(() => expect(result.current.isCleaningVoice).toBe(true));

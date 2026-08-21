@@ -28,7 +28,7 @@ interface ComposerChatProps {
   mode: 'chat';
   chatId: string;
   testID?: string;
-  // Owned by the screen (ChatDetailScreen) and shared with the message list's
+  // Owned by the screen (ChatScreen) and shared with the message list's
   // retry action, so sending and retrying a failed message share one
   // in-flight mutation instead of racing two independent streams.
   chatSend: ComposerChatSend;

@@ -20,7 +20,7 @@ import { inferComposerEntryKind } from './composerInference';
 import { ComposerKindToggle } from './ComposerKindToggle';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import type { ComposerMessageStore } from './useComposerMessageStore';
-import { useComposerMessageSelector } from './useComposerMessageStore';
+import { useComposerMessageStore } from './useComposerMessageStore';
 
 interface ComposerToolbarProps {
   composerProps: ComposerProps;
@@ -71,11 +71,11 @@ function ComposerToolbarComponent({
   onSubmit,
 }: ComposerToolbarProps) {
   const router = useRouter();
-  const inferredEntryKind = useComposerMessageSelector(messageStore, inferComposerEntryKind);
+  const inferredEntryKind = useComposerMessageStore(messageStore, inferComposerEntryKind);
   const selectedEntryKind =
     manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
   const hasContent =
-    useComposerMessageSelector(messageStore, (value) => value.trim().length > 0) ||
+    useComposerMessageStore(messageStore, (value) => value.trim().length > 0) ||
     uploadedAttachmentCount > 0;
   const [primary] = useThemeColor(['--color-primary']) as string[];
 

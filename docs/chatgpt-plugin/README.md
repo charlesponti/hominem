@@ -15,12 +15,13 @@ Users should discover Hominem in the Plugin Directory, choose **Connect**, and
 complete Hominem OAuth. They should not configure MCP URLs, client IDs, or
 callback URLs themselves.
 
-## Use Hominem from the ChatGPT phone app
+## Mobile availability
 
-The API is already the ChatGPT-compatible MCP server; no separate mobile app
-or `packages/api` package is required. ChatGPT connections are account-level,
-so create the connection once in ChatGPT on the web, then use it from the
-ChatGPT app on your phone with the same account.
+Hominem is being prepared as a reviewed Plugin Directory app. The private
+custom MCP app created in ChatGPT Developer Mode is a web-only test harness;
+it is not the mobile delivery mechanism. Mobile availability must be verified
+after OpenAI approves and publishes the Hominem app, because availability can
+vary by app and surface.
 
 Before connecting, set the production API secret `OPENAI_APPS_CHALLENGE` to
 the exact challenge value supplied by the OpenAI Apps submission/developer
@@ -34,15 +35,14 @@ curl -fsS https://api.ponti.io/.well-known/oauth-protected-resource/api/mcp
 The first command must return the challenge as plain text. The second must
 return the Hominem MCP resource metadata. Never commit the challenge value.
 
-In ChatGPT on the web, enable Developer mode under **Settings → Security and
-login**, create a plugin/connector, and use this MCP URL:
+For private web testing, enable Developer mode in ChatGPT, create a custom app,
+and use this MCP URL:
 
 `https://api.ponti.io/api/mcp`
 
-Review the discovered tools, connect, and complete the Hominem email-OTP
-login/consent flow. On the phone, start a new chat, select Hominem from the
-tools/connectors menu, and try: “List my current and previous career
-engagements.”
+Review the discovered tools and complete the Hominem email-OTP login/consent
+flow. After directory approval, test Hominem on ChatGPT web, iOS, and Android
+from the Plugin Directory. Do not claim mobile support before that test passes.
 
 This is a tool-only integration, so results appear as normal ChatGPT messages;
 there is no custom widget to install.
@@ -50,11 +50,11 @@ there is no custom widget to install.
 ## Listing draft
 
 - Name: Hominem
-- Short description: Manage your career profile and job search with ChatGPT.
-- Long description: Hominem securely connects ChatGPT to your career profile so
-  you can review work history, applications, education, skills, projects,
-  testimonials, certifications, and social links, and make explicit updates
-  when you ask.
+- Short description: Your personal data repository for ChatGPT.
+- Long description: Hominem securely connects ChatGPT to your personal data
+  repository so you can review and explicitly update career, finance, health,
+  calendar, travel, media, people, places, collections, tags, and related
+  personal records.
 - Category: Productivity
 - MCP server URL: `https://api.ponti.io/api/mcp`
 - Server type: Universal

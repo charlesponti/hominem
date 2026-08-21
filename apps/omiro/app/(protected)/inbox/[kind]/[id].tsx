@@ -1,8 +1,8 @@
 import { Redirect, Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 
-import { ChatDetailScreen } from '~/components/inbox/ChatDetailScreen';
-import { NoteDetailScreen } from '~/components/inbox/NoteDetailScreen';
+import { ChatScreen } from '~/components/inbox/ChatScreen';
+import { NoteScreen } from '~/components/inbox/NoteScreen';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 
 export default function InboxDetailRoute() {
@@ -11,7 +11,7 @@ export default function InboxDetailRoute() {
   if (kind === 'chat') {
     return id ? (
       <InboxDetailChrome>
-        <ChatDetailScreen id={id} />
+        <ChatScreen id={id} />
       </InboxDetailChrome>
     ) : (
       <Redirect href={HOME_ROUTE} />
@@ -24,7 +24,7 @@ export default function InboxDetailRoute() {
 
   return (
     <InboxDetailChrome>
-      <NoteDetailScreen />
+      <NoteScreen />
     </InboxDetailChrome>
   );
 }

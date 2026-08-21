@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
@@ -130,7 +130,7 @@ export function VoiceRecordingPanel({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   sendingContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
   sendingContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   recordingDot: { width: 8, height: 8, borderRadius: 999 },

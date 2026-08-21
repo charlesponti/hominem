@@ -244,9 +244,23 @@ describe('useNoteEditor', () => {
     mockPersistNow.mockResolvedValueOnce(undefined);
     const { result, queryClient } = renderHookWithQueryClient(() => useNoteEditor(NOTE_ID));
     const files = [
-      { id: 'file-1', name: 'a.png' },
-      { id: 'file-2', name: 'b.png' },
-    ] as Note['files'];
+      {
+        id: 'file-1',
+        originalName: 'a.png',
+        mimetype: 'image/png',
+        size: 1,
+        url: 'https://example.com/a.png',
+        uploadedAt: new Date().toISOString(),
+      },
+      {
+        id: 'file-2',
+        originalName: 'b.png',
+        mimetype: 'image/png',
+        size: 1,
+        url: 'https://example.com/b.png',
+        uploadedAt: new Date().toISOString(),
+      },
+    ];
     queryClient.setQueryData(noteKeys.detail(NOTE_ID), noteFixture({ files }));
 
     await act(async () => {
@@ -254,7 +268,7 @@ describe('useNoteEditor', () => {
     });
 
     expect(queryClient.getQueryData<Note>(noteKeys.detail(NOTE_ID))?.files).toEqual([
-      { id: 'file-2', name: 'b.png' },
+      expect.objectContaining({ id: 'file-2', originalName: 'b.png' }),
     ]);
     expect(mockPersistNow).toHaveBeenCalledWith({
       title: 'Title',

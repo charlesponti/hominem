@@ -9,7 +9,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { HOME_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';

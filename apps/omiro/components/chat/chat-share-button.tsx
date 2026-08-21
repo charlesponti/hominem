@@ -2,7 +2,7 @@ import type { ChatMessageItem } from '@hominem/chat';
 
 import { useShareMessage } from '~/hooks/use-message-actions';
 
-import { ActionIconButton } from './chat-action-icon-button';
+import { ActionIconButton } from '../ui/action-icon-button';
 
 export function ChatShareButton({ message }: { message: ChatMessageItem }) {
   const shareMessage = useShareMessage();

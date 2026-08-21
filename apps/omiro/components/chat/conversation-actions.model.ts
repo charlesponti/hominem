@@ -9,7 +9,7 @@ type ConversationActionKind = 'search' | 'toggle-debug' | 'settings' | 'transfor
 interface ConversationActionItem {
   kind: ConversationActionKind;
   label: string;
-  type?: Exclude<ConversationActionType, 'tracker'>;
+  type?: ConversationActionType;
 }
 
 export interface ConversationActionSection {
@@ -23,7 +23,7 @@ export interface ConversationActionsModelInput {
   showDebug: boolean;
 }
 
-const TRANSFORM_ITEMS: { type: Exclude<ConversationActionType, 'tracker'>; label: string }[] = [
+const TRANSFORM_ITEMS: { type: ConversationActionType; label: string }[] = [
   { type: 'note', label: t.chat.actions.transformToNote },
   { type: 'task_list', label: t.chat.actions.createTasks },
 ];

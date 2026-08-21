@@ -11,7 +11,7 @@ import {
   usePhotoOutput,
 } from 'react-native-vision-camera';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 

@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Card, IconButton } from '~/components/ui';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 import t from '~/translations';

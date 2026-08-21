@@ -3,7 +3,7 @@ import React from 'react';
 import type { ColorValue } from 'react-native';
 import { View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 import AppIcon from './icon';
 
@@ -35,6 +35,6 @@ export function IconChip({ icon, size = 36, radius = 10, iconSize, tintColor }: 
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   container: { alignItems: 'center', justifyContent: 'center' },
 }));

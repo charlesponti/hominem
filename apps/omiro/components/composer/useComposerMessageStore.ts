@@ -30,7 +30,7 @@ export function createComposerMessageStore(initialMessage = ''): ComposerMessage
 // on the selector returning a primitive -- React compares snapshots with
 // Object.is, so a selector that returns a new object/array each call would
 // re-render every time regardless.
-export function useComposerMessageSelector<T>(
+export function useComposerMessageStore<T>(
   store: ComposerMessageStore,
   selector: (message: string) => T,
 ): T {

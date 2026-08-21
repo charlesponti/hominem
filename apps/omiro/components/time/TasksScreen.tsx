@@ -2,7 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { getTaskDetailRoute, getTaskScheduleRoute } from '~/services/navigation/routes';

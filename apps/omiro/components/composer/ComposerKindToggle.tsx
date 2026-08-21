@@ -40,10 +40,9 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
 // makes switching legible -- see ComposerKindToggle in the /animate skill
 // output for the reasoning.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
-  const [primary, mutedForeground, muted] = useThemeColor([
+  const [primary, mutedForeground] = useThemeColor([
     '--color-primary',
     '--color-muted-foreground',
-    '--color-muted',
   ]) as string[];
   const reducedMotion = useReducedMotion();
   const selectedIndex = options.findIndex((option) => option.kind === selected);

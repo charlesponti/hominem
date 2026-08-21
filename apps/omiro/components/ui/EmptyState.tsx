@@ -2,7 +2,7 @@ import type { SFSymbol } from 'expo-symbols';
 import { Image, Text, View, type ImageSourcePropType } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 import { Button } from './button';
 import AppIcon from './icon';

@@ -2,11 +2,11 @@ export interface RestoredQueryStateInput<TData> {
   data: TData | undefined;
   isPending: boolean;
   isFetching: boolean;
-  hasUsableData: (data: TData | undefined) => boolean;
+  isReady: (data: TData | undefined) => boolean;
 }
 
 export interface RestoredQueryStateOutput {
-  hasUsableData: boolean;
+  isReady: boolean;
   isInitialLoading: boolean;
   isRefreshing: boolean;
 }
@@ -20,12 +20,12 @@ export function resolveRestoredQueryState<TData>({
   data,
   isPending,
   isFetching,
-  hasUsableData,
+  isReady,
 }: RestoredQueryStateInput<TData>): RestoredQueryStateOutput {
-  const ready = hasUsableData(data);
+  const ready = isReady(data);
 
   return {
-    hasUsableData: ready,
+    isReady: ready,
     isInitialLoading: isPending && !ready,
     isRefreshing: isFetching && ready,
   };

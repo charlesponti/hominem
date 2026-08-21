@@ -28,24 +28,25 @@ export interface PendingReview extends ClassificationProposal {
   items?: { title: string; description?: string }[];
 }
 
-interface LifecycleState {
+interface LifecycleState<TReview extends PendingReview> {
   lifecycleState: CaptureLifecycleState;
-  pendingReview: PendingReview | null;
+  pendingReview: TReview | null;
   persistedSource: SessionSource | null;
 }
 
-type LifecycleAction =
+type LifecycleAction<TReview extends PendingReview> =
   | { type: 'set-lifecycle'; lifecycleState: CaptureLifecycleState }
-  | { type: 'set-pending-review'; pendingReview: PendingReview | null }
+  | { type: 'set-pending-review'; pendingReview: TReview | null }
   | { type: 'set-persisted-source'; persistedSource: SessionSource | null };
 
-const initialLifecycleState: LifecycleState = {
-  lifecycleState: 'idle',
-  pendingReview: null,
-  persistedSource: null,
-};
+function getInitialLifecycleState<TReview extends PendingReview>(): LifecycleState<TReview> {
+  return { lifecycleState: 'idle', pendingReview: null, persistedSource: null };
+}
 
-function lifecycleReducer(state: LifecycleState, action: LifecycleAction): LifecycleState {
+function lifecycleReducer<TReview extends PendingReview>(
+  state: LifecycleState<TReview>,
+  action: LifecycleAction<TReview>,
+): LifecycleState<TReview> {
   switch (action.type) {
     case 'set-lifecycle':
       return { ...state, lifecycleState: action.lifecycleState };
@@ -56,7 +57,7 @@ function lifecycleReducer(state: LifecycleState, action: LifecycleAction): Lifec
   }
 }
 
-export interface UseChatLifecycleInput {
+export interface UseChatLifecycleInput<TReview extends PendingReview = PendingReview> {
   /**
    * Normalized messages for source derivation and proposal building.
    * Map your platform's message type to `{ role, content }` before passing.
@@ -71,30 +72,34 @@ export interface UseChatLifecycleInput {
    * Platform-specific classification: either calls the server (web) or builds
    * a proposal client-side (mobile). Must resolve to a `PendingReview`.
    */
-  onTransform: (type: ArtifactType) => Promise<PendingReview>;
+  onTransform: (type: ArtifactType) => Promise<TReview>;
   /**
    * Platform-specific persistence: creates the note and returns the new
    * SessionSource that the header should display.
    */
-  onAcceptReview: (review: PendingReview) => Promise<SessionSource>;
+  onAcceptReview: (review: TReview) => Promise<SessionSource>;
   /**
    * Platform-specific rejection: calls the server to discard the ReviewItem
    * (web) or is a no-op (mobile). State is always reset by the hook.
    */
-  onRejectReview: (review: PendingReview) => Promise<void>;
+  onRejectReview: (review: TReview) => Promise<void>;
   /** Called when any lifecycle phase throws. Use to show toasts / alerts. */
   onError: (phase: 'transform' | 'accept' | 'reject', error: unknown) => void;
 }
 
-export function useChatLifecycle({
+export function useChatLifecycle<TReview extends PendingReview = PendingReview>({
   messages,
   source,
   onTransform,
   onAcceptReview,
   onRejectReview,
   onError,
-}: UseChatLifecycleInput) {
-  const [state, dispatch] = useReducer(lifecycleReducer, initialLifecycleState);
+}: UseChatLifecycleInput<TReview>) {
+  const [state, dispatch] = useReducer(
+    lifecycleReducer<TReview>,
+    undefined,
+    getInitialLifecycleState<TReview>,
+  );
 
   const isLifecycleBlocked =
     isBlockingState(state.lifecycleState) || state.lifecycleState === 'reviewing_changes';

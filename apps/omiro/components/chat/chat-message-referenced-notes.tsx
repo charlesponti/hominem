@@ -1,7 +1,7 @@
 import { getReferencedNoteLabel, type ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 export function ReferencedNotes({ message }: { message: ChatMessageItem }) {
   const [textSecondary] = useThemeColor(['--color-muted-foreground']) as string[];

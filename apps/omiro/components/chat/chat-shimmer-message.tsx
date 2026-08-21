@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, transitionDurations, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
 
 const SHIMMER_DURATION = transitionDurations[150] * 5;
 
@@ -64,7 +64,7 @@ export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessage
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   userShimmer: {
     paddingHorizontal: 16,
     paddingVertical: 12,

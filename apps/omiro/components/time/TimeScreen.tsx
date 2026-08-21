@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { ComposerDock } from '~/components/composer/ComposerDock';
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
 

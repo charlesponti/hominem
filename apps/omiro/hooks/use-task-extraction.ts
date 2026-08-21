@@ -10,19 +10,19 @@ import { Alert } from 'react-native';
 
 import t from '~/translations';
 
-export interface ChatContentCreated {
+export interface ExtractedTasksCreated {
   source: { kind: 'artifact'; id: string; type: Exclude<ArtifactType, 'tracker'>; title: string };
   updatedAt?: string;
 }
 
-interface UseChatTransformInput {
+interface UseTaskExtractionInput {
   chatId: string;
   source: SessionSource;
   messages: ChatMessageItem[];
-  onContentCreated?: (content: ChatContentCreated) => Promise<void>;
+  onContentCreated?: (content: ExtractedTasksCreated) => Promise<void>;
 }
 
-export function buildTaskListProposal(previewContent: string, tasks: { title: string }[]) {
+export function buildExtractedTasksProposal(previewContent: string, tasks: { title: string }[]) {
   return {
     proposedType: 'task_list' as const,
     proposedTitle:
@@ -40,59 +40,28 @@ export function buildTaskListProposal(previewContent: string, tasks: { title: st
   };
 }
 
-export function useChatTransform({
+// Backs the "Create tasks" conversation action: extracts a task list from the
+// chat transcript deterministically, shows it in ClassificationReview via
+// useChatLifecycle, and creates the tasks in a batch on accept.
+//
+// "Save as note" is a separate flow -- ChatScreen intercepts that menu
+// item before it ever calls handleExtract, and routes to note-draft-sheet.tsx
+// instead (an AI rewrite, not this hook's deterministic transcript-to-artifact path).
+// Since TRANSFORM_ITEMS in conversation-actions.model.ts only offers 'note' and
+// 'task_list', and 'note' never reaches here, onTransform below only ever
+// needs to handle 'task_list'.
+export function useTaskExtraction({
   chatId,
   source,
   messages,
   onContentCreated,
-}: UseChatTransformInput) {
+}: UseTaskExtractionInput) {
   const client = useApiClient();
 
   const proposalMessages = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.message })),
     [messages],
   );
-
-  const createTask = useMutation({
-    mutationKey: ['chat-task', chatId],
-    mutationFn: async (review: {
-      proposedType: Exclude<ArtifactType, 'note' | 'tracker'>;
-      proposedTitle: string;
-      previewContent: string;
-    }) => {
-      const res = await client.api.tasks.$post({
-        json: {
-          artifactType: review.proposedType,
-          description: review.previewContent,
-          title: review.proposedTitle,
-        },
-      });
-      return res.json();
-    },
-    onSuccess: async (task) => {
-      if (onContentCreated) {
-        await onContentCreated({
-          source: {
-            kind: 'artifact',
-            id: task.id,
-            title: task.title,
-            type: task.artifactType,
-          },
-          updatedAt: task.updatedAt,
-        });
-      }
-    },
-  });
-
-  const createNote = useMutation({
-    mutationKey: ['chat-note', chatId],
-    mutationFn: async (review: { proposedTitle: string; previewContent: string }) => {
-      const res = await client.api.notes.$post({
-        json: { content: review.previewContent, title: review.proposedTitle, type: 'note' },
-      });
-      return res.json();
-    },
-  });
 
   const extractTasksFromTranscript = useMutation({
     mutationKey: ['chat-task-extract', chatId],
@@ -131,13 +100,10 @@ export function useChatTransform({
         const { tasks } = await extractTasksFromTranscript.mutateAsync({
           transcript: previewContent,
         });
-        return buildTaskListProposal(previewContent, tasks);
+        return buildExtractedTasksProposal(previewContent, tasks);
       }
 
-      return buildArtifactProposal(
-        proposalMessages,
-        type === 'tracker' ? 'note' : (type as 'note' | 'task'),
-      );
+      throw new Error(`Unsupported extraction type: ${type}`);
     },
     onAcceptReview: async (review): Promise<SessionSource> => {
       if (review.items) {
@@ -167,51 +133,12 @@ export function useChatTransform({
         };
       }
 
-      if (review.proposedType === 'note') {
-        const note = await createNote.mutateAsync(review);
-        if (onContentCreated) {
-          await onContentCreated({
-            source: {
-              kind: 'artifact',
-              id: note.id,
-              title: note.title || review.proposedTitle,
-              type: 'note',
-            },
-            updatedAt: note.updatedAt,
-          });
-        }
-        return {
-          kind: 'artifact' as const,
-          id: note.id,
-          type: 'note' as const,
-          title: note.title || review.proposedTitle,
-        };
-      }
-
-      if (review.proposedType !== 'task' && review.proposedType !== 'task_list') {
-        const note = await createNote.mutateAsync({
-          proposedTitle: review.proposedTitle,
-          previewContent: review.previewContent,
-        });
-        return {
-          kind: 'artifact' as const,
-          id: note.id,
-          type: 'note' as const,
-          title: note.title || review.proposedTitle,
-        };
-      }
-
-      const task = await createTask.mutateAsync({
-        proposedTitle: review.proposedTitle,
-        previewContent: review.previewContent,
-        proposedType: review.proposedType,
-      });
-      return {
-        kind: 'artifact' as const,
-        id: task.id,
-        type: review.proposedType,
-        title: task.title,
-      };
+      // onTransform above only ever produces a task_list proposal (or
+      // throws), and buildExtractedTasksProposal always sets `items` -- so this
+      // branch is unreachable via the real UI flow. It exists only because
+      // PendingReview['proposedType'] is the shared ArtifactType, which
+      // still includes types this hook doesn't handle (e.g. 'note').
+      throw new Error(`Unsupported review type: ${review.proposedType}`);
     },
     onRejectReview: async () => {},
     onError: (_phase, _error) => {

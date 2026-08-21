@@ -2,7 +2,7 @@ import type { ChatMessageItem } from '@hominem/chat';
 
 import { useCopyMessage } from '~/hooks/use-message-actions';
 
-import { ActionIconButton } from './chat-action-icon-button';
+import { ActionIconButton } from '../ui/action-icon-button';
 
 export function ChatCopyButton({ message }: { message: ChatMessageItem }) {
   const copyMessage = useCopyMessage();

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { waitFor } from '@testing-library/react';
-import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import type { MessageOutput } from '~/services/chat/chatMessages';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
@@ -104,15 +105,19 @@ describe('useChatMessages', () => {
   });
 
   it('keeps the optimistic render key when the server assigns a message id', () => {
-    const previous = {
-      ...toMessageOutput({
-        id: 'optimistic-assistant',
-        role: 'assistant',
-        content: 'hi',
-        createdAt: new Date().toISOString(),
-        chatId: CHAT_ID,
-      } as RpcChatMessageFixture),
+    const previous: MessageOutput = {
+      id: 'optimistic-assistant',
       renderKey: 'optimistic-assistant',
+      role: 'assistant',
+      message: 'hi',
+      created_at: new Date().toISOString(),
+      chat_id: CHAT_ID,
+      profile_id: '',
+      focus_ids: null,
+      focus_items: null,
+      referencedNotes: null,
+      toolCalls: null,
+      isStreaming: false,
     };
     const next = toMessageOutput({
       id: 'server-assistant',
@@ -121,8 +126,9 @@ describe('useChatMessages', () => {
       createdAt: new Date().toISOString(),
       chatId: CHAT_ID,
     } as RpcChatMessageFixture);
+    if (!next) throw new Error('Expected assistant message output');
 
-    expect(preserveRenderKeys([next!], [previous])).toMatchObject([
+    expect(preserveRenderKeys([next], [previous])).toMatchObject([
       {
         id: 'server-assistant',
         renderKey: 'optimistic-assistant',

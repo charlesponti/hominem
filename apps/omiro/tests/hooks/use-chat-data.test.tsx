@@ -22,6 +22,7 @@ vi.mock('~/services/chat/use-chat-archive', () => ({
 }));
 
 const { useChatData } = await import('~/hooks/use-chat-data');
+const { useChatArchiveAction } = await import('~/hooks/use-chat-archive-action');
 
 const CHAT_ID = 'chat-1';
 
@@ -44,10 +45,7 @@ describe('useChatData', () => {
 
   it('reports initial loading when pending with no usable data yet', () => {
     mockUseChatMessages.mockReturnValue(messagesQueryResult({ isPending: true, data: undefined }));
-    const onChatArchive = vi.fn();
-    const { result } = renderHookWithQueryClient(() =>
-      useChatData({ chatId: CHAT_ID, onChatArchive }),
-    );
+    const { result } = renderHookWithQueryClient(() => useChatData({ chatId: CHAT_ID }));
 
     expect(result.current.isMessagesLoading).toBe(true);
     expect(result.current.isMessagesRefreshing).toBe(false);
@@ -62,9 +60,7 @@ describe('useChatData', () => {
         data: [{ id: 'm1' }],
       }),
     );
-    const { result } = renderHookWithQueryClient(() =>
-      useChatData({ chatId: CHAT_ID, onChatArchive: vi.fn() }),
-    );
+    const { result } = renderHookWithQueryClient(() => useChatData({ chatId: CHAT_ID }));
 
     expect(result.current.isMessagesLoading).toBe(false);
     expect(result.current.isMessagesRefreshing).toBe(true);
@@ -73,9 +69,7 @@ describe('useChatData', () => {
 
   it('falls back to an empty array when messages data is an empty list', () => {
     mockUseChatMessages.mockReturnValue(messagesQueryResult({ data: [] }));
-    const { result } = renderHookWithQueryClient(() =>
-      useChatData({ chatId: CHAT_ID, onChatArchive: vi.fn() }),
-    );
+    const { result } = renderHookWithQueryClient(() => useChatData({ chatId: CHAT_ID }));
 
     expect(result.current.messages).toEqual([]);
   });
@@ -83,18 +77,15 @@ describe('useChatData', () => {
   it('surfaces the messages query error', () => {
     const error = new Error('network error');
     mockUseChatMessages.mockReturnValue(messagesQueryResult({ error }));
-    const { result } = renderHookWithQueryClient(() =>
-      useChatData({ chatId: CHAT_ID, onChatArchive: vi.fn() }),
-    );
+    const { result } = renderHookWithQueryClient(() => useChatData({ chatId: CHAT_ID }));
 
     expect(result.current.messagesError).toBe(error);
   });
 
   it('archives the chat, invalidates the messages query, and calls onChatArchive on success', () => {
-    mockUseChatMessages.mockReturnValue(messagesQueryResult());
     const onChatArchive = vi.fn();
     const { result, queryClient } = renderHookWithQueryClient(() =>
-      useChatData({ chatId: CHAT_ID, onChatArchive }),
+      useChatArchiveAction({ chatId: CHAT_ID, onChatArchive }),
     );
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 

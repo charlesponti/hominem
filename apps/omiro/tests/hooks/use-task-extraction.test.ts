@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTaskListProposal } from '~/hooks/use-chat-transform';
+import { buildExtractedTasksProposal } from '~/hooks/use-task-extraction';
 
-describe('buildTaskListProposal', () => {
+describe('buildExtractedTasksProposal', () => {
   it('uses the no-tasks copy when extraction finds nothing', () => {
-    const proposal = buildTaskListProposal('transcript', []);
+    const proposal = buildExtractedTasksProposal('transcript', []);
 
     expect(proposal).toEqual({
       proposedType: 'task_list',
@@ -16,7 +16,7 @@ describe('buildTaskListProposal', () => {
   });
 
   it('uses the single task title when exactly one task is found', () => {
-    const proposal = buildTaskListProposal('transcript', [{ title: 'Write docs' }]);
+    const proposal = buildExtractedTasksProposal('transcript', [{ title: 'Write docs' }]);
 
     expect(proposal.proposedTitle).toBe('Write docs');
     expect(proposal.proposedChanges).toEqual(['Write docs']);
@@ -24,7 +24,7 @@ describe('buildTaskListProposal', () => {
   });
 
   it('uses the plural count title when multiple tasks are found', () => {
-    const proposal = buildTaskListProposal('transcript', [{ title: 'A' }, { title: 'B' }]);
+    const proposal = buildExtractedTasksProposal('transcript', [{ title: 'A' }, { title: 'B' }]);
 
     expect(proposal.proposedTitle).toBe('2 tasks');
     expect(proposal.proposedChanges).toEqual(['A', 'B']);

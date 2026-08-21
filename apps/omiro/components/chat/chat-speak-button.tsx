@@ -2,7 +2,7 @@ import type { ChatMessageItem } from '@hominem/chat';
 
 import { useAudioPlayback } from '~/components/media/useAudioPlayback';
 
-import { ActionIconButton } from './chat-action-icon-button';
+import { ActionIconButton } from '../ui/action-icon-button';
 
 export function ChatSpeakButton({ message }: { message: ChatMessageItem }) {
   const audioUrl = message.audio?.url ?? null;

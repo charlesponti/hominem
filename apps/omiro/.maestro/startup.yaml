@@ -22,7 +22,7 @@ appId: com.pontistudios.hakumi.dev
     timeout: 45000
     optional: true
 # The app persists a "resume target" (writeResumeTarget in
-# ChatDetailScreen.tsx, and the equivalent for notes) and relaunches straight
+# ChatScreen.tsx, and the equivalent for notes) and relaunches straight
 # into the last-viewed chat or note instead of the inbox. The target is
 # cleared when the detail screen unmounts (leaving the chat), so this only
 # happens when the app was killed while still on the detail screen. This
@@ -41,7 +41,7 @@ appId: com.pontistudios.hakumi.dev
       id: note-title-input
     timeout: 5000
     optional: true
-# Both ChatDetailScreen and the note detail screen show the native back
+# Both ChatScreen and the note screen show the native back
 # chevron (resource-id BackButton) only when canGoBack is true; when opened
 # via replace (no back stack), each renders its own "Inbox" toolbar button
 # instead with no testID. Try both so this works regardless of how the

@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { HOME_ROUTE } from '~/services/navigation/routes';
 

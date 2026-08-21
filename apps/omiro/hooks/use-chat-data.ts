@@ -1,9 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
-
-import { useChatArchive } from '~/services/chat/use-chat-archive';
 import { useChatMessages } from '~/services/chat/use-chat-messages';
-import { chatKeys } from '~/services/notes/query-keys';
 import {
   hasNonEmptyListData,
   resolveRestoredQueryState,
@@ -11,11 +6,9 @@ import {
 
 interface UseChatDataInput {
   chatId: string;
-  onChatArchive: () => void;
 }
 
-export function useChatData({ chatId, onChatArchive }: UseChatDataInput) {
-  const queryClient = useQueryClient();
+export function useChatData({ chatId }: UseChatDataInput) {
   const {
     error: messagesError,
     isFetching: isMessagesFetching,
@@ -23,23 +16,12 @@ export function useChatData({ chatId, onChatArchive }: UseChatDataInput) {
     refetch: refetchMessages,
     data: messages,
   } = useChatMessages({ chatId });
-  const { mutate: archiveChat, isPending: isArchiving } = useChatArchive({
-    chatId,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
-      onChatArchive();
-    },
-  });
   const messagesState = resolveRestoredQueryState({
     data: messages,
     isPending: isMessagesPending,
     isFetching: isMessagesFetching,
-    hasUsableData: hasNonEmptyListData,
+    isReady: hasNonEmptyListData,
   });
-
-  const handleArchiveChat = useCallback(() => {
-    archiveChat();
-  }, [archiveChat]);
 
   return {
     messages: messages && messages.length > 0 ? messages : [],
@@ -47,7 +29,5 @@ export function useChatData({ chatId, onChatArchive }: UseChatDataInput) {
     isMessagesLoading: messagesState.isInitialLoading,
     isMessagesRefreshing: messagesState.isRefreshing,
     refetchMessages,
-    handleArchiveChat,
-    isArchiving,
   };
 }

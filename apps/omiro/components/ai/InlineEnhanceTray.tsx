@@ -15,7 +15,7 @@ interface InlineEnhanceTrayProps {
   onPresetSelect: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
-  // Only NoteDetailScreen's inline flow awaits the request here and needs
+  // Only NoteScreen's inline flow awaits the request here and needs
   // these -- the composer's enhance-sheet route dismisses immediately and
   // shows its own loading state back on the composer (see EnhanceParticles),
   // so it leaves both unset.

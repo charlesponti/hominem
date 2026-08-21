@@ -1,7 +1,7 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 type ToolCall = NonNullable<ChatMessageItem['toolCalls']>[number];
 

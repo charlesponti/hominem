@@ -229,6 +229,15 @@ export function ChatMessageList({
       ref={listRef}
       style={styles.list}
       contentInsetAdjustmentBehavior="automatic"
+      ListHeaderComponent={
+        generation && onCancelGeneration ? (
+          <ChatActivityTimeline
+            generation={generation}
+            onCancel={onCancelGeneration}
+            onRetry={onRetryGeneration}
+          />
+        ) : null
+      }
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
         renderedMessages.length > 0 ? (

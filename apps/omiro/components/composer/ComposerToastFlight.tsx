@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { useInterruptibleMotion } from '~/services/motion/use-interruptible-motion';
 

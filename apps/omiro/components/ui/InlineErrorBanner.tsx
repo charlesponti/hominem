@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';

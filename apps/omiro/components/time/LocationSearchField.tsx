@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { TextField } from '~/components/ui/text-field';
 

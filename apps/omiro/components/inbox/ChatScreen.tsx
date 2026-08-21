@@ -2,17 +2,15 @@ import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, Text, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
-import { buildNoteDraft } from '~/components/chat/build-note-draft';
+import { ChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
-import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
-import { useChatArchiveAction } from '~/hooks/use-chat-archive-action';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
 import { useNetworkStatus } from '~/hooks/use-network-status';
@@ -32,17 +30,6 @@ import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE, getContentRoute } from '~/services/navigation/routes';
 import t from '~/translations';
-
-function getConversationActionIcon(kind: string, type?: string) {
-  if (kind === 'search') return 'magnifyingglass';
-  if (kind === 'toggle-debug') return 'ladybug';
-  if (kind === 'settings') return 'slider.horizontal.3';
-  if (kind === 'archive') return 'archivebox';
-  if (type === 'note') return 'doc.text';
-  if (type === 'task') return 'checkmark.circle';
-  if (type === 'task_list') return 'checklist';
-  return 'ellipsis.circle';
-}
 
 function isNotFoundError(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
@@ -88,10 +75,6 @@ export function ChatScreen({ id }: { id: string }) {
 
   const { messages, messagesError, isMessagesLoading, isMessagesRefreshing, refetchMessages } =
     useChatData({ chatId });
-  const { handleArchiveChat, isArchiving } = useChatArchiveAction({
-    chatId,
-    onChatArchive: handleChatArchive,
-  });
   const isConversationGone = isNotFoundError(activeChatError) || isNotFoundError(messagesError);
   const search = useChatSearch(messages, chatId);
   const extraction = useTaskExtraction({
@@ -154,15 +137,6 @@ export function ChatScreen({ id }: { id: string }) {
 
   const [showChatSettings, setShowChatSettings] = useState(false);
 
-  const conversationActions = useMemo(
-    () =>
-      buildConversationActionsModel({
-        canTransform: extraction.canTransform,
-        isArchiving,
-        showDebug,
-      }),
-    [extraction.canTransform, isArchiving, showDebug],
-  );
   const emptyState = useMemo(
     () => <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />,
     [],
@@ -192,98 +166,18 @@ export function ChatScreen({ id }: { id: string }) {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Menu
-          accessibilityLabel={t.chat.conversationActionsLabel}
-          icon="ellipsis.circle"
-        >
-          {(isConversationGone ? [] : conversationActions).map((section) =>
-            section.items.map((item) => {
-              if (item.kind === 'search') {
-                return (
-                  <Stack.Toolbar.MenuAction
-                    key={item.kind}
-                    icon={getConversationActionIcon(item.kind)}
-                    onPress={search.handleOpenSearch}
-                  >
-                    {item.label}
-                  </Stack.Toolbar.MenuAction>
-                );
-              }
-
-              if (item.kind === 'toggle-debug') {
-                return (
-                  <Stack.Toolbar.MenuAction
-                    key={item.kind}
-                    icon={getConversationActionIcon(item.kind)}
-                    isOn={showDebug}
-                    onPress={handleToggleDebug}
-                  >
-                    {item.label}
-                  </Stack.Toolbar.MenuAction>
-                );
-              }
-
-              if (item.kind === 'settings') {
-                return (
-                  <Stack.Toolbar.MenuAction
-                    key={item.kind}
-                    icon={getConversationActionIcon(item.kind)}
-                    onPress={() => setShowChatSettings(true)}
-                  >
-                    {item.label}
-                  </Stack.Toolbar.MenuAction>
-                );
-              }
-
-              if (item.kind === 'transform' && item.type) {
-                return (
-                  <Stack.Toolbar.MenuAction
-                    key={`${item.kind}:${item.type}`}
-                    icon={getConversationActionIcon(item.kind, item.type)}
-                    onPress={() => {
-                      if (!item.type) {
-                        return;
-                      }
-
-                      if (item.type === 'note') {
-                        const draft = buildNoteDraft(messages);
-                        if (draft.transcript.trim().length === 0) {
-                          Alert.alert(t.chat.noteDraft.emptyChat);
-                          return;
-                        }
-
-                        router.push({
-                          pathname: '/note-draft-sheet',
-                          params: {
-                            transcript: draft.transcript,
-                            title: draft.title,
-                            isTruncated: draft.isTruncated.toString(),
-                            chatId,
-                          },
-                        });
-                        return;
-                      }
-
-                      void extraction.handleTransform(item.type);
-                    }}
-                  >
-                    {item.label}
-                  </Stack.Toolbar.MenuAction>
-                );
-              }
-
-              return (
-                <Stack.Toolbar.MenuAction
-                  key={item.kind}
-                  icon={getConversationActionIcon(item.kind)}
-                  onPress={handleArchiveChat}
-                >
-                  {item.label}
-                </Stack.Toolbar.MenuAction>
-              );
-            }),
-          )}
-        </Stack.Toolbar.Menu>
+        <ChatActionsMenu
+          chatId={chatId}
+          canTransform={extraction.canTransform}
+          isConversationGone={isConversationGone}
+          messages={messages}
+          onChatArchive={handleChatArchive}
+          onOpenSearch={search.handleOpenSearch}
+          onOpenSettings={() => setShowChatSettings(true)}
+          onToggleDebug={handleToggleDebug}
+          onTransform={(type) => void extraction.handleTransform(type)}
+          showDebug={showDebug}
+        />
         <Stack.Toolbar.Button
           accessibilityLabel="New chat"
           disabled={isCreatingChat}

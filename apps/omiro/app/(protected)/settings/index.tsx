@@ -4,7 +4,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';

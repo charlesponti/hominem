@@ -8,7 +8,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 const THUMB_SIZE = 24;
 const TRACK_HEIGHT = 4;
@@ -139,7 +139,7 @@ export function DiscreteSlider({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   slider: { height: 24, justifyContent: 'center' },
   track: { position: 'absolute', left: 12, right: 12, height: 4, borderRadius: 999 },
   fill: { position: 'absolute', left: 12, height: 4, borderRadius: 999 },

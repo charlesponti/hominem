@@ -6,7 +6,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { LocationSearchField } from '~/components/time/LocationSearchField';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -37,7 +37,6 @@ function FieldCard({
   icon,
   iconColor,
   label,
-  onPress,
   testID,
 }: {
   align?: 'center' | 'flex-start';

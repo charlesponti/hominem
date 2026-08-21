@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';

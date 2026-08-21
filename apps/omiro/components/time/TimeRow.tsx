@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 
@@ -15,12 +15,7 @@ interface TimeRowProps {
   showDayLabel: boolean;
 }
 
-export const TimeRow = memo(function TimeRow({
-  item,
-  onOpen,
-  onToggleTask,
-  showDayLabel,
-}: TimeRowProps) {
+export const TimeRow = memo(function TimeRow({ item, onToggleTask, showDayLabel }: TimeRowProps) {
   const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useThemeColor([
     '--color-chart-1',
     '--color-chart-2',

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createComposerMessageStore,
-  useComposerMessageSelector,
+  useComposerMessageStore,
 } from '~/components/composer/useComposerMessageStore';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
@@ -40,11 +40,11 @@ describe('createComposerMessageStore', () => {
   });
 });
 
-describe('useComposerMessageSelector', () => {
+describe('useComposerMessageStore', () => {
   it('derives a value from the message via the selector', () => {
     const store = createComposerMessageStore('hello');
     const { result } = renderHookWithQueryClient(() =>
-      useComposerMessageSelector(store, (message) => message.length > 0),
+      useComposerMessageStore(store, (message) => message.length > 0),
     );
 
     expect(result.current).toBe(true);
@@ -56,7 +56,7 @@ describe('useComposerMessageSelector', () => {
   it('reflects the latest selector output after repeated updates', () => {
     const store = createComposerMessageStore('');
     const { result } = renderHookWithQueryClient(() =>
-      useComposerMessageSelector(
+      useComposerMessageStore(
         store,
         (message) => message.trim().split(/\s+/).filter(Boolean).length,
       ),

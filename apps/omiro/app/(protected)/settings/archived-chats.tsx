@@ -4,7 +4,7 @@ import { Stack, useIsFocused, useRouter } from 'expo-router';
 import { memo, useCallback, useMemo } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useArchivedChats } from '~/hooks/useArchivedChats';

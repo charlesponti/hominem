@@ -35,6 +35,7 @@
     "services/**/*.ts",
     "constants/**/*.ts",
     "tests/**/*.ts",
+    "tests/**/*.tsx",
     "app.config.js"
   ],
   "exclude": [

@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import {
   useCalendarEvents,

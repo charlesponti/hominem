@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import type { MeasuredRect } from '~/services/motion/use-measured-element';
 
 export interface LocalRect {
@@ -68,7 +68,7 @@ const ChatMotionOverlayContext = createContext<ChatMotionOverlayContextValue>(no
  * Owns the single same-screen overlay layer that composer/message flights
  * (toast handoff, printer handoff) render into, mirroring the existing
  * `absolute inset-0` / `pointerEvents="box-none"` pattern already used for
- * `ChatReviewOverlay` in `ChatDetailScreen`. Callers register a flight by id
+ * `ChatReviewOverlay` in `ChatScreen`. Callers register a flight by id
  * instead of hand-rolling their own absolutely-positioned container, so there
  * is exactly one overlay per chat screen regardless of how many flight kinds
  * exist.
@@ -159,6 +159,6 @@ export function useChatMotionOverlay(): ChatMotionOverlayContextValue {
   return useContext(ChatMotionOverlayContext);
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
 }));

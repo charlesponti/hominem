@@ -5,7 +5,7 @@
  * for transport consumers. No other package may redefine these.
  */
 
-export type ArtifactType = 'note' | 'task' | 'task_list' | 'tracker';
+export type ArtifactType = 'note' | 'task' | 'task_list';
 
 /** Artifact types enabled in the current release. */
 export const ENABLED_ARTIFACT_TYPES: ArtifactType[] = ['note', 'task', 'task_list'];

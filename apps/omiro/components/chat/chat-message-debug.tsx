@@ -1,7 +1,7 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 export function MessageDebug({
   message,

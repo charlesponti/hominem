@@ -33,7 +33,7 @@ vi.mock('react-native', async (importOriginal) => {
   return { ...actual, Alert: { alert: mockAlert } };
 });
 
-const { useChatTransform } = await import('~/hooks/use-chat-transform');
+const { useTaskExtraction } = await import('~/hooks/use-task-extraction');
 
 const CHAT_ID = 'chat-1';
 
@@ -54,12 +54,12 @@ function message(role: ChatMessageItem['role'], text: string): ChatMessageItem {
   } as ChatMessageItem;
 }
 
-const MESSAGES = [message('user', 'Let’s plan the launch'), message('assistant', 'Sure, on it')];
+const MESSAGES = [message('user', "Let's plan the launch"), message('assistant', 'Sure, on it')];
 
-function renderChatTransform(overrides: Partial<Parameters<typeof useChatTransform>[0]> = {}) {
+function renderTaskExtraction(overrides: Partial<Parameters<typeof useTaskExtraction>[0]> = {}) {
   const onContentCreated = vi.fn().mockResolvedValue(undefined);
   const hook = renderHookWithQueryClient(() =>
-    useChatTransform({
+    useTaskExtraction({
       chatId: CHAT_ID,
       source: { kind: 'new' },
       messages: MESSAGES,
@@ -70,34 +70,34 @@ function renderChatTransform(overrides: Partial<Parameters<typeof useChatTransfo
   return { ...hook, onContentCreated };
 }
 
-describe('useChatTransform', () => {
+describe('useTaskExtraction', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('can transform once there are messages', () => {
-    const { result } = renderChatTransform();
+  it('can extract once there are messages', () => {
+    const { result } = renderTaskExtraction();
     expect(result.current.canTransform).toBe(true);
     expect(result.current.isReviewVisible).toBe(false);
   });
 
-  it('builds a note proposal client-side and surfaces it for review', async () => {
-    const { result } = renderChatTransform();
+  it('surfaces an unsupported-extraction error via Alert for note (routes through note-draft-sheet.tsx instead)', async () => {
+    const { result } = renderTaskExtraction();
 
     await act(async () => {
       await result.current.handleTransform('note');
     });
 
-    expect(result.current.isReviewVisible).toBe(true);
-    expect(result.current.pendingReview).toEqual(expect.objectContaining({ proposedType: 'note' }));
-    expect(mockTasksExtractPost).not.toHaveBeenCalled();
+    expect(result.current.isReviewVisible).toBe(false);
+    expect(mockAlert).toHaveBeenCalledWith('Could not prepare review', 'Please try again.');
+    expect(mockNotesPost).not.toHaveBeenCalled();
   });
 
-  it('extracts tasks from the transcript for a task_list transform', async () => {
+  it('extracts tasks from the transcript for a task_list extraction', async () => {
     mockTasksExtractPost.mockResolvedValue({
       json: async () => ({ tasks: [{ title: 'Book venue' }, { title: 'Send invites' }] }),
     });
-    const { result } = renderChatTransform();
+    const { result } = renderTaskExtraction();
 
     await act(async () => {
       await result.current.handleTransform('task_list');
@@ -115,9 +115,9 @@ describe('useChatTransform', () => {
     );
   });
 
-  it('surfaces a transform error via Alert instead of throwing', async () => {
+  it('surfaces an extraction error via Alert instead of throwing', async () => {
     mockTasksExtractPost.mockRejectedValue(new Error('network down'));
-    const { result } = renderChatTransform();
+    const { result } = renderTaskExtraction();
 
     await act(async () => {
       await result.current.handleTransform('task_list');
@@ -125,58 +125,6 @@ describe('useChatTransform', () => {
 
     expect(result.current.isReviewVisible).toBe(false);
     expect(mockAlert).toHaveBeenCalledWith('Could not prepare review', 'Please try again.');
-  });
-
-  it('accepting a note review creates the note and notifies onContentCreated', async () => {
-    mockNotesPost.mockResolvedValue({
-      json: async () => ({ id: 'note-1', title: 'Launch plan', updatedAt: '2026-01-01' }),
-    });
-    const { result, onContentCreated } = renderChatTransform();
-
-    await act(async () => {
-      await result.current.handleTransform('note');
-    });
-    await act(async () => {
-      await result.current.handleAcceptReview();
-    });
-
-    expect(mockNotesPost).toHaveBeenCalledTimes(1);
-    expect(onContentCreated).toHaveBeenCalledWith({
-      source: { kind: 'artifact', id: 'note-1', title: 'Launch plan', type: 'note' },
-      updatedAt: '2026-01-01',
-    });
-    expect(result.current.pendingReview).toBeNull();
-    expect(result.current.resolvedSource).toEqual({
-      kind: 'artifact',
-      id: 'note-1',
-      type: 'note',
-      title: 'Launch plan',
-    });
-  });
-
-  it('accepting a task review creates a single task', async () => {
-    mockTasksPost.mockResolvedValue({
-      json: async () => ({
-        id: 'task-1',
-        title: 'Book venue',
-        artifactType: 'task',
-        updatedAt: '2026-01-01',
-      }),
-    });
-    const { result, onContentCreated } = renderChatTransform();
-
-    await act(async () => {
-      await result.current.handleTransform('task');
-    });
-    await act(async () => {
-      await result.current.handleAcceptReview();
-    });
-
-    expect(mockTasksPost).toHaveBeenCalledTimes(1);
-    expect(onContentCreated).toHaveBeenCalledWith({
-      source: { kind: 'artifact', id: 'task-1', title: 'Book venue', type: 'task' },
-      updatedAt: '2026-01-01',
-    });
   });
 
   it('accepting a batch review (items present) creates all tasks and reports the parent', async () => {
@@ -189,7 +137,7 @@ describe('useChatTransform', () => {
         tasks: [],
       }),
     });
-    const { result, onContentCreated } = renderChatTransform();
+    const { result, onContentCreated } = renderTaskExtraction();
 
     await act(async () => {
       await result.current.handleTransform('task_list');
@@ -210,7 +158,7 @@ describe('useChatTransform', () => {
 
   it('rejects an empty batch review with an alert rather than creating anything', async () => {
     mockTasksExtractPost.mockResolvedValue({ json: async () => ({ tasks: [] }) });
-    const { result } = renderChatTransform();
+    const { result } = renderTaskExtraction();
 
     await act(async () => {
       await result.current.handleTransform('task_list');

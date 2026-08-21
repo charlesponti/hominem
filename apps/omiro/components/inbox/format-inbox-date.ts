@@ -1,4 +1,3 @@
-import { formatClockTime } from '~/services/date/format-date';
 import t from '~/translations';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -26,15 +25,6 @@ function daysAgo(date: Date, now: Date): number {
 
 function isValidDate(date: Date): boolean {
   return !Number.isNaN(date.getTime());
-}
-
-// Rows sit under a day-section header (see inboxDayGroupLabel below), so the
-// row itself only needs to add time-of-day — repeating the day here would
-// just duplicate the header text on every row in the section.
-export function formatInboxTimestamp(rawDate: string): string {
-  const date = parsePgDate(rawDate);
-  if (!isValidDate(date)) return '';
-  return formatClockTime(date);
 }
 
 export function inboxDayGroupKey(rawDate: string): string {

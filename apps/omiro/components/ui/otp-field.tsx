@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 interface OtpInputProps {
   length?: number;
@@ -180,7 +180,7 @@ export function OtpInput({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = makeStyles(() => ({
   caret: { borderRadius: 1, height: 24, width: 2 },
   cell: {
     alignItems: 'center',

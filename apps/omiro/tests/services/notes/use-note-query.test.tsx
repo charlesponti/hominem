@@ -36,7 +36,7 @@ describe('useNoteQuery', () => {
 
     expect(result.current.isInitialLoading).toBe(true);
 
-    await waitFor(() => expect(result.current.hasUsableData).toBe(true));
+    await waitFor(() => expect(result.current.isReady).toBe(true));
 
     expect(mockGet).toHaveBeenCalledWith({ param: { id: 'note-1' } });
     expect(result.current.data).toEqual({ id: 'note-1', content: 'Hello' });
@@ -61,6 +61,6 @@ describe('useNoteQuery', () => {
     const { result } = renderHookWithQueryClient(() => useNoteQuery({ noteId: 'missing' }));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.hasUsableData).toBe(false);
+    expect(result.current.isReady).toBe(false);
   });
 });

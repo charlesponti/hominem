@@ -89,7 +89,7 @@ Chat detail state is split into focused hooks:
 - `useChatTransform` owns chat-to-note/task actions and review.
 - `useMessageActions` owns copy and share.
 
-React-independent logic belongs in `services/chat/` and is unit-tested directly. `ChatDetailScreen` combines the hooks and owns only screen-local state such as composer height and the debug toggle. Do not replace these hooks with one `useChatController`.
+React-independent logic belongs in `services/chat/` and is unit-tested directly. `ChatScreen` combines the hooks and owns only screen-local state such as composer height and the debug toggle. Do not replace these hooks with one `useChatController`.
 
 Assistant replies use a durable-reply contract. The API may stream lifecycle events, but it never streams prose into the transcript: Omiro shows `Preparing reply` then `Saving reply`, and inserts the assistant message only after the server commits it. Stopping a reply discards uncommitted output. Regeneration hides the prior reply only while a replacement is active and restores it if the replacement does not commit.
 

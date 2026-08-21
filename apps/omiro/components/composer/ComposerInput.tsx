@@ -10,7 +10,7 @@ import type { ComposerEntryKind } from './composerInference';
 import { inferComposerEntryKind } from './composerInference';
 import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import type { ComposerMessageStore } from './useComposerMessageStore';
-import { useComposerMessageSelector } from './useComposerMessageStore';
+import { useComposerMessageStore } from './useComposerMessageStore';
 
 // A generous ceiling meant to stop pathological pastes (megabytes of text)
 // from bloating the draft/optimistic message and jamming layout/markdown
@@ -44,8 +44,8 @@ function ComposerInputComponent({
   onBlur,
   onChangeMessage,
 }: ComposerInputProps) {
-  const message = useComposerMessageSelector(messageStore, (value) => value);
-  const inferredEntryKind = useComposerMessageSelector(messageStore, inferComposerEntryKind);
+  const message = useComposerMessageStore(messageStore, (value) => value);
+  const inferredEntryKind = useComposerMessageStore(messageStore, inferComposerEntryKind);
   const selectedEntryKind =
     manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
   const [destructive, tertiary] = useThemeColor([
