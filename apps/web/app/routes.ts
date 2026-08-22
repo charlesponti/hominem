@@ -1,6 +1,8 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
+  route('health', 'routes/health.ts'),
+
   // API Routes (specific handlers)
   route('api/auth/google', 'routes/api/auth/google.ts'),
 
