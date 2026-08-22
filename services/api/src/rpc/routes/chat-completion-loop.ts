@@ -219,7 +219,12 @@ export async function runCompletionWithTools(
         reasoningText: reasoningText || null,
         toolCallRecords,
         usage,
-        pendingToolCall: { toolCallId: gatedCall.id, toolName: gatedCall.name, args: parsedArgs, preview },
+        pendingToolCall: {
+          toolCallId: gatedCall.id,
+          toolName: gatedCall.name,
+          args: parsedArgs,
+          preview,
+        },
       };
     }
 

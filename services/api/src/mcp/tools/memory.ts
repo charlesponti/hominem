@@ -29,7 +29,12 @@ async function enqueueMemoryEmbedding(userId: string, noteId: string) {
   );
 }
 
-function toMemorySummary(note: { id: string; title: string | null; excerpt: string | null; createdAt: string }) {
+function toMemorySummary(note: {
+  id: string;
+  title: string | null;
+  excerpt: string | null;
+  createdAt: string;
+}) {
   return { id: note.id, title: note.title, excerpt: note.excerpt, createdAt: note.createdAt };
 }
 
@@ -140,7 +145,10 @@ registerTool(
       if (!parsed.success) return null;
       const note = await NoteRepository.getOwned(db, parsed.data.id, ownerUserId);
       if (!note || note.source !== MEMORY_SOURCE) return null;
-      return { title: note.title ?? '(untitled)', excerpt: note.excerpt ?? note.content.slice(0, 200) };
+      return {
+        title: note.title ?? '(untitled)',
+        excerpt: note.excerpt ?? note.content.slice(0, 200),
+      };
     },
   },
   async (ownerUserId, input) => {
