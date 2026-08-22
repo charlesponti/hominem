@@ -13,6 +13,7 @@ import { peopleRoutes } from './people';
 import { personalRoutes } from './personal';
 import { placeListsRoutes } from './place-lists';
 import { tasksRoutes } from './tasks';
+import { telemetryRoutes } from './telemetry';
 import { usageRoutes } from './usage';
 import { voiceRoutes } from './voice';
 
@@ -29,5 +30,6 @@ export const economyRoutes = new Hono<AppContext>()
   .route('/personal', personalRoutes)
   .route('/place-lists', placeListsRoutes)
   .route('/tasks', tasksRoutes)
+  .route('/telemetry', telemetryRoutes)
   .route('/usage', usageRoutes)
   .route('/voice', voiceRoutes);

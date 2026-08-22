@@ -112,6 +112,10 @@ export interface EmbeddingGenerationJob {
   entityId: string;
 }
 
+export interface SpeechUsageReconciliationJob {
+  speechRunId: string;
+}
+
 /**
  * Resume import: parsing a PDF resume and diffing it against the user's
  * existing career profile so changes can be reviewed before being applied.

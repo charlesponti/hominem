@@ -13,11 +13,13 @@ import { startEmbeddingGenerationWorker } from './workers/embedding-generation';
 import { startFileProcessingWorker } from './workers/file-processing';
 import { startImportTransactionsWorker } from './workers/import-transactions';
 import { startResumeAnalysisWorker } from './workers/resume-analysis';
+import { startSpeechUsageReconciliationWorker } from './workers/speech-usage-reconciliation';
 
 const fileProcessingWorker = startFileProcessingWorker();
 const embeddingGenerationWorker = startEmbeddingGenerationWorker();
 const importTransactionsWorker = startImportTransactionsWorker();
 const resumeAnalysisWorker = startResumeAnalysisWorker();
+const speechUsageReconciliationWorker = startSpeechUsageReconciliationWorker();
 // Start career imports from the worker entrypoint so dev watchers reload queue handlers.
 const careerJobImportWorker = startCareerJobImportWorker();
 const workerVersion = 'career-import-v2';
@@ -41,6 +43,7 @@ initRuntime('worker').installSignalHandlers(
       embeddingGenerationWorker.close(),
       importTransactionsWorker.close(),
       resumeAnalysisWorker.close(),
+      speechUsageReconciliationWorker.close(),
       careerJobImportWorker.close(),
     ]);
   },
@@ -52,3 +55,4 @@ logger.info('worker_started', { queue: 'embedding-generation' });
 logger.info('worker_started', { queue: QUEUE_NAMES.IMPORT_TRANSACTIONS });
 logger.info('worker_started', { queue: QUEUE_NAMES.RESUME_ANALYSIS });
 logger.info('worker_started', { queue: QUEUE_NAMES.CAREER_JOB_IMPORT });
+logger.info('worker_started', { queue: QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION });

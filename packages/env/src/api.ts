@@ -52,6 +52,7 @@ export const apiSchema = baseSchema.extend({
   SAVE_VOICE_AUDIO: z.stringbool().default(false),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
+  OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
   OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_API_KEY: z.string().default(''),

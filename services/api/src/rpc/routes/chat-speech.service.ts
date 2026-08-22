@@ -7,7 +7,7 @@ import { logger } from '@hominem/telemetry';
 const CHAT_SPEECH_MAX_CHARS = 2000;
 
 export type ChatSpeechServiceResult =
-  | { kind: 'success'; buffer: Buffer; mimeType: string }
+  | { kind: 'success'; buffer: Buffer; mimeType: string; generationId: string | null }
   | { kind: 'error'; message: string };
 
 type ChatSpeechDependencies = {
@@ -41,8 +41,8 @@ export async function synthesizeChatReplySpeech(
   }
 
   try {
-    const { buffer, mimeType } = await deps.synthesize({ text: trimmed });
-    return { kind: 'success', buffer, mimeType };
+    const { buffer, mimeType, generationId } = await deps.synthesize({ text: trimmed });
+    return { kind: 'success', buffer, mimeType, generationId };
   } catch (error) {
     deps.logError('[chat-speech] synthesis failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -55,7 +55,12 @@ export async function synthesizeChatReplySpeech(
 }
 
 export type ChatSpeechStreamResult =
-  | { kind: 'success'; stream: ReadableStream<Uint8Array>; mimeType: string }
+  | {
+      kind: 'success';
+      stream: ReadableStream<Uint8Array>;
+      mimeType: string;
+      generationId: string | null;
+    }
   | { kind: 'error'; message: string };
 
 export async function streamChatReplySpeech(
@@ -69,8 +74,8 @@ export async function streamChatReplySpeech(
   }
 
   try {
-    const { stream, mimeType } = await deps.synthesizeStream({ text: trimmed });
-    return { kind: 'success', stream, mimeType };
+    const { stream, mimeType, generationId } = await deps.synthesizeStream({ text: trimmed });
+    return { kind: 'success', stream, mimeType, generationId };
   } catch (error) {
     deps.logError('[chat-speech] streaming synthesis failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

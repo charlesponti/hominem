@@ -11,11 +11,33 @@ type SynthesizeSpeechInput = OpenRouterClientOptions & {
 type SynthesizeSpeechResult = {
   buffer: Buffer;
   mimeType: string;
+  generationId: string | null;
+};
+
+type SpeechRequestInspection = {
+  response?: Response;
+};
+
+type SpeechRequestPromise = Promise<ReadableStream<Uint8Array>> & {
+  $inspect: () => Promise<[ReadableStream<Uint8Array>, SpeechRequestInspection]>;
 };
 
 export type SynthesizeSpeechStreamResult = {
   stream: ReadableStream<Uint8Array>;
   mimeType: string;
+  generationId: string | null;
+};
+
+export type SpeechGenerationUsage = {
+  provider: 'openrouter';
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  reportedTotalTokens: number | null;
+  costUsd: number | null;
+  cachedPromptTokens: number | null;
+  reasoningTokens: number | null;
 };
 
 const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
@@ -34,28 +56,58 @@ export async function synthesizeSpeechStream(
 
   let stream: ReadableStream<Uint8Array>;
   try {
-    stream = await client.tts.createSpeech({
+    const request = client.tts.createSpeech({
       speechRequest: {
         input: input.text,
         model,
         voice: input.voice ?? 'af_heart',
         responseFormat,
       },
-    });
+    }) as SpeechRequestPromise;
+    stream = await request;
+
+    let generationId: string | null = null;
+    if (typeof request.$inspect === 'function') {
+      const [, call] = await request.$inspect();
+      generationId = call.response?.headers.get('X-Generation-Id') ?? null;
+    }
+
+    return {
+      stream,
+      mimeType: RESPONSE_FORMAT_MIME_TYPES[responseFormat] ?? 'audio/mpeg',
+      generationId,
+    };
   } catch (error) {
     throw normalizeOpenRouterError(error);
   }
+}
+
+export async function getSpeechGenerationUsage(
+  input: OpenRouterClientOptions & { generationId: string },
+): Promise<SpeechGenerationUsage> {
+  const client = createOpenRouterClient(input);
+  const response = await client.generations.getGeneration({ id: input.generationId });
+  const data = response.data;
+  const promptTokens = data.tokensPrompt ?? data.nativeTokensPrompt ?? 0;
+  const completionTokens = data.tokensCompletion ?? data.nativeTokensCompletion ?? 0;
 
   return {
-    stream,
-    mimeType: RESPONSE_FORMAT_MIME_TYPES[responseFormat] ?? 'audio/mpeg',
+    provider: 'openrouter',
+    model: data.model,
+    promptTokens,
+    completionTokens,
+    totalTokens: promptTokens + completionTokens,
+    reportedTotalTokens: null,
+    costUsd: data.totalCost,
+    cachedPromptTokens: data.nativeTokensCached,
+    reasoningTokens: data.nativeTokensReasoning,
   };
 }
 
 export async function synthesizeSpeech(
   input: SynthesizeSpeechInput,
 ): Promise<SynthesizeSpeechResult> {
-  const { stream, mimeType } = await synthesizeSpeechStream(input);
+  const { stream, mimeType, generationId } = await synthesizeSpeechStream(input);
   const chunks: Uint8Array[] = [];
   const reader = stream.getReader();
   for (;;) {
@@ -67,5 +119,6 @@ export async function synthesizeSpeech(
   return {
     buffer: Buffer.concat(chunks),
     mimeType,
+    generationId,
   };
 }

@@ -413,6 +413,22 @@ export interface AppChats {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppChatSpeechRuns {
+  characterCount: number;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  lastReconciliationError: string | null;
+  messageId: string;
+  ownerUserId: string;
+  provider: string;
+  providerGenerationId: string | null;
+  reconciliationAttempts: Generated<number>;
+  reconciliationStatus: Generated<string>;
+  status: Generated<string>;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  usageEventId: string;
+}
+
 export interface AppCollectionItems {
   collectionId: string;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1419,6 +1435,7 @@ export interface DB {
   'app.chatGenerationRuns': AppChatGenerationRuns;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;
+  'app.chatSpeechRuns': AppChatSpeechRuns;
   'app.collectionItems': AppCollectionItems;
   'app.collectionMembers': AppCollectionMembers;
   'app.collections': AppCollections;

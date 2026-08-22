@@ -21,6 +21,11 @@ const mocks = vi.hoisted(() => ({
   getGenerationRunById: vi.fn(),
   updateGenerationRun: vi.fn(),
   cancelGenerationRun: vi.fn(),
+  createSpeechRun: vi.fn(),
+  getSpeechRun: vi.fn(),
+  setSpeechGenerationId: vi.fn(),
+  markSpeechComplete: vi.fn(),
+  markSpeechReconciliation: vi.fn(),
   resolveReferencedNotes: vi.fn(),
   resolveChatFiles: vi.fn(),
   runInTransaction: vi.fn(),
@@ -28,12 +33,14 @@ const mocks = vi.hoisted(() => ({
   recordAIUsageEvent: vi.fn(),
   assertUnderMonthlyUsageLimit: vi.fn(),
   enqueueEmbedding: vi.fn(),
+  enqueueSpeechUsageReconciliation: vi.fn(),
   streamChatReplySpeech: vi.fn(),
   synthesizeChatReplySpeech: vi.fn(),
   storeFile: vi.fn(),
 }));
 
 vi.mock('@hominem/ai', () => ({
+  AUDIO_TTS_MODEL: 'test-tts-model',
   CHAT_MODEL: 'test-chat-model',
   getChatCompletionUsage: vi.fn((chunk: { usage?: unknown }) => chunk.usage ?? null),
   streamChatCompletion: mocks.streamChatCompletion,
@@ -62,6 +69,13 @@ vi.mock('@hominem/db', async () => {
       resolveReferencedNotes: mocks.resolveReferencedNotes,
       resolveChatFiles: mocks.resolveChatFiles,
     },
+    ChatSpeechRunRepository: {
+      create: mocks.createSpeechRun,
+      getById: mocks.getSpeechRun,
+      setProviderGenerationId: mocks.setSpeechGenerationId,
+      markComplete: mocks.markSpeechComplete,
+      markReconciliation: mocks.markSpeechReconciliation,
+    },
     runInTransaction: mocks.runInTransaction,
   };
 });
@@ -69,6 +83,9 @@ vi.mock('@hominem/db', async () => {
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {
     add: mocks.enqueueEmbedding,
+  },
+  speechUsageReconciliationQueue: {
+    add: mocks.enqueueSpeechUsageReconciliation,
   },
 }));
 
@@ -79,6 +96,15 @@ vi.mock('@hominem/storage', () => ({
 }));
 
 vi.mock('@hominem/telemetry', () => ({
+  getTelemetryTracer: () => ({
+    startSpan: () => ({
+      end: vi.fn(),
+      recordException: vi.fn(),
+      setAttribute: vi.fn(),
+      setAttributes: vi.fn(),
+      setStatus: vi.fn(),
+    }),
+  }),
   logger: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -171,6 +197,11 @@ describe('chat stream accounting', () => {
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
     mocks.assertUnderMonthlyUsageLimit.mockResolvedValue(undefined);
     mocks.enqueueEmbedding.mockResolvedValue(undefined);
+    mocks.enqueueSpeechUsageReconciliation.mockResolvedValue(undefined);
+    mocks.createSpeechRun.mockResolvedValue({ id: 'speech-run-id' });
+    mocks.setSpeechGenerationId.mockResolvedValue({ id: 'speech-run-id' });
+    mocks.markSpeechComplete.mockResolvedValue({ id: 'speech-run-id' });
+    mocks.markSpeechReconciliation.mockResolvedValue({ id: 'speech-run-id' });
     mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
     mocks.streamChatCompletion.mockReturnValue(
       (async function* () {
@@ -621,6 +652,7 @@ describe('chat stream walkie-talkie audio leg', () => {
     mocks.streamChatReplySpeech.mockResolvedValue({
       kind: 'success',
       mimeType: 'audio/mpeg',
+      generationId: 'gen-tts-1',
       stream: new ReadableStream({
         start(controller) {
           controller.enqueue(new TextEncoder().encode('audio-'));
@@ -638,6 +670,15 @@ describe('chat stream walkie-talkie audio leg', () => {
     expect(mocks.streamChatReplySpeech).toHaveBeenCalledWith('Hi there');
     expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
       expect.objectContaining({ feature: 'chat_speech', status: 'succeeded' }),
+    );
+    expect(mocks.setSpeechGenerationId).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ providerGenerationId: 'gen-tts-1' }),
+    );
+    expect(mocks.enqueueSpeechUsageReconciliation).toHaveBeenCalledWith(
+      'reconcile-speech-usage',
+      expect.objectContaining({ speechRunId: expect.any(String) }),
+      expect.objectContaining({ attempts: 3 }),
     );
   });
 });

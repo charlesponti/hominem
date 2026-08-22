@@ -36,3 +36,8 @@ export const resumeAnalysisQueue: Queue = new BullQueue(QUEUE_NAMES.RESUME_ANALY
 export const careerJobImportQueue: Queue = new BullQueue(QUEUE_NAMES.CAREER_JOB_IMPORT, {
   connection: redis,
 });
+
+export const speechUsageReconciliationQueue: Queue = new BullQueue(
+  QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
+  { connection: redis },
+);

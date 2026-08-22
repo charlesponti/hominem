@@ -1,6 +1,7 @@
 type LogData = Record<string, unknown>;
 type LogValue = unknown;
 type LogLevel = 'debug' | 'error' | 'info' | 'warn';
+type TelemetryLogSink = (level: LogLevel, message: string, data?: LogData) => void;
 
 const REDACTED = '[REDACTED]';
 const sensitiveFieldPatterns = [
@@ -13,6 +14,12 @@ const sensitiveFieldPatterns = [
   'secret',
   'token',
 ];
+
+let telemetryLogSink: TelemetryLogSink | null = null;
+
+export function setTelemetryLogSink(sink: TelemetryLogSink | null) {
+  telemetryLogSink = sink;
+}
 
 function isRecord(value: LogValue): value is LogData {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -66,6 +73,12 @@ function formatMessage(level: LogLevel, message: string, data?: LogValue) {
 
 function writeLog(level: LogLevel, message: string, data?: LogValue) {
   const formatted = formatMessage(level, message, data);
+
+  try {
+    telemetryLogSink?.(level, message, isRecord(data) ? data : undefined);
+  } catch {
+    // Telemetry must never interfere with application logging.
+  }
 
   switch (level) {
     case 'debug':

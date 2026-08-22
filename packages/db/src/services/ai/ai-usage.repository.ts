@@ -201,6 +201,44 @@ export const AIUsageEventRepository = {
     return Boolean(inserted?.id);
   },
 
+  async updateUsage(
+    handle: DbHandle,
+    input: {
+      eventId: string;
+      usage: {
+        provider: string;
+        model: string;
+        promptTokens: number;
+        completionTokens: number;
+        totalTokens: number;
+        costUsd: number | null;
+        cachedPromptTokens: number | null;
+        reasoningTokens: number | null;
+      };
+      status?: AIUsageEventStatus;
+    },
+  ): Promise<boolean> {
+    const updated = await handle
+      .updateTable('app.aiUsageEvents')
+      .set({
+        provider: input.usage.provider,
+        model: input.usage.model,
+        inputTokens: input.usage.promptTokens,
+        outputTokens: input.usage.completionTokens,
+        totalTokens: input.usage.totalTokens,
+        costUsd: input.usage.costUsd,
+        cachedInputTokens: input.usage.cachedPromptTokens,
+        reasoningTokens: input.usage.reasoningTokens,
+        usageAvailable: true,
+        ...(input.status ? { status: input.status } : {}),
+      })
+      .where('id', '=', input.eventId)
+      .returning('id')
+      .executeTakeFirst();
+
+    return Boolean(updated?.id);
+  },
+
   async getSummary(handle: DbHandle, input: AIUsageQueryRange): Promise<AIUsageSummaryRecord> {
     let query = handle.selectFrom('app.aiUsageEvents').where('ownerUserid', '=', input.userId);
 

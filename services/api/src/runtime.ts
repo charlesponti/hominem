@@ -22,6 +22,9 @@ export function initRuntime(serviceName: string) {
     environment: env.NODE_ENV,
     ...(env.OTEL_EXPORTER_OTLP_ENDPOINT ? { otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT } : {}),
     ...(env.OTEL_EXPORTER_OTLP_PROTOCOL ? { otlpProtocol: env.OTEL_EXPORTER_OTLP_PROTOCOL } : {}),
+    ...(env.OTEL_EXPORTER_OTLP_HEADERS
+      ? { otlpHeaders: parseOtlpHeaders(env.OTEL_EXPORTER_OTLP_HEADERS) }
+      : {}),
     samplingRatio: env.OTEL_TRACES_SAMPLER_ARG,
   });
 
@@ -47,4 +50,14 @@ export function initRuntime(serviceName: string) {
   return {
     installSignalHandlers,
   };
+}
+
+function parseOtlpHeaders(value: string): Record<string, string> {
+  return Object.fromEntries(
+    value
+      .split(',')
+      .map((entry) => entry.trim().split('='))
+      .filter((parts): parts is [string, string] => parts.length === 2 && parts[0] !== '')
+      .map(([key, headerValue]) => [key, decodeURIComponent(headerValue)]),
+  );
 }

@@ -1,4 +1,9 @@
-export { CHAT_MODEL, JOB_EXTRACTION_MODEL, OpenRouterRequestError } from './shared';
+export {
+  AUDIO_TTS_MODEL,
+  CHAT_MODEL,
+  JOB_EXTRACTION_MODEL,
+  OpenRouterRequestError,
+} from './shared';
 
 export type { AIUsageMetrics } from './shared';
 
@@ -29,7 +34,8 @@ export type { VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
 export { synthesizeSpeech } from './speech';
 export { synthesizeSpeechStream } from './speech';
-export type { SynthesizeSpeechStreamResult } from './speech';
+export { getSpeechGenerationUsage } from './speech';
+export type { SpeechGenerationUsage, SynthesizeSpeechStreamResult } from './speech';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
 export { extractTimeBlock } from './time-block-extraction';

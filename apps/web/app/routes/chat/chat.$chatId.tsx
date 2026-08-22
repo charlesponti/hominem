@@ -1,8 +1,8 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
 import { slugifyText } from '@hominem/utils/text';
-import { Headphones, Mic, Paperclip, Square, X } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Mic, Paperclip, Square, X } from 'lucide-react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { data } from 'react-router';
 
 import {
@@ -11,6 +11,7 @@ import {
   ConversationScrollButton,
 } from '~/components/ai-elements/conversation';
 import { Message, MessageContent, MessageResponse } from '~/components/ai-elements/message';
+import { preloadPersona } from '~/components/ai-elements/persona';
 import {
   PromptInput,
   PromptInputBody,
@@ -30,6 +31,7 @@ import {
   ToolPreview,
 } from '~/components/ai-elements/tool';
 import { PendingPlaceListInvites } from '~/components/chat/pending-place-list-invites';
+import { SpeechPlayer } from '~/components/chat/speech-player';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
@@ -103,6 +105,22 @@ export default function ChatPage({
 }) {
   const { seedNote, messages: initialMessages } = loaderData;
   const { chatId } = params;
+  const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
+
+  const activateSpeech = useCallback((messageId: string) => {
+    setActiveSpeechMessageId(messageId);
+  }, []);
+
+  const deactivateSpeech = useCallback((messageId: string) => {
+    setActiveSpeechMessageId((activeMessageId) =>
+      activeMessageId === messageId ? null : activeMessageId,
+    );
+  }, []);
+
+  useEffect(() => {
+    preloadPersona();
+  }, []);
+
   const { messages } = useChatMessages({ chatId, initialData: initialMessages });
   const streamMessage = useStreamMessage({ chatId });
   const toolCallRespond = useToolCallRespond({ chatId });
@@ -252,65 +270,65 @@ export default function ChatPage({
                 {message.toolCalls?.map((toolCall) => {
                   const isPending = toolCall.status === 'pending';
                   return (
-                    <Tool defaultOpen={isPending} key={toolCall.toolCallId}>
-                      <ToolHeader
-                        state={
-                          isPending
-                            ? 'approval-requested'
-                            : toolCall.status === 'rejected'
-                              ? 'output-denied'
-                              : 'output-available'
-                        }
-                        toolName={toolCall.toolName}
-                        type="dynamic-tool"
-                      />
-                      <ToolContent>
-                        {toolCall.preview ? (
-                          <ToolPreview preview={toolCall.preview} />
-                        ) : (
-                          <ToolInput input={toolCall.args} />
-                        )}
-                        {toolCall.toolName === 'list_pending_invites' &&
-                        toolCall.status !== 'pending' &&
-                        toolCall.status !== 'rejected' ? (
-                          <PendingPlaceListInvites />
-                        ) : null}
-                        {isPending ? (
-                          <ToolApprovalActions
-                            disabled={toolCallRespond.isResponding}
-                            onApprove={() =>
-                              void toolCallRespond.respond({
-                                messageId: message.id,
-                                toolCallId: toolCall.toolCallId,
-                                approved: true,
-                              })
-                            }
-                            onReject={() =>
-                              void toolCallRespond.respond({
-                                messageId: message.id,
-                                toolCallId: toolCall.toolCallId,
-                                approved: false,
-                              })
-                            }
-                          />
-                        ) : null}
-                      </ToolContent>
-                    </Tool>
+                    <Fragment key={toolCall.toolCallId}>
+                      <Tool defaultOpen={isPending}>
+                        <ToolHeader
+                          state={
+                            isPending
+                              ? 'approval-requested'
+                              : toolCall.status === 'rejected'
+                                ? 'output-denied'
+                                : 'output-available'
+                          }
+                          toolName={toolCall.toolName}
+                          type="dynamic-tool"
+                        />
+                        <ToolContent>
+                          {toolCall.preview ? (
+                            <ToolPreview preview={toolCall.preview} />
+                          ) : (
+                            <ToolInput input={toolCall.args} />
+                          )}
+                          {isPending ? (
+                            <ToolApprovalActions
+                              disabled={toolCallRespond.isResponding}
+                              onApprove={() =>
+                                void toolCallRespond.respond({
+                                  messageId: message.id,
+                                  toolCallId: toolCall.toolCallId,
+                                  approved: true,
+                                })
+                              }
+                              onReject={() =>
+                                void toolCallRespond.respond({
+                                  messageId: message.id,
+                                  toolCallId: toolCall.toolCallId,
+                                  approved: false,
+                                })
+                              }
+                            />
+                          ) : null}
+                        </ToolContent>
+                      </Tool>
+                      {toolCall.toolName === 'list_pending_invites' &&
+                      toolCall.status !== 'pending' &&
+                      toolCall.status !== 'rejected' ? (
+                        <PendingPlaceListInvites />
+                      ) : null}
+                    </Fragment>
                   );
                 })}
                 <MessageResponse>{message.content}</MessageResponse>
-                {message.role === 'assistant' && message.content.trim() ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Headphones aria-hidden="true" className="size-3.5" />
-                    <audio
-                      className="h-8 max-w-full"
-                      controls
-                      crossOrigin="use-credentials"
-                      preload="none"
-                      src={getSpeechUrl(chatId, message.id)}
-                      title="Listen to response"
-                    />
-                  </div>
+                {message.role === 'assistant' &&
+                message.content.trim() &&
+                !('isStreaming' in message && message.isStreaming === true) ? (
+                  <SpeechPlayer
+                    isActive={activeSpeechMessageId === message.id}
+                    messageId={message.id}
+                    onActivate={activateSpeech}
+                    onDeactivate={deactivateSpeech}
+                    src={getSpeechUrl(chatId, message.id)}
+                  />
                 ) : null}
               </MessageContent>
             </Message>
