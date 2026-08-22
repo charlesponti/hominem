@@ -43,9 +43,9 @@ USER webuser
 
 EXPOSE 3000
 
-# Railway injects PORT (often 8080). Bind the server to that port so the
-# platform healthcheck and reverse proxy hit the right listener.
+# Railway injects PORT (often 8080), which react-router-serve reads from the
+# environment.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f -s -m 2 http://localhost:${PORT:-3000}/ || exit 1
 
-CMD ["sh", "-c", "exec node_modules/.bin/react-router-serve ./build/server/index.js --port=${PORT:-3000}"]
+CMD ["node_modules/.bin/react-router-serve", "./build/server/index.js"]
