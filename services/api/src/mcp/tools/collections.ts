@@ -9,6 +9,7 @@ import {
   listCollections,
   removeCollectionItem,
 } from '../../application/collections.service';
+import { getEntityDisplayName } from '../../application/tags.service';
 import {
   acceptMemberInviteInputSchema,
   acceptMemberInviteOutputSchema,
@@ -70,6 +71,18 @@ registerTool(
     sensitivity: 'standard',
     resultCap: 1,
     requiresConfirmation: true,
+    preview: async (ownerUserId, input) => {
+      const parsed = removeCollectionItemInputSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const [detail, entityName] = await Promise.all([
+        collectionDetail(ownerUserId, parsed.data.collectionId),
+        getEntityDisplayName(ownerUserId, parsed.data.entityType, parsed.data.entityId),
+      ]);
+      return {
+        collection: detail.collection?.name ?? '(unknown collection)',
+        entity: entityName ?? `${parsed.data.entityType.slice(0, -1)} (unknown)`,
+      };
+    },
   },
   async (ownerUserId, input) => removeCollectionItem(ownerUserId, input),
 );
@@ -78,7 +91,8 @@ registerTool(
   {
     name: 'invite_member',
     title: 'Invite member to collection',
-    description: 'Invite a person to collaborate on a collection as an editor or viewer.',
+    description:
+      'Invite another hominem user (by email) to collaborate on a collection as an editor or viewer.',
     inputSchema: inviteMemberInputSchema,
     outputSchema: inviteMemberOutputSchema,
     readOnly: false,
@@ -93,7 +107,7 @@ registerTool(
   {
     name: 'accept_member_invite',
     title: 'Accept collection invite',
-    description: 'Mark a pending member invite on a collection as accepted.',
+    description: "Accept the caller's pending invite to collaborate on a collection.",
     inputSchema: acceptMemberInviteInputSchema,
     outputSchema: acceptMemberInviteOutputSchema,
     readOnly: false,
@@ -108,7 +122,7 @@ registerTool(
   {
     name: 'list_collections',
     title: 'List collections',
-    description: 'List your collections, most recently created first.',
+    description: 'List collections you own or collaborate on, most recently created first.',
     inputSchema: listCollectionsInputSchema,
     outputSchema: listCollectionsOutputSchema,
     readOnly: true,

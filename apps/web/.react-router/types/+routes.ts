@@ -14,6 +14,9 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/health": {
+    params: {};
+  };
   "/api/auth/google": {
     params: {};
   };
@@ -34,6 +37,12 @@ type Pages = {
   "/settings/archived-chats": {
     params: {};
   };
+  "/settings/memories": {
+    params: {};
+  };
+  "/usage": {
+    params: {};
+  };
   "/*": {
     params: {
       "*": string;
@@ -44,7 +53,11 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/*";
+    page: "/" | "/health" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/settings/memories" | "/usage" | "/*";
+  };
+  "routes/health.ts": {
+    id: "routes/health";
+    page: "/health";
   };
   "routes/api/auth/google.ts": {
     id: "routes/api/auth/google";
@@ -60,11 +73,11 @@ type RouteFiles = {
   };
   "routes/_authenticated.tsx": {
     id: "routes/_authenticated";
-    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats";
+    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/settings/memories" | "/usage";
   };
   "routes/layout.tsx": {
     id: "routes/layout";
-    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats";
+    page: "/" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/settings/memories" | "/usage";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -82,6 +95,14 @@ type RouteFiles = {
     id: "routes/settings.archived-chats";
     page: "/settings/archived-chats";
   };
+  "routes/settings.memories.tsx": {
+    id: "routes/settings.memories";
+    page: "/settings/memories";
+  };
+  "routes/usage.tsx": {
+    id: "routes/usage";
+    page: "/usage";
+  };
   "routes/$.tsx": {
     id: "routes/$";
     page: "/*";
@@ -90,6 +111,7 @@ type RouteFiles = {
 
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
+  "routes/health": typeof import("./app/routes/health.ts");
   "routes/api/auth/google": typeof import("./app/routes/api/auth/google.ts");
   "routes/auth/index": typeof import("./app/routes/auth/index.tsx");
   "routes/auth/logout": typeof import("./app/routes/auth/logout.tsx");
@@ -99,5 +121,7 @@ type RouteModules = {
   "routes/chat/chat.$chatId": typeof import("./app/routes/chat/chat.$chatId.tsx");
   "routes/settings": typeof import("./app/routes/settings.tsx");
   "routes/settings.archived-chats": typeof import("./app/routes/settings.archived-chats.tsx");
+  "routes/settings.memories": typeof import("./app/routes/settings.memories.tsx");
+  "routes/usage": typeof import("./app/routes/usage.tsx");
   "routes/$": typeof import("./app/routes/$.tsx");
 };

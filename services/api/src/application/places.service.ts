@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db, NotFoundError, sql } from '@hominem/db';
 
 function toIso(value: string | Date | null): string | null {
   if (value === null) return null;
@@ -43,4 +43,63 @@ export async function getPlaceVisitHistory(
   }));
 
   return { visits, count: visits.length };
+}
+
+export type FindOrCreatePlaceInput =
+  | { placeId: string }
+  | { name: string; address?: string; latitude?: number; longitude?: number };
+
+/**
+ * Resolves an `app.places` row for the caller, reusing an existing row (by id,
+ * or by matching address/coordinates) instead of creating a duplicate place
+ * every time the same location is referenced.
+ */
+export async function findOrCreatePlace(
+  ownerUserId: string,
+  input: FindOrCreatePlaceInput,
+): Promise<string> {
+  if ('placeId' in input) {
+    const row = await db
+      .selectFrom('app.places')
+      .select('id')
+      .where('id', '=', input.placeId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+    if (!row) throw new NotFoundError('Place', { placeId: input.placeId });
+    return row.id;
+  }
+
+  // Only reuse an existing row when we have a real identifying signal to
+  // match on — an empty filter here would match an arbitrary unrelated place.
+  const existing = await db
+    .selectFrom('app.places')
+    .select('id')
+    .where('ownerUserid', '=', ownerUserId)
+    .$if(input.address !== undefined, (qb) =>
+      qb.where('formattedAddress', '=', input.address as string),
+    )
+    .$if(input.address === undefined && input.latitude !== undefined, (qb) =>
+      qb
+        .where('latitude', '=', String(input.latitude))
+        .where('longitude', '=', String(input.longitude)),
+    )
+    .$if(input.address === undefined && input.latitude === undefined, (qb) =>
+      qb.where(sql<boolean>`lower(name) = lower(${input.name})`),
+    )
+    .executeTakeFirst();
+  if (existing) return existing.id;
+
+  const created = await db
+    .insertInto('app.places')
+    .values({
+      ownerUserid: ownerUserId,
+      name: input.name,
+      formattedAddress: input.address ?? null,
+      latitude: input.latitude !== undefined ? String(input.latitude) : null,
+      longitude: input.longitude !== undefined ? String(input.longitude) : null,
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+
+  return created.id;
 }

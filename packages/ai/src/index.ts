@@ -28,13 +28,18 @@ export { cleanupVoiceTranscript } from './voice-cleanup';
 export type { VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
 export { synthesizeSpeech } from './speech';
+export { synthesizeSpeechStream } from './speech';
+export type { SynthesizeSpeechStreamResult } from './speech';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
 export { extractTimeBlock } from './time-block-extraction';
 
 export {
   assertUnderMonthlyUsageLimit,
+  getMonthlyAIUsageReport,
   getMonthlyUsageStatus,
   recordAIUsageEvent,
   startAIUsageTimer,
 } from './ai-usage';
+
+export type { MonthlyAIUsageReport, MonthlyUsageStatus } from './ai-usage';

@@ -19,6 +19,12 @@ export interface ChatMessageToolCallRecord {
    * field existed.
    */
   status?: 'completed' | 'pending' | 'rejected';
+  /**
+   * Human-readable description of the specific record a `pending` call
+   * would affect (e.g. a skill's name/level), so an approval UI can show
+   * more than a raw id. Only ever set for `requiresConfirmation` tools.
+   */
+  preview?: Record<string, unknown> | null;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -38,6 +44,10 @@ function isOptionalNumber(value: unknown): boolean {
 
 function isOptionalRecord(value: unknown): boolean {
   return value === undefined || isRecord(value);
+}
+
+function isOptionalNullableRecord(value: unknown): boolean {
+  return value === undefined || value === null || isRecord(value);
 }
 
 function isString(value: unknown): boolean {
@@ -78,6 +88,7 @@ const CHAT_MESSAGE_TOOL_CALL_FIELDS = [
   ['toolCallId', isString],
   ['args', isRecord],
   ['status', isOptionalToolCallStatus],
+  ['preview', isOptionalNullableRecord],
 ] as const satisfies readonly FieldValidator[];
 
 function isChatMessageFileRecord(value: unknown): value is ChatMessageFileRecord {

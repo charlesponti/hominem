@@ -78,7 +78,12 @@ export interface RunCompletionWithToolsResult {
    * the partial reply, surface a confirmation prompt to the user, and only
    * then invoke the tool via a separate approve/reject flow.
    */
-  pendingToolCall: { toolCallId: string; toolName: string; args: Record<string, unknown> } | null;
+  pendingToolCall: {
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown>;
+    preview: Record<string, unknown> | null;
+  } | null;
 }
 
 interface StreamOnceResult {
@@ -197,19 +202,24 @@ export async function runCompletionWithTools(
       } catch {
         parsedArgs = {};
       }
+      const definition = getToolDefinition(gatedCall.name);
+      const preview = definition?.preview
+        ? await definition.preview(input.userId, parsedArgs).catch(() => null)
+        : null;
       toolCallRecords.push({
         toolName: gatedCall.name,
         type: 'tool-call',
         toolCallId: gatedCall.id,
         args: parsedArgs,
         status: 'pending',
+        preview,
       });
       return {
         assistantText,
         reasoningText: reasoningText || null,
         toolCallRecords,
         usage,
-        pendingToolCall: { toolCallId: gatedCall.id, toolName: gatedCall.name, args: parsedArgs },
+        pendingToolCall: { toolCallId: gatedCall.id, toolName: gatedCall.name, args: parsedArgs, preview },
       };
     }
 

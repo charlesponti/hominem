@@ -11,6 +11,7 @@ import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
 import { emailOTP, jwt, multiSession, openAPI } from 'better-auth/plugins';
 
+import { activatePendingInvitesForUser } from '../application/collections.service';
 import { API_BRAND } from '../brand';
 import { env } from '../env';
 import { MCP_SCOPES } from '../scopes';
@@ -264,6 +265,15 @@ const betterAuthOptions: BetterAuthOptions = {
   },
   rateLimit: {
     storage: 'database',
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await activatePendingInvitesForUser(user.id, user.email);
+        },
+      },
+    },
   },
   plugins: getAuthPlugins(),
 };

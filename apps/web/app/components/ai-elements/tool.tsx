@@ -10,7 +10,7 @@ import {
   XCircleIcon,
 } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
-import { isValidElement } from 'react';
+import { Fragment, isValidElement } from 'react';
 
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
@@ -118,6 +118,38 @@ export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
     <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 text-foreground text-xs">
       <code>{JSON.stringify(input, null, 2)}</code>
     </pre>
+  </div>
+);
+
+export type ToolPreviewProps = ComponentProps<'div'> & {
+  preview: Record<string, unknown>;
+};
+
+function formatPreviewLabel(key: string): string {
+  return key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+}
+
+function formatPreviewValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  return String(value);
+}
+
+// Shown instead of raw tool-call args when a confirmation-gated tool
+// provides a preview — a bare id/uuid tells a human nothing about what's
+// actually about to be deleted, so this surfaces the record's real fields.
+export const ToolPreview = ({ className, preview, ...props }: ToolPreviewProps) => (
+  <div className={cn('space-y-2', className)} {...props}>
+    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+      About to affect
+    </h4>
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md bg-muted/50 p-3 text-xs">
+      {Object.entries(preview).map(([key, value]) => (
+        <Fragment key={key}>
+          <dt className="font-medium text-muted-foreground">{formatPreviewLabel(key)}</dt>
+          <dd className="text-foreground">{formatPreviewValue(value)}</dd>
+        </Fragment>
+      ))}
+    </dl>
   </div>
 );
 

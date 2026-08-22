@@ -20,7 +20,11 @@ async function registerAll(): Promise<void> {
   if (isEnabled('finance:read')) imports.push(import('./tools/finance'));
   if (isEnabled('health:read')) imports.push(import('./tools/health'));
   if (isEnabled('media:read')) imports.push(import('./tools/media'));
+  if (isEnabled('memory:read', 'memory:write')) imports.push(import('./tools/memory'));
   if (isEnabled('people:read')) imports.push(import('./tools/people'));
+  if (isEnabled('placeLists:read', 'placeLists:write')) {
+    imports.push(import('./tools/place-lists'));
+  }
   if (isEnabled('places:read')) imports.push(import('./tools/places'));
   if (isEnabled('tags:read', 'tags:write')) imports.push(import('./tools/tags'));
   if (isEnabled('social:read')) imports.push(import('./tools/social'));

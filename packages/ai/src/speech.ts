@@ -13,6 +13,11 @@ type SynthesizeSpeechResult = {
   mimeType: string;
 };
 
+export type SynthesizeSpeechStreamResult = {
+  stream: ReadableStream<Uint8Array>;
+  mimeType: string;
+};
+
 const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
   mp3: 'audio/mpeg',
   pcm: 'audio/L16',
@@ -20,9 +25,9 @@ const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
 
 // Kokoro-82m (and TTS-only models generally) aren't chat models, so this goes
 // through the SDK's dedicated `tts.createSpeech` client rather than `chat()` —
-export async function synthesizeSpeech(
+export async function synthesizeSpeechStream(
   input: SynthesizeSpeechInput,
-): Promise<SynthesizeSpeechResult> {
+): Promise<SynthesizeSpeechStreamResult> {
   const client = createOpenRouterClient(input);
   const model = input.model ?? AUDIO_TTS_MODEL;
   const responseFormat = input.responseFormat ?? 'mp3';
@@ -41,6 +46,16 @@ export async function synthesizeSpeech(
     throw normalizeOpenRouterError(error);
   }
 
+  return {
+    stream,
+    mimeType: RESPONSE_FORMAT_MIME_TYPES[responseFormat] ?? 'audio/mpeg',
+  };
+}
+
+export async function synthesizeSpeech(
+  input: SynthesizeSpeechInput,
+): Promise<SynthesizeSpeechResult> {
+  const { stream, mimeType } = await synthesizeSpeechStream(input);
   const chunks: Uint8Array[] = [];
   const reader = stream.getReader();
   for (;;) {
@@ -51,6 +66,6 @@ export async function synthesizeSpeech(
 
   return {
     buffer: Buffer.concat(chunks),
-    mimeType: RESPONSE_FORMAT_MIME_TYPES[responseFormat] ?? 'audio/mpeg',
+    mimeType,
   };
 }

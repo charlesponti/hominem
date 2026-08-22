@@ -16,6 +16,8 @@ export default [
       route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
       route('settings', 'routes/settings.tsx'),
       route('settings/archived-chats', 'routes/settings.archived-chats.tsx'),
+      route('settings/memories', 'routes/settings.memories.tsx'),
+      route('usage', 'routes/usage.tsx'),
     ]),
   ]),
 

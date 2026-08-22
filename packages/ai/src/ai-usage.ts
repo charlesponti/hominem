@@ -4,6 +4,9 @@ import {
   ForbiddenError,
   type AIUsageFeature,
   type AIUsageEventStatus,
+  type AIUsageFeatureBreakdownRecord,
+  type AIUsageModelBreakdownRecord,
+  type AIUsageSummaryRecord,
   type AIUsageOperation,
 } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
@@ -137,6 +140,14 @@ export interface MonthlyUsageStatus {
   periodEnd: string;
 }
 
+export interface MonthlyAIUsageReport {
+  range: { from: string; to: string };
+  monthly: MonthlyUsageStatus;
+  summary: AIUsageSummaryRecord;
+  byFeature: AIUsageFeatureBreakdownRecord[];
+  byModel: AIUsageModelBreakdownRecord[];
+}
+
 function currentMonthRange(now = new Date()): { from: string; to: string } {
   const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   return { from: periodStart.toISOString(), to: now.toISOString() };
@@ -146,6 +157,14 @@ export async function getMonthlyUsageStatus(userId: string): Promise<MonthlyUsag
   const { from, to } = currentMonthRange();
   const summary = await AIUsageEventRepository.getSummary(db, { userId, from, to });
 
+  return buildMonthlyUsageStatus(summary, from, to);
+}
+
+function buildMonthlyUsageStatus(
+  summary: AIUsageSummaryRecord,
+  from: string,
+  to: string,
+): MonthlyUsageStatus {
   return {
     totalCostUsd: summary.totalCostUsd,
     limitUsd: MONTHLY_AI_USAGE_LIMIT_USD,
@@ -153,6 +172,24 @@ export async function getMonthlyUsageStatus(userId: string): Promise<MonthlyUsag
     isOverLimit: summary.totalCostUsd >= MONTHLY_AI_USAGE_LIMIT_USD,
     periodStart: from,
     periodEnd: to,
+  };
+}
+
+export async function getMonthlyAIUsageReport(userId: string): Promise<MonthlyAIUsageReport> {
+  const range = currentMonthRange();
+  const query = { userId, from: range.from, to: range.to };
+  const [summary, byFeature, byModel] = await Promise.all([
+    AIUsageEventRepository.getSummary(db, query),
+    AIUsageEventRepository.getFeatureBreakdown(db, query),
+    AIUsageEventRepository.getModelBreakdown(db, query),
+  ]);
+
+  return {
+    range,
+    monthly: buildMonthlyUsageStatus(summary, range.from, range.to),
+    summary,
+    byFeature,
+    byModel,
   };
 }
 

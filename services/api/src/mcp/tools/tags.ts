@@ -1,4 +1,10 @@
-import { listEntityTags, tagEntity, untagEntity } from '../../application/tags.service';
+import {
+  getEntityDisplayName,
+  getTagName,
+  listEntityTags,
+  tagEntity,
+  untagEntity,
+} from '../../application/tags.service';
 import {
   entityTagsInputSchema,
   entityTagsOutputSchema,
@@ -37,6 +43,18 @@ registerTool(
     sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
+    preview: async (ownerUserId, input) => {
+      const parsed = untagEntityInputSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const [tagName, entityName] = await Promise.all([
+        getTagName(ownerUserId, parsed.data.tagId),
+        getEntityDisplayName(ownerUserId, parsed.data.entityType, parsed.data.entityId),
+      ]);
+      return {
+        tag: tagName ?? '(unknown tag)',
+        entity: entityName ?? `${parsed.data.entityType.slice(0, -1)} (unknown)`,
+      };
+    },
   },
   async (ownerUserId, input) => untagEntity(ownerUserId, input),
 );

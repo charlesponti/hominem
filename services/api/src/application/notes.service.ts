@@ -5,6 +5,7 @@ interface CreateNoteParams {
   title?: string | null | undefined;
   content: string;
   fileIds?: string[];
+  source?: string | null;
 }
 
 interface UpdateNoteParams {
@@ -26,6 +27,7 @@ export class NoteService {
         title,
         content,
         excerpt,
+        source: input.source ?? null,
       });
 
       await NoteRepository.syncFiles(trx, {

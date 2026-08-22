@@ -28,6 +28,17 @@ export interface McpToolDefinition<
    * display annotation for the external MCP-over-HTTP surface.
    */
   requiresConfirmation?: boolean;
+  /**
+   * For `requiresConfirmation` tools: fetches a small, human-readable
+   * description of the specific record the call would affect (e.g. a
+   * skill's name and level, not just the id in the raw args), so the
+   * approval UI can show what's actually about to be deleted. Returning
+   * null means "couldn't resolve a preview" — the UI falls back to raw args.
+   */
+  preview?: (
+    ownerUserId: string,
+    input: Record<string, unknown>,
+  ) => Promise<Record<string, unknown> | null>;
 }
 
 export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {

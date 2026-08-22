@@ -27,12 +27,12 @@ import {
   ChatsToolCallRespondSchema,
   ChatsUpdateSchema,
 } from '../../schemas/chats.schema';
-import { ValidationError } from '../errors';
+import { NotFoundError, UnavailableError, ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { CHAT_ASSISTANT_PROMPT, CHAT_RESPONSE_LENGTH_GUIDANCE } from '../prompts';
 import { runCompletionWithTools } from './chat-completion-loop';
-import { synthesizeChatReplySpeech } from './chat-speech.service';
+import { streamChatReplySpeech, synthesizeChatReplySpeech } from './chat-speech.service';
 import { toChatDto, toChatMessageDto, toStoredUserMessageContent } from './chats.mapper';
 
 async function synthesizeReplyAudioFile(
@@ -281,6 +281,88 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
     return c.json(messages.map(toChatMessageDto));
+  })
+  .use(
+    '/messages/:messageId/speech',
+    rateLimitMiddleware({ bucket: 'chat-speech', windowSec: 60, max: 20 }),
+  )
+  .get('/messages/:messageId/speech', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+
+    await assertUnderMonthlyUsageLimit(userId);
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const message = await ChatRepository.getMessageById(db, chatId, messageId);
+    if (!message || message.role !== 'assistant') {
+      throw new NotFoundError('Assistant message');
+    }
+
+    const eventId = randomUUID();
+    const getDurationMs = startAIUsageTimer();
+    const result = await streamChatReplySpeech(message.content);
+    if (result.kind === 'error') {
+      await recordAIUsageEvent({
+        eventId,
+        userId,
+        feature: 'chat_speech',
+        operation: 'speech',
+        usage: null,
+        status: 'failed',
+        error: result.message,
+        durationMs: getDurationMs(),
+        metadata: { messageId, characterCount: message.content.length },
+      });
+      throw new UnavailableError('Speech playback is unavailable.');
+    }
+
+    const reader = result.stream.getReader();
+    const stream = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          const next = await reader.read();
+          if (next.done) {
+            await recordAIUsageEvent({
+              eventId,
+              userId,
+              feature: 'chat_speech',
+              operation: 'speech',
+              usage: null,
+              status: 'succeeded',
+              durationMs: getDurationMs(),
+              metadata: { messageId, characterCount: message.content.length },
+            });
+            controller.close();
+            return;
+          }
+          controller.enqueue(next.value);
+        } catch (error) {
+          await recordAIUsageEvent({
+            eventId,
+            userId,
+            feature: 'chat_speech',
+            operation: 'speech',
+            usage: null,
+            status: 'failed',
+            error,
+            durationMs: getDurationMs(),
+            metadata: { messageId, characterCount: message.content.length },
+          });
+          controller.error(error);
+        }
+      },
+      async cancel(reason) {
+        await reader.cancel(reason);
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': result.mimeType,
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
   })
   .get('/messages/search', zValidator('query', ChatsSearchMessagesQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
@@ -535,6 +617,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               toolCallId: pendingToolCall.toolCallId,
               toolName: pendingToolCall.toolName,
               args: pendingToolCall.args,
+              preview: pendingToolCall.preview,
             });
           }
           await stream.writeSSE({ data: '[DONE]' });
@@ -795,6 +878,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               toolCallId: pendingToolCall.toolCallId,
               toolName: pendingToolCall.toolName,
               args: pendingToolCall.args,
+              preview: pendingToolCall.preview,
             });
           }
           await stream.writeSSE({ data: '[DONE]' });
@@ -1028,6 +1112,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             toolCallId: pendingToolCall.toolCallId,
             toolName: pendingToolCall.toolName,
             args: pendingToolCall.args,
+            preview: pendingToolCall.preview,
           });
         }
         await stream.writeSSE({ data: '[DONE]' });
@@ -1073,6 +1158,38 @@ export const chatsRoutes = new Hono<AppContext>()
       noteIds = [],
       responseLength,
     } = c.req.valid('json');
+
+    // `/start-stream` has no chatId yet, so a retried generationId can't be
+    // looked up the way `/stream`/`/regenerate` do — fall back to a
+    // chat-agnostic lookup by the run's own (globally unique) id.
+    const existingRun = await ChatRepository.getGenerationRunById(db, generationId, userId);
+    if (existingRun) {
+      return streamSSE(c, async (stream) => {
+        if (existingRun.status === 'committed' && existingRun.assistantMessageId) {
+          const committed = await ChatRepository.getMessageById(
+            db,
+            existingRun.chatId,
+            existingRun.assistantMessageId,
+          );
+          if (committed) {
+            await writeGenerationEvent(stream, {
+              type: 'committed',
+              generationId,
+              message: toChatMessageDto(committed),
+            });
+          }
+        } else if (existingRun.status === 'cancelled') {
+          await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+        } else {
+          await writeGenerationEvent(stream, {
+            type: 'status',
+            generationId,
+            status: existingRun.status === 'saving' ? 'saving' : 'preparing',
+          });
+        }
+        await stream.writeSSE({ data: '[DONE]' });
+      });
+    }
 
     const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
     const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
@@ -1238,6 +1355,7 @@ export const chatsRoutes = new Hono<AppContext>()
             toolCallId: pendingToolCall.toolCallId,
             toolName: pendingToolCall.toolName,
             args: pendingToolCall.args,
+            preview: pendingToolCall.preview,
           });
         }
         await stream.writeSSE({ data: '[DONE]' });

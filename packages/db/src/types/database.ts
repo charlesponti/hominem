@@ -429,15 +429,18 @@ export interface AppCollectionMembers {
   collectionId: string;
   id: Generated<string>;
   invitedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  invitedEmail: string | null;
   ownerUserid: string;
-  personId: string;
+  personId: string | null;
   role: Generated<string>;
+  userId: string | null;
 }
 
 export interface AppCollections {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   description: string | null;
   id: Generated<string>;
+  kind: Generated<string>;
   name: string;
   ownerUserid: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;

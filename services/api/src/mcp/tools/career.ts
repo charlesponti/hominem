@@ -15,6 +15,8 @@ import {
   getCareerProfile,
   getCareerSocialLinks,
   listCareerApplications,
+  listCareerApplicationFiles,
+  listCareerApplicationNotes,
   listCareerCertifications,
   listCareerEducation,
   listCareerEngagements,
@@ -193,6 +195,13 @@ registerTool(
     description: 'Deletes a job application.',
     inputSchema: careerApplicationDeleteSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerApplicationDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { application } = await getCareerApplicationDetail(ownerUserId, parsed.data.id);
+      if (!application) return null;
+      return { company: application.company, title: application.title };
+    },
   },
   async (ownerUserId, input) => ({ removed: await removeCareerApplication(ownerUserId, input.id) }),
 );
@@ -222,6 +231,13 @@ registerTool(
     description: 'Removes an application note.',
     inputSchema: careerApplicationNoteRemoveSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerApplicationNoteRemoveSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const result = await listCareerApplicationNotes(ownerUserId, parsed.data.applicationId);
+      const note = result?.notes.find((n) => n.id === parsed.data.id);
+      return note ? { note: note.content } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerApplicationNote(ownerUserId, input.applicationId, input.id),
@@ -259,6 +275,13 @@ registerTool(
     description: 'Removes an application file.',
     inputSchema: careerApplicationFileRemoveSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerApplicationFileRemoveSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const result = await listCareerApplicationFiles(ownerUserId, parsed.data.applicationId);
+      const file = result?.files.find((f) => f.id === parsed.data.id);
+      return file ? { fileName: file.fileName } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerApplicationFile(ownerUserId, input.applicationId, input.id),
@@ -297,6 +320,13 @@ registerTool(
     description: 'Deletes an education entry.',
     inputSchema: careerEducationDeleteSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerEducationDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { education } = await listCareerEducation(ownerUserId);
+      const entry = education.find((e) => e.id === parsed.data.id);
+      return entry ? { school: entry.school, degree: entry.degree } : null;
+    },
   },
   async (ownerUserId, input) => ({ removed: await removeCareerEducation(ownerUserId, input.id) }),
 );
@@ -333,6 +363,13 @@ registerTool(
     description: 'Deletes a career skill.',
     inputSchema: careerSkillDeleteSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerSkillDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { skills } = await listCareerSkills(ownerUserId);
+      const skill = skills.find((s) => s.id === parsed.data.id);
+      return skill ? { name: skill.name, category: skill.category } : null;
+    },
   },
   async (ownerUserId, input) => ({ removed: await removeCareerSkill(ownerUserId, input.id) }),
 );
@@ -382,6 +419,13 @@ registerTool(
     description: 'Deletes a career testimonial.',
     inputSchema: careerTestimonialDeleteSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerTestimonialDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { testimonials } = await listCareerTestimonials(ownerUserId);
+      const testimonial = testimonials.find((t) => t.id === parsed.data.id);
+      return testimonial ? { from: testimonial.name, company: testimonial.company } : null;
+    },
   },
   async (ownerUserId, input) => ({ removed: await removeCareerTestimonial(ownerUserId, input.id) }),
 );
@@ -420,6 +464,13 @@ registerTool(
     description: 'Deletes a career certification.',
     inputSchema: careerCertificationDeleteSchema,
     outputSchema: z.object({ removed: z.boolean() }),
+    preview: async (ownerUserId, input) => {
+      const parsed = careerCertificationDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { certifications } = await listCareerCertifications(ownerUserId);
+      const cert = certifications.find((c) => c.id === parsed.data.id);
+      return cert ? { name: cert.name, issuer: cert.issuingOrganization } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerCertification(ownerUserId, input.id),
@@ -517,6 +568,13 @@ registerTool(
     sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
+    preview: async (ownerUserId, input) => {
+      const parsed = careerWishlistCompanyDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { companies } = await listCareerWishlistCompanies(ownerUserId);
+      const company = companies.find((c) => c.id === parsed.data.id);
+      return company ? { company: company.company } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerWishlistCompany(ownerUserId, input.id),
@@ -553,6 +611,13 @@ registerTool(
     sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
+    preview: async (ownerUserId, input) => {
+      const parsed = careerEngagementDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { engagements } = await listCareerEngagements(ownerUserId);
+      const engagement = engagements.find((e) => e.id === parsed.data.id);
+      return engagement ? { company: engagement.company, title: engagement.title } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerEngagement(ownerUserId, input.id),
@@ -687,6 +752,13 @@ registerTool(
     sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
+    preview: async (ownerUserId, input) => {
+      const parsed = careerProjectDeleteSchema.safeParse(input);
+      if (!parsed.success) return null;
+      const { projects } = await listCareerProjects(ownerUserId);
+      const project = projects.find((p) => p.id === parsed.data.id);
+      return project ? { title: project.title, organization: project.organization } : null;
+    },
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerProject(ownerUserId, input.id),

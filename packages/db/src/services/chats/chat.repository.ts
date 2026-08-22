@@ -167,6 +167,26 @@ export const ChatRepository = {
     return row ? toChatGenerationRunRecord(row) : null;
   },
 
+  /**
+   * Look up a generation run by id alone (no chatId) — `id` is the table's
+   * primary key, globally unique. Used by `/start-stream`, which has no
+   * chatId yet at the point it needs to detect a retried `generationId`.
+   */
+  async getGenerationRunById(
+    handle: DbHandle,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('id', '=', generationId)
+      .where('ownerUserId', '=', ownerUserId)
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
   async createGenerationRun(
     handle: DbHandle,
     input: CreateChatGenerationRunInput,

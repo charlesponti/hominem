@@ -46,7 +46,13 @@ export const queryKeys = {
   },
 
   usage: {
+    report: ['usage', 'report'] as const,
     monthly: ['usage', 'monthly'] as const,
+  },
+
+  placeLists: {
+    all: ['place-lists'] as const,
+    pendingInvites: ['place-lists', 'pending-invites'] as const,
   },
 } as const;
 

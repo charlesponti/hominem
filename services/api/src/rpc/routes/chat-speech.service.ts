@@ -1,4 +1,4 @@
-import { synthesizeSpeech } from '@hominem/ai';
+import { synthesizeSpeech, synthesizeSpeechStream } from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
 
 // Long assistant replies aren't the walkie-talkie use case (short spoken
@@ -15,8 +15,18 @@ type ChatSpeechDependencies = {
   logError: (message: string, context: Record<string, unknown>) => void;
 };
 
+type ChatSpeechStreamDependencies = {
+  synthesizeStream: typeof synthesizeSpeechStream;
+  logError: (message: string, context: Record<string, unknown>) => void;
+};
+
 const DEFAULT_DEPS: ChatSpeechDependencies = {
   synthesize: synthesizeSpeech,
+  logError: (message, context) => logger.error(message, context),
+};
+
+const DEFAULT_STREAM_DEPS: ChatSpeechStreamDependencies = {
+  synthesizeStream: synthesizeSpeechStream,
   logError: (message, context) => logger.error(message, context),
 };
 
@@ -35,6 +45,34 @@ export async function synthesizeChatReplySpeech(
     return { kind: 'success', buffer, mimeType };
   } catch (error) {
     deps.logError('[chat-speech] synthesis failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return {
+      kind: 'error',
+      message: error instanceof Error ? error.message : 'Speech synthesis failed',
+    };
+  }
+}
+
+export type ChatSpeechStreamResult =
+  | { kind: 'success'; stream: ReadableStream<Uint8Array>; mimeType: string }
+  | { kind: 'error'; message: string };
+
+export async function streamChatReplySpeech(
+  text: string,
+  deps: ChatSpeechStreamDependencies = DEFAULT_STREAM_DEPS,
+): Promise<ChatSpeechStreamResult> {
+  const trimmed = text.trim().slice(0, CHAT_SPEECH_MAX_CHARS);
+
+  if (!trimmed) {
+    return { kind: 'error', message: 'No text to synthesize' };
+  }
+
+  try {
+    const { stream, mimeType } = await deps.synthesizeStream({ text: trimmed });
+    return { kind: 'success', stream, mimeType };
+  } catch (error) {
+    deps.logError('[chat-speech] streaming synthesis failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     return {

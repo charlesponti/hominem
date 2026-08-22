@@ -2,18 +2,22 @@ import * as z from 'zod';
 
 import { entityTypeSchema } from './tags.schema';
 
-const collectionSummarySchema = z.object({
+export const collectionKindSchema = z.enum(['generic', 'place_list']);
+
+export const collectionSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   visibility: z.enum(['private', 'shared']),
+  kind: collectionKindSchema,
   itemCount: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-const collectionMemberSchema = z.object({
-  personId: z.string(),
+export const collectionMemberSchema = z.object({
+  userId: z.string().nullable(),
+  invitedEmail: z.string().nullable(),
   role: z.enum(['owner', 'editor', 'viewer']),
   invitedAt: z.string(),
   acceptedAt: z.string().nullable(),
@@ -40,6 +44,7 @@ export const createCollectionInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
   visibility: z.enum(['private', 'shared']).default('private'),
+  kind: collectionKindSchema.default('generic'),
 });
 
 export const createCollectionOutputSchema = z.object({
@@ -74,6 +79,7 @@ export const removeCollectionItemOutputSchema = z.object({
 // ── list_collections ─────────────────────────────────────────────────
 
 export const listCollectionsInputSchema = z.object({
+  kind: collectionKindSchema.optional(),
   limit: z.number().int().min(1).max(50).default(20),
 });
 
@@ -94,7 +100,7 @@ export const collectionDetailOutputSchema = collectionDetailSchema;
 
 export const inviteMemberInputSchema = z.object({
   collectionId: z.string().uuid(),
-  personId: z.string().uuid(),
+  email: z.string().trim().toLowerCase().email(),
   role: z.enum(['editor', 'viewer']).default('viewer'),
 });
 
@@ -106,11 +112,28 @@ export const inviteMemberOutputSchema = z.object({
 
 export const acceptMemberInviteInputSchema = z.object({
   collectionId: z.string().uuid(),
-  personId: z.string().uuid(),
 });
 
 export const acceptMemberInviteOutputSchema = z.object({
   member: collectionMemberSchema,
+});
+
+// ── list_pending_invites ─────────────────────────────────────────────
+
+export const listPendingInvitesInputSchema = z.object({
+  kind: collectionKindSchema.optional(),
+  limit: z.number().int().min(1).max(50).default(20),
+});
+
+const pendingInviteSchema = z.object({
+  collection: collectionSummarySchema,
+  role: z.enum(['owner', 'editor', 'viewer']),
+  invitedAt: z.string(),
+});
+
+export const listPendingInvitesOutputSchema = z.object({
+  invites: z.array(pendingInviteSchema),
+  count: z.number().int().min(0),
 });
 
 // Types
@@ -124,3 +147,4 @@ export type RemoveCollectionItemInput = z.output<typeof removeCollectionItemInpu
 export type ListCollectionsInput = z.output<typeof listCollectionsInputSchema>;
 export type InviteMemberInput = z.output<typeof inviteMemberInputSchema>;
 export type AcceptMemberInviteInput = z.output<typeof acceptMemberInviteInputSchema>;
+export type ListPendingInvitesInput = z.output<typeof listPendingInvitesInputSchema>;

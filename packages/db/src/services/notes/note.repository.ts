@@ -53,6 +53,7 @@ export interface CreateNoteInput {
   content: string;
   excerpt: string | null;
   parentNoteId?: string | null;
+  source?: string | null;
 }
 
 export interface UpdateNoteInput {
@@ -80,6 +81,7 @@ export interface ListNotesInput {
   offset?: number;
   since?: string;
   query?: string;
+  source?: string;
   sortBy?: 'createdAt' | 'updatedAt' | 'title';
   sortOrder?: 'asc' | 'desc';
 }
@@ -300,6 +302,10 @@ export const NoteRepository = {
       query = query.where('updatedat', '>=', new Date(input.since).toISOString());
     }
 
+    if (input.source) {
+      query = query.where('source', '=', input.source);
+    }
+
     if (input.query) {
       const pattern = `%${input.query.trim()}%`;
       query = query.where((eb) =>
@@ -463,6 +469,7 @@ export const NoteRepository = {
         content: input.content,
         excerpt: input.excerpt,
         ...(input.parentNoteId ? { parentNoteId: input.parentNoteId } : {}),
+        ...(input.source !== undefined ? { source: input.source } : {}),
       })
       .returningAll()
       .executeTakeFirstOrThrow();

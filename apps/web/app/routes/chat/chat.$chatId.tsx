@@ -1,7 +1,7 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
 import { slugifyText } from '@hominem/utils/text';
-import { Mic, Paperclip, Square, X } from 'lucide-react';
+import { Headphones, Mic, Paperclip, Square, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { data } from 'react-router';
 
@@ -27,7 +27,9 @@ import {
   ToolContent,
   ToolHeader,
   ToolInput,
+  ToolPreview,
 } from '~/components/ai-elements/tool';
+import { PendingPlaceListInvites } from '~/components/chat/pending-place-list-invites';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
@@ -55,6 +57,10 @@ function getMentionQuery(value: string) {
 
 function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
   return role === 'assistant' ? 'assistant' : 'user';
+}
+
+function getSpeechUrl(chatId: string, messageId: string) {
+  return `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/messages/${messageId}/speech`;
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -259,7 +265,16 @@ export default function ChatPage({
                         type="dynamic-tool"
                       />
                       <ToolContent>
-                        <ToolInput input={toolCall.args} />
+                        {toolCall.preview ? (
+                          <ToolPreview preview={toolCall.preview} />
+                        ) : (
+                          <ToolInput input={toolCall.args} />
+                        )}
+                        {toolCall.toolName === 'list_pending_invites' &&
+                        toolCall.status !== 'pending' &&
+                        toolCall.status !== 'rejected' ? (
+                          <PendingPlaceListInvites />
+                        ) : null}
                         {isPending ? (
                           <ToolApprovalActions
                             disabled={toolCallRespond.isResponding}
@@ -284,6 +299,19 @@ export default function ChatPage({
                   );
                 })}
                 <MessageResponse>{message.content}</MessageResponse>
+                {message.role === 'assistant' && message.content.trim() ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Headphones aria-hidden="true" className="size-3.5" />
+                    <audio
+                      className="h-8 max-w-full"
+                      controls
+                      crossOrigin="use-credentials"
+                      preload="none"
+                      src={getSpeechUrl(chatId, message.id)}
+                      title="Listen to response"
+                    />
+                  </div>
+                ) : null}
               </MessageContent>
             </Message>
           ))}

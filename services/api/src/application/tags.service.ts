@@ -115,3 +115,47 @@ export async function listEntityTags(
 
   return { tags: rows.rows, count: rows.rows.length };
 }
+
+/** Fetches a tag's name by id, scoped to its owner — used for confirmation previews. */
+export async function getTagName(ownerUserId: string, tagId: string): Promise<string | null> {
+  const row = await db
+    .selectFrom('app.tags')
+    .select('name')
+    .where('id', '=', tagId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+  return row?.name ?? null;
+}
+
+/**
+ * Best-effort display name for a person/place/possession, for confirmation
+ * previews — not a general-purpose entity API. People use `displayName`
+ * (falling back to first/last name); places and possessions use `name`.
+ */
+export async function getEntityDisplayName(
+  ownerUserId: string,
+  entityType: EntityType,
+  entityId: string,
+): Promise<string | null> {
+  if (entityType === 'people') {
+    const row = await db
+      .selectFrom('app.people')
+      .select(['displayName', 'firstName', 'lastName'])
+      .where('id', '=', entityId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+    if (!row) return null;
+    if (row.displayName) return row.displayName;
+    const fullName = [row.firstName, row.lastName].filter(Boolean).join(' ');
+    return fullName || null;
+  }
+
+  const table = entityType === 'places' ? 'app.places' : 'app.possessions';
+  const row = await db
+    .selectFrom(table)
+    .select('name')
+    .where('id', '=', entityId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+  return row?.name ?? null;
+}

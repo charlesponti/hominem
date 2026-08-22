@@ -84,6 +84,7 @@ export interface ChatToolConfirmationRequiredEvent {
   toolCallId: string;
   toolName: string;
   args: Record<string, unknown>;
+  preview: Record<string, unknown> | null;
 }
 
 export type ChatStreamEvent =

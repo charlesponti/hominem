@@ -1,5 +1,6 @@
 export {
   assertUnderMonthlyUsageLimit,
+  getMonthlyAIUsageReport,
   getMonthlyUsageStatus,
   recordAIUsageEvent,
   startAIUsageTimer,

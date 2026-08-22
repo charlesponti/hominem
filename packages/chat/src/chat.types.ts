@@ -14,6 +14,7 @@ export interface ChatMessageToolCall {
   toolCallId: string;
   args: Record<string, unknown>;
   status?: 'completed' | 'pending' | 'rejected';
+  preview?: Record<string, unknown> | null;
 }
 
 export interface ChatMessageItem {

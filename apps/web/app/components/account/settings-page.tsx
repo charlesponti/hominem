@@ -1,10 +1,12 @@
-import { Archive, ArrowLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Archive, ArrowLeft, Brain, ChevronRight, Pencil, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { Textarea } from '~/components/ui/textarea';
 import { useArchivedChats, useMonthlyUsage, useUpdateProfile } from '~/hooks/use-account-settings';
+import { useDeleteMemory, useMemories, useUpdateMemory } from '~/hooks/use-memories';
 import type { User } from '~/lib/auth.server';
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
@@ -116,6 +118,9 @@ export function AccountSettingsPage({ user }: { user: User }) {
                 ? "You've reached this month's free AI usage limit. It resets at the start of next month."
                 : 'Resets at the start of next month.'}
             </p>
+            <Button asChild variant="outline">
+              <Link to="/usage">View usage details</Link>
+            </Button>
           </section>
         ) : null}
 
@@ -125,6 +130,18 @@ export function AccountSettingsPage({ user }: { user: User }) {
             <Link to="/settings/archived-chats">
               <span className="flex items-center gap-2">
                 <Archive /> Archived chats
+              </span>
+              <ChevronRight />
+            </Link>
+          </Button>
+        </section>
+
+        <section className="space-y-3 border-t border-border pt-6">
+          <h2 className="text-base font-semibold">Memory</h2>
+          <Button asChild className="w-full justify-between" variant="outline">
+            <Link to="/settings/memories">
+              <span className="flex items-center gap-2">
+                <Brain /> Memories
               </span>
               <ChevronRight />
             </Link>
@@ -202,6 +219,136 @@ export function ArchivedChatsPage() {
                 </span>
                 <ChevronRight className="size-4 text-muted-foreground" />
               </Link>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </main>
+  );
+}
+
+function MemoryRow({ memory }: { memory: { id: string; title: string | null; content: string } }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(memory.title ?? '');
+  const [content, setContent] = useState(memory.content);
+  const updateMemory = useUpdateMemory();
+  const deleteMemory = useDeleteMemory();
+
+  async function save() {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
+    await updateMemory.mutateAsync({
+      id: memory.id,
+      title: title.trim() || null,
+      content: trimmedContent,
+    });
+    setIsEditing(false);
+  }
+
+  function cancel() {
+    setTitle(memory.title ?? '');
+    setContent(memory.content);
+    setIsEditing(false);
+  }
+
+  if (isEditing) {
+    return (
+      <div className="space-y-2 py-3 first:pt-0 last:pb-0">
+        <Input
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder="Title (optional)"
+          value={title}
+        />
+        <Textarea onChange={(event) => setContent(event.target.value)} rows={3} value={content} />
+        <div className="flex gap-2">
+          <Button
+            disabled={updateMemory.isPending || !content.trim()}
+            onClick={() => void save()}
+            size="sm"
+            variant="secondary"
+          >
+            {updateMemory.isPending ? 'Saving…' : 'Save'}
+          </Button>
+          <Button onClick={cancel} size="sm" variant="ghost">
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+      <Brain className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        {memory.title ? <p className="text-sm font-medium">{memory.title}</p> : null}
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">{memory.content}</p>
+      </div>
+      <div className="flex shrink-0 gap-1">
+        <Button
+          aria-label="Edit memory"
+          onClick={() => setIsEditing(true)}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <Pencil className="size-4" />
+        </Button>
+        <Button
+          aria-label="Delete memory"
+          disabled={deleteMemory.isPending}
+          onClick={() => {
+            if (window.confirm('Delete this memory?')) deleteMemory.mutate({ id: memory.id });
+          }}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function MemoriesPage() {
+  const { data: memories, error, isPending, refetch } = useMemories();
+
+  return (
+    <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+      <div className="mb-8 flex items-center gap-3">
+        <Button aria-label="Back to account settings" asChild size="icon-sm" variant="ghost">
+          <Link to="/settings">
+            <ArrowLeft />
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Memories</h1>
+          <p className="text-sm text-muted-foreground">
+            Facts and preferences the assistant remembers about you.
+          </p>
+        </div>
+      </div>
+      <div className="rounded-xl border border-border bg-card p-5 sm:p-7">
+        {isPending ? <p className="text-sm text-muted-foreground">Loading memories…</p> : null}
+        {error ? (
+          <div className="space-y-3">
+            <p className="text-sm text-destructive">Memories unavailable.</p>
+            <Button onClick={() => void refetch()} variant="secondary">
+              Try again
+            </Button>
+          </div>
+        ) : null}
+        {!isPending && !error && memories?.length === 0 ? (
+          <div className="space-y-1">
+            <h2 className="font-medium">No memories yet</h2>
+            <p className="text-sm text-muted-foreground">
+              Facts the assistant saves about you will appear here.
+            </p>
+          </div>
+        ) : null}
+        {memories?.length ? (
+          <div className="divide-y divide-border">
+            {memories.map((memory) => (
+              <MemoryRow key={memory.id} memory={memory} />
             ))}
           </div>
         ) : null}
