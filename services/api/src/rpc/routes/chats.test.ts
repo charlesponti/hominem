@@ -94,7 +94,7 @@ vi.mock('./chat-speech.service', () => ({
 }));
 
 vi.mock('../../mcp/llm-tools', () => ({
-  getReadOnlyChatTools: vi.fn().mockResolvedValue([]),
+  getChatTools: vi.fn().mockResolvedValue([]),
 }));
 
 // The `/:id/stream` route sits behind rateLimitMiddleware, which lazily
@@ -188,7 +188,7 @@ describe('chat stream accounting', () => {
     );
   });
 
-  it('records observed usage when the stream fails after usage is available', async () => {
+  it('records a failed usage event when the stream errors mid-response', async () => {
     const response = await createApp().request('/api/chats/start-stream', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -205,7 +205,7 @@ describe('chat stream accounting', () => {
     expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         feature: 'chat_stream',
-        usage: expect.objectContaining({ totalTokens: 15, costUsd: 0.12 }),
+        status: 'failed',
       }),
     );
   });
@@ -231,6 +231,32 @@ describe('chat stream accounting', () => {
     expect(completionOptions.messages[0]?.role).toBe('system');
     expect(completionOptions.messages[0]?.content).toContain('silently plan a short outline');
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
+  });
+
+  it('persists reasoning and toolCalls on the committed assistant message', async () => {
+    mocks.streamChatCompletion.mockReturnValue(
+      (async function* () {
+        yield { choices: [{ delta: { content: 'Hi there' } }] };
+      })(),
+    );
+
+    const response = await createApp().request('/api/chats/start-stream', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        generationId: '11111111-1111-4111-8111-111111111118',
+        title: 'Test',
+        message: 'Hello',
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await response.text();
+
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ role: 'assistant', reasoning: null, toolCalls: null }),
+    );
   });
 });
 
@@ -330,6 +356,7 @@ describe('chat message regenerate', () => {
       'chat-id',
       'assistant-1',
       'Regenerated reply',
+      { reasoning: null, toolCalls: null },
     );
     expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, 'chat-id');
   });
@@ -351,10 +378,11 @@ describe('chat message regenerate', () => {
     );
 
     expect(response.status).toBe(200);
+    await response.text();
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
-    expect(completionOptions.messages[1].content).toContain('Latest question');
-    expect(completionOptions.messages[1].content).toContain('1. user: Earlier question');
-    expect(completionOptions.messages[1].content).toContain('2. assistant: Hi');
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Earlier question' });
+    expect(completionOptions.messages[2]).toEqual({ role: 'assistant', content: 'Hi' });
+    expect(completionOptions.messages[3]).toEqual({ role: 'user', content: 'Latest question' });
   });
 
   it('rejects regenerating a user message', async () => {

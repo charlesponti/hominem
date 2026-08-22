@@ -516,6 +516,7 @@ registerTool(
     scopes: ['career:write'],
     sensitivity: 'sensitive',
     resultCap: 1,
+    requiresConfirmation: true,
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerWishlistCompany(ownerUserId, input.id),
@@ -551,6 +552,7 @@ registerTool(
     scopes: ['career:write'],
     sensitivity: 'sensitive',
     resultCap: 1,
+    requiresConfirmation: true,
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerEngagement(ownerUserId, input.id),
@@ -684,6 +686,7 @@ registerTool(
     scopes: ['career:write'],
     sensitivity: 'sensitive',
     resultCap: 1,
+    requiresConfirmation: true,
   },
   async (ownerUserId, input) => ({
     removed: await removeCareerProject(ownerUserId, input.id),

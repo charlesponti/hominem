@@ -13,6 +13,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
 import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/components/ui/collapsible';
 import { cn } from '~/lib/utils';
 
@@ -117,6 +118,29 @@ export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
     <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 text-foreground text-xs">
       <code>{JSON.stringify(input, null, 2)}</code>
     </pre>
+  </div>
+);
+
+export type ToolApprovalActionsProps = ComponentProps<'div'> & {
+  onApprove: () => void;
+  onReject: () => void;
+  disabled?: boolean;
+};
+
+export const ToolApprovalActions = ({
+  className,
+  onApprove,
+  onReject,
+  disabled,
+  ...props
+}: ToolApprovalActionsProps) => (
+  <div className={cn('flex items-center gap-2', className)} {...props}>
+    <Button disabled={disabled} onClick={onApprove} size="sm" type="button">
+      Approve
+    </Button>
+    <Button disabled={disabled} onClick={onReject} size="sm" type="button" variant="outline">
+      Reject
+    </Button>
   </div>
 );
 

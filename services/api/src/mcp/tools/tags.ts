@@ -36,6 +36,7 @@ registerTool(
     scopes: ['tags:write'],
     sensitivity: 'sensitive',
     resultCap: 1,
+    requiresConfirmation: true,
   },
   async (ownerUserId, input) => untagEntity(ownerUserId, input),
 );

@@ -77,11 +77,21 @@ export interface ChatGenerationCancelledEvent {
   generationId: string;
 }
 
+export interface ChatToolConfirmationRequiredEvent {
+  type: 'tool-confirmation-required';
+  generationId: string;
+  messageId: string;
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+}
+
 export type ChatStreamEvent =
   | ChatGenerationStatusEvent
   | ChatGenerationAcceptedEvent
   | ChatGenerationCommittedEvent
   | ChatGenerationCancelledEvent
+  | ChatToolConfirmationRequiredEvent
   | ChatStreamErrorEvent;
 export type ChatsStartStreamEvent = ChatStreamEvent;
 

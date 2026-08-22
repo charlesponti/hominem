@@ -21,13 +21,20 @@ import {
   PromptInputTools,
 } from '~/components/ai-elements/prompt-input';
 import { Shimmer } from '~/components/ai-elements/shimmer';
-import { Tool, ToolContent, ToolHeader, ToolInput } from '~/components/ai-elements/tool';
+import {
+  Tool,
+  ToolApprovalActions,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+} from '~/components/ai-elements/tool';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSpeechToText } from '~/lib/hooks/use-speech-to-text';
 import { useStreamMessage } from '~/lib/hooks/use-stream-message';
+import { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -92,6 +99,7 @@ export default function ChatPage({
   const { chatId } = params;
   const { messages } = useChatMessages({ chatId, initialData: initialMessages });
   const streamMessage = useStreamMessage({ chatId });
+  const toolCallRespond = useToolCallRespond({ chatId });
   const { uploadFiles, uploadState } = useFileUpload();
 
   const [draft, setDraft] = useState('');
@@ -235,18 +243,46 @@ export default function ChatPage({
           {displayMessages.map((message) => (
             <Message key={message.id} from={toMessageRole(message.role)}>
               <MessageContent>
-                {message.toolCalls?.map((toolCall) => (
-                  <Tool defaultOpen={false} key={toolCall.toolCallId}>
-                    <ToolHeader
-                      state="output-available"
-                      toolName={toolCall.toolName}
-                      type="dynamic-tool"
-                    />
-                    <ToolContent>
-                      <ToolInput input={toolCall.args} />
-                    </ToolContent>
-                  </Tool>
-                ))}
+                {message.toolCalls?.map((toolCall) => {
+                  const isPending = toolCall.status === 'pending';
+                  return (
+                    <Tool defaultOpen={isPending} key={toolCall.toolCallId}>
+                      <ToolHeader
+                        state={
+                          isPending
+                            ? 'approval-requested'
+                            : toolCall.status === 'rejected'
+                              ? 'output-denied'
+                              : 'output-available'
+                        }
+                        toolName={toolCall.toolName}
+                        type="dynamic-tool"
+                      />
+                      <ToolContent>
+                        <ToolInput input={toolCall.args} />
+                        {isPending ? (
+                          <ToolApprovalActions
+                            disabled={toolCallRespond.isResponding}
+                            onApprove={() =>
+                              void toolCallRespond.respond({
+                                messageId: message.id,
+                                toolCallId: toolCall.toolCallId,
+                                approved: true,
+                              })
+                            }
+                            onReject={() =>
+                              void toolCallRespond.respond({
+                                messageId: message.id,
+                                toolCallId: toolCall.toolCallId,
+                                approved: false,
+                              })
+                            }
+                          />
+                        ) : null}
+                      </ToolContent>
+                    </Tool>
+                  );
+                })}
                 <MessageResponse>{message.content}</MessageResponse>
               </MessageContent>
             </Message>

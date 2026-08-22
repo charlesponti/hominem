@@ -60,6 +60,12 @@ export const ChatsRegenerateMessageSchema = z.object({
   responseLength: z.enum(['short', 'medium', 'long']).optional(),
 });
 
+export const ChatsToolCallRespondSchema = z.object({
+  approved: z.boolean(),
+  generationId: z.uuid(),
+  responseLength: z.enum(['short', 'medium', 'long']).optional(),
+});
+
 export const ChatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),

@@ -15,6 +15,7 @@ import {
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
 import { getChatTools } from '../../mcp/llm-tools';
+import { callTool } from '../../mcp/tools';
 import {
   ChatsCreateSchema,
   ChatsEditMessageSchema,
@@ -23,6 +24,7 @@ import {
   ChatsSearchMessagesQuerySchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
+  ChatsToolCallRespondSchema,
   ChatsUpdateSchema,
 } from '../../schemas/chats.schema';
 import { ValidationError } from '../errors';
@@ -103,6 +105,20 @@ const RESPONSE_LENGTH_MAX_TOKENS = {
   medium: 1600,
   long: 6000,
 } as const satisfies Record<'short' | 'medium' | 'long', number>;
+
+// `chat_messages.content` has a not-blank check constraint; a turn that ends
+// in a pending tool-call confirmation can have no text of its own, so this
+// gives it a placeholder rather than failing the insert.
+function resolveAssistantContent(
+  assistantText: string,
+  pendingToolCall: { toolName: string } | null,
+): string {
+  if (assistantText.trim()) return assistantText;
+  if (pendingToolCall) {
+    return `I'd like to run "${pendingToolCall.toolName}", which needs your approval first.`;
+  }
+  return assistantText;
+}
 
 function getSystemPrompt(responseLength?: 'short' | 'medium' | 'long'): string {
   if (!responseLength) {
@@ -403,6 +419,8 @@ const chatByIdRoutes = new Hono<AppContext>()
         let reasoningText: string | null = null;
         let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
           [];
+        let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+          null;
         let usage: ReturnType<typeof getChatCompletionUsage> = null;
         let streamError: unknown = null;
 
@@ -427,6 +445,7 @@ const chatByIdRoutes = new Hono<AppContext>()
           assistantText = result.assistantText;
           reasoningText = result.reasoningText;
           toolCallRecords = result.toolCallRecords;
+          pendingToolCall = result.pendingToolCall;
           usage = result.usage;
         } catch (error) {
           streamError = error;
@@ -462,7 +481,9 @@ const chatByIdRoutes = new Hono<AppContext>()
         }
 
         try {
-          if (!assistantText.trim()) throw new Error('No reply was generated');
+          if (!assistantText.trim() && !pendingToolCall) {
+            throw new Error('No reply was generated');
+          }
           await ChatRepository.updateGenerationRun(db, {
             id: generationId,
             ownerUserId: userId,
@@ -484,7 +505,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               trx,
               chatId,
               messageId,
-              assistantText,
+              resolveAssistantContent(assistantText, pendingToolCall),
               {
                 reasoning: reasoningText,
                 toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
@@ -506,6 +527,276 @@ const chatByIdRoutes = new Hono<AppContext>()
             generationId,
             message: toChatMessageDto(committed),
           });
+          if (pendingToolCall) {
+            await writeGenerationEvent(stream, {
+              type: 'tool-confirmation-required',
+              generationId,
+              messageId: committed.id,
+              toolCallId: pendingToolCall.toolCallId,
+              toolName: pendingToolCall.toolName,
+              args: pendingToolCall.args,
+            });
+          }
+          await stream.writeSSE({ data: '[DONE]' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Stream error';
+          const run = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+          if (run?.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+            return;
+          }
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'failed',
+            errorMessage: message,
+          });
+          await writeErrorEvent(stream, message);
+        }
+      });
+    },
+  )
+  .post(
+    '/messages/:messageId/tool-calls/:toolCallId/respond',
+    zValidator('json', ChatsToolCallRespondSchema),
+    async (c) => {
+      const userId = c.get('auth')!.userId;
+      const chatId = getChatId(c);
+      const messageId = getMessageId(c);
+      const toolCallId = c.req.param('toolCallId');
+      if (!toolCallId) throw new ValidationError('Tool call id is required');
+      const { approved, generationId, responseLength } = c.req.valid('json');
+
+      await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+      const targetMessage = await ChatRepository.getMessageById(db, chatId, messageId);
+      if (!targetMessage || targetMessage.role !== 'assistant') {
+        throw new ValidationError('Tool call not found on an assistant message');
+      }
+      const pendingCall = targetMessage.toolCalls?.find((call) => call.toolCallId === toolCallId);
+      if (!pendingCall) {
+        throw new ValidationError('Tool call not found');
+      }
+      if (pendingCall.status !== 'pending') {
+        throw new ValidationError('Tool call is not awaiting confirmation');
+      }
+
+      if (!approved) {
+        const updated = await ChatRepository.updateToolCallStatus(
+          db,
+          chatId,
+          messageId,
+          toolCallId,
+          'rejected',
+        );
+        return c.json(toChatMessageDto(updated));
+      }
+
+      await assertUnderMonthlyUsageLimit(userId);
+
+      const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+      if (existingRun) {
+        return streamSSE(c, async (stream) => {
+          if (existingRun.status === 'committed' && existingRun.assistantMessageId) {
+            const committed = await ChatRepository.getMessageById(
+              db,
+              chatId,
+              existingRun.assistantMessageId,
+            );
+            if (committed) {
+              await writeGenerationEvent(stream, {
+                type: 'committed',
+                generationId,
+                message: toChatMessageDto(committed),
+              });
+            }
+          } else if (existingRun.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+          } else {
+            await writeGenerationEvent(stream, {
+              type: 'status',
+              generationId,
+              status: existingRun.status === 'saving' ? 'saving' : 'preparing',
+            });
+          }
+          await stream.writeSSE({ data: '[DONE]' });
+        });
+      }
+
+      let toolResultContent: string;
+      let toolError: string | null = null;
+      try {
+        const toolResult = await callTool(userId, pendingCall.toolName, pendingCall.args);
+        toolResultContent = toolResult.content[0]?.text ?? 'null';
+      } catch (error) {
+        toolError = error instanceof Error ? error.message : 'Tool call failed';
+        toolResultContent = JSON.stringify({ error: toolError });
+      }
+      await ChatRepository.updateToolCallStatus(
+        db,
+        chatId,
+        messageId,
+        toolCallId,
+        toolError ? 'rejected' : 'completed',
+      );
+      await ChatRepository.createGenerationRun(db, {
+        id: generationId,
+        chatId,
+        ownerUserId: userId,
+        kind: 'send',
+      });
+
+      const history = await ChatRepository.getMessages(db, chatId, 30, 0);
+      const pendingMessageIndex = history.findIndex((entry) => entry.id === messageId);
+      const priorHistory =
+        pendingMessageIndex === -1 ? history : history.slice(0, pendingMessageIndex);
+      const chatMessages: ChatMessages[] = [
+        { role: 'system', content: getSystemPrompt(responseLength) },
+        ...priorHistory.map(
+          (entry): ChatMessages => ({
+            role: entry.role === 'assistant' ? 'assistant' : 'user',
+            content: entry.content,
+          }),
+        ),
+        {
+          role: 'assistant',
+          content: targetMessage.content || null,
+          toolCalls: [
+            {
+              id: toolCallId,
+              type: 'function',
+              function: { name: pendingCall.toolName, arguments: JSON.stringify(pendingCall.args) },
+            },
+          ],
+        },
+        { role: 'tool', toolCallId, content: toolResultContent },
+      ];
+      const chatTools = await getChatTools();
+      const eventId = randomUUID();
+      const getDurationMs = startAIUsageTimer();
+
+      return streamSSE(c, async (stream) => {
+        let assistantText = '';
+        let reasoningText: string | null = null;
+        let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
+          [];
+        let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+          null;
+        let usage: ReturnType<typeof getChatCompletionUsage> = null;
+        let streamError: unknown = null;
+
+        await writeGenerationEvent(stream, {
+          type: 'accepted',
+          generationId,
+          chatId,
+          chat: toChatDto(await ChatRepository.getOwnedOrThrow(db, chatId, userId)),
+          userMessage: null,
+        });
+        await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
+
+        try {
+          const result = await runCompletionWithTools({
+            userId,
+            model: CHAT_MODEL,
+            messages: chatMessages,
+            tools: chatTools,
+            maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
+            reasoning: getReasoningConfig(responseLength),
+          });
+          assistantText = result.assistantText;
+          reasoningText = result.reasoningText;
+          toolCallRecords = result.toolCallRecords;
+          pendingToolCall = result.pendingToolCall;
+          usage = result.usage;
+        } catch (error) {
+          streamError = error;
+        } finally {
+          await recordAIUsageEvent({
+            eventId,
+            userId,
+            feature: 'chat_stream',
+            operation: 'chat_completion',
+            usage,
+            status: streamError ? 'failed' : 'succeeded',
+            error: streamError,
+            durationMs: getDurationMs(),
+            metadata: {
+              chatId,
+              messageId,
+              toolCallRespond: true,
+              toolCallCount: toolCallRecords.length,
+            },
+          });
+        }
+
+        if (streamError) {
+          const message = streamError instanceof Error ? streamError.message : 'Stream error';
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'failed',
+            errorMessage: message,
+          });
+          await writeErrorEvent(stream, message);
+          return;
+        }
+
+        try {
+          if (!assistantText.trim() && !pendingToolCall) {
+            throw new Error('No reply was generated');
+          }
+          await ChatRepository.updateGenerationRun(db, {
+            id: generationId,
+            ownerUserId: userId,
+            status: 'saving',
+          });
+          await writeGenerationEvent(stream, { type: 'status', generationId, status: 'saving' });
+          const beforeCommit = await ChatRepository.getGenerationRun(
+            db,
+            chatId,
+            generationId,
+            userId,
+          );
+          if (beforeCommit?.status === 'cancelled') {
+            await writeGenerationEvent(stream, { type: 'cancelled', generationId });
+            return;
+          }
+
+          const committed = await runInTransaction(async (trx) => {
+            const assistantMessage = await ChatRepository.insertMessage(trx, {
+              chatId,
+              authorUserId: userId,
+              role: 'assistant',
+              content: resolveAssistantContent(assistantText, pendingToolCall),
+              reasoning: reasoningText,
+              toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
+            });
+            await ChatRepository.touchLastMessage(trx, chatId);
+            await ChatRepository.updateGenerationRun(trx, {
+              id: generationId,
+              ownerUserId: userId,
+              status: 'committed',
+              assistantMessageId: assistantMessage.id,
+            });
+            return ChatRepository.getMessageById(trx, chatId, assistantMessage.id);
+          });
+          await enqueueChatEmbedding(userId, chatId);
+
+          if (!committed) throw new Error('Saved reply could not be loaded');
+          await writeGenerationEvent(stream, {
+            type: 'committed',
+            generationId,
+            message: toChatMessageDto(committed),
+          });
+          if (pendingToolCall) {
+            await writeGenerationEvent(stream, {
+              type: 'tool-confirmation-required',
+              generationId,
+              messageId: committed.id,
+              toolCallId: pendingToolCall.toolCallId,
+              toolName: pendingToolCall.toolName,
+              args: pendingToolCall.args,
+            });
+          }
           await stream.writeSSE({ data: '[DONE]' });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Stream error';
@@ -613,6 +904,8 @@ const chatByIdRoutes = new Hono<AppContext>()
       let reasoningText: string | null = null;
       let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
         [];
+      let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+        null;
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
@@ -637,6 +930,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         assistantText = result.assistantText;
         reasoningText = result.reasoningText;
         toolCallRecords = result.toolCallRecords;
+        pendingToolCall = result.pendingToolCall;
         usage = result.usage;
       } catch (error) {
         streamError = error;
@@ -672,7 +966,9 @@ const chatByIdRoutes = new Hono<AppContext>()
       }
 
       try {
-        if (!assistantText.trim()) throw new Error('No reply was generated');
+        if (!assistantText.trim() && !pendingToolCall) {
+          throw new Error('No reply was generated');
+        }
         await ChatRepository.updateGenerationRun(db, {
           id: generationId,
           ownerUserId: userId,
@@ -702,7 +998,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             chatId,
             authorUserId: userId,
             role: 'assistant',
-            content: assistantText,
+            content: resolveAssistantContent(assistantText, pendingToolCall),
             files: audioFile ? [audioFile] : null,
             reasoning: reasoningText,
             toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
@@ -724,6 +1020,16 @@ const chatByIdRoutes = new Hono<AppContext>()
           generationId,
           message: toChatMessageDto(committed),
         });
+        if (pendingToolCall) {
+          await writeGenerationEvent(stream, {
+            type: 'tool-confirmation-required',
+            generationId,
+            messageId: committed.id,
+            toolCallId: pendingToolCall.toolCallId,
+            toolName: pendingToolCall.toolName,
+            args: pendingToolCall.args,
+          });
+        }
         await stream.writeSSE({ data: '[DONE]' });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Stream error';
@@ -817,6 +1123,8 @@ export const chatsRoutes = new Hono<AppContext>()
       let reasoningText: string | null = null;
       let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
         [];
+      let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+        null;
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
@@ -841,6 +1149,7 @@ export const chatsRoutes = new Hono<AppContext>()
         assistantText = result.assistantText;
         reasoningText = result.reasoningText;
         toolCallRecords = result.toolCallRecords;
+        pendingToolCall = result.pendingToolCall;
         usage = result.usage;
       } catch (error) {
         streamError = error;
@@ -876,7 +1185,9 @@ export const chatsRoutes = new Hono<AppContext>()
       }
 
       try {
-        if (!assistantText.trim()) throw new Error('No reply was generated');
+        if (!assistantText.trim() && !pendingToolCall) {
+          throw new Error('No reply was generated');
+        }
         await ChatRepository.updateGenerationRun(db, {
           id: generationId,
           ownerUserId: userId,
@@ -898,7 +1209,7 @@ export const chatsRoutes = new Hono<AppContext>()
             chatId: chat.id,
             authorUserId: userId,
             role: 'assistant',
-            content: assistantText,
+            content: resolveAssistantContent(assistantText, pendingToolCall),
             reasoning: reasoningText,
             toolCalls: toolCallRecords.length > 0 ? toolCallRecords : null,
           });
@@ -919,6 +1230,16 @@ export const chatsRoutes = new Hono<AppContext>()
           generationId,
           message: toChatMessageDto(committed),
         });
+        if (pendingToolCall) {
+          await writeGenerationEvent(stream, {
+            type: 'tool-confirmation-required',
+            generationId,
+            messageId: committed.id,
+            toolCallId: pendingToolCall.toolCallId,
+            toolName: pendingToolCall.toolName,
+            args: pendingToolCall.args,
+          });
+        }
         await stream.writeSSE({ data: '[DONE]' });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Stream error';

@@ -13,6 +13,12 @@ export interface ChatMessageToolCallRecord {
   type: 'tool-call';
   toolCallId: string;
   args: Record<string, unknown>;
+  /**
+   * Confirmation lifecycle for tools flagged `requiresConfirmation`. Absent
+   * (undefined) means the call executed immediately, same as before this
+   * field existed.
+   */
+  status?: 'completed' | 'pending' | 'rejected';
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -36,6 +42,12 @@ function isOptionalRecord(value: unknown): boolean {
 
 function isString(value: unknown): boolean {
   return typeof value === 'string';
+}
+
+function isOptionalToolCallStatus(value: unknown): boolean {
+  return (
+    value === undefined || value === 'completed' || value === 'pending' || value === 'rejected'
+  );
 }
 
 function isChatMessageFileType(value: unknown): boolean {
@@ -65,6 +77,7 @@ const CHAT_MESSAGE_TOOL_CALL_FIELDS = [
   ['type', isToolCallType],
   ['toolCallId', isString],
   ['args', isRecord],
+  ['status', isOptionalToolCallStatus],
 ] as const satisfies readonly FieldValidator[];
 
 function isChatMessageFileRecord(value: unknown): value is ChatMessageFileRecord {

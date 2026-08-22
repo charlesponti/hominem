@@ -435,6 +435,56 @@ export const ChatRepository = {
   },
 
   /**
+   * Update the `status` of a single entry within a message's `toolCalls`
+   * array (used by the tool-call approve/reject flow). Throws if the message
+   * or the matching tool call isn't found.
+   */
+  async updateToolCallStatus(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+    toolCallId: string,
+    status: ChatMessageToolCallRecord['status'],
+  ): Promise<ChatMessageRecord> {
+    const row = (await handle
+      .selectFrom('app.chatMessages')
+      .selectAll()
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .executeTakeFirst()) as ChatMessageRow | undefined;
+
+    if (!row) {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const toolCalls = parseChatMessageToolCalls(row.toolCalls) ?? [];
+    const index = toolCalls.findIndex((call) => call.toolCallId === toolCallId);
+    if (index === -1) {
+      throw new NotFoundError('ChatMessageToolCall', { chatId, messageId, toolCallId });
+    }
+    toolCalls[index] = { ...toolCalls[index]!, status };
+
+    const updated = (await handle
+      .updateTable('app.chatMessages')
+      .set({ toolCalls: toJsonColumnValue(toolCalls), updatedat: new Date().toISOString() })
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .returningAll()
+      .executeTakeFirst()) as ChatMessageRow | undefined;
+
+    if (!updated) {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const noteIds = Array.isArray(updated.referencedNoteIds)
+      ? (updated.referencedNoteIds as string[])
+      : [];
+    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
+
+    return toChatMessageRecord(updated, noteTitlesById);
+  },
+
+  /**
    * Fetch the messages immediately preceding a given point in time (for
    * regenerate), ordered oldest-first like getMessages.
    */

@@ -13,6 +13,7 @@ export interface ChatMessageToolCall {
   type: 'tool-call';
   toolCallId: string;
   args: Record<string, unknown>;
+  status?: 'completed' | 'pending' | 'rejected';
 }
 
 export interface ChatMessageItem {

@@ -9,7 +9,7 @@ import {
 } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
-import { callTool } from '../../mcp/tools';
+import { callTool, getToolDefinition } from '../../mcp/tools';
 
 const DEFAULT_MAX_ITERATIONS = 4;
 
@@ -72,6 +72,13 @@ export interface RunCompletionWithToolsResult {
   reasoningText: string | null;
   toolCallRecords: ChatMessageToolCallRecord[];
   usage: AIUsageMetrics | null;
+  /**
+   * Set when the model requested a tool call flagged `requiresConfirmation`.
+   * The loop stops immediately without executing it — the caller must commit
+   * the partial reply, surface a confirmation prompt to the user, and only
+   * then invoke the tool via a separate approve/reject flow.
+   */
+  pendingToolCall: { toolCallId: string; toolName: string; args: Record<string, unknown> } | null;
 }
 
 interface StreamOnceResult {
@@ -173,6 +180,36 @@ export async function runCompletionWithTools(
         reasoningText: reasoningText || null,
         toolCallRecords,
         usage,
+        pendingToolCall: null,
+      };
+    }
+
+    // If any requested call needs human approval, stop here rather than
+    // executing it (or any other call from this same turn) — surface it to
+    // the caller so a confirmation prompt can be shown before anything runs.
+    const gatedCall = requestedToolCalls.find(
+      (call) => getToolDefinition(call.name)?.requiresConfirmation,
+    );
+    if (gatedCall) {
+      let parsedArgs: Record<string, unknown> = {};
+      try {
+        parsedArgs = gatedCall.arguments ? JSON.parse(gatedCall.arguments) : {};
+      } catch {
+        parsedArgs = {};
+      }
+      toolCallRecords.push({
+        toolName: gatedCall.name,
+        type: 'tool-call',
+        toolCallId: gatedCall.id,
+        args: parsedArgs,
+        status: 'pending',
+      });
+      return {
+        assistantText,
+        reasoningText: reasoningText || null,
+        toolCallRecords,
+        usage,
+        pendingToolCall: { toolCallId: gatedCall.id, toolName: gatedCall.name, args: parsedArgs },
       };
     }
 
@@ -252,5 +289,6 @@ export async function runCompletionWithTools(
     reasoningText: reasoningText || null,
     toolCallRecords,
     usage,
+    pendingToolCall: null,
   };
 }

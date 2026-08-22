@@ -69,6 +69,7 @@ registerTool(
     scopes: ['collections:write'],
     sensitivity: 'standard',
     resultCap: 1,
+    requiresConfirmation: true,
   },
   async (ownerUserId, input) => removeCollectionItem(ownerUserId, input),
 );
