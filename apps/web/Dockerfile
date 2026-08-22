@@ -3,11 +3,10 @@ FROM node:24.18.0-alpine AS builder
 WORKDIR /app
 
 ARG VITE_PUBLIC_API_URL
-ARG VITE_POSTHOG_HOST
 
 ENV TURBO_TELEMETRY_DISABLED=1 \
     VITE_PUBLIC_API_URL=${VITE_PUBLIC_API_URL} \
-    VITE_POSTHOG_HOST=${VITE_POSTHOG_HOST}
+    VITE_POSTHOG_HOST=https://us.i.posthog.com
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages ./packages
