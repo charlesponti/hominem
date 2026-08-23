@@ -19,6 +19,7 @@ scripts/railway-logs.sh api --since 1h
 scripts/railway-logs.sh worker --filter '@level:error OR @level:warn'
 scripts/railway-logs.sh api --http --status '>=400' --since 1h
 scripts/railway-logs.sh worker --follow
+scripts/diagnose-speech.sh 30m
 ```
 
 Supported service aliases are `api`, `worker`, `redis`, and `database`. The
@@ -42,6 +43,12 @@ API for HTTP/runtime logs, worker for queue processing, Redis for cache health,
 and database for database service events. Use the HTTP log view when a request
 status, path, duration, or Railway request ID is more useful than an application
 structured log.
+
+For an incident-oriented speech report, `scripts/diagnose-speech.sh` combines
+API and worker log filters with the GitHub Actions status for the current commit.
+For aggregate database verification, set an explicit `DATABASE_URL` and run
+`scripts/diagnose-usage.sh`; it reports reconciliation states, missing usage
+events, and current-month feature totals without printing individual users.
 
 ## Sentry
 

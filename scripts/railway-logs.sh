@@ -63,8 +63,9 @@ while (($# > 0)); do
     *)
       args+=("$1")
       if [[ "$1" == "--lines" || "$1" == "--since" || "$1" == "--until" || "$1" == "--filter" || "$1" == "--path" || "$1" == "--status" || "$1" == "--method" ]]; then
+        option="$1"
         shift
-        [[ $# -gt 0 ]] || { echo "error: $1 requires a value" >&2; exit 2; }
+        [[ $# -gt 0 ]] || { echo "error: $option requires a value" >&2; exit 2; }
         args+=("$1")
       fi
       ;;
