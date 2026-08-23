@@ -20,6 +20,7 @@ import 'dotenv/config';
 import { TEST_OTP } from '../src/auth/better-auth';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:4040').replace(/\/$/, '');
+const ORIGIN = process.env.E2E_ORIGIN ?? process.env.WEB_URL ?? 'http://localhost:4445';
 const TEST_EMAIL = 'e2e@test.hakumi.io';
 
 function die(message: string): never {
@@ -42,7 +43,7 @@ async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
 async function sendOTP(): Promise<void> {
   const res = await fetch(`${API_URL}/api/auth/email-otp/send-verification-otp`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
     body: JSON.stringify({ email: TEST_EMAIL, type: 'sign-in' }),
   });
   if (!res.ok) {
@@ -59,7 +60,7 @@ interface SignInResult {
 async function signIn(): Promise<SignInResult> {
   const res = await fetch(`${API_URL}/api/auth/sign-in/email-otp`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
     body: JSON.stringify({ email: TEST_EMAIL, otp: TEST_OTP }),
   });
 
