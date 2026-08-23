@@ -140,6 +140,16 @@ function toAIUsageEventRecord(row: AIUsageEventRow): AIUsageEventRecord {
 }
 
 export const AIUsageEventRepository = {
+  async getById(handle: DbHandle, id: string): Promise<AIUsageEventRecord | null> {
+    const row = await handle
+      .selectFrom('app.aiUsageEvents')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return row ? toAIUsageEventRecord(row as AIUsageEventRow) : null;
+  },
+
   async create(handle: DbHandle, input: CreateAIUsageEventInput): Promise<AIUsageEventRecord> {
     const row = await handle
       .insertInto('app.aiUsageEvents')

@@ -1,24 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  getSpeechGenerationUsage: vi.fn(),
+  getSpeechUsageEstimate: vi.fn(),
   createIfAbsent: vi.fn(),
-  getById: vi.fn(),
+  getSpeechRunById: vi.fn(),
+  getUsageEventById: vi.fn(),
   updateUsage: vi.fn(),
   markReconciliation: vi.fn(),
 }));
 
 vi.mock('@hominem/ai', () => ({
-  getSpeechGenerationUsage: mocks.getSpeechGenerationUsage,
+  AUDIO_TTS_MODEL: 'tts-model',
+  getSpeechUsageEstimate: mocks.getSpeechUsageEstimate,
 }));
 
 vi.mock('@hominem/db', () => ({
   AIUsageEventRepository: {
     createIfAbsent: mocks.createIfAbsent,
+    getById: mocks.getUsageEventById,
     updateUsage: mocks.updateUsage,
   },
   ChatSpeechRunRepository: {
-    getById: mocks.getById,
+    getById: mocks.getSpeechRunById,
     markReconciliation: mocks.markReconciliation,
   },
   db: {},
@@ -29,15 +32,17 @@ import { reconcileSpeechUsage } from './speech-usage.service';
 describe('reconcileSpeechUsage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getById.mockResolvedValue({
+    mocks.getSpeechRunById.mockResolvedValue({
       id: 'speech-run-id',
       usageEventId: 'event-id',
       providerGenerationId: 'gen-tts-1',
       status: 'succeeded',
       reconciliationStatus: 'pending',
       reconciliationAttempts: 0,
+      characterCount: 1000,
     });
-    mocks.getSpeechGenerationUsage.mockResolvedValue({
+    mocks.getUsageEventById.mockResolvedValue({ model: 'tts-model' });
+    mocks.getSpeechUsageEstimate.mockResolvedValue({
       provider: 'openrouter',
       model: 'tts-model',
       promptTokens: 10,
@@ -46,6 +51,9 @@ describe('reconcileSpeechUsage', () => {
       costUsd: 0.01,
       cachedPromptTokens: null,
       reasoningTokens: null,
+      characterCount: 1000,
+      costPerCharacterUsd: 0.00001,
+      costSource: 'openrouter_model_catalog',
     });
     mocks.createIfAbsent.mockResolvedValue(true);
     mocks.updateUsage.mockResolvedValue(true);
@@ -54,7 +62,10 @@ describe('reconcileSpeechUsage', () => {
   it('updates the linked usage event and marks the run reconciled', async () => {
     await reconcileSpeechUsage('speech-run-id');
 
-    expect(mocks.getSpeechGenerationUsage).toHaveBeenCalledWith({ generationId: 'gen-tts-1' });
+    expect(mocks.getSpeechUsageEstimate).toHaveBeenCalledWith({
+      model: 'tts-model',
+      characterCount: 1000,
+    });
     expect(mocks.createIfAbsent).toHaveBeenCalledWith(
       {},
       expect.objectContaining({
@@ -73,10 +84,10 @@ describe('reconcileSpeechUsage', () => {
     );
   });
 
-  it('keeps temporary lookup failures retryable', async () => {
-    mocks.getSpeechGenerationUsage.mockRejectedValue(new Error('not ready'));
+  it('keeps temporary pricing failures retryable', async () => {
+    mocks.getSpeechUsageEstimate.mockRejectedValue(new Error('catalog not ready'));
 
-    await expect(reconcileSpeechUsage('speech-run-id')).rejects.toThrow('not ready');
+    await expect(reconcileSpeechUsage('speech-run-id')).rejects.toThrow('catalog not ready');
 
     expect(mocks.markReconciliation).toHaveBeenCalledWith(
       {},
@@ -84,8 +95,8 @@ describe('reconcileSpeechUsage', () => {
     );
   });
 
-  it('marks the run terminal after the final failed attempt', async () => {
-    mocks.getById.mockResolvedValue({
+  it('does not charge a failed speech run', async () => {
+    mocks.getSpeechRunById.mockResolvedValue({
       id: 'speech-run-id',
       usageEventId: 'event-id',
       providerGenerationId: 'gen-tts-1',
@@ -93,13 +104,13 @@ describe('reconcileSpeechUsage', () => {
       reconciliationStatus: 'pending',
       reconciliationAttempts: 2,
     });
-    mocks.getSpeechGenerationUsage.mockRejectedValue(new Error('not found'));
 
     await reconcileSpeechUsage('speech-run-id');
 
     expect(mocks.markReconciliation).toHaveBeenCalledWith(
       {},
-      expect.objectContaining({ id: 'speech-run-id', status: 'failed' }),
+      { id: 'speech-run-id', status: 'succeeded', error: null },
     );
+    expect(mocks.getSpeechUsageEstimate).not.toHaveBeenCalled();
   });
 });

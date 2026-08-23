@@ -14,7 +14,7 @@ vi.mock('./shared', async (importOriginal) => {
   };
 });
 
-import { getSpeechGenerationUsage, synthesizeSpeechStream } from './speech';
+import { getSpeechGenerationUsage, getSpeechUsageEstimate, synthesizeSpeechStream } from './speech';
 
 describe('speech usage metadata', () => {
   it('preserves the provider generation ID from the TTS response header', async () => {
@@ -94,6 +94,33 @@ describe('speech usage metadata', () => {
       costUsd: 0.0042,
       cachedPromptTokens: 2,
       reasoningTokens: 1,
+    });
+  });
+
+  it('calculates TTS cost from the speech model catalog per character price', async () => {
+    createClient.mockReturnValue({
+      models: {
+        list: vi.fn().mockResolvedValue({
+          data: [
+            {
+              id: 'microsoft/mai-voice-2-flash',
+              canonicalSlug: 'microsoft/mai-voice-2-flash-20260723',
+              pricing: { prompt: '0.000015' },
+            },
+          ],
+        }),
+      },
+    });
+
+    await expect(
+      getSpeechUsageEstimate({ model: 'microsoft/mai-voice-2-flash', characterCount: 1000 }),
+    ).resolves.toMatchObject({
+      model: 'microsoft/mai-voice-2-flash',
+      characterCount: 1000,
+      costPerCharacterUsd: 0.000015,
+      costUsd: 0.015,
+      costSource: 'openrouter_model_catalog',
+      totalTokens: 0,
     });
   });
 });

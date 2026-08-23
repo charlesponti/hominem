@@ -5,10 +5,11 @@ import {
   CHAT_MODEL,
   type ChatMessages,
   getChatCompletionUsage,
+  getSpeechUsageEstimate,
 } from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, ChatSpeechRunRepository, db, runInTransaction } from '@hominem/db';
-import { embeddingQueue, speechUsageReconciliationQueue } from '@hominem/queues';
+import { embeddingQueue } from '@hominem/queues';
 import { fileStorageService } from '@hominem/storage';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
@@ -46,25 +47,11 @@ type SynthesizedReplyAudio = {
   file: ChatMessageFileRecord | null;
   eventId: string;
   generationId: string | null;
+  usageAvailable: boolean;
   status: 'succeeded' | 'failed';
 };
 
 const speechTracer = getTelemetryTracer('hominem.chat');
-
-async function enqueueSpeechUsageReconciliation(speechRunId: string) {
-  await speechUsageReconciliationQueue.add(
-    'reconcile-speech-usage',
-    { speechRunId },
-    {
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 500 },
-      jobId: speechRunId,
-      removeOnComplete: true,
-      removeOnFail: true,
-    },
-  );
-  logger.info('speech_usage_reconciliation_queued', { speechRunId });
-}
 
 async function synthesizeReplyAudioFile(
   userId: string,
@@ -77,6 +64,15 @@ async function synthesizeReplyAudioFile(
       'speech.feature': 'chat_speech',
       'speech.character_count': assistantText.length,
     },
+  });
+  const speechUsagePromise = getSpeechUsageEstimate({
+    model: AUDIO_TTS_MODEL,
+    characterCount: assistantText.length,
+  }).catch((error: unknown) => {
+    logger.warn('chat_speech_pricing_unavailable', {
+      error: error instanceof Error ? error.message : 'Speech pricing unavailable',
+    });
+    return null;
   });
   const result = await synthesizeChatReplySpeech(assistantText);
   const generationId = 'generationId' in result ? result.generationId : null;
@@ -96,7 +92,7 @@ async function synthesizeReplyAudioFile(
       durationMs: getDurationMs(),
       metadata: {},
     });
-    return { file: null, eventId, generationId: null, status: 'failed' };
+    return { file: null, eventId, generationId: null, usageAvailable: false, status: 'failed' };
   }
 
   try {
@@ -104,16 +100,21 @@ async function synthesizeReplyAudioFile(
       originalName: 'reply.mp3',
     });
 
+    const speechUsage = await speechUsagePromise;
     await recordAIUsageEvent({
       eventId,
       userId,
       feature: 'chat_speech',
       operation: 'speech',
       model: AUDIO_TTS_MODEL,
-      usage: null,
+      usage: speechUsage,
       status: 'succeeded',
       durationMs: getDurationMs(),
-      metadata: {},
+      metadata: {
+        costSource: speechUsage?.costSource ?? null,
+        costPerCharacterUsd: speechUsage?.costPerCharacterUsd ?? null,
+        characterCount: assistantText.length,
+      },
     });
     speechSpan.setAttribute('speech.audio_bytes', result.buffer.byteLength);
     speechSpan.setStatus({ code: SpanStatusCode.OK });
@@ -129,6 +130,7 @@ async function synthesizeReplyAudioFile(
       },
       eventId,
       generationId,
+      usageAvailable: speechUsage !== null,
       status: 'succeeded',
     };
   } catch (error) {
@@ -147,7 +149,7 @@ async function synthesizeReplyAudioFile(
       durationMs: getDurationMs(),
       metadata: {},
     });
-    return { file: null, eventId, generationId, status: 'failed' };
+    return { file: null, eventId, generationId, usageAvailable: false, status: 'failed' };
   }
 }
 
@@ -373,6 +375,16 @@ const chatByIdRoutes = new Hono<AppContext>()
       provider: 'openrouter',
       characterCount: message.content.length,
     });
+    const speechUsagePromise = getSpeechUsageEstimate({
+      model: AUDIO_TTS_MODEL,
+      characterCount: message.content.length,
+    }).catch((error: unknown) => {
+      logger.warn('chat_speech_pricing_unavailable', {
+        speechRunId,
+        error: error instanceof Error ? error.message : 'Speech pricing unavailable',
+      });
+      return null;
+    });
     const result = await streamChatReplySpeech(message.content);
     const providerReadyDurationMs = Math.max(0, Math.round(performance.now() - speechStartedAt));
     speechSpan.setAttribute('speech.provider_wait_ms', providerReadyDurationMs);
@@ -437,30 +449,32 @@ const chatByIdRoutes = new Hono<AppContext>()
             });
             speechSpan.setStatus({ code: SpanStatusCode.OK });
             speechSpan.end();
+            const speechUsage = await speechUsagePromise;
             await recordAIUsageEvent({
               eventId,
               userId,
               feature: 'chat_speech',
               operation: 'speech',
               model: AUDIO_TTS_MODEL,
-              usage: null,
+              usage: speechUsage,
               status: 'succeeded',
               durationMs: getDurationMs(),
-              metadata: { messageId, characterCount: message.content.length },
+              metadata: {
+                messageId,
+                characterCount: message.content.length,
+                costSource: speechUsage?.costSource ?? null,
+                costPerCharacterUsd: speechUsage?.costPerCharacterUsd ?? null,
+              },
             });
             await ChatSpeechRunRepository.markComplete(db, {
               id: speechRunId,
               status: 'succeeded',
             });
-            if (result.generationId) {
-              await enqueueSpeechUsageReconciliation(speechRunId);
-            } else {
-              await ChatSpeechRunRepository.markReconciliation(db, {
-                id: speechRunId,
-                status: 'failed',
-                error: 'Provider generation ID was not returned',
-              });
-            }
+            await ChatSpeechRunRepository.markReconciliation(db, {
+              id: speechRunId,
+              status: speechUsage ? 'succeeded' : 'failed',
+              ...(speechUsage ? {} : { error: 'Speech pricing was unavailable' }),
+            });
             controller.close();
             return;
           }
@@ -496,15 +510,11 @@ const chatByIdRoutes = new Hono<AppContext>()
             metadata: { messageId, characterCount: message.content.length },
           });
           await ChatSpeechRunRepository.markComplete(db, { id: speechRunId, status: 'failed' });
-          if (result.generationId) {
-            await enqueueSpeechUsageReconciliation(speechRunId);
-          } else {
-            await ChatSpeechRunRepository.markReconciliation(db, {
-              id: speechRunId,
-              status: 'failed',
-              error: error instanceof Error ? error.message : 'Speech stream failed',
-            });
-          }
+          await ChatSpeechRunRepository.markReconciliation(db, {
+            id: speechRunId,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Speech stream failed',
+          });
           controller.error(error);
         }
       },
@@ -535,15 +545,11 @@ const chatByIdRoutes = new Hono<AppContext>()
           metadata: { messageId, characterCount: message.content.length },
         });
         await ChatSpeechRunRepository.markComplete(db, { id: speechRunId, status: 'failed' });
-        if (result.generationId) {
-          await enqueueSpeechUsageReconciliation(speechRunId);
-        } else {
-          await ChatSpeechRunRepository.markReconciliation(db, {
-            id: speechRunId,
-            status: 'failed',
-            error: reason instanceof Error ? reason.message : 'Speech stream cancelled',
-          });
-        }
+        await ChatSpeechRunRepository.markReconciliation(db, {
+          id: speechRunId,
+          status: 'failed',
+          error: reason instanceof Error ? reason.message : 'Speech stream cancelled',
+        });
       },
     });
 
@@ -1313,15 +1319,11 @@ const chatByIdRoutes = new Hono<AppContext>()
             id: speechRunId,
             status: audioRun.status,
           });
-          if (audioRun.generationId) {
-            await enqueueSpeechUsageReconciliation(speechRunId);
-          } else {
-            await ChatSpeechRunRepository.markReconciliation(db, {
-              id: speechRunId,
-              status: 'failed',
-              error: 'Provider generation ID was not returned',
-            });
-          }
+          await ChatSpeechRunRepository.markReconciliation(db, {
+            id: speechRunId,
+            status: audioRun.usageAvailable ? 'succeeded' : 'failed',
+            ...(audioRun.usageAvailable ? {} : { error: 'Speech pricing was unavailable' }),
+          });
         }
         await enqueueChatEmbedding(userId, chatId);
 

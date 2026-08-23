@@ -25,7 +25,10 @@ export type OpenRouterClientOptions = {
 };
 
 type JsonObject = Record<string, unknown>;
-type OpenRouterClientLike = Pick<OpenRouter, 'chat' | 'embeddings' | 'tts' | 'generations'>;
+type OpenRouterClientLike = Pick<
+  OpenRouter,
+  'chat' | 'embeddings' | 'tts' | 'generations' | 'models'
+>;
 
 export type AIUsageMetrics = {
   provider: 'openrouter';

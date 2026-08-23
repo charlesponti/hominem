@@ -36,7 +36,12 @@ export type { VoiceTranscriptCleanupOutput } from './voice-cleanup';
 export { synthesizeSpeech } from './speech';
 export { synthesizeSpeechStream } from './speech';
 export { getSpeechGenerationUsage } from './speech';
-export type { SpeechGenerationUsage, SynthesizeSpeechStreamResult } from './speech';
+export { getSpeechUsageEstimate } from './speech';
+export type {
+  SpeechGenerationUsage,
+  SpeechUsageEstimate,
+  SynthesizeSpeechStreamResult,
+} from './speech';
 
 export { extractTasks, extractVoiceTasks } from './task-extraction';
 export { extractTimeBlock } from './time-block-extraction';

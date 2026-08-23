@@ -1,4 +1,4 @@
-import { getSpeechGenerationUsage } from '@hominem/ai';
+import { AUDIO_TTS_MODEL, getSpeechUsageEstimate } from '@hominem/ai';
 import { AIUsageEventRepository, ChatSpeechRunRepository, db } from '@hominem/db';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { SpanStatusCode } from '@opentelemetry/api';
@@ -18,7 +18,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 export async function reconcileSpeechUsage(speechRunId: string): Promise<void> {
-  return reconciliationTracer.startActiveSpan('speech.reconciliation.lookup', async (span) => {
+  return reconciliationTracer.startActiveSpan('speech.reconciliation.pricing', async (span) => {
     const run = await ChatSpeechRunRepository.getById(db, speechRunId);
     if (!run || run.reconciliationStatus !== 'pending') {
       span.setAttribute('speech.reconciliation.skipped', true);
@@ -47,8 +47,23 @@ export async function reconcileSpeechUsage(speechRunId: string): Promise<void> {
     }
 
     try {
-      const usage = await getSpeechGenerationUsage({ generationId: run.providerGenerationId });
-      const status = run.status === 'failed' ? 'failed' : 'succeeded';
+      if (run.status === 'failed') {
+        await ChatSpeechRunRepository.markReconciliation(db, {
+          id: run.id,
+          status: 'succeeded',
+          error: null,
+        });
+        span.setAttribute('speech.reconciliation.outcome', 'failed_speech_no_charge');
+        span.setStatus({ code: SpanStatusCode.OK });
+        return;
+      }
+
+      const usageEvent = await AIUsageEventRepository.getById(db, run.usageEventId);
+      const usage = await getSpeechUsageEstimate({
+        model: usageEvent?.model ?? AUDIO_TTS_MODEL,
+        characterCount: run.characterCount,
+      });
+      const status = 'succeeded' as const;
       const usageEventCreated = await AIUsageEventRepository.createIfAbsent(db, {
         id: run.usageEventId,
         userId: run.ownerUserId,
@@ -82,11 +97,15 @@ export async function reconcileSpeechUsage(speechRunId: string): Promise<void> {
       logger.info('speech_usage_reconciliation_succeeded', {
         usageEventCreated,
         totalTokens: usage.totalTokens,
+        costUsd: usage.costUsd,
+        costSource: usage.costSource,
         usageAvailable: true,
       });
       span.setAttributes({
         'speech.reconciliation.outcome': 'succeeded',
         'speech.total_tokens': usage.totalTokens,
+        'speech.cost_usd': usage.costUsd ?? 0,
+        'speech.cost_source': usage.costSource,
         'speech.usage_available': true,
       });
       span.setStatus({ code: SpanStatusCode.OK });

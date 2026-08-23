@@ -32,6 +32,20 @@ const mocks = vi.hoisted(() => ({
   streamChatCompletion: vi.fn(),
   recordAIUsageEvent: vi.fn(),
   assertUnderMonthlyUsageLimit: vi.fn(),
+  getSpeechUsageEstimate: vi.fn().mockResolvedValue({
+    provider: 'openrouter',
+    model: 'test-tts-model',
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+    reportedTotalTokens: null,
+    costUsd: 0.001,
+    cachedPromptTokens: null,
+    reasoningTokens: null,
+    characterCount: 8,
+    costPerCharacterUsd: 0.000125,
+    costSource: 'openrouter_model_catalog',
+  }),
   enqueueEmbedding: vi.fn(),
   enqueueSpeechUsageReconciliation: vi.fn(),
   streamChatReplySpeech: vi.fn(),
@@ -42,6 +56,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@hominem/ai', () => ({
   AUDIO_TTS_MODEL: 'test-tts-model',
   CHAT_MODEL: 'test-chat-model',
+  getSpeechUsageEstimate: mocks.getSpeechUsageEstimate,
   getChatCompletionUsage: vi.fn((chunk: { usage?: unknown }) => chunk.usage ?? null),
   streamChatCompletion: mocks.streamChatCompletion,
 }));
@@ -83,9 +98,6 @@ vi.mock('@hominem/db', async () => {
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {
     add: mocks.enqueueEmbedding,
-  },
-  speechUsageReconciliationQueue: {
-    add: mocks.enqueueSpeechUsageReconciliation,
   },
 }));
 
@@ -675,10 +687,9 @@ describe('chat stream walkie-talkie audio leg', () => {
       expect.anything(),
       expect.objectContaining({ providerGenerationId: 'gen-tts-1' }),
     );
-    expect(mocks.enqueueSpeechUsageReconciliation).toHaveBeenCalledWith(
-      'reconcile-speech-usage',
-      expect.objectContaining({ speechRunId: expect.any(String) }),
-      expect.objectContaining({ attempts: 3 }),
+    expect(mocks.markSpeechReconciliation).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ id: expect.any(String), status: 'succeeded' }),
     );
   });
 });
