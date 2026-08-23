@@ -344,7 +344,7 @@ export default function ChatPage({
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-safe-area">
         {suggestions.length > 0 || selectedNotesForSend.length > 0 || attachedFiles.length > 0 ? (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {selectedNotesForSend.map((note) => (

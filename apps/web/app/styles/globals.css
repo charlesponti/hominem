@@ -92,6 +92,10 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+@utility pb-safe-area {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
 @utility mb-safe-area-inset-bottom {
   margin-bottom: env(safe-area-inset-bottom);
 }
