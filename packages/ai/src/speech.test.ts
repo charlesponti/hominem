@@ -50,6 +50,27 @@ describe('speech usage metadata', () => {
     );
   });
 
+  it('captures the provider generation ID from the SDK response hook', async () => {
+    const audio = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.close();
+      },
+    });
+    createSpeech.mockImplementation(() => {
+      return Promise.resolve(audio);
+    });
+    createClient.mockImplementation((options: { responseHook?: (response: Response) => void }) => {
+      options.responseHook?.(
+        new Response(null, { headers: { 'X-Generation-Id': 'gen-tts-hook-1' } }),
+      );
+      return { tts: { createSpeech }, generations: { getGeneration } };
+    });
+
+    const result = await synthesizeSpeechStream({ text: 'Hello' });
+
+    expect(result.generationId).toBe('gen-tts-hook-1');
+  });
+
   it('maps OpenRouter generation accounting into the shared usage shape', async () => {
     getGeneration.mockResolvedValue({
       data: {

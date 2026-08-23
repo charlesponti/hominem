@@ -57,7 +57,13 @@ const SPEECH_REQUEST_TIMEOUT_MS = 15_000;
 export async function synthesizeSpeechStream(
   input: SynthesizeSpeechInput,
 ): Promise<SynthesizeSpeechStreamResult> {
-  const client = createOpenRouterClient(input);
+  let generationId: string | null = null;
+  const client = createOpenRouterClient({
+    ...input,
+    responseHook: (response) => {
+      generationId = response.headers.get('x-generation-id');
+    },
+  });
   const model = input.model ?? AUDIO_TTS_MODEL;
   const responseFormat = input.responseFormat ?? 'mp3';
 
@@ -76,8 +82,7 @@ export async function synthesizeSpeechStream(
     ) as SpeechRequestPromise;
     stream = await request;
 
-    let generationId: string | null = null;
-    if (typeof request.$inspect === 'function') {
+    if (!generationId && typeof request.$inspect === 'function') {
       const [, call] = await request.$inspect();
       generationId = call.response?.headers.get('X-Generation-Id') ?? null;
     }

@@ -1,5 +1,5 @@
 import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
-import { OpenRouter } from '@openrouter/sdk';
+import { HTTPClient, OpenRouter } from '@openrouter/sdk';
 
 import { env } from './env';
 
@@ -21,6 +21,7 @@ export type OpenRouterClientOptions = {
   appTitle?: string;
   appCategories?: string;
   client?: OpenRouterClientLike;
+  responseHook?: (response: Response) => void;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -212,10 +213,15 @@ export function createOpenRouterClient(options: OpenRouterClientOptions = {}) {
     return options.client;
   }
 
+  const httpClient = options.responseHook
+    ? new HTTPClient().addHook('response', options.responseHook)
+    : undefined;
+
   return new OpenRouter({
     apiKey: env.OPENROUTER_API_KEY,
     httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
     appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
     appCategories: options.appCategories,
+    ...(httpClient ? { httpClient } : {}),
   });
 }
