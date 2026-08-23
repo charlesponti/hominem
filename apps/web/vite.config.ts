@@ -22,7 +22,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         // worker, not the manifest.
         manifest: false,
         outDir: 'build/client',
-        registerType: 'prompt',
+        registerType: 'autoUpdate',
         injectRegister: false,
         devOptions: {
           // Precached-hash service workers and Vite's dev-mode dependency
@@ -35,8 +35,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           enabled: false,
         },
         workbox: {
-          skipWaiting: false,
-          clientsClaim: false,
+          skipWaiting: true,
+          clientsClaim: true,
           cleanupOutdatedCaches: true,
           navigateFallback: '/',
           navigateFallbackDenylist: [/^\/api\//],

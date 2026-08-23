@@ -6,7 +6,11 @@ ARG VITE_PUBLIC_API_URL
 
 ENV TURBO_TELEMETRY_DISABLED=1 \
     VITE_PUBLIC_API_URL=${VITE_PUBLIC_API_URL} \
-    VITE_POSTHOG_HOST=https://us.i.posthog.com
+    VITE_POSTHOG_HOST=https://us.i.posthog.com \
+    VITE_OTEL_DEPLOYMENT_ENVIRONMENT=production \
+    VITE_OTEL_SERVICE_VERSION=web
+
+RUN test -n "$VITE_PUBLIC_API_URL"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages ./packages

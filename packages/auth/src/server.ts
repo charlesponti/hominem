@@ -22,10 +22,15 @@ export async function getServerAuth(request: Request, config: AuthConfig) {
     headers.set('cookie', cookie);
   }
 
-  const response = await fetch(new URL('/api/auth/get-session', config.apiBaseUrl).toString(), {
-    method: 'GET',
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(new URL('/api/auth/get-session', config.apiBaseUrl).toString(), {
+      method: 'GET',
+      headers,
+    });
+  } catch {
+    return { user: null, headers: new Headers() };
+  }
 
   if (!response.ok) {
     return { user: null, headers: new Headers() };
