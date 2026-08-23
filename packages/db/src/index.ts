@@ -100,6 +100,9 @@ export type {
   AIUsageModelBreakdownRecord,
   AIUsageOperation,
   AIUsageSummaryRecord,
+  AIUsageTimeseriesGranularity,
+  AIUsageTimeseriesQuery,
+  AIUsageTimeseriesRecord,
   CreateAIUsageEventInput,
 } from './services/ai/ai-usage.repository';
 

@@ -20,6 +20,12 @@ type Pages = {
   "/api/auth/google": {
     params: {};
   };
+  "/api/usage": {
+    params: {};
+  };
+  "/api/usage-timeseries": {
+    params: {};
+  };
   "/auth": {
     params: {};
   };
@@ -53,7 +59,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/health" | "/api/auth/google" | "/auth" | "/logout" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/settings/memories" | "/usage" | "/*";
+    page: "/" | "/health" | "/api/auth/google" | "/api/usage" | "/api/usage-timeseries" | "/auth" | "/logout" | "/chat/:chatId" | "/settings" | "/settings/archived-chats" | "/settings/memories" | "/usage" | "/*";
   };
   "routes/health.ts": {
     id: "routes/health";
@@ -62,6 +68,14 @@ type RouteFiles = {
   "routes/api/auth/google.ts": {
     id: "routes/api/auth/google";
     page: "/api/auth/google";
+  };
+  "routes/api/usage.ts": {
+    id: "routes/api/usage";
+    page: "/api/usage";
+  };
+  "routes/api/usage-timeseries.ts": {
+    id: "routes/api/usage-timeseries";
+    page: "/api/usage-timeseries";
   };
   "routes/auth/index.tsx": {
     id: "routes/auth/index";
@@ -113,6 +127,8 @@ type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/health": typeof import("./app/routes/health.ts");
   "routes/api/auth/google": typeof import("./app/routes/api/auth/google.ts");
+  "routes/api/usage": typeof import("./app/routes/api/usage.ts");
+  "routes/api/usage-timeseries": typeof import("./app/routes/api/usage-timeseries.ts");
   "routes/auth/index": typeof import("./app/routes/auth/index.tsx");
   "routes/auth/logout": typeof import("./app/routes/auth/logout.tsx");
   "routes/_authenticated": typeof import("./app/routes/_authenticated.tsx");

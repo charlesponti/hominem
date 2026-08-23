@@ -36,3 +36,19 @@ export type MonthlyUsageReport = {
   byFeature: UsageFeatureBreakdown[];
   byModel: UsageModelBreakdown[];
 };
+
+export type UsageTimeseriesGranularity = 'day' | 'month';
+
+export type UsageTimeseriesPoint = {
+  bucketStart: string;
+  model: string | null;
+  requestCount: number;
+  usageAvailableCount: number;
+  totalCostUsd: number;
+};
+
+export type UsageTimeseriesReport = {
+  range: { from: string; to: string };
+  granularity: UsageTimeseriesGranularity;
+  points: UsageTimeseriesPoint[];
+};

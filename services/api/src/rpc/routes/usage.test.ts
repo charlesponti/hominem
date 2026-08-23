@@ -8,6 +8,7 @@ import { apiErrorHandler } from '../middleware/error';
 const mocks = vi.hoisted(() => ({
   getMonthlyAIUsageReport: vi.fn(),
   getMonthlyUsageStatus: vi.fn(),
+  getAIUsageTimeseries: vi.fn(),
   getSpeechUsageHealth: vi.fn(),
 }));
 
@@ -60,6 +61,7 @@ describe('usage routes', () => {
   beforeEach(() => {
     mocks.getMonthlyAIUsageReport.mockReset();
     mocks.getMonthlyUsageStatus.mockReset();
+    mocks.getAIUsageTimeseries.mockReset();
     mocks.getSpeechUsageHealth.mockReset();
   });
 
@@ -119,6 +121,45 @@ describe('usage routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(status);
     expect(mocks.getMonthlyUsageStatus).toHaveBeenCalledWith(testUser.id);
+  });
+
+  it('returns time-series usage for the authenticated user', async () => {
+    const report = {
+      range: { from: '2026-08-01T00:00:00.000Z', to: '2026-09-01T00:00:00.000Z' },
+      granularity: 'day' as const,
+      points: [
+        {
+          bucketStart: '2026-08-01T00:00:00.000Z',
+          model: 'model-a',
+          requestCount: 2,
+          usageAvailableCount: 1,
+          totalCostUsd: 0.25,
+        },
+      ],
+    };
+    mocks.getAIUsageTimeseries.mockResolvedValue(report);
+
+    const response = await createApp().request(
+      '/api/usage/timeseries?from=2026-08-01T00%3A00%3A00.000Z&to=2026-09-01T00%3A00%3A00.000Z&granularity=day',
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(report);
+    expect(mocks.getAIUsageTimeseries).toHaveBeenCalledWith({
+      userId: testUser.id,
+      from: '2026-08-01T00:00:00.000Z',
+      to: '2026-09-01T00:00:00.000Z',
+      granularity: 'day',
+    });
+  });
+
+  it('rejects invalid time-series ranges', async () => {
+    const response = await createApp().request(
+      '/api/usage/timeseries?from=2026-09-01T00%3A00%3A00.000Z&to=2026-08-01T00%3A00%3A00.000Z&granularity=day',
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.getAIUsageTimeseries).not.toHaveBeenCalled();
   });
 
   it('rejects health reports for non-admin users', async () => {

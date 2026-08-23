@@ -78,6 +78,15 @@ export interface AIUsageQueryRange {
   to?: string | null;
 }
 
+export type AIUsageTimeseriesGranularity = 'day' | 'month';
+
+export interface AIUsageTimeseriesQuery {
+  userId: string;
+  from: string;
+  to: string;
+  granularity: AIUsageTimeseriesGranularity;
+}
+
 export interface AIUsageSummaryRecord {
   requestCount: number;
   succeededCount: number;
@@ -111,6 +120,14 @@ export interface AIUsageModelBreakdownRecord {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  totalCostUsd: number;
+}
+
+export interface AIUsageTimeseriesRecord {
+  bucketStart: string;
+  model: string | null;
+  requestCount: number;
+  usageAvailableCount: number;
   totalCostUsd: number;
 }
 
@@ -378,5 +395,40 @@ export const AIUsageEventRepository = {
         totalCostUsd: toRequiredNumber(row.totalCostUsd),
       }),
     );
+  },
+
+  async getTimeseries(
+    handle: DbHandle,
+    input: AIUsageTimeseriesQuery,
+  ): Promise<AIUsageTimeseriesRecord[]> {
+    const bucket =
+      input.granularity === 'day'
+        ? sql<Date | string>`date_trunc('day', createdat AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`
+        : sql<Date | string>`date_trunc('month', createdat AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`;
+
+    const rows = await handle
+      .selectFrom('app.aiUsageEvents')
+      .select([
+        bucket.as('bucketStart'),
+        'model',
+        sql<number>`count(*)`.as('requestCount'),
+        sql<number>`count(*) FILTER (WHERE usage_available)`.as('usageAvailableCount'),
+        sql<Numeric>`coalesce(sum(cost_usd), 0)`.as('totalCostUsd'),
+      ])
+      .where('ownerUserid', '=', input.userId)
+      .where('createdat', '>=', new Date(input.from).toISOString())
+      .where('createdat', '<', new Date(input.to).toISOString())
+      .groupBy([bucket, 'model'])
+      .orderBy(bucket, 'asc')
+      .orderBy('model', 'asc')
+      .execute();
+
+    return rows.map((row) => ({
+      bucketStart: new Date(row.bucketStart).toISOString(),
+      model: row.model ?? null,
+      requestCount: Number(row.requestCount ?? 0),
+      usageAvailableCount: Number(row.usageAvailableCount ?? 0),
+      totalCostUsd: toRequiredNumber(row.totalCostUsd),
+    }));
   },
 };

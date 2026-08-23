@@ -49,9 +49,10 @@ export { extractTimeBlock } from './time-block-extraction';
 export {
   assertUnderMonthlyUsageLimit,
   getMonthlyAIUsageReport,
+  getAIUsageTimeseries,
   getMonthlyUsageStatus,
   recordAIUsageEvent,
   startAIUsageTimer,
 } from './ai-usage';
 
-export type { MonthlyAIUsageReport, MonthlyUsageStatus } from './ai-usage';
+export type { AIUsageTimeseriesReport, MonthlyAIUsageReport, MonthlyUsageStatus } from './ai-usage';

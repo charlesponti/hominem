@@ -8,6 +8,8 @@ import {
   type AIUsageModelBreakdownRecord,
   type AIUsageSummaryRecord,
   type AIUsageOperation,
+  type AIUsageTimeseriesGranularity,
+  type AIUsageTimeseriesRecord,
 } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
 
@@ -148,6 +150,12 @@ export interface MonthlyAIUsageReport {
   byModel: AIUsageModelBreakdownRecord[];
 }
 
+export interface AIUsageTimeseriesReport {
+  range: { from: string; to: string };
+  granularity: AIUsageTimeseriesGranularity;
+  points: AIUsageTimeseriesRecord[];
+}
+
 function currentMonthRange(now = new Date()): { from: string; to: string } {
   const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   return { from: periodStart.toISOString(), to: now.toISOString() };
@@ -190,6 +198,20 @@ export async function getMonthlyAIUsageReport(userId: string): Promise<MonthlyAI
     summary,
     byFeature,
     byModel,
+  };
+}
+
+export async function getAIUsageTimeseries(input: {
+  userId: string;
+  from: string;
+  to: string;
+  granularity: AIUsageTimeseriesGranularity;
+}): Promise<AIUsageTimeseriesReport> {
+  const points = await AIUsageEventRepository.getTimeseries(db, input);
+  return {
+    range: { from: input.from, to: input.to },
+    granularity: input.granularity,
+    points,
   };
 }
 

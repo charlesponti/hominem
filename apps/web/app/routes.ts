@@ -5,6 +5,8 @@ export default [
 
   // API Routes (specific handlers)
   route('api/auth/google', 'routes/api/auth/google.ts'),
+  route('api/usage', 'routes/api/usage.ts'),
+  route('api/usage-timeseries', 'routes/api/usage-timeseries.ts'),
 
   // Hosted-login shims — the API's hosted /login page owns the OTP surface.
   route('/auth', 'routes/auth/index.tsx'),

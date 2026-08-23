@@ -48,6 +48,8 @@ export const queryKeys = {
   usage: {
     report: ['usage', 'report'] as const,
     monthly: ['usage', 'monthly'] as const,
+    timeseries: (options: { from: string; to: string; granularity: 'day' | 'month' }) =>
+      ['usage', 'timeseries', options] as const,
   },
 
   placeLists: {

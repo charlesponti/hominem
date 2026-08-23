@@ -170,4 +170,93 @@ describe('AIUsageEventRepository', () => {
       model: null,
     });
   });
+
+  it('aggregates usage by UTC day and month without crossing user or range boundaries', async () => {
+    const userId = await createUser();
+    const otherUserId = await createUser();
+    const events = [
+      { userId, model: 'model-a', costUsd: 0.2, date: '2026-08-01T01:00:00.000Z' },
+      { userId, model: 'model-a', costUsd: 0.3, date: '2026-08-01T23:00:00.000Z' },
+      { userId, model: null, costUsd: null, date: '2026-08-02T01:00:00.000Z' },
+      { userId, model: 'model-a', costUsd: 0.4, date: '2026-09-01T00:00:00.000Z' },
+      { userId: otherUserId, model: 'model-a', costUsd: 10, date: '2026-08-01T01:00:00.000Z' },
+    ];
+
+    for (const event of events) {
+      const eventId = randomUUID();
+      await AIUsageEventRepository.createIfAbsent(db, {
+        id: eventId,
+        userId: event.userId,
+        provider: 'openrouter',
+        feature: 'text_enhance',
+        operation: 'chat_completion',
+        model: event.model,
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        costUsd: event.costUsd,
+        usageAvailable: event.costUsd !== null,
+      });
+      await db
+        .updateTable('app.aiUsageEvents')
+        .set({ createdat: event.date })
+        .where('id', '=', eventId)
+        .execute();
+    }
+
+    await expect(
+      AIUsageEventRepository.getTimeseries(db, {
+        userId,
+        from: '2026-08-01T00:00:00.000Z',
+        to: '2026-09-01T00:00:00.000Z',
+        granularity: 'day',
+      }),
+    ).resolves.toEqual([
+      {
+        bucketStart: '2026-08-01T00:00:00.000Z',
+        model: 'model-a',
+        requestCount: 2,
+        usageAvailableCount: 2,
+        totalCostUsd: 0.5,
+      },
+      {
+        bucketStart: '2026-08-02T00:00:00.000Z',
+        model: null,
+        requestCount: 1,
+        usageAvailableCount: 0,
+        totalCostUsd: 0,
+      },
+    ]);
+
+    await expect(
+      AIUsageEventRepository.getTimeseries(db, {
+        userId,
+        from: '2026-08-01T00:00:00.000Z',
+        to: '2026-10-01T00:00:00.000Z',
+        granularity: 'month',
+      }),
+    ).resolves.toEqual([
+      {
+        bucketStart: '2026-08-01T00:00:00.000Z',
+        model: 'model-a',
+        requestCount: 2,
+        usageAvailableCount: 2,
+        totalCostUsd: 0.5,
+      },
+      {
+        bucketStart: '2026-08-01T00:00:00.000Z',
+        model: null,
+        requestCount: 1,
+        usageAvailableCount: 0,
+        totalCostUsd: 0,
+      },
+      {
+        bucketStart: '2026-09-01T00:00:00.000Z',
+        model: 'model-a',
+        requestCount: 1,
+        usageAvailableCount: 1,
+        totalCostUsd: 0.4,
+      },
+    ]);
+  });
 });
