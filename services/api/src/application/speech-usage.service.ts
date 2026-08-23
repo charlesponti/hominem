@@ -28,14 +28,31 @@ export async function reconcileSpeechUsage(speechRunId: string): Promise<void> {
 
   try {
     const usage = await getSpeechGenerationUsage({ generationId: run.providerGenerationId });
+    const status = run.status === 'failed' ? 'failed' : 'succeeded';
+    await AIUsageEventRepository.createIfAbsent(db, {
+      id: run.usageEventId,
+      userId: run.ownerUserId,
+      provider: usage.provider,
+      feature: 'chat_speech',
+      operation: 'speech',
+      model: usage.model,
+      inputTokens: usage.promptTokens,
+      outputTokens: usage.completionTokens,
+      totalTokens: usage.totalTokens,
+      costUsd: usage.costUsd,
+      cachedInputTokens: usage.cachedPromptTokens,
+      reasoningTokens: usage.reasoningTokens,
+      status,
+      usageAvailable: true,
+    });
     const updated = await AIUsageEventRepository.updateUsage(db, {
       eventId: run.usageEventId,
       usage,
-      status: run.status === 'failed' ? 'failed' : 'succeeded',
+      status,
     });
 
     if (!updated) {
-      throw new Error('Speech usage event was not found');
+      throw new Error('Speech usage event could not be updated');
     }
 
     await ChatSpeechRunRepository.markReconciliation(db, {

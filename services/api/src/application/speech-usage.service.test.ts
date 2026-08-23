@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getSpeechGenerationUsage: vi.fn(),
+  createIfAbsent: vi.fn(),
   getById: vi.fn(),
   updateUsage: vi.fn(),
   markReconciliation: vi.fn(),
@@ -12,7 +13,10 @@ vi.mock('@hominem/ai', () => ({
 }));
 
 vi.mock('@hominem/db', () => ({
-  AIUsageEventRepository: { updateUsage: mocks.updateUsage },
+  AIUsageEventRepository: {
+    createIfAbsent: mocks.createIfAbsent,
+    updateUsage: mocks.updateUsage,
+  },
   ChatSpeechRunRepository: {
     getById: mocks.getById,
     markReconciliation: mocks.markReconciliation,
@@ -43,6 +47,7 @@ describe('reconcileSpeechUsage', () => {
       cachedPromptTokens: null,
       reasoningTokens: null,
     });
+    mocks.createIfAbsent.mockResolvedValue(true);
     mocks.updateUsage.mockResolvedValue(true);
   });
 
@@ -50,6 +55,14 @@ describe('reconcileSpeechUsage', () => {
     await reconcileSpeechUsage('speech-run-id');
 
     expect(mocks.getSpeechGenerationUsage).toHaveBeenCalledWith({ generationId: 'gen-tts-1' });
+    expect(mocks.createIfAbsent).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        id: 'event-id',
+        feature: 'chat_speech',
+        operation: 'speech',
+      }),
+    );
     expect(mocks.updateUsage).toHaveBeenCalledWith(
       {},
       expect.objectContaining({ eventId: 'event-id', status: 'succeeded' }),
