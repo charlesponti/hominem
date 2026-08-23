@@ -26,18 +26,37 @@ type TelemetryConfig = {
   otlpHeaders?: Record<string, string>;
 };
 
-const SPEECH_LOG_PREFIXES = ['chat_speech_', 'speech_', '[speech-usage]'];
-const SPEECH_LOG_ATTRIBUTES = new Set([
+const OTEL_LOG_PREFIXES = [
+  'chat_speech_',
+  'speech_',
+  '[speech-usage]',
+  'http_request_',
+  'worker_',
+  'queue_',
+  'ai_usage_',
+  'telemetry_',
+];
+const OTEL_LOG_ATTRIBUTES = new Set([
   'audioBytes',
   'attempts',
   'characterCount',
   'durationMs',
+  'error_name',
   'outcome',
+  'path',
+  'method',
+  'queue',
+  'status',
+  'serviceName',
+  'serviceVersion',
+  'samplingRatio',
+  'terminal',
   'providerReadyDurationMs',
   'requestToFirstPlayableMs',
   'sessionDurationMs',
-  'terminal',
   'timeToFirstAudioByteMs',
+  'totalTokens',
+  'usageAvailable',
 ]);
 
 class SpeechAwareSampler implements Sampler {
@@ -68,7 +87,7 @@ function withPath(endpoint: string, path: string) {
 }
 
 function isExportableLog(message: string) {
-  return SPEECH_LOG_PREFIXES.some((prefix) => message.startsWith(prefix));
+  return OTEL_LOG_PREFIXES.some((prefix) => message.startsWith(prefix));
 }
 
 export function initTelemetry(config: TelemetryConfig) {
@@ -126,7 +145,7 @@ export function initTelemetry(config: TelemetryConfig) {
     const attributes: LogAttributes = { 'log.event': message, 'log.level': level };
     for (const [key, value] of Object.entries(data ?? {})) {
       if (
-        SPEECH_LOG_ATTRIBUTES.has(key) &&
+        OTEL_LOG_ATTRIBUTES.has(key) &&
         (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
       ) {
         attributes[key] = value;

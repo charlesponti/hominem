@@ -1,8 +1,14 @@
 import { getSpeechGenerationUsage } from '@hominem/ai';
 import { AIUsageEventRepository, ChatSpeechRunRepository, db } from '@hominem/db';
-import { logger } from '@hominem/telemetry';
+import { getTelemetryTracer, logger } from '@hominem/telemetry';
+import { SpanStatusCode } from '@opentelemetry/api';
 
 const MAX_RECONCILIATION_ATTEMPTS = 3;
+const reconciliationTracer = getTelemetryTracer('hominem.speech-usage');
+
+export function getSpeechUsageHealth() {
+  return ChatSpeechRunRepository.getUsageHealth(db);
+}
 
 function getErrorMessage(error: unknown): string {
   return (error instanceof Error ? error.message : 'Speech usage reconciliation failed').slice(
@@ -12,73 +18,102 @@ function getErrorMessage(error: unknown): string {
 }
 
 export async function reconcileSpeechUsage(speechRunId: string): Promise<void> {
-  const run = await ChatSpeechRunRepository.getById(db, speechRunId);
-  if (!run || run.reconciliationStatus !== 'pending') {
-    return;
-  }
-
-  if (!run.providerGenerationId) {
-    await ChatSpeechRunRepository.markReconciliation(db, {
-      id: run.id,
-      status: 'failed',
-      error: 'Provider generation ID was not returned',
-    });
-    return;
-  }
-
-  try {
-    const usage = await getSpeechGenerationUsage({ generationId: run.providerGenerationId });
-    const status = run.status === 'failed' ? 'failed' : 'succeeded';
-    await AIUsageEventRepository.createIfAbsent(db, {
-      id: run.usageEventId,
-      userId: run.ownerUserId,
-      provider: usage.provider,
-      feature: 'chat_speech',
-      operation: 'speech',
-      model: usage.model,
-      inputTokens: usage.promptTokens,
-      outputTokens: usage.completionTokens,
-      totalTokens: usage.totalTokens,
-      costUsd: usage.costUsd,
-      cachedInputTokens: usage.cachedPromptTokens,
-      reasoningTokens: usage.reasoningTokens,
-      status,
-      usageAvailable: true,
-    });
-    const updated = await AIUsageEventRepository.updateUsage(db, {
-      eventId: run.usageEventId,
-      usage,
-      status,
-    });
-
-    if (!updated) {
-      throw new Error('Speech usage event could not be updated');
+  return reconciliationTracer.startActiveSpan('speech.reconciliation.lookup', async (span) => {
+    const run = await ChatSpeechRunRepository.getById(db, speechRunId);
+    if (!run || run.reconciliationStatus !== 'pending') {
+      span.setAttribute('speech.reconciliation.skipped', true);
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+      return;
     }
 
-    await ChatSpeechRunRepository.markReconciliation(db, {
-      id: run.id,
-      status: 'succeeded',
+    span.setAttributes({
+      'speech.reconciliation.attempt': run.reconciliationAttempts + 1,
+      'speech.reconciliation.has_generation_id': Boolean(run.providerGenerationId),
     });
-  } catch (error) {
-    const message = getErrorMessage(error);
-    const attempts = run.reconciliationAttempts + 1;
-    const terminal = attempts >= MAX_RECONCILIATION_ATTEMPTS;
+    logger.info('speech_usage_reconciliation_started', { speechRunId });
 
-    await ChatSpeechRunRepository.markReconciliation(db, {
-      id: run.id,
-      status: terminal ? 'failed' : 'pending',
-      error: message,
-    });
-
-    logger.warn('[speech-usage] reconciliation failed', {
-      speechRunId: run.id,
-      attempts,
-      terminal,
-      error: message,
-    });
-
-    if (!terminal) {
-      throw error;
+    if (!run.providerGenerationId) {
+      await ChatSpeechRunRepository.markReconciliation(db, {
+        id: run.id,
+        status: 'failed',
+        error: 'Provider generation ID was not returned',
+      });
+      logger.warn('speech_usage_reconciliation_missing_generation_id', { terminal: true });
+      span.setAttribute('speech.reconciliation.outcome', 'missing_generation_id');
+      span.setStatus({ code: SpanStatusCode.ERROR });
+      span.end();
+      return;
     }
-  }
+
+    try {
+      const usage = await getSpeechGenerationUsage({ generationId: run.providerGenerationId });
+      const status = run.status === 'failed' ? 'failed' : 'succeeded';
+      const usageEventCreated = await AIUsageEventRepository.createIfAbsent(db, {
+        id: run.usageEventId,
+        userId: run.ownerUserId,
+        provider: usage.provider,
+        feature: 'chat_speech',
+        operation: 'speech',
+        model: usage.model,
+        inputTokens: usage.promptTokens,
+        outputTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        costUsd: usage.costUsd,
+        cachedInputTokens: usage.cachedPromptTokens,
+        reasoningTokens: usage.reasoningTokens,
+        status,
+        usageAvailable: true,
+      });
+      const updated = await AIUsageEventRepository.updateUsage(db, {
+        eventId: run.usageEventId,
+        usage,
+        status,
+      });
+
+      if (!updated) {
+        throw new Error('Speech usage event could not be updated');
+      }
+
+      await ChatSpeechRunRepository.markReconciliation(db, {
+        id: run.id,
+        status: 'succeeded',
+      });
+      logger.info('speech_usage_reconciliation_succeeded', {
+        usageEventCreated,
+        totalTokens: usage.totalTokens,
+        usageAvailable: true,
+      });
+      span.setAttributes({
+        'speech.reconciliation.outcome': 'succeeded',
+        'speech.total_tokens': usage.totalTokens,
+        'speech.usage_available': true,
+      });
+      span.setStatus({ code: SpanStatusCode.OK });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      const attempts = run.reconciliationAttempts + 1;
+      const terminal = attempts >= MAX_RECONCILIATION_ATTEMPTS;
+
+      await ChatSpeechRunRepository.markReconciliation(db, {
+        id: run.id,
+        status: terminal ? 'failed' : 'pending',
+        error: message,
+      });
+
+      logger.warn('speech_usage_reconciliation_failed', { attempts, terminal });
+      span.setAttributes({
+        'speech.reconciliation.attempt': attempts,
+        'speech.reconciliation.outcome': terminal ? 'failed_terminal' : 'retrying',
+      });
+      span.recordException(new Error('Speech usage reconciliation failed'));
+      span.setStatus({ code: SpanStatusCode.ERROR });
+
+      if (!terminal) {
+        throw error;
+      }
+    } finally {
+      span.end();
+    }
+  });
 }

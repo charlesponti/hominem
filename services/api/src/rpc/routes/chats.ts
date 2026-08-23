@@ -51,6 +51,21 @@ type SynthesizedReplyAudio = {
 
 const speechTracer = getTelemetryTracer('hominem.chat');
 
+async function enqueueSpeechUsageReconciliation(speechRunId: string) {
+  await speechUsageReconciliationQueue.add(
+    'reconcile-speech-usage',
+    { speechRunId },
+    {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 500 },
+      jobId: speechRunId,
+      removeOnComplete: true,
+      removeOnFail: true,
+    },
+  );
+  logger.info('speech_usage_reconciliation_queued', { speechRunId });
+}
+
 async function synthesizeReplyAudioFile(
   userId: string,
   assistantText: string,
@@ -438,17 +453,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               status: 'succeeded',
             });
             if (result.generationId) {
-              await speechUsageReconciliationQueue.add(
-                'reconcile-speech-usage',
-                { speechRunId },
-                {
-                  attempts: 3,
-                  backoff: { type: 'exponential', delay: 500 },
-                  jobId: speechRunId,
-                  removeOnComplete: true,
-                  removeOnFail: true,
-                },
-              );
+              await enqueueSpeechUsageReconciliation(speechRunId);
             } else {
               await ChatSpeechRunRepository.markReconciliation(db, {
                 id: speechRunId,
@@ -491,11 +496,15 @@ const chatByIdRoutes = new Hono<AppContext>()
             metadata: { messageId, characterCount: message.content.length },
           });
           await ChatSpeechRunRepository.markComplete(db, { id: speechRunId, status: 'failed' });
-          await ChatSpeechRunRepository.markReconciliation(db, {
-            id: speechRunId,
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Speech stream failed',
-          });
+          if (result.generationId) {
+            await enqueueSpeechUsageReconciliation(speechRunId);
+          } else {
+            await ChatSpeechRunRepository.markReconciliation(db, {
+              id: speechRunId,
+              status: 'failed',
+              error: error instanceof Error ? error.message : 'Speech stream failed',
+            });
+          }
           controller.error(error);
         }
       },
@@ -526,11 +535,15 @@ const chatByIdRoutes = new Hono<AppContext>()
           metadata: { messageId, characterCount: message.content.length },
         });
         await ChatSpeechRunRepository.markComplete(db, { id: speechRunId, status: 'failed' });
-        await ChatSpeechRunRepository.markReconciliation(db, {
-          id: speechRunId,
-          status: 'failed',
-          error: reason instanceof Error ? reason.message : 'Speech stream cancelled',
-        });
+        if (result.generationId) {
+          await enqueueSpeechUsageReconciliation(speechRunId);
+        } else {
+          await ChatSpeechRunRepository.markReconciliation(db, {
+            id: speechRunId,
+            status: 'failed',
+            error: reason instanceof Error ? reason.message : 'Speech stream cancelled',
+          });
+        }
       },
     });
 
@@ -1301,17 +1314,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             status: audioRun.status,
           });
           if (audioRun.generationId) {
-            await speechUsageReconciliationQueue.add(
-              'reconcile-speech-usage',
-              { speechRunId },
-              {
-                attempts: 3,
-                backoff: { type: 'exponential', delay: 500 },
-                jobId: speechRunId,
-                removeOnComplete: true,
-                removeOnFail: true,
-              },
-            );
+            await enqueueSpeechUsageReconciliation(speechRunId);
           } else {
             await ChatSpeechRunRepository.markReconciliation(db, {
               id: speechRunId,

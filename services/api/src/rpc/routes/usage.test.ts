@@ -8,9 +8,13 @@ import { apiErrorHandler } from '../middleware/error';
 const mocks = vi.hoisted(() => ({
   getMonthlyAIUsageReport: vi.fn(),
   getMonthlyUsageStatus: vi.fn(),
+  getSpeechUsageHealth: vi.fn(),
 }));
 
 vi.mock('../../application/ai-usage.service', () => mocks);
+vi.mock('../../application/speech-usage.service', () => ({
+  getSpeechUsageHealth: mocks.getSpeechUsageHealth,
+}));
 
 import { usageRoutes } from './usage';
 
@@ -38,10 +42,25 @@ function createApp(authenticated = true) {
   return app.route('/api/usage', usageRoutes);
 }
 
+function createAdminApp() {
+  const app = new Hono<AppContext>().onError(apiErrorHandler).use(requestIdMiddleware);
+  app.use('*', async (c, next) => {
+    c.set('auth', {
+      user: { ...testUser, isAdmin: true },
+      userId: testUser.id,
+      credential: 'session',
+      scopes: [],
+    });
+    await next();
+  });
+  return app.route('/api/usage', usageRoutes);
+}
+
 describe('usage routes', () => {
   beforeEach(() => {
     mocks.getMonthlyAIUsageReport.mockReset();
     mocks.getMonthlyUsageStatus.mockReset();
+    mocks.getSpeechUsageHealth.mockReset();
   });
 
   it('requires authentication', async () => {
@@ -100,5 +119,27 @@ describe('usage routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(status);
     expect(mocks.getMonthlyUsageStatus).toHaveBeenCalledWith(testUser.id);
+  });
+
+  it('rejects health reports for non-admin users', async () => {
+    const response = await createApp().request('/api/usage/health');
+
+    expect(response.status).toBe(403);
+  });
+
+  it('returns aggregate speech health to admins', async () => {
+    const health = {
+      pendingCount: 1,
+      failedCount: 0,
+      succeededCount: 4,
+      missingUsageEventCount: 0,
+      oldestPendingAt: '2026-08-23T00:00:00.000Z',
+    };
+    mocks.getSpeechUsageHealth.mockResolvedValue(health);
+
+    const response = await createAdminApp().request('/api/usage/health');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(health);
   });
 });

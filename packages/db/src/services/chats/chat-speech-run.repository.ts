@@ -1,4 +1,5 @@
 import type { Selectable } from 'kysely';
+import { sql } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type { AppChatSpeechRuns } from '../../types/database';
@@ -31,6 +32,14 @@ export interface CreateChatSpeechRunInput {
   usageEventId: string;
   provider: string;
   characterCount: number;
+}
+
+export interface ChatSpeechUsageHealthRecord {
+  pendingCount: number;
+  failedCount: number;
+  succeededCount: number;
+  missingUsageEventCount: number;
+  oldestPendingAt: string | null;
 }
 
 function toRecord(row: ChatSpeechRunRow): ChatSpeechRunRecord {
@@ -139,5 +148,41 @@ export const ChatSpeechRunRepository = {
       .limit(limit)
       .execute();
     return rows.map((row) => toRecord(row as ChatSpeechRunRow));
+  },
+
+  async getUsageHealth(handle: DbHandle): Promise<ChatSpeechUsageHealthRecord> {
+    const row = await handle
+      .selectFrom('app.chatSpeechRuns as runs')
+      .select([
+        sql<number>`count(*) FILTER (WHERE runs.reconciliation_status = 'pending')`.as(
+          'pendingCount',
+        ),
+        sql<number>`count(*) FILTER (WHERE runs.reconciliation_status = 'failed')`.as(
+          'failedCount',
+        ),
+        sql<number>`count(*) FILTER (WHERE runs.reconciliation_status = 'succeeded')`.as(
+          'succeededCount',
+        ),
+        sql<number>`count(*) FILTER (
+          WHERE runs.provider_generation_id IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM app.ai_usage_events AS events
+            WHERE events.id = runs.usage_event_id
+          )
+        )`.as('missingUsageEventCount'),
+        sql<Date | string | null>`min(runs.created_at) FILTER (
+          WHERE runs.reconciliation_status = 'pending'
+        )`.as('oldestPendingAt'),
+      ])
+      .executeTakeFirstOrThrow();
+
+    return {
+      pendingCount: Number(row.pendingCount ?? 0),
+      failedCount: Number(row.failedCount ?? 0),
+      succeededCount: Number(row.succeededCount ?? 0),
+      missingUsageEventCount: Number(row.missingUsageEventCount ?? 0),
+      oldestPendingAt:
+        row.oldestPendingAt == null ? null : new Date(row.oldestPendingAt).toISOString(),
+    };
   },
 };

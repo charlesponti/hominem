@@ -78,6 +78,11 @@ describe('ChatSpeechRunRepository', () => {
 
     const pending = await ChatSpeechRunRepository.listPending(db);
     expect(pending).toEqual([]);
+    await expect(ChatSpeechRunRepository.getUsageHealth(db)).resolves.toMatchObject({
+      pendingCount: 1,
+      missingUsageEventCount: 1,
+      succeededCount: 1,
+    });
     expect(await ChatSpeechRunRepository.getById(db, first.id, fixture.userId)).toMatchObject({
       providerGenerationId: 'gen-tts-1',
       status: 'succeeded',

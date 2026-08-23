@@ -31,6 +31,10 @@ async function enqueuePendingSpeechUsageRuns() {
       ),
     ),
   );
+  logger.info('queue_speech_usage_snapshot', {
+    queue: QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
+    pending: runs.length,
+  });
 }
 
 export function startSpeechUsageReconciliationWorker() {
@@ -58,10 +62,19 @@ export function startSpeechUsageReconciliationWorker() {
     { connection: cache },
   );
 
-  worker.on('failed', (job, error) => {
-    logger.error('[speech-usage] reconciliation job failed', {
-      jobId: job?.id,
-      error,
+  worker.on('failed', (_job, error) => {
+    logger.error('queue_speech_usage_job_failed', { error });
+  });
+
+  worker.on('completed', () => {
+    logger.info('queue_speech_usage_job_completed', {
+      queue: QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
+    });
+  });
+
+  worker.on('stalled', () => {
+    logger.warn('queue_speech_usage_job_stalled', {
+      queue: QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
     });
   });
 

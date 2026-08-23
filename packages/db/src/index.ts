@@ -52,6 +52,7 @@ export type {
   ChatSpeechReconciliationStatus,
   ChatSpeechRunRecord,
   ChatSpeechRunStatus,
+  ChatSpeechUsageHealthRecord,
   CreateChatSpeechRunInput,
 } from './services/chats/chat-speech-run.repository';
 export type {

@@ -13,3 +13,6 @@ logs:
 
 status:
     docker compose -f {{OBSERVABILITY_COMPOSE}} ps
+
+railway-logs service='api' lines='200':
+    RAILWAY_LOG_LINES={{lines}} {{justfile_directory()}}/scripts/railway-logs.sh {{service}}
