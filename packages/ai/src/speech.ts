@@ -1,4 +1,9 @@
-import { AUDIO_TTS_MODEL, createOpenRouterClient, normalizeOpenRouterError } from './shared';
+import {
+  AUDIO_TTS_MODEL,
+  AUDIO_TTS_VOICE,
+  createOpenRouterClient,
+  normalizeOpenRouterError,
+} from './shared';
 import type { OpenRouterClientOptions } from './shared';
 
 type SynthesizeSpeechInput = OpenRouterClientOptions & {
@@ -45,8 +50,10 @@ const RESPONSE_FORMAT_MIME_TYPES: Record<string, string> = {
   pcm: 'audio/L16',
 };
 
-// Kokoro-82m (and TTS-only models generally) aren't chat models, so this goes
-// through the SDK's dedicated `tts.createSpeech` client rather than `chat()` —
+const SPEECH_REQUEST_TIMEOUT_MS = 15_000;
+
+// TTS-only models aren't chat models, so this goes through the SDK's dedicated
+// `tts.createSpeech` client rather than `chat()`.
 export async function synthesizeSpeechStream(
   input: SynthesizeSpeechInput,
 ): Promise<SynthesizeSpeechStreamResult> {
@@ -56,14 +63,17 @@ export async function synthesizeSpeechStream(
 
   let stream: ReadableStream<Uint8Array>;
   try {
-    const request = client.tts.createSpeech({
-      speechRequest: {
-        input: input.text,
-        model,
-        voice: input.voice ?? 'af_heart',
-        responseFormat,
+    const request = client.tts.createSpeech(
+      {
+        speechRequest: {
+          input: input.text,
+          model,
+          voice: input.voice ?? AUDIO_TTS_VOICE,
+          responseFormat,
+        },
       },
-    }) as SpeechRequestPromise;
+      { timeoutMs: SPEECH_REQUEST_TIMEOUT_MS },
+    ) as SpeechRequestPromise;
     stream = await request;
 
     let generationId: string | null = null;

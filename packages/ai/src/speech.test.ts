@@ -38,6 +38,16 @@ describe('speech usage metadata', () => {
     const result = await synthesizeSpeechStream({ text: 'Hello' });
 
     expect(result.generationId).toBe('gen-tts-1');
+    expect(createSpeech).toHaveBeenCalledWith(
+      {
+        speechRequest: expect.objectContaining({
+          model: expect.any(String),
+          responseFormat: 'mp3',
+          voice: expect.any(String),
+        }),
+      },
+      { timeoutMs: 15_000 },
+    );
   });
 
   it('maps OpenRouter generation accounting into the shared usage shape', async () => {

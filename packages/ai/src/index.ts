@@ -1,5 +1,6 @@
 export {
   AUDIO_TTS_MODEL,
+  AUDIO_TTS_VOICE,
   CHAT_MODEL,
   JOB_EXTRACTION_MODEL,
   OpenRouterRequestError,

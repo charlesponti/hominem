@@ -23,7 +23,8 @@ export const baseSchema = z.object({
   REDIS_URL: z.url().default('redis://localhost:6379'),
 
   // Models
-  AUDIO_TTS_MODEL: z.string().default('hexgrad/kokoro-82m'),
+  AUDIO_TTS_MODEL: z.string().default('microsoft/mai-voice-2-flash'),
+  AUDIO_TTS_VOICE: z.string().default('en-US-Harper:MAI-Voice-2'),
   CHAT_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
   EMBEDDING_MODEL: z.string().default('google/gemini-embedding-2'),
   ENHANCE_MODEL: z.string().default('google/gemini-2.5-flash-lite'),

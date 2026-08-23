@@ -8,6 +8,7 @@ export const DEFAULT_APP_TITLE = 'Hominem';
 
 export const CHAT_MODEL = env.CHAT_MODEL;
 export const AUDIO_TTS_MODEL = env.AUDIO_TTS_MODEL;
+export const AUDIO_TTS_VOICE = env.AUDIO_TTS_VOICE;
 export const EMBEDDING_MODEL = env.EMBEDDING_MODEL;
 export const ENHANCE_MODEL = env.ENHANCE_MODEL;
 export const JOB_EXTRACTION_MODEL = env.JOB_EXTRACTION_MODEL;
