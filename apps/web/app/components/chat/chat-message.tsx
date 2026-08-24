@@ -1,5 +1,5 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { Check, Pencil, RotateCcw, X } from 'lucide-react';
+import { Check, Clipboard, Pencil, RotateCcw, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -18,12 +18,12 @@ import {
   ToolPreview,
 } from '~/components/ai-elements/tool';
 import { SpeechPlayer } from '~/components/chat/speech-player';
+import type { ChatMessageView } from '~/lib/types/chat';
 
-export type ChatMessageWithStreaming = ChatMessageDto & { isStreaming?: boolean };
 type ChatToolCall = NonNullable<ChatMessageDto['toolCalls']>[number];
 
 export interface ChatMessageProps {
-  message: ChatMessageWithStreaming;
+  message: ChatMessageView;
   speechSrc?: string;
   isSpeechActive?: boolean;
   isToolResponding?: boolean;
@@ -102,6 +102,7 @@ export function ChatMessage({
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
   const [editError, setEditError] = useState<string | null>(null);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
 
   useEffect(() => {
@@ -121,6 +122,28 @@ export function ChatMessage({
     } catch (error) {
       setEditError(error instanceof Error ? error.message : 'Unable to update this message.');
     }
+  }
+
+  async function copyMessage() {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+  }
+
+  async function shareMessage() {
+    if (navigator.share) {
+      await navigator.share({ text: message.content });
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([message.content], { type: 'text/plain' }));
+    const link = document.createElement('a');
+    link.download = `message-${message.id}.txt`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   const canSpeak =
@@ -183,8 +206,40 @@ export function ChatMessage({
             src={speechSrc}
           />
         ) : null}
-        {canEdit || (message.role === 'assistant' && onRegenerate) ? (
+        {canEdit ||
+        (message.role === 'assistant' && onRegenerate) ||
+        (message.role === 'assistant' && !message.isStreaming && message.content.trim()) ? (
           <MessageActions>
+            {message.role === 'assistant' && !message.isStreaming && message.content.trim() ? (
+              <>
+                <MessageAction
+                  label={
+                    copyState === 'copied'
+                      ? 'Copied assistant message'
+                      : copyState === 'failed'
+                        ? 'Copy assistant message failed'
+                        : 'Copy assistant message'
+                  }
+                  onClick={() => void copyMessage()}
+                  tooltip={
+                    copyState === 'copied'
+                      ? 'Copied'
+                      : copyState === 'failed'
+                        ? 'Copy failed'
+                        : 'Copy message'
+                  }
+                >
+                  <Clipboard aria-hidden="true" size={14} />
+                </MessageAction>
+                <MessageAction
+                  label="Share assistant message"
+                  onClick={() => void shareMessage()}
+                  tooltip="Share message"
+                >
+                  <Share2 aria-hidden="true" size={14} />
+                </MessageAction>
+              </>
+            ) : null}
             {canEdit ? (
               <MessageAction
                 label="Edit message"

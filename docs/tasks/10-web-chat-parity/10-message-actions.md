@@ -29,3 +29,8 @@ actions.
 - Actions are hidden or disabled for empty and streaming messages.
 - Keyboard and screen-reader labels identify the message being acted on.
 
+## Implementation update — 2026-08-24
+
+- Added accessible copy and share actions for non-empty, non-streaming assistant messages.
+- Copy reports its result through the action tooltip; share uses the browser share API and downloads a text fallback when unavailable.
+- Added Storybook coverage through `AssistantActions`.

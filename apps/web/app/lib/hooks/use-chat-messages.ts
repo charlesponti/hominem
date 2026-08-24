@@ -1,16 +1,16 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatQueryKeys } from '~/lib/query-keys';
+import type { ChatMessageView } from '~/lib/types/chat';
 
 export interface UseChatMessagesOptions {
   chatId: string;
-  initialData?: ChatMessageDto[];
+  initialData?: ChatMessageView[];
 }
 
 export interface UseChatMessagesReturn {
-  messages: ChatMessageDto[];
+  messages: ChatMessageView[];
   isLoading: boolean;
   error: Error | null;
   isNotFound: boolean;
@@ -18,10 +18,6 @@ export interface UseChatMessagesReturn {
   deleteMessage: (messageId: string) => Promise<void>;
   updateMessage: (messageId: string, content: string) => Promise<void>;
 }
-
-export type ExtendedMessage = ChatMessageDto & {
-  isStreaming?: boolean;
-};
 
 export function useChatMessages({
   chatId,
@@ -63,8 +59,8 @@ export function useChatMessages({
     onMutate: async ({ messageId, content }) => {
       const queryKey = chatQueryKeys.messages(chatId);
       await queryClient.cancelQueries({ queryKey });
-      const previousMessages = queryClient.getQueryData<ChatMessageDto[]>(queryKey);
-      queryClient.setQueryData<ChatMessageDto[]>(queryKey, (currentMessages = []) =>
+      const previousMessages = queryClient.getQueryData<ChatMessageView[]>(queryKey);
+      queryClient.setQueryData<ChatMessageView[]>(queryKey, (currentMessages = []) =>
         currentMessages.map((message) =>
           message.id === messageId
             ? { ...message, content, updatedAt: new Date().toISOString() }
@@ -86,7 +82,7 @@ export function useChatMessages({
   const error = messagesQuery.error;
 
   return {
-    messages: messages as ChatMessageDto[],
+    messages: messages as ChatMessageView[],
     isLoading,
     error,
     isNotFound: (error as (Error & { status?: number }) | null)?.status === 404,

@@ -1,9 +1,10 @@
-import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { useMemo, useState } from 'react';
 
-export function useChatDisplayMessages({ messages }: { messages: ChatMessageDto[] }) {
-  const [optimisticUserMessage, setOptimisticUserMessage] = useState<ChatMessageDto | null>(null);
-  const [pendingAssistantMessage, setPendingAssistantMessage] = useState<ChatMessageDto | null>(
+import type { ChatMessageView } from '~/lib/types/chat';
+
+export function useChatDisplayMessages({ messages }: { messages: ChatMessageView[] }) {
+  const [optimisticUserMessage, setOptimisticUserMessage] = useState<ChatMessageView | null>(null);
+  const [pendingAssistantMessage, setPendingAssistantMessage] = useState<ChatMessageView | null>(
     null,
   );
 

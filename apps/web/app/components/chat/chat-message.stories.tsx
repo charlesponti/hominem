@@ -66,6 +66,12 @@ export const Assistant: Story = {
   },
 };
 
+export const AssistantActions: Story = {
+  args: {
+    message: assistantMessage,
+  },
+};
+
 export const RegenerableAssistant: Story = {
   args: {
     message: assistantMessage,
