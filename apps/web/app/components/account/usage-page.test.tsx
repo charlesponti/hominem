@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ComponentProps, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -104,9 +104,10 @@ describe('UsagePage', () => {
     expect(screen.queryAllByText('$0.00')).toHaveLength(0);
   });
 
-  it('supports changing granularity, metric, and model selection', () => {
+  it('supports changing granularity, metric, and model selection', async () => {
     render(<UsagePage />);
 
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Month' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Price' }));
     fireEvent.click(screen.getByRole('button', { name: 'model-a' }));
