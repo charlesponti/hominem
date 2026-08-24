@@ -1,6 +1,7 @@
 import { Outlet, data } from 'react-router';
 
 import { AccountMenu } from '~/components/account-menu';
+import { ChatNavigation } from '~/components/chat-navigation';
 import { TooltipProvider } from '~/components/ui/tooltip';
 import { userContext } from '~/lib/middleware';
 
@@ -16,7 +17,8 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
     <TooltipProvider>
       <div className="flex h-[100dvh] w-full flex-col bg-background text-foreground">
         {loaderData.user ? (
-          <header className="flex h-12 shrink-0 items-center justify-end border-b border-border px-3">
+          <header className="flex h-12 shrink-0 items-center justify-between border-b border-border px-3">
+            <ChatNavigation />
             <AccountMenu user={loaderData.user} />
           </header>
         ) : null}

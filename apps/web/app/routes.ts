@@ -15,6 +15,7 @@ export default [
   layout('routes/_authenticated.tsx', [
     layout('routes/layout.tsx', [
       index('routes/home.tsx'),
+      route('chats', 'routes/chats.tsx'),
       route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
       route('settings', 'routes/settings.tsx'),
       route('settings/archived-chats', 'routes/settings.archived-chats.tsx'),

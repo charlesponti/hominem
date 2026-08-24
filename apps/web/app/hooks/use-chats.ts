@@ -1,6 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat } from '@hominem/rpc/types/chat.types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
@@ -11,6 +11,21 @@ export function useChatsList() {
     queryKey: chatQueryKeys.list,
     staleTime: 1000 * 30,
     queryFn: () => client.api.chats.$get({ query: { limit: '100' } }).then((r) => r.json()),
+  });
+}
+
+export function useChatLastMessages(chatIds: string[]) {
+  const client = useApiClient();
+
+  return useQueries({
+    queries: chatIds.map((chatId) => ({
+      queryKey: [...chatQueryKeys.messages(chatId), 'latest'],
+      queryFn: () =>
+        client.api.chats[':id'].messages
+          .$get({ param: { id: chatId }, query: { limit: '1' } })
+          .then((response) => response.json()),
+      staleTime: 1000 * 30,
+    })),
   });
 }
 
