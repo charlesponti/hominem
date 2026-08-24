@@ -46,3 +46,8 @@ Preserve raw draft text and attachments whenever retry is safe.
 - Navigated to a nonexistent chat and observed the `Conversation unavailable` recovery state.
 - Activated `Start a new chat` and confirmed return to the existing chat-first route.
 - Offline send, stream failure, and load-retry interactions remain unverified in-browser because the current browser session does not expose network emulation.
+
+## Hydration fix — 2026-08-24
+
+- Made the initial online state deterministic during SSR and hydration, then reconciled `navigator.onLine` after mount to prevent the composer error badge from changing the server/client tree.
+- Connectivity hook coverage continues to pass.

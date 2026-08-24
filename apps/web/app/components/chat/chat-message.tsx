@@ -9,6 +9,7 @@ import {
   MessageContent,
   MessageResponse,
 } from '~/components/ai-elements/message';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/ai-elements/reasoning';
 import {
   Tool,
   ToolApprovalActions,
@@ -24,6 +25,8 @@ type ChatToolCall = NonNullable<ChatMessageDto['toolCalls']>[number];
 
 export interface ChatMessageProps {
   message: ChatMessageView;
+  showDebug?: boolean;
+  formatTimestamp?: (value: string) => string;
   speechSrc?: string;
   isSpeechActive?: boolean;
   isToolResponding?: boolean;
@@ -88,6 +91,8 @@ function ToolCall({
 
 export function ChatMessage({
   message,
+  showDebug = false,
+  formatTimestamp = (value) => new Date(value).toLocaleTimeString(),
   speechSrc,
   isSpeechActive = false,
   isToolResponding = false,
@@ -104,6 +109,9 @@ export function ChatMessage({
   const [editError, setEditError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
+  const hasReasoning = Boolean(message.reasoning?.trim());
+  const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
+  const timestamp = formatTimestamp(message.createdAt);
 
   useEffect(() => {
     if (!isEditing) setDraft(message.content);
@@ -157,6 +165,26 @@ export function ChatMessage({
   return (
     <Message from={toMessageRole(message.role)}>
       <MessageContent>
+        {hasReasoning ? (
+          <Reasoning defaultOpen={false} isStreaming={Boolean(message.isStreaming)}>
+            <ReasoningTrigger aria-label="Toggle reasoning" />
+            <ReasoningContent>{message.reasoning ?? ''}</ReasoningContent>
+          </Reasoning>
+        ) : null}
+        {hasReferencedNotes ? (
+          <div aria-label="Referenced notes" className="flex flex-wrap gap-1.5" role="list">
+            {message.referencedNotes?.map((note) => (
+              <span
+                aria-label={`Referenced note: ${note.title || note.id}`}
+                className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
+                key={note.id}
+                role="listitem"
+              >
+                {note.title || note.id}
+              </span>
+            ))}
+          </div>
+        ) : null}
         {message.toolCalls?.map((toolCall) => (
           <ToolCall
             key={toolCall.toolCallId}
@@ -197,19 +225,57 @@ export function ChatMessage({
         ) : (
           <MessageResponse>{message.content}</MessageResponse>
         )}
-        {canSpeak ? (
-          <SpeechPlayer
-            isActive={isSpeechActive}
-            messageId={message.id}
-            onActivate={onActivateSpeech}
-            onDeactivate={onDeactivateSpeech}
-            src={speechSrc}
-          />
+        {message.failed ? (
+          <p aria-live="polite" className="text-xs text-destructive" role="alert">
+            {message.role === 'assistant'
+              ? 'Response interrupted.'
+              : `${message.error || 'Message failed to send.'} Retry when ready.`}
+          </p>
         ) : null}
-        {canEdit ||
+        {showDebug && !message.isStreaming ? (
+          <details className="rounded-md border border-border-subtle p-2 text-xs text-text-secondary">
+            <summary className="cursor-pointer">Debug details</summary>
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 font-mono">
+              <dt>ID</dt>
+              <dd>{message.id}</dd>
+              <dt>Role</dt>
+              <dd>{message.role}</dd>
+              <dt>Created</dt>
+              <dd>
+                {new Date(message.createdAt).toLocaleTimeString([], {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </dd>
+              <dt>Reasoning</dt>
+              <dd>{hasReasoning ? 'present' : 'none'}</dd>
+              <dt>Tool calls</dt>
+              <dd>{message.toolCalls?.length ?? 0}</dd>
+            </dl>
+          </details>
+        ) : null}
+        {timestamp ||
+        canEdit ||
         (message.role === 'assistant' && onRegenerate) ||
         (message.role === 'assistant' && !message.isStreaming && message.content.trim()) ? (
           <MessageActions>
+            {timestamp ? (
+              <span aria-label={`Sent ${timestamp}`} className="mr-1 text-xs text-text-secondary">
+                {timestamp}
+              </span>
+            ) : null}
+            {canSpeak ? (
+              <SpeechPlayer
+                isActive={isSpeechActive}
+                messageId={message.id}
+                onActivate={onActivateSpeech}
+                onDeactivate={onDeactivateSpeech}
+                src={speechSrc}
+              />
+            ) : null}
             {message.role === 'assistant' && !message.isStreaming && message.content.trim() ? (
               <>
                 <MessageAction

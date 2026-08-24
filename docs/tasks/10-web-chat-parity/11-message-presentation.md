@@ -31,7 +31,13 @@ existing AI element primitives where appropriate.
 
 ## Implementation update — 2026-08-24
 
-- Added reusable `apps/web/app/components/chat/chat-message.tsx` to own `Message`/`MessageContent` composition.
-- The component now renders assistant speech controls and tool-call previews, statuses, and approval actions.
-- Added focused component tests and Storybook stories for user, assistant, and tool-approval states.
-- Reasoning, referenced-note labels, timestamps, failed/interrupted presentation, and debug gating remain open gaps for this task.
+- The reusable `ChatMessage` component owns `Message`/`MessageContent` composition, speech controls, tool-call previews, and approval actions.
+- Added persisted reasoning, referenced-note chips, accessible timestamps, interrupted/failed banners, and opt-in debug details to `ChatMessage`.
+- Extended `ChatMessageView` with transient failed/error presentation state while keeping debug details disabled by default.
+- Added focused tests and Storybook coverage for the presentation states.
+
+## Validation update — 2026-08-24
+
+- Web formatting and lint pass.
+- Focused `chat-message.test.tsx` suite passes: 6 tests.
+- Full web typecheck remains blocked only by existing `.storybook/main.ts` typing errors.

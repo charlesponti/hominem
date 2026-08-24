@@ -5,6 +5,7 @@ import { ChatHomePage } from '~/components/chat/chat-home-page';
 import { normalizeChatTitle } from '~/lib/chat/chat-title';
 import { serverEnv } from '~/lib/env.server';
 import { useOnlineStatus } from '~/lib/hooks/use-online-status';
+import { useResponseLength } from '~/lib/hooks/use-response-length';
 import { useStartChat } from '~/lib/hooks/use-start-chat';
 
 import type { Route } from './+types/home';
@@ -31,6 +32,7 @@ export default function HomePage() {
   const [draft, setDraft] = useState('');
   const startChat = useStartChat();
   const isOnline = useOnlineStatus();
+  const { responseLength } = useResponseLength();
 
   async function handleSubmit() {
     const message = draft.trim();
@@ -39,6 +41,7 @@ export default function HomePage() {
     await startChat.start({
       message,
       title: normalizeChatTitle(message),
+      responseLength,
       onAccepted: (event) => {
         setDraft('');
         navigate(`/chat/${event.chatId}`);

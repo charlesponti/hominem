@@ -30,3 +30,14 @@ behavior without mutating the canonical message cache.
 - Closing search restores the full transcript and clears the query.
 - Search behavior has hook and route-level coverage.
 
+## Implementation update — 2026-08-24
+
+- Added `useChatMessageSearch` with trimmed, debounced queries backed by the message-search RPC.
+- Added route-level search controls with loading, result count, empty-result, error, close, and transcript-restoration states.
+- Search results remain isolated from the canonical message cache and use the shared `ChatMessageView` presentation model.
+- Added Storybook coverage for empty, loading, result, no-result, and error states.
+
+## Validation update — 2026-08-24
+
+- Web formatting and lint pass.
+- Full web typecheck remains blocked only by existing `.storybook/main.ts` typing errors.

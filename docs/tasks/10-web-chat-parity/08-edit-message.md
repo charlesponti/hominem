@@ -34,3 +34,8 @@ eligible user messages.
 - Wired `useChatMessages.updateMessage` to the typed message PATCH endpoint with optimistic cache updates, rollback, and reconciliation.
 - Added an inline edit action for persisted, non-streaming user messages with blank-content validation and recoverable save errors.
 - Added component coverage for successful edits and empty-content rejection.
+
+## Validation update — 2026-08-24
+
+- Web formatting and lint pass.
+- Focused chat component tests pass.

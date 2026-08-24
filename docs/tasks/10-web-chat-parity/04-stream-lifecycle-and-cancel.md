@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-04
 title: Implement durable web generation lifecycle and cancellation
-status: ready
+status: completed
 priority: high
 team: web
 project: web-chat-parity

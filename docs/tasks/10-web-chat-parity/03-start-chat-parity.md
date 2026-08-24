@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-03
 title: Match accepted-message start-chat behavior on web
-status: ready
+status: completed
 priority: high
 team: web
 project: web-chat-parity

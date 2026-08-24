@@ -29,3 +29,13 @@ with an explicit default and recoverable storage behavior.
 - Invalid stored values fall back safely.
 - Settings can be opened, changed, and dismissed without losing the draft.
 
+## Implementation update — 2026-08-24
+
+- Added a hydration-safe `useResponseLength` preference with medium as the default and safe fallback for invalid stored values.
+- Added a dismissible response settings panel and wired the preference into new-chat sends, chat sends, and regeneration requests.
+- Added focused component tests and Storybook coverage for short, medium, and long settings.
+
+## Validation update — 2026-08-24
+
+- Web formatting and lint pass.
+- Focused response-settings and connectivity tests pass.

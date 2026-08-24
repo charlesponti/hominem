@@ -15,18 +15,28 @@ const config: StorybookConfig = {
       if (Array.isArray(plugin)) {
         return plugin.flatMap(removeReactRouterPlugin);
       }
-      return plugin?.name?.includes('react-router') ? [] : [plugin];
+      if (
+        plugin &&
+        typeof plugin === 'object' &&
+        'name' in plugin &&
+        typeof plugin.name === 'string' &&
+        plugin.name.includes('react-router')
+      ) {
+        return [];
+      }
+      return [plugin];
     };
     config.plugins = config.plugins?.flatMap(removeReactRouterPlugin);
     config.resolve ??= {};
+    const aliases = config.resolve.alias;
     config.resolve.alias = {
-      ...config.resolve.alias,
+      ...(aliases && typeof aliases === 'object' && !Array.isArray(aliases) ? aliases : {}),
       '~': fileURLToPath(new URL('../app', import.meta.url)),
+      '@hominem/rpc': path.resolve(
+        fileURLToPath(new URL('../../../packages/rpc', import.meta.url)),
+        'src',
+      ),
     };
-    config.resolve.alias['@hominem/rpc'] = path.resolve(
-      fileURLToPath(new URL('../../../packages/rpc', import.meta.url)),
-      'src',
-    );
     return config;
   },
 };

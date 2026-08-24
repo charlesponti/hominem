@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import { chatQueryKeys } from '~/lib/query-keys';
 
 import { consumeChatStream } from '../chat/stream-events';
+import type { ResponseLength } from './use-response-length';
 
 export function useRegenerateMessage({ chatId }: { chatId: string }) {
   const client = useApiClient();
@@ -14,7 +15,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
   const [error, setError] = useState<Error | null>(null);
 
   const regenerate = useCallback(
-    async (messageId: string) => {
+    async (messageId: string, responseLength?: ResponseLength) => {
       if (activeMessageId) return;
 
       setActiveMessageId(messageId);
@@ -22,7 +23,10 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
       try {
         const response = await client.api.chats[':id'].messages[':messageId'].regenerate.$post({
           param: { id: chatId, messageId },
-          json: { generationId: crypto.randomUUID() },
+          json: {
+            generationId: crypto.randomUUID(),
+            ...(responseLength ? { responseLength } : {}),
+          },
         });
         await consumeChatStream(response, (event: ChatStreamEvent) => {
           if (event.type === 'error') throw new Error(event.message);

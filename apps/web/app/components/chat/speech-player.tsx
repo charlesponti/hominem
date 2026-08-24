@@ -1,8 +1,8 @@
 import { Headphones, LoaderCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { MessageAction } from '~/components/ai-elements/message';
 import { Persona } from '~/components/ai-elements/persona';
-import { Button } from '~/components/ui/button';
 import {
   endSpeechPlaybackTelemetry,
   startSpeechPlaybackTelemetry,
@@ -146,18 +146,11 @@ export function SpeechPlayer({
     );
   }
 
-  const status =
-    state === 'loading'
-      ? 'Loading response audio'
-      : state === 'playing'
-        ? 'AI is speaking'
-        : state === 'paused'
-          ? 'Response audio paused'
-          : state === 'error'
-            ? 'Unable to play response audio'
-            : 'Listen to response';
-  const controlTransition =
-    'absolute inset-0 transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:transform-none';
+  const controlTransition = cn(
+    'absolute inset-0  duration-200',
+    'transition-[opacity,transform] [transition-timing-function:cubic-bezier(0.23,1,0.32,1)]',
+    'motion-reduce:transition-none motion-reduce:transform-none',
+  );
 
   function handleStop() {
     const audio = audioRef.current;
@@ -205,59 +198,98 @@ export function SpeechPlayer({
       data-speech-control-state={showBrowserControls ? 'active' : 'idle'}
       data-speech-player
     >
-      <div className="relative size-8 shrink-0">
-        <Button
-          aria-hidden={showBrowserControls}
-          aria-label={state === 'error' ? 'Retry response audio' : 'Listen to response'}
+      <MessageAction
+        aria-hidden={showBrowserControls}
+        aria-label={state === 'error' ? 'Retry response audio' : 'Listen to response'}
+        className={cn(
+          controlTransition,
+          showBrowserControls
+            ? 'pointer-events-none scale-90 opacity-0'
+            : 'pointer-events-auto scale-100 opacity-100',
+        )}
+        onClick={() => void handleListen()}
+        tabIndex={showBrowserControls ? -1 : 0}
+        tooltip={state === 'error' ? 'Retry response audio' : 'Listen to response'}
+      >
+        <Headphones aria-hidden="true" />
+      </MessageAction>
+
+      {personaMounted ? (
+        <MessageAction
+          aria-hidden={!showPersona || state !== 'playing'}
+          aria-label="Stop listening"
           className={cn(
             controlTransition,
-            showBrowserControls
-              ? 'pointer-events-none scale-90 opacity-0'
-              : 'pointer-events-auto scale-100 opacity-100',
+            showPersona && state === 'playing'
+              ? 'pointer-events-auto scale-100 opacity-100'
+              : 'pointer-events-none scale-90 opacity-0',
           )}
-          onClick={() => void handleListen()}
-          size="icon"
-          tabIndex={showBrowserControls ? -1 : 0}
-          type="button"
-          variant="ghost"
+          onClick={handleStop}
+          tabIndex={showPersona && state === 'playing' ? 0 : -1}
+          tooltip="Stop listening"
         >
-          <Headphones aria-hidden="true" />
-        </Button>
-        {personaMounted ? (
-          <Button
-            aria-hidden={!showPersona || state !== 'playing'}
-            aria-label="Stop listening"
-            className={cn(
-              controlTransition,
-              showPersona && state === 'playing'
-                ? 'pointer-events-auto scale-100 opacity-100'
-                : 'pointer-events-none scale-90 opacity-0',
-            )}
-            onClick={handleStop}
-            size="icon"
-            tabIndex={showPersona && state === 'playing' ? 0 : -1}
-            type="button"
-            variant="ghost"
-          >
-            <Persona state={reducedMotion ? 'idle' : 'speaking'} variant="mana" />
-          </Button>
-        ) : null}
-      </div>
-      {state === 'loading' && isActive ? (
-        <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />
+          <Persona state={reducedMotion ? 'idle' : 'speaking'} variant="mana" />
+        </MessageAction>
       ) : null}
-      <audio
-        ref={audioRef}
-        className={showBrowserControls ? 'h-8 max-w-full' : 'sr-only'}
-        controls={showBrowserControls}
-        crossOrigin="use-credentials"
-        preload="none"
+
+      <AudioPlayer
         src={src}
-        title="Listen to response"
+        state={state}
+        isActive={state === 'playing'}
+        audioRef={audioRef}
+        showBrowserControls={showBrowserControls}
       />
-      <span aria-live="polite" className="sr-only select-none">
-        {status}
-      </span>
+
+      <ChatMessageStatus state={state} />
     </div>
+  );
+}
+
+function ChatMessageStatus({ state }: { state: SpeechState }) {
+  const status =
+    state === 'loading'
+      ? 'Loading response audio'
+      : state === 'playing'
+        ? 'AI is speaking'
+        : state === 'paused'
+          ? 'Response audio paused'
+          : state === 'error'
+            ? 'Unable to play response audio'
+            : 'Listen to response';
+
+  return (
+    <span aria-live="polite" className="sr-only select-none">
+      {status}
+    </span>
+  );
+}
+
+function AudioPlayer({
+  src,
+  state,
+  isActive,
+  audioRef,
+  showBrowserControls,
+}: {
+  src: string;
+  state: SpeechState;
+  isActive: boolean;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  showBrowserControls: boolean;
+}) {
+  if (state === 'loading' && isActive) {
+    return <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />;
+  }
+
+  return (
+    <audio
+      ref={audioRef}
+      className={showBrowserControls ? 'h-8 max-w-full' : 'sr-only'}
+      controls={showBrowserControls}
+      crossOrigin="use-credentials"
+      preload="none"
+      src={src}
+      title="Listen to response"
+    />
   );
 }

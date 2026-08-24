@@ -68,7 +68,9 @@ export const MessageAction = ({
   const button = (
     <Button size={size} type="button" variant={variant} {...props}>
       {children}
-      <span className="sr-only">{label || tooltip}</span>
+      {!props['aria-label'] && (label || tooltip) ? (
+        <span className="sr-only">{label || tooltip}</span>
+      ) : null}
     </Button>
   );
 

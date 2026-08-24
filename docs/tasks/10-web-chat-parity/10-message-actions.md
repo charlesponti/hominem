@@ -34,3 +34,8 @@ actions.
 - Added accessible copy and share actions for non-empty, non-streaming assistant messages.
 - Copy reports its result through the action tooltip; share uses the browser share API and downloads a text fallback when unavailable.
 - Added Storybook coverage through `AssistantActions`.
+
+## Validation update — 2026-08-24
+
+- Web formatting and lint pass.
+- Focused chat component tests pass.

@@ -126,4 +126,27 @@ describe('ChatMessage', () => {
     rerender(<ChatMessage message={message({ isStreaming: true })} />);
     expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
   });
+
+  it('renders reasoning, referenced notes, timestamps, failures, and opt-in debug details', () => {
+    render(
+      <ChatMessage
+        formatTimestamp={() => '10:30 AM'}
+        message={message({
+          content: 'Answer',
+          createdAt: '2026-08-24T17:30:00.000Z',
+          failed: true,
+          referencedNotes: [{ id: 'note-1', title: 'Release plan' }],
+          reasoning: 'I compared the release constraints.',
+        })}
+        showDebug
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle reasoning' }));
+    expect(screen.getByText('I compared the release constraints.')).toBeTruthy();
+    expect(screen.getByLabelText('Referenced note: Release plan')).toBeTruthy();
+    expect(screen.getByLabelText('Sent 10:30 AM')).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain('Response interrupted.');
+    expect(screen.getByText('Debug details')).toBeTruthy();
+  });
 });
