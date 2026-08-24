@@ -27,7 +27,6 @@ export const Default: Story = {
   beforeEach({ msw }) {
     msw.use(
       http.get('/api/collections/invites', () => HttpResponse.json({ invites: [], count: 0 })),
-      http.get('/api/place-lists/invites', () => HttpResponse.json({ invites: [], count: 0 })),
     );
   },
 };

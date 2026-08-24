@@ -3,7 +3,6 @@ export type CollectionSummary = {
   name: string;
   description: string | null;
   visibility: 'private' | 'shared';
-  kind: 'generic' | 'place_list';
   itemCount: number;
   createdAt: string;
   updatedAt: string;

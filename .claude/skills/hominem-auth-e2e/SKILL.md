@@ -4,7 +4,7 @@ description: Authenticate as a disposable test account against the dev Better Au
 ---
 
 Shared auth plumbing for e2e verification in this repo. Every
-feature-specific test (place-list invites today, others later) needs the
+feature-specific test (collection invites, or another domain) needs the
 same three things — a disposable logged-in account, a way to get the
 browser itself logged in as one, and a safe way to tear it down — so that
 logic lives here once instead of being reimplemented per feature.
@@ -36,7 +36,7 @@ pair, just sign in and go.
 
 Only create a disposable `@test.hominem.dev` account when a test
 genuinely needs a **second, distinct** identity — e.g. an owner and an
-invitee who must not be the same person, like `place-list-invite-e2e`'s
+invitee who must not be the same person, like a collection-invite test's
 fast path. In that shape, `test@hominem.local` is naturally the owner
 and a fresh `*-e2e@test.hominem.dev` account is the invitee.
 
@@ -55,12 +55,11 @@ stop:
   session lives.
 - `hominem_delete_user` refuses `test@hominem.local` outright — that
   account is meant to persist across sessions. "Cleanup" for it means
-  deleting the *data it created this run* (a feature driver's job, e.g.
-  `place-list-invite-e2e`'s list manifest), never the account.
+  deleting the *data it created this run* (a feature driver's job), never the
+  account.
 - `hominem_delete_user` otherwise only takes one exact disposable email
   per call — no glob, no pattern match. Callers must track what they
-  created themselves (e.g. a manifest, per `place-list-invite-e2e`'s
-  driver) and only ever delete exactly that.
+  created themselves and only ever delete exactly that.
 
 ## Using it from another skill's driver.sh
 
@@ -69,7 +68,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../hominem-auth-e2e/lib.sh"
 
 hominem_signin_default                                  # -> prints userId for test@hominem.local
 jar="$(hominem_cookiejar_for "$HOMINEM_STABLE_TEST_USER")"
-curl -sS -b "$jar" "$HOMINEM_API_URL/api/place-lists"    # now authenticated
+curl -sS -b "$jar" "$HOMINEM_API_URL/api/collections/invites"    # now authenticated
 
 # only when a second identity is actually needed:
 hominem_signup "invitee-e2e@test.hominem.dev"           # -> prints userId

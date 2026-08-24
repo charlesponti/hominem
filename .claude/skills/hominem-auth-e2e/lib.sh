@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sourceable library for authenticating as a disposable test account against
 # the dev Better Auth email-OTP flow (localhost:4040). Every feature-specific
-# e2e driver (place-list-invite-e2e, and future ones) should `source` this
+# e2e driver (collection invites, and future ones) should `source` this
 # instead of reimplementing OTP/cookie/safety-rail logic — auth setup is the
 # same regardless of which resource the test is actually exercising.
 #

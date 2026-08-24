@@ -456,7 +456,6 @@ export interface AppCollections {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   description: string | null;
   id: Generated<string>;
-  kind: Generated<string>;
   name: string;
   ownerUserid: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;

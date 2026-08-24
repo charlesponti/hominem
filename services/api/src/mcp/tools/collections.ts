@@ -35,7 +35,7 @@ registerTool(
   {
     name: 'create_collection',
     title: 'Create a collection',
-    description: 'Create a new collection for grouping entities (places, people, possessions).',
+    description: 'Create a new collection for grouping any supported entities.',
     inputSchema: createCollectionInputSchema,
     outputSchema: createCollectionOutputSchema,
     readOnly: false,
@@ -51,7 +51,7 @@ registerTool(
   {
     name: 'add_collection_item',
     title: 'Add item to collection',
-    description: 'Add an entity (person, place, possession) to a collection with an optional note.',
+    description: 'Add any supported entity to a collection with an optional note.',
     inputSchema: addCollectionItemInputSchema,
     outputSchema: addCollectionItemOutputSchema,
     readOnly: false,
@@ -110,7 +110,7 @@ registerTool(
   {
     name: 'accept_collection_invite',
     title: 'Accept collection invitation',
-    description: "Accept the caller's pending invitation to collaborate on a generic collection.",
+    description: "Accept the caller's pending invitation to collaborate on a collection.",
     inputSchema: acceptMemberInviteInputSchema,
     outputSchema: acceptMemberInviteOutputSchema,
     readOnly: false,
@@ -140,8 +140,7 @@ registerTool(
   {
     name: 'list_pending_collection_invites',
     title: 'List pending collection invitations',
-    description:
-      'List pending invitations to generic collections for the caller. Use this for questions about collection or shared-list invitations.',
+    description: 'List pending invitations to collections for the caller.',
     inputSchema: listPendingInvitesInputSchema,
     outputSchema: listPendingInvitesOutputSchema,
     readOnly: true,
@@ -149,7 +148,7 @@ registerTool(
     sensitivity: 'standard',
     resultCap: 50,
   },
-  async (ownerUserId, input) => listPendingInvites(ownerUserId, { ...input, kind: 'generic' }),
+  async (ownerUserId, input) => listPendingInvites(ownerUserId, input),
 );
 
 registerTool(

@@ -52,10 +52,6 @@ export const queryKeys = {
       ['usage', 'timeseries', options] as const,
   },
 
-  placeLists: {
-    all: ['place-lists'] as const,
-    pendingInvites: ['place-lists', 'pending-invites'] as const,
-  },
 } as const;
 
 export type QueryKeys = typeof queryKeys;

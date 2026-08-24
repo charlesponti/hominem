@@ -30,7 +30,6 @@ import {
   ToolInput,
   ToolPreview,
 } from '~/components/ai-elements/tool';
-import { PendingPlaceListInvites } from '~/components/chat/pending-place-list-invites';
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import { useNoteSearch } from '~/hooks/use-notes';
 import { serverEnv } from '~/lib/env.server';
@@ -310,11 +309,6 @@ export default function ChatPage({
                           ) : null}
                         </ToolContent>
                       </Tool>
-                      {toolCall.toolName === 'list_pending_place_list_invites' &&
-                      toolCall.status !== 'pending' &&
-                      toolCall.status !== 'rejected' ? (
-                        <PendingPlaceListInvites />
-                      ) : null}
                     </Fragment>
                   );
                 })}

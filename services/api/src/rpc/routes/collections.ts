@@ -17,10 +17,7 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 export const collectionsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   .get('/invites', zValidator('query', listPendingInvitesInputSchema), async (c) => {
-    const result = await listPendingInvites(c.get('auth')!.userId, {
-      ...c.req.valid('query'),
-      kind: 'generic',
-    });
+    const result = await listPendingInvites(c.get('auth')!.userId, c.req.valid('query'));
     return c.json(listPendingInvitesOutputSchema.parse(result));
   })
   .post('/invites/:collectionId/accept', async (c) => {

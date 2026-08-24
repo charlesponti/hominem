@@ -2,14 +2,11 @@ import * as z from 'zod';
 
 import { entityTypeSchema } from './tags.schema';
 
-export const collectionKindSchema = z.enum(['generic', 'place_list']);
-
 export const collectionSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   visibility: z.enum(['private', 'shared']),
-  kind: collectionKindSchema,
   itemCount: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -44,7 +41,6 @@ export const createCollectionInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
   visibility: z.enum(['private', 'shared']).default('private'),
-  kind: collectionKindSchema.default('generic'),
 });
 
 export const createCollectionOutputSchema = z.object({
@@ -79,7 +75,6 @@ export const removeCollectionItemOutputSchema = z.object({
 // ── list_collections ─────────────────────────────────────────────────
 
 export const listCollectionsInputSchema = z.object({
-  kind: collectionKindSchema.optional(),
   limit: z.number().int().min(1).max(50).default(20),
 });
 
@@ -121,7 +116,6 @@ export const acceptMemberInviteOutputSchema = z.object({
 // ── list_pending_invites ─────────────────────────────────────────────
 
 export const listPendingInvitesInputSchema = z.object({
-  kind: collectionKindSchema.optional(),
   limit: z.number().int().min(1).max(50).default(20),
 });
 

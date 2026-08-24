@@ -31,10 +31,9 @@ export function CollaborationNotifications() {
       ) : null}
       <ul className="space-y-2">
         {invites.invites.map((invite) => {
-          const id = invite.kind === 'collection' ? invite.collection.id : invite.placeList.id;
-          const name =
-            invite.kind === 'collection' ? invite.collection.name : invite.placeList.name;
-          const key = `${invite.kind}:${id}`;
+          const id = invite.collection.id;
+          const name = invite.collection.name;
+          const key = id;
           const isAccepted = accepted.has(key);
           const isPending = acceptInvite.isPending && acceptInvite.variables?.id === id;
 
@@ -54,7 +53,7 @@ export function CollaborationNotifications() {
                     disabled={isPending}
                     onClick={() => {
                       acceptInvite.mutate(
-                        { kind: invite.kind, id },
+                        { id },
                         { onSuccess: () => setAccepted((current) => new Set(current).add(key)) },
                       );
                     }}
@@ -65,7 +64,7 @@ export function CollaborationNotifications() {
                   </Button>
                   <Button
                     disabled={declineInvite.isPending}
-                    onClick={() => declineInvite.mutate({ kind: invite.kind, id })}
+                    onClick={() => declineInvite.mutate({ id })}
                     size="sm"
                     type="button"
                     variant="outline"

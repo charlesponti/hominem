@@ -12,7 +12,6 @@ import { memoryRoutes } from './memory';
 import { notesRoutes } from './notes';
 import { peopleRoutes } from './people';
 import { personalRoutes } from './personal';
-import { placeListsRoutes } from './place-lists';
 import { tasksRoutes } from './tasks';
 import { telemetryRoutes } from './telemetry';
 import { usageRoutes } from './usage';
@@ -30,7 +29,6 @@ export const economyRoutes = new Hono<AppContext>()
   .route('/notes', notesRoutes)
   .route('/people', peopleRoutes)
   .route('/personal', personalRoutes)
-  .route('/place-lists', placeListsRoutes)
   .route('/tasks', tasksRoutes)
   .route('/telemetry', telemetryRoutes)
   .route('/usage', usageRoutes)

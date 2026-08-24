@@ -17,10 +17,6 @@ export const chatQueryKeys = {
   sidebarList: ['chats', 'sidebar', 'list'] as const,
 };
 
-export const placeListsQueryKeys = {
-  pendingInvites: queryKeys.placeLists.pendingInvites,
-};
-
 export const notesQueryKeys = {
   lists: queryKeys.notes.lists,
   feeds: queryKeys.notes.feeds,

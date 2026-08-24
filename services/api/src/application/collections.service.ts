@@ -85,7 +85,6 @@ async function loadCollectionSummary(collectionId: string): Promise<CollectionSu
     name: row.name,
     description: row.description,
     visibility: row.visibility as 'private' | 'shared',
-    kind: row.kind as 'generic' | 'place_list',
     itemCount: Number(count),
     createdAt: toIso(row.createdat)!,
     updatedAt: toIso(row.updatedat)!,
@@ -100,7 +99,6 @@ export async function createCollection(ownerUserId: string, input: CreateCollect
       name: input.name,
       description: input.description ?? null,
       visibility: input.visibility,
-      kind: input.kind,
     })
     .returning(['id'])
     .executeTakeFirstOrThrow();
@@ -333,7 +331,7 @@ export async function listCollections(ownerUserId: string, input: ListCollection
   const collections: CollectionSummary[] = [];
   for (const row of rows) {
     const summary = await loadCollectionSummary(row.id);
-    if (summary && (input.kind === undefined || summary.kind === input.kind)) {
+    if (summary) {
       collections.push(summary);
     }
   }
@@ -360,7 +358,7 @@ export async function listPendingInvites(ownerUserId: string, input: ListPending
   }> = [];
   for (const row of rows) {
     const collection = await loadCollectionSummary(row.collectionId);
-    if (collection && (input.kind === undefined || collection.kind === input.kind)) {
+    if (collection) {
       invites.push({
         collection,
         role: row.role as 'editor' | 'owner' | 'viewer',

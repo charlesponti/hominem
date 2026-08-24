@@ -6,7 +6,6 @@ export * from './inbox.types';
 export * from './memory.types';
 export * from './mobile.types';
 export * from './notes.types';
-export * from './place-lists.types';
 export * from './tasks.schemas';
 export * from './tasks.types';
 export * from './usage.types';
