@@ -1,6 +1,6 @@
 import type { CareerCertificationRecord } from '@hominem/db';
 import { Input } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { AwardIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -99,7 +99,7 @@ export function CertificationsSection({
 
       <form onSubmit={handleAdd} className="grid grid-cols-1 items-end gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="cert-name">Name</Label>
+          <label htmlFor="cert-name">Name</label>
           <Input
             id="cert-name"
             value={name}
@@ -109,7 +109,7 @@ export function CertificationsSection({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cert-org">Issuing organization</Label>
+          <label htmlFor="cert-org">Issuing organization</label>
           <Input
             id="cert-org"
             value={issuingOrganization}
@@ -118,7 +118,7 @@ export function CertificationsSection({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cert-date">Issue date</Label>
+          <label htmlFor="cert-date">Issue date</label>
           <Input id="cert-date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
         </div>
         <div className="sm:col-span-3">

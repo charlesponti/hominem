@@ -1,5 +1,4 @@
 import { Switch } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -284,7 +283,7 @@ export function ProfilePage({ loaderData }: { loaderData: ProfileLoaderData }) {
         <section className="space-y-4 border border-border rounded-2xl p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <Label htmlFor="profile-slug">Profile URL</Label>
+              <label htmlFor="profile-slug">Profile URL</label>
               <p className="text-sm text-muted-foreground">
                 {isPublic
                   ? 'Anyone with the link can view your profile at this URL.'

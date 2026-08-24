@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -83,7 +83,7 @@ export function TeamSection({ workExperience }: { workExperience: CareerEngageme
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Seniority level</Label>
+              <label>Seniority level</label>
               <Controller
                 control={control}
                 name="seniorityLevel"
@@ -108,21 +108,21 @@ export function TeamSection({ workExperience }: { workExperience: CareerEngageme
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Department</Label>
+              <label>Department</label>
               <Input placeholder="Engineering" {...register('department')} />
             </div>
             <div className="space-y-1.5">
-              <Label>Team size</Label>
+              <label>Team size</label>
               <Input inputMode="numeric" placeholder="12" {...register('teamSize')} />
             </div>
             <div className="space-y-1.5">
-              <Label>Direct reports</Label>
+              <label>Direct reports</label>
               <Input inputMode="numeric" placeholder="4" {...register('directReports')} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Reports to</Label>
+            <label>Reports to</label>
             <Input placeholder="Director of Engineering" {...register('reportsTo')} />
           </div>
 

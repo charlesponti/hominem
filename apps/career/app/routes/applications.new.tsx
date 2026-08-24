@@ -2,7 +2,7 @@ import { CareerImportRepository, db } from '@hominem/db';
 import type { CareerImportDraft } from '@hominem/queues';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
-  DateField,
+  DatePicker,
   Input,
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
   SelectValue,
   todayDateInput,
 } from '@ponti-studios/ui/forms';
-import { Button, Card, CardContent, Label } from '@ponti-studios/ui/primitives';
+import { Button, Card, CardContent } from '@ponti-studios/ui/primitives';
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Form, Link, redirect } from 'react-router';
@@ -567,7 +567,7 @@ export default function CreateJobApplication() {
             <Form method="post" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="position">Job Title *</Label>
+                  <label htmlFor="position">Job Title *</label>
                   <Input
                     id="position"
                     name="position"
@@ -579,7 +579,7 @@ export default function CreateJobApplication() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company *</Label>
+                  <label htmlFor="company">Company *</label>
                   <Input
                     id="company"
                     name="company"
@@ -593,19 +593,16 @@ export default function CreateJobApplication() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <DateField
+                  <DatePicker
                     id="startDate"
                     name="startDate"
                     label="Application Date *"
                     defaultValue={todayDateInput()}
-                    placeholder="Pick application date"
-                    containerClassName="min-w-0"
-                    captionLayout="dropdown"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <label htmlFor="status">Status</label>
                   <Select name="status" defaultValue={JobApplicationStatus.APPLIED}>
                     <SelectTrigger id="status" className="w-full">
                       <SelectValue placeholder="Select Status" />
@@ -622,7 +619,7 @@ export default function CreateJobApplication() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <label htmlFor="location">Location</label>
                 <Input
                   id="location"
                   name="location"
@@ -633,7 +630,7 @@ export default function CreateJobApplication() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="jobPosting">Job Description</Label>
+                <label htmlFor="jobPosting">Job Description</label>
                 <textarea
                   id="jobPosting"
                   name="jobPosting"
@@ -650,7 +647,7 @@ export default function CreateJobApplication() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salaryQuoted">Salary Range</Label>
+                <label htmlFor="salaryQuoted">Salary Range</label>
                 <Input
                   id="salaryQuoted"
                   name="salaryQuoted"
@@ -664,7 +661,7 @@ export default function CreateJobApplication() {
                 <h3 className="heading-3 text-foreground mb-4">Recruiter Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="recruiterName">Recruiter Name</Label>
+                    <label htmlFor="recruiterName">Recruiter Name</label>
                     <Input
                       id="recruiterName"
                       name="recruiterName"
@@ -674,7 +671,7 @@ export default function CreateJobApplication() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="recruiterEmail">Recruiter Email</Label>
+                    <label htmlFor="recruiterEmail">Recruiter Email</label>
                     <Input
                       id="recruiterEmail"
                       name="recruiterEmail"
@@ -686,7 +683,7 @@ export default function CreateJobApplication() {
                 </div>
 
                 <div className="mt-6 space-y-2">
-                  <Label htmlFor="recruiterLinkedin">Recruiter LinkedIn URL</Label>
+                  <label htmlFor="recruiterLinkedin">Recruiter LinkedIn URL</label>
                   <Input
                     id="recruiterLinkedin"
                     name="recruiterLinkedin"

@@ -1,5 +1,5 @@
 import { FilterChip, SortControls } from '@ponti-studios/ui/data-display';
-import { DatePicker, Input } from '@ponti-studios/ui/forms';
+import { DatePicker, Input, parseDateInput } from '@ponti-studios/ui/forms';
 import { type SortOption } from '@ponti-studios/ui/hooks';
 import type { SortField } from '@ponti-studios/ui/hooks';
 import {
@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@ponti-studios/ui/overlays';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { ListFilter, RefreshCcw } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -246,20 +246,20 @@ export function TransactionFilters({
                 />
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="from-date-filter">From date</Label>
+                  <label htmlFor="from-date-filter">From date</label>
                   <DatePicker
+                    id="from-date-filter"
                     value={filters.dateFrom}
-                    onSelect={handleDateFromChange}
-                    placeholder="Start date"
+                    onValueChange={(value) => handleDateFromChange(parseDateInput(value))}
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="to-date-filter">To date</Label>
+                  <label htmlFor="to-date-filter">To date</label>
                   <DatePicker
+                    id="to-date-filter"
                     value={filters.dateTo}
-                    onSelect={handleDateToChange}
-                    placeholder="End date"
+                    onValueChange={(value) => handleDateToChange(parseDateInput(value))}
                   />
                 </div>
               </DropdownMenuGroup>

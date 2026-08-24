@@ -7,14 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Label,
-} from '@ponti-studios/ui/primitives';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 import { AlertCircle, CheckCircle, Copy, Download, FileText, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useFetcher } from 'react-router';
@@ -245,7 +238,7 @@ export function ApplicationResumeTab({
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="resume-format">Format</Label>
+                <label htmlFor="resume-format">Format</label>
                 <Select
                   value={resumeFormat}
                   onValueChange={(v) => setResumeFormat(v as typeof resumeFormat)}
@@ -263,7 +256,7 @@ export function ApplicationResumeTab({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="resume-length">Length</Label>
+                <label htmlFor="resume-length">Length</label>
                 <Select
                   value={targetLength}
                   onValueChange={(v) => setTargetLength(v as typeof targetLength)}
@@ -281,12 +274,12 @@ export function ApplicationResumeTab({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="resume-focus-areas">
+              <label htmlFor="resume-focus-areas">
                 Focus Areas{' '}
                 <span className="font-normal text-muted-foreground/70">
                   (optional, comma-separated)
                 </span>
-              </Label>
+              </label>
               <Input
                 id="resume-focus-areas"
                 placeholder="e.g. leadership, TypeScript, distributed systems"

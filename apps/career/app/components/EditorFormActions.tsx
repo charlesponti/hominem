@@ -1,13 +1,12 @@
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@ponti-studios/ui/overlays';
 import { Button } from '@ponti-studios/ui/primitives';
 import { RotateCcwIcon, SaveIcon, Trash2Icon } from 'lucide-react';
@@ -66,32 +65,38 @@ export function EditorFormActions({
       </Button>
 
       {!isNew && onDelete ? (
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                disabled={isSaving}
-                title="Delete"
-              >
-                <Trash2Icon />
-                <span className="sr-only">Delete</span>
-              </Button>
-            }
-          />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{deleteConfirmTitle}</AlertDialogTitle>
-              <AlertDialogDescription>{deleteConfirmDescription}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Dialog alert>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              disabled={isSaving}
+              title="Delete"
+            >
+              <Trash2Icon />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{deleteConfirmTitle}</DialogTitle>
+              <DialogDescription>{deleteConfirmDescription}</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button type="button" variant="destructive" onClick={onDelete}>
+                  Delete
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </div>
   );

@@ -1,5 +1,5 @@
 import { Textarea } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -54,7 +54,7 @@ export function TechnologiesSection({ technologies }: { technologies: string[] }
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormErrorAlert title="Technologies weren’t saved" message={submissionError} />
           <div className="space-y-1.5">
-            <Label>Technologies</Label>
+            <label>Technologies</label>
             <p className="text-sm text-muted-foreground">
               Use a comma-separated list, like React, TypeScript, GraphQL.
             </p>

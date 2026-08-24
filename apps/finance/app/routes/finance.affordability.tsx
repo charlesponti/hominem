@@ -1,5 +1,4 @@
 import { Input } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
 import { Badge } from '@ponti-studios/ui/primitives';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
@@ -66,7 +65,7 @@ export default function AffordabilityPage() {
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor={purchaseAmountId}>Purchase amount ($)</Label>
+              <label htmlFor={purchaseAmountId}>Purchase amount ($)</label>
               <Input
                 type="number"
                 id={purchaseAmountId}
@@ -75,7 +74,7 @@ export default function AffordabilityPage() {
               />
             </div>
             <div>
-              <Label htmlFor={currentBalanceId}>Current balance ($)</Label>
+              <label htmlFor={currentBalanceId}>Current balance ($)</label>
               <Input
                 type="number"
                 id={currentBalanceId}
@@ -84,7 +83,7 @@ export default function AffordabilityPage() {
               />
             </div>
             <div>
-              <Label htmlFor={monthlyIncomeId}>Monthly income ($)</Label>
+              <label htmlFor={monthlyIncomeId}>Monthly income ($)</label>
               <Input
                 type="number"
                 id={monthlyIncomeId}
@@ -93,7 +92,7 @@ export default function AffordabilityPage() {
               />
             </div>
             <div>
-              <Label htmlFor={monthlyExpensesId}>Monthly expenses ($)</Label>
+              <label htmlFor={monthlyExpensesId}>Monthly expenses ($)</label>
               <Input
                 type="number"
                 id={monthlyExpensesId}
@@ -102,9 +101,9 @@ export default function AffordabilityPage() {
               />
             </div>
             <div>
-              <Label htmlFor={emergencyFundTargetId}>
+              <label htmlFor={emergencyFundTargetId}>
                 Emergency fund target ($) <span className="text-muted-foreground">(optional)</span>
-              </Label>
+              </label>
               <Input
                 type="number"
                 id={emergencyFundTargetId}

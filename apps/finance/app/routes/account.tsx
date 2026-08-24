@@ -1,13 +1,12 @@
 import { useApiClient } from '@hominem/rpc/react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@ponti-studios/ui/overlays';
 import { Button, buttonVariants } from '@ponti-studios/ui/primitives';
 import {
@@ -123,26 +122,34 @@ export default function AccountPage() {
         </div>
       </div>
 
-      <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog alert open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
               This action cannot be undone. This will permanently delete all your finance data from
               our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteAllFinanceData.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteAllFinanceData.mutate()}
-              disabled={deleteAllFinanceData.isPending}
-            >
-              {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={deleteAllFinanceData.isPending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => deleteAllFinanceData.mutate()}
+                disabled={deleteAllFinanceData.isPending}
+              >
+                {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

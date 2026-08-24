@@ -1,6 +1,5 @@
 import type { CareerProfileRecord } from '@hominem/db';
 import { Input, Switch, Textarea } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { PhoneField } from '~/components/PhoneField';
@@ -36,23 +35,23 @@ export function BasicInfoForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="name">Full Name</Label>
+            <label htmlFor="name">Full Name</label>
             <Input id="name" {...register('name', { required: 'Name is required' })} />
             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="initials">Initials</Label>
+            <label htmlFor="initials">Initials</label>
             <Input id="initials" {...register('initials')} maxLength={10} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="jobTitle">Job Title</Label>
+            <label htmlFor="jobTitle">Job Title</label>
             <Input id="jobTitle" {...register('jobTitle', { required: 'Job title is required' })} />
             {errors.jobTitle && (
               <p className="text-sm text-destructive">{errors.jobTitle.message}</p>
             )}
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="tagline">Tagline</Label>
+            <label htmlFor="tagline">Tagline</label>
             <Input
               id="tagline"
               {...register('tagline', { required: 'Tagline is required' })}
@@ -61,7 +60,7 @@ export function BasicInfoForm({
             {errors.tagline && <p className="text-sm text-destructive">{errors.tagline.message}</p>}
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label htmlFor="bio">Bio</Label>
+            <label htmlFor="bio">Bio</label>
             <Textarea
               id="bio"
               {...register('bio', { required: 'Bio is required' })}
@@ -77,7 +76,7 @@ export function BasicInfoForm({
 
       <div className="space-y-4">
         <div>
-          <Label htmlFor="currentLocation">Location</Label>
+          <label htmlFor="currentLocation">Location</label>
           <Input
             id="currentLocation"
             {...register('currentLocation', { required: 'Location is required' })}

@@ -1,13 +1,12 @@
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@ponti-studios/ui/overlays';
 import { Button } from '@ponti-studios/ui/primitives';
 import { RefreshCcw, Trash2 } from 'lucide-react';
@@ -94,30 +93,36 @@ export function PlaidAccountStatus({
           )}
           Sync Now
         </Button>
-        <AlertDialog>
-          <AlertDialogTrigger>
+        <Dialog alert>
+          <DialogTrigger asChild>
             <Button variant="destructive" size="sm" disabled={removeConnectionMutation.isLoading}>
               <Trash2 className="size-4 mr-2" />
               Remove Connection
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove Plaid Connection</AlertDialogTitle>
-              <AlertDialogDescription>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove Plaid Connection</DialogTitle>
+              <DialogDescription>
                 This will permanently remove the Plaid connection for {account.name}. The account
                 will remain but will no longer sync data from your bank. This action cannot be
                 undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleRemoveConnection}>
-                Remove Connection
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button type="button" variant="destructive" onClick={handleRemoveConnection}>
+                  Remove Connection
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

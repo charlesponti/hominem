@@ -1,6 +1,5 @@
 import { CHART_COLORS } from '@ponti-studios/ui';
 import { Input } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
 import { Badge } from '@ponti-studios/ui/primitives';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
@@ -228,7 +227,7 @@ export default function RunwayPage() {
           </CardHeader>
           <CardContent>
             <div>
-              <Label htmlFor={initialBalanceId}>Initial Balance ($)</Label>
+              <label htmlFor={initialBalanceId}>Initial Balance ($)</label>
               <Input
                 type="number"
                 id={initialBalanceId}
@@ -237,7 +236,7 @@ export default function RunwayPage() {
               />
             </div>
             <div>
-              <Label htmlFor={monthlyExpensesId}>Monthly Expenses ($)</Label>
+              <label htmlFor={monthlyExpensesId}>Monthly Expenses ($)</label>
               <Input
                 type="number"
                 id={monthlyExpensesId}
@@ -261,7 +260,7 @@ export default function RunwayPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor={descriptionId}>Description</Label>
+                <label htmlFor={descriptionId}>Description</label>
                 <Input
                   id={descriptionId}
                   placeholder="e.g., New laptop"
@@ -271,7 +270,7 @@ export default function RunwayPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor={amountId}>Amount ($)</Label>
+                  <label htmlFor={amountId}>Amount ($)</label>
                   <Input
                     type="number"
                     id={amountId}
@@ -283,7 +282,7 @@ export default function RunwayPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor={dateId}>Date</Label>
+                  <label htmlFor={dateId}>Date</label>
                   <Input
                     type="date"
                     id={dateId}

@@ -1,6 +1,6 @@
 import type { CareerEngagementRecord } from '@hominem/db';
 import { Input, Textarea } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -81,35 +81,35 @@ export function OverviewSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Role</Label>
+              <label>Role</label>
               <Input {...register('role', { required: 'Add the role title.' })} />
               {errors.role?.message && (
                 <p className="text-sm text-destructive">{errors.role.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label>Company</Label>
+              <label>Company</label>
               <Input {...register('company', { required: 'Add the company name.' })} />
               {errors.company?.message && (
                 <p className="text-sm text-destructive">{errors.company.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label>Start month</Label>
+              <label>Start month</label>
               <Input type="month" {...register('startDate')} />
               {errors.startDate?.message && (
                 <p className="text-sm text-destructive">{errors.startDate.message}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label>End month</Label>
+              <label>End month</label>
               <p className="text-sm text-muted-foreground">Leave blank for a current role.</p>
               <Input type="month" {...register('endDate')} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Description</Label>
+            <label>Description</label>
             <p className="text-sm text-muted-foreground">
               Focus on scope, responsibilities, and the shape of the role.
             </p>
@@ -118,7 +118,7 @@ export function OverviewSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Location</Label>
+              <label>Location</label>
               <Input placeholder="San Francisco, CA" {...register('location')} />
             </div>
           </div>

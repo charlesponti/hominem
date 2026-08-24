@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@ponti-studios/ui/overlays';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { ChevronDownIcon } from 'lucide-react';
 import { useId, useMemo } from 'react';
 
@@ -157,7 +157,7 @@ export function AccountSelect(props: AccountSelectProps) {
   if (showLabel) {
     return (
       <div className="space-y-2">
-        <Label htmlFor={id}>{label}</Label>
+        <label htmlFor={id}>{label}</label>
         {selectElement}
       </div>
     );

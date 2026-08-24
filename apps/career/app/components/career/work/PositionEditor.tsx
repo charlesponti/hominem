@@ -1,6 +1,6 @@
 import type { CareerEngagementRecord } from '@hominem/db';
-import { DateField, Input, Switch } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { DatePicker, Input, Switch } from '@ponti-studios/ui/forms';
+import { Button } from '@ponti-studios/ui/primitives';
 import { useState } from 'react';
 import { Form, useNavigation } from 'react-router';
 
@@ -25,23 +25,23 @@ export function PositionEditor({
       {position && <input type="hidden" name="id" value={position.id} />}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="company">Company *</Label>
+          <label htmlFor="company">Company *</label>
           <Input id="company" name="company" defaultValue={position?.company ?? ''} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
+          <label htmlFor="title">Title *</label>
           <Input id="title" name="title" defaultValue={position?.title ?? ''} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <label htmlFor="location">Location</label>
           <Input id="location" name="location" defaultValue={position?.location ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="url">URL</Label>
+          <label htmlFor="url">URL</label>
           <Input id="url" name="url" type="url" defaultValue={position?.url ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="kind">Engagement type</Label>
+          <label htmlFor="kind">Engagement type</label>
           <select
             id="kind"
             name="kind"
@@ -59,14 +59,13 @@ export function PositionEditor({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <DateField
+          <DatePicker
             mode="range"
             id="startDate"
             key={isCurrent ? 'current-role' : 'fixed-term'}
             startName="startDate"
             endName="endDate"
             label="Dates"
-            captionLayout="dropdown"
             defaultValue={
               isCurrent
                 ? { from: position?.startDate }
@@ -75,16 +74,16 @@ export function PositionEditor({
           />
         </div>
         <div className="space-y-2 flex items-end">
-          <Label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <Switch checked={isCurrent} onCheckedChange={setIsCurrent} name="isCurrent" />
             Current role
-          </Label>
+          </label>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="salaryLow">Salary low ($/yr)</Label>
+          <label htmlFor="salaryLow">Salary low ($/yr)</label>
           <Input
             id="salaryLow"
             name="salaryLow"
@@ -93,7 +92,7 @@ export function PositionEditor({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="salaryHigh">Salary high ($/yr)</Label>
+          <label htmlFor="salaryHigh">Salary high ($/yr)</label>
           <Input
             id="salaryHigh"
             name="salaryHigh"
@@ -102,13 +101,13 @@ export function PositionEditor({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="currency">Currency</Label>
+          <label htmlFor="currency">Currency</label>
           <Input id="currency" name="currency" defaultValue={position?.currency ?? 'USD'} />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <label htmlFor="description">Description</label>
         <textarea
           id="description"
           name="description"
@@ -120,11 +119,11 @@ export function PositionEditor({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="contactName">Contact name</Label>
+          <label htmlFor="contactName">Contact name</label>
           <Input id="contactName" name="contactName" defaultValue={position?.contactName ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="contactPhone">Contact phone</Label>
+          <label htmlFor="contactPhone">Contact phone</label>
           <Input
             id="contactPhone"
             name="contactPhone"
@@ -132,18 +131,18 @@ export function PositionEditor({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+          <label htmlFor="address">Address</label>
           <Input id="address" name="address" defaultValue={position?.address ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="source">Source</Label>
+          <label htmlFor="source">Source</label>
           <Input id="source" name="source" defaultValue={position?.source ?? ''} />
         </div>
       </div>
 
       {!isCurrent && (
         <div className="space-y-2">
-          <Label htmlFor="reasonForLeaving">Reason for leaving</Label>
+          <label htmlFor="reasonForLeaving">Reason for leaving</label>
           <textarea
             id="reasonForLeaving"
             name="reasonForLeaving"

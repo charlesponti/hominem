@@ -1,14 +1,13 @@
 import type { CareerEngagementRecord } from '@hominem/db';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@ponti-studios/ui/overlays';
 import { Button } from '@ponti-studios/ui/primitives';
 import { TrashIcon } from 'lucide-react';
@@ -76,37 +75,45 @@ export function WorkExperienceDetail({
             </div>
           </div>
 
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="self-start shrink-0 lg:self-auto"
-                >
-                  <TrashIcon className="size-4" />
-                  <span className="hidden sm:inline">Delete experience</span>
-                </Button>
-              }
-            />
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this work experience?</AlertDialogTitle>
-                <AlertDialogDescription>
+          <Dialog alert>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="self-start shrink-0 lg:self-auto"
+              >
+                <TrashIcon className="size-4" />
+                <span className="hidden sm:inline">Delete experience</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete this work experience?</DialogTitle>
+                <DialogDescription>
                   This removes the role from your portfolio and unlinks any details kept here.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => submitDelete(deleteFetcher, clearSubmissionError, workExperience)}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() =>
+                      submitDelete(deleteFetcher, clearSubmissionError, workExperience)
+                    }
+                  >
+                    Delete
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 

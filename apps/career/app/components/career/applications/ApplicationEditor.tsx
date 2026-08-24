@@ -1,7 +1,7 @@
 import type { CareerApplicationWithRelations } from '@hominem/db';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
-  DateField,
+  DatePicker,
   Input,
   Select,
   SelectContent,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { Form, useNavigation } from 'react-router';
 
 import { JOB_APPLICATION_STATUSES } from '~/types/career';
@@ -30,33 +30,31 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
         <input type="hidden" name="intent" value="update-application" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Job title</Label>
+            <label htmlFor="title">Job title</label>
             <Input id="title" name="title" defaultValue={application.title} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="company">Company</Label>
+            <label htmlFor="company">Company</label>
             <Input id="company" name="company" defaultValue={application.company} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <label htmlFor="location">Location</label>
             <Input id="location" name="location" defaultValue={application.location ?? ''} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="source">Source</Label>
+            <label htmlFor="source">Source</label>
             <Input id="source" name="source" defaultValue={application.source ?? ''} />
           </div>
           <div className="space-y-2">
-            <DateField
+            <DatePicker
               id="appliedAt"
               name="appliedAt"
               label="Applied date"
               defaultValue={application.appliedAt}
-              placeholder="Pick applied date"
-              captionLayout="dropdown"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
+            <label htmlFor="status">Status</label>
             <Select name="status" defaultValue={application.status ?? undefined}>
               <SelectTrigger id="status" className="w-full">
                 <SelectValue placeholder="Select status" />
@@ -71,7 +69,7 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="salaryExpectation">Salary expectation ($/yr)</Label>
+            <label htmlFor="salaryExpectation">Salary expectation ($/yr)</label>
             <Input
               id="salaryExpectation"
               name="salaryExpectation"
@@ -84,7 +82,7 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="jobPostingUrl">Job posting URL</Label>
+            <label htmlFor="jobPostingUrl">Job posting URL</label>
             <Input
               id="jobPostingUrl"
               name="jobPostingUrl"
@@ -94,7 +92,7 @@ export function ApplicationEditor({ application, onCancel }: ApplicationEditorPr
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes</Label>
+          <label htmlFor="notes">Notes</label>
           <textarea
             id="notes"
             name="notes"

@@ -1,6 +1,7 @@
 import { Skeleton } from '@ponti-studios/ui/feedback';
 import {
   DatePicker,
+  parseDateInput,
   Select,
   SelectContent,
   SelectItem,
@@ -8,7 +9,7 @@ import {
   SelectValue,
   Switch,
 } from '@ponti-studios/ui/forms';
-import { Badge, Button, Card, Label } from '@ponti-studios/ui/primitives';
+import { Badge, Button, Card } from '@ponti-studios/ui/primitives';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Filter, X } from 'lucide-react';
 import { type Dispatch, type SetStateAction, useId, useState } from 'react';
@@ -226,16 +227,20 @@ export function AnalyticsFilters({
                     {/* Date Range Filters */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={dateFromId}>From Date</Label>
+                        <label htmlFor={dateFromId}>From Date</label>
                         <DatePicker
+                          id={dateFromId}
                           value={dateFrom}
-                          onSelect={setDateFrom}
-                          placeholder="Start date"
+                          onValueChange={(value) => setDateFrom(parseDateInput(value))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor={dateToId}>To Date</Label>
-                        <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
+                        <label htmlFor={dateToId}>To Date</label>
+                        <DatePicker
+                          id={dateToId}
+                          value={dateTo}
+                          onValueChange={(value) => setDateTo(parseDateInput(value))}
+                        />
                       </div>
                     </div>
 
@@ -256,7 +261,7 @@ export function AnalyticsFilters({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="groupBy">Group By</Label>
+                      <label htmlFor="groupBy">Group By</label>
                       <Select
                         name="groupBy"
                         value={groupBy}
@@ -281,7 +286,7 @@ export function AnalyticsFilters({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label htmlFor={includeStatsId}>Include Statistics</Label>
+                          <label htmlFor={includeStatsId}>Include Statistics</label>
                           <p className="text-sm text-muted-foreground">
                             Show summary statistics with the data
                           </p>
@@ -294,7 +299,7 @@ export function AnalyticsFilters({
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
+                          <label htmlFor={compareToPreviousId}>Compare to Previous Period</label>
                           <p className="text-sm text-muted-foreground">
                             Show trend information compared to the previous period
                           </p>

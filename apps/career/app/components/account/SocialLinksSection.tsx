@@ -1,5 +1,5 @@
 import { Input } from '@ponti-studios/ui/forms';
-import { Card, CardContent, Label } from '@ponti-studios/ui/primitives';
+import { Card, CardContent } from '@ponti-studios/ui/primitives';
 import { Globe } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import { siGithub, siX } from 'simple-icons';
@@ -42,13 +42,13 @@ export function SocialLinksSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* GitHub */}
             <div className="flex flex-col gap-1.5">
-              <Label
+              <label
                 htmlFor="github"
                 className="subheading-4 text-text-primary flex items-center gap-2"
               >
                 <BrandIcon path={siGithub.path} />
                 GitHub
-              </Label>
+              </label>
               <div className="flex">
                 <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                   github.com/
@@ -72,13 +72,13 @@ export function SocialLinksSection() {
 
             {/* LinkedIn */}
             <div className="flex flex-col gap-1.5">
-              <Label
+              <label
                 htmlFor="linkedin"
                 className="subheading-4 text-text-primary flex items-center gap-2"
               >
                 <BrandIcon path={linkedinPath} viewBox="0 0 448 512" />
                 LinkedIn
-              </Label>
+              </label>
               <div className="flex">
                 <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                   linkedin.com/in/
@@ -104,13 +104,13 @@ export function SocialLinksSection() {
 
             {/* Twitter */}
             <div className="flex flex-col gap-1.5">
-              <Label
+              <label
                 htmlFor="twitter"
                 className="subheading-4 text-text-primary flex items-center gap-2"
               >
                 <BrandIcon path={siX.path} />
                 Twitter / X
-              </Label>
+              </label>
               <div className="flex">
                 <span className="inline-flex items-center shrink-0 px-3 body-3 text-muted-foreground border border-r-0 rounded-l-md bg-surface-base">
                   x.com/
@@ -136,13 +136,13 @@ export function SocialLinksSection() {
 
             {/* Website */}
             <div className="flex flex-col gap-1.5">
-              <Label
+              <label
                 htmlFor="website"
                 className="subheading-4 text-text-primary flex items-center gap-2"
               >
                 <Globe className="size-4 text-muted-foreground" />
                 Website
-              </Label>
+              </label>
               <Input
                 id="website"
                 type="url"

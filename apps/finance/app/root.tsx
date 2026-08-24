@@ -12,6 +12,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import type { Route } from './+types/root';
 import { HonoProvider } from './lib/api';
@@ -80,12 +81,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const { apiBaseUrl } = loaderData;
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
   return (
     <HonoProvider baseUrl={apiBaseUrl}>
-      <UpdateGuard>
-        <Outlet />
-      </UpdateGuard>
+      <UpdateGuard needRefresh={needRefresh} onRefresh={() => updateServiceWorker(true)} />
+      <Outlet />
     </HonoProvider>
   );
 }

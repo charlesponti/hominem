@@ -1,5 +1,5 @@
 import type { CareerProjectRecord } from '@hominem/db';
-import { DateField, TextField, Textarea } from '@ponti-studios/ui/forms';
+import { DatePicker, TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Form, useNavigation } from 'react-router';
 
@@ -54,13 +54,12 @@ export function ProjectEditor({
           </select>
         </label>
         <div className="space-y-1.5 md:col-span-2">
-          <DateField
+          <DatePicker
             mode="range"
             id="startDate"
             startName="startDate"
             endName="endDate"
             label="Dates"
-            captionLayout="dropdown"
             defaultValue={{ from: project?.startDate, to: project?.endDate }}
           />
         </div>

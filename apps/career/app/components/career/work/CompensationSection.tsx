@@ -1,6 +1,6 @@
 import type { CareerEngagementRecord } from '@hominem/db';
 import { Input } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -62,7 +62,7 @@ export function CompensationSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Base salary</Label>
+              <label>Base salary</label>
               <p className="text-sm text-muted-foreground">Enter the annual amount in dollars.</p>
               <Input inputMode="decimal" placeholder="180000" {...register('baseSalary')} />
             </div>

@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import { Button, Label } from '@ponti-studios/ui/primitives';
+import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -63,7 +63,7 @@ export function ExitSection({ workExperience }: { workExperience: CareerEngageme
           <FormErrorAlert title="Exit details weren’t saved" message={submissionError} />
 
           <div className="space-y-1.5">
-            <Label>Reason for leaving</Label>
+            <label>Reason for leaving</label>
             <Controller
               control={control}
               name="reasonForLeaving"

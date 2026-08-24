@@ -5,7 +5,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ponti-studios/ui/forms';
-import { Label } from '@ponti-studios/ui/primitives';
 import { useId } from 'react';
 
 interface TagOption {
@@ -37,7 +36,7 @@ export function TagSelect({
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
-      <Label htmlFor={id}>{label}</Label>
+      <label htmlFor={id}>{label}</label>
       <Select
         name="tag"
         disabled={isLoading}

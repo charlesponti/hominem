@@ -1,5 +1,4 @@
 import type { FileStatus } from '@hominem/queues';
-import { FileUploadStatus } from '@ponti-studios/ui/feedback';
 import { Badge, Button } from '@ponti-studios/ui/primitives';
 import { memo, useCallback, useMemo, type ReactNode } from 'react';
 
@@ -16,6 +15,21 @@ const STATUS_CONFIG: Record<FileUploadStatusValue, { bg: string; text: string; l
   done: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Complete' },
   error: { bg: 'bg-destructive/10', text: 'text-destructive-text', label: 'Error' },
 };
+
+function FileUploadStatus({ uploadStatus }: { uploadStatus: FileStatus }) {
+  const config = STATUS_CONFIG[uploadStatus.status as FileUploadStatusValue] ?? {
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
+    label: uploadStatus.status,
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className={cn('size-2 rounded-full', config.bg)} aria-hidden="true" />
+      <span className={config.text}>{config.label}</span>
+    </div>
+  );
+}
 
 type FileImportProps = {
   fileName: string;
