@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ChatMessage } from './chat-message';
 
 const meta = {
-  title: 'Chat/Regeneration',
+  title: 'Chat/Workflows/Regeneration',
   parameters: { layout: 'centered' },
 } satisfies Meta;
 

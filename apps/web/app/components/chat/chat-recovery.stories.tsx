@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ErrorState } from '~/components/error-state';
 
 const meta = {
-  title: 'Chat/Chat Recovery',
+  title: 'Chat/Workflows/Chat Recovery',
   component: ErrorState,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof ErrorState>;

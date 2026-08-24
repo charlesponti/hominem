@@ -102,6 +102,7 @@ export default function ChatPage({
     error: messagesError,
     isNotFound,
     retry,
+    updateMessage,
   } = useChatMessages({
     chatId,
     ...(initialMessages ? { initialData: initialMessages } : {}),
@@ -230,6 +231,7 @@ export default function ChatPage({
                 void toolCallRespond.respond({ messageId, toolCallId, approved: false })
               }
               onRegenerate={(messageId) => void regeneration.regenerate(messageId)}
+              onEdit={updateMessage}
               speechSrc={getSpeechUrl(chatId, message.id)}
             />
           ))}

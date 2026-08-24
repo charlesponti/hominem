@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ChatComposer } from './chat-composer';
 
 const meta = {
-  title: 'Chat/Chat Composer',
+  title: 'Chat/Components/Chat Composer',
   component: ChatComposer,
   args: { draft: '', onChangeDraft: () => undefined, onSubmit: () => undefined },
   parameters: { layout: 'fullscreen' },
@@ -15,12 +15,15 @@ type Story = StoryObj<typeof meta>;
 
 function Harness({
   simulateError = false,
+  voiceSupported = false,
   ...props
 }: Partial<React.ComponentProps<typeof ChatComposer>> & {
   simulateError?: boolean;
+  voiceSupported?: boolean;
 }) {
   const [draft, setDraft] = useState(props.draft ?? '');
   const [error, setError] = useState(props.error ?? null);
+  const [isListening, setIsListening] = useState(props.isListening ?? false);
 
   return (
     <div className="min-h-40 bg-background pt-4">
@@ -28,7 +31,10 @@ function Harness({
         {...props}
         draft={draft}
         error={error}
+        isListening={isListening}
         onChangeDraft={setDraft}
+        isVoiceSupported={voiceSupported}
+        onToggleVoice={() => setIsListening((current) => !current)}
         onSubmit={() => {
           if (simulateError) setError('Unable to send the message.');
           props.onSubmit?.();
@@ -94,4 +100,20 @@ export const UploadFailure: Story = {
       onRetry={() => undefined}
     />
   ),
+};
+
+export const VoiceReady: Story = {
+  render: () => <Harness draft="Ask with your voice" voiceSupported />,
+};
+
+export const VoiceListening: Story = {
+  render: () => <Harness draft="Listening for your question" isListening voiceSupported />,
+};
+
+export const VoiceUnsupported: Story = {
+  render: () => <Harness draft="Voice input is unavailable" />,
+};
+
+export const Streaming: Story = {
+  render: () => <Harness draft="Generating a response" isStreaming onStop={() => undefined} />,
 };

@@ -1,5 +1,6 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { RotateCcw } from 'lucide-react';
+import { Check, Pencil, RotateCcw, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import {
   Message,
@@ -32,6 +33,7 @@ export interface ChatMessageProps {
   onDeactivateSpeech?: (messageId: string) => void;
   onRejectTool?: (input: { messageId: string; toolCallId: string }) => void;
   onRegenerate?: (messageId: string) => void;
+  onEdit?: (messageId: string, content: string) => Promise<void> | void;
 }
 
 function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
@@ -95,7 +97,32 @@ export function ChatMessage({
   onDeactivateSpeech,
   onRejectTool,
   onRegenerate,
+  onEdit,
 }: ChatMessageProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
+  const [editError, setEditError] = useState<string | null>(null);
+  const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
+
+  useEffect(() => {
+    if (!isEditing) setDraft(message.content);
+  }, [isEditing, message.content]);
+
+  async function saveEdit() {
+    const content = draft.trim();
+    if (!content) {
+      setEditError('Message cannot be empty.');
+      return;
+    }
+    try {
+      await onEdit?.(message.id, content);
+      setEditError(null);
+      setIsEditing(false);
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Unable to update this message.');
+    }
+  }
+
   const canSpeak =
     message.role === 'assistant' &&
     message.content.trim().length > 0 &&
@@ -117,7 +144,36 @@ export function ChatMessage({
             toolCall={toolCall}
           />
         ))}
-        <MessageResponse>{message.content}</MessageResponse>
+        {isEditing ? (
+          <div className="flex min-w-72 flex-col gap-2">
+            <textarea
+              aria-label="Edit message"
+              autoFocus
+              className="min-h-20 rounded-md border border-border-subtle bg-background p-2 text-sm"
+              onChange={(event) => setDraft(event.target.value)}
+              value={draft}
+            />
+            {editError ? <p className="text-xs text-destructive">{editError}</p> : null}
+            <div className="flex gap-1">
+              <MessageAction label="Save edit" onClick={() => void saveEdit()} tooltip="Save edit">
+                <Check aria-hidden="true" size={14} />
+              </MessageAction>
+              <MessageAction
+                label="Cancel edit"
+                onClick={() => {
+                  setDraft(message.content);
+                  setEditError(null);
+                  setIsEditing(false);
+                }}
+                tooltip="Cancel edit"
+              >
+                <X aria-hidden="true" size={14} />
+              </MessageAction>
+            </div>
+          </div>
+        ) : (
+          <MessageResponse>{message.content}</MessageResponse>
+        )}
         {canSpeak ? (
           <SpeechPlayer
             isActive={isSpeechActive}
@@ -127,16 +183,31 @@ export function ChatMessage({
             src={speechSrc}
           />
         ) : null}
-        {message.role === 'assistant' && onRegenerate ? (
+        {canEdit || (message.role === 'assistant' && onRegenerate) ? (
           <MessageActions>
-            <MessageAction
-              disabled={isToolResponding || message.isStreaming || isRegenerating}
-              label="Regenerate response"
-              onClick={() => onRegenerate(message.id)}
-              tooltip="Regenerate response"
-            >
-              <RotateCcw aria-hidden="true" size={14} />
-            </MessageAction>
+            {canEdit ? (
+              <MessageAction
+                label="Edit message"
+                onClick={() => {
+                  setDraft(message.content);
+                  setEditError(null);
+                  setIsEditing(true);
+                }}
+                tooltip="Edit message"
+              >
+                <Pencil aria-hidden="true" size={14} />
+              </MessageAction>
+            ) : null}
+            {message.role === 'assistant' && onRegenerate ? (
+              <MessageAction
+                disabled={isToolResponding || message.isStreaming || isRegenerating}
+                label="Regenerate response"
+                onClick={() => onRegenerate(message.id)}
+                tooltip="Regenerate response"
+              >
+                <RotateCcw aria-hidden="true" size={14} />
+              </MessageAction>
+            ) : null}
           </MessageActions>
         ) : null}
       </MessageContent>

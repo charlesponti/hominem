@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Persona } from './persona';
 
 const meta = {
-  title: 'Chat/Persona',
+  title: 'Chat/Primitives/Persona',
   component: Persona,
   parameters: { layout: 'centered' },
   args: { state: 'idle' },

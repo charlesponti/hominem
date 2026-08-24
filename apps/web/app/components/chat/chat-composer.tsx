@@ -1,7 +1,8 @@
-import { AlertCircle, Mic, Paperclip, Square, X } from 'lucide-react';
+import { AlertCircle, Mic, Paperclip, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
+import { Persona } from '~/components/ai-elements/persona';
 import {
   PromptInput,
   PromptInputBody,
@@ -13,6 +14,7 @@ import {
 } from '~/components/ai-elements/prompt-input';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 
 export interface ChatComposerFile {
   id: string;
@@ -156,14 +158,33 @@ export function ChatComposer({
             {isVoiceSupported && onToggleVoice ? (
               <PromptInputButton
                 aria-label={isListening ? 'Stop voice input' : 'Voice input'}
+                data-testid="chat-voice-input"
+                data-voice-state={isListening ? 'listening' : 'ready'}
                 onClick={onToggleVoice}
                 tooltip={isListening ? 'Stop voice input' : 'Voice input'}
               >
-                {isListening ? (
-                  <Square aria-hidden="true" size={14} />
-                ) : (
-                  <Mic aria-hidden="true" size={16} />
-                )}
+                <span className="relative flex size-5 items-center justify-center">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'absolute transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
+                      isListening
+                        ? 'scale-100 opacity-100'
+                        : 'pointer-events-none scale-95 opacity-0',
+                    )}
+                  >
+                    <Persona className="size-5" state="listening" />
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
+                      isListening ? 'scale-95 opacity-0' : 'scale-100 opacity-100',
+                    )}
+                  >
+                    <Mic size={16} />
+                  </span>
+                </span>
               </PromptInputButton>
             ) : null}
           </PromptInputTools>

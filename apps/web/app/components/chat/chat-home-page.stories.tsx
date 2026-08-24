@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ChatHomePage } from './chat-home-page';
 
 const meta = {
-  title: 'Chat/Chat Home Page',
+  title: 'Chat/Components/Chat Home Page',
   component: ChatHomePage,
   args: {
     draft: '',

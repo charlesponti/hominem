@@ -87,4 +87,25 @@ describe('ChatMessage', () => {
     );
     expect(screen.queryByRole('button', { name: 'Listen to response' })).toBeNull();
   });
+
+  it('edits persisted user messages and rejects empty content', async () => {
+    const onEdit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ChatMessage
+        message={message({ role: 'user', content: 'Original message' })}
+        onEdit={onEdit}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit message' }));
+    const input = screen.getByRole('textbox', { name: 'Edit message' });
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save edit' }));
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(screen.getByText('Message cannot be empty.')).toBeTruthy();
+
+    fireEvent.change(input, { target: { value: 'Updated message' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save edit' }));
+    expect(onEdit).toHaveBeenCalledWith('message-1', 'Updated message');
+  });
 });

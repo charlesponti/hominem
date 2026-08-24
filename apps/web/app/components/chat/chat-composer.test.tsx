@@ -5,6 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatComposer } from './chat-composer';
 
+vi.mock('~/components/ai-elements/persona', () => ({
+  Persona: ({ className }: { className?: string }) => (
+    <span aria-hidden="true" className={className} data-testid="persona" />
+  ),
+}));
+
 vi.mock('~/components/ai-elements/prompt-input', () => ({
   PromptInput: ({ children, onSubmit }: { children: React.ReactNode; onSubmit: () => void }) => (
     <form
@@ -129,5 +135,48 @@ describe('ChatComposer', () => {
     fireEvent.click(screen.getByRole('button', { name: /notes\.pdf/i }));
 
     expect(onRemoveAttachment).toHaveBeenCalledWith('file-1');
+  });
+
+  it('transforms the voice button into Persona while preserving the composer controls', () => {
+    const onToggleVoice = vi.fn();
+    render(
+      <ChatComposer
+        draft="Ask with my voice"
+        onAttachFiles={() => undefined}
+        isListening
+        isVoiceSupported
+        onChangeDraft={() => undefined}
+        onSubmit={() => undefined}
+        onToggleVoice={onToggleVoice}
+      />,
+    );
+
+    const voiceButton = screen.getByTestId('chat-voice-input');
+    expect(voiceButton.getAttribute('aria-label')).toBe('Stop voice input');
+    expect(voiceButton.getAttribute('data-voice-state')).toBe('listening');
+    expect(screen.getByTestId('persona')).toBeTruthy();
+    expect(screen.getByTestId('chat-file-input')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
+    fireEvent.click(voiceButton);
+    expect(onToggleVoice).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the voice button keyboard focusable when ready', () => {
+    render(
+      <ChatComposer
+        draft="Ask with my voice"
+        isVoiceSupported
+        onChangeDraft={() => undefined}
+        onSubmit={() => undefined}
+        onToggleVoice={() => undefined}
+      />,
+    );
+
+    const voiceButton = screen.getByTestId('chat-voice-input');
+    expect(voiceButton.getAttribute('aria-label')).toBe('Voice input');
+    expect(voiceButton.getAttribute('data-voice-state')).toBe('ready');
+    expect(screen.queryByTestId('persona')).toBeTruthy();
+    voiceButton.focus();
+    expect(document.activeElement).toBe(voiceButton);
   });
 });

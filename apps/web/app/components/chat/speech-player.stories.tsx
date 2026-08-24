@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import { SpeechPlayer } from './speech-player';
 
 const meta = {
-  title: 'Chat/Speech Player',
+  title: 'Chat/Components/Speech Player',
   component: SpeechPlayer,
   parameters: { layout: 'centered' },
   args: {
