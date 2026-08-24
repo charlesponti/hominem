@@ -22,7 +22,7 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
-import { getChatTools } from '../../mcp/llm-tools';
+import { planChatTools } from '../../mcp/llm-tools';
 import { callTool } from '../../mcp/tools';
 import {
   ChatsCreateSchema,
@@ -690,7 +690,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         currentUserContent,
         getSystemPrompt(responseLength),
       );
-      const chatTools = await getChatTools();
+      const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
       const eventId = randomUUID();
       const getDurationMs = startAIUsageTimer();
 
@@ -718,7 +718,8 @@ const chatByIdRoutes = new Hono<AppContext>()
             userId,
             model: CHAT_MODEL,
             messages: chatMessages,
-            tools: chatTools,
+            tools: chatToolPlan.tools,
+            requiresToolCall: chatToolPlan.requiresLookup,
             maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
             reasoning: getReasoningConfig(responseLength),
           });
@@ -951,7 +952,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         },
         { role: 'tool', toolCallId, content: toolResultContent },
       ];
-      const chatTools = await getChatTools();
+      const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
       const eventId = randomUUID();
       const getDurationMs = startAIUsageTimer();
 
@@ -979,7 +980,8 @@ const chatByIdRoutes = new Hono<AppContext>()
             userId,
             model: CHAT_MODEL,
             messages: chatMessages,
-            tools: chatTools,
+            tools: chatToolPlan.tools,
+            requiresToolCall: chatToolPlan.requiresLookup,
             maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
             reasoning: getReasoningConfig(responseLength),
           });
@@ -1177,7 +1179,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       currentUserContent,
       getSystemPrompt(responseLength),
     );
-    const chatTools = await getChatTools();
+    const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
 
@@ -1205,7 +1207,8 @@ const chatByIdRoutes = new Hono<AppContext>()
           userId,
           model: CHAT_MODEL,
           messages: chatMessages,
-          tools: chatTools,
+          tools: chatToolPlan.tools,
+          requiresToolCall: chatToolPlan.requiresLookup,
           maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
           reasoning: getReasoningConfig(responseLength),
         });
@@ -1460,7 +1463,7 @@ export const chatsRoutes = new Hono<AppContext>()
 
     const currentUserContent = formatUserContentWithContext(message, resolvedNotes, resolvedFiles);
     const chatMessages = buildMessages([], currentUserContent, getSystemPrompt(responseLength));
-    const chatTools = await getChatTools();
+    const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
 
@@ -1488,7 +1491,8 @@ export const chatsRoutes = new Hono<AppContext>()
           userId,
           model: CHAT_MODEL,
           messages: chatMessages,
-          tools: chatTools,
+          tools: chatToolPlan.tools,
+          requiresToolCall: chatToolPlan.requiresLookup,
           maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
           reasoning: getReasoningConfig(responseLength),
         });

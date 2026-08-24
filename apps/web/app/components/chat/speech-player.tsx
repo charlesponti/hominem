@@ -255,7 +255,7 @@ export function SpeechPlayer({
         src={src}
         title="Listen to response"
       />
-      <span aria-live="polite" className="sr-only">
+      <span aria-live="polite" className="sr-only select-none">
         {status}
       </span>
     </div>

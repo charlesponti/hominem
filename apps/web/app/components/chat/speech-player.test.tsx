@@ -59,6 +59,12 @@ describe('SpeechPlayer', () => {
     expect(screen.getByRole('button', { name: 'Listen to response' })).not.toBeNull();
   });
 
+  it('keeps the live audio status out of transcript text selection', () => {
+    renderPlayer();
+
+    expect(screen.getByText('Listen to response').className).toContain('select-none');
+  });
+
   it('shows the speaking Persona while audio is playing', () => {
     renderPlayer();
     const audio = screen.getByTitle('Listen to response');

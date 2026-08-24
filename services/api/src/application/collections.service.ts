@@ -301,6 +301,21 @@ export async function acceptMemberInvite(ownerUserId: string, input: AcceptMembe
   return { member: mapMemberRow({ ...existing, acceptedAt: now }) };
 }
 
+export async function declineMemberInvite(ownerUserId: string, input: AcceptMemberInviteInput) {
+  const result = await db
+    .deleteFrom('app.collectionMembers')
+    .where('collectionId', '=', input.collectionId)
+    .where('userId', '=', ownerUserId)
+    .where('acceptedAt', 'is', null)
+    .executeTakeFirst();
+
+  if (Number(result.numDeletedRows) === 0) {
+    throw new NotFoundError('Pending collection invite', { collectionId: input.collectionId });
+  }
+
+  return { removed: true };
+}
+
 export async function listCollections(ownerUserId: string, input: ListCollectionsInput) {
   const ownedRows = db
     .selectFrom('app.collections')

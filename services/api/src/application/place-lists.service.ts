@@ -14,6 +14,7 @@ import {
   addCollectionItem,
   collectionDetail,
   createCollection,
+  declineMemberInvite,
   inviteMember,
   listCollections,
   listPendingInvites,
@@ -103,6 +104,13 @@ export async function acceptCollaboratorInvite(
   input: AcceptCollaboratorInviteInput,
 ) {
   return acceptMemberInvite(ownerUserId, { collectionId: input.placeListId });
+}
+
+export async function declineCollaboratorInvite(
+  ownerUserId: string,
+  input: AcceptCollaboratorInviteInput,
+) {
+  return declineMemberInvite(ownerUserId, { collectionId: input.placeListId });
 }
 
 export async function listMyPendingInvites(ownerUserId: string, input: ListPendingInvitesInput) {

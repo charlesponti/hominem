@@ -7,6 +7,7 @@ import {
   createCollection,
   inviteMember,
   listCollections,
+  listPendingInvites,
   removeCollectionItem,
 } from '../../application/collections.service';
 import { getEntityDisplayName } from '../../application/tags.service';
@@ -23,6 +24,8 @@ import {
   inviteMemberOutputSchema,
   listCollectionsInputSchema,
   listCollectionsOutputSchema,
+  listPendingInvitesInputSchema,
+  listPendingInvitesOutputSchema,
   removeCollectionItemInputSchema,
   removeCollectionItemOutputSchema,
 } from '../../schemas/collections.schema';
@@ -105,6 +108,21 @@ registerTool(
 
 registerTool(
   {
+    name: 'accept_collection_invite',
+    title: 'Accept collection invitation',
+    description: "Accept the caller's pending invitation to collaborate on a generic collection.",
+    inputSchema: acceptMemberInviteInputSchema,
+    outputSchema: acceptMemberInviteOutputSchema,
+    readOnly: false,
+    scopes: ['collections:write'],
+    sensitivity: 'standard',
+    resultCap: 1,
+  },
+  async (ownerUserId, input) => acceptMemberInvite(ownerUserId, input),
+);
+
+registerTool(
+  {
     name: 'accept_member_invite',
     title: 'Accept collection invite',
     description: "Accept the caller's pending invite to collaborate on a collection.",
@@ -116,6 +134,22 @@ registerTool(
     resultCap: 1,
   },
   async (ownerUserId, input) => acceptMemberInvite(ownerUserId, input),
+);
+
+registerTool(
+  {
+    name: 'list_pending_collection_invites',
+    title: 'List pending collection invitations',
+    description:
+      'List pending invitations to generic collections for the caller. Use this for questions about collection or shared-list invitations.',
+    inputSchema: listPendingInvitesInputSchema,
+    outputSchema: listPendingInvitesOutputSchema,
+    readOnly: true,
+    scopes: ['collections:read'],
+    sensitivity: 'standard',
+    resultCap: 50,
+  },
+  async (ownerUserId, input) => listPendingInvites(ownerUserId, { ...input, kind: 'generic' }),
 );
 
 registerTool(

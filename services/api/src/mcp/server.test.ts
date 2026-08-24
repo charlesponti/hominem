@@ -93,11 +93,12 @@ const mcpAuthContext = {
   scopes: ['career:read', 'finance:read'],
 } satisfies AuthContext;
 
-async function createClient(app: Hono<AppContext>) {
+async function createClient(app: Hono<AppContext>, scopes = 'career:read finance:read') {
   const transport = new StreamableHTTPClientTransport(new URL('http://localhost/api/mcp'), {
     fetch: async (input, init) => {
       const headers = new Headers(init?.headers);
       headers.set('authorization', 'Bearer test-token');
+      headers.set('x-mcp-scopes', scopes);
       return app.fetch(new Request(input, { ...init, headers }));
     },
   });
@@ -210,14 +211,15 @@ describe('mcp server transport', () => {
       const toolNames = tools.tools.map((t) => t.name);
       expect(toolNames).toContain('career_profile');
       expect(toolNames).toContain('career_engagements');
-      expect(toolNames).toContain('career_wishlist_add');
+      expect(toolNames).toContain('finance_net_worth');
+      expect(toolNames).not.toContain('career_wishlist_add');
     } finally {
       await client.close();
     }
   });
 
   it('advertises ChatGPT safety annotations and invocation status', async () => {
-    const client = await createClient(createApp(mcpAuthContext));
+    const client = await createClient(createApp(mcpAuthContext), 'career:read career:write');
     try {
       const tools = await client.listTools();
       const deleteTool = tools.tools.find((tool) => tool.name === 'career_wishlist_remove');
@@ -268,18 +270,12 @@ describe('mcp server transport', () => {
     }
   });
 
-  it('rejects a wishlist mutation without career:write', async () => {
+  it('does not advertise a wishlist mutation without career:write', async () => {
     const client = await createClient(createApp(mcpAuthContext));
     try {
-      const result = await client.callTool({
-        name: 'career_wishlist_add',
-        arguments: { company: 'Acme' },
-      });
-
-      expect(result.isError).toBe(true);
-      expect(result.content).toEqual([
-        { type: 'text', text: 'Missing required scope(s): career:write' },
-      ]);
+      await expect(
+        client.callTool({ name: 'career_wishlist_add', arguments: { company: 'Acme' } }),
+      ).rejects.toThrow('not found');
     } finally {
       await client.close();
     }

@@ -9,7 +9,7 @@ import type { Context } from 'hono';
 
 import type { AuthContext } from '../auth/types';
 import { UnauthorizedError } from '../errors';
-import { callTool, listTools, type McpToolDefinition } from './tools';
+import { callTool, listToolsForScopes, type McpToolDefinition } from './tools';
 
 export type McpHonoEnv = {
   Variables: {
@@ -72,7 +72,7 @@ function createMcpServer(authInfo?: AuthInfo) {
     { instructions: 'MCP tools for authenticated Hominem users.' },
   );
 
-  for (const definition of listTools()) {
+  for (const definition of listToolsForScopes(authInfo?.scopes ?? [])) {
     const destructive = definition.destructive ?? /(?:delete|remove)/i.test(definition.name);
     const idempotent =
       definition.idempotent ?? /(?:delete|remove|update|save)/i.test(definition.name);

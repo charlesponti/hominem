@@ -19,6 +19,7 @@ export type {
 
 export {
   createChatCompletion,
+  createStructuredChatCompletion,
   enhanceText,
   generateNoteFromChat,
   getChatCompletionText,

@@ -65,6 +65,7 @@ export interface RunCompletionWithToolsInput {
   maxTokens?: number;
   reasoning?: ChatRequest['reasoning'];
   maxIterations?: number;
+  requiresToolCall?: boolean;
 }
 
 export interface RunCompletionWithToolsResult {
@@ -99,7 +100,8 @@ async function streamOnce(opts: {
   model: string;
   messages: ChatMessages[];
   tools?: ChatFunctionTool[];
-  toolChoice?: 'auto';
+  toolChoice?: 'auto' | 'required';
+  parallelToolCalls?: boolean;
   maxTokens?: number;
   reasoning?: ChatRequest['reasoning'];
 }): Promise<StreamOnceResult> {
@@ -157,7 +159,8 @@ export async function runCompletionWithTools(
       model: input.model,
       messages,
       tools: useTools ? input.tools : undefined,
-      toolChoice: useTools ? 'auto' : undefined,
+      toolChoice: useTools ? (input.requiresToolCall ? 'required' : 'auto') : undefined,
+      parallelToolCalls: false,
       maxTokens: input.maxTokens,
       reasoning: input.reasoning,
     });
@@ -168,6 +171,7 @@ export async function runCompletionWithTools(
     // Retry once without tools so the user still gets a text answer instead
     // of a hard failure.
     if (result.erroredEmpty && useTools) {
+      if (input.requiresToolCall) throw new Error('The model did not perform the required lookup');
       const retry = await streamOnce({
         model: input.model,
         messages,

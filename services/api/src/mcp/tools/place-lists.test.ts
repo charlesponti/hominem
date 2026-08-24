@@ -236,7 +236,9 @@ describe('place lists', () => {
     );
     await activatePendingInvitesForUser(newSignupId, newSignupEmail);
 
-    const pendingRes = resultContent(await callTool(newSignupId, 'list_pending_invites', {})) as {
+    const pendingRes = resultContent(
+      await callTool(newSignupId, 'list_pending_place_list_invites', {}),
+    ) as {
       invites: Array<{ placeList: { name: string }; role: string }>;
     };
     expect(pendingRes.invites.map((invite) => invite.placeList.name)).toContain(
@@ -284,7 +286,9 @@ describe('place lists', () => {
       placeListId: acceptedShared.placeList.id,
     });
 
-    const pending = resultContent(await callTool(collaboratorId, 'list_pending_invites', {})) as {
+    const pending = resultContent(
+      await callTool(collaboratorId, 'list_pending_place_list_invites', {}),
+    ) as {
       invites: Array<{ placeList: { id: string; name: string } }>;
     };
     const pendingIds = pending.invites.map((invite) => invite.placeList.id);
@@ -294,7 +298,9 @@ describe('place lists', () => {
 
     // The owner's own lists are never "pending" for them — their membership
     // row is accepted at creation time.
-    const ownerPending = resultContent(await callTool(ownerId, 'list_pending_invites', {})) as {
+    const ownerPending = resultContent(
+      await callTool(ownerId, 'list_pending_place_list_invites', {}),
+    ) as {
       invites: Array<{ placeList: { id: string } }>;
     };
     expect(ownerPending.invites.map((invite) => invite.placeList.id)).not.toContain(

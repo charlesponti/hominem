@@ -1,5 +1,6 @@
 export * from './ai.types';
 export * from './chat.types';
+export * from './collections.types';
 export * from './files.types';
 export * from './inbox.types';
 export * from './memory.types';

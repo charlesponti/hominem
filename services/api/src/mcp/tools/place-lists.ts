@@ -149,10 +149,10 @@ registerTool(
 
 registerTool(
   {
-    name: 'list_pending_invites',
+    name: 'list_pending_place_list_invites',
     title: 'List pending place list invites',
     description:
-      "List place list invites waiting on the caller's response, most recently invited first.",
+      "List place list invitations waiting on the caller's response, most recently invited first. Use this for travel or place-list invitations.",
     inputSchema: listPendingInvitesInputSchema,
     outputSchema: listPendingInvitesOutputSchema,
     readOnly: true,

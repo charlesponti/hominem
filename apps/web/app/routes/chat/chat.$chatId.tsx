@@ -310,7 +310,7 @@ export default function ChatPage({
                           ) : null}
                         </ToolContent>
                       </Tool>
-                      {toolCall.toolName === 'list_pending_invites' &&
+                      {toolCall.toolName === 'list_pending_place_list_invites' &&
                       toolCall.status !== 'pending' &&
                       toolCall.status !== 'rejected' ? (
                         <PendingPlaceListInvites />

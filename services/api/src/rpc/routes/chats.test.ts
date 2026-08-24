@@ -136,7 +136,7 @@ vi.mock('./chat-speech.service', () => ({
 }));
 
 vi.mock('../../mcp/llm-tools', () => ({
-  getChatTools: vi.fn().mockResolvedValue([]),
+  planChatTools: vi.fn().mockResolvedValue({ capabilities: [], requiresLookup: false, tools: [] }),
 }));
 
 // The `/:id/stream` route sits behind rateLimitMiddleware, which lazily

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { CHAT_ASSISTANT_PROMPT } from '../../api/src/rpc/prompts';
 import { chatComplete, type ModelConfig } from './lib/openrouter';
 
 const MODEL: ModelConfig = {
-  model: 'google/gemini-2.5-flash-lite',
+  model: process.env.CHAT_MODEL ?? 'openai/gpt-4o-mini',
   temperature: 0,
   tools: [
     {
@@ -34,6 +35,11 @@ const CASES: Array<{ label: string; prompt: string; expectToolCall: boolean }> =
     expectToolCall: true,
   },
   {
+    label: 'explicit tool name is not required for a lookup',
+    prompt: 'Use the career tool to show my work experience.',
+    expectToolCall: true,
+  },
+  {
     label: 'unrelated small talk',
     prompt: 'Tell me about your favorite movie.',
     expectToolCall: false,
@@ -42,9 +48,16 @@ const CASES: Array<{ label: string; prompt: string; expectToolCall: boolean }> =
 
 describe('mcp-tool-selection', () => {
   it.each(CASES)('$label', async ({ prompt, expectToolCall }) => {
-    const reply = await chatComplete([{ role: 'user', content: prompt }], MODEL);
+    const reply = await chatComplete(
+      [
+        { role: 'system', content: CHAT_ASSISTANT_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      MODEL,
+    );
     const calledTool = reply.toolCalls.some(
-      (call) => (call as { function?: { name?: string } }).function?.name === 'get_career_portfolio',
+      (call) =>
+        (call as { function?: { name?: string } }).function?.name === 'get_career_portfolio',
     );
     expect(calledTool).toBe(expectToolCall);
   });

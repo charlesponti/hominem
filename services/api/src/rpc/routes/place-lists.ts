@@ -5,6 +5,7 @@ import {
   acceptCollaboratorInvite,
   addPlaceToList,
   createPlaceList,
+  declineCollaboratorInvite,
   inviteCollaborator,
   listMyPendingInvites,
   listPlaceLists,
@@ -80,4 +81,11 @@ export const placeListsRoutes = new Hono<AppContext>()
       acceptCollaboratorInviteInputSchema.parse({ placeListId: c.req.param('placeListId') }),
     );
     return c.json(acceptCollaboratorInviteOutputSchema.parse(result));
+  })
+  .post('/:placeListId/collaborators/decline', async (c) => {
+    const result = await declineCollaboratorInvite(
+      c.get('auth')!.userId,
+      acceptCollaboratorInviteInputSchema.parse({ placeListId: c.req.param('placeListId') }),
+    );
+    return c.json(result);
   });

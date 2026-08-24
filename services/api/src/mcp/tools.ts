@@ -41,6 +41,49 @@ export interface McpToolDefinition<
   ) => Promise<Record<string, unknown> | null>;
 }
 
+export const CHAT_CAPABILITIES = [
+  'calendar',
+  'career',
+  'collections',
+  'finance',
+  'health',
+  'media',
+  'memory',
+  'people',
+  'placeLists',
+  'places',
+  'social',
+  'tags',
+  'travel',
+] as const;
+
+export type ChatCapability = (typeof CHAT_CAPABILITIES)[number];
+
+const capabilityByScope: Record<string, ChatCapability> = {
+  'calendar:read': 'calendar',
+  'career:read': 'career',
+  'career:write': 'career',
+  'collections:read': 'collections',
+  'collections:write': 'collections',
+  'finance:read': 'finance',
+  'health:read': 'health',
+  'media:read': 'media',
+  'memory:read': 'memory',
+  'memory:write': 'memory',
+  'people:read': 'people',
+  'placeLists:read': 'placeLists',
+  'placeLists:write': 'placeLists',
+  'places:read': 'places',
+  'social:read': 'social',
+  'tags:read': 'tags',
+  'tags:write': 'tags',
+  'travel:read': 'travel',
+};
+
+export function getToolCapabilities(definition: McpToolDefinition): ChatCapability[] {
+  return [...new Set(definition.scopes.flatMap((scope) => capabilityByScope[scope] ?? []))];
+}
+
 export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
   content: Array<{ type: 'text'; text: string }>;
   structuredContent: Record<string, unknown> | null;
@@ -82,6 +125,11 @@ const tools = new Map<string, RegisteredTool>();
 
 export function listTools(): McpToolDefinition[] {
   return [...tools.values()].map((t) => t.definition);
+}
+
+export function listToolsForScopes(grantedScopes: readonly string[]): McpToolDefinition[] {
+  const granted = new Set(grantedScopes);
+  return listTools().filter((tool) => tool.scopes.every((scope) => granted.has(scope)));
 }
 
 export function getToolDefinition(name: string): McpToolDefinition | undefined {
