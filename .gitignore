@@ -10,6 +10,7 @@ output/
 artifacts/
 web-build/
 storybook-static/
+.react-router/
 .turbo
 .cache/
 *.tsbuildinfo

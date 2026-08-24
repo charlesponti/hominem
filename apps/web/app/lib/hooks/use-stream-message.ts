@@ -1,117 +1,153 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
-import { useSignal } from '@preact/signals-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
-type StreamStatus = 'idle' | 'streaming' | 'done' | 'error';
+import { consumeChatStream } from '../chat/stream-events';
+
+export type StreamStatus =
+  | 'idle'
+  | 'preparing'
+  | 'streaming'
+  | 'stopping'
+  | 'cancelled'
+  | 'committed'
+  | 'failed';
+
+interface StreamInput {
+  message: string;
+  fileIds?: string[];
+  noteIds?: string[];
+  onAccepted?: (userMessage: ChatMessageDto | null) => void;
+  onCommitted?: (message: ChatMessageDto) => void;
+  onCancelled?: () => void;
+}
 
 export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
   const client = useApiClient();
-  const text = useSignal('');
-  const status = useSignal<StreamStatus>('idle');
-  const error = useSignal<Error | null>(null);
+  const [text, setText] = useState('');
+  const [status, setStatus] = useState<StreamStatus>('idle');
+  const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const generationIdRef = useRef<string | null>(null);
+  const cancelRequestedRef = useRef(false);
 
   const stream = useCallback(
-    async (input: {
-      message: string;
-      fileIds?: string[];
-      noteIds?: string[];
-      onChunk?: (chunk: string) => void;
-      onAccepted?: (userMessage: ChatMessageDto | null) => void;
-      onCommitted?: (message: ChatMessageDto) => void;
-    }) => {
-      text.value = '';
-      status.value = 'streaming';
-      error.value = null;
-
-      abortControllerRef.current = new AbortController();
+    async (input: StreamInput) => {
+      const generationId = crypto.randomUUID();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      generationIdRef.current = generationId;
+      cancelRequestedRef.current = false;
+      let terminalStatus: StreamStatus | null = null;
+      setText('');
+      setStatus('preparing');
+      setError(null);
 
       try {
-        const streamRes = await client.api.chats[':id'].stream.$post({
-          param: { id: chatId },
-          json: {
-            generationId: crypto.randomUUID(),
-            message: input.message,
-            ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
-            ...(input.noteIds && input.noteIds.length > 0 ? { noteIds: input.noteIds } : {}),
+        const streamRes = await client.api.chats[':id'].stream.$post(
+          {
+            param: { id: chatId },
+            json: {
+              generationId,
+              message: input.message,
+              ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
+              ...(input.noteIds && input.noteIds.length > 0 ? { noteIds: input.noteIds } : {}),
+            },
           },
-        });
-        const body = streamRes.body;
-        if (!body) throw new Error('No response body');
+          { init: { signal: abortController.signal } },
+        );
 
-        const reader = body.getReader();
-        const decoder = new TextDecoder();
-        let lineBuffer = '';
-
-        const processLine = (line: string) => {
-          if (!line.startsWith('data: ')) return;
-          const data = line.slice(6).trimEnd();
-          if (data === '[DONE]') return;
-          let event: ChatStreamEvent;
-          try {
-            event = JSON.parse(data) as ChatStreamEvent;
-          } catch {
-            return;
+        await consumeChatStream(streamRes, (event: ChatStreamEvent) => {
+          if (event.type === 'error') {
+            throw new Error(event.message);
           }
-          if (event.type === 'error') throw new Error(event.message);
+
           if (event.type === 'accepted') {
             input.onAccepted?.(event.userMessage);
+            return;
           }
+
+          if (event.type === 'status') {
+            terminalStatus = event.status === 'preparing' ? 'preparing' : 'streaming';
+            setStatus(terminalStatus);
+            return;
+          }
+
+          if (event.type === 'cancelled') {
+            terminalStatus = 'cancelled';
+            setStatus('cancelled');
+            input.onCancelled?.();
+            return;
+          }
+
           if (event.type === 'committed') {
-            text.value = event.message.content;
-            input.onChunk?.(event.message.content);
+            terminalStatus = 'committed';
+            setText(event.message.content);
+            setStatus('committed');
             input.onCommitted?.(event.message);
           }
-        };
+        });
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          lineBuffer += decoder.decode(value, { stream: true });
-          const lines = lineBuffer.split('\n');
-          lineBuffer = lines.pop() ?? '';
-          for (const line of lines) processLine(line);
+        if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
+          ]);
         }
-
-        const final = decoder.decode();
-        if (final) lineBuffer += final;
-        for (const line of lineBuffer.split('\n')) processLine(line);
-
-        status.value = 'done';
-        await queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) });
-        await queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
-        await queryClient.invalidateQueries({ queryKey: chatQueryKeys.list });
-      } catch (err) {
-        if (abortControllerRef.current?.signal.aborted) {
-          status.value = 'idle';
+      } catch (caught) {
+        if (
+          cancelRequestedRef.current ||
+          (caught instanceof DOMException && caught.name === 'AbortError')
+        ) {
+          setStatus('cancelled');
+          input.onCancelled?.();
           return;
         }
-        const nextError = err instanceof Error ? err : new Error(String(err));
-        error.value = nextError;
-        status.value = 'error';
+
+        const nextError = caught instanceof Error ? caught : new Error(String(caught));
+        setError(nextError);
+        setStatus('failed');
+      } finally {
+        abortControllerRef.current = null;
+        generationIdRef.current = null;
       }
     },
-    [chatId, client, error, queryClient, status, text],
+    [chatId, client, queryClient],
   );
 
-  const cancel = useCallback(() => {
-    abortControllerRef.current?.abort();
-    status.value = 'idle';
-    text.value = '';
-  }, [status, text]);
+  const cancel = useCallback(async () => {
+    const generationId = generationIdRef.current;
+    const abortController = abortControllerRef.current;
+    if (!generationId || !abortController || status === 'stopping') return;
+
+    cancelRequestedRef.current = true;
+    setStatus('stopping');
+
+    try {
+      await client.api.chats[':id'].generations[':generationId'].cancel.$post({
+        param: { id: chatId, generationId },
+      });
+      abortController.abort();
+      setStatus('cancelled');
+    } catch (caught) {
+      cancelRequestedRef.current = false;
+      setError(caught instanceof Error ? caught : new Error(String(caught)));
+      setStatus('failed');
+    }
+  }, [chatId, client, status]);
 
   return {
-    stream,
     cancel,
-    text: text.value,
-    status: status.value,
-    error: error.value,
-    isStreaming: status.value === 'streaming',
+    error,
+    generationId: generationIdRef.current,
+    isStreaming: status === 'preparing' || status === 'streaming',
+    status,
+    stream,
+    text,
   };
 }

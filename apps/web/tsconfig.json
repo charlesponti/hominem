@@ -20,7 +20,8 @@
     "app/**/*.ts",
     "app/**/*.tsx",
     ".react-router/types/**/*",
-    "vite.config.ts"
+    "vite.config.ts",
+    ".storybook/**/*"
   ],
   "exclude": [
     "node_modules",

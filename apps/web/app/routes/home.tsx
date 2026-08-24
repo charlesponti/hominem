@@ -1,6 +1,10 @@
-import { redirect } from 'react-router';
+import { useState } from 'react';
+import { data, redirect, useNavigate } from 'react-router';
 
+import { ChatHomePage } from '~/components/chat/chat-home-page';
+import { normalizeChatTitle } from '~/lib/chat/chat-title';
 import { serverEnv } from '~/lib/env.server';
+import { useStartChat } from '~/lib/hooks/use-start-chat';
 
 import type { Route } from './+types/home';
 
@@ -14,19 +18,39 @@ export async function loader({ request }: Route.LoaderArgs) {
   const listResponse = await fetch(new URL('/api/chats?limit=1', apiUrl).toString(), { headers });
   const chats = listResponse.ok ? ((await listResponse.json()) as ChatListItem[]) : [];
 
-  if (chats[0]) {
+  if (chats[0]?.id) {
     throw redirect(`/chat/${chats[0].id}`);
   }
 
-  const createResponse = await fetch(new URL('/api/chats', apiUrl).toString(), {
-    method: 'POST',
-    headers: { ...headers, 'content-type': 'application/json' },
-    body: JSON.stringify({ title: 'New chat' }),
-  });
-  const created = (await createResponse.json()) as { id: string };
-  throw redirect(`/chat/${created.id}`);
+  return data({ hasChats: false });
 }
 
 export default function HomePage() {
-  return null;
+  const navigate = useNavigate();
+  const [draft, setDraft] = useState('');
+  const startChat = useStartChat();
+
+  async function handleSubmit() {
+    const message = draft.trim();
+    if (!message || startChat.isStarting) return;
+
+    await startChat.start({
+      message,
+      title: normalizeChatTitle(message),
+      onAccepted: (event) => {
+        setDraft('');
+        navigate(`/chat/${event.chatId}`);
+      },
+    });
+  }
+
+  return (
+    <ChatHomePage
+      draft={draft}
+      error={startChat.error?.message}
+      isSubmitting={startChat.isStarting}
+      onChangeDraft={setDraft}
+      onSubmit={() => void handleSubmit()}
+    />
+  );
 }

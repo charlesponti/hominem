@@ -31,6 +31,9 @@ Hominem is one product system made up of the API, Omiro, and shared packages.
 - [Production web authentication](./docs/auth-production.md) — public browser auth and private server-side session checks
 - Design system: `@ponti-studios/ui/docs/`
 - [Chat motion](./docs/chat-motion.md) — Omiro chat's kinetic-correspondence motion rules
+- [Omiro chat inventory](./docs/omiro-chat-inventory.md) — client feature ownership and verification coverage
+- [Omiro web chat gaps](./docs/omiro-web-chat-gaps.md) — features missing or incomplete in `apps/web`
+- [Web chat parity tasks](./docs/tasks/10-web-chat-parity/README.md) — Linear-style implementation tasks for each gap
 
 ### III. Operations
 
