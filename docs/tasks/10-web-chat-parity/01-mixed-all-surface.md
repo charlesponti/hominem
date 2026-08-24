@@ -37,3 +37,10 @@ and the existing chat navigation/query hooks.
 - A recent chat still navigates to `/chat/:chatId`.
 - No-chat and creation-error states are explicit and recoverable.
 - The mixed All stream remains documented as deferred rather than partially implemented.
+
+## Implementation update — 2026-08-24
+
+- Implemented the explicit chat-first home state in `apps/web/app/routes/home.tsx`.
+- Added `ChatHomePage` coverage and Storybook states for empty, composing, starting, and error flows.
+- Verified the authenticated browser flow reaches a new chat and accepts its first message.
+- The mixed All stream remains intentionally deferred.

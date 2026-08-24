@@ -31,3 +31,10 @@ error presentation. Mixed chat/note inference and note submission are deferred.
 - Attachment and note-reference context can be rendered without owning remote data.
 - Draft text and attachment state survive the approved recoverable failures.
 - Chat submission uses the existing typed API boundary.
+
+## Implementation update — 2026-08-24
+
+- Implemented the reusable `ChatComposer` around the shared prompt-input primitives.
+- Extracted composer state into `apps/web/app/lib/hooks/use-chat-composer-state.ts`.
+- Covered draft, seeded-note, mention suggestion, attachment, restore, voice, busy, and dismissible error behavior with unit tests and Storybook stories.
+- The composer now exposes one submit/stop boundary for chat detail and chat-first entry.

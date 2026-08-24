@@ -33,3 +33,10 @@ without leaving stale optimistic rows.
 - No duplicate or orphan assistant message remains after cancellation.
 - Query invalidation and draft recovery are deterministic after every terminal state.
 
+## Implementation update — 2026-08-24
+
+- Updated `useStreamMessage` to connect the browser abort signal to the typed stream request.
+- Added server-backed generation cancellation before aborting the browser stream.
+- Modeled preparing, streaming, stopping, cancelled, committed, and failed states.
+- Added hook coverage for abort-signal wiring, committed responses, and cancellation ordering.
+- Live browser verification observed the preparing/thinking and committed states; automated tests cover cancellation because the local response completed before the Stop control became actionable.

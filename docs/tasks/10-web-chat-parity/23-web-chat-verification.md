@@ -57,3 +57,10 @@ present capabilities as well as newly added gaps.
 - Keyboard navigation, screen-reader labels, focus recovery, and responsive
   behavior are verified for each new action surface.
 - The gap map is updated so no feature is marked present without evidence.
+
+## Verification update — 2026-08-24
+
+- Web automated validation passes: 13 test files and 37 tests, lint, typecheck, production build, and Storybook build.
+- Integrated-browser verification covered chat-first new-chat navigation, message submission, preparing/thinking state, streamed response completion, and composer transitions.
+- Component Storybook coverage includes chat home, composer, stream status, and `ChatMessage` states.
+- Full parity verification remains open for the unimplemented mutation, search, settings, offline, transformation, and accessibility scenarios listed above.

@@ -29,3 +29,9 @@ existing AI element primitives where appropriate.
 - Failed, interrupted, and streaming states are visually distinct.
 - Debug details are hidden unless the approved debug mode is active.
 
+## Implementation update — 2026-08-24
+
+- Added reusable `apps/web/app/components/chat/chat-message.tsx` to own `Message`/`MessageContent` composition.
+- The component now renders assistant speech controls and tool-call previews, statuses, and approval actions.
+- Added focused component tests and Storybook stories for user, assistant, and tool-approval states.
+- Reasoning, referenced-note labels, timestamps, failed/interrupted presentation, and debug gating remain open gaps for this task.
