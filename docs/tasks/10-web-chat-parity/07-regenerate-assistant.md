@@ -31,3 +31,10 @@ Apply the approved ordering semantics for middle and final assistant messages.
 - Cancellation and failure restore the approved prior state.
 - Last and middle-message ordering behavior is covered by tests and a browser flow.
 
+## Implementation update — 2026-08-24
+
+- Added a typed web regeneration hook using the existing assistant-message regeneration endpoint.
+- Assistant messages expose a disabled-while-active regenerate action and reconcile chat/list caches after completion.
+- Added focused hook coverage for the request boundary and concurrent regeneration guard.
+- Browser ordering and cancellation verification remain open.
+- Consolidated regeneration Storybook coverage into one interactive conversation harness with middle- and final-message states, plus a focused single-message action story.

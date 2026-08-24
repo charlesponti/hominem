@@ -13,6 +13,8 @@ export interface UseChatMessagesReturn {
   messages: ChatMessageDto[];
   isLoading: boolean;
   error: Error | null;
+  isNotFound: boolean;
+  retry: () => Promise<unknown>;
   deleteMessage: (messageId: string) => Promise<void>;
   updateMessage: (messageId: string, content: string) => Promise<void>;
 }
@@ -34,10 +36,18 @@ export function useChatMessages({
     refetchOnReconnect: false,
     staleTime: 30_000,
     ...(initialData ? { initialData } : {}),
-    queryFn: () =>
-      client.api.chats[':id'].messages
-        .$get({ param: { id: chatId }, query: { limit: '50' } })
-        .then((r) => r.json()),
+    queryFn: async () => {
+      const response = await client.api.chats[':id'].messages.$get({
+        param: { id: chatId },
+        query: { limit: '50' },
+      });
+      if (!response.ok) {
+        throw Object.assign(new Error('Unable to load this conversation.'), {
+          status: response.status,
+        });
+      }
+      return response.json();
+    },
   });
 
   const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
@@ -48,6 +58,8 @@ export function useChatMessages({
     messages: messages as ChatMessageDto[],
     isLoading,
     error,
+    isNotFound: (error as (Error & { status?: number }) | null)?.status === 404,
+    retry: messagesQuery.refetch,
     deleteMessage: async () => undefined,
     updateMessage: async () => undefined,
   };

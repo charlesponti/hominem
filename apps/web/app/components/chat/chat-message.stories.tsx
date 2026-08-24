@@ -34,6 +34,13 @@ export const Assistant: Story = {
   },
 };
 
+export const RegenerableAssistant: Story = {
+  args: {
+    message: assistantMessage,
+    onRegenerate: () => undefined,
+  },
+};
+
 export const ToolApproval: Story = {
   args: {
     message: {
@@ -43,6 +50,7 @@ export const ToolApproval: Story = {
         {
           toolCallId: 'tool-1',
           toolName: 'delete_note',
+          type: 'tool-call',
           args: { noteId: 'note-1' },
           preview: { title: 'Draft note' },
           status: 'pending',

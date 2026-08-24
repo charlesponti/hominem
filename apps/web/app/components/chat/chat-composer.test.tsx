@@ -92,6 +92,28 @@ describe('ChatComposer', () => {
     expect(screen.queryByText('Unable to send')).toBeNull();
   });
 
+  it('exposes retry without changing the preserved draft', () => {
+    const onRetry = vi.fn();
+    render(
+      <ChatComposer
+        draft="Try again"
+        error="Unable to send"
+        onChangeDraft={() => undefined}
+        onRetry={onRetry}
+        onSubmit={() => undefined}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry sending' }));
+
+    expect(onRetry).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Unable to send')).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Chat message' })).toHaveProperty(
+      'value',
+      'Try again',
+    );
+  });
+
   it('removes an attachment through its accessible chip', () => {
     const onRemoveAttachment = vi.fn();
     render(

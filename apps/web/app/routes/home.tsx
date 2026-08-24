@@ -4,6 +4,7 @@ import { data, redirect, useNavigate } from 'react-router';
 import { ChatHomePage } from '~/components/chat/chat-home-page';
 import { normalizeChatTitle } from '~/lib/chat/chat-title';
 import { serverEnv } from '~/lib/env.server';
+import { useOnlineStatus } from '~/lib/hooks/use-online-status';
 import { useStartChat } from '~/lib/hooks/use-start-chat';
 
 import type { Route } from './+types/home';
@@ -29,10 +30,11 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState('');
   const startChat = useStartChat();
+  const isOnline = useOnlineStatus();
 
   async function handleSubmit() {
     const message = draft.trim();
-    if (!message || startChat.isStarting) return;
+    if (!message || startChat.isStarting || !isOnline) return;
 
     await startChat.start({
       message,
@@ -48,6 +50,7 @@ export default function HomePage() {
     <ChatHomePage
       draft={draft}
       error={startChat.error?.message}
+      isOffline={!isOnline}
       isSubmitting={startChat.isStarting}
       onChangeDraft={setDraft}
       onSubmit={() => void handleSubmit()}

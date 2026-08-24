@@ -59,3 +59,39 @@ export const Submitting: Story = {
 export const Error: Story = {
   render: () => <Harness draft="Try again" simulateError />,
 };
+
+export const Offline: Story = {
+  render: () => (
+    <Harness
+      draft="Keep this while offline"
+      error="You are offline. Your draft and attachments are preserved."
+      isOffline
+    />
+  ),
+};
+
+export const RetryableError: Story = {
+  render: () => (
+    <Harness
+      draft="Retry this message"
+      error="Unable to send the message."
+      onRetry={() => undefined}
+    />
+  ),
+};
+
+export const Retrying: Story = {
+  render: () => <Harness draft="Retrying this message" isSubmitting />,
+};
+
+export const UploadFailure: Story = {
+  render: () => (
+    <Harness
+      attachments={[{ id: 'file-1', originalName: 'important-notes.pdf' }]}
+      draft="Send this when the connection returns"
+      error="Upload failed. Your attachment is still selected."
+      onRemoveAttachment={() => undefined}
+      onRetry={() => undefined}
+    />
+  ),
+};

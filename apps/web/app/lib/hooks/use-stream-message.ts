@@ -23,6 +23,7 @@ interface StreamInput {
   onAccepted?: (userMessage: ChatMessageDto | null) => void;
   onCommitted?: (message: ChatMessageDto) => void;
   onCancelled?: () => void;
+  onFailed?: (error: Error) => void;
 }
 
 export function useStreamMessage({ chatId }: { chatId: string }) {
@@ -112,6 +113,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
         setStatus('failed');
+        input.onFailed?.(nextError);
       } finally {
         abortControllerRef.current = null;
         generationIdRef.current = null;

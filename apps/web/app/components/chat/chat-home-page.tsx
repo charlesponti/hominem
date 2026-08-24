@@ -6,6 +6,7 @@ interface ChatHomePageProps {
   draft: string;
   isSubmitting: boolean;
   error?: string | null;
+  isOffline?: boolean;
   onChangeDraft: (value: string) => void;
   onSubmit: () => void;
 }
@@ -14,6 +15,7 @@ export function ChatHomePage({
   draft,
   isSubmitting,
   error,
+  isOffline = false,
   onChangeDraft,
   onSubmit,
 }: ChatHomePageProps) {
@@ -28,7 +30,8 @@ export function ChatHomePage({
       </section>
       <ChatComposer
         draft={draft}
-        error={error}
+        error={isOffline ? 'You are offline. Reconnect before sending your message.' : error}
+        isOffline={isOffline}
         isSubmitting={isSubmitting}
         onChangeDraft={onChangeDraft}
         onSubmit={onSubmit}

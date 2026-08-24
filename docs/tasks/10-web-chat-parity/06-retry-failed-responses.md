@@ -30,3 +30,10 @@ send operations, and reconcile the result through the shared stream lifecycle.
 - Retry is disabled while another generation is active.
 - Failure after retry remains recoverable and preserves the correct state.
 
+## Implementation update — 2026-08-24
+
+- Added an explicit retry action to the composer error state.
+- Failed sends before durable acceptance preserve the draft and attachment context for retry.
+- Concurrent sends and retries are blocked while a generation is preparing, streaming, or stopping.
+- Durable interrupted-response retry and assistant regeneration remain separate follow-up work for `WEB-CHAT-07`.
+- Added Storybook coverage for retryable errors, retrying state, offline preservation, and upload failure recovery.

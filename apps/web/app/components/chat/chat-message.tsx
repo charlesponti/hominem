@@ -1,6 +1,13 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
+import { RotateCcw } from 'lucide-react';
 
-import { Message, MessageContent, MessageResponse } from '~/components/ai-elements/message';
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+  MessageResponse,
+} from '~/components/ai-elements/message';
 import {
   Tool,
   ToolApprovalActions,
@@ -19,10 +26,12 @@ export interface ChatMessageProps {
   speechSrc?: string;
   isSpeechActive?: boolean;
   isToolResponding?: boolean;
+  isRegenerating?: boolean;
   onActivateSpeech?: (messageId: string) => void;
   onApproveTool?: (input: { messageId: string; toolCallId: string }) => void;
   onDeactivateSpeech?: (messageId: string) => void;
   onRejectTool?: (input: { messageId: string; toolCallId: string }) => void;
+  onRegenerate?: (messageId: string) => void;
 }
 
 function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
@@ -80,10 +89,12 @@ export function ChatMessage({
   speechSrc,
   isSpeechActive = false,
   isToolResponding = false,
+  isRegenerating = false,
   onActivateSpeech,
   onApproveTool,
   onDeactivateSpeech,
   onRejectTool,
+  onRegenerate,
 }: ChatMessageProps) {
   const canSpeak =
     message.role === 'assistant' &&
@@ -115,6 +126,18 @@ export function ChatMessage({
             onDeactivate={onDeactivateSpeech}
             src={speechSrc}
           />
+        ) : null}
+        {message.role === 'assistant' && onRegenerate ? (
+          <MessageActions>
+            <MessageAction
+              disabled={isToolResponding || message.isStreaming || isRegenerating}
+              label="Regenerate response"
+              onClick={() => onRegenerate(message.id)}
+              tooltip="Regenerate response"
+            >
+              <RotateCcw aria-hidden="true" size={14} />
+            </MessageAction>
+          </MessageActions>
         ) : null}
       </MessageContent>
     </Message>

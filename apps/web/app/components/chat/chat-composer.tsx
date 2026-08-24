@@ -22,6 +22,7 @@ export interface ChatComposerFile {
 interface ChatComposerProps {
   draft: string;
   isSubmitting?: boolean;
+  isOffline?: boolean;
   isStreaming?: boolean;
   hasContext?: boolean;
   attachments?: ChatComposerFile[];
@@ -30,6 +31,7 @@ interface ChatComposerProps {
   onChangeDraft: (value: string) => void;
   onSubmit: () => void;
   onStop?: () => void;
+  onRetry?: () => void;
   onAttachFiles?: (files: FileList | null) => void;
   onRemoveAttachment?: (fileId: string) => void;
   isVoiceSupported?: boolean;
@@ -41,6 +43,7 @@ interface ChatComposerProps {
 export function ChatComposer({
   draft,
   isSubmitting = false,
+  isOffline = false,
   isStreaming = false,
   hasContext = false,
   attachments = [],
@@ -49,6 +52,7 @@ export function ChatComposer({
   onChangeDraft,
   onSubmit,
   onStop,
+  onRetry,
   onAttachFiles,
   onRemoveAttachment,
   isVoiceSupported = false,
@@ -93,6 +97,21 @@ export function ChatComposer({
         >
           <AlertCircle aria-hidden="true" />
           <span className="min-w-0 flex-1 whitespace-normal">{visibleError}</span>
+          {onRetry ? (
+            <Button
+              aria-label="Retry sending"
+              className="shrink-0"
+              onClick={() => {
+                setDismissedError(visibleError);
+                onRetry();
+              }}
+              size="xs"
+              type="button"
+              variant="ghost"
+            >
+              Retry
+            </Button>
+          ) : null}
           <Button
             aria-label="Dismiss error"
             className="-mr-1"
@@ -149,7 +168,7 @@ export function ChatComposer({
             ) : null}
           </PromptInputTools>
           <PromptInputSubmit
-            disabled={!hasContent || isSubmitting}
+            disabled={!hasContent || isSubmitting || isOffline}
             onStop={isStreaming ? onStop : undefined}
             status={isStreaming ? 'streaming' : isSubmitting ? 'submitted' : 'ready'}
           />
