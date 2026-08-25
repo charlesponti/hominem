@@ -4,12 +4,18 @@ import { Button } from '~/components/ui/button';
 
 export interface ChatConversationActionsProps {
   isArchiving?: boolean;
+  isCreatingChat?: boolean;
+  isDebugOpen?: boolean;
+  canTransform?: boolean;
+  isTransforming?: boolean;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
   onArchive: () => void;
+  onDebug?: () => void;
   onNewChat: () => void;
   onResponseSettings: () => void;
   onSearch: () => void;
+  onTransform?: () => void;
 }
 
 export function ChatConversationActions({
@@ -17,9 +23,15 @@ export function ChatConversationActions({
   isSearchOpen = false,
   isSettingsOpen = false,
   onArchive,
+  onDebug,
   onNewChat,
   onResponseSettings,
   onSearch,
+  isCreatingChat = false,
+  isDebugOpen = false,
+  canTransform = false,
+  isTransforming = false,
+  onTransform,
 }: ChatConversationActionsProps) {
   return (
     <div aria-label="Conversation actions" className="flex items-center gap-1" role="toolbar">
@@ -46,20 +58,22 @@ export function ChatConversationActions({
         <Settings2 aria-hidden="true" size={16} />
       </Button>
       <Button
-        aria-label="Debug mode unavailable"
-        disabled
+        aria-label={isDebugOpen ? 'Disable debug mode' : 'Enable debug mode'}
+        aria-pressed={isDebugOpen}
+        onClick={onDebug}
         size="icon-sm"
-        title="Debug mode coming soon"
+        title={isDebugOpen ? 'Disable debug mode' : 'Enable debug mode'}
         type="button"
         variant="ghost"
       >
         <Bug aria-hidden="true" size={16} />
       </Button>
       <Button
-        aria-label="Transform conversation unavailable"
-        disabled
+        aria-label={isTransforming ? 'Preparing note draft' : 'Create note from chat'}
+        disabled={!canTransform || isTransforming}
+        onClick={onTransform}
         size="icon-sm"
-        title="Conversation transforms coming soon"
+        title={canTransform ? 'Create note from chat' : 'No messages to transform'}
         type="button"
         variant="ghost"
       >
@@ -67,7 +81,8 @@ export function ChatConversationActions({
       </Button>
       <span className="flex-1" />
       <Button
-        aria-label="Start a new chat"
+        aria-label={isCreatingChat ? 'Creating new chat' : 'Start a new chat'}
+        disabled={isCreatingChat}
         onClick={onNewChat}
         size="icon-sm"
         title="Start a new chat"

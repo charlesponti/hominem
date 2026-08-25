@@ -17,7 +17,9 @@ import { ChatMessageSearch } from '~/components/chat/chat-message-search';
 import { ChatResponseSettings } from '~/components/chat/chat-response-settings';
 import { ErrorState } from '~/components/error-state';
 import { RouteHeader } from '~/components/route-header';
-import { useArchiveChat } from '~/hooks/use-chats';
+import { useArchiveChat, useChatsList, useCreateChat, useUpdateChatTitle } from '~/hooks/use-chats';
+import { buildChatNoteDraft, saveChatNoteDraft } from '~/lib/chat/chat-note-draft';
+import { getAutomaticChatTitle } from '~/lib/chat/chat-title';
 import { serverEnv } from '~/lib/env.server';
 import { useChatComposerState } from '~/lib/hooks/use-chat-composer-state';
 import { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
@@ -90,6 +92,7 @@ export default function ChatPage({
   const [isRetryable, setIsRetryable] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
 
   const activateSpeech = useCallback((messageId: string) => {
@@ -129,7 +132,11 @@ export default function ChatPage({
     chatId,
     onSuccess: () => navigate('/', { viewTransition: true }),
   });
+  const createChat = useCreateChat();
+  const updateChatTitle = useUpdateChatTitle();
+  const { data: chats = [] } = useChatsList();
   const { responseLength, setResponseLength } = useResponseLength();
+  const currentChat = chats.find((chat) => chat.id === chatId);
   const visibleMessages =
     isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
 
@@ -184,6 +191,10 @@ export default function ChatPage({
         accepted = true;
         setIsRetryable(false);
         if (userMessage) display.setOptimisticUserMessage(userMessage);
+        const title = getAutomaticChatTitle(userMessage?.content ?? '');
+        if (currentChat?.title === 'New chat' && title) {
+          updateChatTitle.mutate({ chatId, title });
+        }
       },
       onCommitted: (message) => {
         display.setPendingAssistantMessage(message);
@@ -244,12 +255,28 @@ export default function ChatPage({
           >
             <ChatConversationActions
               isArchiving={archiveChat.isPending}
+              isCreatingChat={createChat.isPending}
+              isDebugOpen={isDebugOpen}
+              canTransform={messages.some((message) => message.content.trim().length > 0)}
               isSearchOpen={isSearchOpen}
               isSettingsOpen={isSettingsOpen}
               onArchive={() => archiveChat.mutate({ chatId })}
-              onNewChat={() => navigate('/', { viewTransition: true })}
+              onDebug={() => setIsDebugOpen((open) => !open)}
+              onNewChat={() => {
+                if (createChat.isPending) return;
+                createChat.mutate(
+                  { title: 'New chat' },
+                  { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
+                );
+              }}
               onResponseSettings={() => setIsSettingsOpen(true)}
               onSearch={() => setIsSearchOpen(true)}
+              onTransform={() => {
+                const draft = buildChatNoteDraft(messages, currentChat?.title || 'Chat transcript');
+                if (!draft.content) return;
+                saveChatNoteDraft(draft);
+                navigate('/notes/new', { viewTransition: true });
+              }}
             />
           </div>
           <ChatMessageSearch
@@ -300,6 +327,7 @@ export default function ChatPage({
                 }
                 isToolResponding={toolCallRespond.isResponding}
                 message={message}
+                showDebug={isDebugOpen}
                 onActivateSpeech={activateSpeech}
                 onApproveTool={({ messageId, toolCallId }) =>
                   void toolCallRespond.respond({ messageId, toolCallId, approved: true })

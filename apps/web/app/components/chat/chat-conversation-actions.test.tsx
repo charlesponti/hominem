@@ -79,4 +79,36 @@ describe('ChatConversationActions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search messages' }));
     expect(onSearch).toHaveBeenCalledOnce();
   });
+
+  it('exposes an accessible scoped debug toggle', () => {
+    const onDebug = vi.fn();
+    const { rerender } = render(
+      <ChatConversationActions
+        onArchive={() => undefined}
+        onDebug={onDebug}
+        onNewChat={() => undefined}
+        onResponseSettings={() => undefined}
+        onSearch={() => undefined}
+      />,
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Enable debug mode' });
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(toggle);
+    expect(onDebug).toHaveBeenCalledOnce();
+
+    rerender(
+      <ChatConversationActions
+        isDebugOpen
+        onArchive={() => undefined}
+        onDebug={onDebug}
+        onNewChat={() => undefined}
+        onResponseSettings={() => undefined}
+        onSearch={() => undefined}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Disable debug mode' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
 });

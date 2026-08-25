@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-17
 title: Add automatic chat title updates on web
-status: proposed
+status: complete
 priority: medium
 team: web
 project: web-chat-parity
@@ -29,3 +29,13 @@ caches consistently and preserve custom titles.
 - Optimistic title updates roll back or invalidate on failure.
 - Sidebar and list views show the same title after a fresh read.
 
+## Implementation update — 2026-08-24
+
+- Added meaningful-message title normalization that ignores blank and default-only messages.
+- Added optimistic title mutation with rollback and list-cache reconciliation while preserving custom titles.
+- Wired the first accepted message in chat detail to update a still-default chat title.
+
+## Validation update — 2026-08-24
+
+- Title normalization and cache rollback tests pass.
+- Web formatting and typecheck pass.

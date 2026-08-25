@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-15
 title: Add web chat debug mode
-status: proposed
+status: complete
 priority: low
 team: web
 project: web-chat-parity
@@ -31,3 +31,13 @@ presentation when disabled.
 - Debug output does not alter persisted message content.
 - Debug output is excluded from normal screenshots and default rendering.
 
+## Implementation update — 2026-08-24
+
+- Added a route-scoped debug toggle to the conversation toolbar with accessible pressed state.
+- Passed the opt-in state into each message and kept diagnostics limited to non-sensitive metadata.
+- Preserved the default transcript when debug mode is disabled.
+
+## Validation update — 2026-08-24
+
+- Focused chat-message and conversation-action tests pass, including hidden-by-default and toggle states.
+- Web formatting and typecheck pass.

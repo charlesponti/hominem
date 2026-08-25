@@ -1,10 +1,10 @@
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Archive, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { RouteHeader } from '~/components/route-header';
 import { Button } from '~/components/ui/button';
-import { useChatLastMessages, useChatsList } from '~/hooks/use-chats';
+import { useArchiveChat, useChatLastMessages, useChatsList } from '~/hooks/use-chats';
 
 const PAGE_SIZE = 20;
 const chatDateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -26,6 +26,7 @@ export const meta = () => [{ title: 'Chats' }];
 export default function ChatsPage() {
   const [page, setPage] = useState(0);
   const { data: chats = [], error, isPending } = useChatsList();
+  const archiveChat = useArchiveChat({});
   const pageChats = chats.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const lastMessageQueries = useChatLastMessages(pageChats.map((chat) => chat.id));
   const pageCount = Math.max(1, Math.ceil(chats.length / PAGE_SIZE));
@@ -55,22 +56,32 @@ export default function ChatsPage() {
           {!isPending && !error && pageChats.length > 0 ? (
             <div className="divide-y divide-border">
               {pageChats.map((chat, index) => (
-                <Link
-                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                <div
+                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted"
                   key={chat.id}
-                  to={`/chat/${chat.id}`}
-                  viewTransition
                 >
-                  <span className="min-w-0 truncate font-medium">
-                    {chat.title || 'Untitled chat'}
-                  </span>
-                  <time
-                    className="shrink-0 text-sm text-muted-foreground"
-                    dateTime={lastMessageQueries[index]?.data?.[0]?.createdAt}
+                  <Link className="min-w-0 flex-1" to={`/chat/${chat.id}`} viewTransition>
+                    <span className="block truncate font-medium">
+                      {chat.title || 'Untitled chat'}
+                    </span>
+                    <time
+                      className="text-sm text-muted-foreground"
+                      dateTime={lastMessageQueries[index]?.data?.[0]?.createdAt}
+                    >
+                      {getLastMessageLabel(lastMessageQueries[index] ?? { isPending: true })}
+                    </time>
+                  </Link>
+                  <Button
+                    aria-label={`Archive ${chat.title || 'chat'}`}
+                    disabled={archiveChat.isPending}
+                    onClick={() => archiveChat.mutate({ chatId: chat.id })}
+                    size="icon-sm"
+                    title="Archive chat"
+                    variant="ghost"
                   >
-                    {getLastMessageLabel(lastMessageQueries[index] ?? { isPending: true })}
-                  </time>
-                </Link>
+                    <Archive aria-hidden="true" />
+                  </Button>
+                </div>
               ))}
             </div>
           ) : null}
