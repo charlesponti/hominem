@@ -33,8 +33,10 @@ tool-call parity.
 - Web remains chat-first at `/`; the mixed All surface is deferred.
 - Stop uses the server-backed generation cancellation endpoint and aborts the
   browser stream.
-- Voice/audio, message deletion, and tool-call presentation remain explicit
-  follow-up decisions and are not silently expanded into this delivery slice.
+- Web message deletion truncates from an eligible user message forward,
+  requires confirmation, and uses optimistic rollback on failure.
+- Voice/audio and tool-call presentation remain explicit follow-up decisions
+  and are not silently expanded into this delivery slice.
 
 ## Decision
 

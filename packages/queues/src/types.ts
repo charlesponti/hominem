@@ -38,6 +38,11 @@ export interface BaseJob<TStatus extends string = JobStatus> {
   type: string;
 }
 
+export interface ChatFileCleanupQueuePayload {
+  fileIds: string[];
+  userId: string;
+}
+
 /**
  * Generic file status information for UI
  */

@@ -9,6 +9,7 @@ import { logger } from '@hominem/telemetry';
 import { env } from './env';
 import { initRuntime } from './runtime';
 import { startCareerJobImportWorker } from './workers/career-job-import';
+import { startChatFileCleanupWorker } from './workers/chat-file-cleanup';
 import { startEmbeddingGenerationWorker } from './workers/embedding-generation';
 import { startFileProcessingWorker } from './workers/file-processing';
 import { startImportTransactionsWorker } from './workers/import-transactions';
@@ -22,6 +23,7 @@ const resumeAnalysisWorker = startResumeAnalysisWorker();
 const speechUsageReconciliationWorker = startSpeechUsageReconciliationWorker();
 // Start career imports from the worker entrypoint so dev watchers reload queue handlers.
 const careerJobImportWorker = startCareerJobImportWorker();
+const chatFileCleanupWorker = startChatFileCleanupWorker();
 const workerVersion = 'career-import-v2';
 
 const healthServer = createServer((req, res) => {
@@ -45,6 +47,7 @@ initRuntime('worker').installSignalHandlers(
       resumeAnalysisWorker.close(),
       speechUsageReconciliationWorker.close(),
       careerJobImportWorker.close(),
+      chatFileCleanupWorker.close(),
     ]);
   },
   () => new Promise<void>((resolve) => healthServer.close(() => resolve())),
@@ -56,3 +59,4 @@ logger.info('worker_started', { queue: QUEUE_NAMES.IMPORT_TRANSACTIONS });
 logger.info('worker_started', { queue: QUEUE_NAMES.RESUME_ANALYSIS });
 logger.info('worker_started', { queue: QUEUE_NAMES.CAREER_JOB_IMPORT });
 logger.info('worker_started', { queue: QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION });
+logger.info('worker_started', { queue: QUEUE_NAMES.CHAT_FILE_CLEANUP });

@@ -111,6 +111,8 @@ export default function ChatPage({
     error: messagesError,
     isNotFound,
     retry,
+    deleteMessage,
+    isDeleting,
     updateMessage,
   } = useChatMessages({
     chatId,
@@ -303,6 +305,7 @@ export default function ChatPage({
                   void toolCallRespond.respond({ messageId, toolCallId, approved: true })
                 }
                 onDeactivateSpeech={deactivateSpeech}
+                onDelete={deleteMessage}
                 onRejectTool={({ messageId, toolCallId }) =>
                   void toolCallRespond.respond({ messageId, toolCallId, approved: false })
                 }
@@ -312,6 +315,7 @@ export default function ChatPage({
                 onCancelRegenerate={() => void regeneration.cancel()}
                 onRetryRegenerate={() => void regeneration.retry()}
                 onEdit={updateMessage}
+                isDeleting={isDeleting}
                 speechSrc={getSpeechUrl(chatId, message.id)}
               />
             ))}

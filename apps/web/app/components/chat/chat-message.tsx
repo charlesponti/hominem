@@ -1,5 +1,5 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { Check, Clipboard, Pencil, RotateCcw, Share2, X } from 'lucide-react';
+import { Check, Clipboard, Pencil, RotateCcw, Share2, Trash2, X } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
@@ -20,6 +20,17 @@ import {
   ToolInput,
   ToolPreview,
 } from '~/components/ai-elements/tool';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '~/components/alert-dialog';
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
 import type { ChatMessageView } from '~/lib/types/chat';
@@ -45,6 +56,8 @@ export interface ChatMessageProps {
   onCancelRegenerate?: () => void;
   onRetryRegenerate?: () => void;
   onEdit?: (messageId: string, content: string) => Promise<void> | void;
+  onDelete?: (messageId: string) => Promise<void>;
+  isDeleting?: boolean;
 }
 
 function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
@@ -116,11 +129,16 @@ export function ChatMessage({
   onCancelRegenerate,
   onRetryRegenerate,
   onEdit,
+  onDelete,
+  isDeleting = false,
 }: ChatMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
   const [editError, setEditError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'failed'>('idle');
   const reduceMotion = useReducedMotion() === true;
   const isRegenerationActive =
     isRegenerating ||
@@ -129,6 +147,7 @@ export function ChatMessage({
     regenerationStatus === 'stopping';
   const isRegenerationStopping = regenerationStatus === 'stopping';
   const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
+  const canDelete = message.role === 'user' && !message.isStreaming && Boolean(onDelete);
   const hasReasoning = Boolean(message.reasoning?.trim());
   const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
   const timestamp = formatTimestamp(message.createdAt);
@@ -162,16 +181,32 @@ export function ChatMessage({
   }
 
   async function shareMessage() {
-    if (navigator.share) {
-      await navigator.share({ text: message.content });
-      return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: message.content });
+      } else {
+        const url = URL.createObjectURL(new Blob([message.content], { type: 'text/plain' }));
+        const link = document.createElement('a');
+        link.download = `message-${message.id}.txt`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+      setShareState('shared');
+    } catch {
+      setShareState('failed');
     }
-    const url = URL.createObjectURL(new Blob([message.content], { type: 'text/plain' }));
-    const link = document.createElement('a');
-    link.download = `message-${message.id}.txt`;
-    link.href = url;
-    link.click();
-    URL.revokeObjectURL(url);
+  }
+
+  async function confirmDelete() {
+    if (!onDelete) return;
+    try {
+      await onDelete(message.id);
+      setDeleteError(null);
+      setIsDeleteOpen(false);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Unable to delete this message.');
+    }
   }
 
   const canSpeak =
@@ -294,6 +329,11 @@ export function ChatMessage({
             ) : null}
           </p>
         ) : null}
+        {deleteError ? (
+          <p aria-live="polite" className="text-xs text-destructive" role="alert">
+            {deleteError} Try again when ready.
+          </p>
+        ) : null}
         {showDebug && !message.isStreaming ? (
           <details className="rounded-md border border-border-subtle p-2 text-xs text-text-secondary">
             <summary className="cursor-pointer">Debug details</summary>
@@ -321,6 +361,7 @@ export function ChatMessage({
         ) : null}
         {timestamp ||
         canEdit ||
+        canDelete ||
         (message.role === 'assistant' && onRegenerate) ||
         (message.role === 'assistant' && !message.isStreaming && message.content.trim()) ? (
           <MessageActions>
@@ -363,9 +404,21 @@ export function ChatMessage({
                   <Clipboard aria-hidden="true" size={14} />
                 </MessageAction>
                 <MessageAction
-                  label="Share assistant message"
+                  label={
+                    shareState === 'shared'
+                      ? 'Shared assistant message'
+                      : shareState === 'failed'
+                        ? 'Share assistant message failed'
+                        : 'Share assistant message'
+                  }
                   onClick={() => void shareMessage()}
-                  tooltip="Share message"
+                  tooltip={
+                    shareState === 'shared'
+                      ? 'Shared'
+                      : shareState === 'failed'
+                        ? 'Share failed'
+                        : 'Share message'
+                  }
                 >
                   <Share2 aria-hidden="true" size={14} />
                 </MessageAction>
@@ -383,6 +436,45 @@ export function ChatMessage({
               >
                 <Pencil aria-hidden="true" size={14} />
               </MessageAction>
+            ) : null}
+            {canDelete ? (
+              <AlertDialog
+                onOpenChange={(open) => {
+                  setIsDeleteOpen(open);
+                  if (open) setDeleteError(null);
+                }}
+                open={isDeleteOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <MessageAction
+                    disabled={isDeleting || isGenerationActive || isEditing}
+                    label="Delete user message"
+                    tooltip="Delete message"
+                  >
+                    <Trash2 aria-hidden="true" size={14} />
+                  </MessageAction>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will delete this message and all later messages in the conversation.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      disabled={isDeleting}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void confirmDelete();
+                      }}
+                    >
+                      {isDeleting ? 'Deleting…' : 'Delete message'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ) : null}
             {message.role === 'assistant' && onRegenerate ? (
               <MessageAction

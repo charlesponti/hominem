@@ -16,6 +16,7 @@ export interface UseChatMessagesReturn {
   isNotFound: boolean;
   retry: () => Promise<unknown>;
   deleteMessage: (messageId: string) => Promise<void>;
+  isDeleting: boolean;
   updateMessage: (messageId: string, content: string) => Promise<void>;
 }
 
@@ -74,7 +75,43 @@ export function useChatMessages({
         queryClient.setQueryData(chatQueryKeys.messages(chatId), context.previousMessages);
       }
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+        queryClient.invalidateQueries({ queryKey: ['chats', chatId, 'message-search'] }),
+      ]);
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: string) => {
+      const response = await client.api.chats[':id'].messages[':messageId'].$delete({
+        param: { id: chatId, messageId },
+      });
+      if (!response.ok) throw new Error('Unable to delete this message.');
+      return response.json();
+    },
+    onMutate: async (messageId) => {
+      const queryKey = chatQueryKeys.messages(chatId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousMessages = queryClient.getQueryData<ChatMessageView[]>(queryKey);
+      queryClient.setQueryData<ChatMessageView[]>(queryKey, (currentMessages = []) => {
+        const targetIndex = currentMessages.findIndex((message) => message.id === messageId);
+        return targetIndex === -1 ? currentMessages : currentMessages.slice(0, targetIndex);
+      });
+      return { previousMessages };
+    },
+    onError: (_error, _messageId, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(chatQueryKeys.messages(chatId), context.previousMessages);
+      }
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+        queryClient.invalidateQueries({ queryKey: ['chats', chatId, 'message-search'] }),
+      ]);
+    },
   });
 
   const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
@@ -87,7 +124,11 @@ export function useChatMessages({
     error,
     isNotFound: (error as (Error & { status?: number }) | null)?.status === 404,
     retry: messagesQuery.refetch,
-    deleteMessage: async () => undefined,
+    deleteMessage: async (messageId) => {
+      if (deleteMessageMutation.isPending) return;
+      await deleteMessageMutation.mutateAsync(messageId);
+    },
+    isDeleting: deleteMessageMutation.isPending,
     updateMessage: async (messageId, content) => {
       const trimmedContent = content.trim();
       if (!trimmedContent) throw new Error('Message content cannot be empty.');

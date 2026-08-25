@@ -41,3 +41,7 @@ export const speechUsageReconciliationQueue: Queue = new BullQueue(
   QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
   { connection: redis },
 );
+
+export const chatFileCleanupQueue: Queue = new BullQueue(QUEUE_NAMES.CHAT_FILE_CLEANUP, {
+  connection: redis,
+});

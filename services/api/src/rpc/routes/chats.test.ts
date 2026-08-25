@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   getMessageById: vi.fn(),
   getMessagesBefore: vi.fn(),
   searchMessages: vi.fn(),
+  deleteUserMessageAndFollowing: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
   replaceAssistantMessageContent: vi.fn(),
@@ -73,6 +74,7 @@ vi.mock('@hominem/db', async () => {
       getMessageById: mocks.getMessageById,
       getMessagesBefore: mocks.getMessagesBefore,
       searchMessages: mocks.searchMessages,
+      deleteUserMessageAndFollowing: mocks.deleteUserMessageAndFollowing,
       insertMessage: mocks.insertMessage,
       touchLastMessage: mocks.touchLastMessage,
       replaceAssistantMessageContent: mocks.replaceAssistantMessageContent,
@@ -98,6 +100,9 @@ vi.mock('@hominem/db', async () => {
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {
     add: mocks.enqueueEmbedding,
+  },
+  chatFileCleanupQueue: {
+    add: vi.fn(),
   },
 }));
 
@@ -372,6 +377,45 @@ describe('chat message search', () => {
 
     expect(response.status).toBe(400);
     expect(mocks.searchMessages).not.toHaveBeenCalled();
+  });
+});
+
+describe('chat message deletion', () => {
+  beforeEach(() => {
+    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.deleteUserMessageAndFollowing.mockReset();
+    mocks.deleteUserMessageAndFollowing.mockResolvedValue({
+      deletedMessageIds: ['message-1', 'message-2'],
+      cleanupFileIds: [],
+    });
+  });
+
+  it('deletes the selected user message and later messages', async () => {
+    const response = await createApp().request('/api/chats/chat-id/messages/message-1', {
+      method: 'DELETE',
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      deletedMessageIds: ['message-1', 'message-2'],
+    });
+    expect(mocks.deleteUserMessageAndFollowing).toHaveBeenCalledWith(
+      {},
+      'chat-id',
+      'message-1',
+      testUser.id,
+    );
+  });
+
+  it('does not delete when the chat is not owned', async () => {
+    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+
+    const response = await createApp().request('/api/chats/chat-id/messages/message-1', {
+      method: 'DELETE',
+    });
+
+    expect(response.status).not.toBe(200);
+    expect(mocks.deleteUserMessageAndFollowing).not.toHaveBeenCalled();
   });
 });
 

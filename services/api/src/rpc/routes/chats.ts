@@ -9,7 +9,7 @@ import {
 } from '@hominem/ai';
 import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
 import { ChatRepository, ChatSpeechRunRepository, db, runInTransaction } from '@hominem/db';
-import { embeddingQueue } from '@hominem/queues';
+import { chatFileCleanupQueue, embeddingQueue } from '@hominem/queues';
 import { fileStorageService } from '@hominem/storage';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
@@ -123,6 +123,7 @@ async function synthesizeReplyAudioFile(
     return {
       file: {
         type: 'audio',
+        fileId: stored.id,
         url: stored.url,
         filename: stored.originalName,
         mimeType: result.mimeType,
@@ -610,6 +611,32 @@ const chatByIdRoutes = new Hono<AppContext>()
     );
 
     return c.json(toChatMessageDto(updated));
+  })
+  .delete('/messages/:messageId', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const result = await runInTransaction((trx) =>
+      ChatRepository.deleteUserMessageAndFollowing(trx, chatId, messageId, userId),
+    );
+
+    if (result.cleanupFileIds.length > 0) {
+      await chatFileCleanupQueue.add(
+        'cleanup-chat-files',
+        { fileIds: result.cleanupFileIds, userId },
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1_000 },
+          jobId: `chat-file-cleanup:${chatId}:${messageId}`,
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
+
+    return c.json({ deletedMessageIds: result.deletedMessageIds });
   })
   .post(
     '/messages/:messageId/regenerate',

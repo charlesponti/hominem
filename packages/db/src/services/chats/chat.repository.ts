@@ -49,6 +49,11 @@ export interface ChatMessageRecord {
   updatedAt: string;
 }
 
+export interface DeleteChatMessagesResult {
+  deletedMessageIds: string[];
+  cleanupFileIds: string[];
+}
+
 export interface InsertChatMessageInput {
   chatId: string;
   authorUserId: string;
@@ -429,6 +434,61 @@ export const ChatRepository = {
     const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
 
     return toChatMessageRecord(updated, noteTitlesById);
+  },
+
+  async deleteUserMessageAndFollowing(
+    handle: DbHandle,
+    chatId: string,
+    messageId: string,
+    userId: string,
+  ): Promise<DeleteChatMessagesResult> {
+    const target = await handle
+      .selectFrom('app.chatMessages')
+      .select(['id', 'createdat', 'role', 'authorUserid'])
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .where('authorUserid', '=', userId)
+      .executeTakeFirst();
+
+    if (!target || target.role !== 'user') {
+      throw new NotFoundError('ChatMessage', { chatId, messageId });
+    }
+
+    const messages = await handle
+      .selectFrom('app.chatMessages')
+      .select(['id', 'files'])
+      .where('chatId', '=', chatId)
+      .where((expressionBuilder) =>
+        expressionBuilder.or([
+          expressionBuilder('createdat', '>', target.createdat),
+          expressionBuilder.and([
+            expressionBuilder('createdat', '=', target.createdat),
+            expressionBuilder('id', '>=', target.id),
+          ]),
+        ]),
+      )
+      .execute();
+
+    const cleanupFileIds = [
+      ...new Set(
+        messages.flatMap((message) =>
+          (parseChatMessageFiles(message.files) ?? [])
+            .filter((file) => file.type === 'audio' && file.fileId)
+            .map((file) => file.fileId as string),
+        ),
+      ),
+    ];
+    const deletedMessageIds = messages.map((message) => message.id);
+
+    if (deletedMessageIds.length > 0) {
+      await handle
+        .deleteFrom('app.chatMessages')
+        .where('chatId', '=', chatId)
+        .where('id', 'in', deletedMessageIds)
+        .execute();
+    }
+
+    return { deletedMessageIds, cleanupFileIds };
   },
 
   /**

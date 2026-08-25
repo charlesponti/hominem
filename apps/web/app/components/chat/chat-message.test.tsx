@@ -110,6 +110,26 @@ describe('ChatMessage', () => {
     expect(onEdit).toHaveBeenCalledWith('message-1', 'Updated message');
   });
 
+  it('confirms user-message deletion and surfaces failures', async () => {
+    const onDelete = vi.fn().mockRejectedValue(new Error('Unable to delete this message.'));
+    render(
+      <ChatMessage
+        message={message({ role: 'user', content: 'Delete this message' })}
+        onDelete={onDelete}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete user message' }));
+    expect(screen.getByRole('alertdialog')).toBeTruthy();
+    expect(screen.getByRole('alertdialog').textContent).toContain(
+      'This will delete this message and all later messages',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete message' }));
+
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith('message-1'));
+    expect(screen.getByText('Unable to delete this message. Try again when ready.')).toBeTruthy();
+  });
+
   it('exposes copy and share actions only for non-empty assistant messages', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
@@ -125,6 +145,39 @@ describe('ChatMessage', () => {
     expect(screen.queryByRole('button', { name: 'Copy assistant message' })).toBeNull();
     rerender(<ChatMessage message={message({ isStreaming: true })} />);
     expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
+  });
+
+  it('reports native share success and failure accessibly', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+    render(<ChatMessage message={message()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share assistant message' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Shared assistant message' })).toBeTruthy(),
+    );
+    expect(share).toHaveBeenCalledWith({ text: 'Hello from the assistant' });
+
+    share.mockRejectedValueOnce(new Error('Share cancelled'));
+    fireEvent.click(screen.getByRole('button', { name: 'Shared assistant message' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Share assistant message failed' })).toBeTruthy(),
+    );
+  });
+
+  it('uses the download fallback when native share is unavailable', async () => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn().mockReturnValue('blob:message'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    render(<ChatMessage message={message()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share assistant message' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Shared assistant message' })).toBeTruthy(),
+    );
   });
 
   it('guards regeneration during an active generation and exposes cancellation', () => {

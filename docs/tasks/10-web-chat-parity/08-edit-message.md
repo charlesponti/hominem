@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-08
 title: Wire web user-message editing
-status: ready
+status: completed
 priority: high
 team: web
 project: web-chat-parity
@@ -39,3 +39,12 @@ eligible user messages.
 
 - Web formatting and lint pass.
 - Focused chat component tests pass.
+
+## Completion update — 2026-08-24
+
+- Browser verification confirmed that an eligible user message opens the inline editor.
+- Blank content is rejected in place without a mutation.
+- Cancel restores the transcript and closes the editor.
+- Saving the existing content closes the editor, and a fresh chat load returns the saved content.
+- Focused component tests pass: 9 tests.
+- Web typecheck, lint, and diff checks pass.
