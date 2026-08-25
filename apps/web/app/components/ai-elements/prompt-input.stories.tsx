@@ -14,8 +14,8 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
-  usePromptInputController,
   usePromptInputAttachments,
+  usePromptInputController,
 } from './prompt-input';
 
 const meta = {
@@ -67,7 +67,7 @@ function StoryAttachmentList() {
       {attachments.files.map((file) => (
         <button
           key={file.id}
-          className="rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
+          className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
           onClick={() => attachments.remove(file.id)}
           type="button"
         >
@@ -90,7 +90,10 @@ export const InteractiveHarness: Story = {
     function HarnessContents() {
       const controller = usePromptInputController();
       const attachments = usePromptInputAttachments();
-      attachmentsRef.current = attachments;
+
+      useEffect(() => {
+        attachmentsRef.current = attachments;
+      }, [attachments]);
 
       useEffect(() => {
         const sample = new File(['Sample attachment'], 'sample-note.txt', { type: 'text/plain' });

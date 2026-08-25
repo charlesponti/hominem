@@ -100,15 +100,15 @@ function UpdateGuardClient({
     <>
       {offlineMessage && !isDev && (
         <div className="fixed inset-x-0 bottom-16 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2">
-            <span className="text-sm text-text-primary">{offlineMessage}</span>
+          <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-2">
+            <span className="text-sm text-foreground">{offlineMessage}</span>
           </div>
         </div>
       )}
       {(offlineReady || needRefresh) && !isDev && (
         <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-md border border-default bg-surface px-4 py-2">
-            <span className="text-sm text-text-primary">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-2">
+            <span className="text-sm text-foreground">
               {offlineReady ? 'App ready to work offline' : 'New content available'}
             </span>
             {needRefresh && (
@@ -120,7 +120,7 @@ function UpdateGuardClient({
                 Refresh
               </button>
             )}
-            <button type="button" onClick={closePrompt} className="text-sm text-text-secondary">
+            <button type="button" onClick={closePrompt} className="text-sm text-muted-foreground">
               Close
             </button>
           </div>
@@ -131,7 +131,11 @@ function UpdateGuardClient({
 }
 
 export function UpdateGuard({ children, logo = '', appName = 'App' }: UpdateGuardProps) {
-  const isClient = typeof window !== 'undefined';
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   return (
     <>

@@ -95,6 +95,10 @@ jobs:
           pnpm build --filter=${{ inputs.package-filter }}...
           pnpm test --filter=${{ inputs.package-filter }}...
 
+      - name: react-doctor
+        if: inputs.package-filter == '@hominem/web'
+        run: pnpm --filter @hominem/web doctor
+
       - name: validate-mobile-embed
         if: inputs.mobile-export
         run: NODE_ENV=production pnpm --filter @hominem/omiro run export:embed:ios

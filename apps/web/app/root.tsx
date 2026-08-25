@@ -17,11 +17,11 @@ import { TelemetryProvider } from '~/lib/telemetry/telemetry-provider';
 import type { Route } from './+types/root';
 import { ErrorState } from './components/error-state';
 
-import './globals.css';
+import './app.css';
 import { HonoProvider } from './lib/api';
 import { serverEnv } from './lib/env.server';
-import { sessionMiddleware } from './lib/middleware';
 import './lib/i18n';
+import { sessionMiddleware } from './lib/middleware';
 
 const ICON_VERSION = '20260407';
 

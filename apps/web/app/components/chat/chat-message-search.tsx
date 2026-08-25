@@ -37,7 +37,7 @@ export function ChatMessageSearch({
         isOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-2 opacity-0',
       )}
     >
-      <div className="relative flex min-w-0 flex-1 items-center overflow-hidden rounded-full border border-border-subtle bg-muted">
+      <div className="relative flex min-w-0 flex-1 items-center overflow-hidden rounded-full border border-border bg-muted">
         <div className="flex shrink-0 items-center justify-center px-2.5 text-secondary">
           <Search aria-hidden="true" size={15} />
         </div>
@@ -70,7 +70,7 @@ export function ChatMessageSearch({
       >
         <p
           aria-live="polite"
-          className={cn('min-w-0 text-text-secondary', error && 'text-destructive')}
+          className={cn('min-w-0 text-muted-foreground', error && 'text-destructive-text')}
           role={error ? 'alert' : undefined}
         >
           {error ? error.message : null}

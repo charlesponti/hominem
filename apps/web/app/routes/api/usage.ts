@@ -15,6 +15,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const cookie = request.headers.get('cookie');
   const response = await fetch(new URL('/api/usage', serverEnv.HOMINEM_INTERNAL_API_URL), {
     headers: cookie ? { cookie } : undefined,
+    signal: request.signal,
   });
 
   return new Response(response.body, {

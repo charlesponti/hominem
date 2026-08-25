@@ -20,10 +20,14 @@ export function useStreamdownPlugins(): PluginConfig {
       import('@streamdown/code'),
       import('@streamdown/math'),
       import('@streamdown/mermaid'),
-    ]).then(([cjk, code, math, mermaid]) => {
-      if (!mounted) return;
-      setPlugins({ cjk: cjk.cjk, code: code.code, math: math.math, mermaid: mermaid.mermaid });
-    });
+    ])
+      .then(([cjk, code, math, mermaid]) => {
+        if (!mounted) return;
+        setPlugins({ cjk: cjk.cjk, code: code.code, math: math.math, mermaid: mermaid.mermaid });
+      })
+      .catch(() => {
+        if (mounted) setPlugins({});
+      });
 
     return () => {
       mounted = false;

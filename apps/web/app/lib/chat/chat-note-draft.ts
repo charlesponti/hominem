@@ -7,14 +7,20 @@ export type ChatNoteDraft = {
   title: string;
   content: string;
   truncated: boolean;
+  linkedNoteId?: string;
 };
 
-export function buildChatNoteDraft(messages: ChatMessageDto[], title: string): ChatNoteDraft {
+export function buildChatNoteDraft(
+  messages: ChatMessageDto[],
+  title: string,
+  linkedNoteId?: string,
+): ChatNoteDraft {
   const transcript = messages
-    .filter((message) => message.content.trim())
-    .map(
-      (message) => `${message.role === 'user' ? 'You' : 'Assistant'}:\n${message.content.trim()}`,
-    )
+    .reduce<string[]>((lines, message) => {
+      const content = message.content.trim();
+      if (content) lines.push(`${message.role === 'user' ? 'You' : 'Assistant'}:\n${content}`);
+      return lines;
+    }, [])
     .join('\n\n');
   const content = transcript.slice(0, CHAT_NOTE_MAX_LENGTH);
 
@@ -22,6 +28,7 @@ export function buildChatNoteDraft(messages: ChatMessageDto[], title: string): C
     title: title.trim() || 'Chat transcript',
     content,
     truncated: content.length < transcript.length,
+    ...(linkedNoteId ? { linkedNoteId } : {}),
   };
 }
 

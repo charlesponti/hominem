@@ -8,7 +8,7 @@ export interface ChatResponseSettingsProps {
 
 export function ChatResponseSettings({ value, onChange, onClose }: ChatResponseSettingsProps) {
   return (
-    <div aria-label="Response settings" className="border-b border-border-subtle p-3">
+    <div aria-label="Response settings" className="border-b border-border p-3">
       <div className="flex items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm" htmlFor="response-length">
           Response length
@@ -24,14 +24,14 @@ export function ChatResponseSettings({ value, onChange, onClose }: ChatResponseS
         </label>
         <button
           aria-label="Close response settings"
-          className="text-sm text-text-secondary hover:text-foreground"
+          className="text-sm text-muted-foreground hover:text-foreground"
           onClick={onClose}
           type="button"
         >
           Done
         </button>
       </div>
-      <p className="mt-2 text-xs text-text-secondary">Applies to the next response.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Applies to the next response.</p>
     </div>
   );
 }

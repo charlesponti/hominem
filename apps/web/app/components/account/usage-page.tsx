@@ -1,10 +1,11 @@
 import type { UsageFeatureBreakdown, UsageModelBreakdown } from '@hominem/rpc/types';
 import { ArrowLeft } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/components/ui/button';
 import { useUsageReport } from '~/hooks/use-usage';
+import { formatUsagePeriod, formatUsageTimestamp } from '~/lib/formatters/usage';
 
 const UsageTrendsChart = lazy(() =>
   import('./usage-trends-chart').then((module) => ({ default: module.UsageTrendsChart })),
@@ -17,7 +18,6 @@ const preciseUsdFormatter = new Intl.NumberFormat('en-US', {
 });
 const numberFormatter = new Intl.NumberFormat('en-US');
 const preciseNumberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 12 });
-const periodFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
 const featureLabels: Record<string, string> = {
   chat_stream: 'Chat',
   text_enhance: 'Text enhancement',
@@ -121,6 +121,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 export function UsagePage() {
   const { data: report, error, isPending, refetch } = useUsageReport();
+  const periodLabel = useMemo(() => (report ? formatUsagePeriod(report.range.from) : ''), [report]);
+  const lastRecordedLabel = useMemo(
+    () =>
+      report?.summary.lastRecordedAt ? formatUsageTimestamp(report.summary.lastRecordedAt) : '',
+    [report?.summary.lastRecordedAt],
+  );
   const [showPreciseValues, setShowPreciseValues] = useState(false);
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
@@ -160,9 +166,7 @@ export function UsagePage() {
           <>
             <section className="space-y-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-base font-semibold">
-                  {periodFormatter.format(new Date(report.range.from))}
-                </h2>
+                <h2 className="text-base font-semibold">{periodLabel}</h2>
                 <span className="text-sm text-muted-foreground">
                   {formatUsd(report.monthly.totalCostUsd, showPreciseValues)} of{' '}
                   {formatUsd(report.monthly.limitUsd, showPreciseValues)}
@@ -192,9 +196,7 @@ export function UsagePage() {
                 {report.monthly.isOverLimit
                   ? "You've reached this month's free AI usage limit."
                   : 'Resets at the start of next month.'}
-                {report.summary.lastRecordedAt
-                  ? ` Last recorded ${new Date(report.summary.lastRecordedAt).toLocaleString()}.`
-                  : ''}
+                {lastRecordedLabel ? ` Last recorded ${lastRecordedLabel}.` : ''}
               </p>
             </section>
             {report.byFeature.length || report.byModel.length ? (

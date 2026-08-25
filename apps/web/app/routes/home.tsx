@@ -17,7 +17,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const headers = cookie ? { cookie } : undefined;
   const apiUrl = serverEnv.HOMINEM_INTERNAL_API_URL;
 
-  const listResponse = await fetch(new URL('/api/chats?limit=1', apiUrl).toString(), { headers });
+  const listResponse = await fetch(new URL('/api/chats?limit=1', apiUrl).toString(), {
+    headers,
+    signal: request.signal,
+  });
   const chats = listResponse.ok ? ((await listResponse.json()) as ChatListItem[]) : [];
 
   if (chats[0]?.id) {

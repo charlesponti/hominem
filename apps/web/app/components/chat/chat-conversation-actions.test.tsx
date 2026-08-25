@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatConversationActions } from './chat-conversation-actions';
@@ -8,7 +8,7 @@ import { ChatConversationActions } from './chat-conversation-actions';
 afterEach(cleanup);
 
 describe('ChatConversationActions', () => {
-  it('delegates active actions and disables only the affected controls', () => {
+  it('delegates active actions and disables only the affected controls', async () => {
     const onArchive = vi.fn();
     const onNewChat = vi.fn();
     const onSearch = vi.fn();
@@ -23,19 +23,29 @@ describe('ChatConversationActions', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Search messages' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Start a new chat' }));
     expect(onSearch).toHaveBeenCalledOnce();
+
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open conversation actions' }), {
+      button: 0,
+    });
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'New chat' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New chat' }));
     expect(onNewChat).toHaveBeenCalledOnce();
-    expect(
-      screen.getByRole('button', { name: 'Archiving conversation' }).hasAttribute('disabled'),
-    ).toBe(true);
-    expect(screen.getByRole('button', { name: 'Response settings' }).hasAttribute('disabled')).toBe(
-      false,
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open conversation actions' }), {
+      button: 0,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Archiving conversation…' })).toBeTruthy(),
     );
-    expect(screen.getByRole('toolbar', { name: 'Conversation actions' })).toBeTruthy();
+    expect(
+      screen
+        .getByRole('menuitem', { name: 'Archiving conversation…' })
+        .hasAttribute('data-disabled'),
+    ).toBe(true);
+    expect(screen.getByRole('menuitem', { name: 'Response settings' })).toBeTruthy();
   });
 
-  it('keeps unrelated actions available while search or settings owns the pending state', () => {
+  it('keeps unrelated actions available while search or settings owns the pending state', async () => {
     const onArchive = vi.fn();
     const onNewChat = vi.fn();
     const onResponseSettings = vi.fn();
@@ -53,12 +63,6 @@ describe('ChatConversationActions', () => {
     expect(screen.getByRole('button', { name: 'Search messages' }).hasAttribute('disabled')).toBe(
       true,
     );
-    expect(screen.getByRole('button', { name: 'Response settings' }).hasAttribute('disabled')).toBe(
-      false,
-    );
-    expect(
-      screen.getByRole('button', { name: 'Archive conversation' }).hasAttribute('disabled'),
-    ).toBe(false);
 
     rerender(
       <ChatConversationActions
@@ -70,17 +74,24 @@ describe('ChatConversationActions', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Response settings' }).hasAttribute('disabled')).toBe(
-      true,
-    );
     expect(screen.getByRole('button', { name: 'Search messages' }).hasAttribute('disabled')).toBe(
       false,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Search messages' }));
     expect(onSearch).toHaveBeenCalledOnce();
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open conversation actions' }), {
+      button: 0,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Response settings' })).toBeTruthy(),
+    );
+    expect(
+      screen.getByRole('menuitem', { name: 'Response settings' }).hasAttribute('data-disabled'),
+    ).toBe(true);
+    expect(screen.getByRole('menuitem', { name: 'Archive conversation' })).toBeTruthy();
   });
 
-  it('exposes an accessible scoped debug toggle', () => {
+  it('exposes an accessible scoped debug toggle', async () => {
     const onDebug = vi.fn();
     const { rerender } = render(
       <ChatConversationActions
@@ -92,8 +103,13 @@ describe('ChatConversationActions', () => {
       />,
     );
 
-    const toggle = screen.getByRole('button', { name: 'Enable debug mode' });
-    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open conversation actions' }), {
+      button: 0,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Enable debug mode' })).toBeTruthy(),
+    );
+    const toggle = screen.getByRole('menuitem', { name: 'Enable debug mode' });
     fireEvent.click(toggle);
     expect(onDebug).toHaveBeenCalledOnce();
 
@@ -107,8 +123,11 @@ describe('ChatConversationActions', () => {
         onSearch={() => undefined}
       />,
     );
-    expect(
-      screen.getByRole('button', { name: 'Disable debug mode' }).getAttribute('aria-pressed'),
-    ).toBe('true');
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open conversation actions' }), {
+      button: 0,
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Disable debug mode' })).toBeTruthy(),
+    );
   });
 });

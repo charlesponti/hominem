@@ -142,6 +142,7 @@ export function useFileUpload(): UseFileUploadReturn {
     null,
   );
   const uppyPromiseRef = useRef<ReturnType<typeof loadUppyModules> | null>(null);
+  const uppyCleanupRef = useRef<(() => void) | null>(null);
 
   // Pre-load Uppy modules in test mode for deterministic behavior
   useEffect(() => {
@@ -149,6 +150,15 @@ export function useFileUpload(): UseFileUploadReturn {
       uppyPromiseRef.current = loadUppyModules();
     }
   }, []);
+
+  useEffect(
+    () => () => {
+      uppyCleanupRef.current?.();
+      uppyRef.current?.cancelAll();
+      uppyRef.current?.clear();
+    },
+    [],
+  );
 
   const getUppy = useCallback(async () => {
     if (uppyRef.current) {
@@ -191,27 +201,36 @@ export function useFileUpload(): UseFileUploadReturn {
       },
     });
 
-    uppy.on('file-added', (file) => {
+    const handleFileAdded = (file: UppyFile<Meta, Body>) => {
       uppy.setFileMeta(file.id, {
         originalName: file.name ?? 'file',
         mimetype: file.type || 'application/octet-stream',
       });
-    });
+    };
 
-    uppy.on('progress', (progress: number) => {
+    const handleProgress = (progress: number) => {
       setUploadState((prev) => ({
         ...prev,
         progress,
       }));
-    });
+    };
 
-    uppy.on('restriction-failed', (file: UppyFile<Meta, Body> | undefined, error: Error) => {
+    const handleRestrictionFailed = (file: UppyFile<Meta, Body> | undefined, error: Error) => {
       const message = file ? `${file.name}: ${error.message}` : error.message;
       setUploadState((prev) => ({
         ...prev,
         errors: [...prev.errors, message],
       }));
-    });
+    };
+
+    uppy.on('file-added', handleFileAdded);
+    uppy.on('progress', handleProgress);
+    uppy.on('restriction-failed', handleRestrictionFailed);
+    uppyCleanupRef.current = () => {
+      uppy.off('file-added', handleFileAdded);
+      uppy.off('progress', handleProgress);
+      uppy.off('restriction-failed', handleRestrictionFailed);
+    };
 
     uppyRef.current = uppy;
     return uppy;

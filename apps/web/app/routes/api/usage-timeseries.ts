@@ -22,6 +22,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const cookie = request.headers.get('cookie');
   const response = await fetch(apiUrl, {
     headers: cookie ? { cookie } : undefined,
+    signal: request.signal,
   });
 
   return new Response(response.body, {

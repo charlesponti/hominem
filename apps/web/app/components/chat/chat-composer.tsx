@@ -79,7 +79,7 @@ export function ChatComposer({
         <div className="mb-2 flex flex-wrap gap-1.5" aria-label="Attached files">
           {attachments.map((file) => (
             <button
-              className="flex items-center gap-1 rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
+              className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
               key={file.id}
               onClick={() => onRemoveAttachment?.(file.id)}
               type="button"

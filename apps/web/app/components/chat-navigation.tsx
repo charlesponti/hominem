@@ -26,7 +26,7 @@ function getLastMessageLabel(query: { isPending: boolean; data?: Array<{ created
   return query.isPending ? 'Loading…' : formatLastMessageDate(query.data?.[0]?.createdAt);
 }
 
-export function ChatNavigation() {
+export function ChatNavigation({ showNewChat = true }: { showNewChat?: boolean }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: chats = [], isPending } = useChatsList();
@@ -43,16 +43,18 @@ export function ChatNavigation() {
 
   return (
     <div className="flex items-center gap-1">
-      <Button
-        aria-label="Start a new chat"
-        disabled={createChat.isPending}
-        onClick={handleNewChat}
-        size="sm"
-        variant="outline"
-      >
-        {createChat.isPending ? <LoaderCircle className="animate-spin" /> : <Plus />}
-        <span className="hidden sm:inline">New chat</span>
-      </Button>
+      {showNewChat ? (
+        <Button
+          aria-label="Start a new chat"
+          disabled={createChat.isPending}
+          onClick={handleNewChat}
+          size="sm"
+          variant="outline"
+        >
+          {createChat.isPending ? <LoaderCircle className="animate-spin" /> : <Plus />}
+          <span className="hidden sm:inline">New chat</span>
+        </Button>
+      ) : null}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

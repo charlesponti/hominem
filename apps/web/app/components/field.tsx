@@ -29,8 +29,8 @@ function Field({ label, helpText, error, required, children, id: externalId }: F
         <label
           htmlFor={id}
           className={cn(
-            'body-3 font-medium text-text-primary',
-            required && "after:content-['*'] after:ml-0.5 after:text-destructive",
+            'text-sm font-medium text-foreground',
+            required && "after:content-['*'] after:ml-0.5 after:text-destructive-text",
           )}
         >
           {label}
@@ -50,11 +50,11 @@ function Field({ label, helpText, error, required, children, id: externalId }: F
         : children}
 
       {error ? (
-        <p id={errorId} role="alert" className="body-4 text-destructive">
+        <p id={errorId} role="alert" className="text-sm text-destructive-text">
           {error}
         </p>
       ) : helpText ? (
-        <p id={descId} className="body-4 text-text-tertiary">
+        <p id={descId} className="text-sm text-muted-foreground">
           {helpText}
         </p>
       ) : null}

@@ -26,7 +26,7 @@ export function StatePanel({
   return (
     <div
       className={cn(
-        'rounded-3xl border-subtle bg-surface p-5',
+        'rounded-3xl border border-border bg-card p-5',
         centered
           ? 'flex min-h-80 flex-col items-center justify-center text-center'
           : 'flex flex-col gap-3',
@@ -34,11 +34,11 @@ export function StatePanel({
       )}
     >
       {icon ? (
-        <div className={cn(centered ? 'mb-4' : 'mb-1', 'text-text-tertiary')}>{icon}</div>
+        <div className={cn(centered ? 'mb-4' : 'mb-1', 'text-muted-foreground')}>{icon}</div>
       ) : null}
       {title ? <h2 className="text-base font-semibold text-foreground">{title}</h2> : null}
       {description ? (
-        <p className={cn('text-sm text-text-secondary', centered && 'max-w-[32ch]')}>
+        <p className={cn('text-sm text-muted-foreground', centered && 'max-w-[32ch]')}>
           {description}
         </p>
       ) : null}

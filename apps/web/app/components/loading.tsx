@@ -18,7 +18,14 @@ function Loading({
   const content = (
     <div className={cn('flex items-center justify-center', className)}>
       <div className="flex items-center space-x-3">
-        <Loader2 className={cn(`loading-size-${size}`)} />
+        <Loader2
+          className={cn({
+            'size-4': size === 'sm',
+            'size-8': size === 'md',
+            'size-12': size === 'lg',
+            'size-16': size === 'xl',
+          })}
+        />
         {text && <span className="text-sm text-muted-foreground">{text}</span>}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
 export const UploadedFileSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   originalName: z.string().min(1),
   type: z.enum(['image', 'document', 'audio', 'video', 'unknown']),
   mimetype: z.string().min(1),

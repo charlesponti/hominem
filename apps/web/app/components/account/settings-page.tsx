@@ -29,12 +29,17 @@ function formatUsd(amount: number) {
   return usdFormatter.format(amount);
 }
 
+function showDeleteNotice() {
+  window.alert('Account deletion is not available in this release.');
+}
+
 export function AccountSettingsPage({ user }: { user: User }) {
   const navigate = useNavigate();
   const [name, setName] = useState(user.name);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
   const { data: usage } = useMonthlyUsage();
+  const [usagePeriod] = useState(() => formatUsagePeriod(new Date()));
   const nameChanged = name.trim() !== user.name.trim();
   const usagePercent = usage ? Math.min(100, (usage.totalCostUsd / usage.limitUsd) * 100) : 0;
 
@@ -55,10 +60,6 @@ export function AccountSettingsPage({ user }: { user: User }) {
     }
   }
 
-  function showDeleteNotice() {
-    window.alert('Account deletion is not available in this release.');
-  }
-
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
@@ -75,7 +76,7 @@ export function AccountSettingsPage({ user }: { user: User }) {
 
       <div className="space-y-8 rounded-xl border border-border bg-card p-5 sm:p-7">
         <section className="space-y-4">
-          <h2 className="text-base font-semibold">Identity</h2>
+          <h2 className="text-primary font-semibold">Identity</h2>
           <label className="block space-y-2 text-xs">
             <span className="text-muted-foreground">Name</span>
             <Input value={name} onChange={(event) => setName(event.target.value)} />
@@ -98,7 +99,7 @@ export function AccountSettingsPage({ user }: { user: User }) {
 
         {usage ? (
           <section className="space-y-3 border-t border-border pt-6">
-            <h2 className="text-base font-semibold">AI usage · {formatUsagePeriod(new Date())}</h2>
+            <h2 className="text-base font-semibold">AI usage · {usagePeriod}</h2>
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-semibold tabular-nums">
                 {formatUsd(usage.totalCostUsd)}

@@ -2,7 +2,7 @@
 
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from 'ai';
 import { CornerDownLeftIcon, ImageIcon, Monitor, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import type {
   ChangeEvent,
@@ -68,6 +68,7 @@ import { cn } from '~/lib/utils';
 const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
   try {
     const response = await fetch(url);
+    if (!response.ok) return null;
     const blob = await response.blob();
     // FileReader uses callback-based API, wrapping in Promise is necessary
     // oxlint-disable-next-line eslint-plugin-promise(avoid-new)
@@ -558,30 +559,30 @@ export const PromptInput = ({
         return;
       }
 
+      const capacity =
+        typeof maxFiles === 'number' ? Math.max(0, maxFiles - items.length) : undefined;
+      const capped = typeof capacity === 'number' ? sized.slice(0, capacity) : sized;
+      if (typeof capacity === 'number' && sized.length > capacity) {
+        onError?.({
+          code: 'max_files',
+          message: 'Too many files. Some were not added.',
+        });
+      }
+      const next: (FileUIPart & { id: string })[] = [];
+      for (const file of capped) {
+        next.push({
+          filename: file.name,
+          id: nanoid(),
+          mediaType: file.type,
+          type: 'file',
+          url: URL.createObjectURL(file),
+        });
+      }
       setItems((prev) => {
-        const capacity =
-          typeof maxFiles === 'number' ? Math.max(0, maxFiles - prev.length) : undefined;
-        const capped = typeof capacity === 'number' ? sized.slice(0, capacity) : sized;
-        if (typeof capacity === 'number' && sized.length > capacity) {
-          onError?.({
-            code: 'max_files',
-            message: 'Too many files. Some were not added.',
-          });
-        }
-        const next: (FileUIPart & { id: string })[] = [];
-        for (const file of capped) {
-          next.push({
-            filename: file.name,
-            id: nanoid(),
-            mediaType: file.type,
-            type: 'file',
-            url: URL.createObjectURL(file),
-          });
-        }
         return [...prev, ...next];
       });
     },
-    [matchesAccept, maxFiles, maxFileSize, onError],
+    [items.length, matchesAccept, maxFiles, maxFileSize, onError],
   );
 
   const removeLocal = useCallback(
@@ -877,9 +878,11 @@ export const PromptInput = ({
 
   // Always provide LocalAttachmentsContext so children get validated add function
   return (
-    <LocalAttachmentsContext.Provider value={attachmentsCtx}>
-      {withReferencedSources}
-    </LocalAttachmentsContext.Provider>
+    <LazyMotion features={domAnimation}>
+      <LocalAttachmentsContext.Provider value={attachmentsCtx}>
+        {withReferencedSources}
+      </LocalAttachmentsContext.Provider>
+    </LazyMotion>
   );
 };
 
@@ -1168,7 +1171,7 @@ export const PromptInputSubmit = ({
     >
       {children ?? (
         <AnimatePresence initial={false} mode="wait">
-          <motion.span
+          <m.span
             animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
             exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
             initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
@@ -1176,7 +1179,7 @@ export const PromptInputSubmit = ({
             transition={{ duration: reduceMotion ? 0.08 : 0.15, ease: [0.23, 1, 0.32, 1] }}
           >
             {Icon}
-          </motion.span>
+          </m.span>
         </AnimatePresence>
       )}
     </InputGroupButton>

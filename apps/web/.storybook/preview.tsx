@@ -8,7 +8,7 @@ import { MemoryRouter } from 'react-router';
 import { TooltipProvider } from '~/components/ui/tooltip';
 import { HonoProvider } from '~/lib/api/provider';
 
-import '../app/styles/globals.css';
+import '../app/app.css';
 
 function Providers({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
