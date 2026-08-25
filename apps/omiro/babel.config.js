@@ -6,7 +6,10 @@ module.exports = function (api) {
       [
         'babel-preset-expo',
         {
-          reactCompiler: true,
+          // Omiro uses native/Reanimated callbacks and async finalizers that
+          // React Compiler 1.x cannot lower. Keep the existing explicit
+          // memoization semantics until the Expo compiler supports them.
+          reactCompiler: false,
           lazyImports: true,
         },
       ],

@@ -1,7 +1,6 @@
 import type { MarkdownComponent } from '@hominem/chat';
 import { logger } from '@hominem/telemetry';
-import type React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { createElement, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { makeStyles, useThemeColor } from '~/components/theme';
@@ -49,7 +48,7 @@ export function MessageContent({
   content: string;
   enableMarkdown: boolean;
   textStyle: object;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   const Markdown = useMarkdownComponent();
   const isStreaming = !enableMarkdown;
@@ -85,13 +84,14 @@ export function MessageContent({
     }),
     [textPrimary, popover, textStyle],
   );
+  const markdownChildren = { children: content };
 
   return (
     <View style={styles.content}>
       {isStreaming || !Markdown ? (
         <Text style={textStyle}>{content}</Text>
       ) : (
-        <Markdown style={markdownStyle}>{content}</Markdown>
+        createElement(Markdown, { style: markdownStyle, ...markdownChildren })
       )}
       {children}
     </View>

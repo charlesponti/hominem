@@ -55,7 +55,9 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
   const reducedMotion = useReducedMotion();
 
   const valueRef = useRef(value);
-  valueRef.current = value;
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const voice = useVoiceComposerInput({
     getMessage: () => valueRef.current,

@@ -72,12 +72,12 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
   const { uploadAssets, uploadState, clearErrors } = useFileUpload();
 
   const setAttachments = useCallback((next: SetStateAction<ComposerAttachment[]>) => {
-    setAttachmentsState((currentAttachments) => {
-      const resolvedAttachments = typeof next === 'function' ? next(currentAttachments) : next;
-      attachmentsRef.current = resolvedAttachments;
-      return resolvedAttachments;
-    });
+    setAttachmentsState(next);
   }, []);
+
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
 
   const deleteUploadedFile = useCallback(
     (fileId: string) => {
@@ -93,13 +93,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
   // Attachment operations
   const onRemove = useCallback(
     (id: string) => {
-      setAttachments((prev) => {
-        const target = prev.find((a) => a.id === id);
-        if (target?.uploadedFile?.id) {
-          deleteUploadedFile(target.uploadedFile.id);
-        }
-        return prev.filter((a) => a.id !== id);
-      });
+      const target = attachmentsRef.current.find((attachment) => attachment.id === id);
+      if (target?.uploadedFile?.id) deleteUploadedFile(target.uploadedFile.id);
+      setAttachments((prev) => prev.filter((attachment) => attachment.id !== id));
     },
     [deleteUploadedFile, setAttachments],
   );

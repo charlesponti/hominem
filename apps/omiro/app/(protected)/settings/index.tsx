@@ -35,6 +35,12 @@ function formatUsd(amount: number): string {
   return usdFormatter.format(amount);
 }
 
+function showDeleteAccountAlert() {
+  Alert.alert(t.settings.deleteAccount.alertTitle, t.settings.deleteAccount.alertMessage, [
+    { text: t.settings.deleteAccount.ok, style: 'default' },
+  ]);
+}
+
 function getInitials(name: string, fallback: string): string {
   const source = name.trim() || fallback;
   const parts = source.split(/\s+/).filter(Boolean);
@@ -192,12 +198,6 @@ function Settings() {
     Alert.alert(t.settings.signOut.alertTitle, t.settings.signOut.alertMessage, [
       { text: t.settings.signOut.cancel, style: 'cancel' },
       { text: t.settings.signOut.confirm, style: 'destructive', onPress: () => signOut() },
-    ]);
-  };
-
-  const onDeleteAccountPress = () => {
-    Alert.alert(t.settings.deleteAccount.alertTitle, t.settings.deleteAccount.alertMessage, [
-      { text: t.settings.deleteAccount.ok, style: 'default' },
     ]);
   };
 
@@ -366,7 +366,7 @@ function Settings() {
         <SettingsRow
           icon="trash"
           label={t.settings.deleteAccount.label}
-          onPress={onDeleteAccountPress}
+          onPress={showDeleteAccountAlert}
           destructive
         />
       </View>

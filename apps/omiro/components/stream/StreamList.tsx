@@ -56,10 +56,7 @@ export function StreamList<T>({
   return (
     <FlashList
       ref={listRef}
-      contentContainerStyle={{
-        paddingTop: contentPaddingTop,
-      }}
-      contentInset={{ bottom: contentPaddingBottom }}
+      contentInset={{ bottom: contentPaddingBottom, top: contentPaddingTop }}
       contentInsetAdjustmentBehavior="automatic"
       data={data}
       keyboardDismissMode="on-drag"

@@ -16,13 +16,14 @@ export function useEmailAuth(ops: EmailAuthOperations) {
   const run = useCallback(
     async (
       action: () => Promise<void>,
-      opts: { resending?: boolean; clearOtpOnError?: boolean } = {},
+      opts: { resending?: boolean; clearOtpOnError?: boolean; clearOtpOnSuccess?: boolean } = {},
     ) => {
       const setBusy = opts.resending ? setIsResending : setIsSubmitting;
       try {
         setBusy(true);
         setError(null);
         await action();
+        if (opts.clearOtpOnSuccess) setOtp('');
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : t.auth.verify.authFailedError);
         if (opts.clearOtpOnError) setOtp('');
@@ -53,13 +54,7 @@ export function useEmailAuth(ops: EmailAuthOperations) {
     handleResendOtp: (email: string) => {
       const resolved = normalizeEmail(email);
       return resolved
-        ? run(
-            async () => {
-              await ops.resendOtp(resolved);
-              setOtp('');
-            },
-            { resending: true },
-          )
+        ? run(() => ops.resendOtp(resolved), { clearOtpOnSuccess: true, resending: true })
         : (setError(t.auth.verify.emailRequiredError), Promise.resolve());
     },
   };

@@ -59,7 +59,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
   }));
 
   return (
-    <View style={[styles.control]} testID="composer-kind-control">
+    <View style={styles.control} testID="composer-kind-control">
       <Animated.View
         pointerEvents="none"
         style={[

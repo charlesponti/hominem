@@ -28,9 +28,7 @@ export function ModalOverlay({
   statusBarTranslucent = false,
 }: ModalOverlayProps) {
   const scrimColor = useThemeColor(`--color-${backdropToken}`) as string;
-  const Backdrop = dismissOnBackdropPress ? Pressable : View;
-
-  const styles = useStyles;
+  const styles = modalOverlayStyles;
 
   return (
     <Modal
@@ -40,17 +38,23 @@ export function ModalOverlay({
       transparent
       visible={visible}
     >
-      <Backdrop
-        onPress={dismissOnBackdropPress ? onClose : undefined}
-        style={[styles.backdrop, styles[position], { backgroundColor: scrimColor }]}
-      >
-        {children}
-      </Backdrop>
+      {dismissOnBackdropPress ? (
+        <Pressable
+          onPress={onClose}
+          style={[styles.backdrop, styles[position], { backgroundColor: scrimColor }]}
+        >
+          {children}
+        </Pressable>
+      ) : (
+        <View style={[styles.backdrop, styles[position], { backgroundColor: scrimColor }]}>
+          {children}
+        </View>
+      )}
     </Modal>
   );
 }
 
-const useStyles = makeStyles(() => ({
+const modalOverlayStyles = makeStyles(() => ({
   backdrop: { flex: 1 },
   top: { justifyContent: 'flex-start' },
   center: { justifyContent: 'center' },

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
-import { ComposerDock } from '~/components/composer/ComposerDock';
+import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
 import { inboxDayGroupKey, inboxDayGroupLabel } from '~/components/inbox/format-inbox-date';
 import { InboxStreamItem } from '~/components/inbox/InboxStreamItem';
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
@@ -30,7 +30,7 @@ function groupByDay(items: InboxStreamItemData[]) {
 }
 
 export function HomeScreen() {
-  const [composerInset, setComposerInset] = useState(0);
+  const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
   const inbox = useInboxStreamItems();
   const { isFetching: isFetchingTasks, refetch: refetchTasks } = useTasksQuery();
   const recentItems = inbox.items.slice(0, 6);
@@ -69,7 +69,7 @@ export function HomeScreen() {
           ) : null}
         </View>
       </ScrollView>
-      <ComposerDock onInsetChange={setComposerInset} testID="home-composer-dock">
+      <ComposerDock safeAreaBottom={safeAreaBottom} testID="home-composer-dock">
         <Composer
           entryMode="mixed"
           initialMessage={readInboxDraft()}

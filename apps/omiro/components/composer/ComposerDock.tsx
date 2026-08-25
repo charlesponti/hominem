@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,27 +7,24 @@ import { getFloatingDockInset } from './composerDock.helpers';
 
 interface ComposerDockProps {
   children: ReactNode;
+  safeAreaBottom: number;
   testID?: string;
-  /**
-   * Reports the extra space a scroll surface must reserve while the keyboard
-   * is open, since this dock lifts above the keyboard by translating out of
-   * its normal column position rather than resizing it.
-   */
-  onInsetChange?: (inset: number) => void;
 }
 
-export function ComposerDock({ children, testID, onInsetChange }: ComposerDockProps) {
+export function useComposerDockMetrics() {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardState((state) => state.height);
+  return {
+    inset: getFloatingDockInset({ keyboardHeight, safeAreaBottom: insets.bottom }),
+    safeAreaBottom: insets.bottom,
+  };
+}
 
-  useEffect(() => {
-    onInsetChange?.(getFloatingDockInset({ keyboardHeight, safeAreaBottom: insets.bottom }));
-  }, [insets.bottom, keyboardHeight, onInsetChange]);
-
+export function ComposerDock({ children, safeAreaBottom, testID }: ComposerDockProps) {
   return (
     <KeyboardStickyView
-      offset={{ closed: 0, opened: insets.bottom }}
-      style={{ paddingBottom: insets.bottom, paddingHorizontal: 8 }}
+      offset={{ closed: 0, opened: safeAreaBottom }}
+      style={{ paddingBottom: safeAreaBottom, paddingHorizontal: 8 }}
       testID={testID}
     >
       <View>{children}</View>

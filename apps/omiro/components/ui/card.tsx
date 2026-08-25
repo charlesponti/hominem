@@ -12,7 +12,7 @@ import {
 import { makeStyles } from '~/components/theme';
 
 export function Card({ children, style, ...props }: PropsWithChildren<ViewProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <View {...props} style={[styles.card, style]}>
       {children}
@@ -21,7 +21,7 @@ export function Card({ children, style, ...props }: PropsWithChildren<ViewProps>
 }
 
 export function CardHeader({ children, style, ...props }: PropsWithChildren<ViewProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <View {...props} style={[styles.header, style]}>
       {children}
@@ -30,7 +30,7 @@ export function CardHeader({ children, style, ...props }: PropsWithChildren<View
 }
 
 export function CardTitle({ children, style, ...props }: PropsWithChildren<TextProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <Text {...props} style={[styles.title, style]}>
       {children}
@@ -39,7 +39,7 @@ export function CardTitle({ children, style, ...props }: PropsWithChildren<TextP
 }
 
 export function CardDescription({ children, style, ...props }: PropsWithChildren<TextProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <Text {...props} style={[styles.description, style]}>
       {children}
@@ -48,7 +48,7 @@ export function CardDescription({ children, style, ...props }: PropsWithChildren
 }
 
 export function CardAction({ children, style, ...props }: PropsWithChildren<ViewProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <View {...props} style={[styles.action, style]}>
       {children}
@@ -65,7 +65,7 @@ export function CardContent({ children, style, ...props }: PropsWithChildren<Vie
 }
 
 export function CardFooter({ children, style, ...props }: PropsWithChildren<ViewProps>) {
-  const styles = useStyles;
+  const styles = cardStyles;
   return (
     <View {...props} style={[styles.footer, style]}>
       {children}
@@ -73,7 +73,7 @@ export function CardFooter({ children, style, ...props }: PropsWithChildren<View
   );
 }
 
-const useStyles = makeStyles((currentTheme) => ({
+const cardStyles = makeStyles((currentTheme) => ({
   card: {
     backgroundColor: currentTheme.colors.card,
     gap: 16,

@@ -71,6 +71,7 @@ export const TimeStream = memo(function TimeStream({
     const message = error instanceof Error ? error.message : null;
     if (!message || message === errorRef.current) return;
     errorRef.current = message;
+    // react-doctor-disable-next-line no-pass-data-to-parent -- this is a deduplicated external toast notification, not derived render data.
     onError(message);
   }, [error, onError]);
 

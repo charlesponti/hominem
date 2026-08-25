@@ -53,7 +53,7 @@ function AuthScreen() {
     return { stage: 5, message: 'Ready to go!' };
   };
 
-  const progress = useMemo(() => getEmailProgress(), [email]);
+  const progress = getEmailProgress();
 
   // Rounded-rect path for the button outline, traced clockwise from top-left.
   const borderPath = useMemo(() => {
@@ -141,8 +141,8 @@ function AuthScreen() {
     }
   }, [normalizedEmail, requestEmailOtp, router]);
 
-  const isProbing = useMemo(() => isPending && !authError, [isPending, authError]);
-  const displayError = useMemo(() => !!authError, [authError]);
+  const isProbing = isPending && !authError;
+  const displayError = authError;
 
   if (isSignedIn) {
     return <Redirect href={CHAT_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
@@ -185,7 +185,7 @@ function AuthScreen() {
                       autoCorrect={false}
                       autoFocus
                       editable={!isSubmitting}
-                      hasError={displayError}
+                      hasError={Boolean(displayError)}
                       cursorColor={textPrimary}
                       selectionColor={textPrimary}
                       style={{

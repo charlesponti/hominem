@@ -85,6 +85,7 @@ function resolveAutoSubmitInput({
   };
 }
 
+// react-doctor-disable-next-line no-giant-component -- auth verification keeps OTP timing, resend, auto-submit, and recovery states together.
 function VerifyScreen() {
   const router = useRouter();
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();

@@ -83,10 +83,14 @@ export const createMMKVStore = async () => {
     upsertMedia: async (media: Media) => {
       const nextMedia = normalizeMedia(media);
       const mediaItems = parseJSON<Media[]>(KEYS.media) ?? [];
-      writeJSON(KEYS.media, [
-        nextMedia,
-        ...mediaItems.filter((item) => item.id !== nextMedia.id).map(normalizeMedia),
-      ]);
+      const nextItems = mediaItems.reduce<Media[]>(
+        (items, item) => {
+          if (item.id !== nextMedia.id) items.push(normalizeMedia(item));
+          return items;
+        },
+        [nextMedia],
+      );
+      writeJSON(KEYS.media, nextItems);
       return nextMedia;
     },
     listMedia: async () => {

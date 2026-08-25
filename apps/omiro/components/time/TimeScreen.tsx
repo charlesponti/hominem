@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { ComposerDock } from '~/components/composer/ComposerDock';
+import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
@@ -16,7 +16,7 @@ import { TimeStream } from './TimeStream';
 
 export function TimeScreen() {
   const router = useRouter();
-  const [composerInset, setComposerInset] = useState(0);
+  const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [toastKey, setToastKey] = useState(0);
   const [toastExpanded, setToastExpanded] = useState(false);
@@ -70,7 +70,7 @@ export function TimeScreen() {
           </IconButton>
         </View>
       ) : null}
-      <ComposerDock onInsetChange={setComposerInset} testID="time-composer-dock">
+      <ComposerDock safeAreaBottom={safeAreaBottom} testID="time-composer-dock">
         <TimeComposer onOpenEvent={openEvent} />
       </ComposerDock>
     </View>

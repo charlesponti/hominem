@@ -18,9 +18,7 @@ export function ActiveMessageActions({
   isUser,
   timestamp,
   message,
-  canEdit,
-  canRegenerate,
-  canDelete,
+  actions,
   onEdit,
   onRegenerate,
   onDelete,
@@ -29,9 +27,7 @@ export function ActiveMessageActions({
   isUser: boolean;
   timestamp: string;
   message: ChatMessageItem;
-  canEdit: boolean;
-  canRegenerate: boolean;
-  canDelete: boolean;
+  actions: { canDelete: boolean; canEdit: boolean; canRegenerate: boolean };
   onEdit: () => void;
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
@@ -54,11 +50,11 @@ export function ActiveMessageActions({
         <ChatCopyButton message={message} />
         <ChatSpeakButton message={message} />
         <ChatShareButton message={message} />
-        {canEdit ? <ActionIconButton icon="square.and.pencil" onPress={onEdit} /> : null}
-        {canRegenerate ? (
+        {actions.canEdit ? <ActionIconButton icon="square.and.pencil" onPress={onEdit} /> : null}
+        {actions.canRegenerate ? (
           <ActionIconButton icon="arrow.clockwise" onPress={() => onRegenerate?.(message.id)} />
         ) : null}
-        {canDelete ? (
+        {actions.canDelete ? (
           <ActionIconButton icon="trash" isDestructive onPress={() => onDelete?.(message.id)} />
         ) : null}
       </View>

@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { makeStyles, useThemeColor } from '~/components/theme';
 
@@ -71,7 +67,7 @@ export function DiscreteSlider({
       position.value = Math.min(1, Math.max(0, next));
     })
     .onEnd(() => {
-      runOnJS(setStepFromFraction)(position.value);
+      scheduleOnRN(setStepFromFraction, position.value);
     });
 
   const thumbStyle = useAnimatedStyle(() => ({

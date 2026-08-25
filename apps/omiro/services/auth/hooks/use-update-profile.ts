@@ -20,5 +20,5 @@ export async function updateProfile(updates: Partial<User>): Promise<void> {
 }
 
 export function useUpdateProfile() {
-  return useCallback(updateProfile, []);
+  return useCallback((updates: Partial<User>) => updateProfile(updates), []);
 }

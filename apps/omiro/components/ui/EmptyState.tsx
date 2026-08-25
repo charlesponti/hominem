@@ -1,5 +1,6 @@
+import { Image, type ImageSource } from 'expo-image';
 import type { SFSymbol } from 'expo-symbols';
-import { Image, Text, View, type ImageSourcePropType } from 'react-native';
+import { Text, View } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
 
 import { makeStyles, useThemeColor } from '~/components/theme';
@@ -10,7 +11,7 @@ import AppIcon from './icon';
 interface EmptyStateProps {
   action?: { label: string; onPress: () => void };
   description?: string;
-  imageSource?: ImageSourcePropType;
+  imageSource?: ImageSource;
   sfSymbol?: SFSymbol;
   title: string;
 }
@@ -26,7 +27,7 @@ function EmptyState({ action, description, imageSource, sfSymbol, title }: Empty
             accessibilityIgnoresInvertColors
             source={imageSource}
             style={styles.image}
-            resizeMode="contain"
+            contentFit="contain"
           />
         ) : sfSymbol ? (
           <AppIcon name={sfSymbol} size={32} tintColor={textSecondary} />

@@ -83,7 +83,7 @@ export function useRegenerateMessage(chatId: string) {
         stage: 'preparing',
         targetMessageId: messageId,
       });
-      void mutation.mutateAsync({ messageId, generationId });
+      void mutation.mutateAsync({ messageId, generationId }).catch(() => undefined);
     },
     [chatId, mutation, setCurrentGeneration],
   );

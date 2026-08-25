@@ -2,12 +2,8 @@ import { usePathname, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { makeStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -42,7 +38,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
     direction.value = 0;
     startX.value = -1;
     setIsSettling(false);
-  }, [direction, pathname, progress]);
+  }, [direction, pathname, progress, startX]);
 
   const commitRoute = useCallback(
     (target: Scene) => {
@@ -96,13 +92,13 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
         }
         const target = scene === 'all' ? 'time' : 'all';
         if (reducedMotion) {
-          runOnJS(commitRoute)(target);
+          scheduleOnRN(commitRoute, target);
           return;
         }
         progress.value = withTiming(1, nativeMotionTiming.enter, (finished) => {
-          if (finished) runOnJS(commitRoute)(target);
+          if (finished) scheduleOnRN(commitRoute, target);
         });
-        runOnJS(setIsSettling)(true);
+        scheduleOnRN(setIsSettling, true);
       });
 
     return pan;

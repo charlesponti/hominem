@@ -76,12 +76,11 @@ function getScheduledTimeItems({
   loadedUntil: Date;
   tasks: TaskListItem[];
 }): TimeItem[] {
-  return [
-    ...events.map((value) => ({ kind: 'event' as const, value })),
-    ...tasks
-      .filter((value) => value.scheduledStartAt ?? value.dueAt)
-      .map((value) => ({ kind: 'task' as const, value })),
-  ]
+  const items: TimeItem[] = events.map((value) => ({ kind: 'event' as const, value }));
+  for (const value of tasks) {
+    if (value.scheduledStartAt ?? value.dueAt) items.push({ kind: 'task', value });
+  }
+  return items
     .filter((item) => {
       const date = itemDate(item);
       return date ? new Date(date).getTime() < loadedUntil.getTime() : false;
@@ -140,20 +139,19 @@ export function findOpenings({
   range: { end: Date; start: Date };
   tasks: TaskListItem[];
 }): TimeOpening[] {
-  const busy = [
-    ...events.map((event) => ({ end: new Date(event.endDate), start: new Date(event.startDate) })),
-    ...tasks.flatMap((task) =>
-      task.scheduledStartAt && task.scheduledEndAt
-        ? [{ end: new Date(task.scheduledEndAt), start: new Date(task.scheduledStartAt) }]
-        : [],
-    ),
-  ]
-    .map(({ start, end }) => ({
-      start: new Date(Math.max(start.getTime(), range.start.getTime())),
-      end: new Date(Math.min(end.getTime(), range.end.getTime())),
-    }))
-    .filter(({ start, end }) => end > start)
-    .sort((left, right) => left.start.getTime() - right.start.getTime());
+  const busy: { end: Date; start: Date }[] = [];
+  const addBusyInterval = (start: Date, end: Date) => {
+    const clippedStart = new Date(Math.max(start.getTime(), range.start.getTime()));
+    const clippedEnd = new Date(Math.min(end.getTime(), range.end.getTime()));
+    if (clippedEnd > clippedStart) busy.push({ end: clippedEnd, start: clippedStart });
+  };
+  for (const event of events) addBusyInterval(new Date(event.startDate), new Date(event.endDate));
+  for (const task of tasks) {
+    if (task.scheduledStartAt && task.scheduledEndAt) {
+      addBusyInterval(new Date(task.scheduledStartAt), new Date(task.scheduledEndAt));
+    }
+  }
+  busy.sort((left, right) => left.start.getTime() - right.start.getTime());
   const openings: TimeOpening[] = [];
   let cursor = range.start;
   const durationMs = durationMinutes * 60 * 1000;

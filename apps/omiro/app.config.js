@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const withPrivacyManifest = require('./plugins/withPrivacyManifest');
 
 // Keep this schema local because Expo evaluates the dynamic config during native builds.
 // It is intentionally duplicated from env.ts's appEnvironmentSchema rather than shared.
@@ -129,7 +130,7 @@ function createConfig({ config }) {
       },
     ],
     '@sentry/react-native',
-    './plugins/withPrivacyManifest',
+    withPrivacyManifest,
     [
       'expo-build-properties',
       {

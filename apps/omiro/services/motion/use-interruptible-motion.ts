@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { cancelAnimation, runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
+import { cancelAnimation, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -53,7 +54,7 @@ export function useInterruptibleMotion(): InterruptibleMotion {
     }
 
     progress.value = withTiming(1, nativeMotionTiming.enter, (finished) => {
-      if (finished) runOnJS(setPhase)('done');
+      if (finished) scheduleOnRN(setPhase, 'done');
     });
   }, [progress, reducedMotion]);
 
@@ -71,8 +72,8 @@ export function useInterruptibleMotion(): InterruptibleMotion {
 
       progress.value = withTiming(1, nativeMotionTiming.quick, (finished) => {
         if (finished) {
-          runOnJS(setPhase)('done');
-          if (onDone) runOnJS(onDone)();
+          scheduleOnRN(setPhase, 'done');
+          if (onDone) scheduleOnRN(onDone);
         }
       });
     },

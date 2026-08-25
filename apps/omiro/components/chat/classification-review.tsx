@@ -58,8 +58,8 @@ export function ClassificationReview({
 
         {proposedChanges.length > 0 ? (
           <View style={styles.changesList}>
-            {proposedChanges.map((change, index) => (
-              <View key={`${change}-${index}`} style={styles.changeItem}>
+            {proposedChanges.map((change) => (
+              <View key={change} style={styles.changeItem}>
                 <Text style={styles.changeBullet}>-</Text>
                 <Text style={styles.changeText}>{change}</Text>
               </View>

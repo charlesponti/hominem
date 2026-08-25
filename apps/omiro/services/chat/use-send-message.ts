@@ -139,9 +139,11 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   });
 
   const sendChatMessage = useCallback(
-    async (input: SendInput) => {
+    (input: SendInput) => {
       lastInputRef.current = input;
-      await mutation.mutateAsync({ ...input, generationId: randomUUID() });
+      return mutation
+        .mutateAsync({ ...input, generationId: randomUUID() })
+        .catch((error: unknown) => Promise.reject(error));
     },
     [mutation],
   );

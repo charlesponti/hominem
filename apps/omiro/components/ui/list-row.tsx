@@ -35,7 +35,7 @@ export function ListRow({
   titleStyle,
   trailing,
 }: ListRowProps) {
-  const styles = useStyles;
+  const styles = listRowStyles;
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -61,7 +61,7 @@ export function ListRow({
   );
 }
 
-const useStyles = makeStyles((currentTheme) => ({
+const listRowStyles = makeStyles((currentTheme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

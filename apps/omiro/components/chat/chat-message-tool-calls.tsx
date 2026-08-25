@@ -14,8 +14,11 @@ export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
 
   return (
     <View style={styles.toolCalls}>
-      {toolCalls.map((toolCall: ToolCall, index: number) => (
-        <View key={toolCall.toolCallId || `tool-call-${index}`} style={styles.toolCall}>
+      {toolCalls.map((toolCall: ToolCall) => (
+        <View
+          key={toolCall.toolCallId || `${toolCall.toolName}:${JSON.stringify(toolCall.args)}`}
+          style={styles.toolCall}
+        >
           <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '600' }}>
             {toolCall.toolName}
           </Text>

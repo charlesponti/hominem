@@ -9,7 +9,7 @@ import { buildNoteDraft } from '~/components/chat/build-note-draft';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { buildConversationActionsModel } from '~/components/chat/conversation-actions.model';
 import { Composer } from '~/components/composer/Composer';
-import { ComposerDock } from '~/components/composer/ComposerDock';
+import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useChatArchiveAction } from '~/hooks/use-chat-archive-action';
@@ -48,12 +48,13 @@ function isNotFoundError(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
 }
 
+// react-doctor-disable-next-line no-giant-component -- this route owns the approved chat detail orchestration and overlay stack.
 export function ChatScreen({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: activeChat, error: activeChatError } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
-  const [composerInset, setComposerInset] = useState(0);
+  const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
 
@@ -346,7 +347,7 @@ export function ChatScreen({ id }: { id: string }) {
         />
         {!isConversationGone ? (
           <>
-            <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
+            <ComposerDock safeAreaBottom={safeAreaBottom} testID="chat-composer-dock">
               <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
             </ComposerDock>
             <View style={styles.overlayContainer} pointerEvents="box-none">

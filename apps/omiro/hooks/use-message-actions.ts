@@ -28,9 +28,9 @@ export async function shareMessage(message: ChatMessageItem): Promise<void> {
 }
 
 export function useCopyMessage() {
-  return useCallback(copyMessage, []);
+  return useCallback((message: ChatMessageItem) => copyMessage(message), []);
 }
 
 export function useShareMessage() {
-  return useCallback(shareMessage, []);
+  return useCallback((message: ChatMessageItem) => shareMessage(message), []);
 }

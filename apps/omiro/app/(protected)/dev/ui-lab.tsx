@@ -1,5 +1,6 @@
+import { FlashList } from '@shopify/flash-list';
 import { Redirect, Stack } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { makeStyles } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
@@ -15,6 +16,25 @@ const sections = [
   ['transitions', 'Transitions', 'Interruptible enter and exit contracts'],
   ['reduced-motion', 'Reduce Motion', 'Reduced-motion substitutions'],
 ] as const;
+type UiLabSectionData = (typeof sections)[number];
+
+function UiLabSection({ item: [id, title, description] }: { item: UiLabSectionData }) {
+  return (
+    <View style={styles.sectionCard} testID={`ui-lab-${id}`}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.sectionDescription}>{description}</Text>
+      {id === 'tokens' ? (
+        <Text style={styles.tokenDetails}>
+          Standard {nativeMotionContracts.duration.standard}ms · row enter{' '}
+          {nativeMotionContracts.distance.rowEnter}px
+        </Text>
+      ) : null}
+      {id === 'reduced-motion' ? (
+        <Text style={styles.reducedMotionNote}>{nativeMotionContracts.reducedMotion}</Text>
+      ) : null}
+    </View>
+  );
+}
 
 export default function UiLabRoute() {
   if (!__DEV__) return <Redirect href={HOME_ROUTE} />;
@@ -22,32 +42,21 @@ export default function UiLabRoute() {
   return (
     <>
       <Stack.Screen options={{ title: 'UI Lab' }} />
-      <ScrollView
-        contentContainerStyle={{ gap: 16, padding: 16, paddingBottom: 40 }}
+      <FlashList
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        data={sections}
+        keyExtractor={([id]) => id}
+        renderItem={UiLabSection}
         testID="ui-lab"
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Native UI Lab</Text>
-          <Text style={styles.subtitle}>
-            Deterministic Omiro composition fixtures for the smallest supported iPhone.
-          </Text>
-        </View>
-        {sections.map(([id, title, description]) => (
-          <View style={styles.sectionCard} key={id} testID={`ui-lab-${id}`}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <Text style={styles.sectionDescription}>{description}</Text>
-            {id === 'tokens' ? (
-              <Text style={styles.tokenDetails}>
-                Standard {nativeMotionContracts.duration.standard}ms · row enter{' '}
-                {nativeMotionContracts.distance.rowEnter}px
-              </Text>
-            ) : null}
-            {id === 'reduced-motion' ? (
-              <Text style={styles.reducedMotionNote}>{nativeMotionContracts.reducedMotion}</Text>
-            ) : null}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={styles.title}>Native UI Lab</Text>
+            <Text style={styles.subtitle}>
+              Deterministic Omiro composition fixtures for the smallest supported iPhone.
+            </Text>
           </View>
-        ))}
-      </ScrollView>
+        }
+      />
     </>
   );
 }

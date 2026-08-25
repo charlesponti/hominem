@@ -31,8 +31,10 @@ export function useAppLock() {
       return;
     }
 
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    const [hasHardware, isEnrolled] = await Promise.all([
+      LocalAuthentication.hasHardwareAsync(),
+      LocalAuthentication.isEnrolledAsync(),
+    ]);
 
     if (!hasHardware || !isEnrolled) {
       setIsUnlocked(true);

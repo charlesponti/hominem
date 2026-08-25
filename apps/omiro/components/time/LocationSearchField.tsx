@@ -27,13 +27,12 @@ export function LocationSearchField({
   testID?: string;
   value: string;
 }) {
-  const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const requestId = useRef(0);
 
   useEffect(() => {
-    const trimmed = query.trim();
+    const trimmed = value.trim();
     if (trimmed.length < MIN_QUERY_LENGTH || trimmed === value) {
       setSuggestions([]);
       setIsSearching(false);
@@ -49,11 +48,13 @@ export function LocationSearchField({
             matches.slice(0, MAX_SUGGESTIONS).map((match) => Location.reverseGeocodeAsync(match)),
           );
           if (requestId.current !== thisRequest) return;
-          const labels = addresses
-            .map((results) => results[0])
-            .filter((address): address is Location.LocationGeocodedAddress => Boolean(address))
-            .map(formatAddress)
-            .filter((label, index, arr) => label && arr.indexOf(label) === index);
+          const labels = addresses.reduce<string[]>((uniqueLabels, results) => {
+            const address = results[0];
+            if (!address) return uniqueLabels;
+            const label = formatAddress(address);
+            if (label && !uniqueLabels.includes(label)) uniqueLabels.push(label);
+            return uniqueLabels;
+          }, []);
           setSuggestions(labels);
         } catch {
           if (requestId.current === thisRequest) setSuggestions([]);
@@ -63,19 +64,18 @@ export function LocationSearchField({
       })();
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
-  }, [query, value]);
+  }, [value]);
 
   return (
     <View style={styles.field}>
       <TextField
         autoFocus
         onChangeText={(next) => {
-          setQuery(next);
           onChange(next);
         }}
         placeholder="Add location"
         testID={testID}
-        value={query}
+        value={value}
       />
       {isSearching ? (
         <View style={styles.searchingState}>

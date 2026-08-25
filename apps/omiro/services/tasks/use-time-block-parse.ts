@@ -1,6 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { TasksParseInput, TasksParseOutput } from '@hominem/rpc/types';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { parseApiError } from '~/services/api/parse-api-error';
 import { localTimeZone } from '~/services/date/format-date';
@@ -22,6 +22,7 @@ function localISOString(date: Date): string {
 
 export function useTimeBlockParse() {
   const client = useApiClient();
+  const queryClient = useQueryClient();
 
   return useMutation<
     TasksParseOutput,
@@ -47,5 +48,6 @@ export function useTimeBlockParse() {
       }
       return res.json();
     },
+    onSuccess: () => queryClient.invalidateQueries(),
   });
 }

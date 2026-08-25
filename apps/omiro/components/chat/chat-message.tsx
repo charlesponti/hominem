@@ -208,9 +208,7 @@ export const ChatMessage = memo(function ChatMessage({
         </View>
       </Pressable>
       <ActiveMessageActions
-        canDelete={canDelete}
-        canEdit={canEdit}
-        canRegenerate={canRegenerate}
+        actions={{ canDelete, canEdit, canRegenerate }}
         isActive={isActive}
         isUser={isUser}
         message={message}

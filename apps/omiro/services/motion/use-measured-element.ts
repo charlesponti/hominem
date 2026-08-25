@@ -1,6 +1,7 @@
 import type { View } from 'react-native';
-import { measure, runOnJS, runOnUI, useAnimatedRef } from 'react-native-reanimated';
+import { measure, useAnimatedRef } from 'react-native-reanimated';
 import type { AnimatedRef, MeasuredDimensions } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 export type MeasuredRect = MeasuredDimensions;
 
@@ -18,11 +19,11 @@ export function useMeasuredElement<TRef extends View = View>(): {
   const ref = useAnimatedRef<TRef>();
 
   const measureElement = (onMeasured: (rect: MeasuredRect | null) => void) => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       const measured = measure(ref);
-      runOnJS(onMeasured)(measured);
-    })();
+      scheduleOnRN(onMeasured, measured);
+    });
   };
 
   return { ref, measure: measureElement };

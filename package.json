@@ -51,6 +51,7 @@
     "knip": "^6.4.1",
     "oxfmt": "0.56.0",
     "oxlint": "^1.71.0",
+    "react-doctor": "^0.9.12",
     "turbo": "^2.10.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

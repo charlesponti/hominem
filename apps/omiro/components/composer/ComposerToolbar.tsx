@@ -29,12 +29,13 @@ interface ComposerToolbarProps {
   manualEntryKind: ComposerEntryKind | null;
   onManualEntryKindChange: (kind: ComposerEntryKind) => void;
   uploadedAttachmentCount: number;
-  isFocused: boolean;
-  showAttachments: boolean;
-  isInteractionBusy: boolean;
-  isSubmitting: boolean;
-  canPickMedia: boolean;
-  canToggleVoice: boolean;
+  state: {
+    isFocused: boolean;
+    isInteractionBusy: boolean;
+    isSubmitting: boolean;
+    showAttachments: boolean;
+  };
+  capabilities: { canPickMedia: boolean; canToggleVoice: boolean };
   voice: {
     isBusy: boolean;
     isRecording: boolean;
@@ -59,12 +60,8 @@ function ComposerToolbarComponent({
   manualEntryKind,
   onManualEntryKindChange,
   uploadedAttachmentCount,
-  isFocused,
-  showAttachments,
-  isInteractionBusy,
-  isSubmitting,
-  canPickMedia,
-  canToggleVoice,
+  state,
+  capabilities,
   voice,
   onChangeMessage,
   onToggleWalkieTalkie,
@@ -87,9 +84,9 @@ function ComposerToolbarComponent({
   };
   const { canSubmit, canOpenEnhance } = deriveComposerContentCapabilities({
     hasContent,
-    isFocused,
-    showAttachments,
-    isInteractionBusy,
+    isFocused: state.isFocused,
+    showAttachments: state.showAttachments,
+    isInteractionBusy: state.isInteractionBusy,
     voice: voiceCapabilitiesInput,
   });
 
@@ -107,7 +104,7 @@ function ComposerToolbarComponent({
   return (
     <View style={styles.toolbar}>
       <View style={styles.leadingActions}>
-        <ComposerAttachButton disabled={!canPickMedia} />
+        <ComposerAttachButton disabled={!capabilities.canPickMedia} />
       </View>
       <View style={styles.trailingActions}>
         {kindControl}
@@ -145,7 +142,7 @@ function ComposerToolbarComponent({
               ? t.inboxComposer.composer.recordingElsewhereA11y
               : t.inboxComposer.composer.startVoiceInputA11y
           }
-          disabled={!canToggleVoice}
+          disabled={!capabilities.canToggleVoice}
           testID="composer-mic-button"
           variant="plain"
           onPress={() => void voice.handleVoicePress()}
@@ -155,7 +152,7 @@ function ComposerToolbarComponent({
         <ComposerSendButton
           accessibilityLabel={
             presentation.submitAccessibilityLabel ??
-            (isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
+            (state.isSubmitting ? t.chat.input.sendingA11y : t.chat.input.sendMessageA11y)
           }
           disabled={!canSubmit}
           icon="arrow.up"

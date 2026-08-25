@@ -4,10 +4,11 @@ import { useChatLifecycle } from '@hominem/chat/react';
 import { buildArtifactProposal } from '@hominem/chat/ui';
 import { useApiClient } from '@hominem/rpc/react';
 import type { ArtifactType, SessionSource } from '@hominem/rpc/types';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
 
+import { taskKeys } from '~/services/tasks/query-keys';
 import t from '~/translations';
 
 export interface ExtractedTasksCreated {
@@ -57,6 +58,7 @@ export function useTaskExtraction({
   onContentCreated,
 }: UseTaskExtractionInput) {
   const client = useApiClient();
+  const queryClient = useQueryClient();
 
   const proposalMessages = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.message })),
@@ -73,6 +75,7 @@ export function useTaskExtraction({
       }
       return json;
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: taskKeys.all }),
   });
 
   const createTasksBatch = useMutation({
@@ -81,6 +84,7 @@ export function useTaskExtraction({
       const res = await client.api.tasks.batch.$post({ json: input });
       return res.json();
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: taskKeys.all }),
   });
 
   const {

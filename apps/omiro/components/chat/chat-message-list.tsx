@@ -119,7 +119,7 @@ export function ChatMessageList({
       announceMessage(message, previous);
       previousMessages.set(message.id, message);
     }
-  }, [isMessagesLoading, renderedMessages]);
+  }, [displayMessages.length, isMessagesLoading, renderedMessages]);
 
   // Force-scroll to the bottom when the user sends a new message, even if they'd
   // scrolled up. Auto-follow while already near the bottom (including while a
@@ -157,17 +157,16 @@ export function ChatMessageList({
 
   const activationHandlers = useMemo(
     () =>
-      new Map(
-        renderedMessages
-          .filter((message) => !message.isStreaming)
-          .map((message) => [
-            message.id,
-            () =>
-              setActiveActionMessageId((currentMessageId) =>
-                currentMessageId === message.id ? null : message.id,
-              ),
-          ]),
-      ),
+      renderedMessages.reduce((handlers, message) => {
+        if (!message.isStreaming) {
+          handlers.set(message.id, () =>
+            setActiveActionMessageId((currentMessageId) =>
+              currentMessageId === message.id ? null : message.id,
+            ),
+          );
+        }
+        return handlers;
+      }, new Map<string, () => void>()),
     [renderedMessages],
   );
 
@@ -199,15 +198,11 @@ export function ChatMessageList({
     ],
   );
 
-  const emptySearch = useMemo(() => {
-    if (!hasSearchQuery) return null;
-
-    return (
-      <View style={styles.emptySearch}>
-        <Text style={styles.emptySearchText}>No messages matching &ldquo;{searchQuery}&rdquo;</Text>
-      </View>
-    );
-  }, [hasSearchQuery, searchQuery]);
+  const emptySearch = hasSearchQuery ? (
+    <View style={styles.emptySearch}>
+      <Text style={styles.emptySearchText}>No messages matching &ldquo;{searchQuery}&rdquo;</Text>
+    </View>
+  ) : null;
 
   const listEmptyComponent = hasSearchQuery ? emptySearch : (emptyState ?? null);
   if (isMessagesLoading && renderedMessages.length === 0) {

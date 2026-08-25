@@ -22,7 +22,7 @@ export function IconButton({
   testID,
   variant = 'bordered',
 }: IconButtonProps) {
-  const styles = useStyles;
+  const styles = iconButtonStyles;
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -43,7 +43,7 @@ export function IconButton({
   );
 }
 
-const useStyles = makeStyles((currentTheme) => ({
+const iconButtonStyles = makeStyles((currentTheme) => ({
   button: {
     width: 32,
     height: 32,

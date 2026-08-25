@@ -15,11 +15,11 @@ function isChatResumable(chat: Chat, now = Date.now()): boolean {
 
 function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {
   return chats
-    .map((chat) => ({
-      ...chat,
-      activityAt: getChatActivityAt(chat),
-    }))
-    .filter((chat) => isChatResumable(chat, now))
+    .reduce<ChatWithActivity[]>((resumable, chat) => {
+      const chatWithActivity = { ...chat, activityAt: getChatActivityAt(chat) };
+      if (isChatResumable(chatWithActivity, now)) resumable.push(chatWithActivity);
+      return resumable;
+    }, [])
     .sort(
       (a, b) =>
         parseInboxTimestamp(b.activityAt).getTime() - parseInboxTimestamp(a.activityAt).getTime(),

@@ -1,8 +1,13 @@
+import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useCallback } from 'react';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
-import { useComposerAttachments } from '~/components/composer/ComposerContext';
+import {
+  useComposerAttachments,
+  type ComposerAttachment,
+} from '~/components/composer/ComposerContext';
 import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -10,11 +15,63 @@ import t from '~/translations';
 
 const BADGE_SIZE = 16;
 
+function AttachmentItem({
+  attachment,
+  onRemove,
+  primaryForeground,
+  progress,
+}: {
+  attachment: ComposerAttachment;
+  onRemove: (id: string) => void;
+  primaryForeground: string;
+  progress: number;
+}) {
+  const uploading = progress > 0 && progress < 100;
+  return (
+    <Pressable
+      style={styles.attachmentContainer}
+      onPress={() => onRemove(attachment.id)}
+      accessibilityLabel={t.notes.editor.removeFile(attachment.name)}
+      accessibilityRole="button"
+    >
+      {attachment.localUri && (
+        <Image
+          source={{ uri: attachment.localUri }}
+          style={styles.attachmentImage}
+          contentFit="cover"
+        />
+      )}
+      <View style={styles.removeBadge} pointerEvents="none">
+        <AppIcon name="xmark" size={BADGE_SIZE} tintColor={primaryForeground} />
+      </View>
+      {uploading && (
+        <>
+          <View style={styles.uploadOverlay} />
+          <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+          </View>
+        </>
+      )}
+    </Pressable>
+  );
+}
+
 export function ComposerAttachmentRow() {
   const { attachments, errors, isUploading, progressByAssetId, onRemove } =
     useComposerAttachments();
   const [primaryForeground] = useThemeColor(['--color-primary-foreground']) as string[];
   const prefersReducedMotion = useReducedMotion();
+  const renderAttachment = useCallback(
+    ({ item }: { item: ComposerAttachment }) => (
+      <AttachmentItem
+        attachment={item}
+        onRemove={onRemove}
+        primaryForeground={primaryForeground}
+        progress={progressByAssetId[item.id] ?? 0}
+      />
+    ),
+    [onRemove, primaryForeground, progressByAssetId],
+  );
 
   if (attachments.length === 0 && errors.length === 0 && !isUploading) return null;
 
@@ -27,40 +84,13 @@ export function ComposerAttachmentRow() {
       }
     >
       {attachments.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {attachments.map((a) => {
-            const progress = progressByAssetId[a.id] ?? 0;
-            const uploading = progress > 0 && progress < 100;
-            return (
-              <Pressable
-                key={a.id}
-                style={[styles.attachmentContainer, { borderCurve: 'continuous' }]}
-                onPress={() => onRemove(a.id)}
-                accessibilityLabel={t.notes.editor.removeFile(a.name)}
-                accessibilityRole="button"
-              >
-                {a.localUri && (
-                  <Image
-                    source={{ uri: a.localUri }}
-                    style={styles.attachmentImage}
-                    contentFit="cover"
-                  />
-                )}
-                <View style={styles.removeBadge} pointerEvents="none">
-                  <AppIcon name="xmark" size={BADGE_SIZE} tintColor={primaryForeground} />
-                </View>
-                {uploading && (
-                  <>
-                    <View style={styles.uploadOverlay} />
-                    <View style={styles.progressBarContainer}>
-                      <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
-                    </View>
-                  </>
-                )}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <FlashList
+          data={attachments}
+          horizontal
+          keyExtractor={(attachment) => attachment.id}
+          showsHorizontalScrollIndicator={false}
+          renderItem={renderAttachment}
+        />
       )}
       {errors.length > 0 && (
         <Animated.Text style={styles.errorText}>{errors.join(' · ')}</Animated.Text>

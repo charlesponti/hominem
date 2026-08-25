@@ -10,9 +10,35 @@ import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
 import { getUnscheduledTasks } from './time-utils';
 
-export function TasksScreen() {
+function TaskRow({
+  item,
+}: {
+  item: { id: string; title: string; durationMinutes?: number | null };
+}) {
   const router = useRouter();
   const successColor = useThemeColor('--color-success') as string;
+  return (
+    <ListRow
+      accessibilityLabel={item.title}
+      leading={<AppIcon name="circle" size={20} tintColor={successColor} />}
+      onPress={() => router.push(getTaskDetailRoute(item.id))}
+      subtitle={item.durationMinutes ? `${item.durationMinutes} min` : null}
+      testID={`unscheduled-task-${item.id}`}
+      title={item.title}
+      trailing={
+        <IconButton
+          accessibilityLabel={`Schedule ${item.title}`}
+          onPress={() => router.push(getTaskScheduleRoute(item.id))}
+          testID={`unscheduled-task-${item.id}-schedule`}
+        >
+          <AppIcon name="calendar.badge.plus" size={20} />
+        </IconButton>
+      }
+    />
+  );
+}
+
+export function TasksScreen() {
   const { data: tasks = [], isFetching, refetch } = useTasksQuery();
   const unscheduledTasks = getUnscheduledTasks(tasks);
 
@@ -29,25 +55,7 @@ export function TasksScreen() {
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />}
-        renderItem={({ item }) => (
-          <ListRow
-            accessibilityLabel={item.title}
-            leading={<AppIcon name="circle" size={20} tintColor={successColor} />}
-            onPress={() => router.push(getTaskDetailRoute(item.id))}
-            subtitle={item.durationMinutes ? `${item.durationMinutes} min` : null}
-            testID={`unscheduled-task-${item.id}`}
-            title={item.title}
-            trailing={
-              <IconButton
-                accessibilityLabel={`Schedule ${item.title}`}
-                onPress={() => router.push(getTaskScheduleRoute(item.id))}
-                testID={`unscheduled-task-${item.id}-schedule`}
-              >
-                <AppIcon name="calendar.badge.plus" size={20} />
-              </IconButton>
-            }
-          />
-        )}
+        renderItem={TaskRow}
         testID="unscheduled-task-list"
       />
     </View>

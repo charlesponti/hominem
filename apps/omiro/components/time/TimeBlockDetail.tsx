@@ -1,7 +1,7 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
 import { Stack } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
@@ -26,6 +26,28 @@ import { useTaskUpdate } from '~/services/tasks/use-task-update';
 
 export type TimeBlockDetailSource = 'task' | 'event';
 type ActiveField = 'location' | 'notes' | 'people' | 'time' | 'title' | null;
+
+interface TimeBlockDraft {
+  duration: string;
+  end: Date | null;
+  location: string;
+  notes: string;
+  people: PersonPickerRecord[];
+  start: Date | null;
+  title: string;
+}
+
+type TimeBlockDraftAction =
+  | { type: 'initialize'; draft: TimeBlockDraft }
+  | { type: 'set'; field: keyof TimeBlockDraft; value: TimeBlockDraft[keyof TimeBlockDraft] };
+
+function timeBlockDraftReducer(
+  state: TimeBlockDraft,
+  action: TimeBlockDraftAction,
+): TimeBlockDraft {
+  if (action.type === 'initialize') return action.draft;
+  return { ...state, [action.field]: action.value } as TimeBlockDraft;
+}
 
 function formatInterval(start: Date, end: Date) {
   return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${formatClockTime(start)}–${formatClockTime(end)}`;
@@ -121,6 +143,7 @@ function CalendarEventDetailEditor({
   );
 }
 
+// react-doctor-disable-next-line no-giant-component -- task and event editing share one controlled iOS surface and lifecycle.
 function TimeBlockEditor({
   id,
   initialActiveField = null,
@@ -140,15 +163,37 @@ function TimeBlockEditor({
   const updateEvent = useUpdateCalendarEvent();
   const deleteEvent = useDeleteCalendarEvent();
   const [eventError, setEventError] = useState('');
-  const [draftDuration, setDraftDuration] = useState('');
-  const [draftStart, setDraftStart] = useState<Date | null>(null);
-  const [draftEnd, setDraftEnd] = useState<Date | null>(null);
-  const [draftTitle, setDraftTitle] = useState('');
-  const [draftLocation, setDraftLocation] = useState('');
-  const [draftNotes, setDraftNotes] = useState('');
-  const [draftPeople, setDraftPeople] = useState<PersonPickerRecord[]>([]);
+  const [draft, dispatchDraft] = useReducer(timeBlockDraftReducer, {
+    duration: '',
+    end: null,
+    location: '',
+    notes: '',
+    people: [],
+    start: null,
+    title: '',
+  });
+  const {
+    duration: draftDuration,
+    end: draftEnd,
+    location: draftLocation,
+    notes: draftNotes,
+    people: draftPeople,
+    start: draftStart,
+    title: draftTitle,
+  } = draft;
+  const setDraftDuration = (value: string) =>
+    dispatchDraft({ type: 'set', field: 'duration', value });
+  const setDraftStart = (value: Date | null) =>
+    dispatchDraft({ type: 'set', field: 'start', value });
+  const setDraftEnd = (value: Date | null) => dispatchDraft({ type: 'set', field: 'end', value });
+  const setDraftTitle = (value: string) => dispatchDraft({ type: 'set', field: 'title', value });
+  const setDraftLocation = (value: string) =>
+    dispatchDraft({ type: 'set', field: 'location', value });
+  const setDraftNotes = (value: string) => dispatchDraft({ type: 'set', field: 'notes', value });
+  const setDraftPeople = (value: PersonPickerRecord[]) =>
+    dispatchDraft({ type: 'set', field: 'people', value });
   const [activeField, setActiveField] = useState<ActiveField>(initialActiveField);
-  const [isScheduling, setIsScheduling] = useState(false);
+  const isSchedulingRef = useRef(false);
   const initializedBlockKeyRef = useRef<string | null>(null);
   const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useThemeColor([
     '--color-chart-1',
@@ -184,25 +229,31 @@ function TimeBlockEditor({
         ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000)
         : null;
     const defaultStart = new Date();
-    setDraftDuration(duration ? String(duration) : '');
-    setDraftEnd(end ? new Date(end) : new Date(defaultStart.getTime() + 60 * 60 * 1000));
-    setDraftLocation(location ?? '');
-    setDraftNotes(notes ?? '');
-    setDraftPeople(
-      taskQuery.data?.participants.map((person) => ({
-        id: person.personId,
-        displayName: person.displayName,
-        email: person.email,
-      })) ?? [],
-    );
-    setDraftStart(start ? new Date(start) : defaultStart);
-    setDraftTitle(title);
-    setIsScheduling(Boolean(start && end) || (isTask && initialActiveField === 'time'));
+    dispatchDraft({
+      type: 'initialize',
+      draft: {
+        duration: duration ? String(duration) : '',
+        end: end ? new Date(end) : new Date(defaultStart.getTime() + 60 * 60 * 1000),
+        location: location ?? '',
+        notes: notes ?? '',
+        people:
+          taskQuery.data?.participants.map((person) => ({
+            id: person.personId,
+            displayName: person.displayName,
+            email: person.email,
+          })) ?? [],
+        start: start ? new Date(start) : defaultStart,
+        title,
+      },
+    });
+    isSchedulingRef.current = Boolean(start && end) || (isTask && initialActiveField === 'time');
   }, [
     block,
     event?.endDate,
     event?.startDate,
     isTask,
+    source,
+    id,
     location,
     notes,
     task?.durationMinutes,
@@ -245,6 +296,7 @@ function TimeBlockEditor({
     location,
     notes,
     originalPeople,
+    taskQuery.data?.participants,
     task?.durationMinutes,
     task?.scheduledEndAt,
     task?.scheduledStartAt,
@@ -303,8 +355,8 @@ function TimeBlockEditor({
           durationMinutes,
           location: draftLocation.trim() || null,
           participants: draftPeople.map((person) => person.id),
-          scheduledEndAt: isScheduling ? draftEnd.toISOString() : null,
-          scheduledStartAt: isScheduling ? draftStart.toISOString() : null,
+          scheduledEndAt: isSchedulingRef.current ? draftEnd.toISOString() : null,
+          scheduledStartAt: isSchedulingRef.current ? draftStart.toISOString() : null,
           title: draftTitle.trim() || title,
         });
         await taskQuery.refetch();
@@ -331,12 +383,9 @@ function TimeBlockEditor({
     draftPeople,
     draftStart,
     draftTitle,
-    event,
     id,
     isTask,
-    isScheduling,
     saveEventPatch,
-    task?.scheduledEndAt,
     taskQuery,
     title,
     updateTask,
@@ -457,7 +506,7 @@ function TimeBlockEditor({
                 readOnlyEvent
                   ? undefined
                   : () => {
-                      if (isTask && !isScheduling) setIsScheduling(true);
+                      if (isTask) isSchedulingRef.current = true;
                       setActiveField('time');
                     }
               }

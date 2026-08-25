@@ -8,7 +8,7 @@ import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/component
 import { ChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { Composer } from '~/components/composer/Composer';
-import { ComposerDock } from '~/components/composer/ComposerDock';
+import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useChatData } from '~/hooks/use-chat-data';
@@ -40,7 +40,7 @@ export function ChatScreen({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const { data: activeChat, error: activeChatError } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
-  const [composerInset, setComposerInset] = useState(0);
+  const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
 
@@ -240,7 +240,7 @@ export function ChatScreen({ id }: { id: string }) {
         />
         {!isConversationGone ? (
           <>
-            <ComposerDock onInsetChange={setComposerInset} testID="chat-composer-dock">
+            <ComposerDock safeAreaBottom={safeAreaBottom} testID="chat-composer-dock">
               <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
             </ComposerDock>
             <View style={styles.overlayContainer} pointerEvents="box-none">

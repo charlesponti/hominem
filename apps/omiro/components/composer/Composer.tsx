@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -62,7 +62,9 @@ function ComposerContent(props: ComposerProps) {
     onClearDraft: submission.onClearDraft,
     onWalkieTalkieTranscript: props.mode === 'chat' ? handleWalkieTalkieTranscript : undefined,
   });
-  clearComposerRef.current = controller.clearComposer;
+  useEffect(() => {
+    clearComposerRef.current = controller.clearComposer;
+  }, [controller.clearComposer]);
   // Static (mode-only) fields for the outer shell -- the kind-dependent
   // fields (placeholder, submitTestID, ...) are recomputed inside
   // ComposerInput/ComposerToolbar, the only things that know the live,
@@ -200,12 +202,16 @@ function ComposerContent(props: ComposerProps) {
                 manualEntryKind={controller.manualEntryKind}
                 onManualEntryKindChange={controller.setManualEntryKind}
                 uploadedAttachmentCount={controller.uploadedAttachmentIds.length}
-                isFocused={controller.isFocused}
-                showAttachments={controller.showAttachments}
-                isInteractionBusy={controller.isInteractionBusy}
-                isSubmitting={submission.isSubmitting}
-                canPickMedia={controller.canPickMedia}
-                canToggleVoice={controller.canToggleVoice}
+                state={{
+                  isFocused: controller.isFocused,
+                  showAttachments: controller.showAttachments,
+                  isInteractionBusy: controller.isInteractionBusy,
+                  isSubmitting: submission.isSubmitting,
+                }}
+                capabilities={{
+                  canPickMedia: controller.canPickMedia,
+                  canToggleVoice: controller.canToggleVoice,
+                }}
                 voice={controller.voice}
                 onChangeMessage={controller.setMessage}
                 onToggleWalkieTalkie={props.mode === 'chat' ? onToggleWalkieTalkie : undefined}
