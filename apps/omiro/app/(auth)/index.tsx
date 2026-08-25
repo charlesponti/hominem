@@ -1,20 +1,17 @@
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
-  interpolateColor,
   useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { makeStyles, useThemeColor } from '~/components/theme';
+import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
 import { TextField } from '~/components/ui/text-field';
@@ -24,23 +21,15 @@ import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
 import { posthog } from '~/services/posthog';
 import t from '~/translations';
 
-const BUTTON_HEIGHT = 44; // h-11
-const BUTTON_BORDER_RADIUS = 6; // rounded-md
-
 function AuthScreen() {
   const { isPending, isSignedIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [buttonWidth, setButtonWidth] = useState(0);
   const normalizedEmail = normalizeEmail(email);
 
-  const [textPrimary, mutedForeground, primaryColor] = useThemeColor([
-    '--color-foreground',
-    '--color-muted-foreground',
-    '--color-primary',
-  ]) as string[];
+  const [textPrimary] = useThemeColor(['--color-foreground']) as string[];
 
   const getEmailProgress = () => {
     if (!email) return { stage: 0, message: 'Enter your email' };
@@ -54,33 +43,6 @@ function AuthScreen() {
   };
 
   const progress = getEmailProgress();
-
-  // Rounded-rect path for the button outline, traced clockwise from top-left.
-  const borderPath = useMemo(() => {
-    if (buttonWidth === 0) return null;
-    const path = Skia.Path.Make();
-    path.addRRect(
-      {
-        rect: { x: 1, y: 1, width: buttonWidth - 2, height: BUTTON_HEIGHT - 2 },
-        rx: BUTTON_BORDER_RADIUS,
-        ry: BUTTON_BORDER_RADIUS,
-      },
-      false, // clockwise
-    );
-    return path;
-  }, [buttonWidth]);
-
-  // Continuous 0-1 draw progress, one step per email-completion stage.
-  const drawProgress = useSharedValue(0);
-  useEffect(() => {
-    const stageProgress = [0, 0.2, 0.4, 0.6, 0.8, 1];
-    drawProgress.value = withTiming(stageProgress[progress.stage], { duration: 350 });
-  }, [progress.stage, drawProgress]);
-
-  // Border color travels from muted to primary alongside the draw progress.
-  const borderStrokeColor = useDerivedValue(() =>
-    interpolateColor(drawProgress.value, [0, 1], [mutedForeground, primaryColor]),
-  );
 
   // Animations
   const shakeStyle = useAnimatedStyle(
@@ -100,13 +62,6 @@ function AuthScreen() {
       ],
     }),
     [authError],
-  );
-
-  const borderStyle = useAnimatedStyle(
-    () => ({
-      opacity: withTiming(progress.stage === 5 ? 0 : 1, { duration: 200 }),
-    }),
-    [progress.stage],
   );
 
   const continueButtonStyle = useAnimatedStyle(
@@ -219,33 +174,10 @@ function AuthScreen() {
                   ) : null}
 
                   {/* Animated border + button container */}
-                  <View
-                    style={[styles.buttonContainer, { height: BUTTON_HEIGHT }]}
-                    onLayout={(e) => setButtonWidth(e.nativeEvent.layout.width)}
+                  <AnimatedCanvasButton
+                    progress={progress.stage / 5}
+                    style={styles.buttonContainer}
                   >
-                    {/* Clockwise-drawing border (stages 0-4) */}
-                    {progress.stage < 5 && borderPath && (
-                      <Animated.View
-                        style={[
-                          { position: 'absolute', width: buttonWidth, height: BUTTON_HEIGHT },
-                          borderStyle,
-                        ]}
-                        pointerEvents="none"
-                      >
-                        <Canvas style={{ width: buttonWidth, height: BUTTON_HEIGHT }}>
-                          <Path
-                            path={borderPath}
-                            style="stroke"
-                            strokeWidth={2}
-                            strokeCap="round"
-                            color={borderStrokeColor}
-                            start={0}
-                            end={drawProgress}
-                          />
-                        </Canvas>
-                      </Animated.View>
-                    )}
-
                     {/* Helper text, centered inside the animating border (stages 0-4) */}
                     {progress.stage < 5 && !displayError && (
                       <View style={styles.progressHelper}>
@@ -266,7 +198,7 @@ function AuthScreen() {
                         variant="primary"
                       />
                     </Animated.View>
-                  </View>
+                  </AnimatedCanvasButton>
                 </View>
               ) : null}
             </View>

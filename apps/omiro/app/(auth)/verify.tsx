@@ -1,20 +1,13 @@
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, {
-  FadeIn,
-  interpolateColor,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { makeStyles, useThemeColor } from '~/components/theme';
+import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import { IconChip } from '~/components/ui/icon-chip';
@@ -63,9 +56,6 @@ function resolveTokenSentAt(sentAt?: string) {
 function resolveSecondsLeft(tokenSentAt: number, now = Date.now()) {
   return Math.max(0, OTP_EXPIRES_SECONDS - Math.floor((now - tokenSentAt) / 1000));
 }
-
-const VERIFY_BUTTON_HEIGHT = 44; // h-11
-const VERIFY_BUTTON_BORDER_RADIUS = 6; // rounded-md
 
 function resolveAutoSubmitInput({
   resolvedEmail,
@@ -152,40 +142,6 @@ function VerifyScreen() {
     '--color-muted-foreground',
     '--color-success',
   ]) as string[];
-
-  // Clockwise-drawing border around the Verify button, filling in as digits are entered.
-  const [verifyButtonWidth, setVerifyButtonWidth] = React.useState(0);
-  const verifyBorderPath = React.useMemo(() => {
-    if (verifyButtonWidth === 0) return null;
-    const path = Skia.Path.Make();
-    path.addRRect(
-      {
-        rect: { x: 1, y: 1, width: verifyButtonWidth - 2, height: VERIFY_BUTTON_HEIGHT - 2 },
-        rx: VERIFY_BUTTON_BORDER_RADIUS,
-        ry: VERIFY_BUTTON_BORDER_RADIUS,
-      },
-      false, // clockwise
-    );
-    return path;
-  }, [verifyButtonWidth]);
-
-  const verifyDrawProgress = useSharedValue(0);
-  React.useEffect(() => {
-    verifyDrawProgress.value = withTiming(normalizedOtp.length / 6, { duration: 250 });
-  }, [normalizedOtp.length, verifyDrawProgress]);
-
-  // Border color travels from muted to primary alongside the draw progress.
-  const verifyBorderStrokeColor = useDerivedValue(() =>
-    interpolateColor(verifyDrawProgress.value, [0, 1], [textSecondary, primary]),
-  );
-
-  // Animations
-  const verifyBorderStyle = useAnimatedStyle(
-    () => ({
-      opacity: withTiming(normalizedOtp.length === 6 ? 0 : 1, { duration: 200 }),
-    }),
-    [normalizedOtp.length],
-  );
 
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
@@ -318,36 +274,10 @@ function VerifyScreen() {
 
               {/* Clockwise-drawing border fills in as digits are entered, then fades
                   into the Verify button once all 6 are present — zero layout shift. */}
-              <View
-                style={[styles.verifyButtonContainer, { height: VERIFY_BUTTON_HEIGHT }]}
-                onLayout={(e) => setVerifyButtonWidth(e.nativeEvent.layout.width)}
+              <AnimatedCanvasButton
+                progress={normalizedOtp.length / 6}
+                style={styles.verifyButtonContainer}
               >
-                {normalizedOtp.length < 6 && verifyBorderPath && (
-                  <Animated.View
-                    style={[
-                      {
-                        position: 'absolute',
-                        width: verifyButtonWidth,
-                        height: VERIFY_BUTTON_HEIGHT,
-                      },
-                      verifyBorderStyle,
-                    ]}
-                    pointerEvents="none"
-                  >
-                    <Canvas style={{ width: verifyButtonWidth, height: VERIFY_BUTTON_HEIGHT }}>
-                      <Path
-                        path={verifyBorderPath}
-                        style="stroke"
-                        strokeWidth={2}
-                        strokeCap="round"
-                        color={verifyBorderStrokeColor}
-                        start={0}
-                        end={verifyDrawProgress}
-                      />
-                    </Canvas>
-                  </Animated.View>
-                )}
-
                 {normalizedOtp.length < 6 && !authError && (
                   <View style={styles.progressHelper}>
                     {normalizedOtp.length > 0 ? <Text style={styles.progressArrow}>↑</Text> : null}
@@ -369,7 +299,7 @@ function VerifyScreen() {
                     variant="primary"
                   />
                 </Animated.View>
-              </View>
+              </AnimatedCanvasButton>
 
               <Pressable
                 testID="auth-resend-otp"

@@ -17,14 +17,20 @@ const entries =
     : [
         ['src/index.ts', 'dist/index.mjs'],
         ['src/worker.ts', 'dist/worker.mjs'],
+        ['src/routes/login/browser.ts', 'public/login.js'],
       ];
 
 await Promise.all(
   entries.map(([input, file]) =>
     build({
       ...sharedConfig,
+      platform: input.includes('/browser.') ? 'browser' : sharedConfig.platform,
       input,
-      output: { file, format: 'esm', codeSplitting: false },
+      output: {
+        file,
+        format: input.includes('/browser.') ? 'iife' : 'esm',
+        codeSplitting: false,
+      },
     }),
   ),
 );

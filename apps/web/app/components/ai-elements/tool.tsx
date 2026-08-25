@@ -12,7 +12,6 @@ import {
 import type { ComponentProps, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
-import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/components/ui/collapsible';
 import { cn } from '~/lib/utils';
@@ -23,7 +22,10 @@ export type ToolProps = ComponentProps<typeof Collapsible>;
 
 export const Tool = ({ className, ...props }: ToolProps) => (
   <Collapsible
-    className={cn('group not-prose mb-4 w-full rounded-md border', className)}
+    className={cn(
+      'group not-prose mb-4 w-full overflow-hidden rounded-xl border border-border/60 bg-background/40 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-background/30 data-[state=open]:bg-background/50',
+      className,
+    )}
     {...props}
   />
 );
@@ -63,10 +65,13 @@ const statusIcons: Record<ToolPart['state'], ReactNode> = {
 };
 
 export const getStatusBadge = (status: ToolPart['state']) => (
-  <Badge className="gap-1.5 rounded-full text-xs" variant="secondary">
+  <span
+    aria-label={statusLabels[status]}
+    className="inline-flex size-4 shrink-0 items-center justify-center"
+    role="img"
+  >
     {statusIcons[status]}
-    {statusLabels[status]}
-  </Badge>
+  </span>
 );
 
 export const ToolHeader = ({
@@ -81,13 +86,16 @@ export const ToolHeader = ({
 
   return (
     <CollapsibleTrigger
-      className={cn('flex w-full items-center justify-between gap-4 p-3', className)}
+      className={cn(
+        'flex w-full items-center justify-between gap-4 p-3 text-left transition-colors hover:bg-background/20 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring',
+        className,
+      )}
       {...props}
     >
       <div className="flex items-center gap-2">
         <WrenchIcon className="size-4 text-muted-foreground" />
-        <span className="font-medium text-sm">{title ?? derivedName}</span>
         {getStatusBadge(state)}
+        <span className="font-medium text-sm">{title ?? derivedName}</span>
       </div>
       <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
     </CollapsibleTrigger>
@@ -99,7 +107,7 @@ export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 export const ToolContent = ({ className, ...props }: ToolContentProps) => (
   <CollapsibleContent
     className={cn(
-      'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
+      'border-border/50 border-t bg-background/15 data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
       className,
     )}
     {...props}
@@ -115,7 +123,7 @@ export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
     </h4>
-    <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 text-foreground text-xs">
+    <pre className="overflow-x-auto rounded-md border border-border/40 bg-muted/35 p-3 text-foreground text-xs">
       <code>{JSON.stringify(input, null, 2)}</code>
     </pre>
   </div>
@@ -142,7 +150,7 @@ export const ToolPreview = ({ className, preview, ...props }: ToolPreviewProps) 
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       About to affect
     </h4>
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md bg-muted/50 p-3 text-xs">
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border border-border/40 bg-muted/35 p-3 text-xs">
       {Object.entries(preview).map(([key, value]) => (
         <Fragment key={key}>
           <dt className="font-medium text-muted-foreground">{formatPreviewLabel(key)}</dt>

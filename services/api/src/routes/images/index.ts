@@ -5,8 +5,8 @@ import { logger } from '@hominem/telemetry';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 
-import { ForbiddenError, InternalError, UnavailableError, ValidationError } from '../errors';
-import type { AppEnv } from '../server';
+import { ForbiddenError, InternalError, UnavailableError, ValidationError } from '../../errors';
+import type { AppEnv } from '../../server';
 
 function isValidGoogleHost(input: string): boolean {
   try {

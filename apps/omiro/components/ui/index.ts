@@ -10,6 +10,7 @@ export {
   CardTitle,
 } from './card';
 export { ListRow } from './list-row';
+export { AnimatedCanvasButton } from './animated-canvas-button';
 export { TextField } from './text-field';
 export { nativeShadows } from '~/components/theme';
 export { useColorMode } from '~/components/theme';

@@ -48,7 +48,9 @@ describe('API login route', () => {
     const response = await createApp().request(`http://localhost/login?${oauthQuery}`);
 
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain('Enter your email to continue.');
+    await expect(response.text()).resolves.toContain(
+      'Enter your email to receive the one-time code.',
+    );
     expect(mocks.getSession).toHaveBeenCalledOnce();
   });
 
@@ -66,7 +68,9 @@ describe('API login route', () => {
     const response = await createApp().request(`http://localhost/login?next=${next}`);
 
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain('Enter your email to continue.');
+    await expect(response.text()).resolves.toContain(
+      'Enter your email to receive the one-time code.',
+    );
   });
 
   it('rejects an app redirect request to a non-allow-listed origin', async () => {
@@ -82,6 +86,31 @@ describe('API login route', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/webp');
     expect((await response.arrayBuffer()).byteLength).toBeGreaterThan(0);
+  });
+
+  it('serves the login browser bundle', async () => {
+    const response = await createApp().request('http://localhost/login.js');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/javascript; charset=utf-8');
+    await expect(response.text()).resolves.toContain('data-otp-digit');
+  });
+
+  it('serves static assets with cache validators and no HEAD body', async () => {
+    const getResponse = await createApp().request('http://localhost/logo.hominem.500x500.webp');
+    const etag = getResponse.headers.get('etag');
+    const notModifiedResponse = await createApp().request(
+      'http://localhost/logo.hominem.500x500.webp',
+      { headers: { 'if-none-match': etag! } },
+    );
+    const headResponse = await createApp().request('http://localhost/logo.hominem.500x500.webp', {
+      method: 'HEAD',
+    });
+
+    expect(etag).toBeTruthy();
+    expect(notModifiedResponse.status).toBe(304);
+    expect(headResponse.status).toBe(getResponse.status);
+    expect(headResponse.body).toBeNull();
   });
 
   it('sends the OTP through Better Auth and advances to verification', async () => {

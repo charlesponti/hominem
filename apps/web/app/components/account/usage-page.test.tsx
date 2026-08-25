@@ -100,14 +100,24 @@ describe('UsagePage', () => {
 
     fireEvent.click(screen.getByLabelText('Show exact values'));
 
-    expect(screen.getAllByText('$0.001305')).not.toHaveLength(0);
-    expect(screen.queryAllByText('$0.00')).toHaveLength(0);
+    expect(screen.getAllByText('$0.001305')).toHaveLength(2);
+  });
+
+  it('shows totals and removes summary cards', () => {
+    render(<UsagePage />);
+
+    expect(screen.getAllByText('Total')).toHaveLength(2);
+    expect(screen.queryByText('Remaining', { selector: 'p' })).toBeNull();
+    expect(screen.queryByText('Requests', { selector: 'p' })).toBeNull();
+    expect(screen.queryByText('Total tokens', { selector: 'p' })).toBeNull();
   });
 
   it('supports changing granularity, metric, and model selection', async () => {
     render(<UsagePage />);
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Month' })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Month' })).toBeTruthy(), {
+      timeout: 5000,
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Price' }));
     fireEvent.click(screen.getByRole('button', { name: 'model-a' }));

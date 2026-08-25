@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 
-import type { AppEnv } from '../server';
+import type { AppEnv } from '../../server';
 
 const EFFECTIVE_DATE = 'August 20, 2026';
 

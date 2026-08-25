@@ -2,8 +2,8 @@ import { db } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
 import { Hono } from 'hono';
 
-import { UnavailableError } from '../errors';
-import type { AppEnv } from '../server';
+import { UnavailableError } from '../../errors';
+import type { AppEnv } from '../../server';
 
 export const statusRoutes = new Hono<AppEnv>();
 

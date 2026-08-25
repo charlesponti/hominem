@@ -4,6 +4,7 @@
     "composite": false,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
+    "lib": ["ESNext", "DOM"],
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     "paths": {
       "@/*": ["./*"]

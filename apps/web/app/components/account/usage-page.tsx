@@ -56,6 +56,25 @@ function UsageTable({
   kind: 'feature' | 'model';
   precise: boolean;
 }) {
+  const totals = rows.reduce(
+    (total, row) => ({
+      requestCount: total.requestCount + row.requestCount,
+      failedCount: total.failedCount + row.failedCount,
+      promptTokens: total.promptTokens + row.promptTokens,
+      completionTokens: total.completionTokens + row.completionTokens,
+      totalTokens: total.totalTokens + row.totalTokens,
+      totalCostUsd: total.totalCostUsd + row.totalCostUsd,
+    }),
+    {
+      requestCount: 0,
+      failedCount: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      totalCostUsd: 0,
+    },
+  );
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[640px] text-left text-sm">
@@ -105,16 +124,32 @@ function UsageTable({
             );
           })}
         </tbody>
+        <tfoot className="border-t border-border bg-muted/40">
+          <tr>
+            <th className="px-3 py-3 font-semibold">Total</th>
+            <td className="px-3 py-3 text-right font-semibold tabular-nums">
+              {formatNumber(totals.requestCount, precise)}
+              {totals.failedCount ? (
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  ({totals.failedCount} failed)
+                </span>
+              ) : null}
+            </td>
+            <td className="px-3 py-3 text-right font-semibold tabular-nums">
+              {formatNumber(totals.promptTokens, precise)}
+            </td>
+            <td className="px-3 py-3 text-right font-semibold tabular-nums">
+              {formatNumber(totals.completionTokens, precise)}
+            </td>
+            <td className="px-3 py-3 text-right font-semibold tabular-nums">
+              {formatNumber(totals.totalTokens, precise)}
+            </td>
+            <td className="px-3 py-3 text-right font-semibold tabular-nums">
+              {formatUsd(totals.totalCostUsd, precise)}
+            </td>
+          </tr>
+        </tfoot>
       </table>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-background p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
@@ -178,20 +213,6 @@ export function UsagePage() {
                 max={100}
                 value={Math.min(100, (report.monthly.totalCostUsd / report.monthly.limitUsd) * 100)}
               />
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Metric
-                  label="Remaining"
-                  value={formatUsd(report.monthly.remainingUsd, showPreciseValues)}
-                />
-                <Metric
-                  label="Requests"
-                  value={formatNumber(report.summary.requestCount, showPreciseValues)}
-                />
-                <Metric
-                  label="Total tokens"
-                  value={formatNumber(report.summary.totalTokens, showPreciseValues)}
-                />
-              </div>
               <p className="text-sm text-muted-foreground">
                 {report.monthly.isOverLimit
                   ? "You've reached this month's free AI usage limit."
