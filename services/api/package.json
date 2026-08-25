@@ -41,7 +41,7 @@
     "@better-auth/expo": "1.7.0-rc.6",
     "@better-auth/kysely-adapter": "1.7.0-rc.6",
     "@better-auth/mcp": "1.7.0-rc.6",
-    "@better-auth/oauth-provider": "1.7.0-rc.6",
+    "@better-auth/oauth-provider": "1.7.1",
     "@hominem/ai": "workspace:*",
     "@hominem/career-services": "workspace:*",
     "@hominem/db": "workspace:*",
