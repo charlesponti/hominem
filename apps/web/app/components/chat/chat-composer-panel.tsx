@@ -1,5 +1,5 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { ChatComposer } from '~/components/chat/chat-composer';
 import { getAutomaticChatTitle } from '~/lib/chat/chat-title';
@@ -45,6 +45,45 @@ export function ChatComposerPanel({
 }: ChatComposerPanelProps) {
   const composer = useChatComposerState({ seedNote });
   const speech = useSpeechToText({ onTranscript: composer.setDraft });
+  const { setPendingAssistantMessage } = display;
+
+  useEffect(() => {
+    if (
+      !streamMessage.isStreaming ||
+      (!streamMessage.text && !streamMessage.reasoning && streamMessage.toolSteps.length === 0)
+    ) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    setPendingAssistantMessage({
+      id: `stream-${chatId}`,
+      chatId,
+      userId: '',
+      role: 'assistant',
+      content: streamMessage.text,
+      files: null,
+      referencedNotes: null,
+      toolCalls: streamMessage.toolSteps.map((step) => ({
+        toolName: step.toolName,
+        type: 'tool-call' as const,
+        toolCallId: step.toolCallId,
+        args: {},
+      })),
+      reasoning: streamMessage.reasoning || null,
+      parentMessageId: null,
+      createdAt: now,
+      updatedAt: now,
+      isStreaming: true,
+    } as ChatMessageDto);
+  }, [
+    chatId,
+    setPendingAssistantMessage,
+    streamMessage.isStreaming,
+    streamMessage.reasoning,
+    streamMessage.text,
+    streamMessage.toolSteps,
+  ]);
 
   const handleSend = useCallback(async () => {
     if (

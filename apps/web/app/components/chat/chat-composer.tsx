@@ -136,7 +136,7 @@ export function ChatComposer({
             value={draft}
           />
         </PromptInputBody>
-        <PromptInputFooter>
+        <PromptInputFooter className="!justify-end">
           <PromptInputTools>
             {onAttachFiles ? (
               <PromptInputButton asChild tooltip="Attach file">

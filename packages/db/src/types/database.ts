@@ -369,6 +369,16 @@ export interface AppCareerTestimonials {
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
+export interface AppChatGenerationEvents {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  generationId: string;
+  id: Generated<string>;
+  payload: Json;
+  sequence: Int8;
+  type: string;
+  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
 export interface AppChatGenerationRuns {
   assistantMessageId: string | null;
   chatId: string;
@@ -377,6 +387,7 @@ export interface AppChatGenerationRuns {
   id: string;
   kind: string;
   ownerUserId: string;
+  requestContext: Json | null;
   status: string;
   targetAssistantMessageId: string | null;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -1431,6 +1442,7 @@ export interface DB {
   'app.careerSkills': AppCareerSkills;
   'app.careerSocialLinks': AppCareerSocialLinks;
   'app.careerTestimonials': AppCareerTestimonials;
+  'app.chatGenerationEvents': AppChatGenerationEvents;
   'app.chatGenerationRuns': AppChatGenerationRuns;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;

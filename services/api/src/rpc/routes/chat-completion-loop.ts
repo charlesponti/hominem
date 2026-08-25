@@ -9,7 +9,7 @@ import {
 } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
-import { callTool, getToolDefinition } from '../../mcp/tools';
+import { callTool, getToolDefinition, type McpToolResult } from '../../mcp/tools';
 
 const DEFAULT_MAX_ITERATIONS = 4;
 
@@ -17,6 +17,33 @@ interface AccumulatingToolCall {
   id: string;
   name: string;
   arguments: string;
+}
+
+export type ChatGenerationLiveEvent =
+  | { type: 'text-delta'; text: string }
+  | { type: 'reasoning-delta'; text: string }
+  | {
+      type: 'tool-step';
+      toolCallId: string;
+      toolName: string;
+      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
+    }
+  | { type: 'phase'; phase: 'generating' };
+
+function canonicalizeToolArgs(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeToolArgs);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, canonicalizeToolArgs(child)]),
+    );
+  }
+  return value;
+}
+
+function getReadOnlyToolCacheKey(toolName: string, args: Record<string, unknown>) {
+  return `${toolName}:${JSON.stringify(canonicalizeToolArgs(args))}`;
 }
 
 function mergeToolCallDeltas(
@@ -66,6 +93,7 @@ export interface RunCompletionWithToolsInput {
   reasoning?: ChatRequest['reasoning'];
   maxIterations?: number;
   requiresToolCall?: boolean;
+  onEvent?: (event: ChatGenerationLiveEvent) => Promise<void> | void;
 }
 
 export interface RunCompletionWithToolsResult {
@@ -104,8 +132,11 @@ async function streamOnce(opts: {
   parallelToolCalls?: boolean;
   maxTokens?: number;
   reasoning?: ChatRequest['reasoning'];
+  onEvent?: RunCompletionWithToolsInput['onEvent'];
 }): Promise<StreamOnceResult> {
   const completion = streamChatCompletion(opts);
+
+  if (opts.onEvent) await opts.onEvent({ type: 'phase', phase: 'generating' });
 
   let assistantText = '';
   let reasoningText = '';
@@ -120,9 +151,11 @@ async function streamOnce(opts: {
     const delta = choice?.delta;
     if (typeof delta?.content === 'string' && delta.content.length > 0) {
       assistantText += delta.content;
+      if (opts.onEvent) await opts.onEvent({ type: 'text-delta', text: delta.content });
     }
     if (typeof delta?.reasoning === 'string' && delta.reasoning.length > 0) {
       reasoningText += delta.reasoning;
+      if (opts.onEvent) await opts.onEvent({ type: 'reasoning-delta', text: delta.reasoning });
     }
     if (delta?.toolCalls && delta.toolCalls.length > 0) {
       mergeToolCallDeltas(accumulatedToolCalls, delta.toolCalls);
@@ -151,6 +184,10 @@ export async function runCompletionWithTools(
   const messages = [...input.messages];
   const maxIterations = input.maxIterations ?? DEFAULT_MAX_ITERATIONS;
   const toolCallRecords: ChatMessageToolCallRecord[] = [];
+  // This cache intentionally lives only for one generation. Read-only tools can
+  // be safely reused within a single model turn, while writes and destructive
+  // actions must always execute according to the model's request.
+  const readOnlyToolResults = new Map<string, Promise<McpToolResult>>();
   let usage: AIUsageMetrics | null = null;
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
@@ -163,6 +200,7 @@ export async function runCompletionWithTools(
       parallelToolCalls: false,
       maxTokens: input.maxTokens,
       reasoning: input.reasoning,
+      onEvent: input.onEvent,
     });
     usage = sumUsage(usage, result.usage);
 
@@ -177,6 +215,7 @@ export async function runCompletionWithTools(
         messages,
         maxTokens: input.maxTokens,
         reasoning: input.reasoning,
+        onEvent: input.onEvent,
       });
       usage = sumUsage(usage, retry.usage);
       result = retry;
@@ -242,43 +281,115 @@ export async function runCompletionWithTools(
       })),
     });
 
-    await Promise.all(
+    const toolResults = await Promise.all(
       requestedToolCalls.map(async (call) => {
         let parsedArgs: Record<string, unknown> = {};
         try {
           parsedArgs = call.arguments ? JSON.parse(call.arguments) : {};
         } catch {
-          messages.push({
-            role: 'tool',
-            toolCallId: call.id,
+          return {
+            call,
+            parsedArgs,
             content: JSON.stringify({ error: `Invalid tool arguments for ${call.name}` }),
+            error: true,
+            cached: false,
+          };
+        }
+
+        const definition = getToolDefinition(call.name);
+        if (input.onEvent)
+          await input.onEvent({
+            type: 'tool-step',
+            toolCallId: call.id,
+            toolName: call.name,
+            status: 'requested',
           });
-          return;
+        const cacheKey = definition?.readOnly
+          ? getReadOnlyToolCacheKey(call.name, parsedArgs)
+          : null;
+        let cached = false;
+        let resultPromise = cacheKey ? readOnlyToolResults.get(cacheKey) : undefined;
+
+        if (!resultPromise) {
+          if (input.onEvent)
+            await input.onEvent({
+              type: 'tool-step',
+              toolCallId: call.id,
+              toolName: call.name,
+              status: 'running',
+            });
+          resultPromise = callTool(input.userId, call.name, parsedArgs);
+          if (cacheKey) {
+            resultPromise = resultPromise.catch((error: unknown) => {
+              readOnlyToolResults.delete(cacheKey);
+              throw error;
+            });
+            readOnlyToolResults.set(cacheKey, resultPromise);
+          }
+        } else {
+          cached = true;
+          if (input.onEvent)
+            await input.onEvent({
+              type: 'tool-step',
+              toolCallId: call.id,
+              toolName: call.name,
+              status: 'reused',
+            });
         }
 
         try {
-          const result = await callTool(input.userId, call.name, parsedArgs);
-          messages.push({
-            role: 'tool',
-            toolCallId: call.id,
+          const result = await resultPromise;
+          if (!cached) {
+            if (input.onEvent)
+              await input.onEvent({
+                type: 'tool-step',
+                toolCallId: call.id,
+                toolName: call.name,
+                status: 'completed',
+              });
+          }
+          return {
+            call,
+            parsedArgs,
             content: result.content[0]?.text ?? 'null',
-          });
-          toolCallRecords.push({
-            toolName: call.name,
-            type: 'tool-call',
-            toolCallId: call.id,
-            args: parsedArgs,
-          });
+            error: false,
+            cached,
+          };
         } catch (error) {
+          if (input.onEvent)
+            await input.onEvent({
+              type: 'tool-step',
+              toolCallId: call.id,
+              toolName: call.name,
+              status: 'failed',
+            });
           const message = error instanceof Error ? error.message : 'Tool call failed';
-          messages.push({
-            role: 'tool',
-            toolCallId: call.id,
+          return {
+            call,
+            parsedArgs,
             content: JSON.stringify({ error: message }),
-          });
+            error: true,
+            cached: false,
+          };
         }
       }),
     );
+
+    for (const result of toolResults) {
+      messages.push({
+        role: 'tool',
+        toolCallId: result.call.id,
+        content: result.content,
+      });
+      if (!result.error && !result.cached) {
+        toolCallRecords.push({
+          toolName: result.call.name,
+          type: 'tool-call',
+          toolCallId: result.call.id,
+          args: result.parsedArgs,
+        });
+      }
+    }
   }
 
   // Iteration cap reached — force a final text-only answer instead of

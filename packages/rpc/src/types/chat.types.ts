@@ -87,12 +87,35 @@ export interface ChatToolConfirmationRequiredEvent {
   preview: Record<string, unknown> | null;
 }
 
+export interface ChatGenerationDeltaEvent {
+  type: 'text-delta' | 'reasoning-delta';
+  generationId: string;
+  text: string;
+}
+
+export interface ChatGenerationToolStepEvent {
+  type: 'tool-step';
+  generationId: string;
+  toolCallId: string;
+  toolName: string;
+  status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
+}
+
+export interface ChatGenerationPhaseEvent {
+  type: 'phase';
+  generationId: string;
+  phase: 'generating';
+}
+
 export type ChatStreamEvent =
   | ChatGenerationStatusEvent
   | ChatGenerationAcceptedEvent
   | ChatGenerationCommittedEvent
   | ChatGenerationCancelledEvent
   | ChatToolConfirmationRequiredEvent
+  | ChatGenerationDeltaEvent
+  | ChatGenerationToolStepEvent
+  | ChatGenerationPhaseEvent
   | ChatStreamErrorEvent;
 export type ChatsStartStreamEvent = ChatStreamEvent;
 

@@ -32,6 +32,14 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
   const client = useApiClient();
   const [text, setText] = useState('');
+  const [reasoning, setReasoning] = useState('');
+  const [toolSteps, setToolSteps] = useState<
+    Array<{
+      toolCallId: string;
+      toolName: string;
+      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
+    }>
+  >([]);
   const [status, setStatus] = useState<StreamStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -47,6 +55,8 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       cancelRequestedRef.current = false;
       let terminalStatus: StreamStatus | null = null;
       setText('');
+      setReasoning('');
+      setToolSteps([]);
       setStatus('preparing');
       setError(null);
 
@@ -78,6 +88,30 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           if (event.type === 'status') {
             terminalStatus = event.status === 'preparing' ? 'preparing' : 'streaming';
             setStatus(terminalStatus);
+            return;
+          }
+
+          if (event.type === 'text-delta') {
+            setText((current) => current + event.text);
+            return;
+          }
+
+          if (event.type === 'reasoning-delta') {
+            setReasoning((current) => current + event.text);
+            return;
+          }
+
+          if (event.type === 'tool-step') {
+            setToolSteps((current) => {
+              const index = current.findIndex((step) => step.toolCallId === event.toolCallId);
+              const next = {
+                toolCallId: event.toolCallId,
+                toolName: event.toolName,
+                status: event.status,
+              };
+              if (index === -1) return [...current, next];
+              return current.map((step, stepIndex) => (stepIndex === index ? next : step));
+            });
             return;
           }
 
@@ -154,5 +188,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
     status,
     stream,
     text,
+    reasoning,
+    toolSteps,
   };
 }

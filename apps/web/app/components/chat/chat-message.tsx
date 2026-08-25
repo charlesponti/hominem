@@ -34,6 +34,7 @@ import {
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
 import type { ChatMessageView } from '~/lib/types/chat';
+import { cn } from '~/lib/utils';
 
 type ChatToolCall = NonNullable<ChatMessageDto['toolCalls']>[number];
 
@@ -163,7 +164,6 @@ export const ChatMessage = memo(function ChatMessage({
   const canDelete = message.role === 'user' && !message.isStreaming && Boolean(onDelete);
   const hasReasoning = Boolean(message.reasoning?.trim());
   const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
-  const timestamp = formatTimestamp(message.createdAt);
   const presentationState = message.failed
     ? message.role === 'assistant'
       ? 'interrupted'
@@ -241,10 +241,13 @@ export const ChatMessage = memo(function ChatMessage({
     <LazyMotion features={domAnimation}>
       <Message
         aria-label={`Message ${presentationState}`}
+        className={cn('ml-0! max-w-full! justify-start!', {
+          'mt-4': message.role === 'user',
+        })}
         data-presentation-state={presentationState}
         from={toMessageRole(message.role)}
       >
-        <MessageContent>
+        <MessageContent className="ml-0! w-full!">
           <AnimatePresence initial={false} mode="wait">
             {isRegenerationActive ? (
               <m.div
@@ -388,20 +391,11 @@ export const ChatMessage = memo(function ChatMessage({
               </dl>
             </details>
           ) : null}
-          {timestamp ||
-          canEdit ||
+          {canEdit ||
           canDelete ||
           (message.role === 'assistant' && onRegenerate) ||
           (message.role === 'assistant' && !message.isStreaming && message.content.trim()) ? (
-            <MessageActions>
-              {timestamp ? (
-                <span
-                  aria-label={`Sent ${timestamp}`}
-                  className="mr-1 text-xs text-muted-foreground"
-                >
-                  {timestamp}
-                </span>
-              ) : null}
+            <MessageActions className="justify-end">
               {canSpeak ? (
                 <SpeechPlayer
                   isActive={isSpeechActive}

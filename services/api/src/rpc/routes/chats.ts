@@ -749,6 +749,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             requiresToolCall: chatToolPlan.requiresLookup,
             maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
             reasoning: getReasoningConfig(responseLength),
+            onEvent: (event) => writeGenerationEvent(stream, { ...event, generationId }),
           });
           assistantText = result.assistantText;
           reasoningText = result.reasoningText;
@@ -1011,6 +1012,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             requiresToolCall: chatToolPlan.requiresLookup,
             maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
             reasoning: getReasoningConfig(responseLength),
+            onEvent: (event) => writeGenerationEvent(stream, { ...event, generationId }),
           });
           assistantText = result.assistantText;
           reasoningText = result.reasoningText;
@@ -1238,6 +1240,7 @@ const chatByIdRoutes = new Hono<AppContext>()
           requiresToolCall: chatToolPlan.requiresLookup,
           maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
           reasoning: getReasoningConfig(responseLength),
+          onEvent: (event) => writeGenerationEvent(stream, { ...event, generationId }),
         });
         assistantText = result.assistantText;
         reasoningText = result.reasoningText;
@@ -1522,6 +1525,7 @@ export const chatsRoutes = new Hono<AppContext>()
           requiresToolCall: chatToolPlan.requiresLookup,
           maxTokens: responseLength ? RESPONSE_LENGTH_MAX_TOKENS[responseLength] : undefined,
           reasoning: getReasoningConfig(responseLength),
+          onEvent: (event) => writeGenerationEvent(stream, { ...event, generationId }),
         });
         assistantText = result.assistantText;
         reasoningText = result.reasoningText;

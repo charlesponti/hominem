@@ -274,7 +274,7 @@ describe('ChatMessage', () => {
     expect(onRetryRegenerate).toHaveBeenCalledOnce();
   });
 
-  it('renders reasoning, referenced notes, timestamps, failures, and opt-in debug details', () => {
+  it('renders reasoning, referenced notes, failures, and opt-in debug details', () => {
     render(
       <ChatMessage
         formatTimestamp={() => '10:30 AM'}
@@ -292,7 +292,7 @@ describe('ChatMessage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Toggle reasoning' }));
     expect(screen.getByText('I compared the release constraints.')).toBeTruthy();
     expect(screen.getByLabelText('Referenced note: Release plan')).toBeTruthy();
-    expect(screen.getByLabelText('Sent 10:30 AM')).toBeTruthy();
+    expect(screen.queryByLabelText('Sent 10:30 AM')).toBeNull();
     expect(screen.getByRole('alert').textContent).toContain(
       'Response interrupted. The previous content is preserved.',
     );
