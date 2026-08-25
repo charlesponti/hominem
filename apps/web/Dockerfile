@@ -20,7 +20,7 @@ COPY tsconfig.base.json ./
 COPY tsconfig.profiles ./tsconfig.profiles
 COPY tsconfig.json ./
 
-RUN npm install -g pnpm@11.10.0 && \
+RUN npm install -g pnpm@11.23.0 && \
     pnpm install --frozen-lockfile --filter @hominem/web...
 
 # react-router build bundles all @hominem/* packages into build/server and build/client

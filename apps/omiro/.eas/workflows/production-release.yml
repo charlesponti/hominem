@@ -67,4 +67,4 @@ jobs:
       # before EAS's automatic install step runs, instead of loosening that
       # policy repo-wide.
       before_install_node_modules:
-        - run: corepack prepare pnpm@11.10.0 --activate
+        - run: corepack prepare pnpm@11.23.0 --activate
