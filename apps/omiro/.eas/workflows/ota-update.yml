@@ -38,4 +38,4 @@ jobs:
       # version, and pnpm-workspace.yaml's pmOnFail: error makes that fail
       # the automatic dependency install instead of warning.
       before_install_node_modules:
-        - run: corepack prepare pnpm@11.10.0 --activate
+        - run: corepack prepare pnpm@11.23.0 --activate

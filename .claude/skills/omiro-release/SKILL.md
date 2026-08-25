@@ -50,13 +50,13 @@ trust it — fix the underlying env resolution rather than bypassing it.
 
 ## pnpm version pinning gotcha
 
-`eas.json`'s `build.base.pnpm` pin (`11.10.0`) only applies to `type: build`
+`eas.json`'s `build.base.pnpm` pin (`11.23.0`) only applies to `type: build`
 jobs. `submit` and `update` job types run on a separate generic runner that
 installs dependencies independently and never consults that field. If
 either fails with:
 
 ```
-This project is configured to use 11.10.0 of pnpm. Your current pnpm is v11.9.0
+This project is configured to use 11.23.0 of pnpm. Your current pnpm is v11.x
 ```
 
 the fix is a `before_install_node_modules` hook on *that specific job*
@@ -66,7 +66,7 @@ files):
 ```yaml
 hooks:
   before_install_node_modules:
-    - run: corepack prepare pnpm@11.10.0 --activate
+    - run: corepack prepare pnpm@11.23.0 --activate
 ```
 
 Do **not** fix this by loosening `pmOnFail`, `engineStrict`,
@@ -93,7 +93,7 @@ pnpm submit                      # ad hoc local submit, gated on the identity gu
 
 ## Troubleshooting
 
-- **`build` job fails on pnpm mismatch** — verify the `"pnpm": "11.10.0"`
+- **`build` job fails on pnpm mismatch** — verify the `"pnpm": "11.23.0"`
   pin is present in `eas.json`'s `build.base`. Do not remove it; a stale
   warning in older notes about Corepack conflicts (`npm ERR! EEXIST`)
   describes a different failure mode than what the current EAS build image

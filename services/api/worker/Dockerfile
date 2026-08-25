@@ -11,7 +11,7 @@ COPY tsconfig.profiles ./tsconfig.profiles
 COPY tsconfig.base.json ./
 COPY tsconfig.json ./
 
-RUN npm install -g pnpm@11.10.0 && \
+RUN npm install -g pnpm@11.23.0 && \
     pnpm install --frozen-lockfile --filter @hominem/api...
 
 RUN pnpm --filter @ponti-studios/auth build
