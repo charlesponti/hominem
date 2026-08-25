@@ -73,7 +73,10 @@ export const ChatConversation = memo(function ChatConversation({
 
   return (
     <Conversation>
-      <ConversationContent scrollClassName="overflow-y-auto overscroll-contain">
+      <ConversationContent
+        className="mx-auto w-full max-w-5xl"
+        scrollClassName="overflow-y-auto overscroll-contain"
+      >
         {seedNote ? (
           <ChatLinkedNoteContext
             excerpt={seedNote.excerpt}

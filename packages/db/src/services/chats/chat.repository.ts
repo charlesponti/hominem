@@ -482,6 +482,18 @@ export const ChatRepository = {
 
     if (deletedMessageIds.length > 0) {
       await handle
+        .deleteFrom('app.chatGenerationRuns')
+        .where('chatId', '=', chatId)
+        .where((expressionBuilder) =>
+          expressionBuilder.or([
+            expressionBuilder('userMessageId', 'in', deletedMessageIds),
+            expressionBuilder('targetAssistantMessageId', 'in', deletedMessageIds),
+            expressionBuilder('assistantMessageId', 'in', deletedMessageIds),
+          ]),
+        )
+        .execute();
+
+      await handle
         .deleteFrom('app.chatMessages')
         .where('chatId', '=', chatId)
         .where('id', 'in', deletedMessageIds)

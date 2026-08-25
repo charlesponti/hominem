@@ -272,11 +272,11 @@ export function AuthErrorPage({
   error,
   mode,
 }: AuthErrorPageProps & Omit<PageFrameProps, 'children' | 'title'>) {
-  const accessLabel = mode === 'app' ? 'App access' : 'OAuth access';
-  const returnCopy =
-    mode === 'app'
-      ? 'Return to the app you came from and try again.'
-      : 'Return to your MCP client and try again.';
+  const isAppMode = mode === 'app' || mode === 'oauth';
+  const accessLabel = isAppMode ? 'App access' : 'OAuth access';
+  const returnCopy = isAppMode
+    ? 'Return to the app you came from and try again.'
+    : 'Return to your MCP client and try again.';
 
   return (
     <PageFrame>
@@ -287,15 +287,12 @@ export function AuthErrorPage({
             !
           </div>
           <div class="card-topline">
-            <span class="secure-label">{accessLabel}</span>
-            <span class="step-label">ERROR</span>
+            <p class="secure-label">{accessLabel}</p>
           </div>
           <h2 id="error-title">Authorization stopped</h2>
           <p class="card-copy">
-            {description ??
-              (error ? `The request ended with ${error}.` : 'This request could not be completed.')}
+            {description ?? (error ? `The request ended with ${error}.` : null) ?? returnCopy}
           </p>
-          <p class="card-copy">{returnCopy}</p>
         </section>
       </main>
     </PageFrame>
