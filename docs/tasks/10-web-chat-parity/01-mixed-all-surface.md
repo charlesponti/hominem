@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-01
 title: Harden the chat-first web entry surface
-status: proposed
+status: completed
 priority: high
 team: web
 project: web-chat-parity

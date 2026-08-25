@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-06
 title: Add retry for failed and interrupted responses
-status: proposed
+status: completed
 priority: high
 team: web
 project: web-chat-parity
@@ -37,3 +37,8 @@ send operations, and reconcile the result through the shared stream lifecycle.
 - Concurrent sends and retries are blocked while a generation is preparing, streaming, or stopping.
 - Durable interrupted-response retry and assistant regeneration remain separate follow-up work for `WEB-CHAT-07`.
 - Added Storybook coverage for retryable errors, retrying state, offline preservation, and upload failure recovery.
+
+## Validation update — 2026-08-24
+
+- Web tests passed: 19 files, 52 tests.
+- Web formatting, lint, typecheck, and diff checks passed.

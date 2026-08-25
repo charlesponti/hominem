@@ -2,6 +2,7 @@
 
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from 'ai';
 import { CornerDownLeftIcon, ImageIcon, Monitor, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import type {
   ChangeEvent,
@@ -1129,6 +1130,7 @@ export const PromptInputSubmit = ({
   ...props
 }: PromptInputSubmitProps) => {
   const isGenerating = status === 'submitted' || status === 'streaming';
+  const reduceMotion = useReducedMotion() === true;
 
   let Icon = <CornerDownLeftIcon className="size-4" />;
 
@@ -1154,7 +1156,9 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
-      aria-label={isGenerating ? 'Stop' : 'Submit'}
+      aria-label={
+        status === 'streaming' && onStop ? 'Stop' : status === 'submitted' ? 'Generating' : 'Submit'
+      }
       className={cn(className)}
       onClick={handleClick}
       size={size}
@@ -1162,7 +1166,19 @@ export const PromptInputSubmit = ({
       variant={variant}
       {...props}
     >
-      {children ?? Icon}
+      {children ?? (
+        <AnimatePresence initial={false} mode="wait">
+          <motion.span
+            animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
+            exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+            initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+            key={status ?? 'ready'}
+            transition={{ duration: reduceMotion ? 0.08 : 0.15, ease: [0.23, 1, 0.32, 1] }}
+          >
+            {Icon}
+          </motion.span>
+        </AnimatePresence>
+      )}
     </InputGroupButton>
   );
 };

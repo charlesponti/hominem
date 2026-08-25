@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-02
 title: Add the reusable chat composer
-status: proposed
+status: completed
 priority: high
 team: web
 project: web-chat-parity

@@ -1,4 +1,5 @@
 import { ArchivedChatsPage } from '~/components/account/settings-page';
+import { RouteHeader } from '~/components/route-header';
 import { userContext } from '~/lib/middleware';
 
 import type { Route } from './+types/settings.archived-chats';
@@ -12,5 +13,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function ArchivedChatsRoute() {
-  return <ArchivedChatsPage />;
+  return (
+    <div className="h-full overflow-auto">
+      <RouteHeader />
+      <ArchivedChatsPage />
+    </div>
+  );
 }

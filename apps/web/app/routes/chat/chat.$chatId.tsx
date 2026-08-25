@@ -16,6 +16,7 @@ import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
 import { ChatMessageSearch } from '~/components/chat/chat-message-search';
 import { ChatResponseSettings } from '~/components/chat/chat-response-settings';
 import { ErrorState } from '~/components/error-state';
+import { RouteHeader } from '~/components/route-header';
 import { useArchiveChat } from '~/hooks/use-chats';
 import { serverEnv } from '~/lib/env.server';
 import { useChatComposerState } from '~/lib/hooks/use-chat-composer-state';
@@ -124,7 +125,7 @@ export default function ChatPage({
   const search = useChatMessageSearch(chatId, isSearchOpen);
   const archiveChat = useArchiveChat({
     chatId,
-    onSuccess: () => navigate('/'),
+    onSuccess: () => navigate('/', { viewTransition: true }),
   });
   const { responseLength, setResponseLength } = useResponseLength();
   const visibleMessages =
@@ -135,6 +136,7 @@ export default function ChatPage({
       !isOnline ||
       streamMessage.isStreaming ||
       streamMessage.status === 'stopping' ||
+      regeneration.isRegenerating ||
       (composer.draftWithSeed.trim().length === 0 &&
         composer.attachedFiles.length === 0 &&
         composer.selectedNotesForSend.length === 0)
@@ -207,7 +209,7 @@ export default function ChatPage({
       <ErrorState
         actionLabel="Start a new chat"
         message="This conversation no longer exists or you do not have access to it."
-        onAction={() => navigate('/')}
+        onAction={() => navigate('/', { viewTransition: true })}
         title="Conversation unavailable"
       />
     );
@@ -229,123 +231,154 @@ export default function ChatPage({
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl min-h-0 flex-1 flex-col">
-      <ChatMessageSearch
-        error={search.error}
-        isOpen={isSearchOpen}
-        onChange={search.setQuery}
-        onClose={() => {
-          search.close();
-          setIsSearchOpen(false);
-        }}
-        query={search.query}
-      />
-
-      <ChatConversationActions
-        isArchiving={archiveChat.isPending}
-        isSearchOpen={isSearchOpen}
-        isSettingsOpen={isSettingsOpen}
-        onArchive={() => archiveChat.mutate({ chatId })}
-        onNewChat={() => navigate('/')}
-        onResponseSettings={() => setIsSettingsOpen(true)}
-        onSearch={() => setIsSearchOpen(true)}
-      />
-
-      {isSettingsOpen ? (
-        <ChatResponseSettings
-          onChange={setResponseLength}
-          onClose={() => setIsSettingsOpen(false)}
-          value={responseLength}
-        />
-      ) : null}
-
-      <Conversation>
-        <ConversationContent>
-          {isSearchOpen &&
-          search.debouncedQuery &&
-          !search.isSearching &&
-          search.results.length === 0 ? (
-            <p className="p-4 text-center text-sm text-text-secondary">No messages found.</p>
-          ) : null}
-          {visibleMessages.map((message) => (
-            <ChatMessageView
-              key={message.id}
-              isSpeechActive={activeSpeechMessageId === message.id}
-              isRegenerating={regeneration.activeMessageId === message.id}
-              isToolResponding={toolCallRespond.isResponding}
-              message={message}
-              onActivateSpeech={activateSpeech}
-              onApproveTool={({ messageId, toolCallId }) =>
-                void toolCallRespond.respond({ messageId, toolCallId, approved: true })
-              }
-              onDeactivateSpeech={deactivateSpeech}
-              onRejectTool={({ messageId, toolCallId }) =>
-                void toolCallRespond.respond({ messageId, toolCallId, approved: false })
-              }
-              onRegenerate={(messageId) => void regeneration.regenerate(messageId, responseLength)}
-              onEdit={updateMessage}
-              speechSrc={getSpeechUrl(chatId, message.id)}
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <RouteHeader>
+        <div className="relative h-7 min-w-0 flex-1">
+          <div
+            aria-hidden={isSearchOpen}
+            className={`absolute inset-0 flex items-center transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:transform-none ${isSearchOpen ? 'pointer-events-none translate-x-2 opacity-0' : 'translate-x-0 opacity-100'}`}
+            data-chat-actions
+            inert={isSearchOpen ? true : undefined}
+          >
+            <ChatConversationActions
+              isArchiving={archiveChat.isPending}
+              isSearchOpen={isSearchOpen}
+              isSettingsOpen={isSettingsOpen}
+              onArchive={() => archiveChat.mutate({ chatId })}
+              onNewChat={() => navigate('/', { viewTransition: true })}
+              onResponseSettings={() => setIsSettingsOpen(true)}
+              onSearch={() => setIsSearchOpen(true)}
             />
-          ))}
-          {display.isThinking ? (
-            <Message from="assistant">
-              <MessageContent>
-                <Shimmer>Thinking</Shimmer>
-              </MessageContent>
-            </Message>
-          ) : null}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+          </div>
+          <ChatMessageSearch
+            error={search.error}
+            isOpen={isSearchOpen}
+            onChange={search.setQuery}
+            onClose={() => {
+              search.close();
+              setIsSearchOpen(false);
+            }}
+            query={search.query}
+          />
+        </div>
+      </RouteHeader>
 
-      <ChatComposer
-        attachments={composer.attachedFiles}
-        contextContent={
-          composer.suggestions.length > 0 || composer.selectedNotesForSend.length > 0 ? (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {composer.selectedNotesForSend.map((note) => (
-                <span
-                  key={note.id}
-                  className="rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
-                >
-                  {note.title || 'Untitled'}
-                </span>
-              ))}
-              {composer.suggestions.map((note) => (
-                <button
-                  key={note.id}
-                  type="button"
-                  className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
-                  onClick={() => composer.selectSuggestion(note)}
-                >
-                  {note.title || 'Untitled'}
-                </button>
-              ))}
-            </div>
-          ) : null
-        }
-        draft={composer.draft}
-        error={
-          !isOnline
-            ? 'You are offline. Your draft and attachments are preserved.'
-            : composer.uploadState.errors.length > 0
-              ? composer.uploadState.errors.join(', ')
-              : streamMessage.error?.message
-        }
-        hasContext={composer.selectedNotesForSend.length > 0}
-        isOffline={!isOnline}
-        isSubmitting={streamMessage.isStreaming || streamMessage.status === 'stopping'}
-        isStreaming={streamMessage.isStreaming}
-        isVoiceSupported={speech.isSupported}
-        isListening={speech.isListening}
-        onAttachFiles={(files) => void composer.attachFiles(files)}
-        onChangeDraft={composer.setDraft}
-        onRemoveAttachment={composer.removeAttachment}
-        onStop={() => void streamMessage.cancel()}
-        onSubmit={() => void handleSend()}
-        onRetry={isRetryable && isOnline ? () => void handleSend() : undefined}
-        onToggleVoice={() => speech.toggle(composer.draft)}
-      />
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
+        {isSettingsOpen ? (
+          <ChatResponseSettings
+            onChange={setResponseLength}
+            onClose={() => setIsSettingsOpen(false)}
+            value={responseLength}
+          />
+        ) : null}
+
+        <Conversation>
+          <ConversationContent>
+            {isSearchOpen &&
+            search.debouncedQuery &&
+            !search.isSearching &&
+            search.results.length === 0 ? (
+              <p className="p-4 text-center text-sm text-text-secondary">No messages found.</p>
+            ) : null}
+            {visibleMessages.map((message) => (
+              <ChatMessageView
+                key={message.id}
+                isSpeechActive={activeSpeechMessageId === message.id}
+                isGenerationActive={
+                  streamMessage.isStreaming ||
+                  streamMessage.status === 'stopping' ||
+                  regeneration.isRegenerating
+                }
+                isRegenerating={regeneration.activeMessageId === message.id}
+                regenerationStatus={
+                  regeneration.lastMessageId === message.id ? regeneration.status : 'idle'
+                }
+                regenerationError={
+                  regeneration.lastMessageId === message.id ? regeneration.error?.message : null
+                }
+                isToolResponding={toolCallRespond.isResponding}
+                message={message}
+                onActivateSpeech={activateSpeech}
+                onApproveTool={({ messageId, toolCallId }) =>
+                  void toolCallRespond.respond({ messageId, toolCallId, approved: true })
+                }
+                onDeactivateSpeech={deactivateSpeech}
+                onRejectTool={({ messageId, toolCallId }) =>
+                  void toolCallRespond.respond({ messageId, toolCallId, approved: false })
+                }
+                onRegenerate={(messageId) =>
+                  void regeneration.regenerate(messageId, responseLength)
+                }
+                onCancelRegenerate={() => void regeneration.cancel()}
+                onRetryRegenerate={() => void regeneration.retry()}
+                onEdit={updateMessage}
+                speechSrc={getSpeechUrl(chatId, message.id)}
+              />
+            ))}
+            {display.isThinking ? (
+              <Message from="assistant">
+                <MessageContent>
+                  <Shimmer>Thinking</Shimmer>
+                </MessageContent>
+              </Message>
+            ) : null}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+
+        <ChatComposer
+          attachments={composer.attachedFiles}
+          contextContent={
+            composer.suggestions.length > 0 || composer.selectedNotesForSend.length > 0 ? (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {composer.selectedNotesForSend.map((note) => (
+                  <span
+                    key={note.id}
+                    className="rounded-full bg-emphasis-faint px-2.5 py-1 text-xs text-text-secondary"
+                  >
+                    {note.title || 'Untitled'}
+                  </span>
+                ))}
+                {composer.suggestions.map((note) => (
+                  <button
+                    key={note.id}
+                    type="button"
+                    className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
+                    onClick={() => composer.selectSuggestion(note)}
+                  >
+                    {note.title || 'Untitled'}
+                  </button>
+                ))}
+              </div>
+            ) : null
+          }
+          draft={composer.draft}
+          error={
+            !isOnline
+              ? 'You are offline. Your draft and attachments are preserved.'
+              : composer.uploadState.errors.length > 0
+                ? composer.uploadState.errors.join(', ')
+                : streamMessage.error?.message
+          }
+          hasContext={composer.selectedNotesForSend.length > 0}
+          isOffline={!isOnline}
+          isSubmitting={
+            streamMessage.isStreaming ||
+            streamMessage.status === 'stopping' ||
+            regeneration.isRegenerating
+          }
+          isStreaming={streamMessage.isStreaming}
+          isVoiceSupported={speech.isSupported}
+          isListening={speech.isListening}
+          onAttachFiles={(files) => void composer.attachFiles(files)}
+          onChangeDraft={composer.setDraft}
+          onRemoveAttachment={composer.removeAttachment}
+          onStop={() => void streamMessage.cancel()}
+          onSubmit={() => void handleSend()}
+          onRetry={isRetryable && isOnline ? () => void handleSend() : undefined}
+          onToggleVoice={() => speech.toggle(composer.draft)}
+        />
+      </div>
     </div>
   );
 }

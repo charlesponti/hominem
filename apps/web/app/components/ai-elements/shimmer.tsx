@@ -1,7 +1,7 @@
 'use client';
 
 import type { MotionProps } from 'motion/react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { CSSProperties, ElementType, JSX } from 'react';
 import { memo, useMemo } from 'react';
 
@@ -40,8 +40,17 @@ const ShimmerComponent = ({
   spread = 2,
 }: TextShimmerProps) => {
   const MotionComponent = getMotionComponent(Component as keyof JSX.IntrinsicElements);
+  const reduceMotion = useReducedMotion() === true;
 
   const dynamicSpread = useMemo(() => (children?.length ?? 0) * spread, [children, spread]);
+
+  if (reduceMotion) {
+    return (
+      <Component className={cn('inline-block text-muted-foreground', className)}>
+        {children}
+      </Component>
+    );
+  }
 
   return (
     <MotionComponent

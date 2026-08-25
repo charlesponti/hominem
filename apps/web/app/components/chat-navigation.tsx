@@ -35,7 +35,10 @@ export function ChatNavigation() {
   const lastMessageQueries = useChatLastMessages(recentChats.map((chat) => chat.id));
 
   function handleNewChat() {
-    createChat.mutate({ title: 'New chat' }, { onSuccess: (chat) => navigate(`/chat/${chat.id}`) });
+    createChat.mutate(
+      { title: 'New chat' },
+      { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
+    );
   }
 
   return (
@@ -72,7 +75,7 @@ export function ChatNavigation() {
                 className={location.pathname === `/chat/${chat.id}` ? 'bg-accent' : undefined}
                 key={chat.id}
               >
-                <Link className="min-w-0" to={`/chat/${chat.id}`}>
+                <Link className="min-w-0" to={`/chat/${chat.id}`} viewTransition>
                   <span className="min-w-0 flex-1 truncate">{chat.title || 'Untitled chat'}</span>
                   <time
                     className="shrink-0 text-xs text-muted-foreground"
@@ -86,7 +89,9 @@ export function ChatNavigation() {
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to="/chats">View all chats</Link>
+            <Link to="/chats" viewTransition>
+              View all chats
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

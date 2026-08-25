@@ -21,8 +21,8 @@ describe('ChatMessageSearch', () => {
 
     const searchBar = container.firstElementChild;
     expect(searchBar?.className).toContain('pointer-events-none');
-    expect(searchBar?.className).toContain('grid-rows-[0fr]');
-    expect(searchBar?.className).toContain('-translate-y-4');
+    expect(searchBar?.className).toContain('translate-x-2');
+    expect(searchBar?.className).toContain('pointer-events-none');
 
     rerender(
       <ChatMessageSearch
@@ -35,7 +35,7 @@ describe('ChatMessageSearch', () => {
     );
 
     expect(screen.getByRole('textbox', { name: 'Search messages' })).toBeTruthy();
-    expect(searchBar?.className).toContain('translate-y-0');
+    expect(searchBar?.className).toContain('translate-x-0');
   });
 
   it('reports blank, result, and empty states and closes accessibly', () => {

@@ -1,4 +1,5 @@
 import { AccountSettingsPage } from '~/components/account/settings-page';
+import { RouteHeader } from '~/components/route-header';
 import { userContext } from '~/lib/middleware';
 
 import type { Route } from './+types/settings';
@@ -12,5 +13,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function SettingsRoute({ loaderData }: Route.ComponentProps) {
-  return <AccountSettingsPage user={loaderData.user} />;
+  return (
+    <div className="h-full overflow-auto">
+      <RouteHeader />
+      <AccountSettingsPage user={loaderData.user} />
+    </div>
+  );
 }

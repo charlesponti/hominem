@@ -1,5 +1,6 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { Check, Clipboard, Pencil, RotateCcw, Share2, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -10,6 +11,7 @@ import {
   MessageResponse,
 } from '~/components/ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/ai-elements/reasoning';
+import { Shimmer } from '~/components/ai-elements/shimmer';
 import {
   Tool,
   ToolApprovalActions,
@@ -19,6 +21,7 @@ import {
   ToolPreview,
 } from '~/components/ai-elements/tool';
 import { SpeechPlayer } from '~/components/chat/speech-player';
+import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
 import type { ChatMessageView } from '~/lib/types/chat';
 
 type ChatToolCall = NonNullable<ChatMessageDto['toolCalls']>[number];
@@ -31,11 +34,16 @@ export interface ChatMessageProps {
   isSpeechActive?: boolean;
   isToolResponding?: boolean;
   isRegenerating?: boolean;
+  regenerationStatus?: RegenerationStatus;
+  isGenerationActive?: boolean;
+  regenerationError?: string | null;
   onActivateSpeech?: (messageId: string) => void;
   onApproveTool?: (input: { messageId: string; toolCallId: string }) => void;
   onDeactivateSpeech?: (messageId: string) => void;
   onRejectTool?: (input: { messageId: string; toolCallId: string }) => void;
   onRegenerate?: (messageId: string) => void;
+  onCancelRegenerate?: () => void;
+  onRetryRegenerate?: () => void;
   onEdit?: (messageId: string, content: string) => Promise<void> | void;
 }
 
@@ -97,17 +105,29 @@ export function ChatMessage({
   isSpeechActive = false,
   isToolResponding = false,
   isRegenerating = false,
+  regenerationStatus = 'idle',
+  isGenerationActive = false,
+  regenerationError,
   onActivateSpeech,
   onApproveTool,
   onDeactivateSpeech,
   onRejectTool,
   onRegenerate,
+  onCancelRegenerate,
+  onRetryRegenerate,
   onEdit,
 }: ChatMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
   const [editError, setEditError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const reduceMotion = useReducedMotion() === true;
+  const isRegenerationActive =
+    isRegenerating ||
+    regenerationStatus === 'preparing' ||
+    regenerationStatus === 'streaming' ||
+    regenerationStatus === 'stopping';
+  const isRegenerationStopping = regenerationStatus === 'stopping';
   const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
   const hasReasoning = Boolean(message.reasoning?.trim());
   const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
@@ -165,71 +185,113 @@ export function ChatMessage({
   return (
     <Message from={toMessageRole(message.role)}>
       <MessageContent>
-        {hasReasoning ? (
-          <Reasoning defaultOpen={false} isStreaming={Boolean(message.isStreaming)}>
-            <ReasoningTrigger aria-label="Toggle reasoning" />
-            <ReasoningContent>{message.reasoning ?? ''}</ReasoningContent>
-          </Reasoning>
-        ) : null}
-        {hasReferencedNotes ? (
-          <div aria-label="Referenced notes" className="flex flex-wrap gap-1.5" role="list">
-            {message.referencedNotes?.map((note) => (
-              <span
-                aria-label={`Referenced note: ${note.title || note.id}`}
-                className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
-                key={note.id}
-                role="listitem"
-              >
-                {note.title || note.id}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {message.toolCalls?.map((toolCall) => (
-          <ToolCall
-            key={toolCall.toolCallId}
-            isToolResponding={isToolResponding}
-            messageId={message.id}
-            onApprove={onApproveTool}
-            onReject={onRejectTool}
-            toolCall={toolCall}
-          />
-        ))}
-        {isEditing ? (
-          <div className="flex min-w-72 flex-col gap-2">
-            <textarea
-              aria-label="Edit message"
-              autoFocus
-              className="min-h-20 rounded-md border border-border-subtle bg-background p-2 text-sm"
-              onChange={(event) => setDraft(event.target.value)}
-              value={draft}
-            />
-            {editError ? <p className="text-xs text-destructive">{editError}</p> : null}
-            <div className="flex gap-1">
-              <MessageAction label="Save edit" onClick={() => void saveEdit()} tooltip="Save edit">
-                <Check aria-hidden="true" size={14} />
-              </MessageAction>
-              <MessageAction
-                label="Cancel edit"
-                onClick={() => {
-                  setDraft(message.content);
-                  setEditError(null);
-                  setIsEditing(false);
-                }}
-                tooltip="Cancel edit"
-              >
-                <X aria-hidden="true" size={14} />
-              </MessageAction>
-            </div>
-          </div>
-        ) : (
-          <MessageResponse>{message.content}</MessageResponse>
-        )}
+        <AnimatePresence initial={false} mode="wait">
+          {isRegenerationActive ? (
+            <motion.div
+              animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}
+              className="min-h-6"
+              exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-4px)' }}
+              initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(4px)' }}
+              key="regeneration-thinking"
+              transition={{
+                duration: reduceMotion ? 0.08 : 0.18,
+                ease: [0.23, 1, 0.32, 1],
+              }}
+            >
+              <Shimmer duration={1}>Thinking</Shimmer>
+            </motion.div>
+          ) : (
+            <motion.div
+              animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}
+              initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(4px)' }}
+              key={`message-content-${message.id}-${message.updatedAt}`}
+              transition={{
+                duration: reduceMotion ? 0.08 : 0.18,
+                ease: [0.23, 1, 0.32, 1],
+              }}
+            >
+              {hasReasoning ? (
+                <Reasoning defaultOpen={false} isStreaming={Boolean(message.isStreaming)}>
+                  <ReasoningTrigger aria-label="Toggle reasoning" />
+                  <ReasoningContent>{message.reasoning ?? ''}</ReasoningContent>
+                </Reasoning>
+              ) : null}
+              {hasReferencedNotes ? (
+                <div aria-label="Referenced notes" className="flex flex-wrap gap-1.5" role="list">
+                  {message.referencedNotes?.map((note) => (
+                    <span
+                      aria-label={`Referenced note: ${note.title || note.id}`}
+                      className="rounded-full border border-border-subtle px-2.5 py-1 text-xs text-text-secondary"
+                      key={note.id}
+                      role="listitem"
+                    >
+                      {note.title || note.id}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {message.toolCalls?.map((toolCall) => (
+                <ToolCall
+                  key={toolCall.toolCallId}
+                  isToolResponding={isToolResponding}
+                  messageId={message.id}
+                  onApprove={onApproveTool}
+                  onReject={onRejectTool}
+                  toolCall={toolCall}
+                />
+              ))}
+              {isEditing ? (
+                <div className="flex min-w-72 flex-col gap-2">
+                  <textarea
+                    aria-label="Edit message"
+                    autoFocus
+                    className="min-h-20 rounded-md border border-border-subtle bg-background p-2 text-sm"
+                    onChange={(event) => setDraft(event.target.value)}
+                    value={draft}
+                  />
+                  {editError ? <p className="text-xs text-destructive">{editError}</p> : null}
+                  <div className="flex gap-1">
+                    <MessageAction
+                      label="Save edit"
+                      onClick={() => void saveEdit()}
+                      tooltip="Save edit"
+                    >
+                      <Check aria-hidden="true" size={14} />
+                    </MessageAction>
+                    <MessageAction
+                      label="Cancel edit"
+                      onClick={() => {
+                        setDraft(message.content);
+                        setEditError(null);
+                        setIsEditing(false);
+                      }}
+                      tooltip="Cancel edit"
+                    >
+                      <X aria-hidden="true" size={14} />
+                    </MessageAction>
+                  </div>
+                </div>
+              ) : (
+                <MessageResponse>{message.content}</MessageResponse>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {message.failed ? (
           <p aria-live="polite" className="text-xs text-destructive" role="alert">
             {message.role === 'assistant'
               ? 'Response interrupted.'
               : `${message.error || 'Message failed to send.'} Retry when ready.`}
+          </p>
+        ) : null}
+        {regenerationError ? (
+          <p aria-live="polite" className="text-xs text-destructive" role="alert">
+            {regenerationError}
+            {onRetryRegenerate ? (
+              <button className="ml-1 underline" onClick={onRetryRegenerate} type="button">
+                Retry
+              </button>
+            ) : null}
           </p>
         ) : null}
         {showDebug && !message.isStreaming ? (
@@ -276,7 +338,10 @@ export function ChatMessage({
                 src={speechSrc}
               />
             ) : null}
-            {message.role === 'assistant' && !message.isStreaming && message.content.trim() ? (
+            {message.role === 'assistant' &&
+            !message.isStreaming &&
+            !isRegenerationActive &&
+            message.content.trim() ? (
               <>
                 <MessageAction
                   label={
@@ -306,7 +371,7 @@ export function ChatMessage({
                 </MessageAction>
               </>
             ) : null}
-            {canEdit ? (
+            {canEdit && !isRegenerationActive ? (
               <MessageAction
                 label="Edit message"
                 onClick={() => {
@@ -321,12 +386,59 @@ export function ChatMessage({
             ) : null}
             {message.role === 'assistant' && onRegenerate ? (
               <MessageAction
-                disabled={isToolResponding || message.isStreaming || isRegenerating}
-                label="Regenerate response"
-                onClick={() => onRegenerate(message.id)}
-                tooltip="Regenerate response"
+                disabled={
+                  isToolResponding ||
+                  message.isStreaming ||
+                  (isGenerationActive && !isRegenerationActive) ||
+                  isRegenerationStopping
+                }
+                label={
+                  isRegenerationStopping
+                    ? 'Stopping regeneration'
+                    : isRegenerationActive
+                      ? 'Stop regenerating response'
+                      : 'Regenerate response'
+                }
+                onClick={() => {
+                  if (isRegenerationActive && !isRegenerationStopping) {
+                    onCancelRegenerate?.();
+                  } else if (!isRegenerationActive) {
+                    onRegenerate(message.id);
+                  }
+                }}
+                tooltip={
+                  isRegenerationStopping
+                    ? 'Stopping regeneration'
+                    : isRegenerationActive
+                      ? 'Stop regenerating response'
+                      : 'Regenerate response'
+                }
               >
-                <RotateCcw aria-hidden="true" size={14} />
+                <AnimatePresence initial={false} mode="wait">
+                  <motion.span
+                    animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
+                    exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+                    initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+                    key={
+                      isRegenerationStopping ? 'stopping' : isRegenerationActive ? 'active' : 'idle'
+                    }
+                    transition={{
+                      duration: reduceMotion ? 0.08 : 0.15,
+                      ease: [0.23, 1, 0.32, 1],
+                    }}
+                  >
+                    {isRegenerationStopping ? (
+                      <span
+                        aria-hidden="true"
+                        className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+                      />
+                    ) : isRegenerationActive ? (
+                      <X aria-hidden="true" size={14} />
+                    ) : (
+                      <RotateCcw aria-hidden="true" size={14} />
+                    )}
+                  </motion.span>
+                </AnimatePresence>
               </MessageAction>
             ) : null}
           </MessageActions>

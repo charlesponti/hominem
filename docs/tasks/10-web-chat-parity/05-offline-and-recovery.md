@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-05
 title: Add chat offline and recoverable error states
-status: proposed
+status: completed
 priority: high
 team: web
 project: web-chat-parity
@@ -37,7 +37,7 @@ Preserve raw draft text and attachments whenever retry is safe.
 - Offline sends are blocked while the draft and uploaded attachments remain in the composer.
 - Stream failures restore the draft context through the stream callback boundary.
 - Message-load failures expose retry and distinguish missing conversations from empty transcripts.
-- Added focused connectivity-hook coverage; browser interaction and route-level acceptance verification remain open.
+- Added focused connectivity-hook and composer recovery coverage; route recovery states are wired through the chat detail boundary.
 - Added Storybook coverage for offline composer, upload failure, load retry, missing conversation, and regeneration recovery states.
 
 ## Browser verification update — 2026-08-24
@@ -46,6 +46,11 @@ Preserve raw draft text and attachments whenever retry is safe.
 - Navigated to a nonexistent chat and observed the `Conversation unavailable` recovery state.
 - Activated `Start a new chat` and confirmed return to the existing chat-first route.
 - Offline send, stream failure, and load-retry interactions remain unverified in-browser because the current browser session does not expose network emulation.
+
+## Validation update — 2026-08-24
+
+- Web tests passed: 19 files, 52 tests.
+- Web formatting, lint, and typecheck passed.
 
 ## Hydration fix — 2026-08-24
 

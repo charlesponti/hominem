@@ -127,6 +127,86 @@ describe('ChatMessage', () => {
     expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
   });
 
+  it('guards regeneration during an active generation and exposes cancellation', () => {
+    const onRegenerate = vi.fn();
+    const onCancelRegenerate = vi.fn();
+    const { rerender } = render(
+      <ChatMessage
+        isGenerationActive
+        message={message()}
+        onRegenerate={onRegenerate}
+        onCancelRegenerate={onCancelRegenerate}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Regenerate response' })).toHaveProperty(
+      'disabled',
+      true,
+    );
+    rerender(
+      <ChatMessage
+        isRegenerating
+        message={message()}
+        onCancelRegenerate={onCancelRegenerate}
+        onRegenerate={onRegenerate}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Stop regenerating response' }));
+    expect(onRegenerate).not.toHaveBeenCalled();
+    expect(onCancelRegenerate).toHaveBeenCalledOnce();
+  });
+
+  it('replaces the targeted answer with in-place Thinking without adding a second message', async () => {
+    const { rerender } = render(
+      <ChatMessage
+        isRegenerating
+        message={message()}
+        onCancelRegenerate={() => undefined}
+        onRegenerate={() => undefined}
+        regenerationStatus="streaming"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Thinking')).toBeTruthy();
+      expect(screen.queryByText('Hello from the assistant')).toBeNull();
+    });
+
+    rerender(
+      <ChatMessage
+        message={message({ updatedAt: '2026-08-24T17:31:00.000Z' })}
+        onRegenerate={() => undefined}
+        regenerationStatus="stopping"
+      />,
+    );
+    const stoppingButton = screen.getByRole('button', { name: 'Stopping regeneration' });
+    expect(stoppingButton).toHaveProperty('disabled', true);
+    rerender(
+      <ChatMessage
+        message={message({ updatedAt: '2026-08-24T17:31:00.000Z' })}
+        onRegenerate={() => undefined}
+        regenerationStatus="cancelled"
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Hello from the assistant')).toBeTruthy());
+  });
+
+  it('keeps regeneration failures retryable for the target message', () => {
+    const onRetryRegenerate = vi.fn();
+    render(
+      <ChatMessage
+        message={message()}
+        onRegenerate={() => undefined}
+        onRetryRegenerate={onRetryRegenerate}
+        regenerationError="Regeneration failed"
+      />,
+    );
+
+    expect(screen.getByRole('alert').textContent).toContain('Regeneration failed');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetryRegenerate).toHaveBeenCalledOnce();
+  });
+
   it('renders reasoning, referenced notes, timestamps, failures, and opt-in debug details', () => {
     render(
       <ChatMessage

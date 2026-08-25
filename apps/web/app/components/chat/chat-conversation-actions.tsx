@@ -22,11 +22,7 @@ export function ChatConversationActions({
   onSearch,
 }: ChatConversationActionsProps) {
   return (
-    <div
-      aria-label="Conversation actions"
-      className="flex items-center gap-1 border-b border-border-subtle p-2"
-      role="toolbar"
-    >
+    <div aria-label="Conversation actions" className="flex items-center gap-1" role="toolbar">
       <Button
         aria-label="Search messages"
         disabled={isSearchOpen}

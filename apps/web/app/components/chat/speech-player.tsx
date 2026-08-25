@@ -194,43 +194,45 @@ export function SpeechPlayer({
 
   return (
     <div
-      className="flex min-w-0 items-center gap-2 text-muted-foreground"
+      className="inline-flex min-w-0 items-center gap-2 text-muted-foreground"
       data-speech-control-state={showBrowserControls ? 'active' : 'idle'}
       data-speech-player
     >
-      <MessageAction
-        aria-hidden={showBrowserControls}
-        aria-label={state === 'error' ? 'Retry response audio' : 'Listen to response'}
-        className={cn(
-          controlTransition,
-          showBrowserControls
-            ? 'pointer-events-none scale-90 opacity-0'
-            : 'pointer-events-auto scale-100 opacity-100',
-        )}
-        onClick={() => void handleListen()}
-        tabIndex={showBrowserControls ? -1 : 0}
-        tooltip={state === 'error' ? 'Retry response audio' : 'Listen to response'}
-      >
-        <Headphones aria-hidden="true" />
-      </MessageAction>
-
-      {personaMounted ? (
+      <div className="relative flex size-7 shrink-0 items-center justify-center" data-speech-action>
         <MessageAction
-          aria-hidden={!showPersona || state !== 'playing'}
-          aria-label="Stop listening"
+          aria-hidden={showBrowserControls}
+          aria-label={state === 'error' ? 'Retry response audio' : 'Listen to response'}
           className={cn(
             controlTransition,
-            showPersona && state === 'playing'
-              ? 'pointer-events-auto scale-100 opacity-100'
-              : 'pointer-events-none scale-90 opacity-0',
+            showBrowserControls
+              ? 'pointer-events-none scale-90 opacity-0'
+              : 'pointer-events-auto scale-100 opacity-100',
           )}
-          onClick={handleStop}
-          tabIndex={showPersona && state === 'playing' ? 0 : -1}
-          tooltip="Stop listening"
+          onClick={() => void handleListen()}
+          tabIndex={showBrowserControls ? -1 : 0}
+          tooltip={state === 'error' ? 'Retry response audio' : 'Listen to response'}
         >
-          <Persona state={reducedMotion ? 'idle' : 'speaking'} variant="mana" />
+          <Headphones aria-hidden="true" />
         </MessageAction>
-      ) : null}
+
+        {personaMounted ? (
+          <MessageAction
+            aria-hidden={!showPersona || state !== 'playing'}
+            aria-label="Stop listening"
+            className={cn(
+              controlTransition,
+              showPersona && state === 'playing'
+                ? 'pointer-events-auto scale-100 opacity-100'
+                : 'pointer-events-none scale-90 opacity-0',
+            )}
+            onClick={handleStop}
+            tabIndex={showPersona && state === 'playing' ? 0 : -1}
+            tooltip="Stop listening"
+          >
+            <Persona state={reducedMotion ? 'idle' : 'speaking'} variant="mana" />
+          </MessageAction>
+        ) : null}
+      </div>
 
       <AudioPlayer
         src={src}

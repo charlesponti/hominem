@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { RouteHeader } from '~/components/route-header';
 import { Button } from '~/components/ui/button';
 import { useChatLastMessages, useChatsList } from '~/hooks/use-chats';
 
@@ -30,69 +31,73 @@ export default function ChatsPage() {
   const pageCount = Math.max(1, Math.ceil(chats.length / PAGE_SIZE));
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex items-center gap-3">
-        <Button aria-label="Back to chat" asChild size="icon-sm" variant="ghost">
-          <Link to="/">
-            <ArrowLeft />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Chats</h1>
-          <p className="text-sm text-muted-foreground">Your previous conversations.</p>
-        </div>
-      </div>
-
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
-        {isPending ? <p className="p-5 text-sm text-muted-foreground">Loading chats…</p> : null}
-        {error ? <p className="p-5 text-sm text-destructive">Chats unavailable.</p> : null}
-        {!isPending && !error && chats.length === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground">No chats yet.</p>
-        ) : null}
-        {!isPending && !error && pageChats.length > 0 ? (
-          <div className="divide-y divide-border">
-            {pageChats.map((chat, index) => (
-              <Link
-                className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
-                key={chat.id}
-                to={`/chat/${chat.id}`}
-              >
-                <span className="min-w-0 truncate font-medium">
-                  {chat.title || 'Untitled chat'}
-                </span>
-                <time
-                  className="shrink-0 text-sm text-muted-foreground"
-                  dateTime={lastMessageQueries[index]?.data?.[0]?.createdAt}
-                >
-                  {getLastMessageLabel(lastMessageQueries[index] ?? { isPending: true })}
-                </time>
-              </Link>
-            ))}
+    <div className="h-full overflow-auto">
+      <RouteHeader />
+      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+        <div className="mb-8 flex items-center gap-3">
+          <Button aria-label="Back to chat" asChild size="icon-sm" variant="ghost">
+            <Link to="/" viewTransition>
+              <ArrowLeft />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Chats</h1>
+            <p className="text-sm text-muted-foreground">Your previous conversations.</p>
           </div>
-        ) : null}
-      </section>
+        </div>
 
-      {chats.length > PAGE_SIZE ? (
-        <nav aria-label="Chat pages" className="mt-5 flex items-center justify-between">
-          <Button
-            disabled={page === 0}
-            onClick={() => setPage((current) => current - 1)}
-            variant="outline"
-          >
-            <ChevronLeft /> Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page + 1} of {pageCount}
-          </span>
-          <Button
-            disabled={page >= pageCount - 1}
-            onClick={() => setPage((current) => current + 1)}
-            variant="outline"
-          >
-            Next <ChevronRight />
-          </Button>
-        </nav>
-      ) : null}
-    </main>
+        <section className="overflow-hidden rounded-xl border border-border bg-card">
+          {isPending ? <p className="p-5 text-sm text-muted-foreground">Loading chats…</p> : null}
+          {error ? <p className="p-5 text-sm text-destructive">Chats unavailable.</p> : null}
+          {!isPending && !error && chats.length === 0 ? (
+            <p className="p-5 text-sm text-muted-foreground">No chats yet.</p>
+          ) : null}
+          {!isPending && !error && pageChats.length > 0 ? (
+            <div className="divide-y divide-border">
+              {pageChats.map((chat, index) => (
+                <Link
+                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                  key={chat.id}
+                  to={`/chat/${chat.id}`}
+                  viewTransition
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {chat.title || 'Untitled chat'}
+                  </span>
+                  <time
+                    className="shrink-0 text-sm text-muted-foreground"
+                    dateTime={lastMessageQueries[index]?.data?.[0]?.createdAt}
+                  >
+                    {getLastMessageLabel(lastMessageQueries[index] ?? { isPending: true })}
+                  </time>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        {chats.length > PAGE_SIZE ? (
+          <nav aria-label="Chat pages" className="mt-5 flex items-center justify-between">
+            <Button
+              disabled={page === 0}
+              onClick={() => setPage((current) => current - 1)}
+              variant="outline"
+            >
+              <ChevronLeft /> Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page + 1} of {pageCount}
+            </span>
+            <Button
+              disabled={page >= pageCount - 1}
+              onClick={() => setPage((current) => current + 1)}
+              variant="outline"
+            >
+              Next <ChevronRight />
+            </Button>
+          </nav>
+        ) : null}
+      </main>
+    </div>
   );
 }

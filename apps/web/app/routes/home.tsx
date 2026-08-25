@@ -44,7 +44,7 @@ export default function HomePage() {
       responseLength,
       onAccepted: (event) => {
         setDraft('');
-        navigate(`/chat/${event.chatId}`);
+        navigate(`/chat/${event.chatId}`, { viewTransition: true });
       },
     });
   }

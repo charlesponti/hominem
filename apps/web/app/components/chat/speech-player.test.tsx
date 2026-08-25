@@ -52,6 +52,17 @@ function renderHarness() {
 }
 
 describe('SpeechPlayer', () => {
+  it('keeps the speech action inline and scopes icon swaps to the action wrapper', () => {
+    renderPlayer({ isActive: false });
+
+    const player = document.querySelector('[data-speech-player]');
+    const action = document.querySelector('[data-speech-action]');
+
+    expect(player?.className).toContain('inline-flex');
+    expect(action?.className).toContain('relative');
+    expect(action?.className).toContain('size-7');
+  });
+
   it('hides browser controls until playback starts', () => {
     renderPlayer({ isActive: false });
 

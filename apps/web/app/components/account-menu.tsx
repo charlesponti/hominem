@@ -46,7 +46,7 @@ export function AccountMenu({ user }: { user: User }) {
         <CollaborationNotifications />
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/settings">
+          <Link to="/settings" viewTransition>
             <Settings />
             Settings
           </Link>
