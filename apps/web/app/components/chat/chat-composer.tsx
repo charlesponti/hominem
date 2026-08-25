@@ -73,7 +73,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className="px-4 pb-safe-area">
+    <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
       {contextContent}
       {attachments.length > 0 ? (
         <div className="mb-2 flex flex-wrap gap-1.5" aria-label="Attached files">
@@ -167,7 +167,7 @@ export function ChatComposer({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      'absolute transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
+                      'absolute transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
                       isListening
                         ? 'scale-100 opacity-100'
                         : 'pointer-events-none scale-95 opacity-0',
@@ -178,7 +178,7 @@ export function ChatComposer({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      'transition-[opacity,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
+                      'transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
                       isListening ? 'scale-95 opacity-0' : 'scale-100 opacity-100',
                     )}
                   >
