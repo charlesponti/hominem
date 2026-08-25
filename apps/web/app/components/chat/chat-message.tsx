@@ -61,7 +61,7 @@ export interface ChatMessageProps {
 }
 
 function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
-  return role === 'assistant' ? 'assistant' : 'user';
+  return role === 'user' ? 'user' : 'assistant';
 }
 
 function ToolCall({
@@ -151,6 +151,13 @@ export function ChatMessage({
   const hasReasoning = Boolean(message.reasoning?.trim());
   const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
   const timestamp = formatTimestamp(message.createdAt);
+  const presentationState = message.failed
+    ? message.role === 'assistant'
+      ? 'interrupted'
+      : 'failed'
+    : message.isStreaming
+      ? 'streaming'
+      : 'complete';
 
   useEffect(() => {
     if (!isEditing) setDraft(message.content);
@@ -218,7 +225,11 @@ export function ChatMessage({
     onDeactivateSpeech;
 
   return (
-    <Message from={toMessageRole(message.role)}>
+    <Message
+      aria-label={`Message ${presentationState}`}
+      data-presentation-state={presentationState}
+      from={toMessageRole(message.role)}
+    >
       <MessageContent>
         <AnimatePresence initial={false} mode="wait">
           {isRegenerationActive ? (
@@ -307,7 +318,20 @@ export function ChatMessage({
                   </div>
                 </div>
               ) : (
-                <MessageResponse>{message.content}</MessageResponse>
+                <>
+                  {message.isStreaming ? (
+                    <p
+                      aria-label="Response is streaming"
+                      className="text-sm text-text-secondary"
+                      role="status"
+                    >
+                      <Shimmer as="span" duration={1}>
+                        Thinking
+                      </Shimmer>
+                    </p>
+                  ) : null}
+                  <MessageResponse>{message.content}</MessageResponse>
+                </>
               )}
             </motion.div>
           )}
@@ -315,7 +339,7 @@ export function ChatMessage({
         {message.failed ? (
           <p aria-live="polite" className="text-xs text-destructive" role="alert">
             {message.role === 'assistant'
-              ? 'Response interrupted.'
+              ? 'Response interrupted. The previous content is preserved.'
               : `${message.error || 'Message failed to send.'} Retry when ready.`}
           </p>
         ) : null}

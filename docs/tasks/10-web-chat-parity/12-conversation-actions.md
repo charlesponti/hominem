@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-12
 title: Add the web chat conversation action surface
-status: proposed
+status: complete
 priority: high
 team: web
 project: web-chat-parity
@@ -38,9 +38,9 @@ disabled or absent according to the approved contract.
 - Wired archive through the focused `useArchiveChat` mutation and returned users to the chat-first home after success.
 - Kept response settings, debug mode, and conversation transforms visibly disabled until their dedicated tasks and product decisions are complete.
 - Added Storybook and focused component coverage for ready, searching, and archiving states.
+- Verified pending search, response-settings, and archive states disable only their owning control; unrelated navigation remains available.
 
 ## Validation update — 2026-08-24
 
-- Web formatting and lint pass.
-- Focused conversation-action tests pass.
-- Full web typecheck remains blocked only by existing `.storybook/main.ts` typing errors.
+- Web formatting, lint, typecheck, build, and tests pass.
+- Focused conversation-action tests cover ready, searching, settings, and archiving states.

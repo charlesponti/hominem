@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-11
 title: Match Omiro message presentation states on web
-status: proposed
+status: complete
 priority: medium
 team: web
 project: web-chat-parity
@@ -34,10 +34,12 @@ existing AI element primitives where appropriate.
 - The reusable `ChatMessage` component owns `Message`/`MessageContent` composition, speech controls, tool-call previews, and approval actions.
 - Added persisted reasoning, referenced-note chips, accessible timestamps, interrupted/failed banners, and opt-in debug details to `ChatMessage`.
 - Extended `ChatMessageView` with transient failed/error presentation state while keeping debug details disabled by default.
+- Added an explicit accessible presentation state for complete, streaming, failed, and interrupted messages; streaming now shows the in-message Thinking indicator used by Omiro.
+- Normalized non-user message roles to the assistant presentation so tool/system records cannot render as user bubbles.
 - Added focused tests and Storybook coverage for the presentation states.
 
 ## Validation update — 2026-08-24
 
 - Web formatting and lint pass.
-- Focused `chat-message.test.tsx` suite passes: 6 tests.
-- Full web typecheck remains blocked only by existing `.storybook/main.ts` typing errors.
+- Focused `chat-message.test.tsx` suite passes: 13 tests.
+- Full web typecheck, lint, formatting, and component tests pass.

@@ -36,7 +36,12 @@ describe('ChatMessage', () => {
 
     expect(screen.getByText('Hello from the assistant')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Listen to response' })).toBeTruthy();
-    expect(screen.getByText('Hello from the assistant').closest('.is-assistant')).toBeTruthy();
+    expect(
+      screen
+        .getByText('Hello from the assistant')
+        .closest('.is-assistant')
+        ?.getAttribute('data-presentation-state'),
+    ).toBe('complete');
   });
 
   it('renders tool approval actions and reports the selected action', () => {
@@ -87,6 +92,13 @@ describe('ChatMessage', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: 'Listen to response' })).toBeNull();
+  });
+
+  it('exposes a distinct accessible streaming state inside the message', () => {
+    render(<ChatMessage message={message({ content: 'Partial answer', isStreaming: true })} />);
+
+    expect(screen.getByRole('status', { name: 'Response is streaming' })).toBeTruthy();
+    expect(screen.getByLabelText('Message streaming')).toBeTruthy();
   });
 
   it('edits persisted user messages and rejects empty content', async () => {
@@ -279,7 +291,10 @@ describe('ChatMessage', () => {
     expect(screen.getByText('I compared the release constraints.')).toBeTruthy();
     expect(screen.getByLabelText('Referenced note: Release plan')).toBeTruthy();
     expect(screen.getByLabelText('Sent 10:30 AM')).toBeTruthy();
-    expect(screen.getByRole('alert').textContent).toContain('Response interrupted.');
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Response interrupted. The previous content is preserved.',
+    );
+    expect(screen.getByLabelText('Message interrupted')).toBeTruthy();
     expect(screen.getByText('Debug details')).toBeTruthy();
   });
 });
