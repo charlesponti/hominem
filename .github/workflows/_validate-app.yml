@@ -97,7 +97,7 @@ jobs:
 
       - name: react-doctor
         if: inputs.package-filter == '@hominem/web'
-        run: pnpm --filter @hominem/web doctor
+        run: pnpm --filter @hominem/web run doctor
 
       - name: validate-mobile-embed
         if: inputs.mobile-export
