@@ -38,10 +38,10 @@
     "merge-user-data": "tsx scripts/merge-user-data.ts"
   },
   "dependencies": {
-    "@better-auth/cimd": "1.7.0-rc.6",
-    "@better-auth/expo": "1.7.0-rc.6",
-    "@better-auth/kysely-adapter": "1.7.0-rc.6",
-    "@better-auth/mcp": "1.7.0-rc.6",
+    "@better-auth/cimd": "1.7.1",
+    "@better-auth/expo": "1.7.1",
+    "@better-auth/kysely-adapter": "1.7.1",
+    "@better-auth/mcp": "1.7.1",
     "@better-auth/oauth-provider": "1.7.1",
     "@hominem/ai": "workspace:*",
     "@hominem/career-services": "workspace:*",
