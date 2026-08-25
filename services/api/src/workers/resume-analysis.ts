@@ -1,4 +1,4 @@
-import { Buffer, File } from 'node:buffer';
+import { Buffer } from 'node:buffer';
 
 import {
   buildResumeImportDiff,
@@ -6,12 +6,12 @@ import {
   parseResumeWithAI,
   ResumeParseError,
 } from '@hominem/career-services/resume';
-import { CareerRepository, SocialLinksRepository, db } from '@hominem/db';
+import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
 import {
   getJobStatus,
   publishImportProgress,
-  updateImportJob,
   QUEUE_NAMES,
+  updateImportJob,
   type ResumeAnalysisJob,
   type ResumeAnalysisQueuePayload,
   type ResumeAnalysisStage,
