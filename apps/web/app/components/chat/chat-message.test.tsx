@@ -139,7 +139,9 @@ describe('ChatMessage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete message' }));
 
     await waitFor(() => expect(onDelete).toHaveBeenCalledWith('message-1'));
-    expect(screen.getByText('Unable to delete this message. Try again when ready.')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByText('Unable to delete this message. Try again when ready.')).toBeTruthy(),
+    );
   });
 
   it('exposes copy and share actions only for non-empty assistant messages', async () => {

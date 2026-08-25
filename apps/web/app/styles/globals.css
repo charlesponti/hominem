@@ -124,6 +124,10 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+@utility pt-safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
 @utility pb-safe-area {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }

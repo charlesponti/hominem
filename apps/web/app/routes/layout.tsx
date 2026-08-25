@@ -13,8 +13,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Layout() {
   return (
     <TooltipProvider>
-      <div className="flex h-[100dvh] w-full flex-col bg-background text-foreground">
-        <div className="min-h-0 flex-1">
+      <div className="flex h-[100svh] min-h-[100svh] w-full flex-col overflow-hidden bg-background text-foreground">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <Outlet />
         </div>
       </div>

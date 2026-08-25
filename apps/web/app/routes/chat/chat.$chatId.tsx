@@ -233,7 +233,7 @@ export default function ChatPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <RouteHeader>
         <div className="relative h-7 min-w-0 flex-1">
           <div
@@ -265,7 +265,7 @@ export default function ChatPage({
         </div>
       </RouteHeader>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
         {isSettingsOpen ? (
           <ChatResponseSettings
             onChange={setResponseLength}
@@ -275,7 +275,7 @@ export default function ChatPage({
         ) : null}
 
         <Conversation>
-          <ConversationContent>
+          <ConversationContent scrollClassName="overflow-y-auto overscroll-contain">
             {isSearchOpen &&
             search.debouncedQuery &&
             !search.isSearching &&

@@ -2,7 +2,7 @@
 type: task
 id: WEB-CHAT-13
 title: Add in-chat message search
-status: proposed
+status: complete
 priority: medium
 team: web
 project: web-chat-parity
@@ -36,8 +36,8 @@ behavior without mutating the canonical message cache.
 - Added route-level search controls with loading, result count, empty-result, error, close, and transcript-restoration states.
 - Search results remain isolated from the canonical message cache and use the shared `ChatMessageView` presentation model.
 - Added Storybook coverage for empty, loading, result, no-result, and error states.
+- Added hook coverage for whitespace suppression, trimmed debouncing, isolated results, and close/reset behavior.
 
 ## Validation update — 2026-08-24
 
-- Web formatting and lint pass.
-- Full web typecheck remains blocked only by existing `.storybook/main.ts` typing errors.
+- Web formatting, lint, typecheck, build, and tests pass.
