@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: '24.18.0'
 
+      - name: install-eas-cli
+        run: pnpm add --global eas-cli
+
       - name: trigger-production-release-workflow
         working-directory: apps/omiro
         env:
