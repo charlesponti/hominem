@@ -7,8 +7,7 @@ const meta = {
   component: ChatConversationActions,
   parameters: { layout: 'centered' },
   args: {
-    onArchive: () => undefined,
-    onNewChat: () => undefined,
+    chatId: 'chat-1',
     onResponseSettings: () => undefined,
     onSearch: () => undefined,
   },
@@ -18,5 +17,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
-export const Archiving: Story = { args: { isArchiving: true } };
 export const SearchOpen: Story = { args: { isSearchOpen: true } };

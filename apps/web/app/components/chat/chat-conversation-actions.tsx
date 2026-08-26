@@ -1,14 +1,6 @@
-import {
-  Archive,
-  Bug,
-  Check,
-  MoreHorizontal,
-  Plus,
-  Search,
-  Settings2,
-  WandSparkles,
-} from 'lucide-react';
+import { Archive, Bug, Check, MoreHorizontal, Plus, Search, Settings2 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import {
   DropdownMenu,
@@ -19,47 +11,49 @@ import {
   DropdownMenuTrigger,
 } from '~/components/dropdown-menu';
 import { Button } from '~/components/ui/button';
+import { useArchiveChat, useCreateChat } from '~/hooks/use-chats';
 
 export interface ChatConversationActionsProps {
-  isArchiving?: boolean;
-  isCreatingChat?: boolean;
+  chatId: string;
   isDebugOpen?: boolean;
-  canTransform?: boolean;
-  isTransforming?: boolean;
   canExtractTasks?: boolean;
   isExtractingTasks?: boolean;
-  isLinkedNote?: boolean;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
-  onArchive: () => void;
   onDebug?: () => void;
-  onNewChat: () => void;
   onResponseSettings: () => void;
   onSearch: () => void;
-  onTransform?: () => void;
   onExtractTasks?: () => void;
 }
 
 export function ChatConversationActions({
-  isArchiving = false,
+  chatId,
   isSearchOpen = false,
   isSettingsOpen = false,
-  onArchive,
   onDebug,
-  onNewChat,
   onResponseSettings,
   onSearch,
-  isCreatingChat = false,
   isDebugOpen = false,
-  canTransform = false,
-  isTransforming = false,
-  onTransform,
   canExtractTasks = false,
   isExtractingTasks = false,
   onExtractTasks,
-  isLinkedNote = false,
 }: ChatConversationActionsProps) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const navigate = useNavigate();
+  const archiveChat = useArchiveChat({
+    chatId,
+    onSuccess: () => navigate('/', { viewTransition: true }),
+  });
+  const createChat = useCreateChat();
+
+  const onArchive = () => archiveChat.mutate({ chatId });
+  const onNewChat = () => {
+    if (createChat.isPending) return;
+    createChat.mutate(
+      { title: 'New chat' },
+      { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
+    );
+  };
 
   return (
     <div
@@ -107,23 +101,19 @@ export function ChatConversationActions({
             <Bug aria-hidden="true" />
             {isDebugOpen ? 'Disable debug mode' : 'Enable debug mode'}
           </DropdownMenuItem>
-          <DropdownMenuItem disabled={!canTransform || isTransforming} onClick={onTransform}>
-            <WandSparkles aria-hidden="true" />
-            {isTransforming
-              ? 'Preparing note draft…'
-              : isLinkedNote
-                ? 'Summarize linked note'
-                : 'Create note from chat'}
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Manage</DropdownMenuLabel>
-          <DropdownMenuItem disabled={isCreatingChat} onClick={onNewChat}>
+          <DropdownMenuItem disabled={createChat.isPending} onClick={onNewChat}>
             <Plus aria-hidden="true" />
-            {isCreatingChat ? 'Creating new chat…' : 'New chat'}
+            {createChat.isPending ? 'Creating new chat…' : 'New chat'}
           </DropdownMenuItem>
-          <DropdownMenuItem disabled={isArchiving} onClick={onArchive} variant="destructive">
+          <DropdownMenuItem
+            disabled={archiveChat.isPending}
+            onClick={onArchive}
+            variant="destructive"
+          >
             <Archive aria-hidden="true" />
-            {isArchiving ? 'Archiving conversation…' : 'Archive conversation'}
+            {archiveChat.isPending ? 'Archiving conversation…' : 'Archive conversation'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

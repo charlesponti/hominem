@@ -1,10 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type {
-  NotesCreateInput,
-  NotesCreateOutput,
-  NotesSearchOutput,
-} from '@hominem/rpc/types/notes.types';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import type { NotesSearchOutput } from '@hominem/rpc/types/notes.types';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { notesQueryKeys } from '~/lib/query-keys';
 
@@ -37,17 +33,6 @@ export function useNoteSearch(query: string, enabled = true) {
         notes,
         nextCursor: data.pages.at(-1)?.nextCursor ?? null,
       } as NotesSearchOutput & { pages: typeof data.pages; pageParams: typeof data.pageParams };
-    },
-  });
-}
-
-export function useCreateNote() {
-  const client = useApiClient();
-
-  return useMutation<NotesCreateOutput, Error, NotesCreateInput>({
-    mutationFn: async (variables) => {
-      const res = await client.api.notes.$post({ json: variables as never });
-      return res.json() as Promise<NotesCreateOutput>;
     },
   });
 }

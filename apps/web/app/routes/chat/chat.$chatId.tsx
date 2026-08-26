@@ -32,8 +32,7 @@ import {
   useExtractChatTasks,
   type ProposedChatTask,
 } from '~/hooks/use-chat-tasks';
-import { useArchiveChat, useChatsList, useCreateChat, useUpdateChatTitle } from '~/hooks/use-chats';
-import { buildChatNoteDraft, saveChatNoteDraft } from '~/lib/chat/chat-note-draft';
+import { useChatsList, useUpdateChatTitle } from '~/hooks/use-chats';
 import { serverEnv } from '~/lib/env.server';
 import { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import { useChatMessageSearch } from '~/lib/hooks/use-chat-message-search';
@@ -137,11 +136,6 @@ export default function ChatPage({
   const toolCallRespond = useToolCallRespond({ chatId });
   const display = useChatDisplayMessages({ messages });
   const search = useChatMessageSearch(chatId, isSearchOpen);
-  const archiveChat = useArchiveChat({
-    chatId,
-    onSuccess: () => navigate('/', { viewTransition: true }),
-  });
-  const createChat = useCreateChat();
   const extractTasks = useExtractChatTasks();
   const createTasks = useCreateChatTasks();
   const updateChatTitle = useUpdateChatTitle();
@@ -206,38 +200,15 @@ export default function ChatPage({
               {currentChat?.title || 'New chat'}
             </span>
             <ChatConversationActions
-              isArchiving={archiveChat.isPending}
-              isCreatingChat={createChat.isPending}
+              chatId={chatId}
               isDebugOpen={isDebugOpen}
-              canTransform={messages.some((message) => message.content.trim().length > 0)}
-              isLinkedNote={Boolean(seedNote)}
               canExtractTasks={canExtractTasks}
               isExtractingTasks={extractTasks.isPending}
               isSearchOpen={isSearchOpen}
               isSettingsOpen={isSettingsOpen}
-              onArchive={() => archiveChat.mutate({ chatId })}
               onDebug={() => setIsDebugOpen((open) => !open)}
-              onNewChat={() => {
-                if (createChat.isPending) return;
-                createChat.mutate(
-                  { title: 'New chat' },
-                  { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
-                );
-              }}
               onResponseSettings={() => setIsSettingsOpen(true)}
               onSearch={() => setIsSearchOpen(true)}
-              onTransform={() => {
-                const draft = buildChatNoteDraft(
-                  messages,
-                  seedNote
-                    ? `Summary: ${seedNote.title || 'linked note'}`
-                    : currentChat?.title || 'Chat transcript',
-                  seedNote?.id,
-                );
-                if (!draft.content) return;
-                saveChatNoteDraft(draft);
-                navigate('/notes/new', { viewTransition: true });
-              }}
               onExtractTasks={() => {
                 if (!canExtractTasks) return;
                 setIsTaskDialogOpen(true);
