@@ -45,7 +45,13 @@ function timeBlockDraftReducer(
  */
 function computeOriginalSchedule(
   isTask: boolean,
-  task: { scheduledStartAt?: string | null; scheduledEndAt?: string | null; durationMinutes?: number | null } | undefined,
+  task:
+    | {
+        scheduledStartAt?: string | null;
+        scheduledEndAt?: string | null;
+        durationMinutes?: number | null;
+      }
+    | undefined,
   event: { startDate?: string | null; endDate?: string | null } | null,
 ) {
   const start = isTask ? task?.scheduledStartAt : event?.startDate;

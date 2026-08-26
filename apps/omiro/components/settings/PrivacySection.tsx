@@ -1,7 +1,7 @@
 import { Switch, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
 import { SectionLabel, SettingsRow } from '~/components/settings/SettingsRow';
+import { makeStyles } from '~/components/theme';
 import t from '~/translations';
 
 export function PrivacySection({

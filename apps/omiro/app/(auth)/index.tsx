@@ -15,8 +15,9 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
 import { useShakeAnimation } from '~/services/motion/use-shake-animation';
 import { posthog } from '~/services/posthog';
-import { authSharedStyles } from './_shared-styles';
 import t from '~/translations';
+
+import { authSharedStyles } from './_shared-styles';
 
 function AuthScreen() {
   const { isPending, isSignedIn, requestEmailOtp } = useAuth();

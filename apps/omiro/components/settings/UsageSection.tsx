@@ -1,8 +1,8 @@
 import type { MonthlyUsageStatus } from '@hominem/rpc/types';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
 import { SectionLabel } from '~/components/settings/SettingsRow';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',

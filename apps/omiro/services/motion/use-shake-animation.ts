@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 /**
  * A short horizontal shake, used to call attention to a validation error.

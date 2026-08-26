@@ -1,7 +1,7 @@
 import { Alert, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
 import { SettingsRow } from '~/components/settings/SettingsRow';
+import { makeStyles } from '~/components/theme';
 import t from '~/translations';
 
 function showDeleteAccountAlert() {

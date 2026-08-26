@@ -7,7 +7,10 @@ import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
 import { makeStyles, useThemeColor } from '~/components/theme';
 import { LocationSearchField } from '~/components/time/LocationSearchField';
-import type { ActiveField, TimeBlockDetailSource } from '~/components/time/use-time-block-editor-state';
+import type {
+  ActiveField,
+  TimeBlockDetailSource,
+} from '~/components/time/use-time-block-editor-state';
 import { useTimeBlockEditorState } from '~/components/time/use-time-block-editor-state';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';

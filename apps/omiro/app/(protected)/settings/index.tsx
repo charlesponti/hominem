@@ -2,12 +2,12 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 
+import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
 import { AccountIdentitySection } from '~/components/settings/AccountIdentitySection';
 import { DangerZoneSection } from '~/components/settings/DangerZoneSection';
 import { PrivacySection } from '~/components/settings/PrivacySection';
 import { SectionLabel, SettingsRow } from '~/components/settings/SettingsRow';
 import { UsageSection } from '~/components/settings/UsageSection';
-import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
 import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
