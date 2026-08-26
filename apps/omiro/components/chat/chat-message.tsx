@@ -1,5 +1,5 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -42,7 +42,7 @@ type ChatMessageProps = {
   onDelete?: (messageId: string) => void;
   onRetry?: (messageId: string) => void;
   isActive?: boolean;
-  onActivate?: () => void;
+  onActivate?: (messageId: string) => void;
   formatTimestamp: (value: string) => string;
 };
 
@@ -66,6 +66,7 @@ export const ChatMessage = memo(function ChatMessage({
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
+  const handleActivate = useCallback(() => onActivate?.(message.id), [onActivate, message.id]);
   const reducedMotion = useReducedMotion();
   const overlay = useChatMotionOverlay();
   const inFlight = isUser && overlay.isInFlight(message.renderKey ?? message.id);
@@ -148,7 +149,7 @@ export const ChatMessage = memo(function ChatMessage({
       style={[styles.message, isUser ? styles.messageUser : styles.messageAssistant, revealStyle]}
     >
       <Pressable
-        onPress={isStreaming ? undefined : onActivate}
+        onPress={isStreaming ? undefined : handleActivate}
         style={[isUser ? styles.userBubble : styles.assistantBubble, isUser && styles.continuous]}
         testID={`chat-message-${message.id}`}
       >

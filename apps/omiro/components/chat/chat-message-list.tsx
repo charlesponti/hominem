@@ -155,19 +155,12 @@ export function ChatMessageList({
     return () => cancelAnimationFrame(frame);
   }, [hasSearchQuery, renderedMessages.length]);
 
-  const activationHandlers = useMemo(
-    () =>
-      renderedMessages.reduce((handlers, message) => {
-        if (!message.isStreaming) {
-          handlers.set(message.id, () =>
-            setActiveActionMessageId((currentMessageId) =>
-              currentMessageId === message.id ? null : message.id,
-            ),
-          );
-        }
-        return handlers;
-      }, new Map<string, () => void>()),
-    [renderedMessages],
+  const onActivate = useCallback(
+    (messageId: string) =>
+      setActiveActionMessageId((currentMessageId) =>
+        currentMessageId === messageId ? null : messageId,
+      ),
+    [],
   );
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
@@ -177,7 +170,7 @@ export function ChatMessageList({
         message={item}
         {...{
           isActive: !item.isStreaming && activeActionMessageId === item.id,
-          onActivate: activationHandlers.get(item.id),
+          onActivate: item.isStreaming ? undefined : onActivate,
           onEdit: item.isStreaming ? undefined : onEdit,
           onRegenerate: item.isStreaming ? undefined : onRegenerate,
           onDelete: item.isStreaming ? undefined : onDelete,
@@ -188,7 +181,7 @@ export function ChatMessageList({
     ),
     [
       activeActionMessageId,
-      activationHandlers,
+      onActivate,
       formatTimestamp,
       onDelete,
       onEdit,
