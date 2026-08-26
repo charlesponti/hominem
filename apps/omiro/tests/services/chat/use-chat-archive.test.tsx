@@ -99,7 +99,7 @@ describe('useChatArchive', () => {
     expect(data?.pages[0]?.itemIds).toEqual([`chat:${CHAT_ID}`]);
   });
 
-  it('updates the active chat cache, prepends the archived id, and calls onSuccess', async () => {
+  it('updates the active chat cache, invalidates archived chats, and calls onSuccess', async () => {
     mockReadResumeTarget.mockReturnValue(null);
     const archivedChat = { id: CHAT_ID, archivedAt: new Date().toISOString() };
     mockArchivePost.mockResolvedValueOnce({ json: async () => archivedChat });
@@ -107,14 +107,14 @@ describe('useChatArchive', () => {
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useChatArchive({ chatId: CHAT_ID, onSuccess }),
     );
-    queryClient.setQueryData(chatKeys.archivedChats, ['other-chat']);
+    queryClient.setQueryData(chatKeys.archivedChats, []);
 
     await act(async () => {
       await result.current.mutateAsync();
     });
 
     expect(queryClient.getQueryData(chatKeys.activeChat(CHAT_ID))).toEqual(archivedChat);
-    expect(queryClient.getQueryData(chatKeys.archivedChats)).toEqual(['chat-1', 'other-chat']);
+    expect(queryClient.getQueryState(chatKeys.archivedChats)?.isInvalidated).toBe(true);
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 

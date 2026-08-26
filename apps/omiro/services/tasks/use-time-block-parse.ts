@@ -5,6 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseApiError } from '~/services/api/parse-api-error';
 import { localTimeZone } from '~/services/date/format-date';
 
+import { taskKeys } from './query-keys';
+
 function localISOString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   const y = date.getFullYear();
@@ -48,6 +50,6 @@ export function useTimeBlockParse() {
       }
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: taskKeys.all }),
   });
 }

@@ -8,11 +8,7 @@ import { InboxStreamItem } from '~/components/inbox/InboxStreamItem';
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
 import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
-import {
-  clearInboxDraft,
-  readInboxDraft,
-  writeInboxDraft,
-} from '~/services/navigation/launch-state';
+import { clearAllDraft, readAllDraft, writeAllDraft } from '~/services/navigation/launch-state';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
 function groupByDay(items: InboxStreamItemData[]) {
@@ -72,10 +68,10 @@ export function HomeScreen() {
       <ComposerDock safeAreaBottom={safeAreaBottom} testID="home-composer-dock">
         <Composer
           entryMode="mixed"
-          initialMessage={readInboxDraft()}
+          initialMessage={readAllDraft()}
           mode="inbox"
-          onClearDraft={clearInboxDraft}
-          onDraftChange={writeInboxDraft}
+          onClearDraft={clearAllDraft}
+          onDraftChange={writeAllDraft}
         />
       </ComposerDock>
     </View>

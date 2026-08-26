@@ -24,10 +24,8 @@ export function useChatArchive({ chatId, onSuccess }: UseChatArchiveOptions) {
     onSuccess: (archivedChat) => {
       removal.clearResumeTargetIfMatch();
       queryClient.setQueryData(chatKeys.activeChat(chatId), archivedChat);
-      queryClient.setQueryData<string[] | undefined>(chatKeys.archivedChats, (ids) =>
-        ids ? [chatId, ...ids.filter((id) => id !== chatId)] : [chatId],
-      );
       void queryClient.invalidateQueries({ queryKey: chatKeys.list });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.archivedChats });
       onSuccess?.();
     },
   });

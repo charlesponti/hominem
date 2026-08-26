@@ -97,6 +97,9 @@ export async function recordAIUsageEvent(input: RecordAIUsageEventInput) {
       operation: input.operation,
       model: input.model ?? null,
       status: input.status ?? 'succeeded',
+      error: input.error instanceof Error ? input.error.message : (input.error ?? null),
+      errorCode: failure?.errorCode,
+      errorStatus: failure?.errorStatus,
     });
   }
 

@@ -5,6 +5,7 @@ import {
   type ChatRequest,
   type ChatStreamToolCall,
   getChatCompletionUsage,
+  OpenRouterRequestError,
   streamChatCompletion,
 } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
@@ -12,6 +13,8 @@ import type { ChatMessageToolCallRecord } from '@hominem/db';
 import { callTool, getToolDefinition, type McpToolResult } from '../../mcp/tools';
 
 const DEFAULT_MAX_ITERATIONS = 4;
+const MAX_PROVIDER_RETRIES = 2;
+const PROVIDER_RETRY_DELAYS_MS = [250, 750] as const;
 
 interface AccumulatingToolCall {
   id: string;
@@ -143,6 +146,34 @@ async function streamOnce(opts: {
   reasoning?: ChatRequest['reasoning'];
   onEvent?: RunCompletionWithToolsInput['onEvent'];
 }): Promise<StreamOnceResult> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await streamOnceAttempt(opts);
+    } catch (error) {
+      const status =
+        error instanceof OpenRouterRequestError
+          ? error.status
+          : error && typeof error === 'object' && 'status' in error
+            ? (error as { status?: unknown }).status
+            : undefined;
+      if (status !== 429 || attempt >= MAX_PROVIDER_RETRIES) throw error;
+      await new Promise((resolve) =>
+        setTimeout(resolve, PROVIDER_RETRY_DELAYS_MS[attempt] ?? PROVIDER_RETRY_DELAYS_MS.at(-1)),
+      );
+    }
+  }
+}
+
+async function streamOnceAttempt(opts: {
+  model: string;
+  messages: ChatMessages[];
+  tools?: ChatFunctionTool[];
+  toolChoice?: 'auto' | 'required';
+  parallelToolCalls?: boolean;
+  maxTokens?: number;
+  reasoning?: ChatRequest['reasoning'];
+  onEvent?: RunCompletionWithToolsInput['onEvent'];
+}): Promise<StreamOnceResult> {
   const completion = streamChatCompletion(opts);
 
   if (opts.onEvent) await opts.onEvent({ type: 'phase', phase: 'generating' });
@@ -154,6 +185,13 @@ async function streamOnce(opts: {
   const accumulatedToolCalls = new Map<number, AccumulatingToolCall>();
 
   for await (const chunk of completion) {
+    if (chunk.error) {
+      throw new OpenRouterRequestError(chunk.error.message, {
+        status: chunk.error.code,
+        code: String(chunk.error.code),
+        providerMessage: chunk.error.message,
+      });
+    }
     usage = sumUsage(usage, getChatCompletionUsage(chunk));
     const choice = chunk.choices?.[0];
     if (choice?.finishReason === 'error') sawError = true;

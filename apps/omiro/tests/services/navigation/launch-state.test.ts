@@ -16,7 +16,7 @@ vi.mock('~/services/storage/mmkv', () => {
   };
 });
 
-describe('inbox launch state', () => {
+describe('launch state', () => {
   beforeEach(async () => {
     vi.resetModules();
   });
@@ -24,7 +24,7 @@ describe('inbox launch state', () => {
   it('stores resume metadata independently from drafts', async () => {
     const launchState = await import('~/services/navigation/launch-state');
 
-    launchState.writeInboxDraft('Follow up on notes');
+    launchState.writeAllDraft('Follow up on notes');
     launchState.writeResumeTarget({
       kind: 'note',
       id: 'note-1',
@@ -32,7 +32,7 @@ describe('inbox launch state', () => {
       updatedAt: '2026-06-18T12:00:00.000Z',
     });
 
-    expect(launchState.readInboxDraft()).toBe('Follow up on notes');
+    expect(launchState.readAllDraft()).toBe('Follow up on notes');
     expect(launchState.readResumeTarget()).toEqual({
       kind: 'note',
       id: 'note-1',
@@ -42,23 +42,23 @@ describe('inbox launch state', () => {
 
     launchState.clearResumeTarget();
     expect(launchState.readResumeTarget()).toBeNull();
-    expect(launchState.readInboxDraft()).toBe('Follow up on notes');
+    expect(launchState.readAllDraft()).toBe('Follow up on notes');
   });
 
   it('keeps the new-chat draft separate from the All composer draft', async () => {
     const launchState = await import('~/services/navigation/launch-state');
 
-    launchState.writeInboxDraft('A note in All');
+    launchState.writeAllDraft('A note in All');
     launchState.writeNewChatDraft('A new conversation');
 
-    expect(launchState.readInboxDraft()).toBe('A note in All');
+    expect(launchState.readAllDraft()).toBe('A note in All');
     expect(launchState.readNewChatDraft()).toBe('A new conversation');
     launchState.clearNewChatDraft();
     expect(launchState.readNewChatDraft()).toBe('');
-    expect(launchState.readInboxDraft()).toBe('A note in All');
+    expect(launchState.readAllDraft()).toBe('A note in All');
   });
 
-  it('consumes inbox resume metadata once', async () => {
+  it('consumes resume metadata once', async () => {
     const launchState = await import('~/services/navigation/launch-state');
 
     launchState.writeResumeTarget({
@@ -78,7 +78,7 @@ describe('inbox launch state', () => {
     expect(launchState.readResumeTarget()).toBeNull();
   });
 
-  it('only consumes the inbox restore attempt once per module load', async () => {
+  it('only consumes the restore attempt once per module load', async () => {
     const launchState = await import('~/services/navigation/launch-state');
 
     expect(launchState.consumeRestoreAttempt()).toBe(true);

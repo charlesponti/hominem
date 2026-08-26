@@ -8,6 +8,7 @@ import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
+import { invalidateChatQueries } from './chat-cache';
 import type { MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
 import { useChatGeneration } from './use-chat-generation';
@@ -49,6 +50,7 @@ export function useRegenerateMessage(chatId: string) {
               );
             }
             setGeneration(null);
+            void invalidateChatQueries(queryClient, chatId);
             return;
           }
           if (event.type === 'cancelled') {

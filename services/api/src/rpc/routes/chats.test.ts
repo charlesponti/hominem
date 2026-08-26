@@ -261,6 +261,7 @@ describe('chat stream accounting', () => {
       expect.objectContaining({
         feature: 'chat_stream',
         status: 'failed',
+        model: 'test-chat-model',
       }),
     );
   });

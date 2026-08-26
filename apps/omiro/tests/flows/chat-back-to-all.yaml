@@ -1,8 +1,8 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Flow: Chat back returns to inbox
-# Creates a chat from the home composer, taps the chat detail back control, and
-# verifies users land on the inbox instead of another history entry.
+# Flow: Chat back returns to All
+# Creates a chat from the All composer, taps the chat detail back control, and
+# verifies users land on All instead of another history entry.
 
 - runFlow: ../subflows/open-dev-home.yaml
 - assertVisible:
@@ -31,4 +31,4 @@ appId: com.pontistudios.hakumi.dev
     timeout: 3000
 - assertVisible:
     id: 'inbox-composer-input'
-- takeScreenshot: /tmp/omiro_chat_back_to_inbox
+- takeScreenshot: /tmp/omiro_chat_back_to_all

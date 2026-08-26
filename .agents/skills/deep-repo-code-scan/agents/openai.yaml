@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deep Repo Code Scan"
+  short_description: "Find safe deletions and abstraction mismatches"
+  default_prompt: "Scan this repository deeply for dead code, duplicated ownership, lifecycle drift, cache mismatches, and unnecessary work. Produce a confidence-ranked finding ledger before making changes."

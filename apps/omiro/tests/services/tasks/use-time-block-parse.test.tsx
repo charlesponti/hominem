@@ -7,6 +7,12 @@ import { renderHookWithQueryClient } from '../../utils/render-hook';
 const mockPost = vi.fn();
 
 vi.mock('@hominem/rpc/react', () => ({
+  queryKeys: {
+    tasks: {
+      all: ['tasks'],
+      detail: (id: string) => ['tasks', 'detail', id],
+    },
+  },
   useApiClient: () => ({
     api: {
       tasks: {

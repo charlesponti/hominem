@@ -14,6 +14,8 @@ import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { chatKeys } from '~/services/notes/query-keys';
 
+import { invalidateChatQueries } from './chat-cache';
+
 interface StartChatOptions {
   onAccepted?: (event: Extract<ChatsStartStreamEvent, { type: 'accepted' }>) => void;
 }
@@ -29,6 +31,14 @@ export function useStartChat() {
   const queryClient = useQueryClient();
 
   const startedChatIdRef = useRef<string | null>(null);
+  const reconcileStartedChat = useCallback(
+    (chatId: string) =>
+      Promise.all([
+        invalidateInboxQueries(queryClient),
+        invalidateChatQueries(queryClient, chatId),
+      ]),
+    [queryClient],
+  );
 
   const mutation = useMutation<string, Error, StartChatInput & StartChatOptions>({
     mutationFn: async ({ onAccepted, ...input }) => {
@@ -59,8 +69,7 @@ export function useStartChat() {
                 userMessage ? [userMessage] : [],
               );
 
-              void invalidateInboxQueries(queryClient);
-              void queryClient.invalidateQueries({ queryKey: chatKeys.list });
+              void reconcileStartedChat(event.chatId);
               onAccepted?.(event);
               return;
             }
@@ -78,19 +87,14 @@ export function useStartChat() {
             if (!startedChatIdRef.current) {
               return;
             }
-            void invalidateInboxQueries(queryClient);
-            void queryClient.invalidateQueries({ queryKey: chatKeys.list });
-            void queryClient.invalidateQueries({
-              queryKey: chatKeys.messages(startedChatIdRef.current),
-            });
+            void reconcileStartedChat(startedChatIdRef.current);
           },
         });
       } catch (error) {
         if (!startedChatIdRef.current) {
           throw error;
         }
-        void invalidateInboxQueries(queryClient);
-        void queryClient.invalidateQueries({ queryKey: chatKeys.list });
+        void reconcileStartedChat(startedChatIdRef.current);
         throw error;
       }
 

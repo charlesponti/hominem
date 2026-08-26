@@ -2,7 +2,7 @@ import { storage } from '~/services/storage/mmkv';
 
 import type { ResumeTarget } from './routes';
 
-const INBOX_DRAFT_KEY = 'workspace-feed-draft-v1';
+const ALL_DRAFT_KEY = 'workspace-feed-draft-v1';
 const NEW_CHAT_DRAFT_KEY = 'workspace-new-chat-draft-v1';
 const CHAT_DRAFT_PREFIX = 'workspace-chat-draft-v1:';
 const RESUME_TARGET_KEY = 'workspace-resume-artifact-v1';
@@ -29,22 +29,22 @@ function writeJSONValue<T>(key: string, value: T) {
   storage.set(key, JSON.stringify(value));
 }
 
-export function readInboxDraft(): string {
-  return storage.getString(INBOX_DRAFT_KEY) ?? '';
+export function readAllDraft(): string {
+  return storage.getString(ALL_DRAFT_KEY) ?? '';
 }
 
-export function writeInboxDraft(value: string) {
+export function writeAllDraft(value: string) {
   const normalized = value.trim();
   if (normalized.length === 0) {
-    storage.remove(INBOX_DRAFT_KEY);
+    storage.remove(ALL_DRAFT_KEY);
     return;
   }
 
-  storage.set(INBOX_DRAFT_KEY, value);
+  storage.set(ALL_DRAFT_KEY, value);
 }
 
-export function clearInboxDraft() {
-  storage.remove(INBOX_DRAFT_KEY);
+export function clearAllDraft() {
+  storage.remove(ALL_DRAFT_KEY);
 }
 
 export function readNewChatDraft(): string {

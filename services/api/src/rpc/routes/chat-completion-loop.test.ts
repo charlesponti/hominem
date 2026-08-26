@@ -8,6 +8,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@hominem/ai', () => ({
   getChatCompletionUsage: vi.fn(() => null),
+  OpenRouterRequestError: class OpenRouterRequestError extends Error {
+    status?: number;
+
+    constructor(message: string, options: { status?: number } = {}) {
+      super(message);
+      this.status = options.status;
+    }
+  },
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
@@ -175,6 +183,24 @@ describe('runCompletionWithTools', () => {
 
     expect(mocks.callTool).not.toHaveBeenCalled();
     expect(result.assistantText).toBe('I need valid search details.');
+  });
+
+  it('retries transient provider rate limits before returning the response', async () => {
+    mocks.streamChatCompletion
+      .mockImplementationOnce(async function* () {
+        yield { error: { code: 429, message: 'Provider rate limit exceeded' } };
+      })
+      .mockImplementationOnce(() => streamChunks([textChunk('Recovered response.')]));
+
+    const result = await runCompletionWithTools({
+      userId: 'user-1',
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'Try again.' }],
+      tools: [],
+    });
+
+    expect(result.assistantText).toBe('Recovered response.');
+    expect(mocks.streamChatCompletion).toHaveBeenCalledTimes(2);
   });
 
   it('continues after a tool failure and records no successful call', async () => {

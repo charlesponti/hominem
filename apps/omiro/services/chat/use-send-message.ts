@@ -11,6 +11,7 @@ import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
+import { invalidateChatQueries } from './chat-cache';
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
 import { createOptimisticMessage, type MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
@@ -102,6 +103,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             setGeneration(null);
             triggerAssistantCompletionHaptic();
             void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
+            void invalidateChatQueries(queryClient, chatId);
             return;
           }
           if (event.type === 'cancelled') {
@@ -133,15 +135,15 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const sendChatMessage = useCallback(
     (input: SendInput) => {
       lastInputRef.current = input;
-      return mutation
-        .mutateAsync({ ...input, generationId: randomUUID() })
-        .catch((error: unknown) => Promise.reject(error));
+      return mutation.mutateAsync({ ...input, generationId: randomUUID() });
     },
     [mutation],
   );
 
   const retryLastGeneration = useCallback(() => {
-    if (lastInputRef.current) void sendChatMessage(lastInputRef.current);
+    if (lastInputRef.current) {
+      void sendChatMessage(lastInputRef.current).catch(() => undefined);
+    }
   }, [sendChatMessage]);
 
   return {

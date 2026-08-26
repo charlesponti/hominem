@@ -40,7 +40,7 @@ function InboxDetailChrome({ children }: { children: ReactNode }) {
       {canGoBack ? (
         <Stack.Toolbar placement="left">
           <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.replace(ALL_ROUTE)}>
-            Inbox
+            All
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       ) : null}
