@@ -16,7 +16,6 @@ export type Note = {
   title: string | null;
   content: string;
   excerpt: string | null;
-  parentNoteId: string | null;
   files: NoteFile[];
   createdAt: string;
   updatedAt: string;
@@ -26,11 +25,7 @@ export type Note = {
 // Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================
 
-export type NotesListOutput = { notes: Note[] };
-export type NotesGetOutput = Note;
 export type NotesCreateOutput = Note;
-export type NotesUpdateOutput = Note;
-export type NotesDeleteOutput = Note;
 
 export type NoteSearchResult = {
   id: string;
@@ -38,29 +33,7 @@ export type NoteSearchResult = {
   excerpt: string | null;
 };
 
-export type NoteFeedItem = {
-  id: string;
-  title: string | null;
-  contentPreview: string;
-  createdAt: string;
-  authorId: string;
-  metadata: {
-    hasAttachments: boolean;
-  };
-};
-
-export type NotesFeedOutput = { notes: NoteFeedItem[]; nextCursor: string | null };
-export type NotesFeedInput = { limit?: number; cursor?: string };
 export type NotesSearchOutput = { notes: NoteSearchResult[]; nextCursor: string | null };
-
-export type NotesListInput = {
-  query?: string;
-  since?: string;
-  sortBy?: 'createdAt' | 'updatedAt' | 'title';
-  sortOrder?: 'asc' | 'desc';
-  limit?: number;
-  offset?: number;
-};
 
 // ============================================================================
 // CREATE NOTE

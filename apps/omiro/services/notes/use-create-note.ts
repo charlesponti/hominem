@@ -26,7 +26,6 @@ function buildOptimisticNote(text: string, title: string | undefined, optimistic
     title: title ?? null,
     content: trimmed,
     excerpt: buildContentPreview(null, trimmed) || null,
-    parentNoteId: null,
     files: [],
     userId: '',
     createdAt: now,

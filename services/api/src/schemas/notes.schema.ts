@@ -12,20 +12,6 @@ export const UpdateNoteInputSchema = z.object({
   fileIds: z.array(z.uuid()).max(5).optional(),
 });
 
-export const NotesListQuerySchema = z.object({
-  query: z.string().optional(),
-  since: z.string().optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'title']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
-  limit: z.string().optional(),
-  offset: z.string().optional(),
-});
-
-export const NotesFeedQuerySchema = z.object({
-  limit: z.string().optional(),
-  cursor: z.string().optional(),
-});
-
 export const NoteParamSchema = z.object({ id: z.uuid() });
 
 export const GenerateNoteFromChatInputSchema = z.object({

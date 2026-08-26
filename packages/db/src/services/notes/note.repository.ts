@@ -1,4 +1,3 @@
-import { buildContentPreview } from '@hominem/utils/text';
 import type { Selectable, UpdateObject } from 'kysely';
 
 import type { Database } from '../../db';
@@ -41,7 +40,6 @@ export interface NoteRecord {
   title: string | null;
   content: string;
   excerpt: string | null;
-  parentNoteId: string | null;
   files: NoteFileRecord[];
   createdAt: string;
   updatedAt: string;
@@ -52,7 +50,6 @@ export interface CreateNoteInput {
   title: string | null;
   content: string;
   excerpt: string | null;
-  parentNoteId?: string | null;
   source?: string | null;
 }
 
@@ -86,33 +83,11 @@ export interface ListNotesInput {
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface ListNoteFeedInput {
-  userId: string;
-  limit?: number;
-  cursor?: string;
-}
-
 export interface SearchNotesInput {
   userId: string;
   query: string;
   limit?: number;
   cursor?: string;
-}
-
-export interface NoteFeedRecord {
-  id: string;
-  title: string | null;
-  contentPreview: string;
-  createdAt: string;
-  authorId: string;
-  metadata: {
-    hasAttachments: boolean;
-  };
-}
-
-export interface NoteFeedPageRecord {
-  notes: NoteFeedRecord[];
-  nextCursor: string | null;
 }
 
 export interface SearchNoteResult {
@@ -125,15 +100,6 @@ export interface SearchNotesPageRecord {
   notes: SearchNoteResult[];
   nextCursor: string | null;
 }
-
-type NoteFeedRow = Pick<
-  NoteRow,
-  'id' | 'title' | 'excerpt' | 'content' | 'createdat' | 'ownerUserid'
->;
-
-type NoteFeedAttachmentRow = {
-  noteId: string;
-};
 
 function toNoteFile(row: NoteFileSource): NoteFileRecord {
   return {
@@ -158,35 +124,10 @@ function toNoteRecord(row: NoteRow, files: NoteFileRecord[]): NoteRecord {
     title: row.title,
     content: row.content,
     excerpt: row.excerpt,
-    parentNoteId: row.parentNoteId,
     files,
     createdAt: new Date(row.createdat).toISOString(),
     updatedAt: new Date(row.updatedat).toISOString(),
   };
-}
-
-function encodeNoteFeedCursor(createdAt: string, id: string): string {
-  return Buffer.from(JSON.stringify({ createdAt, id }), 'utf8').toString('base64url');
-}
-
-function decodeNoteFeedCursor(cursor: string): { createdAt: string; id: string } | null {
-  try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
-      createdAt?: unknown;
-      id?: unknown;
-    };
-
-    if (typeof parsed.createdAt !== 'string' || typeof parsed.id !== 'string') {
-      return null;
-    }
-
-    return {
-      createdAt: parsed.createdAt,
-      id: parsed.id,
-    };
-  } catch {
-    return null;
-  }
 }
 
 function encodeNoteSearchCursor(updatedAt: string, id: string): string {
@@ -292,11 +233,7 @@ export const NoteRepository = {
    * List notes for a user with filtering and sorting.
    */
   async list(handle: DbHandle, input: ListNotesInput): Promise<NoteRecord[]> {
-    let query = handle
-      .selectFrom('app.notes')
-      .selectAll()
-      .where('ownerUserid', '=', input.userId)
-      .where('archivedAt', 'is', null);
+    let query = handle.selectFrom('app.notes').selectAll().where('ownerUserid', '=', input.userId);
 
     if (input.since) {
       query = query.where('updatedat', '>=', new Date(input.since).toISOString());
@@ -337,71 +274,6 @@ export const NoteRepository = {
     return rows.map((row) => toNoteRecord(row, attachedFiles.get(row.id) ?? []));
   },
 
-  async listFeed(handle: DbHandle, input: ListNoteFeedInput): Promise<NoteFeedPageRecord> {
-    const limit = input.limit ? Math.min(input.limit, 100) : 20;
-    let query = handle
-      .selectFrom('app.notes')
-      .select(['id', 'title', 'excerpt', 'content', 'createdat', 'ownerUserid'])
-      .where('ownerUserid', '=', input.userId)
-      .where('archivedAt', 'is', null)
-      .orderBy('createdat', 'desc')
-      .orderBy('id', 'desc');
-
-    if (input.cursor) {
-      const decoded = decodeNoteFeedCursor(input.cursor);
-
-      if (!decoded) {
-        throw new ValidationError('Invalid note feed cursor');
-      }
-
-      const cursorDate = new Date(decoded.createdAt).toISOString();
-      query = query.where((eb) =>
-        eb.or([
-          eb('createdat', '<', cursorDate),
-          eb.and([eb('createdat', '=', cursorDate), eb('id', '<', decoded.id)]),
-        ]),
-      );
-    }
-
-    const rows = (await query.limit(limit + 1).execute()) as NoteFeedRow[];
-    const pageRows = rows.slice(0, limit);
-
-    const attachmentRows =
-      pageRows.length === 0
-        ? []
-        : ((await handle
-            .selectFrom('app.noteFiles')
-            .select('noteId as noteId')
-            .where(
-              'noteId',
-              'in',
-              pageRows.map((row) => row.id),
-            )
-            .groupBy('noteId')
-            .execute()) as NoteFeedAttachmentRow[]);
-    const attachmentIds = new Set(attachmentRows.map((row) => row.noteId));
-
-    const notes = pageRows.map<NoteFeedRecord>((row) => ({
-      id: row.id,
-      title: row.title,
-      contentPreview: buildContentPreview(row.excerpt, row.content),
-      createdAt: new Date(row.createdat).toISOString(),
-      authorId: row.ownerUserid,
-      metadata: {
-        hasAttachments: attachmentIds.has(row.id),
-      },
-    }));
-    const lastRow = pageRows.at(-1);
-
-    return {
-      notes,
-      nextCursor:
-        rows.length > limit && lastRow
-          ? encodeNoteFeedCursor(new Date(lastRow.createdat).toISOString(), lastRow.id)
-          : null,
-    };
-  },
-
   /**
    * Search notes by title/content text match.
    */
@@ -414,7 +286,6 @@ export const NoteRepository = {
       .selectFrom('app.notes')
       .select(['id', 'title', 'excerpt', 'updatedat'])
       .where('ownerUserid', '=', input.userId)
-      .where('archivedAt', 'is', null)
       .where((eb) => eb.or([eb('title', 'ilike', pattern), eb('content', 'ilike', pattern)]));
 
     if (decoded) {
@@ -457,10 +328,6 @@ export const NoteRepository = {
    * Insert a new note.
    */
   async create(handle: DbHandle, input: CreateNoteInput): Promise<NoteRecord> {
-    if (input.parentNoteId) {
-      await NoteRepository.getOwnedOrThrow(handle, input.parentNoteId, input.userId);
-    }
-
     const created = await handle
       .insertInto('app.notes')
       .values({
@@ -468,7 +335,6 @@ export const NoteRepository = {
         title: input.title,
         content: input.content,
         excerpt: input.excerpt,
-        ...(input.parentNoteId ? { parentNoteId: input.parentNoteId } : {}),
         ...(input.source !== undefined ? { source: input.source } : {}),
       })
       .returningAll()
@@ -503,39 +369,8 @@ export const NoteRepository = {
   },
 
   /**
-   * Delete a note by ID with ownership enforcement.
-   */
-  /**
-   * Soft delete (archive) a note by ID with ownership enforcement.
-   * Sets archivedAt timestamp; note remains in database but is filtered from queries.
-   */
-  async archive(handle: DbHandle, command: NoteMutationCommand): Promise<void> {
-    const updated = await handle
-      .updateTable('app.notes')
-      .set({ archivedAt: new Date() })
-      .where('id', '=', command.noteId)
-      .where('ownerUserid', '=', command.userId)
-      .returning('id')
-      .executeTakeFirst();
-
-    if (!updated) throw new NotFoundError('Note', { noteId: command.noteId });
-  },
-
-  async unarchive(handle: DbHandle, command: NoteMutationCommand): Promise<void> {
-    const updated = await handle
-      .updateTable('app.notes')
-      .set({ archivedAt: null })
-      .where('id', '=', command.noteId)
-      .where('ownerUserid', '=', command.userId)
-      .returning('id')
-      .executeTakeFirst();
-
-    if (!updated) throw new NotFoundError('Note', { noteId: command.noteId });
-  },
-
-  /**
    * Hard delete a note by ID with ownership enforcement.
-   * Permanently removes note from database. Use sparingly; prefer archive() for soft delete.
+   * Permanently removes note from database.
    */
   async hardDelete(handle: DbHandle, command: NoteMutationCommand): Promise<void> {
     const deleted = await handle

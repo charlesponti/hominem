@@ -31,11 +31,8 @@ export type { ErrorCode } from './errors';
 // Repositories
 export { NoteRepository } from './services/notes/note.repository';
 export type {
-  ListNoteFeedInput,
   ListNotesInput,
   CreateNoteInput as NoteCreateInput,
-  NoteFeedPageRecord,
-  NoteFeedRecord,
   NoteFileRecord,
   NoteMutationCommand,
   NoteRecord,

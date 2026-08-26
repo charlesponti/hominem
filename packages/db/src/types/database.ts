@@ -783,13 +783,11 @@ export interface AppNoteFiles {
 }
 
 export interface AppNotes {
-  archivedAt: ColumnType<string, Date | string, Date | string> | null;
   content: Generated<string>;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   excerpt: string | null;
   id: Generated<string>;
   ownerUserid: string;
-  parentNoteId: string | null;
   source: string | null;
   title: string | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;

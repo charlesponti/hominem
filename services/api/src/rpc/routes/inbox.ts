@@ -73,7 +73,6 @@ export const inboxRoutes = new Hono<AppContext>()
           n.updatedat as "updatedAt"
         from app.notes n
         where n.owner_userid = ${userId}
-          and n.archived_at is null
       )
       select *
       from inbox_items

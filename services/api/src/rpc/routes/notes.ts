@@ -17,15 +17,13 @@ import {
   CreateNoteInputSchema,
   GenerateNoteFromChatInputSchema,
   NoteParamSchema,
-  NotesListQuerySchema,
-  NotesFeedQuerySchema,
   NoteSearchQuerySchema,
   UpdateNoteInputSchema,
 } from '../../schemas/notes.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { CHAT_TO_NOTE_PROMPT } from '../prompts';
-import { toNoteDto, toNoteFeedItemDto } from './notes.mapper';
+import { toNoteDto } from './notes.mapper';
 const noteService = new NoteService();
 
 async function enqueueNoteEmbedding(userId: string, noteId: string) {
@@ -38,38 +36,6 @@ async function enqueueNoteEmbedding(userId: string, noteId: string) {
 
 export const notesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
-  .get('/', zValidator('query', NotesListQuerySchema), async (c) => {
-    const userId = c.get('auth')!.userId;
-    const query = c.req.valid('query');
-
-    const notes = await NoteRepository.list(db, {
-      userId,
-      ...(query.limit ? { limit: Number.parseInt(query.limit, 10) } : {}),
-      ...(query.offset ? { offset: Number.parseInt(query.offset, 10) } : {}),
-      ...(query.since ? { since: query.since } : {}),
-      ...(query.query ? { query: query.query } : {}),
-      ...(query.sortBy ? { sortBy: query.sortBy as 'createdAt' | 'updatedAt' | 'title' } : {}),
-      ...(query.sortOrder ? { sortOrder: query.sortOrder as 'asc' | 'desc' } : {}),
-    });
-
-    return c.json({
-      notes: notes.map(toNoteDto),
-    });
-  })
-  .get('/feed', zValidator('query', NotesFeedQuerySchema), async (c) => {
-    const userId = c.get('auth')!.userId;
-    const query = c.req.valid('query');
-    const feed = await NoteRepository.listFeed(db, {
-      userId,
-      ...(query.limit ? { limit: Number.parseInt(query.limit, 10) } : {}),
-      ...(query.cursor ? { cursor: query.cursor } : {}),
-    });
-
-    return c.json({
-      notes: feed.notes.map(toNoteFeedItemDto),
-      nextCursor: feed.nextCursor,
-    });
-  })
   .get('/search', zValidator('query', NoteSearchQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const query = c.req.valid('query');

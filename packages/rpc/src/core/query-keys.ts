@@ -15,10 +15,6 @@ export const queryKeys = {
 
   notes: {
     all: ['notes'] as const,
-    lists: () => ['notes', 'list'] as const,
-    feeds: () => ['notes', 'feed'] as const,
-    list: (options: Record<string, unknown>) => ['notes', 'list', options] as const,
-    feed: (options: Record<string, unknown>) => ['notes', 'feed', options] as const,
     detail: (id: string) => ['notes', 'detail', id] as const,
     search: (query: string) => ['notes', 'search', query] as const,
   },
