@@ -1,21 +1,31 @@
+import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 import { normalizeChatTitle, useStartChat } from '~/services/chat';
 import { isOfflineUnavailable } from '~/services/chat/chat-errors';
+import { getContentRoute } from '~/services/navigation/routes';
 
 interface StartChatSubmissionInput {
   clearComposer: () => void;
   fileIds: string[];
   message: string;
   onComplete?: () => void;
+  onStartChatAccepted?: (chatId: string) => void;
 }
 
 export function useStartChatSubmission() {
   const { startChat, isStartingChat } = useStartChat();
+  const router = useRouter();
 
   const submitStartChat = useCallback(
-    async ({ clearComposer, fileIds, message, onComplete }: StartChatSubmissionInput) => {
+    async ({
+      clearComposer,
+      fileIds,
+      message,
+      onComplete,
+      onStartChatAccepted,
+    }: StartChatSubmissionInput) => {
       if (isStartingChat) return;
 
       try {
@@ -23,9 +33,14 @@ export function useStartChatSubmission() {
           title: normalizeChatTitle(message),
           message: message.trim(),
           fileIds,
-          onReady: () => {
+          onAccepted: (event) => {
             clearComposer();
             onComplete?.();
+            if (onStartChatAccepted) {
+              onStartChatAccepted(event.chatId);
+              return;
+            }
+            router.push(getContentRoute('chat', event.chatId));
           },
         });
       } catch (error) {
@@ -35,7 +50,7 @@ export function useStartChatSubmission() {
         Alert.alert('Could not start chat', alertMessage, [{ text: 'OK' }]);
       }
     },
-    [isStartingChat, startChat],
+    [isStartingChat, router, startChat],
   );
 
   return { isStartingChat, submitStartChat };

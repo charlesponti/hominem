@@ -8,7 +8,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { makeStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
-import { HOME_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { ALL_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
 const EDGE_SIZE = 28;
 const COMMIT_DISTANCE = 100;
@@ -17,7 +17,7 @@ const COMMIT_VELOCITY = 900;
 type Scene = 'all' | 'time';
 
 function sceneFromPathname(pathname: string): Scene | null {
-  if (pathname === '/(protected)' || pathname === '/') return 'all';
+  if (pathname === '/(protected)/all' || pathname === '/all') return 'all';
   if (pathname === '/(protected)/time' || pathname === '/time') return 'time';
   return null;
 }
@@ -42,7 +42,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
 
   const commitRoute = useCallback(
     (target: Scene) => {
-      router.dismissTo(target === 'all' ? HOME_ROUTE : TIME_ROUTE);
+      router.dismissTo(target === 'all' ? ALL_ROUTE : TIME_ROUTE);
       setIsSettling(false);
     },
     [router],

@@ -8,6 +8,8 @@ interface ComposerInboxProps {
   onClearDraft?: () => void;
   entryMode?: 'mixed' | 'note' | 'chat';
   onComplete?: () => void;
+  onStartChatAccepted?: (chatId: string) => void;
+  presentation?: 'inbox' | 'new-chat';
   testID?: string;
 }
 

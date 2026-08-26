@@ -11,7 +11,11 @@ import { useStartChat } from '~/lib/hooks/use-start-chat';
 import type { Route } from './+types/home';
 
 type ChatListItem = { id: string; updatedAt: string };
+type ChatListPage = { items: ChatListItem[] };
 
+// React Router requires route loaders to be exported from route modules.
+// This is intentionally a framework boundary, not a component module export.
+// eslint-disable-next-line react-doctor/only-export-components
 export async function loader({ request }: Route.LoaderArgs) {
   const cookie = request.headers.get('cookie');
   const headers = cookie ? { cookie } : undefined;
@@ -21,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     headers,
     signal: request.signal,
   });
-  const chats = listResponse.ok ? ((await listResponse.json()) as ChatListItem[]) : [];
+  const chats = listResponse.ok ? ((await listResponse.json()) as ChatListPage).items : [];
 
   if (chats[0]?.id) {
     throw redirect(`/chat/${chats[0].id}`);

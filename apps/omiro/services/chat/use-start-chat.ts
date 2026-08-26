@@ -2,7 +2,6 @@ import type { ChatsStartStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
 
 import { API_BASE_URL } from '~/constants';
@@ -13,11 +12,10 @@ import type { MessageOutput } from '~/services/chat/chatMessages';
 import { streamSSE } from '~/services/chat/stream-sse';
 import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
-import { getContentRoute } from '~/services/navigation/routes';
 import { chatKeys } from '~/services/notes/query-keys';
 
 interface StartChatOptions {
-  onReady?: () => void;
+  onAccepted?: (event: Extract<ChatsStartStreamEvent, { type: 'accepted' }>) => void;
 }
 
 type StartChatInput = {
@@ -29,12 +27,11 @@ type StartChatInput = {
 export function useStartChat() {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   const startedChatIdRef = useRef<string | null>(null);
 
   const mutation = useMutation<string, Error, StartChatInput & StartChatOptions>({
-    mutationFn: async ({ onReady, ...input }) => {
+    mutationFn: async ({ onAccepted, ...input }) => {
       const net = await NetInfo.fetch();
       if (net.isConnected === false) {
         throw new Error(OFFLINE_UNAVAILABLE_ERROR);
@@ -63,8 +60,8 @@ export function useStartChat() {
               );
 
               void invalidateInboxQueries(queryClient);
-              onReady?.();
-              router.push(getContentRoute('chat', event.chatId));
+              void queryClient.invalidateQueries({ queryKey: chatKeys.list });
+              onAccepted?.(event);
               return;
             }
 
@@ -82,6 +79,7 @@ export function useStartChat() {
               return;
             }
             void invalidateInboxQueries(queryClient);
+            void queryClient.invalidateQueries({ queryKey: chatKeys.list });
             void queryClient.invalidateQueries({
               queryKey: chatKeys.messages(startedChatIdRef.current),
             });
@@ -92,6 +90,7 @@ export function useStartChat() {
           throw error;
         }
         void invalidateInboxQueries(queryClient);
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list });
         throw error;
       }
 

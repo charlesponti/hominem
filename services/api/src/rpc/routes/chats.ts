@@ -28,6 +28,7 @@ import {
   ChatsAddSourceSchema,
   ChatsCreateSchema,
   ChatsEditMessageSchema,
+  ChatsListQuerySchema,
   ChatsMessagesQuerySchema,
   ChatsRegenerateMessageSchema,
   ChatsSearchMessagesQuerySchema,
@@ -296,8 +297,10 @@ const chatByIdRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
 
-    const chat = await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const messages = await ChatRepository.getMessages(db, chatId, 100, 0);
+    const [chat, messages] = await Promise.all([
+      ChatRepository.getOwnedOrThrow(db, chatId, userId),
+      ChatRepository.getMessages(db, chatId, 100, 0),
+    ]);
 
     return c.json({
       ...toChatDto(chat),
@@ -1417,11 +1420,15 @@ const chatByIdRoutes = new Hono<AppContext>()
 
 export const chatsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
-  .get('/', async (c) => {
+  .get('/', zValidator('query', ChatsListQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const includeArchived = c.req.query('includeArchived') === 'true';
-    const chats = await ChatRepository.listForUser(db, userId, 100, { includeArchived });
-    return c.json(chats.map(toChatDto));
+    const { cursor, includeArchived, limit } = c.req.valid('query');
+    const page = await ChatRepository.listForUser(db, userId, {
+      cursor,
+      includeArchived: includeArchived === 'true',
+      limit,
+    });
+    return c.json({ items: page.chats.map(toChatDto), nextCursor: page.nextCursor });
   })
   .post('/', zValidator('json', ChatsCreateSchema), async (c) => {
     const userId = c.get('auth')!.userId;

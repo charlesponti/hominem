@@ -1,0 +1,4 @@
+interface:
+  display_name: "Omiro Predeploy"
+  short_description: "Run Omiro production preflight checks before EAS release"
+  default_prompt: "Run the Omiro production predeploy checklist and report any blockers."

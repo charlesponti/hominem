@@ -5,6 +5,8 @@ import { TIME_UNITS } from '@hominem/utils/time';
 import { getChatActivityAt } from './chat-activity';
 import type { ChatWithActivity } from './chat-types';
 
+export const CHAT_LIST_STALE_TIME_MS = 30_000;
+
 function parseChatActivityAt(chat: Chat): Date {
   return parseInboxTimestamp(getChatActivityAt(chat));
 }

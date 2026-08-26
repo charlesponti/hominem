@@ -10,13 +10,11 @@ import { mockMmkvModule } from '../../mocks/mmkv';
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
 const mockRandomUUID = vi.fn();
-const mockPush = vi.fn();
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({});
 const mockStreamSSE = vi.fn();
 
 vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
 vi.mock('expo-crypto', () => ({ randomUUID: mockRandomUUID }));
-vi.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 vi.mock('~/services/auth/auth-provider', () => ({
   useAuth: () => ({ getAuthHeaders: mockGetAuthHeaders }),
 }));
@@ -55,16 +53,16 @@ describe('useStartChat', () => {
 
   afterEach(() => vi.clearAllMocks());
 
-  it('navigates only after the durable user message is accepted', async () => {
+  it('reports the chat only after the durable user message is accepted', async () => {
     const { result, queryClient } = renderHookWithQueryClient(() => useStartChat());
-    const onReady = vi.fn();
+    const onAccepted = vi.fn();
 
     await act(async () => {
-      await result.current.startChat({ title: 'Test', message: 'Hello', onReady });
+      await result.current.startChat({ title: 'Test', message: 'Hello', onAccepted });
     });
 
-    await waitFor(() => expect(onReady).toHaveBeenCalledOnce());
-    expect(mockPush).toHaveBeenCalledWith('/(protected)/inbox/chat/chat-1');
+    await waitFor(() => expect(onAccepted).toHaveBeenCalledOnce());
+    expect(onAccepted).toHaveBeenCalledWith(expect.objectContaining({ chatId: 'chat-1' }));
     expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toEqual([
       expect.objectContaining({ id: 'user-1', message: 'Hello' }),
     ]);

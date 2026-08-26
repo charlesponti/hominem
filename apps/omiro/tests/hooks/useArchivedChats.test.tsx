@@ -44,15 +44,18 @@ describe('useArchivedChats', () => {
 
     expect(result.current.fetchStatus).toBe('idle');
     expect(mockChatsListGet).not.toHaveBeenCalled();
-    expect(result.current.data).toEqual([]);
+    expect(result.current.data ?? []).toEqual([]);
   });
 
-  it('fetches archived chats, seeds per-chat detail cache, and resolves the composed list', async () => {
+  it('fetches and filters archived chats', async () => {
     mockChatsListGet.mockResolvedValueOnce({
-      json: async () => [
-        chatFixture({ id: 'archived-1' }),
-        chatFixture({ id: 'active-1', archivedAt: null }),
-      ],
+      json: async () => ({
+        items: [
+          chatFixture({ id: 'archived-1' }),
+          chatFixture({ id: 'active-1', archivedAt: null }),
+        ],
+        nextCursor: null,
+      }),
     });
 
     const { result, queryClient } = renderHookWithQueryClient(() => useArchivedChats());
@@ -60,17 +63,15 @@ describe('useArchivedChats', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toHaveLength(1);
-    expect(result.current.data[0]?.id).toBe('archived-1');
-    expect(queryClient.getQueryData(chatKeys.detail('archived-1'))).toEqual(
-      expect.objectContaining({ id: 'archived-1' }),
-    );
+    expect(result.current.data?.[0]?.id).toBe('archived-1');
+    expect(queryClient.getQueryData(chatKeys.detail('archived-1'))).toBeUndefined();
   });
 
   it('returns an empty list while the archived index has not resolved yet', () => {
     mockChatsListGet.mockImplementation(() => new Promise(() => {}));
     const { result } = renderHookWithQueryClient(() => useArchivedChats());
 
-    expect(result.current.data).toEqual([]);
+    expect(result.current.data ?? []).toEqual([]);
     expect(result.current.isPending).toBe(true);
   });
 
@@ -79,6 +80,6 @@ describe('useArchivedChats', () => {
     const { result } = renderHookWithQueryClient(() => useArchivedChats());
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.data).toEqual([]);
+    expect(result.current.data ?? []).toEqual([]);
   });
 });

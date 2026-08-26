@@ -21,6 +21,7 @@ export function getComposerSubmissionConfig(
   const isInbox = props.mode === 'inbox';
   const entryMode = isInbox ? (selectedEntryKind ?? props.entryMode ?? 'mixed') : undefined;
   const isChatEntryMode = isInbox && entryMode === 'chat';
+  const isNewChat = isInbox && props.presentation === 'new-chat';
 
   if (!isInbox) {
     return {
@@ -34,13 +35,17 @@ export function getComposerSubmissionConfig(
   }
 
   return {
-    inputTestID: 'inbox-composer-input',
-    shellTestID: props.testID ?? 'inbox-composer',
+    inputTestID: isNewChat ? 'new-chat-composer-input' : 'inbox-composer-input',
+    shellTestID: props.testID ?? (isNewChat ? 'new-chat-composer' : 'inbox-composer'),
     placeholder: isChatEntryMode
       ? t.chat.input.messagePlaceholder
       : t.inboxComposer.composer.placeholder,
     primarySubmitKind: isChatEntryMode ? 'start-chat' : 'note',
-    submitTestID: isChatEntryMode ? 'composer-submit-chat' : 'composer-submit-note',
+    submitTestID: isChatEntryMode
+      ? isNewChat
+        ? 'new-chat-submit'
+        : 'composer-submit-chat'
+      : 'composer-submit-note',
     submitAccessibilityLabel: isChatEntryMode
       ? t.inbox.screen.startChatSubmitA11y
       : t.inboxComposer.composer.saveNoteA11y,

@@ -28,7 +28,15 @@ export type { ComposerProps } from './composer.types';
 
 export function Composer(props: ComposerProps) {
   return (
-    <ComposerProvider key={props.mode === 'chat' ? props.chatId : 'inbox-composer'}>
+    <ComposerProvider
+      key={
+        props.mode === 'chat'
+          ? props.chatId
+          : props.presentation === 'new-chat'
+            ? 'new-chat'
+            : 'inbox'
+      }
+    >
       <ComposerContent {...props} />
     </ComposerProvider>
   );

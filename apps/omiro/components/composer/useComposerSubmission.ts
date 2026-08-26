@@ -33,6 +33,7 @@ export function useComposerSubmission(props: ComposerProps) {
 
   const isInbox = props.mode === 'inbox';
   const onComplete = isInbox ? props.onComplete : undefined;
+  const onStartChatAccepted = isInbox ? props.onStartChatAccepted : undefined;
   const initialMessage = isInbox ? props.initialMessage : readChatDraft(props.chatId);
   const writeChatDraftForId = useCallback(
     (message: string) => writeChatDraft(chatId, message),
@@ -67,6 +68,7 @@ export function useComposerSubmission(props: ComposerProps) {
           fileIds,
           message,
           onComplete,
+          onStartChatAccepted,
         });
         return;
       }
@@ -94,7 +96,15 @@ export function useComposerSubmission(props: ComposerProps) {
         logger.warn('[useComposerSubmission] sendChatMessage failed', { error });
       }
     },
-    [autoUpdateChatTitle, isChatSending, onComplete, sendChatMessage, submitNote, submitStartChat],
+    [
+      autoUpdateChatTitle,
+      isChatSending,
+      onComplete,
+      onStartChatAccepted,
+      sendChatMessage,
+      submitNote,
+      submitStartChat,
+    ],
   );
 
   const isSubmitting = isInbox ? isSaving || isStartingChat : isChatSending;

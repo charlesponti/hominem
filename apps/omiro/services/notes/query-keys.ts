@@ -16,6 +16,10 @@ export const noteKeys = {
 } as const;
 
 export const chatKeys = {
+  list: ['chats', 'list'] as const,
+  latest: [...queryKeys.chats.list, 'latest'] as const,
+  page: (options: { cursor?: string | null; includeArchived?: boolean; limit: number }) =>
+    queryKeys.chats.page(options),
   resumableChats: queryKeys.chats.sessions,
   archivedChats: queryKeys.chats.archived,
   messages: (chatId: string) => queryKeys.chats.messages(chatId),

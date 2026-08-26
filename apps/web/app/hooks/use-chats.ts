@@ -10,7 +10,11 @@ export function useChatsList() {
   return useQuery({
     queryKey: chatQueryKeys.list,
     staleTime: 1000 * 30,
-    queryFn: () => client.api.chats.$get({ query: { limit: '100' } }).then((r) => r.json()),
+    queryFn: () =>
+      client.api.chats.$get({ query: { limit: '100' } }).then(async (response) => {
+        const page = await response.json();
+        return page.items;
+      }),
   });
 }
 

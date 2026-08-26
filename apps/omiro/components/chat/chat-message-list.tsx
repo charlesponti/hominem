@@ -266,7 +266,6 @@ const styles = makeStyles((theme) => ({
   loadingState: { flex: 1, paddingTop: 12 },
   emptyState: { flex: 1 },
   list: { flex: 1 },
-  topSentinel: { flexGrow: 1, minHeight: 32 },
   bottomSentinel: { flexGrow: 1, minHeight: 32 },
   itemSeparator: { height: 20 },
 }));

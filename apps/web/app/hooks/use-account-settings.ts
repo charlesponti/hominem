@@ -1,7 +1,8 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat } from '@hominem/rpc/types';
 import type { MonthlyUsageStatus } from '@hominem/rpc/types';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 
 import { authClient } from '~/lib/auth-client';
 import { chatQueryKeys } from '~/lib/query-keys';
@@ -24,7 +25,7 @@ export function useArchivedChats() {
     queryKey: [...chatQueryKeys.list, 'archived'],
     queryFn: async () => {
       const response = await client.api.chats.$get({ query: { includeArchived: 'true' } });
-      const chats = await response.json();
+      const { items: chats } = await response.json();
       const cutoff = Date.now() - MONTH_MS;
 
       return chats
@@ -37,12 +38,18 @@ export function useArchivedChats() {
 }
 
 export function useUpdateProfile() {
-  return useMutation({
-    mutationFn: async (name: string) => {
+  const [isPending, setIsPending] = useState(false);
+  const mutateAsync = useCallback(async (name: string) => {
+    setIsPending(true);
+    try {
       const result = await authClient.updateUser({ name });
       if (result.error) {
         throw new Error(result.error.message ?? 'Could not save name.');
       }
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  }, []);
+
+  return { isPending, mutateAsync };
 }

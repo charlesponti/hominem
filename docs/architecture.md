@@ -30,6 +30,8 @@ API
 
 Omiro's route ownership and app-specific implementation details are documented in [the Omiro README](../apps/omiro/README.md).
 
+Omiro is chat-first: its protected root resumes the most recent active chat or opens a focused New Chat composer. Chat history, All, Time, and Settings are secondary destinations. Native route presentation remains Expo Router-owned; shared chat transport, lifecycle, message, and cache contracts remain platform-neutral.
+
 ## Chat assistant behavior
 
 Omiro's chat assistant is a private cognitive tool, not a performed character. It is clear, calm,

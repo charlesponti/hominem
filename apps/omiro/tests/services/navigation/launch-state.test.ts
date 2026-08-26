@@ -45,6 +45,19 @@ describe('inbox launch state', () => {
     expect(launchState.readInboxDraft()).toBe('Follow up on notes');
   });
 
+  it('keeps the new-chat draft separate from the All composer draft', async () => {
+    const launchState = await import('~/services/navigation/launch-state');
+
+    launchState.writeInboxDraft('A note in All');
+    launchState.writeNewChatDraft('A new conversation');
+
+    expect(launchState.readInboxDraft()).toBe('A note in All');
+    expect(launchState.readNewChatDraft()).toBe('A new conversation');
+    launchState.clearNewChatDraft();
+    expect(launchState.readNewChatDraft()).toBe('');
+    expect(launchState.readInboxDraft()).toBe('A note in All');
+  });
+
   it('consumes inbox resume metadata once', async () => {
     const launchState = await import('~/services/navigation/launch-state');
 
@@ -70,41 +83,5 @@ describe('inbox launch state', () => {
 
     expect(launchState.consumeRestoreAttempt()).toBe(true);
     expect(launchState.consumeRestoreAttempt()).toBe(false);
-  });
-
-  it('round-trips and consumes chat composer handoff state', async () => {
-    const launchState = await import('~/services/navigation/launch-state');
-
-    launchState.writeChatComposerHandoff('chat-1', {
-      message: 'Follow up with context',
-      attachments: [
-        {
-          id: 'file-1',
-          localUri: 'file:///tmp/file-1.png',
-          name: 'file-1.png',
-          type: 'image',
-          uploadedFile: {
-            id: 'uploaded-file-1',
-            originalName: 'file-1.png',
-            type: 'image',
-            mimetype: 'image/png',
-            size: 128,
-            url: 'https://example.com/file-1.png',
-            uploadedAt: new Date('2026-06-21T12:00:00.000Z'),
-            vectorIds: [],
-          },
-        },
-      ],
-    });
-
-    const handoff = launchState.readChatComposerHandoff('chat-1');
-    expect(handoff).not.toBeNull();
-    expect(handoff?.message).toBe('Follow up with context');
-    expect(handoff?.attachments).toHaveLength(1);
-    expect(handoff?.attachments[0]?.uploadedFile?.uploadedAt).toBeInstanceOf(Date);
-    expect(launchState.consumeChatComposerHandoff('chat-1')?.attachments[0]?.uploadedFile?.id).toBe(
-      'uploaded-file-1',
-    );
-    expect(launchState.readChatComposerHandoff('chat-1')).toBeNull();
   });
 });

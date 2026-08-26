@@ -24,7 +24,7 @@ export function useChatData({ chatId }: UseChatDataInput) {
   });
 
   return {
-    messages: messages && messages.length > 0 ? messages : [],
+    messages: messages ?? [],
     messagesError,
     isMessagesLoading: messagesState.isInitialLoading,
     isMessagesRefreshing: messagesState.isRefreshing,

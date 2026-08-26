@@ -31,6 +31,13 @@ export interface ChatRecord {
   updatedAt: string;
 }
 
+export interface ChatPage {
+  chats: ChatRecord[];
+  nextCursor: string | null;
+}
+
+type ChatListCursor = { id: string; lastMessageAt: string };
+
 export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface ChatMessageRecord {
@@ -107,6 +114,27 @@ function toChatRecord(row: ChatRow): ChatRecord {
     createdAt: new Date(row.createdat).toISOString(),
     updatedAt: new Date(row.updatedat).toISOString(),
   };
+}
+
+function decodeChatListCursor(cursor: string): ChatListCursor {
+  try {
+    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as ChatListCursor;
+    if (!value.id || !value.lastMessageAt || Number.isNaN(Date.parse(value.lastMessageAt))) {
+      throw new Error('Invalid cursor');
+    }
+    return value;
+  } catch {
+    throw new ValidationError('Invalid chat cursor');
+  }
+}
+
+function encodeChatListCursor(row: ChatRow): string {
+  return Buffer.from(
+    JSON.stringify({
+      id: row.id,
+      lastMessageAt: new Date(row.lastMessageAt).toISOString(),
+    }),
+  ).toString('base64url');
 }
 
 function toChatMessageRecord(row: ChatMessageRow): ChatMessageRecord {
@@ -290,21 +318,37 @@ export const ChatRepository = {
   async listForUser(
     handle: DbHandle,
     userId: string,
-    limit = 100,
-    options: { includeArchived?: boolean } = {},
-  ): Promise<ChatRecord[]> {
+    options: { cursor?: string; includeArchived?: boolean; limit?: number } = {},
+  ): Promise<ChatPage> {
+    const limit = options.limit ?? 50;
+    const cursor = options.cursor ? decodeChatListCursor(options.cursor) : null;
     let query = handle.selectFrom('app.chats').selectAll().where('ownerUserid', '=', userId);
 
     if (!options.includeArchived) {
       query = query.where('archivedAt', 'is', null);
     }
 
+    if (cursor) {
+      query = query.where((eb) =>
+        eb.or([
+          eb('lastMessageAt', '<', cursor.lastMessageAt),
+          eb.and([eb('lastMessageAt', '=', cursor.lastMessageAt), eb('id', '<', cursor.id)]),
+        ]),
+      );
+    }
+
     const chats = (await query
       .orderBy('lastMessageAt', 'desc')
-      .limit(limit)
+      .orderBy('id', 'desc')
+      .limit(limit + 1)
       .execute()) as ChatRow[];
 
-    return chats.map(toChatRecord);
+    const page = chats.slice(0, limit);
+    const finalChat = page.at(-1);
+    return {
+      chats: page.map(toChatRecord),
+      nextCursor: chats.length > limit && finalChat ? encodeChatListCursor(finalChat) : null,
+    };
   },
 
   /**
@@ -430,15 +474,15 @@ export const ChatRepository = {
       )
       .execute();
 
-    const cleanupFileIds = [
-      ...new Set(
-        messages.flatMap((message) =>
-          (parseChatMessageFiles(message.files) ?? [])
-            .filter((file) => file.type === 'audio' && file.fileId)
-            .map((file) => file.fileId as string),
-        ),
-      ),
-    ];
+    const cleanupFileIdsSet = new Set<string>();
+    for (const message of messages) {
+      for (const file of parseChatMessageFiles(message.files) ?? []) {
+        if (file.type === 'audio' && file.fileId) {
+          cleanupFileIdsSet.add(file.fileId);
+        }
+      }
+    }
+    const cleanupFileIds = [...cleanupFileIdsSet];
     const deletedMessageIds = messages.map((message) => message.id);
 
     if (deletedMessageIds.length > 0) {

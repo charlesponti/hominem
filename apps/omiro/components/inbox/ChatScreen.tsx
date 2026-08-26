@@ -17,7 +17,6 @@ import { useChatSearch } from '~/hooks/use-chat-search';
 import { useNetworkStatus } from '~/hooks/use-network-status';
 import { useTaskExtraction, type ExtractedTasksCreated } from '~/hooks/use-task-extraction';
 import {
-  DEFAULT_CHAT_TITLE,
   getChatTitle,
   updateChatTitleCaches,
   useActiveChat,
@@ -25,11 +24,10 @@ import {
   useRegenerateMessage,
   useSendMessage,
 } from '~/services/chat';
-import { useCreateChat } from '~/services/chat/use-create-chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
-import { HOME_ROUTE, getContentRoute } from '~/services/navigation/routes';
+import { HOME_ROUTE, NEW_CHAT_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
 function isNotFoundError(error: unknown): boolean {
@@ -110,7 +108,6 @@ export function ChatScreen({ id }: { id: string }) {
   const retryActiveGeneration = generation ? retryLastGeneration : retryGeneration;
 
   const displayTitle = getChatTitle(activeChat?.title, extraction.resolvedSource);
-  const { mutateAsync: createChat, isPending: isCreatingChat } = useCreateChat();
 
   useEffect(() => {
     writeResumeTarget({
@@ -130,30 +127,21 @@ export function ChatScreen({ id }: { id: string }) {
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [showChatSources, setShowChatSources] = useState(false);
 
-  const emptyState = useMemo(
-    () => <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />,
-    [],
+  const emptyState = <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />;
+  const errorState = (
+    <EmptyState
+      action={{ label: t.chat.loadErrorRetry, onPress: () => void refetchMessages() }}
+      sfSymbol="arrow.clockwise.circle"
+      title={t.chat.loadErrorTitle}
+    />
   );
-  const errorState = useMemo(
-    () => (
-      <EmptyState
-        action={{ label: t.chat.loadErrorRetry, onPress: () => void refetchMessages() }}
-        sfSymbol="arrow.clockwise.circle"
-        title={t.chat.loadErrorTitle}
-      />
-    ),
-    [refetchMessages],
-  );
-  const missingConversationState = useMemo(
-    () => (
-      <EmptyState
-        action={{ label: t.chat.goBack, onPress: () => router.dismissTo(HOME_ROUTE) }}
-        description={t.chat.missingMessage}
-        sfSymbol="bubble.left.and.exclamationmark.bubble.right"
-        title={t.chat.missingTitle}
-      />
-    ),
-    [router],
+  const missingConversationState = (
+    <EmptyState
+      action={{ label: t.chat.goBack, onPress: () => router.dismissTo(HOME_ROUTE) }}
+      description={t.chat.missingMessage}
+      sfSymbol="bubble.left.and.exclamationmark.bubble.right"
+      title={t.chat.missingTitle}
+    />
   );
 
   return (
@@ -174,13 +162,8 @@ export function ChatScreen({ id }: { id: string }) {
         />
         <Stack.Toolbar.Button
           accessibilityLabel="New chat"
-          disabled={isCreatingChat}
           icon="square.and.pencil"
-          onPress={() => {
-            void createChat({ title: DEFAULT_CHAT_TITLE }).then((chat) => {
-              router.push(getContentRoute('chat', chat.id));
-            });
-          }}
+          onPress={() => router.push(NEW_CHAT_ROUTE)}
         />
       </Stack.Toolbar>
 

@@ -3,7 +3,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
@@ -12,9 +12,9 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
-import type { ChatGenerationState } from './chat-generation';
 import { createOptimisticMessage, type MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
+import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
 function triggerAssistantCompletionHaptic() {
@@ -34,15 +34,9 @@ type SendContext = { userMessageId: string };
 export function useSendMessage({ chatId }: { chatId: string }) {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const generationRef = useRef<ChatGenerationState | null>(null);
   const lastInputRef = useRef<SendInput | null>(null);
-  const [generation, setGeneration] = useState<ChatGenerationState | null>(null);
-
-  const setCurrentGeneration = useCallback((next: ChatGenerationState | null) => {
-    generationRef.current = next;
-    setGeneration(next);
-  }, []);
+  const { abortControllerRef, cancelGeneration, generation, generationRef, setGeneration } =
+    useChatGeneration({ chatId, getAuthHeaders });
 
   const mutation = useMutation<void, Error, MutationInput, SendContext>({
     mutationKey: ['chat-generation', chatId],
@@ -54,7 +48,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         ...previous,
         createOptimisticMessage(chatId, message, userMessageId),
       ]);
-      setCurrentGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
+      setGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
       return { userMessageId };
     },
     mutationFn: async ({ generationId, message, fileIds, responseModality }) => {
@@ -89,7 +83,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if (event.type === 'status') {
             const current = generationRef.current;
             if (current?.id === event.generationId) {
-              setCurrentGeneration({ ...current, stage: event.status });
+              setGeneration({ ...current, stage: event.status });
             }
             return;
           }
@@ -105,7 +99,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
               );
               if (committed.audio?.url) playAudioReply(committed.id, committed.audio.url);
             }
-            setCurrentGeneration(null);
+            setGeneration(null);
             triggerAssistantCompletionHaptic();
             void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
             return;
@@ -113,7 +107,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if (event.type === 'cancelled') {
             const current = generationRef.current;
             if (current?.id === event.generationId) {
-              setCurrentGeneration({ ...current, stage: 'cancelled' });
+              setGeneration({ ...current, stage: 'cancelled' });
             }
           }
         },
@@ -123,7 +117,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       abortControllerRef.current = null;
       if (generationRef.current?.stage === 'stopping' || error.name === 'AbortError') return;
       const current = generationRef.current;
-      if (current) setCurrentGeneration({ ...current, stage: 'failed', error: error.message });
+      if (current) setGeneration({ ...current, stage: 'failed', error: error.message });
       if (!context) return;
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (messages = []) =>
         messages.filter(
@@ -145,26 +139,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     },
     [mutation],
   );
-
-  const cancelGeneration = useCallback(async () => {
-    const current = generationRef.current;
-    if (!current || current.stage === 'stopping') return;
-    setCurrentGeneration({ ...current, stage: 'stopping' });
-    const headers = await getAuthHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/cancel`,
-      {
-        method: 'POST',
-        headers,
-      },
-    );
-    if (!response.ok) {
-      setCurrentGeneration({ ...current, stage: 'failed', error: 'Unable to stop reply.' });
-      return;
-    }
-    abortControllerRef.current?.abort();
-    setCurrentGeneration({ ...current, stage: 'cancelled' });
-  }, [chatId, getAuthHeaders, setCurrentGeneration]);
 
   const retryLastGeneration = useCallback(() => {
     if (lastInputRef.current) void sendChatMessage(lastInputRef.current);

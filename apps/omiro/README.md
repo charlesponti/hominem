@@ -57,21 +57,23 @@ If the error still appears, the local generated `apps/omiro/ios` directory is li
 
 ## Useful Commands
 
-| Need                                | Run                                           | When to use it                                                     |
-| ----------------------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
-| Generate the dev iOS project        | `just mobile prebuild development`            | First-time setup or after native config changes during development |
-| Generate the production iOS project | `just mobile prebuild production`             | Local CNG verification before a native release                     |
-| Launch the iOS app                  | `just mobile dev`                             | Daily mobile development                                           |
+| Need                                 | Run                                           | When to use it                                                     |
+| ------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------ |
+| Generate the dev iOS project         | `just mobile prebuild development`            | First-time setup or after native config changes during development |
+| Generate the production iOS project  | `just mobile prebuild production`             | Local CNG verification before a native release                     |
+| Launch the iOS app                   | `just mobile dev`                             | Daily mobile development                                           |
 | Create and submit a production build | `just mobile release`                         | App Store/TestFlight release builds                                |
-| Publish a JS-only OTA update         | `just mobile update "<message>"`              | Ship a fix without a new store build                                |
-| Start Metro / Expo                  | `just mobile start`                           | When you want to attach to an existing native build                |
-| Read Omiro's governing decisions    | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |
+| Publish a JS-only OTA update         | `just mobile update "<message>"`              | Ship a fix without a new store build                               |
+| Start Metro / Expo                   | `just mobile start`                           | When you want to attach to an existing native build                |
+| Read Omiro's governing decisions     | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |
 
 ## App architecture
 
-Omiro has one protected Expo Router stack with two primary content destinations. It does not use a persistent tab bar:
+Omiro has one protected Expo Router stack with a chat-first signed-in entry point and secondary native content destinations. It does not use a persistent tab bar:
 
-- **All** (`/(protected)`) is the signed-in entry point and canonical mixed stream for chats and notes.
+- **Chat** (`/(protected)`) resolves the latest active conversation on launch. If none exists, it opens the focused **New Chat** composer at `/(protected)/new-chat`; a chat record is created only when its first message is accepted.
+- **Chats** (`/(protected)/chats`) is the paginated active-conversation history. It owns browsing, refresh, archive-by-long-press, and the explicit New Chat action.
+- **All** (`/(protected)/all`) is the canonical mixed stream for chats and notes, retained as a secondary native destination.
 - **Time** owns the chronological schedule and time-block detail routes. Unscheduled tasks are a dedicated secondary route, not schedule rows.
 
 The registered `inbox` route redirects to All for compatibility with old links. Chat and note details remain at `/(protected)/inbox/[kind]/[id]`; `kind` is required and persisted. Deep links open the correct destination directly. Settings is a protected form sheet. Onboarding and the UI Lab are also registered protected routes. Keep temporary state in the screen that owns it. Use route parameters only for destinations and deep-linkable detail IDs.
@@ -97,7 +99,9 @@ Assistant replies use a durable-reply contract. The API may stream lifecycle eve
 
 Use these product terms consistently:
 
-- **All** — Signed-in root surface and mixed recent list of conversations and documents.
+- **Chat** — The signed-in, chat-first entry point that resumes the latest conversation or opens New Chat.
+- **Chats** — The active conversation history destination.
+- **All** — A secondary mixed recent list of conversations and documents.
 - **Time** — The task-and-calendar surface.
 - **thread** — Presentation-only language for an existing chat or note; persisted kind never changes.
 - **chat** — A conversation.

@@ -18,6 +18,8 @@ vi.mock('~/services/chat', () => ({
   normalizeChatTitle: (value: string) => `title:${value.trim()}`,
 }));
 
+vi.mock('expo-router', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const { useStartChatSubmission } = await import('~/components/composer/useStartChatSubmission');
 
 describe('useStartChatSubmission', () => {
@@ -32,9 +34,11 @@ describe('useStartChatSubmission', () => {
   it('starts the chat with a normalized title and trimmed message, then clears the composer and completes on ready', async () => {
     const clearComposer = vi.fn();
     const onComplete = vi.fn();
-    mockStartChat.mockImplementation(async ({ onReady }: { onReady?: () => void }) => {
-      onReady?.();
-    });
+    mockStartChat.mockImplementation(
+      async ({ onAccepted }: { onAccepted?: (event: { chatId: string }) => void }) => {
+        onAccepted?.({ chatId: 'chat-1' });
+      },
+    );
 
     const { result } = renderHookWithQueryClient(() => useStartChatSubmission());
 

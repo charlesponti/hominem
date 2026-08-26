@@ -3,17 +3,18 @@ import { useRouter, useSegments } from 'expo-router';
 
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
-import { HOME_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { ALL_ROUTE, CHATS_ROUTE, SETTINGS_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
-type Destination = 'all' | 'time' | 'settings';
+type Destination = 'chats' | 'all' | 'time' | 'settings';
 
 const destinations: {
   key: Destination;
   label: string;
   icon: MenuAction['image'];
-  route: typeof HOME_ROUTE;
+  route: typeof CHATS_ROUTE | typeof ALL_ROUTE | typeof TIME_ROUTE;
 }[] = [
-  { key: 'all', label: 'All', icon: 'tray.full.fill', route: HOME_ROUTE },
+  { key: 'chats', label: 'Chats', icon: 'bubble.left.fill', route: CHATS_ROUTE },
+  { key: 'all', label: 'All', icon: 'tray.full.fill', route: ALL_ROUTE },
   { key: 'time', label: 'Time', icon: 'clock.fill', route: TIME_ROUTE },
 ];
 
@@ -26,7 +27,9 @@ const settingsDestination: { key: Destination; label: string; icon: MenuAction['
 function getActiveDestination(segments: readonly string[]): Destination | null {
   const [root, section] = segments;
   if (root !== '(protected)') return null;
-  if (!section) return 'all';
+  if (!section || section === 'new-chat' || section === 'inbox') return 'chats';
+  if (section === 'chats') return 'chats';
+  if (section === 'all') return 'all';
   if (section === 'time') return 'time';
   if (section === 'settings') return 'settings';
   return null;

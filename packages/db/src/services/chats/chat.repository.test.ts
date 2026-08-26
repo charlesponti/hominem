@@ -117,6 +117,37 @@ describe('ChatRepository message deletion', () => {
     expect(new Date(chat.lastMessageAt).toISOString()).toBe('2026-01-01T00:00:01.000Z');
   });
 
+  it('returns a stable cursor page ordered by activity and id', async () => {
+    const fixture = await createFixture();
+    const chatIds = [randomUUID(), randomUUID(), randomUUID()];
+
+    await db
+      .insertInto('app.chats')
+      .values(
+        chatIds.map((id, index) => ({
+          id,
+          ownerUserid: fixture.userId,
+          title: `Page ${index + 1}`,
+          createdat: new Date(`2026-02-0${index + 1}T00:00:00.000Z`),
+          lastMessageAt: new Date(`2026-02-0${index + 1}T00:00:00.000Z`),
+        })),
+      )
+      .execute();
+
+    const firstPage = await ChatRepository.listForUser(db, fixture.userId, { limit: 2 });
+
+    expect(firstPage.chats.map((chat) => chat.id)).toEqual([chatIds[2], chatIds[1]]);
+    expect(firstPage.nextCursor).not.toBeNull();
+
+    const secondPage = await ChatRepository.listForUser(db, fixture.userId, {
+      cursor: firstPage.nextCursor ?? undefined,
+      limit: 2,
+    });
+
+    expect(secondPage.chats.map((chat) => chat.id)).toEqual([chatIds[0], fixture.chatId]);
+    expect(secondPage.nextCursor).toBeNull();
+  });
+
   it("does not delete another user's message", async () => {
     const fixture = await createFixture();
     const otherUserId = randomUUID();

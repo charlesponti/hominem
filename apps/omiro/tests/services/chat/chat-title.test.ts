@@ -55,7 +55,6 @@ describe('chat title helpers', () => {
       archivedAt: null,
       createdAt: '2026-04-13T01:29:18.000Z',
       id: 'chat-1',
-      noteId: null,
       title: DEFAULT_CHAT_TITLE,
       updatedAt: '2026-04-13T01:29:18.000Z',
       userId: 'user-1',

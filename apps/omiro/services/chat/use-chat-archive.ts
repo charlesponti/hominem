@@ -27,6 +27,7 @@ export function useChatArchive({ chatId, onSuccess }: UseChatArchiveOptions) {
       queryClient.setQueryData<string[] | undefined>(chatKeys.archivedChats, (ids) =>
         ids ? [chatId, ...ids.filter((id) => id !== chatId)] : [chatId],
       );
+      void queryClient.invalidateQueries({ queryKey: chatKeys.list });
       onSuccess?.();
     },
   });

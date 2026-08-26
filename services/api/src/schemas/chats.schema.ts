@@ -22,6 +22,12 @@ export const ChatsCreateSchema = z.object({
   title: z.string().trim().min(1).max(120),
 });
 
+export const ChatsListQuerySchema = z.object({
+  cursor: z.string().min(1).max(512).optional(),
+  includeArchived: z.enum(['true', 'false']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
 export const ChatsStartStreamSchema = ChatsCreateSchema.extend({
   generationId: z.uuid(),
   message: z.string(),

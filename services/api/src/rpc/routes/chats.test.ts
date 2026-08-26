@@ -7,6 +7,7 @@ import { apiErrorHandler } from '../middleware/error';
 import { validationErrorMiddleware } from '../middleware/validation';
 
 const mocks = vi.hoisted(() => ({
+  listForUser: vi.fn(),
   createChat: vi.fn(),
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
@@ -68,6 +69,7 @@ vi.mock('@hominem/db', async () => {
     ...actual,
     db: {},
     ChatRepository: {
+      listForUser: mocks.listForUser,
       create: mocks.createChat,
       getOwnedOrThrow: mocks.getOwnedOrThrow,
       getMessages: mocks.getMessages,
@@ -352,6 +354,37 @@ describe('chat stream accounting', () => {
     expect(body).toContain('Already generated reply');
     expect(mocks.createChat).not.toHaveBeenCalled();
     expect(mocks.createGenerationRun).not.toHaveBeenCalled();
+  });
+});
+
+describe('chat list pagination', () => {
+  beforeEach(() => {
+    mocks.listForUser.mockClear();
+    mocks.listForUser.mockResolvedValue({ chats: [{ id: 'chat-1' }], nextCursor: 'next-page' });
+  });
+
+  it('returns a page and forwards the validated cursor options', async () => {
+    const response = await createApp().request(
+      '/api/chats?cursor=previous-page&includeArchived=true&limit=25',
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      items: [{ id: 'chat-1' }],
+      nextCursor: 'next-page',
+    });
+    expect(mocks.listForUser).toHaveBeenCalledWith({}, testUser.id, {
+      cursor: 'previous-page',
+      includeArchived: true,
+      limit: 25,
+    });
+  });
+
+  it('rejects an invalid page size', async () => {
+    const response = await createApp().request('/api/chats?limit=101');
+
+    expect(response.status).toBe(400);
+    expect(mocks.listForUser).not.toHaveBeenCalled();
   });
 });
 
