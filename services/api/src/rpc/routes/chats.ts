@@ -39,7 +39,7 @@ import {
 import { NotFoundError, UnavailableError, ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
-import { CHAT_ASSISTANT_PROMPT, CHAT_RESPONSE_LENGTH_GUIDANCE } from '../prompts';
+import { buildChatSystemPrompt } from '../prompts';
 import { runCompletionWithTools } from './chat-completion-loop';
 import { streamChatReplySpeech, synthesizeChatReplySpeech } from './chat-speech.service';
 import {
@@ -181,14 +181,6 @@ function resolveAssistantContent(
     return `I'd like to run "${pendingToolCall.toolName}", which needs your approval first.`;
   }
   return assistantText;
-}
-
-function getSystemPrompt(responseLength?: 'short' | 'medium' | 'long'): string {
-  if (!responseLength) {
-    return CHAT_ASSISTANT_PROMPT;
-  }
-
-  return `${CHAT_ASSISTANT_PROMPT}\n\n${CHAT_RESPONSE_LENGTH_GUIDANCE[responseLength]}`;
 }
 
 // The "long" essay option plans an outline before writing, so give it room to
@@ -744,7 +736,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       const chatMessages = buildMessages(
         history,
         currentUserContent,
-        getSystemPrompt(responseLength),
+        buildChatSystemPrompt(responseLength),
       );
       const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
       const eventId = randomUUID();
@@ -989,7 +981,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       const priorHistory =
         pendingMessageIndex === -1 ? history : history.slice(0, pendingMessageIndex);
       const chatMessages: ChatMessages[] = [
-        { role: 'system', content: getSystemPrompt(responseLength) },
+        { role: 'system', content: buildChatSystemPrompt(responseLength) },
         ...priorHistory.map(
           (entry): ChatMessages => ({
             role: entry.role === 'assistant' ? 'assistant' : 'user',
@@ -1235,7 +1227,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     const chatMessages = buildMessages(
       history,
       currentUserContent,
-      getSystemPrompt(responseLength),
+      buildChatSystemPrompt(responseLength),
     );
     const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
     const eventId = randomUUID();
@@ -1508,7 +1500,11 @@ export const chatsRoutes = new Hono<AppContext>()
     );
 
     const currentUserContent = formatUserContentWithContext(message, [], resolvedFiles);
-    const chatMessages = buildMessages([], currentUserContent, getSystemPrompt(responseLength));
+    const chatMessages = buildMessages(
+      [],
+      currentUserContent,
+      buildChatSystemPrompt(responseLength),
+    );
     const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();

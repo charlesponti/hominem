@@ -22,7 +22,7 @@ async function* streamChunks(chunks: object[]) {
   yield* chunks;
 }
 
-function toolCallChunk(toolName: string, id: string, index: number) {
+function toolCallChunk(toolName: string, id: string, index: number, argumentsJson = '{}') {
   return {
     choices: [
       {
@@ -31,7 +31,7 @@ function toolCallChunk(toolName: string, id: string, index: number) {
             {
               index,
               id,
-              function: { name: toolName, arguments: '{}' },
+              function: { name: toolName, arguments: argumentsJson },
             },
           ],
         },
@@ -116,5 +116,82 @@ describe('runCompletionWithTools', () => {
 
     expect(mocks.callTool).toHaveBeenCalledOnce();
     expect(result.toolCallRecords).toHaveLength(1);
+  });
+
+  it('returns a pending confirmation without invoking the tool', async () => {
+    mocks.getToolDefinition.mockReturnValue({
+      requiresConfirmation: true,
+      preview: vi.fn().mockResolvedValue({ title: 'Saved preference' }),
+    });
+    mocks.streamChatCompletion.mockImplementationOnce(() =>
+      streamChunks([toolCallChunk('forget_memory', 'call-1', 0)]),
+    );
+
+    const result = await runCompletionWithTools({
+      userId: 'user-1',
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'Forget that preference.' }],
+      tools: [],
+      toolRuntime: { callTool: mocks.callTool, getToolDefinition: mocks.getToolDefinition },
+    });
+
+    expect(mocks.callTool).not.toHaveBeenCalled();
+    expect(result.pendingToolCall).toMatchObject({ toolName: 'forget_memory' });
+    expect(result.toolCallRecords[0]).toMatchObject({ status: 'pending' });
+  });
+
+  it('returns a final text answer after the interaction budget is exhausted', async () => {
+    mocks.getToolDefinition.mockReturnValue({ readOnly: false });
+    mocks.streamChatCompletion
+      .mockImplementationOnce(() => streamChunks([toolCallChunk('search_memories', 'call-1', 0)]))
+      .mockImplementationOnce(() => streamChunks([textChunk('Final answer.')]))
+      .mockImplementationOnce(() => streamChunks([textChunk('Final answer.')]));
+
+    const result = await runCompletionWithTools({
+      userId: 'user-1',
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'Use memory.' }],
+      tools: [],
+      maxIterations: 1,
+      toolRuntime: { callTool: mocks.callTool, getToolDefinition: mocks.getToolDefinition },
+    });
+
+    expect(result.assistantText).toBe('Final answer.');
+  });
+
+  it('returns an error result to the model for malformed tool arguments', async () => {
+    mocks.streamChatCompletion
+      .mockImplementationOnce(() =>
+        streamChunks([toolCallChunk('search_memories', 'call-1', 0, '{not json')]),
+      )
+      .mockImplementationOnce(() => streamChunks([textChunk('I need valid search details.')]));
+
+    const result = await runCompletionWithTools({
+      userId: 'user-1',
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'Search my memories.' }],
+      tools: [],
+    });
+
+    expect(mocks.callTool).not.toHaveBeenCalled();
+    expect(result.assistantText).toBe('I need valid search details.');
+  });
+
+  it('continues after a tool failure and records no successful call', async () => {
+    mocks.getToolDefinition.mockReturnValue({ readOnly: true });
+    mocks.callTool.mockRejectedValueOnce(new Error('Fixture unavailable'));
+    mocks.streamChatCompletion
+      .mockImplementationOnce(() => streamChunks([toolCallChunk('search_memories', 'call-1', 0)]))
+      .mockImplementationOnce(() => streamChunks([textChunk('I could not retrieve that memory.')]));
+
+    const result = await runCompletionWithTools({
+      userId: 'user-1',
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'Search my memories.' }],
+      tools: [],
+    });
+
+    expect(result.toolCallRecords).toEqual([]);
+    expect(result.assistantText).toBe('I could not retrieve that memory.');
   });
 });

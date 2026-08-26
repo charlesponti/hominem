@@ -5,5 +5,5 @@ import { OpenRouterModel } from 'deepeval/models';
 // be steered from here. Building the judge model explicitly sidesteps that
 // entirely and is the supported way to pin a specific judge provider/model.
 export const judgeModel = new OpenRouterModel({
-  model: process.env.DEEPEVAL_JUDGE_MODEL ?? 'google/gemini-2.5-flash-lite',
+  model: process.env.DEEPEVAL_JUDGE_MODEL ?? 'qwen/qwen3-30b-a3b-instruct-2507',
 });

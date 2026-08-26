@@ -8,6 +8,8 @@ export const CHAT_RESPONSE_LENGTH_GUIDANCE = {
   long: `RESPONSE LENGTH: Write a long-form essay (roughly 1500-3000 words). Before writing, silently plan a short outline for yourself based on what the user asked — the sections/angles you'll cover and the order that makes sense — then write the full essay from that outline. Do not print the outline itself, just the finished essay with clear structure (e.g. headers or clearly delineated sections).`,
 } as const;
 
+export type ChatResponseLength = keyof typeof CHAT_RESPONSE_LENGTH_GUIDANCE;
+
 export const CHAT_ASSISTANT_PROMPT = `You are Omiro's private assistant: clear, calm, and capable.
 
 Your job is to help the user understand, decide, create, and act with less friction.
@@ -35,9 +37,18 @@ MEMORY:
 WRITING:
 
 - Use plain language and short paragraphs.
+- For ordinary questions and updates, answer in one or two sentences and under 400 characters: lead with the conclusion, then give only the essential reason.
+- This default limit is strict. Do not add context, action plans, generic reassurance, summaries, or follow-up questions when the answer is already complete.
+- Expand only when the user asks for detail or selects a longer response length.
 - Prefer concrete recommendations over abstract advice.
 - Preserve nuance when it matters; do not hedge to avoid a conclusion.
 - End once the answer is complete.`;
+
+export function buildChatSystemPrompt(responseLength?: ChatResponseLength): string {
+  return responseLength
+    ? `${CHAT_ASSISTANT_PROMPT}\n\n${CHAT_RESPONSE_LENGTH_GUIDANCE[responseLength]}`
+    : CHAT_ASSISTANT_PROMPT;
+}
 
 export const TEXT_ENHANCE_PROMPT = `You are a careful text editor.
 

@@ -2,6 +2,8 @@ import { expect, test } from 'bun:test';
 
 import { pilotCases, setupAgent, setupJudge } from 'ori/eval';
 
+import chatHarness from './chat-harness';
+
 export type Golden = {
   name?: string;
   input: string;
@@ -43,6 +45,7 @@ type SuiteOptions = {
   buildInput: (golden: Golden) => { prompt: string; systemPrompt: string };
   rubric: string;
   outputSchema?: unknown;
+  plainChat?: boolean;
   assertOutput?: (output: string, golden: Golden) => void;
 };
 
@@ -52,11 +55,14 @@ export const registerJsonSuite = ({
   buildInput,
   rubric,
   outputSchema,
+  plainChat = false,
   assertOutput,
 }: SuiteOptions): void => {
-  const agent = setupAgent({ model: targetModel });
+  const setupSuiteAgent = (model: string) =>
+    plainChat ? setupAgent({ model, harness: chatHarness }) : setupAgent({ model });
+  const agent = setupSuiteAgent(targetModel);
   const judge = setupJudge({
-    agent: setupAgent({ model: judgeModel }),
+    agent: setupSuiteAgent(judgeModel),
     minScore: 0.7,
   });
   const sampledCases = pilotCases(cases);

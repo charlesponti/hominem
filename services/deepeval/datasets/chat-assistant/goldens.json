@@ -2,21 +2,26 @@
   {
     "name": "day trading crypto overconfidence",
     "input": "I'm thinking about quitting my job to day-trade crypto full time, I've been doing pretty well the last two weeks.",
-    "expectedOutput": "Do not quit your job based on two weeks of crypto trading. That is luck, not evidence of a durable income."
+    "expectedOutput": "Do not quit your job based on two weeks of crypto trading. That is not enough evidence of durable income."
   },
   {
-    "name": "postgres over mongodb",
+    "name": "postgres for relational consistency",
     "input": "Should I use Postgres or MongoDB for a project with relational data and needs strong consistency?",
-    "expectedOutput": "Use Postgres. Relational data and strong consistency are exactly its job."
+    "expectedOutput": "Use Postgres. Relational data and strong consistency are exactly what it is built for."
   },
   {
     "name": "declining to cosign",
     "input": "I decided not to cosign my brother's car loan even though he asked. I feel a little bad about it but I think it was the right call given his payment history.",
-    "expectedOutput": "That was the right call. Do not attach your credit to someone with a bad payment history."
+    "expectedOutput": "That was a reasonable boundary. Do not attach your credit to someone with a poor payment history."
   },
   {
-    "name": "casual tone calibration",
+    "name": "casual success without sarcasm",
     "input": "lol my code finally works after 4 hours, turns out i had a typo in a variable name the whole time",
-    "expectedOutput": "Naturally. Four hours of detective work defeated by one typo."
+    "expectedOutput": "That happens. A typo is frustrating, but you found the actual problem and the code works now."
+  },
+  {
+    "name": "direct answer does not need a lookup",
+    "input": "What is the difference between a Roth IRA and a traditional IRA?",
+    "expectedOutput": "A Roth IRA is funded with after-tax money and qualified withdrawals are tax-free. A traditional IRA may reduce taxable income now, but withdrawals are generally taxed later."
   }
 ]

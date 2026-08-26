@@ -4,9 +4,10 @@ This service contains parallel Ori versions of the nine evaluation suites in
 `services/deepeval`. The original DeepEval service remains unchanged while the
 results are compared.
 
-The datasets under `data/` are versioned snapshots. Keep regression and holdout
-fixtures separate, and add confirmed production failures to regression data
-without moving holdout cases.
+The datasets under `data/` are versioned snapshots. The chat-assistant prompt is
+a snapshot of `services/api/src/rpc/prompts.ts`; the API parity test makes drift
+fail loudly. Keep regression and holdout fixtures separate, and add confirmed
+production failures to regression data without moving holdout cases.
 
 Run the discovery check without spending model credits:
 

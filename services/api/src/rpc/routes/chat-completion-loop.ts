@@ -30,6 +30,13 @@ export type ChatGenerationLiveEvent =
     }
   | { type: 'phase'; phase: 'generating' };
 
+export type ChatToolRuntime = {
+  callTool: typeof callTool;
+  getToolDefinition: typeof getToolDefinition;
+};
+
+const productionToolRuntime: ChatToolRuntime = { callTool, getToolDefinition };
+
 function canonicalizeToolArgs(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalizeToolArgs);
   if (value && typeof value === 'object') {
@@ -93,6 +100,8 @@ export interface RunCompletionWithToolsInput {
   reasoning?: ChatRequest['reasoning'];
   maxIterations?: number;
   requiresToolCall?: boolean;
+  /** Allows hermetic route tests to exercise the production loop with fixture tools. */
+  toolRuntime?: ChatToolRuntime;
   onEvent?: (event: ChatGenerationLiveEvent) => Promise<void> | void;
 }
 
@@ -182,6 +191,7 @@ export async function runCompletionWithTools(
   input: RunCompletionWithToolsInput,
 ): Promise<RunCompletionWithToolsResult> {
   const messages = [...input.messages];
+  const toolRuntime = input.toolRuntime ?? productionToolRuntime;
   const maxIterations = input.maxIterations ?? DEFAULT_MAX_ITERATIONS;
   const toolCallRecords: ChatMessageToolCallRecord[] = [];
   // This cache intentionally lives only for one generation. Read-only tools can
@@ -236,7 +246,7 @@ export async function runCompletionWithTools(
     // executing it (or any other call from this same turn) — surface it to
     // the caller so a confirmation prompt can be shown before anything runs.
     const gatedCall = requestedToolCalls.find(
-      (call) => getToolDefinition(call.name)?.requiresConfirmation,
+      (call) => toolRuntime.getToolDefinition(call.name)?.requiresConfirmation,
     );
     if (gatedCall) {
       let parsedArgs: Record<string, unknown> = {};
@@ -245,7 +255,7 @@ export async function runCompletionWithTools(
       } catch {
         parsedArgs = {};
       }
-      const definition = getToolDefinition(gatedCall.name);
+      const definition = toolRuntime.getToolDefinition(gatedCall.name);
       const preview = definition?.preview
         ? await definition.preview(input.userId, parsedArgs).catch(() => null)
         : null;
@@ -296,7 +306,7 @@ export async function runCompletionWithTools(
           };
         }
 
-        const definition = getToolDefinition(call.name);
+        const definition = toolRuntime.getToolDefinition(call.name);
         if (input.onEvent)
           await input.onEvent({
             type: 'tool-step',
@@ -318,7 +328,7 @@ export async function runCompletionWithTools(
               toolName: call.name,
               status: 'running',
             });
-          resultPromise = callTool(input.userId, call.name, parsedArgs);
+          resultPromise = toolRuntime.callTool(input.userId, call.name, parsedArgs);
           if (cacheKey) {
             resultPromise = resultPromise.catch((error: unknown) => {
               readOnlyToolResults.delete(cacheKey);

@@ -20,8 +20,8 @@ const metrics = [
     name: 'Assistant persona and answer quality',
     evaluationSteps: [
       'Check that the response gives the correct substantive answer from expected output.',
-      'Require a direct, concise, grounded, blunt tone appropriate to the user message.',
-      'Reject corporate hedging, excessive reassurance, generic advice, needless padding, and invented claims.',
+      'Require a direct, concise, calm, respectful, and grounded tone appropriate to the user message.',
+      'Reject mockery, sarcasm, corporate hedging, excessive reassurance, generic advice, needless padding, and invented claims.',
     ],
     evaluationParams: [
       SingleTurnParams.INPUT,
@@ -38,7 +38,12 @@ describe('chat assistant', () => {
     if (!(golden instanceof Golden)) throw new Error('Chat assistant dataset must be single-turn');
     it(golden.name ?? golden.input, async () => {
       await expect(golden).toPass(metrics, {
-        task: (testCase) => runTarget(renderMessages(prompt, { user_message: testCase.input })),
+        task: async (testCase) => {
+          const output = await runTarget(renderMessages(prompt, { user_message: testCase.input }));
+          expect(output.trim()).not.toBe('');
+          expect(output.length).toBeLessThanOrEqual(400);
+          return output;
+        },
       });
     });
   }
