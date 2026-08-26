@@ -45,18 +45,7 @@ export function ChatScreen({ id }: { id: string }) {
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
 
-  const source = useMemo<SessionSource>(() => {
-    if (activeChat?.noteId) {
-      return {
-        kind: 'artifact',
-        id: activeChat.noteId,
-        title: activeChat.title,
-        type: 'note',
-      };
-    }
-
-    return { kind: 'new' };
-  }, [activeChat]);
+  const source: SessionSource = { kind: 'new' };
 
   const handleContentCreated = useCallback(
     async (content: ExtractedTasksCreated) => {

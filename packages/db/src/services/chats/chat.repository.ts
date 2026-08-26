@@ -26,7 +26,6 @@ export interface ChatRecord {
   id: string;
   userId: string;
   title: string;
-  noteId: string | null;
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -104,7 +103,6 @@ function toChatRecord(row: ChatRow): ChatRecord {
     id: row.id,
     userId: row.ownerUserid,
     title: row.title,
-    noteId: row.noteId ?? null,
     archivedAt: row.archivedAt ? new Date(row.archivedAt).toISOString() : null,
     createdAt: new Date(row.createdat).toISOString(),
     updatedAt: new Date(row.updatedat).toISOString(),
@@ -287,20 +285,6 @@ export const ChatRepository = {
   },
 
   /**
-   * Get a chat by note ID with ownership enforcement.
-   */
-  async getByNoteId(handle: DbHandle, noteId: string, userId: string): Promise<ChatRecord | null> {
-    const chat = await handle
-      .selectFrom('app.chats')
-      .selectAll()
-      .where('noteId', '=', noteId)
-      .where('ownerUserid', '=', userId)
-      .executeTakeFirst();
-
-    return chat ? toChatRecord(chat) : null;
-  },
-
-  /**
    * List non-archived chats for a user, ordered by last message.
    */
   async listForUser(
@@ -328,14 +312,13 @@ export const ChatRepository = {
    */
   async create(
     handle: DbHandle,
-    input: { userId: string; title: string; noteId?: string | null; archivedAt?: string | null },
+    input: { userId: string; title: string; archivedAt?: string | null },
   ): Promise<ChatRecord> {
     const chat = await handle
       .insertInto('app.chats')
       .values({
         ownerUserid: input.userId,
         title: input.title,
-        noteId: input.noteId ?? null,
         archivedAt: input.archivedAt ?? null,
       })
       .returningAll()
@@ -377,36 +360,6 @@ export const ChatRepository = {
       .executeTakeFirstOrThrow();
 
     return toChatRecord(archived);
-  },
-
-  /**
-   * Delete a chat by ID with ownership enforcement.
-   */
-  async delete(handle: DbHandle, chatId: string, userId: string): Promise<void> {
-    await handle
-      .deleteFrom('app.chats')
-      .where('id', '=', chatId)
-      .where('ownerUserid', '=', userId)
-      .execute();
-  },
-
-  /**
-   * Delete all messages for a chat after checking ownership.
-   */
-  async clearMessages(handle: DbHandle, chatId: string, userId: string): Promise<boolean> {
-    const existing = await handle
-      .selectFrom('app.chats')
-      .select('id')
-      .where('id', '=', chatId)
-      .where('ownerUserid', '=', userId)
-      .executeTakeFirst();
-
-    if (!existing) {
-      return false;
-    }
-
-    await handle.deleteFrom('app.chatMessages').where('chatId', '=', chatId).execute();
-    return true;
   },
 
   /**

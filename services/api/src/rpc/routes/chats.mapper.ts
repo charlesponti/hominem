@@ -10,7 +10,6 @@ export function toChatDto(record: ChatRecord) {
     id: record.id,
     userId: record.userId,
     title: record.title,
-    noteId: record.noteId,
     archivedAt: record.archivedAt,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
