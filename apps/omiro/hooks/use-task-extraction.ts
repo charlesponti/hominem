@@ -46,7 +46,7 @@ export function buildExtractedTasksProposal(previewContent: string, tasks: { tit
 // useChatLifecycle, and creates the tasks in a batch on accept.
 //
 // "Save as note" is a separate flow -- ChatScreen intercepts that menu
-// item before it ever calls handleExtract, and routes to note-draft-sheet.tsx
+// item before it ever calls handleExtract, and routes to chat-to-note-sheet.tsx
 // instead (an AI rewrite, not this hook's deterministic transcript-to-artifact path).
 // Since TRANSFORM_ITEMS in conversation-actions.model.ts only offers 'note' and
 // 'task_list', and 'note' never reaches here, onTransform below only ever

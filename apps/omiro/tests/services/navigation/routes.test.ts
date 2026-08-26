@@ -21,8 +21,8 @@ describe('protected routes', () => {
     expect(TIME_ROUTE).toBe('/(protected)/time');
     expect(SETTINGS_ROUTE).toBe('/(protected)/settings');
     expect(ARCHIVED_CHATS_ROUTE).toBe('/(protected)/settings/archived-chats');
-    expect(getContentRoute('chat', 'chat-1')).toBe('/(protected)/inbox/chat/chat-1');
-    expect(getContentRoute('note', 'note-1')).toBe('/(protected)/inbox/note/note-1');
+    expect(getContentRoute('chat', 'chat-1')).toBe('/(protected)/chats/chat-1');
+    expect(getContentRoute('note', 'note-1')).toBe('/(protected)/notes/note-1');
   });
 
   it('rejects an empty content id', () => {

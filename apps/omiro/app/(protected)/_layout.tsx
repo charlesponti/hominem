@@ -91,9 +91,9 @@ function ProtectedShell() {
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="new-chat" />
-            <Stack.Screen name="chats" />
+            <Stack.Screen name="chats" options={{ headerShown: false }} />
             <Stack.Screen name="all" options={{ headerShown: false }} />
-            <Stack.Screen name="inbox" options={{ headerShown: false }} />
+            <Stack.Screen name="notes" options={{ headerShown: false }} />
             <Stack.Screen name="time" options={{ headerShown: false }} />
             <Stack.Screen
               name="settings/index"
@@ -114,7 +114,7 @@ function ProtectedShell() {
               }}
             />
             <Stack.Screen
-              name="note-draft-sheet"
+              name="chat-to-note-sheet"
               options={{
                 headerShown: false,
                 presentation: 'formSheet',

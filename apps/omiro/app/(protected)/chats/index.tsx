@@ -9,7 +9,13 @@ export default function ChatsRoute() {
 
   return (
     <>
-      <Stack.Screen options={{ headerLeft: () => <NavDrawerMenuButton />, title: 'Chats' }} />
+      <Stack.Screen
+        options={{
+          headerLeft: () => <NavDrawerMenuButton />,
+          headerShown: true,
+          title: 'Chats',
+        }}
+      />
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           accessibilityLabel="New chat"

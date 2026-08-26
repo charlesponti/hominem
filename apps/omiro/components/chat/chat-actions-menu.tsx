@@ -127,7 +127,7 @@ export function ChatActionsMenu({
                     }
 
                     router.push({
-                      pathname: '/note-draft-sheet',
+                      pathname: '/chat-to-note-sheet',
                       params: {
                         transcript: draft.transcript,
                         title: draft.title,

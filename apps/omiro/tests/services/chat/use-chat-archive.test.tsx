@@ -52,7 +52,7 @@ function seedInboxPage(queryClient: ReturnType<typeof renderHookWithQueryClient>
       title: 'A chat',
       preview: null,
       updatedAt: new Date().toISOString(),
-      route: '/(protected)/inbox/chat/chat-1',
+      route: '/(protected)/chats/chat-1',
       variant: 'conversation',
     },
   });

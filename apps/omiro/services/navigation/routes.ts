@@ -37,5 +37,7 @@ export function getContentRoute(kind: ContentKind, id: string) {
     throw new Error('Content route requires an id');
   }
 
-  return `/(protected)/inbox/${kind}/${id}`;
+  return kind === 'chat'
+    ? `/(protected)/chats/${encodeURIComponent(id)}`
+    : `/(protected)/notes/${encodeURIComponent(id)}`;
 }

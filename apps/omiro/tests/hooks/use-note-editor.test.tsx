@@ -83,7 +83,7 @@ function seedInboxEntity(queryClient: ReturnType<typeof renderHookWithQueryClien
       title: 'Original title',
       preview: 'Original content',
       updatedAt: new Date().toISOString(),
-      route: `/(protected)/inbox/note/${NOTE_ID}`,
+      route: `/(protected)/notes/${NOTE_ID}`,
       variant: 'note',
     },
   });

@@ -26,7 +26,7 @@ type NoteDraftPhase =
   | { kind: 'preview'; text: string }
   | { kind: 'error'; message: string };
 
-export default function NoteDraftSheetScreen() {
+export default function ChatToNoteSheetScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const params = useLocalSearchParams<{

@@ -78,7 +78,7 @@ describe('useTaskExtraction', () => {
     expect(result.current.isReviewVisible).toBe(false);
   });
 
-  it('surfaces an unsupported-extraction error via Alert for note (routes through note-draft-sheet.tsx instead)', async () => {
+  it('surfaces an unsupported-extraction error via Alert for note (routes through chat-to-note-sheet.tsx instead)', async () => {
     const { result } = renderTaskExtraction();
 
     await act(async () => {
