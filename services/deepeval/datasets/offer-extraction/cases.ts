@@ -55,7 +55,8 @@ export const CASES: OfferCase[] = [
   },
   {
     caseId: 'person-profile',
-    notes: 'Currently in LA, single, 40k savings, 80k in 401k, spend about 7k a month total, have a dog',
+    notes:
+      'Currently in LA, single, 40k savings, 80k in 401k, spend about 7k a month total, have a dog',
   },
   {
     caseId: 'multi-offer',
@@ -188,7 +189,8 @@ export const CASES: OfferCase[] = [
   },
   {
     caseId: 'signon-heavy',
-    notes: '300k base, San Francisco, 50k sign-on bonus, RSU 200k over 4 years, 1yr cliff quarterly vest',
+    notes:
+      '300k base, San Francisco, 50k sign-on bonus, RSU 200k over 4 years, 1yr cliff quarterly vest',
     expectedCurrency: 'USD',
     expectedLocation: 'san francisco',
     expectedBase: 300000,
@@ -250,7 +252,8 @@ export const CASES: OfferCase[] = [
   },
   {
     caseId: 'equity-iso-vs-nso',
-    notes: '220k base, 50k NSO grant at current FMV $10/share, strike price $15, 4yr monthly vest, no cliff',
+    notes:
+      '220k base, 50k NSO grant at current FMV $10/share, strike price $15, 4yr monthly vest, no cliff',
     expectEquity: true,
     expectedReason: 'Correctly extracts NSO details with FMV, strike, vesting schedule',
   },

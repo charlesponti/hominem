@@ -217,7 +217,8 @@ export const REGRESSION_CASES: TimeBlockCase[] = [
     caseId: 'move-meeting-time',
     referenceDateTime: '2026-07-25T11:17:00-07:00',
     timezone: 'America/Los_Angeles',
-    calendarContext: 'Existing event: planning meeting from 2026-07-26T14:00:00-07:00 to 2026-07-26T15:00:00-07:00.',
+    calendarContext:
+      'Existing event: planning meeting from 2026-07-26T14:00:00-07:00 to 2026-07-26T15:00:00-07:00.',
     conversationContext: 'None.',
     input: 'Move my 2 PM meeting to 4 PM',
     expectedIntent: 'edit_event',

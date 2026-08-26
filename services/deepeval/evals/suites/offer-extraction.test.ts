@@ -18,28 +18,29 @@ const prompt = loadTextPrompt(
 const dataset = new EvaluationDataset({ goldens: goldens.map((golden) => new Golden(golden)) });
 const nullableString = z.string().nullable();
 const nullableNumber = z.number().nullable();
+const nullableBoolean = z.boolean().nullable();
 const offerSchema = z
   .object({
     baseSalary: nullableNumber,
     currency: nullableString,
     currencyAmbiguous: z.boolean(),
     location: nullableString,
-    hasEquity: z.boolean(),
+    hasEquity: nullableBoolean,
     equityType: nullableString,
     equityValue: nullableNumber,
     equityGrantTotal: nullableNumber,
     equityVestingYears: nullableNumber,
     equityCliff: nullableNumber,
     equityVestingFrequency: nullableString,
-    hasBonus: z.boolean(),
+    hasBonus: nullableBoolean,
     bonusTargetPct: nullableNumber,
     bonusFrequency: nullableString,
-    hasRelocation: z.boolean(),
+    hasRelocation: nullableBoolean,
     relocationAllowance: nullableNumber,
     relocationCurrency: nullableString,
-    requiresVisa: z.boolean(),
+    requiresVisa: nullableBoolean,
     visaType: nullableString,
-    employerCoversVisa: z.boolean(),
+    employerCoversVisa: nullableBoolean,
     startDate: nullableString,
     employmentType: z.enum(['employee', 'contractor']).nullable(),
   })
