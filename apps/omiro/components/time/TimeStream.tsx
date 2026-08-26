@@ -75,25 +75,27 @@ export const TimeStream = memo(function TimeStream({
     onError(message);
   }, [error, onError]);
 
+  const handleToggleTask = useCallback(
+    (item: TimeItem) => {
+      if (item.kind === 'task') {
+        toggleTask({ completed: item.value.status !== 'completed', taskId: item.value.id });
+      }
+    },
+    [toggleTask],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: TimeStreamRenderRow }) => {
       return (
         <TimeRow
           item={item.item}
-          onOpen={() => onOpenItem(item.item)}
-          onToggleTask={() => {
-            if (item.item.kind === 'task') {
-              toggleTask({
-                completed: item.item.value.status !== 'completed',
-                taskId: item.item.value.id,
-              });
-            }
-          }}
+          onOpen={onOpenItem}
+          onToggleTask={handleToggleTask}
           showDayLabel={item.showDayLabel}
         />
       );
     },
-    [onOpenItem, toggleTask],
+    [handleToggleTask, onOpenItem],
   );
 
   const isLoadingEvents = scenario ? false : calendar.isLoadingEvents;

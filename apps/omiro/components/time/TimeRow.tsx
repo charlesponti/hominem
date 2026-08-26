@@ -10,12 +10,17 @@ import { accentTokenIndex, dayLabel, eventTimeParts, itemDate, taskTimeParts } f
 
 interface TimeRowProps {
   item: TimeItem;
-  onOpen: () => void;
-  onToggleTask: () => void;
+  onOpen: (item: TimeItem) => void;
+  onToggleTask: (item: TimeItem) => void;
   showDayLabel: boolean;
 }
 
-export const TimeRow = memo(function TimeRow({ item, onToggleTask, showDayLabel }: TimeRowProps) {
+export const TimeRow = memo(function TimeRow({
+  item,
+  onOpen,
+  onToggleTask,
+  showDayLabel,
+}: TimeRowProps) {
   const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useThemeColor([
     '--color-chart-1',
     '--color-chart-2',
@@ -52,6 +57,7 @@ export const TimeRow = memo(function TimeRow({ item, onToggleTask, showDayLabel 
       <Pressable
         accessibilityLabel={item.value.title}
         accessibilityRole="button"
+        onPress={() => onOpen(item)}
         style={({ pressed }) => [styles.itemRow, pressed && { backgroundColor: muted }]}
         testID={`time-item-${item.kind}-${item.value.id}`}
       >
@@ -84,7 +90,7 @@ export const TimeRow = memo(function TimeRow({ item, onToggleTask, showDayLabel 
         {isTask ? (
           <IconButton
             accessibilityLabel={completed ? 'Mark task incomplete' : 'Mark task complete'}
-            onPress={onToggleTask}
+            onPress={() => onToggleTask(item)}
             testID={`time-item-task-${item.value.id}-toggle`}
             variant="plain"
           >
