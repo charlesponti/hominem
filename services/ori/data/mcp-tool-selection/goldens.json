@@ -38,5 +38,17 @@
     "expectedOutput": "A concise answer grounded in both the user's calendar and career records.",
     "expectedTools": [{ "name": "calendar_upcoming" }, { "name": "get_career_portfolio" }],
     "expectedOutputIncludes": ["Staff Engineer", "Hominem"]
+  },
+  {
+    "name": "trip briefing plans conditional lookups across all domains",
+    "input": "Prepare a concise personal briefing for an upcoming Tokyo trip. First check my upcoming calendar for the next 30 days and my travel history. If Tokyo appears in my travel history, check my place-visit history. Then retrieve my work experience and suggest how my engineering background is relevant to the trip. Clearly separate facts from suggestions, mention when a lookup returns no records, and do not invent details.",
+    "expectedOutput": "A grounded briefing that follows the requested lookup sequence, reports empty results, and separates facts from suggestions.",
+    "expectedTools": [
+      { "name": "calendar_upcoming" },
+      { "name": "trip_history" },
+      { "name": "place_visit_history" },
+      { "name": "get_career_portfolio" }
+    ],
+    "expectedOutputIncludes": ["Tokyo", "London", "Staff Engineer", "Hominem"]
   }
 ]
