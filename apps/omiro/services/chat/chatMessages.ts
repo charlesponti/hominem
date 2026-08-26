@@ -25,8 +25,6 @@ export function createOptimisticMessage(
     created_at: new Date().toISOString(),
     chat_id: chatId,
     profile_id: '',
-    focus_ids: null,
-    focus_items: null,
     reasoning: null,
     referencedNotes,
     toolCalls: null,

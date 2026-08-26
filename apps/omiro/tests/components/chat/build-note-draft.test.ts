@@ -16,8 +16,6 @@ function makeMessage(overrides: Partial<ChatMessageItem>): ChatMessageItem {
     created_at: '2024-01-01T00:00:00.000Z',
     chat_id: 'chat-1',
     profile_id: 'profile-1',
-    focus_ids: null,
-    focus_items: null,
     referencedNotes: null,
     toolCalls: null,
     ...overrides,

@@ -113,8 +113,6 @@ describe('useChatMessages', () => {
       created_at: new Date().toISOString(),
       chat_id: CHAT_ID,
       profile_id: '',
-      focus_ids: null,
-      focus_items: null,
       referencedNotes: null,
       toolCalls: null,
       isStreaming: false,

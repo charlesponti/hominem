@@ -26,8 +26,6 @@ export interface ChatMessageItem {
   created_at: string;
   chat_id: string;
   profile_id: string;
-  focus_ids: string[] | null;
-  focus_items: Array<{ id: string; text: string }> | null;
   reasoning?: string | null;
   referencedNotes: ChatMessageReferencedNote[] | null;
   toolCalls: ChatMessageToolCall[] | null;

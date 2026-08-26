@@ -22,8 +22,6 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     created_at: message.createdAt,
     chat_id: message.chatId,
     profile_id: '',
-    focus_ids: null,
-    focus_items: null,
     reasoning: message.reasoning,
     referencedNotes: message.referencedNotes ?? null,
     toolCalls: message.toolCalls ?? null,

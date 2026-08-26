@@ -22,7 +22,6 @@ import { ActiveMessageActions } from './chat-message-actions';
 import { MessageContent } from './chat-message-content';
 import { MessageDebug } from './chat-message-debug';
 import { MessageEditModal } from './chat-message-edit-modal';
-import { FocusItems } from './chat-message-focus-items';
 import { ReferencedNotes } from './chat-message-referenced-notes';
 import { MessageToolCalls } from './chat-message-tool-calls';
 import { useChatMotionOverlay } from './chat-motion-overlay';
@@ -204,8 +203,6 @@ export const ChatMessage = memo(function ChatMessage({
           {showDebug && !isStreaming ? (
             <MessageDebug hasReasoning={hasReasoning} message={message} />
           ) : null}
-
-          {!isStreaming ? <FocusItems message={message} /> : null}
         </View>
       </Pressable>
       <ActiveMessageActions
