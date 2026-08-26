@@ -13,9 +13,13 @@ export function createComposerMessageStore(initialMessage = ''): ComposerMessage
   return {
     getMessage: () => message,
     setMessage: (next) => {
-      if (next === message) return;
+      if (next === message) {
+        return;
+      }
       message = next;
-      for (const listener of listeners) listener();
+      for (const listener of listeners) {
+        listener();
+      }
     },
     subscribe: (listener) => {
       listeners.add(listener);

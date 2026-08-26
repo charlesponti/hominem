@@ -56,5 +56,5 @@ export function updateChatTitleCaches(
       : currentChat,
   );
   patchInboxEntity(queryClient, { kind: 'chat', entityId: chatId }, { title, updatedAt });
-  void invalidateInboxQueries(queryClient);
+  invalidateInboxQueries(queryClient).catch(() => undefined);
 }

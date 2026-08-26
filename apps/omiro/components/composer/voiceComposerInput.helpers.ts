@@ -19,7 +19,9 @@ export interface VoiceComposerErrorPresentation {
 // be layered onto text the user already typed.
 export function mergeTranscriptIntoDraft(message: string, transcript: string) {
   const trimmedMessage = message.trimEnd();
-  if (!trimmedMessage) return transcript;
+  if (!trimmedMessage) {
+    return transcript;
+  }
   return `${trimmedMessage}\n${transcript}`;
 }
 
@@ -28,7 +30,9 @@ export function mergeTranscriptIntoDraft(message: string, transcript: string) {
 // there's nothing left to safely replace.
 export function replaceTranscriptInDraft(draft: string, rawText: string, cleanedText: string) {
   const suffix = draft.endsWith(rawText) ? rawText : null;
-  if (!suffix) return draft;
+  if (!suffix) {
+    return draft;
+  }
 
   return `${draft.slice(0, -rawText.length)}${cleanedText}`;
 }
@@ -44,8 +48,12 @@ export function maybeApplyCleanedTranscript(input: {
   cleanedText: string;
   changed: boolean;
 }) {
-  if (!input.changed) return input.currentDraft;
-  if (input.currentDraft !== input.insertedDraft) return input.currentDraft;
+  if (!input.changed) {
+    return input.currentDraft;
+  }
+  if (input.currentDraft !== input.insertedDraft) {
+    return input.currentDraft;
+  }
 
   return replaceTranscriptInDraft(input.insertedDraft, input.rawText, input.cleanedText);
 }
@@ -56,10 +64,18 @@ export function deriveVoiceComposerState(input: {
   isCleaningVoice: boolean;
   error: VoiceComposerError | null;
 }): VoiceComposerState {
-  if (input.error) return 'failed';
-  if (input.isCleaningVoice) return 'cleaning';
-  if (input.isTranscribing) return 'transcribing';
-  if (input.isRecording) return 'recording';
+  if (input.error) {
+    return 'failed';
+  }
+  if (input.isCleaningVoice) {
+    return 'cleaning';
+  }
+  if (input.isTranscribing) {
+    return 'transcribing';
+  }
+  if (input.isRecording) {
+    return 'recording';
+  }
   return 'idle';
 }
 
