@@ -33,12 +33,13 @@ export function ChatMessageSearch({
       aria-hidden={!isOpen}
       data-chat-search
       className={cn(
-        'absolute inset-0 z-10 flex min-w-0 items-center transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:transform-none',
+        'absolute inset-0 z-10 flex min-w-0 items-center transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        'motion-reduce:transition-none motion-reduce:transform-none',
         isOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-2 opacity-0',
       )}
     >
       <div className="relative flex min-w-0 flex-1 items-center overflow-hidden rounded-full border border-border bg-muted">
-        <div className="flex shrink-0 items-center justify-center px-2.5 text-secondary">
+        <div className="flex shrink-0 items-center justify-center px-2.5">
           <Search aria-hidden="true" size={15} />
         </div>
         <Input
@@ -52,10 +53,11 @@ export function ChatMessageSearch({
         />
         <Button
           aria-label="Close message search"
-          className="mr-0.5 size-6 rounded-full text-primary hover:bg-destructive/80"
+          className="shrink-0 rounded-full mr-1 my-1"
           onClick={onClose}
           size="icon-sm"
           type="button"
+          variant="destructive"
         >
           <X aria-hidden="true" size={14} />
         </Button>
