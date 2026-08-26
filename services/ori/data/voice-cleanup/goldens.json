@@ -1,0 +1,22 @@
+[
+  {
+    "name": "dry cleaning and call reminder",
+    "input": "um so like i need to uh pick up the the dry cleaning tomorrow and also um call john about the uh about the meeting on thursday i think it's at like 3pm or something",
+    "expectedOutput": "{\"cleanedText\":\"I need to pick up the dry cleaning tomorrow and call John about the meeting on Thursday at 3 PM.\"}"
+  },
+  {
+    "name": "repeated words",
+    "input": "i i need to call call the the bank about about my account tomorrow",
+    "expectedOutput": "{\"cleanedText\":\"I need to call the bank about my account tomorrow.\"}"
+  },
+  {
+    "name": "invoice ordinal date",
+    "input": "remind sarah that the invoice number is uh four five two one and it's due on the fifteenth",
+    "expectedOutput": "{\"cleanedText\":\"Remind Sarah that the invoice number is 4521 and it's due on the 15th.\"}"
+  },
+  {
+    "name": "already clean transcript",
+    "input": "Pick up milk and eggs on the way home.",
+    "expectedOutput": "{\"cleanedText\":\"Pick up milk and eggs on the way home.\"}"
+  }
+]

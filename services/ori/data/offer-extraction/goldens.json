@@ -1,0 +1,162 @@
+[
+  {
+    "name": "la-baseline",
+    "input": "215k base salary, Los Angeles, single filer, 40k savings, 80k 401k",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":215000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"los angeles\",\"hasEquity\":null,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":null,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":\"los angeles\",\"filingStatus\":\"single\",\"currentSavings\":40000,\"currentRetirement\":80000,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "london-offer",
+    "input": "140k gbp, London, Tate Modern office, Skilled Worker visa, employer covers NHS surcharge, 4k relocation, single person",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":140000,\"currency\":\"GBP\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":true,\"relocationAllowance\":4000,\"relocationCurrency\":\"GBP\",\"requiresVisa\":true,\"visaType\":\"skilled-worker\",\"employerCoversVisa\":true,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":\"london\",\"filingStatus\":\"single\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "users-offer-notes",
+    "input": "135k, 30% of base equity over 4 years, (50k) 1 year 15%, bi annual bonus, quarterly performance reviews, visa, 4k relocation, Tate Modern",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":135000,\"currency\":\"GBP\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":true,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":40500,\"equityVestingYears\":4,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"bi-annual\",\"hasRelocation\":true,\"relocationAllowance\":4000,\"relocationCurrency\":\"GBP\",\"requiresVisa\":true,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":\"london\",\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "ambiguous-currency",
+    "input": "135k salary, London office, 10% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":135000,\"currency\":\"GBP\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "contradictory-currency",
+    "input": "$135k salary, London office, 10% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":135000,\"currency\":\"GBP\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "partial-info",
+    "input": "200k base, senior engineer, NYC",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":200000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"new-york\",\"hasEquity\":null,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":null,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "landmark-fidi",
+    "input": "250k base, FiDi office, 15% annual bonus, married",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":250000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"new-york\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":\"married\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "equity-rsu-cliff",
+    "input": "300k base, 100k RSU grant over 4 years, 1 year cliff, quarterly vest, San Francisco",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":300000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"san-francisco\",\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":100000,\"equityGrantTotal\":100000,\"equityVestingYears\":4,\"equityCliff\":1,\"equityVestingFrequency\":\"quarterly\",\"hasBonus\":null,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "contractor",
+    "input": "175k contractor rate, no benefits, Austin Texas, single, 50k savings",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":175000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"austin\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"contractor\"}],\"person\":{\"homeCity\":null,\"filingStatus\":\"single\",\"currentSavings\":50000,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "person-profile",
+    "input": "Currently in LA, single, 40k savings, 80k in 401k, spend about 7k a month total, have a dog",
+    "expectedOutput": "{\"offers\":[],\"person\":{\"homeCity\":\"los angeles\",\"filingStatus\":\"single\",\"currentSavings\":40000,\"currentRetirement\":80000,\"currentMonthlySpend\":7000,\"petCount\":1}}"
+  },
+  {
+    "name": "multi-offer",
+    "input": "Offer A: 220k, NYC, 15% bonus, no equity. Offer B: 240k, SF, 10% bonus, 50k RSU grant over 4 years. Single, no pets.",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":220000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"new-york\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"},{\"baseSalary\":240000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"san-francisco\",\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":50000,\"equityGrantTotal\":50000,\"equityVestingYears\":4,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":\"single\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":0}}"
+  },
+  {
+    "name": "tokyo-jpy",
+    "input": "18 million yen, Tokyo, Roppongi office, no bonus, no relocation, single",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":18000000,\"currency\":\"JPY\",\"currencyAmbiguous\":false,\"location\":\"tokyo\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":\"single\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "singapore-sgd",
+    "input": "SGD 250k, Singapore, Marina Bay, 15% bonus, 50k RSU grant over 3 years",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":250000,\"currency\":\"SGD\",\"currencyAmbiguous\":false,\"location\":\"singapore\",\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":50000,\"equityGrantTotal\":50000,\"equityVestingYears\":3,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "sydney-aud",
+    "input": "200k base, Sydney, 10% bonus, super included, start March 2027",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":200000,\"currency\":\"AUD\",\"currencyAmbiguous\":false,\"location\":\"sydney\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":\"March 2027\",\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "berlin-eur",
+    "input": "€120k, Berlin, 5% annual bonus, 30 days PTO",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":120000,\"currency\":\"EUR\",\"currencyAmbiguous\":false,\"location\":\"berlin\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":5,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "paris-eur",
+    "input": "€150k base, Paris office near Opera, 20% target bonus, ISO options grant",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":150000,\"currency\":\"EUR\",\"currencyAmbiguous\":false,\"location\":\"paris\",\"hasEquity\":true,\"equityType\":\"iso\",\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":20,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "dubai-aed",
+    "input": "500k AED, Dubai, DIFC, no income tax, 10% bonus, married",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":500000,\"currency\":\"AED\",\"currencyAmbiguous\":false,\"location\":\"dubai\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":\"married\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "zurich-chf",
+    "input": "220k CHF, Zurich, 10% pension contribution, 15% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":220000,\"currency\":\"CHF\",\"currencyAmbiguous\":false,\"location\":\"zurich\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "toronto-cad",
+    "input": "180k CAD, Toronto, Yonge and Bloor, 5k relocation, RRSP match 4%",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":180000,\"currency\":\"CAD\",\"currencyAmbiguous\":false,\"location\":\"toronto\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":true,\"relocationAllowance\":5000,\"relocationCurrency\":\"CAD\",\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "bangalore-inr",
+    "input": "4M INR, Bangalore, Whitefield office, 10% bonus, stock options",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":4000000,\"currency\":\"INR\",\"currencyAmbiguous\":false,\"location\":\"bangalore\",\"hasEquity\":true,\"equityType\":\"stock options\",\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "sao-paulo-brl",
+    "input": "400k BRL, São Paulo, Faria Lima, 15% bonus, 30 days vacation",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":400000,\"currency\":\"BRL\",\"currencyAmbiguous\":false,\"location\":\"sao paulo\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "seattle-usd",
+    "input": "$250k base, Seattle, 100k RSU over 4 years graded, 15% bonus, married filing jointly",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":250000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"seattle\",\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":100000,\"equityGrantTotal\":100000,\"equityVestingYears\":4,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":\"married\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "london-ontario",
+    "input": "150k, London Ontario Canada, software engineer, 10% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":150000,\"currency\":\"CAD\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "hourly-contractor",
+    "input": "$150 per hour, New York City, 6 month contract, no benefits, single",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":312000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"new-york\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"contractor\"}],\"person\":{\"homeCity\":null,\"filingStatus\":\"single\",\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "signon-heavy",
+    "input": "300k base, San Francisco, 50k sign-on bonus, RSU 200k over 4 years, 1yr cliff quarterly vest",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":300000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":\"san-francisco\",\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":200000,\"equityGrantTotal\":200000,\"equityVestingYears\":4,\"equityCliff\":1,\"equityVestingFrequency\":\"quarterly\",\"hasBonus\":true,\"bonusTargetPct\":null,\"bonusFrequency\":\"one-time\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "dublin-eur",
+    "input": "€130k, Dublin, Google office, 10% bonus, 5k relocation",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":130000,\"currency\":\"EUR\",\"currencyAmbiguous\":false,\"location\":\"dublin\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":true,\"relocationAllowance\":5000,\"relocationCurrency\":\"EUR\",\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "amsterdam-eur",
+    "input": "€140k base, Amsterdam, 30% ruling, 8% annual bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":140000,\"currency\":\"EUR\",\"currencyAmbiguous\":false,\"location\":\"amsterdam\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":8,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":false,\"visaType\":null,\"employerCoversVisa\":false,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "stockholm-sek",
+    "input": "1.2 million SEK, Stockholm, 12% pension, 10% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":1200000,\"currency\":\"SEK\",\"currencyAmbiguous\":false,\"location\":\"stockholm\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "cape-town-zar",
+    "input": "1.8M ZAR, Cape Town, Waterfront office, remote-friendly, 10% bonus",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":1800000,\"currency\":\"ZAR\",\"currencyAmbiguous\":false,\"location\":\"cape town\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":10,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "no-location",
+    "input": "Total comp 350k, RSUs, 15% bonus, fully remote — location TBD",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":350000,\"currency\":null,\"currencyAmbiguous\":false,\"location\":null,\"hasEquity\":true,\"equityType\":\"rsu\",\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":true,\"bonusTargetPct\":15,\"bonusFrequency\":\"annual\",\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":false,\"visaType\":null,\"employerCoversVisa\":false,\"startDate\":null,\"employmentType\":\"employee\"}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "fractional-cto",
+    "input": "£500/day, London, 3 days per week, 12 month contract, outside IR35",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":78000,\"currency\":\"GBP\",\"currencyAmbiguous\":false,\"location\":\"london\",\"hasEquity\":false,\"equityType\":null,\"equityValue\":null,\"equityGrantTotal\":null,\"equityVestingYears\":null,\"equityCliff\":null,\"equityVestingFrequency\":null,\"hasBonus\":false,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":false,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":\"contractor\"}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  },
+  {
+    "name": "equity-iso-vs-nso",
+    "input": "220k base, 50k NSO grant at current FMV $10/share, strike price $15, 4yr monthly vest, no cliff",
+    "expectedOutput": "{\"offers\":[{\"baseSalary\":220000,\"currency\":\"USD\",\"currencyAmbiguous\":false,\"location\":null,\"hasEquity\":true,\"equityType\":\"nso\",\"equityValue\":50000,\"equityGrantTotal\":50000,\"equityVestingYears\":4,\"equityCliff\":0,\"equityVestingFrequency\":\"monthly\",\"hasBonus\":null,\"bonusTargetPct\":null,\"bonusFrequency\":null,\"hasRelocation\":null,\"relocationAllowance\":null,\"relocationCurrency\":null,\"requiresVisa\":null,\"visaType\":null,\"employerCoversVisa\":null,\"startDate\":null,\"employmentType\":null}],\"person\":{\"homeCity\":null,\"filingStatus\":null,\"currentSavings\":null,\"currentRetirement\":null,\"currentMonthlySpend\":null,\"petCount\":null}}"
+  }
+]

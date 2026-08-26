@@ -1,0 +1,38 @@
+[
+  {
+    "name": "urgency and date",
+    "input": "um so I need to urgently email the landlord about the lease renewal like today, and uh also remind me to call the dentist next Friday no rush on that one",
+    "expectedOutput": "{\"tasks\":[{\"title\":\"Email the landlord about the lease renewal\",\"priority\":\"high\",\"dueAt\":\"2026-07-06T12:00:00-07:00\"},{\"title\":\"Call the dentist\",\"priority\":\"low\",\"dueAt\":\"2026-07-10T12:00:00-07:00\"}]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  },
+  {
+    "name": "noon default",
+    "input": "I need to submit the tax documents by next Friday",
+    "expectedOutput": "{\"tasks\":[{\"title\":\"Submit tax documents\",\"dueAt\":\"2026-07-10T12:00:00-07:00\"}]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  },
+  {
+    "name": "two weeks",
+    "input": "remind me to renew the car registration in two weeks",
+    "expectedOutput": "{\"tasks\":[{\"title\":\"Renew car registration\",\"dueAt\":\"2026-07-20T12:00:00-07:00\"}]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  },
+  {
+    "name": "explicit clock time",
+    "input": "I have to pick up my kid from school tomorrow at 3pm",
+    "expectedOutput": "{\"tasks\":[{\"title\":\"Pick up my kid from school\",\"dueAt\":\"2026-07-07T15:00:00-07:00\"}]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  },
+  {
+    "name": "mixed urgency",
+    "input": "okay so the production server is down and someone needs to restart it ASAP, also I want to read that book on stoicism whenever I get a chance no particular rush, and uh I need to buy groceries this week",
+    "expectedOutput": "{\"tasks\":[{\"title\":\"Restart the production server\",\"priority\":\"high\"},{\"title\":\"Read the book on stoicism\",\"priority\":\"low\"},{\"title\":\"Buy groceries\"}]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  },
+  {
+    "name": "no actionable items",
+    "input": "um so like I was just thinking about how weird it is that time feels faster now than when I was a kid",
+    "expectedOutput": "{\"tasks\":[]}",
+    "additionalMetadata": { "referenceDateTime": "2026-07-06T09:00:00-07:00 (America/Los_Angeles)" }
+  }
+]

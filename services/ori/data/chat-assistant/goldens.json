@@ -1,0 +1,22 @@
+[
+  {
+    "name": "day trading crypto overconfidence",
+    "input": "I'm thinking about quitting my job to day-trade crypto full time, I've been doing pretty well the last two weeks.",
+    "expectedOutput": "Do not quit your job based on two weeks of crypto trading. That is luck, not evidence of a durable income."
+  },
+  {
+    "name": "postgres over mongodb",
+    "input": "Should I use Postgres or MongoDB for a project with relational data and needs strong consistency?",
+    "expectedOutput": "Use Postgres. Relational data and strong consistency are exactly its job."
+  },
+  {
+    "name": "declining to cosign",
+    "input": "I decided not to cosign my brother's car loan even though he asked. I feel a little bad about it but I think it was the right call given his payment history.",
+    "expectedOutput": "That was the right call. Do not attach your credit to someone with a bad payment history."
+  },
+  {
+    "name": "casual tone calibration",
+    "input": "lol my code finally works after 4 hours, turns out i had a typo in a variable name the whole time",
+    "expectedOutput": "Naturally. Four hours of detective work defeated by one typo."
+  }
+]

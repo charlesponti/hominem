@@ -1,0 +1,57 @@
+[
+  {
+    "name": "dst-fixed-event",
+    "input": "Team sync with Mia at 9 AM tomorrow for 30 minutes",
+    "expectedOutput": "{\"primary_intent\":\"add_event\",\"title\":\"Team sync with Mia at 9 AM tomorrow for 30 minutes\",\"target_title\":null,\"participants\":[\"Mia\"],\"location\":null,\"duration\":30,\"start_time\":\"2026-11-01T09:00:00-08:00\",\"end_time\":\"2026-11-01T09:30:00-08:00\",\"scheduling_window_start\":null,\"scheduling_window_end\":null,\"deadline_fixed\":null,\"recurrence_rule\":null}",
+    "additionalMetadata": {
+      "referenceDateTime": "2026-10-31T10:00:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "calendarContext": "No calendar data supplied.",
+      "conversationContext": "None."
+    }
+  },
+  {
+    "name": "future-window",
+    "input": "Need to plan the quarterly roadmap next week for three hours",
+    "expectedOutput": "{\"primary_intent\":\"add_task\",\"title\":\"Need to plan the quarterly roadmap next week for three hours\",\"target_title\":null,\"participants\":null,\"location\":null,\"duration\":180,\"start_time\":null,\"end_time\":null,\"scheduling_window_start\":\"2026-07-27T00:00:00-07:00\",\"scheduling_window_end\":\"2026-08-03T00:00:00-07:00\",\"deadline_fixed\":null,\"recurrence_rule\":null}",
+    "additionalMetadata": {
+      "referenceDateTime": "2026-07-25T11:17:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "calendarContext": "No calendar data supplied.",
+      "conversationContext": "None."
+    }
+  },
+  {
+    "name": "availability-with-window",
+    "input": "Find a 90 minute gap Monday afternoon for a design review",
+    "expectedOutput": "{\"primary_intent\":\"schedule_gap_fill\",\"title\":\"Find a 90 minute gap Monday afternoon for a design review\",\"target_title\":null,\"participants\":null,\"location\":null,\"duration\":90,\"start_time\":null,\"end_time\":null,\"scheduling_window_start\":null,\"scheduling_window_end\":null,\"deadline_fixed\":null,\"recurrence_rule\":null}",
+    "additionalMetadata": {
+      "referenceDateTime": "2026-07-25T11:17:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "calendarContext": "Monday 13:00–14:00 busy; Monday 16:00–17:30 busy.",
+      "conversationContext": "None."
+    }
+  },
+  {
+    "name": "appointment-without-clock",
+    "input": "Schedule a dentist appointment Monday",
+    "expectedOutput": "{\"primary_intent\":\"add_event\",\"title\":\"Schedule a dentist appointment Monday\",\"target_title\":null,\"participants\":null,\"location\":null,\"duration\":null,\"start_time\":null,\"end_time\":null,\"scheduling_window_start\":\"2026-07-27T00:00:00-07:00\",\"scheduling_window_end\":\"2026-07-28T00:00:00-07:00\",\"deadline_fixed\":null,\"recurrence_rule\":null}",
+    "additionalMetadata": {
+      "referenceDateTime": "2026-07-25T11:17:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "calendarContext": "No calendar data supplied.",
+      "conversationContext": "None."
+    }
+  },
+  {
+    "name": "search-never-creates",
+    "input": "What deadlines do I have this week?",
+    "expectedOutput": "{\"primary_intent\":\"search\",\"title\":null,\"target_title\":null,\"participants\":null,\"location\":null,\"duration\":null,\"start_time\":null,\"end_time\":null,\"scheduling_window_start\":null,\"scheduling_window_end\":null,\"deadline_fixed\":null,\"recurrence_rule\":null}",
+    "additionalMetadata": {
+      "referenceDateTime": "2026-07-25T11:17:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "calendarContext": "No calendar data supplied.",
+      "conversationContext": "None."
+    }
+  }
+]

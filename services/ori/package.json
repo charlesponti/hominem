@@ -1,0 +1,18 @@
+{
+  "name": "@hominem/ori",
+  "private": true,
+  "scripts": {
+    "eval:chat-assistant": "ori eval evals/chat-assistant.eval.ts",
+    "eval:career-job-import": "ori eval evals/career-job-import.eval.ts",
+    "eval:mcp-tool-selection": "ori eval evals/mcp-tool-selection.eval.ts",
+    "eval:offer-extraction": "ori eval evals/offer-extraction.eval.ts",
+    "eval:task-extraction": "ori eval evals/task-extraction.eval.ts",
+    "eval:time-block-regression": "ori eval evals/time-block-regression.eval.ts",
+    "eval:time-block-holdout": "ori eval evals/time-block-holdout.eval.ts",
+    "eval:voice-cleanup": "ori eval evals/voice-cleanup.eval.ts",
+    "eval:voice-task-extraction": "ori eval evals/voice-task-extraction.eval.ts",
+    "eval:all": "ori eval evals",
+    "eval:list": "ori eval --list --allow-no-key evals",
+    "eval:pilot": "ori eval --pilot 1 evals"
+  }
+}
