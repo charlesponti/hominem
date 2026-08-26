@@ -32,10 +32,10 @@ RAILWAY_PROJECT_ID=<project-id> RAILWAY_ENVIRONMENT=staging \
   scripts/railway-logs.sh api --since 30m
 ```
 
-The equivalent Just command is:
+The equivalent repository script is:
 
 ```bash
-just observability railway-logs api 200
+scripts/railway-logs.sh api --lines 200
 ```
 
 The dashboard path is Railway → Hominem → environment → service → Logs. Choose
@@ -176,19 +176,21 @@ a dashboard aggregate alone.
 
 ## Local verification
 
-Run the local collector and Jaeger viewer before starting the API or worker:
+Run the foundation stack before starting the API or worker:
 
 ```bash
-just observability up
-just observability status
-just observability logs
+cd ~/Developer/infra/foundation
+just up
+just health
+just logs otel-collector
 ```
 
 Jaeger is available at `http://localhost:16686`. Local application logs remain
-in the API or worker terminal. Stop the collector when finished with:
+in the API or worker terminal. Stop the foundation stack when finished with:
 
 ```bash
-just observability down
+cd ~/Developer/infra/foundation
+just down
 ```
 
 After deployment, authenticate a controlled Web session, play one response, and

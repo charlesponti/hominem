@@ -1,7 +1,7 @@
 import {
-  ALL_ROUTE,
   NEW_CHAT_ROUTE,
   SETTINGS_ROUTE,
+  STREAM_ROUTE,
   getContentRoute,
   getTimeBlockRoute,
   type TimeBlockSource,
@@ -20,7 +20,7 @@ export function redirectSystemPath({
 
   // App Intent / Siri: note/add -> All
   if (normalized === 'note/add') {
-    return ALL_ROUTE;
+    return STREAM_ROUTE;
   }
 
   // OTP verification link: verify?token=xxx -> /(auth)/verify?token=xxx
@@ -53,7 +53,7 @@ export function redirectSystemPath({
 
   // Notes list -> inbox
   if (normalized === 'notes') {
-    return ALL_ROUTE;
+    return STREAM_ROUTE;
   }
 
   // Focus with specific ID -> note detail
@@ -64,7 +64,7 @@ export function redirectSystemPath({
 
   // Focus list -> inbox
   if (normalized === 'focus') {
-    return ALL_ROUTE;
+    return STREAM_ROUTE;
   }
 
   // Account/settings screen

@@ -8,16 +8,16 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { makeStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
-import { ALL_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
+import { STREAM_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
 
 const EDGE_SIZE = 28;
 const COMMIT_DISTANCE = 100;
 const COMMIT_VELOCITY = 900;
 
-type Scene = 'all' | 'time';
+type Scene = 'stream' | 'time';
 
 function sceneFromPathname(pathname: string): Scene | null {
-  if (pathname === '/(protected)/all' || pathname === '/all') return 'all';
+  if (pathname === '/(protected)/stream' || pathname === '/stream') return 'stream';
   if (pathname === '/(protected)/time' || pathname === '/time') return 'time';
   return null;
 }
@@ -42,7 +42,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
 
   const commitRoute = useCallback(
     (target: Scene) => {
-      router.dismissTo(target === 'all' ? ALL_ROUTE : TIME_ROUTE);
+      router.dismissTo(target === 'stream' ? STREAM_ROUTE : TIME_ROUTE);
       setIsSettling(false);
     },
     [router],
@@ -58,15 +58,15 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
         'worklet';
         const touch = event.allTouches[0];
         if (!touch) return;
-        const fromAll = scene === 'all';
-        const fromEdge = fromAll
+        const fromStream = scene === 'stream';
+        const fromEdge = fromStream
           ? touch.absoluteX >= width - EDGE_SIZE
           : touch.absoluteX <= EDGE_SIZE;
         startX.value = fromEdge ? touch.absoluteX : -1;
       })
       .onStart(() => {
         'worklet';
-        direction.value = startX.value >= 0 ? (scene === 'all' ? -1 : 1) : 0;
+        direction.value = startX.value >= 0 ? (scene === 'stream' ? -1 : 1) : 0;
         progress.value = 0;
       })
       .onUpdate((event) => {
@@ -90,7 +90,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
           direction.value = 0;
           return;
         }
-        const target = scene === 'all' ? 'time' : 'all';
+        const target = scene === 'stream' ? 'time' : 'stream';
         if (reducedMotion) {
           scheduleOnRN(commitRoute, target);
           return;
@@ -118,7 +118,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
 
   if (!scene) return children;
 
-  const adjacentScene = scene === 'all' ? 'Time' : 'All';
+  const adjacentScene = scene === 'stream' ? 'Time' : 'Stream';
   return (
     <GestureDetector gesture={gesture}>
       <View style={styles.container} testID={`root-scene-${scene}`}>

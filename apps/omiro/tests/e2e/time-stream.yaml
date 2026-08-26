@@ -2,7 +2,7 @@ appId: com.pontistudios.hakumi.dev
 ---
 - runFlow: ../subflows/reset-to-home.yaml
 - assertVisible:
-    id: home-screen
+    id: stream-screen
 - tapOn:
     id: home-time-button
 - assertVisible:

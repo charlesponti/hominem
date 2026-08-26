@@ -2,22 +2,20 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ARCHIVED_CHATS_ROUTE,
-  ALL_ROUTE,
-  CHATS_ROUTE,
   HOME_ROUTE,
   NEW_CHAT_ROUTE,
   SETTINGS_ROUTE,
+  STREAM_ROUTE,
   TIME_ROUTE,
   getContentRoute,
   getTimeBlockRoute,
 } from '~/services/navigation/routes';
 
 describe('protected routes', () => {
-  it('builds the canonical Chat, Chats, All, and Time routes', () => {
+  it('builds the canonical Chat, Stream, and Time routes', () => {
     expect(HOME_ROUTE).toBe('/(protected)');
     expect(NEW_CHAT_ROUTE).toBe('/(protected)/new-chat');
-    expect(CHATS_ROUTE).toBe('/(protected)/chats');
-    expect(ALL_ROUTE).toBe('/(protected)/all');
+    expect(STREAM_ROUTE).toBe('/(protected)/stream');
     expect(TIME_ROUTE).toBe('/(protected)/time');
     expect(SETTINGS_ROUTE).toBe('/(protected)/settings');
     expect(ARCHIVED_CHATS_ROUTE).toBe('/(protected)/chats/archived');

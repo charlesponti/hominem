@@ -4,7 +4,7 @@ The system must behave predictably from a clean checkout through deployment and 
 
 ## Commands
 
-`just` provides `setup`, `check`, `db`, `mcp`, and `mobile`. Everything else is a root `pnpm` script, optionally scoped with `--filter`.
+`just` provides `setup`, `check`, `db`, `mcp`, and `mobile`. Local infrastructure is managed by the shared foundation repository. Everything else is a root `pnpm` script, optionally scoped with `--filter`.
 
 Use the smallest possible loop by default.
 
@@ -35,13 +35,13 @@ For Omiro work, use the app bootstrap loop in [apps/omiro/README.md](../apps/omi
 - `just db codegen`: regenerate database types against the caller's `DATABASE_URL`
 - `pnpm --filter @hominem/api merge-user-data`: dry-run-first, insert-only local-to-production user-data merge; see the API script help before use
 - `just mobile <action>`: iOS development, test, build, update, and release commands
-- `just observability up`: start the local OTLP Collector and Jaeger trace viewer
-- `just observability down`: stop the local observability containers
-- `just observability status`: inspect local observability container readiness
+- `cd ~/Developer/infra/foundation && just up`: start local infrastructure, including the OTLP Collector and Jaeger
+- `cd ~/Developer/infra/foundation && just health`: inspect local infrastructure readiness
+- `cd ~/Developer/infra/foundation && just down`: stop local infrastructure
 
 ### Local OpenTelemetry
 
-Start `just observability up` before running the API when you want local traces. The API and worker export to `http://localhost:4318` from their local environment configuration. Open Jaeger at `http://localhost:16686`. The Collector also prints exported logs and traces through `just observability logs`; local application logs remain in the service terminal.
+Start the foundation stack before running the API when you want local traces. The API and worker export to `http://localhost:4318` from their local environment configuration. Open Jaeger at `http://localhost:16686`. Collector logs are available with `cd ~/Developer/infra/foundation && just logs otel-collector`; local application logs remain in the service terminal.
 
 ## Development rules
 

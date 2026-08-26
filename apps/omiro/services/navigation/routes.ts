@@ -11,8 +11,7 @@ export interface ResumeTarget {
 
 export const HOME_ROUTE = '/(protected)' as RelativePathString;
 export const NEW_CHAT_ROUTE = '/(protected)/new-chat' as RelativePathString;
-export const CHATS_ROUTE = '/(protected)/chats' as RelativePathString;
-export const ALL_ROUTE = '/(protected)/all' as RelativePathString;
+export const STREAM_ROUTE = '/(protected)/stream' as RelativePathString;
 export const TIME_ROUTE = '/(protected)/time' as RelativePathString;
 export const UNSCHEDULED_ROUTE = '/(protected)/time/unscheduled' as RelativePathString;
 export const SETTINGS_ROUTE = '/(protected)/settings' as RelativePathString;

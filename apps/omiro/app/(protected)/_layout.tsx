@@ -92,7 +92,7 @@ function ProtectedShell() {
             <Stack.Screen name="index" />
             <Stack.Screen name="new-chat" />
             <Stack.Screen name="chats" options={{ headerShown: false }} />
-            <Stack.Screen name="all" options={{ headerShown: false }} />
+            <Stack.Screen name="stream" options={{ headerShown: false }} />
             <Stack.Screen name="notes" options={{ headerShown: false }} />
             <Stack.Screen name="time" options={{ headerShown: false }} />
             <Stack.Screen
