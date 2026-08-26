@@ -1,6 +1,6 @@
 ROOT_DIR := justfile_directory()
 ENV_FILE := ROOT_DIR / "services/api/.env"
-JOB_IMPORT_FIXTURE := ROOT_DIR / "services/deepeval/career-job-import/fixtures/whatnot-ashby-posting.html"
+JOB_IMPORT_FIXTURE := ROOT_DIR / "services/deepeval/datasets/career-job-import/fixtures/whatnot-ashby-posting.html"
 JOB_IMPORT_ORG := "whatnot"
 JOB_IMPORT_POSTING_ID := "7cfa0536-94de-42b7-9fe7-d646f4addc29"
 
@@ -43,13 +43,9 @@ mcp-tool-selection: (_run "mcp-tool-selection")
 # Career job-import extraction against the checked-in Whatnot/Ashby fixture.
 career-job-import: (_run "career-job-import")
 
-# Typecheck every suite: prompts, assertions, cases, and the test files themselves.
+# Typecheck every prompt, Golden dataset, and test file.
 typecheck:
     pnpm --filter @hominem/deepeval typecheck
-
-# Open the DeepEval results viewer for the most recent run.
-view:
-    pnpm --filter @hominem/deepeval view
 
 # Refresh the checked-in Whatnot job-posting fixture from the live Ashby posting.
 refresh-job-import-fixture:

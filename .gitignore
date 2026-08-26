@@ -27,6 +27,8 @@ playwright-report
 test-results
 results/
 results.json
+services/deepeval/data/
+services/deepeval/.deepeval/
 
 # environment
 .env

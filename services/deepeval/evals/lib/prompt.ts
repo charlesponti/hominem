@@ -14,6 +14,12 @@ export function render(template: string, vars: Record<string, string>): string {
   return template.replace(/{{\s*([^}]+?)\s*}}/g, (_, key: string) => vars[key.trim()] ?? '');
 }
 
-export function renderMessages(messages: ChatMessage[], vars: Record<string, string>): ChatMessage[] {
-  return messages.map((message) => ({ role: message.role, content: render(message.content, vars) }));
+export function renderMessages(
+  messages: ChatMessage[],
+  vars: Record<string, string>,
+): ChatMessage[] {
+  return messages.map((message) => ({
+    role: message.role,
+    content: render(message.content, vars),
+  }));
 }

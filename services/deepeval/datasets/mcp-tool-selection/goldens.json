@@ -1,0 +1,20 @@
+[
+  {
+    "name": "flight history uses one travel lookup",
+    "input": "Where have I flown?",
+    "expectedOutput": "A concise list of destinations in the user's flight history.",
+    "expectedTools": [{ "name": "trip_history" }]
+  },
+  {
+    "name": "career lookup uses one career tool",
+    "input": "Show me my work experience.",
+    "expectedOutput": "A concise summary of the user's saved work experience.",
+    "expectedTools": [{ "name": "get_career_portfolio" }]
+  },
+  {
+    "name": "general question uses no private-data tools",
+    "input": "What is your favorite movie?",
+    "expectedOutput": "A direct conversational answer without private-data lookup.",
+    "expectedTools": []
+  }
+]

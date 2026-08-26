@@ -1,4 +1,10 @@
-export type ChatMessage = { role: string; content: string };
+export type ChatMessage = {
+  role: string;
+  content: string | null;
+  name?: string;
+  toolCalls?: unknown[];
+  toolCallId?: string;
+};
 
 export type ToolDefinition = { type: string; function: Record<string, unknown> };
 
@@ -14,6 +20,8 @@ export type ModelConfig = {
 
 export type ChatReply = { content: string; toolCalls: unknown[] };
 
+export const DEFAULT_TARGET_MODEL = 'openai/gpt-4o-mini';
+
 /**
  * Calls the model under test. Deliberately a plain fetch rather than
  * deepeval's own model classes: `DeepEvalOpenAICompatibleModel.generate()`
@@ -26,7 +34,7 @@ export async function chatComplete(
   messages: ChatMessage[],
   config: ModelConfig,
 ): Promise<ChatReply> {
-  const requestedModel = process.env.DEEPEVAL_TARGET_MODEL ?? config.model;
+  const requestedModel = config.model;
   const local = requestedModel.startsWith('ollama:');
   const model = local ? requestedModel.replace(/^ollama:chat:/, '') : requestedModel;
   const endpoint = local
@@ -45,7 +53,13 @@ export async function chatComplete(
     headers,
     body: JSON.stringify({
       model,
-      messages,
+      messages: messages.map((message) => ({
+        role: message.role,
+        content: message.content ?? '',
+        ...(message.name ? { name: message.name } : {}),
+        ...(message.toolCalls ? { tool_calls: message.toolCalls } : {}),
+        ...(message.toolCallId ? { tool_call_id: message.toolCallId } : {}),
+      })),
       temperature: config.temperature ?? 0,
       ...(config.maxTokens ? { max_tokens: config.maxTokens } : {}),
       ...(config.responseFormat ? { response_format: config.responseFormat } : {}),

@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Whatnot AI Tooling Engineer posting",
+    "input": "fixtures/whatnot-ashby-posting.html",
+    "expectedOutput": "{\"jobTitle\":\"AI Tooling Engineer\",\"companyName\":\"Whatnot\",\"companyDescription\":\"\",\"jobDescription\":\"The complete, unabridged AI Tooling Engineer job description from the supplied Whatnot posting.\",\"location\":\"\",\"salaryRange\":\"\",\"salaryDetails\":\"\",\"employmentType\":\"\",\"experienceLevel\":\"\",\"education\":\"\",\"requirements\":[],\"skills\":[],\"benefits\":[],\"responsibilities\":[],\"industry\":\"\",\"postedDate\":\"\",\"applicationDeadline\":\"\",\"department\":\"\",\"hiringManager\":\"\",\"companySize\":\"\",\"fundingStage\":\"\",\"technologyStack\":[],\"cultureAspects\":[],\"fullText\":\"The complete, unabridged AI Tooling Engineer job description from the supplied Whatnot posting.\"}"
+  }
+]
