@@ -36,6 +36,8 @@ function isNotFoundError(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
 }
 
+const NEW_SESSION_SOURCE: SessionSource = { kind: 'new' };
+
 export function ChatScreen({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -45,7 +47,7 @@ export function ChatScreen({ id }: { id: string }) {
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
 
-  const source: SessionSource = { kind: 'new' };
+  const source = NEW_SESSION_SOURCE;
 
   const handleContentCreated = useCallback(
     async (content: ExtractedTasksCreated) => {
