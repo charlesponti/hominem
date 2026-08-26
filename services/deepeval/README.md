@@ -28,8 +28,8 @@ model; no suite has custom assertion or scoring code.
 
 Set `OPENROUTER_API_KEY` for both the tested model and the DeepEval judge. All
 suites evaluate `openai/gpt-4o-mini` as the target model. The judge defaults to
-`google/gemini-2.5-flash-lite`; set `DEEPEVAL_JUDGE_MODEL` to use another
-OpenRouter model.
+`openai/gpt-oss-20b`; set `DEEPEVAL_JUDGE_MODEL` to use another OpenRouter
+model.
 
 The MCP suite is a native DeepEval traced run: it records agent, LLM, and tool
 spans and evaluates task completion, step efficiency, and tool correctness.

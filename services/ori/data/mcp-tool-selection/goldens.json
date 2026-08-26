@@ -3,18 +3,40 @@
     "name": "flight history uses one travel lookup",
     "input": "Where have I flown?",
     "expectedOutput": "A concise list of destinations in the user's flight history.",
-    "expectedTools": [{ "name": "trip_history" }]
+    "expectedTools": [{ "name": "trip_history" }],
+    "expectedOutputIncludes": ["Tokyo", "London"]
   },
   {
     "name": "career lookup uses one career tool",
     "input": "Show me my work experience.",
     "expectedOutput": "A concise summary of the user's saved work experience.",
-    "expectedTools": [{ "name": "get_career_portfolio" }]
+    "expectedTools": [{ "name": "get_career_portfolio" }],
+    "expectedOutputIncludes": ["Staff Engineer", "Hominem"]
   },
   {
     "name": "general question uses no private-data tools",
     "input": "What is your favorite movie?",
     "expectedOutput": "A direct conversational answer without private-data lookup.",
     "expectedTools": []
+  },
+  {
+    "name": "travel and career request calls tools in requested order",
+    "input": "First tell me where I have traveled, then summarize my work experience.",
+    "expectedOutput": "A concise answer grounded in both the user's travel and career records.",
+    "expectedTools": [{ "name": "trip_history" }, { "name": "get_career_portfolio" }],
+    "expectedOutputIncludes": ["Tokyo", "Staff Engineer"]
+  },
+  {
+    "name": "place and travel request calls both history tools",
+    "input": "Tell me which places I have visited and where I have flown.",
+    "expectedOutput": "A concise answer grounded in the user's place-visit and flight history.",
+    "expectedTools": [{ "name": "place_visit_history" }, { "name": "trip_history" }]
+  },
+  {
+    "name": "calendar and career request calls tools in requested order",
+    "input": "Check my upcoming calendar and then show my work experience.",
+    "expectedOutput": "A concise answer grounded in both the user's calendar and career records.",
+    "expectedTools": [{ "name": "calendar_upcoming" }, { "name": "get_career_portfolio" }],
+    "expectedOutputIncludes": ["Staff Engineer", "Hominem"]
   }
 ]

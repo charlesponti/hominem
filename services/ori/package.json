@@ -2,6 +2,7 @@
   "name": "@hominem/ori",
   "private": true,
   "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
     "eval:chat-assistant": "ori eval evals/chat-assistant.eval.ts",
     "eval:career-job-import": "ori eval evals/career-job-import.eval.ts",
     "eval:mcp-tool-selection": "ori eval evals/mcp-tool-selection.eval.ts",

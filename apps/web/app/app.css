@@ -6,6 +6,21 @@
 @source '../../node_modules/@ponti-studios/ui/src/**/*.{ts,tsx}';
 @source './';
 
+@font-face {
+  font-family: 'Geist Pixel Square';
+  src: url('/fonts/geist-pixel-square-latin.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+  unicode-range: U+0000-00FF, U+2010-2027, U+20AC;
+}
+
+@utility font-assistant {
+  font-family: 'Geist Pixel Square', var(--font-sans);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
 [data-slot='sheet-overlay'] {
   position: fixed;
   inset: 0;

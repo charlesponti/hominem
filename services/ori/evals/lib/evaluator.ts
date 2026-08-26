@@ -14,7 +14,7 @@ export type Golden = {
 export type PromptMessage = { role: string; content: string };
 
 export const targetModel = process.env.ORI_TARGET_MODEL?.trim() || 'openai/gpt-4o-mini';
-export const judgeModel = process.env.ORI_JUDGE_MODEL?.trim() || 'qwen/qwen3-30b-a3b-instruct-2507';
+export const judgeModel = process.env.ORI_JUDGE_MODEL?.trim() || 'openai/gpt-oss-20b';
 
 export const loadJson = async <T>(url: URL): Promise<T> => (await Bun.file(url).json()) as T;
 

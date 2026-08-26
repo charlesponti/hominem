@@ -332,7 +332,7 @@ export const ChatMessage = memo(function ChatMessage({
                         </Shimmer>
                       </p>
                     ) : null}
-                    <MessageResponse>{message.content}</MessageResponse>
+                    <MessageResponse className="font-assistant">{message.content}</MessageResponse>
                   </>
                 )}
               </m.div>
