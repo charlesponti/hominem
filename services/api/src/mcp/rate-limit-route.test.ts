@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ checkRateLimit: vi.fn() }));
 
 vi.mock('./rate-limiter', () => ({ checkRateLimit: mocks.checkRateLimit }));
+vi.mock('../env', async () => {
+  const actual = await vi.importActual<typeof import('../env')>('../env');
+  return { ...actual, env: { ...actual.env, NODE_ENV: 'production' } };
+});
 vi.mock('@better-auth/mcp', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@better-auth/mcp')>()),
   requireMcpAuth:
@@ -27,6 +31,7 @@ vi.mock('../middleware/auth', () => ({
 }));
 
 import type { AuthContext } from '../auth/types';
+import { mcpAuthorizationMiddleware } from './routes';
 
 const auth = {
   user: { id: 'user-1' },
@@ -35,14 +40,7 @@ const auth = {
   scopes: ['career:read'],
 } as AuthContext;
 
-async function createApp() {
-  vi.resetModules();
-  vi.doMock('../env', async () => {
-    const actual = await vi.importActual<typeof import('../env')>('../env');
-    return { env: { ...actual.env, NODE_ENV: 'production' } };
-  });
-
-  const { mcpAuthorizationMiddleware } = await import('./routes');
+function createApp() {
   const app = new Hono();
   app.use('*', async (c, next) => {
     c.set('auth', auth);
@@ -59,7 +57,7 @@ describe('MCP rate-limit route behavior', () => {
 
   it('fails closed with 503 when Redis is unavailable', async () => {
     mocks.checkRateLimit.mockResolvedValue('unavailable');
-    const app = await createApp();
+    const app = createApp();
     const response = await app.request('/api/mcp');
 
     expect(response.status).toBe(503);
@@ -71,7 +69,7 @@ describe('MCP rate-limit route behavior', () => {
 
   it('preserves 429 when the MCP quota is exceeded', async () => {
     mocks.checkRateLimit.mockResolvedValue('limited');
-    const app = await createApp();
+    const app = createApp();
     const response = await app.request('/api/mcp');
 
     expect(response.status).toBe(429);
