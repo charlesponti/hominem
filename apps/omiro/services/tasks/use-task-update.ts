@@ -1,9 +1,7 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { Task, TaskDetailOutput, TaskListItem } from '@hominem/rpc/types';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Task } from '@hominem/rpc/types';
 
-import { taskKeys } from './query-keys';
-import { mapTaskDetail, mapTaskList } from './task-cache';
+import { useTaskPatchMutation } from './use-task-patch-mutation';
 
 interface UseTaskUpdateOptions {
   parentId?: string;
@@ -48,69 +46,18 @@ function applyPatch<T extends Task>(task: T, patch: UpdateTaskInput): T {
 
 export function useTaskUpdate({ parentId }: UseTaskUpdateOptions = {}) {
   const client = useApiClient();
-  const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ taskId, ...patch }: UpdateTaskInput) => {
+  return useTaskPatchMutation<UpdateTaskInput>({
+    parentId,
+    mutationFn: async ({ taskId, ...patch }) => {
       const res = await client.api.tasks[':id'].$patch({
         param: { id: taskId },
         json: patch,
       });
       return res.json();
     },
-    onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: taskKeys.all });
-
-      const previousAll = queryClient.getQueryData<TaskListItem[]>(taskKeys.all);
-      const previousDetail = queryClient.getQueryData<TaskDetailOutput>(
-        taskKeys.detail(input.taskId),
-      );
-      const previousParentDetail = parentId
-        ? queryClient.getQueryData<TaskDetailOutput>(taskKeys.detail(parentId))
-        : undefined;
-
-      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
-        mapTaskList(current, input.taskId, (task) => applyPatch(task, input)),
-      );
-
-      if (parentId) {
-        queryClient.setQueryData<TaskDetailOutput | undefined>(
-          taskKeys.detail(parentId),
-          (current) => mapTaskDetail(current, input.taskId, (task) => applyPatch(task, input)),
-        );
-      } else {
-        queryClient.setQueryData<TaskDetailOutput | undefined>(
-          taskKeys.detail(input.taskId),
-          (current) => mapTaskDetail(current, input.taskId, (task) => applyPatch(task, input)),
-        );
-      }
-
-      return { previousAll, previousDetail, previousParentDetail };
-    },
-    onError: (_error, input, context) => {
-      if (!context) return;
-      queryClient.setQueryData(taskKeys.all, context.previousAll);
-      queryClient.setQueryData(taskKeys.detail(input.taskId), context.previousDetail);
-      if (parentId) {
-        queryClient.setQueryData(taskKeys.detail(parentId), context.previousParentDetail);
-      }
-    },
-    onSuccess: (updatedTask) => {
-      queryClient.setQueryData<TaskListItem[] | undefined>(taskKeys.all, (current) =>
-        mapTaskList(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
-      );
-      queryClient.setQueryData<TaskDetailOutput | undefined>(
-        taskKeys.detail(updatedTask.id),
-        (current) =>
-          mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
-      );
-      if (parentId) {
-        queryClient.setQueryData<TaskDetailOutput | undefined>(
-          taskKeys.detail(parentId),
-          (current) =>
-            mapTaskDetail(current, updatedTask.id, (task) => ({ ...task, ...updatedTask })),
-        );
-      }
-    },
+    getTaskId: (input) => input.taskId,
+    applyOptimistic: applyPatch,
+    alwaysUpdateOwnDetailOnSuccess: true,
   });
 }

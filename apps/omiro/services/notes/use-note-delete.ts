@@ -1,9 +1,7 @@
 import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { removeInboxStreamItem } from '~/services/inbox/inbox-refresh';
-import { clearResumeTarget, readResumeTarget } from '~/services/navigation/launch-state';
-import { inboxKeys } from '~/services/notes/query-keys';
+import { useInboxItemRemoval } from '~/services/inbox/use-inbox-item-removal';
 
 import { noteKeys } from './query-keys';
 
@@ -14,30 +12,16 @@ interface UseNoteDeleteOptions {
 export function useNoteDelete({ noteId }: UseNoteDeleteOptions) {
   const client = useApiClient();
   const queryClient = useQueryClient();
+  const removal = useInboxItemRemoval({ kind: 'note', entityId: noteId });
 
   return useMutation({
     mutationFn: async () => {
       await client.api.notes[':id'].$delete({ param: { id: noteId } });
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: inboxKeys.pages() });
-      const previousInboxPages = queryClient.getQueriesData({
-        queryKey: inboxKeys.pages(),
-      });
-
-      removeInboxStreamItem(queryClient, { kind: 'note', entityId: noteId });
-
-      return { previousInboxPages };
-    },
-    onError: (_error, _variables, context) => {
-      context?.previousInboxPages.forEach(([queryKey, data]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
-    },
+    onMutate: removal.onMutate,
+    onError: removal.onError,
     onSuccess: () => {
-      if (readResumeTarget()?.id === noteId) {
-        clearResumeTarget();
-      }
+      removal.clearResumeTargetIfMatch();
       queryClient.removeQueries({ queryKey: noteKeys.detail(noteId), exact: true });
     },
   });
