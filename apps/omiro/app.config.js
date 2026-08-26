@@ -160,12 +160,6 @@ function createConfig({ config }) {
     'expo-localization',
     'expo-sharing',
     [
-      'expo-camera',
-      {
-        cameraPermission: 'Allow Omiro to access your camera to capture photos for notes.',
-      },
-    ],
-    [
       'expo-media-library',
       {
         photosPermission: 'Allow Omiro to save photos to your library.',
