@@ -146,11 +146,17 @@ export const ChatMessage = memo(function ChatMessage({
       layout={rowLayout}
       style={[styles.message, isUser ? styles.messageUser : styles.messageAssistant, revealStyle]}
     >
+      <MessageToolCalls toolCalls={renderedToolCalls} />
       <Pressable
         onPress={isStreaming ? undefined : handleActivate}
         style={[isUser ? styles.userBubble : styles.assistantBubble, isUser && styles.continuous]}
         testID={`chat-message-${message.id}`}
       >
+        {!isUser && hasReasoning ? (
+          <View style={styles.reasoningPanel}>
+            <Text style={styles.reasoningText}>{message.reasoning}</Text>
+          </View>
+        ) : null}
         <MessageEditModal
           content={content}
           draftMessage={draftMessage}
@@ -161,14 +167,6 @@ export const ChatMessage = memo(function ChatMessage({
         />
 
         <View style={styles.content}>
-          {!isUser && hasReasoning ? (
-            <View style={styles.reasoningPanel}>
-              <Text style={styles.reasoningText}>{message.reasoning}</Text>
-            </View>
-          ) : null}
-
-          <MessageToolCalls toolCalls={renderedToolCalls} />
-
           <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
             {!isUser && isStreaming ? <ChatThinkingIndicator compact /> : null}
           </MessageContent>
@@ -240,19 +238,14 @@ const styles = makeStyles((theme) => ({
   messageAssistant: { alignItems: 'flex-start' },
   userBubble: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 16,
+    borderRadius: theme.radius.sm,
     borderBottomRightRadius: 2,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    maxWidth: '85%',
   },
   assistantBubble: {
-    backgroundColor: theme.colors.muted,
-    borderRadius: 16,
+    borderRadius: theme.radius.sm,
     borderBottomLeftRadius: 2,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    maxWidth: '85%',
   },
   continuous: { borderCurve: 'continuous' },
 }));

@@ -124,7 +124,6 @@ function ProtectedShell() {
               }}
             />
             <Stack.Screen name="onboarding" options={{ headerShown: true }} />
-            <Stack.Screen name="dev/ui-lab" options={{ title: 'UI Lab' }} />
           </Stack>
         </View>
       </ApiProvider>

@@ -45,7 +45,7 @@ export type Theme = {
     overlayScrim: ColorValue;
     chart: readonly [ColorValue, ColorValue, ColorValue, ColorValue, ColorValue];
   };
-  typography: Record<string, TextStyle>;
+  typography: Typography;
   radius: { sm: number; md: number; lg: number; xl: number };
 };
 
@@ -198,6 +198,9 @@ const typography = {
     letterSpacing: 0,
   },
 } satisfies Record<string, TextStyle>;
+
+export type Typography = typeof typography;
+export type TypographyKey = keyof Typography;
 
 export const theme = {
   light: {

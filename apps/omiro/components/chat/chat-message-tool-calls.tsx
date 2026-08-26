@@ -1,13 +1,11 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 type ToolCall = NonNullable<ChatMessageItem['toolCalls']>[number];
 
 export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
-  const [textPrimary] = useThemeColor(['--color-foreground']) as string[];
-
   if (toolCalls.length === 0) {
     return null;
   }
@@ -19,9 +17,7 @@ export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
           key={toolCall.toolCallId || `${toolCall.toolName}:${JSON.stringify(toolCall.args)}`}
           style={styles.toolCall}
         >
-          <Text style={{ color: textPrimary, fontSize: 12, fontWeight: '600' }}>
-            {toolCall.toolName}
-          </Text>
+          <Text style={styles.toolName}>{toolCall.toolName}</Text>
           <Text style={styles.toolCallArgs}>
             {toolCall.args ? JSON.stringify(toolCall.args, null, 2) : ''}
           </Text>
@@ -32,14 +28,21 @@ export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
 }
 
 const styles = makeStyles((theme) => ({
-  toolCalls: { gap: 4 },
+  toolCalls: { width: '100%', gap: 8, marginBottom: 12 },
   toolCall: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 4,
-    padding: 12,
+    borderRadius: theme.radius.sm,
+    gap: 8,
+    padding: 8,
   },
-  toolCallArgs: { ...theme.typography.mono, color: theme.colors.mutedForeground },
+  toolName: { ...theme.typography.footnote, color: theme.colors.foreground, fontWeight: '600' },
+  toolCallArgs: {
+    backgroundColor: theme.colors.foreground,
+    ...theme.typography.mono,
+    color: theme.colors.secondary,
+    borderRadius: theme.radius.sm,
+    padding: 8,
+  },
 }));

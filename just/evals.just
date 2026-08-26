@@ -46,7 +46,3 @@ career-job-import: (_run "career-job-import")
 # Typecheck every prompt, Golden dataset, and test file.
 typecheck:
     pnpm --filter @hominem/deepeval typecheck
-
-# Refresh the checked-in Whatnot job-posting fixture from the live Ashby posting.
-refresh-job-import-fixture:
-    node '{{ ROOT_DIR }}/just/refresh-job-import-fixture.mjs' '{{ JOB_IMPORT_ORG }}' '{{ JOB_IMPORT_POSTING_ID }}' '{{ JOB_IMPORT_FIXTURE }}'

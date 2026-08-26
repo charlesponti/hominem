@@ -80,10 +80,6 @@ function Settings() {
     router.push(ARCHIVED_CHATS_ROUTE);
   };
 
-  const onUiLabPress = () => {
-    router.push('/(protected)/dev/ui-lab');
-  };
-
   if (isPending || !isSignedIn) {
     return <ProtectedRouteFallback />;
   }
@@ -134,19 +130,6 @@ function Settings() {
         />
       </View>
 
-      {__DEV__ ? (
-        <View style={styles.developmentSection}>
-          <SectionLabel>Development</SectionLabel>
-          <SettingsRow
-            icon="rectangle.3.group"
-            label="UI Lab"
-            onPress={onUiLabPress}
-            testID="settings-ui-lab"
-            accessory={<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />}
-          />
-        </View>
-      ) : null}
-
       <DangerZoneSection onLogoutPress={onLogoutPress} />
     </ScrollView>
   );
@@ -156,5 +139,4 @@ export default Settings;
 
 const styles = makeStyles(() => ({
   chatsSection: { gap: 8 },
-  developmentSection: { gap: 8 },
 }));
