@@ -421,15 +421,6 @@ const t = {
       authFailedError: 'Authentication failed. Please try again.',
     },
   },
-  onboarding: {
-    title: 'What should Omiro call you?',
-    subtitle: 'This is only used to personalize your inbox. You can change it later.',
-    namePlaceholder: 'Wyatt',
-    nameError: 'Add a name or continue without one.',
-    start: 'Start using Omiro',
-    continueWithoutName: 'Continue without name',
-    signOut: 'Sign out',
-  },
   errors: {
     somethingWentWrong: 'Something went wrong',
     goHome: 'Go Home',

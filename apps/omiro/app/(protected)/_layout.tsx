@@ -123,7 +123,6 @@ function ProtectedShell() {
                 sheetInitialDetentIndex: 0,
               }}
             />
-            <Stack.Screen name="onboarding" options={{ headerShown: true }} />
           </Stack>
         </View>
       </ApiProvider>
