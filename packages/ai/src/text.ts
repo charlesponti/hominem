@@ -148,6 +148,7 @@ export async function createStructuredChatCompletion<TSchema extends z.ZodTypeAn
           strict: true,
         },
       },
+      reasoning: { effort: 'none' },
       ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
       ...(input.maxCompletionTokens !== undefined
         ? { maxCompletionTokens: input.maxCompletionTokens }
