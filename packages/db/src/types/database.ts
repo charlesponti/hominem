@@ -409,14 +409,6 @@ export interface AppChatMessages {
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
 
-export interface AppChatSources {
-  addedByUserid: string | null;
-  chatId: string;
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: Generated<string>;
-  noteId: string;
-}
-
 export interface AppChats {
   archivedAt: ColumnType<string, Date | string, Date | string> | null;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
@@ -429,6 +421,14 @@ export interface AppChats {
   source: string | null;
   title: string;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppChatSources {
+  addedByUserid: string | null;
+  chatId: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  noteId: string;
 }
 
 export interface AppChatSpeechRuns {
@@ -1452,8 +1452,8 @@ export interface DB {
   'app.chatGenerationEvents': AppChatGenerationEvents;
   'app.chatGenerationRuns': AppChatGenerationRuns;
   'app.chatMessages': AppChatMessages;
-  'app.chatSources': AppChatSources;
   'app.chats': AppChats;
+  'app.chatSources': AppChatSources;
   'app.chatSpeechRuns': AppChatSpeechRuns;
   'app.collectionItems': AppCollectionItems;
   'app.collectionMembers': AppCollectionMembers;
