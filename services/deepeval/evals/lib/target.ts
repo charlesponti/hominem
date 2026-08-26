@@ -3,7 +3,8 @@ import { observe, updateCurrentSpan } from 'deepeval/tracing';
 import '../vitest';
 import {
   chatComplete,
-  DEFAULT_TARGET_MODEL,
+  TARGET_MODEL,
+  TARGET_REASONING,
   type ChatMessage,
   type ModelConfig,
 } from './openrouter';
@@ -12,9 +13,13 @@ import {
 export const runTarget = observe({
   type: 'llm',
   name: 'hominem_eval_target',
-  model: DEFAULT_TARGET_MODEL,
+  model: TARGET_MODEL,
   fn: async (messages: ChatMessage[], config: Omit<ModelConfig, 'model'> = {}) => {
-    const reply = await chatComplete(messages, { ...config, model: DEFAULT_TARGET_MODEL });
+    const reply = await chatComplete(messages, {
+      ...config,
+      ...(TARGET_REASONING ? { reasoning: { effort: TARGET_REASONING, exclude: true } } : {}),
+      model: TARGET_MODEL,
+    });
     updateCurrentSpan({ input: messages, output: reply.content });
     return reply.content;
   },

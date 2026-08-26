@@ -51,3 +51,18 @@ shape, intent, temporal grounding, duration, participants, and the absence of
 invented fields. Do not move a held-out case into the regression suite merely
 to improve a prompt's score; add a new regression case only for a confirmed
 production failure.
+To compare another OpenRouter target without changing the baseline, set
+`DEEPEVAL_TARGET_MODEL` for the run:
+
+```sh
+DEEPEVAL_TARGET_MODEL=deepseek/deepseek-v4-flash just evals all
+```
+
+Enable OpenRouter reasoning for models that support it:
+
+```sh
+DEEPEVAL_TARGET_MODEL=deepseek/deepseek-v4-flash \
+DEEPEVAL_TARGET_REASONING=high just evals all
+```
+
+The judge model remains controlled separately by `DEEPEVAL_JUDGE_MODEL`.

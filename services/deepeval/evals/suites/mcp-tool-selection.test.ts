@@ -14,7 +14,8 @@ import goldens from '../../datasets/mcp-tool-selection/goldens.json';
 import { judgeModel } from '../lib/judge';
 import {
   chatComplete,
-  DEFAULT_TARGET_MODEL,
+  TARGET_MODEL,
+  TARGET_REASONING,
   type ChatMessage,
   type ChatReply,
   type ModelConfig,
@@ -80,9 +81,10 @@ const TOOL_NAMES = TOOL_DEFINITIONS.map((tool) =>
 ).filter(Boolean);
 
 const MODEL: ModelConfig = {
-  model: DEFAULT_TARGET_MODEL,
+  model: TARGET_MODEL,
   temperature: 0,
   tools: TOOL_DEFINITIONS,
+  ...(TARGET_REASONING ? { reasoning: { effort: TARGET_REASONING, exclude: true } } : {}),
 };
 
 const toolCorrectness = new ToolCorrectnessMetric({
@@ -137,7 +139,7 @@ type TracedTurn = {
 const tracedModelCall = observe({
   type: 'llm',
   name: 'mcp_model_decision',
-  model: DEFAULT_TARGET_MODEL,
+  model: TARGET_MODEL,
   metrics: [toolCorrectness],
   fn: async (messages: ChatMessage[], expectedTools: ToolCall[]) => {
     const reply = await chatComplete(messages, MODEL);

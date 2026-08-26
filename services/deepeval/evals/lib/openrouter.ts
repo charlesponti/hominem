@@ -14,6 +14,12 @@ export type ModelConfig = {
   maxTokens?: number;
   responseFormat?: Record<string, unknown>;
   tools?: ToolDefinition[];
+  reasoning?: {
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+    max_tokens?: number;
+    enabled?: boolean;
+    exclude?: boolean;
+  };
   /** Extra fields merged directly into the request body, for provider-specific options. */
   extraBody?: Record<string, unknown>;
 };
@@ -21,6 +27,11 @@ export type ModelConfig = {
 export type ChatReply = { content: string; toolCalls: unknown[] };
 
 export const DEFAULT_TARGET_MODEL = 'openai/gpt-4o-mini';
+export const TARGET_MODEL = process.env.DEEPEVAL_TARGET_MODEL?.trim() || DEFAULT_TARGET_MODEL;
+const reasoningEfforts = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
+export const TARGET_REASONING = reasoningEfforts.find(
+  (effort) => effort === process.env.DEEPEVAL_TARGET_REASONING?.trim(),
+);
 
 /**
  * Calls the model under test. Deliberately a plain fetch rather than
@@ -64,6 +75,7 @@ export async function chatComplete(
       ...(config.maxTokens ? { max_tokens: config.maxTokens } : {}),
       ...(config.responseFormat ? { response_format: config.responseFormat } : {}),
       ...(config.tools ? { tools: config.tools } : {}),
+      ...(config.reasoning ? { reasoning: config.reasoning } : {}),
       ...(config.extraBody ?? {}),
     }),
   });
