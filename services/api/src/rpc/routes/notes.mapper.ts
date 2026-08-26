@@ -4,15 +4,9 @@ export function toNoteDto(record: NoteRecord) {
   return {
     id: record.id,
     userId: record.userId,
-    type: 'note' as const,
-    status: 'draft' as const,
     title: record.title,
     content: record.content,
     excerpt: record.excerpt,
-    tags: [],
-    mentions: [],
-    analysis: null,
-    publishingMetadata: null,
     parentNoteId: record.parentNoteId,
     files: record.files.map((file) => ({
       id: file.id,
@@ -25,10 +19,6 @@ export function toNoteDto(record: NoteRecord) {
       ...(file.textContent ? { textContent: file.textContent } : {}),
       ...(file.metadata ? { metadata: file.metadata } : {}),
     })),
-    versionNumber: 1,
-    isLatestVersion: true,
-    publishedAt: null,
-    scheduledFor: null,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };

@@ -786,10 +786,8 @@ export interface AppNotes {
   archivedAt: ColumnType<string, Date | string, Date | string> | null;
   content: Generated<string>;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  currentVersionId: string | null;
   excerpt: string | null;
   id: Generated<string>;
-  isLocked: Generated<boolean>;
   ownerUserid: string;
   parentNoteId: string | null;
   source: string | null;

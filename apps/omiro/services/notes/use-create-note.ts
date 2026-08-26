@@ -26,21 +26,11 @@ function buildOptimisticNote(text: string, title: string | undefined, optimistic
     title: title ?? null,
     content: trimmed,
     excerpt: buildContentPreview(null, trimmed) || null,
-    status: 'draft',
-    type: 'note',
-    tags: [],
-    mentions: [],
-    analysis: null,
-    publishingMetadata: null,
     parentNoteId: null,
     files: [],
-    versionNumber: 1,
-    isLatestVersion: true,
     userId: '',
     createdAt: now,
     updatedAt: now,
-    publishedAt: null,
-    scheduledFor: null,
   };
 }
 
@@ -61,7 +51,6 @@ export const useCreateNote = (): UseMutationResult<
           content: input.text.trim(),
           ...(input.title ? { title: input.title } : {}),
           ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
-          type: 'note',
         },
       });
       return res.json();

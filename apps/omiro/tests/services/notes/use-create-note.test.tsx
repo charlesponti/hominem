@@ -56,7 +56,7 @@ describe('useCreateNote', () => {
     });
 
     expect(mockPost).toHaveBeenCalledWith({
-      json: { content: 'Hello there', type: 'note' },
+      json: { content: 'Hello there' },
     });
     expect(queryClient.getQueryData(noteKeys.detail('note-server-1'))).toEqual(createdNote);
     expect(mockInvalidateInboxQueries).toHaveBeenCalledWith(queryClient);
@@ -72,7 +72,7 @@ describe('useCreateNote', () => {
     });
 
     expect(mockPost).toHaveBeenCalledWith({
-      json: { content: 'With files', fileIds: ['file-1', 'file-2'], type: 'note' },
+      json: { content: 'With files', fileIds: ['file-1', 'file-2'] },
     });
   });
 
