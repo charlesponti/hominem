@@ -280,7 +280,7 @@ describe('chat stream accounting', () => {
 
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
     expect(completionOptions.maxTokens).toBe(6000);
-    expect(completionOptions.reasoning).toEqual({ effort: 'medium' });
+    expect(completionOptions.reasoning).toEqual({ effort: 'none' });
     expect(completionOptions.messages[0]?.role).toBe('system');
     expect(completionOptions.messages[0]?.content).toContain('silently plan a short outline');
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });

@@ -183,10 +183,8 @@ function resolveAssistantContent(
   return assistantText;
 }
 
-// The "long" essay option plans an outline before writing, so give it room to
-// reason through structure before committing to prose.
-function getReasoningConfig(responseLength?: 'short' | 'medium' | 'long') {
-  return responseLength === 'long' ? { effort: 'medium' as const } : undefined;
+function getReasoningConfig(_responseLength?: 'short' | 'medium' | 'long') {
+  return { effort: 'none' as const };
 }
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
