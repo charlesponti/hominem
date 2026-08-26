@@ -100,6 +100,22 @@ function createRecordingController() {
     store.updateSnapshot((current) => ({ ...current, state }));
   };
 
+  const teardownRecorder = async (stopFailureLogLabel: string) => {
+    setState('STOPPING');
+
+    try {
+      await recorder?.stop();
+    } catch (error) {
+      logger.error(stopFailureLogLabel, error as Error);
+    }
+
+    stopPolling();
+
+    await deactivateKeepAwake().catch((error: Error) =>
+      logger.error('[recorder] keep-awake deactivation failed', error),
+    );
+  };
+
   return {
     getSnapshot: store.getSnapshot,
     subscribe: store.subscribe,
@@ -185,19 +201,7 @@ function createRecordingController() {
         state: current.state,
       });
 
-      setState('STOPPING');
-
-      try {
-        await recorder?.stop();
-      } catch (error) {
-        logger.error('[recorder] stop failed', error as Error);
-      }
-
-      stopPolling();
-
-      await deactivateKeepAwake().catch((error: Error) =>
-        logger.error('[recorder] keep-awake deactivation failed', error),
-      );
+      await teardownRecorder('[recorder] stop failed');
 
       const fileUri = recorder?.uri ?? null;
 
@@ -235,19 +239,7 @@ function createRecordingController() {
         reason,
       });
 
-      setState('STOPPING');
-
-      try {
-        await recorder?.stop();
-      } catch (error) {
-        logger.error('[recorder] discard stop failed', error as Error);
-      }
-
-      stopPolling();
-
-      await deactivateKeepAwake().catch((error: Error) =>
-        logger.error('[recorder] keep-awake deactivation failed', error),
-      );
+      await teardownRecorder('[recorder] discard stop failed');
 
       const fileUri = recorder?.uri ?? null;
       if (fileUri) {

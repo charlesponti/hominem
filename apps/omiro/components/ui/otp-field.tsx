@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { makeStyles, useThemeColor } from '~/components/theme';
+import { useShakeAnimation } from '~/services/motion/use-shake-animation';
 
 interface OtpInputProps {
   length?: number;
@@ -113,20 +114,7 @@ export function OtpInput({
   ]) as string[];
   const inputRef = useRef<TextInput>(null);
 
-  const shakeX = useSharedValue(0);
-  useEffect(() => {
-    if (!error) return;
-    shakeX.value = withSequence(
-      withTiming(10, { duration: 50 }),
-      withTiming(-10, { duration: 50 }),
-      withTiming(7, { duration: 50 }),
-      withTiming(-7, { duration: 50 }),
-      withTiming(0, { duration: 50 }),
-    );
-  }, [error, shakeX]);
-  const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shakeX.value }],
-  }));
+  const shakeStyle = useShakeAnimation(error);
 
   const cells = Array.from({ length }, (_, index) => value[index] ?? '');
   const activeIndex = Math.min(value.length, length - 1);

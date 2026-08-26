@@ -20,6 +20,8 @@ import { normalizeOtp } from '~/services/auth/validation';
 import { posthog } from '~/services/posthog';
 import t from '~/translations';
 
+import { authSharedStyles } from './_shared-styles';
+
 function countdownColor(
   secondsLeft: number,
   destructive: string,
@@ -356,6 +358,7 @@ const VerifyWithErrorBoundary = () => (
 export default VerifyWithErrorBoundary;
 
 const styles = makeStyles((theme) => ({
+  ...authSharedStyles(theme),
   successContainer: {
     flex: 1,
     alignItems: 'center',
@@ -364,11 +367,6 @@ const styles = makeStyles((theme) => ({
   },
   successContent: { alignItems: 'center', gap: 16 },
   successMessage: { ...theme.typography.title2, color: theme.colors.foreground },
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  content: { width: '100%', alignItems: 'center' },
-  form: { width: '100%', maxWidth: 420, gap: 18 },
-  header: { gap: 8 },
-  title: { ...theme.typography.title1, color: theme.colors.foreground },
   emailRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
   codeSentLabel: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
   emailChip: {
@@ -388,19 +386,6 @@ const styles = makeStyles((theme) => ({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  progressHelper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-  },
-  progressArrow: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  progressMessage: {
-    ...theme.typography.footnote,
-    color: theme.colors.mutedForeground,
-    textAlign: 'center',
   },
   resendButton: {
     flexDirection: 'row',

@@ -1,13 +1,8 @@
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { makeStyles, useThemeColor } from '~/components/theme';
@@ -18,7 +13,9 @@ import { TextField } from '~/components/ui/text-field';
 import { CHAT_AUTH_CONFIG } from '~/config/auth';
 import { useAuth } from '~/services/auth/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/services/auth/validation';
+import { useShakeAnimation } from '~/services/motion/use-shake-animation';
 import { posthog } from '~/services/posthog';
+import { authSharedStyles } from './_shared-styles';
 import t from '~/translations';
 
 function AuthScreen() {
@@ -44,25 +41,7 @@ function AuthScreen() {
 
   const progress = getEmailProgress();
 
-  // Animations
-  const shakeStyle = useAnimatedStyle(
-    () => ({
-      transform: [
-        {
-          translateX: authError
-            ? withSequence(
-                withTiming(10, { duration: 50, easing: Easing.linear }),
-                withTiming(-10, { duration: 50, easing: Easing.linear }),
-                withTiming(7, { duration: 50, easing: Easing.linear }),
-                withTiming(-7, { duration: 50, easing: Easing.linear }),
-                withTiming(0, { duration: 50, easing: Easing.linear }),
-              )
-            : 0,
-        },
-      ],
-    }),
-    [authError],
-  );
+  const shakeStyle = useShakeAnimation(Boolean(authError));
 
   const continueButtonStyle = useAnimatedStyle(
     () => ({
@@ -218,11 +197,7 @@ const AuthWithErrorBoundary = () => (
 export default AuthWithErrorBoundary;
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  content: { width: '100%', alignItems: 'center' },
-  form: { width: '100%', maxWidth: 420, gap: 18 },
-  header: { gap: 8 },
-  title: { ...theme.typography.title1, color: theme.colors.foreground },
+  ...authSharedStyles(theme),
   restoringMessage: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
   inputContainer: { gap: 12 },
   errorText: { ...theme.typography.footnote, color: theme.colors.destructive },
@@ -231,18 +206,5 @@ const styles = makeStyles((theme) => ({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  progressHelper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-  },
-  progressArrow: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  progressMessage: {
-    ...theme.typography.footnote,
-    color: theme.colors.mutedForeground,
-    textAlign: 'center',
   },
 }));
