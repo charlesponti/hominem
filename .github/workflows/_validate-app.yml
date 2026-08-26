@@ -46,7 +46,7 @@ jobs:
 
     services:
       postgres:
-        image: ghcr.io/ponti-studios/foundation/postgres:1.0.5
+        image: ghcr.io/ponti-studios/foundation/postgres@sha256:578d34f82b21752b9e749776e955fadc85e1cba8d962e78bce1bd60878a9c316
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
