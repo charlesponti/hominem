@@ -181,7 +181,6 @@ describe('useComposerSubmission', () => {
       expect(sendChatMessage).toHaveBeenCalledWith({
         message: 'hello there',
         fileIds: ['f1'],
-        noteIds: [],
         responseModality: 'text',
       });
       expect(mockImpactAsync).toHaveBeenCalledTimes(1);

@@ -22,7 +22,6 @@ import { ActiveMessageActions } from './chat-message-actions';
 import { MessageContent } from './chat-message-content';
 import { MessageDebug } from './chat-message-debug';
 import { MessageEditModal } from './chat-message-edit-modal';
-import { ReferencedNotes } from './chat-message-referenced-notes';
 import { MessageToolCalls } from './chat-message-tool-calls';
 import { useChatMotionOverlay } from './chat-motion-overlay';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
@@ -172,7 +171,6 @@ export const ChatMessage = memo(function ChatMessage({
 
           <MessageContent content={content} enableMarkdown={!isStreaming} textStyle={textStyle}>
             {!isUser && isStreaming ? <ChatThinkingIndicator compact /> : null}
-            {isUser ? <ReferencedNotes message={message} /> : null}
           </MessageContent>
 
           {failed && isUser ? (

@@ -4,7 +4,6 @@ export type {
   ArtifactType,
   CaptureBarProps,
   ChatMessageItem,
-  ChatMessageReferencedNote,
   ChatMessageRole,
   ChatMessageToolCall,
   JsonPrimitive,
@@ -19,7 +18,6 @@ export type {
 export {
   CHAT_TITLE_MAX_LENGTH,
   ENABLED_ARTIFACT_TYPES,
-  getReferencedNoteLabel,
   isArtifactTypeEnabled,
 } from '@hominem/chat/types';
 
@@ -164,11 +162,26 @@ export type ChatsSearchMessagesOutput = InferResponseType<_ChatsSearchMessagesEn
 export type ChatsSendInput = {
   message: string;
   fileIds?: string[];
-  noteIds?: string[];
   chatId?: string;
   responseModality?: 'text' | 'audio';
   responseLength?: 'short' | 'medium' | 'long';
 };
+
+// ============================================================================
+// SOURCES (chat-level attached notes)
+// ============================================================================
+
+type _ChatsListSourcesEndpoint = HonoClient['api']['chats'][':id']['sources']['$get'];
+export type ChatsListSourcesOutput = InferResponseType<_ChatsListSourcesEndpoint, 200>;
+export type ChatSourceDto = ChatsListSourcesOutput[number];
+
+type _ChatsAddSourceEndpoint = HonoClient['api']['chats'][':id']['sources']['$post'];
+export type ChatsAddSourceInput = InferRequestType<_ChatsAddSourceEndpoint>['json'];
+export type ChatsAddSourceOutput = InferResponseType<_ChatsAddSourceEndpoint, 201>;
+
+type _ChatsRemoveSourceEndpoint =
+  HonoClient['api']['chats'][':id']['sources'][':noteId']['$delete'];
+export type ChatsRemoveSourceOutput = InferResponseType<_ChatsRemoveSourceEndpoint, 200>;
 
 export type ChatUIMessageInput = {
   id: string;

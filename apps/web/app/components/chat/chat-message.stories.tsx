@@ -112,13 +112,12 @@ export const AssistantActions: Story = {
   render: () => <Harness />,
 };
 
-export const ReasoningAndReferencedNotes: Story = {
+export const ReasoningExample: Story = {
   render: () => (
     <Harness
       formatTimestamp={() => '10:30 AM'}
       message={{
         ...assistantMessage,
-        referencedNotes: [{ id: 'note-1', title: 'Release plan' }],
         reasoning: 'I compared the release constraints before answering.',
       }}
     />

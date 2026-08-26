@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => ({
   setSpeechGenerationId: vi.fn(),
   markSpeechComplete: vi.fn(),
   markSpeechReconciliation: vi.fn(),
-  resolveReferencedNotes: vi.fn(),
+  getChatSourceContext: vi.fn(),
   resolveChatFiles: vi.fn(),
   runInTransaction: vi.fn(),
   streamChatCompletion: vi.fn(),
@@ -83,7 +83,7 @@ vi.mock('@hominem/db', async () => {
       getGenerationRunById: mocks.getGenerationRunById,
       updateGenerationRun: mocks.updateGenerationRun,
       cancelGenerationRun: mocks.cancelGenerationRun,
-      resolveReferencedNotes: mocks.resolveReferencedNotes,
+      getChatSourceContext: mocks.getChatSourceContext,
       resolveChatFiles: mocks.resolveChatFiles,
     },
     ChatSpeechRunRepository: {
@@ -206,7 +206,7 @@ describe('chat stream accounting', () => {
     mocks.updateGenerationRun.mockResolvedValue(undefined);
     mocks.getMessageById.mockResolvedValue({ id: 'message-id' });
     mocks.touchLastMessage.mockResolvedValue(undefined);
-    mocks.resolveReferencedNotes.mockResolvedValue([]);
+    mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.resolveChatFiles.mockResolvedValue([]);
     mocks.runInTransaction.mockImplementation(
       async (callback: (trx: unknown) => Promise<unknown>) => callback({}),
@@ -334,7 +334,6 @@ describe('chat stream accounting', () => {
       role: 'assistant',
       content: 'Already generated reply',
       createdAt: '2026-01-01T00:00:01.000Z',
-      referencedNotes: null,
       files: null,
     });
 
@@ -425,7 +424,6 @@ describe('chat message regenerate', () => {
     role: 'user',
     content: 'Hello',
     createdAt: '2026-01-01T00:00:00.000Z',
-    referencedNotes: null,
     files: null,
   };
   const assistantMessage = {
@@ -433,14 +431,13 @@ describe('chat message regenerate', () => {
     role: 'assistant',
     content: 'Hi',
     createdAt: '2026-01-01T00:00:01.000Z',
-    referencedNotes: null,
     files: null,
   };
 
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
     mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
-    mocks.resolveReferencedNotes.mockResolvedValue([]);
+    mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.replaceAssistantMessageContent.mockReset();
     mocks.replaceAssistantMessageContent.mockResolvedValue({
       ...assistantMessage,
@@ -584,7 +581,7 @@ describe('chat stream walkie-talkie audio leg', () => {
       files: null,
     });
     mocks.touchLastMessage.mockResolvedValue(undefined);
-    mocks.resolveReferencedNotes.mockResolvedValue([]);
+    mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.resolveChatFiles.mockResolvedValue([]);
     mocks.runInTransaction.mockImplementation(
       async (callback: (trx: unknown) => Promise<unknown>) => callback({}),

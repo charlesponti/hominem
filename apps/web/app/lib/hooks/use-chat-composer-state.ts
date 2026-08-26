@@ -1,9 +1,9 @@
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
-import { slugifyText } from '@hominem/utils/text';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNoteSearch } from '~/hooks/use-notes';
 
+import { useAddChatSource, useChatSources, useRemoveChatSource } from './use-chat-sources';
 import { useFileUpload } from './use-file-upload';
 
 export type ChatComposerNote = Pick<NoteSearchResult, 'id' | 'title' | 'excerpt'>;
@@ -27,35 +27,39 @@ function getMentionQuery(value: string) {
   return match?.[1] ?? '';
 }
 
-export function useChatComposerState({ seedNote }: { seedNote: ChatComposerSeedNote | null }) {
+/**
+ * Notes attached to a chat are a persistent, chat-level relationship
+ * (chat_sources) rather than something staged per-message -- selecting a
+ * note or seeding from `seedNote` attaches it immediately.
+ */
+export function useChatComposerState({
+  chatId,
+  seedNote,
+}: {
+  chatId: string;
+  seedNote: ChatComposerSeedNote | null;
+}) {
   const [draft, setDraft] = useState('');
-  const [selectedNotes, setSelectedNotes] = useState<ChatComposerNote[]>([]);
   const [attachedFiles, setAttachedFiles] = useState<ChatComposerAttachment[]>([]);
   const { uploadFiles, uploadState } = useFileUpload();
 
-  const seededNote = useMemo(
-    () => (seedNote ? [{ id: seedNote.id, title: seedNote.title, excerpt: seedNote.excerpt }] : []),
-    [seedNote],
+  const { data: sources = [] } = useChatSources(chatId);
+  const { mutate: addSource } = useAddChatSource();
+  const { mutate: removeSource } = useRemoveChatSource(chatId);
+
+  const selectedNotesForSend: ChatComposerNote[] = useMemo(
+    () => sources.map((source) => ({ id: source.noteId, title: source.title, excerpt: null })),
+    [sources],
   );
 
-  const selectedNotesForSend = useMemo(
-    () => [
-      ...seededNote,
-      ...selectedNotes.filter((note) => !seededNote.some((seed) => seed.id === note.id)),
-    ],
-    [seededNote, selectedNotes],
-  );
+  const seededSourceNoteId = seedNote?.id ?? null;
+  useEffect(() => {
+    if (!seededSourceNoteId) return;
+    if (sources.some((source) => source.noteId === seededSourceNoteId)) return;
+    addSource({ chatId, noteId: seededSourceNoteId });
+  }, [addSource, chatId, seededSourceNoteId, sources]);
 
-  const draftWithSeed = useMemo(() => {
-    if (!seedNote) return draft;
-
-    const slug = slugifyText(seedNote.title ?? null);
-    if (!slug || draft.includes(`#${slug}`)) return draft;
-
-    return `${draft} #${slug}`.trim();
-  }, [draft, seedNote]);
-
-  const mentionQuery = getMentionQuery(draftWithSeed);
+  const mentionQuery = getMentionQuery(draft);
   const { data: searchResults } = useNoteSearch(mentionQuery, mentionQuery.length > 0);
   const suggestions = useMemo(
     () =>
@@ -65,11 +69,15 @@ export function useChatComposerState({ seedNote }: { seedNote: ChatComposerSeedN
     [searchResults?.notes, selectedNotesForSend],
   );
 
-  const selectSuggestion = useCallback((note: ChatComposerNote) => {
-    setSelectedNotes((current) =>
-      current.some((selected) => selected.id === note.id) ? current : [...current, note],
-    );
-  }, []);
+  const selectSuggestion = useCallback(
+    (note: ChatComposerNote) => addSource({ chatId, noteId: note.id }),
+    [addSource, chatId],
+  );
+
+  const removeSelectedNote = useCallback(
+    (noteId: string) => removeSource(noteId),
+    [removeSource],
+  );
 
   const attachFiles = useCallback(
     async (fileList: FileList | null) => {
@@ -90,22 +98,12 @@ export function useChatComposerState({ seedNote }: { seedNote: ChatComposerSeedN
   const clear = useCallback(() => {
     setDraft('');
     setAttachedFiles([]);
-    setSelectedNotes([]);
   }, []);
 
   const restore = useCallback(
-    ({
-      draft: nextDraft,
-      attachments,
-      notes,
-    }: {
-      draft: string;
-      attachments: ChatComposerAttachment[];
-      notes: ChatComposerNote[];
-    }) => {
+    ({ draft: nextDraft, attachments }: { draft: string; attachments: ChatComposerAttachment[] }) => {
       setDraft(nextDraft);
       setAttachedFiles(attachments);
-      setSelectedNotes(notes);
     },
     [],
   );
@@ -115,11 +113,11 @@ export function useChatComposerState({ seedNote }: { seedNote: ChatComposerSeedN
     attachedFiles,
     clear,
     draft,
-    draftWithSeed,
+    draftWithSeed: draft,
     mentionQuery,
     removeAttachment,
+    removeSelectedNote,
     restore,
-    selectedNotes,
     selectedNotesForSend,
     selectSuggestion,
     setDraft,

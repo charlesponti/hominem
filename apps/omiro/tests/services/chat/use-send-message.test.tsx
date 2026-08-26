@@ -38,7 +38,6 @@ vi.mock('~/services/chat/use-chat-messages', () => ({
     chat_id: CHAT_ID,
     profile_id: '',
     reasoning: null,
-    referencedNotes: null,
     toolCalls: null,
     isStreaming: false,
   }),

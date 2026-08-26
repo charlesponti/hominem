@@ -12,6 +12,7 @@ function getConversationActionIcon(kind: string, type?: string) {
   if (kind === 'search') return 'magnifyingglass';
   if (kind === 'toggle-debug') return 'ladybug';
   if (kind === 'settings') return 'slider.horizontal.3';
+  if (kind === 'sources') return 'doc.text.magnifyingglass';
   if (kind === 'archive') return 'archivebox';
   if (type === 'note') return 'doc.text';
   if (type === 'task') return 'checkmark.circle';
@@ -29,6 +30,7 @@ interface ChatActionsMenuProps {
   onOpenSearch: () => void;
   onToggleDebug: () => void;
   onOpenSettings: () => void;
+  onOpenSources: () => void;
   onTransform: (type: ArtifactType) => void;
 }
 
@@ -42,6 +44,7 @@ export function ChatActionsMenu({
   onOpenSearch,
   onToggleDebug,
   onOpenSettings,
+  onOpenSources,
   onTransform,
 }: ChatActionsMenuProps) {
   const router = useRouter();
@@ -87,6 +90,18 @@ export function ChatActionsMenu({
                 key={item.kind}
                 icon={getConversationActionIcon(item.kind)}
                 onPress={onOpenSettings}
+              >
+                {item.label}
+              </Stack.Toolbar.MenuAction>
+            );
+          }
+
+          if (item.kind === 'sources') {
+            return (
+              <Stack.Toolbar.MenuAction
+                key={item.kind}
+                icon={getConversationActionIcon(item.kind)}
+                onPress={onOpenSources}
               >
                 {item.label}
               </Stack.Toolbar.MenuAction>

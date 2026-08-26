@@ -3,11 +3,6 @@ export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue
 
 export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
-export interface ChatMessageReferencedNote {
-  id: string;
-  title: string | null;
-}
-
 export interface ChatMessageToolCall {
   toolName: string;
   type: 'tool-call';
@@ -27,7 +22,6 @@ export interface ChatMessageItem {
   chat_id: string;
   profile_id: string;
   reasoning?: string | null;
-  referencedNotes: ChatMessageReferencedNote[] | null;
   toolCalls: ChatMessageToolCall[] | null;
   isStreaming?: boolean;
   audio?: { url: string; mimeType: string } | null;
@@ -36,10 +30,6 @@ export interface ChatMessageItem {
   // record the user can retry instead of silently losing what they typed.
   failed?: boolean;
   error?: string | null;
-}
-
-export function getReferencedNoteLabel(note: ChatMessageReferencedNote) {
-  return note.title || note.id;
 }
 
 export type MarkdownComponent = import('react').ComponentType<{

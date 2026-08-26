@@ -78,7 +78,6 @@ export function useComposerSubmission(props: ComposerProps) {
       const sendPromise = sendChatMessage({
         message: trimmedMessage,
         fileIds,
-        noteIds: [],
         responseModality,
         messageId,
       });

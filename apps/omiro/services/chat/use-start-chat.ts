@@ -24,7 +24,6 @@ type StartChatInput = {
   title: string;
   message: string;
   fileIds?: string[];
-  noteIds?: string[];
 };
 
 export function useStartChat() {
@@ -34,7 +33,7 @@ export function useStartChat() {
 
   const startedChatIdRef = useRef<string | null>(null);
 
-  const mutation = useMutation<void, Error, StartChatInput & StartChatOptions>({
+  const mutation = useMutation<string, Error, StartChatInput & StartChatOptions>({
     mutationFn: async ({ onReady, ...input }) => {
       const net = await NetInfo.fetch();
       if (net.isConnected === false) {
@@ -95,6 +94,11 @@ export function useStartChat() {
         void invalidateInboxQueries(queryClient);
         throw error;
       }
+
+      if (!startedChatIdRef.current) {
+        throw new Error('Chat was not created');
+      }
+      return startedChatIdRef.current;
     },
   });
 
@@ -105,6 +109,6 @@ export function useStartChat() {
 
   return {
     isStartingChat: mutation.isPending,
-    startChat: startChat as (input: StartChatInput & StartChatOptions) => Promise<void>,
+    startChat: startChat as (input: StartChatInput & StartChatOptions) => Promise<string>,
   };
 }

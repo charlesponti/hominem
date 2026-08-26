@@ -11,7 +11,6 @@ interface StartChatInput {
   title: string;
   message: string;
   fileIds?: string[];
-  noteIds?: string[];
   responseLength?: 'short' | 'medium' | 'long';
   onAccepted?: (event: Extract<ChatStreamEvent, { type: 'accepted' }>) => void;
   onCommitted?: (event: Extract<ChatStreamEvent, { type: 'committed' }>) => void;

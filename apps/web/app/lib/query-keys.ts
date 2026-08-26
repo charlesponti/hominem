@@ -15,6 +15,7 @@ export const chatQueryKeys = {
   messages: (chatId: string) => queryKeys.chats.messages(chatId),
   note: (noteId: string) => ['chats', 'note', noteId] as const,
   sidebarList: ['chats', 'sidebar', 'list'] as const,
+  sources: (chatId: string) => ['chats', 'sources', chatId] as const,
 };
 
 export const notesQueryKeys = {

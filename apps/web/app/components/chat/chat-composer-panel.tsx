@@ -43,7 +43,7 @@ export function ChatComposerPanel({
   streamMessage,
   updateChatTitle,
 }: ChatComposerPanelProps) {
-  const composer = useChatComposerState({ seedNote });
+  const composer = useChatComposerState({ chatId, seedNote });
   const speech = useSpeechToText({ onTranscript: composer.setDraft });
   const { setPendingAssistantMessage } = display;
 
@@ -63,7 +63,6 @@ export function ChatComposerPanel({
       role: 'assistant',
       content: streamMessage.text,
       files: null,
-      referencedNotes: null,
       toolCalls: streamMessage.toolSteps.map((step) => ({
         toolName: step.toolName,
         type: 'tool-call' as const,
@@ -101,8 +100,6 @@ export function ChatComposerPanel({
 
     const messageToSend = composer.draftWithSeed;
     const filesToSend = composer.attachedFiles;
-    const notesToSend = composer.selectedNotesForSend;
-    const selectedNotesToRestore = composer.selectedNotes;
     let accepted = false;
     setIsRetryable(false);
 
@@ -114,9 +111,6 @@ export function ChatComposerPanel({
       role: 'user',
       content: messageToSend,
       files: null,
-      referencedNotes: notesToSend.length
-        ? notesToSend.map((note) => ({ id: note.id, title: note.title ?? null }))
-        : null,
       toolCalls: null,
       reasoning: null,
       parentMessageId: null,
@@ -129,7 +123,6 @@ export function ChatComposerPanel({
     await streamMessage.stream({
       message: messageToSend,
       fileIds: filesToSend.map((file) => file.id),
-      noteIds: notesToSend.map((note) => note.id),
       responseLength,
       onAccepted: (userMessage) => {
         accepted = true;
@@ -146,11 +139,7 @@ export function ChatComposerPanel({
         if (!accepted) setIsRetryable(true);
       },
       onFailed: () => {
-        composer.restore({
-          attachments: filesToSend,
-          draft: messageToSend,
-          notes: selectedNotesToRestore,
-        });
+        composer.restore({ attachments: filesToSend, draft: messageToSend });
         if (!accepted) setIsRetryable(true);
       },
     });
@@ -178,12 +167,14 @@ export function ChatComposerPanel({
         composer.suggestions.length > 0 || composer.selectedNotesForSend.length > 0 ? (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {composer.selectedNotesForSend.map((note) => (
-              <span
+              <button
                 key={note.id}
+                type="button"
                 className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
+                onClick={() => composer.removeSelectedNote(note.id)}
               >
-                {note.title || 'Untitled'}
-              </span>
+                {note.title || 'Untitled'} ×
+              </button>
             ))}
             {composer.suggestions.map((note) => (
               <button

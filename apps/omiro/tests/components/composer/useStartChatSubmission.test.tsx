@@ -52,7 +52,6 @@ describe('useStartChatSubmission', () => {
         title: 'title:hello there',
         message: 'hello there',
         fileIds: ['file-1'],
-        noteIds: [],
       }),
     );
     expect(clearComposer).toHaveBeenCalledTimes(1);

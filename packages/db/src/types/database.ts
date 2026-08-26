@@ -404,10 +404,17 @@ export interface AppChatMessages {
   metadata: Generated<Json>;
   parentMessageId: string | null;
   reasoning: string | null;
-  referencedNoteIds: Json | null;
   role: string;
   toolCalls: Json | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
+}
+
+export interface AppChatSources {
+  addedByUserid: string | null;
+  chatId: string;
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  id: Generated<string>;
+  noteId: string;
 }
 
 export interface AppChats {
@@ -1445,6 +1452,7 @@ export interface DB {
   'app.chatGenerationEvents': AppChatGenerationEvents;
   'app.chatGenerationRuns': AppChatGenerationRuns;
   'app.chatMessages': AppChatMessages;
+  'app.chatSources': AppChatSources;
   'app.chats': AppChats;
   'app.chatSpeechRuns': AppChatSpeechRuns;
   'app.collectionItems': AppCollectionItems;

@@ -5,19 +5,14 @@ export const ChatsSendSchema = z
     generationId: z.uuid(),
     message: z.string(),
     fileIds: z.array(z.uuid()).max(5).optional(),
-    noteIds: z.array(z.uuid()).max(10).optional(),
     responseModality: z.enum(['text', 'audio']).optional(),
     responseLength: z.enum(['short', 'medium', 'long']).optional(),
   })
   .superRefine((value, ctx) => {
-    if (
-      value.message.trim().length === 0 &&
-      (!value.fileIds || value.fileIds.length === 0) &&
-      (!value.noteIds || value.noteIds.length === 0)
-    ) {
+    if (value.message.trim().length === 0 && (!value.fileIds || value.fileIds.length === 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'message, fileIds, or noteIds is required',
+        message: 'message or fileIds is required',
         path: ['message'],
       });
     }
@@ -31,17 +26,12 @@ export const ChatsStartStreamSchema = ChatsCreateSchema.extend({
   generationId: z.uuid(),
   message: z.string(),
   fileIds: z.array(z.uuid()).max(5).optional(),
-  noteIds: z.array(z.uuid()).max(10).optional(),
   responseLength: z.enum(['short', 'medium', 'long']).optional(),
 }).superRefine((value, ctx) => {
-  if (
-    value.message.trim().length === 0 &&
-    (!value.fileIds || value.fileIds.length === 0) &&
-    (!value.noteIds || value.noteIds.length === 0)
-  ) {
+  if (value.message.trim().length === 0 && (!value.fileIds || value.fileIds.length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'message, fileIds, or noteIds is required',
+      message: 'message or fileIds is required',
       path: ['message'],
     });
   }
@@ -74,4 +64,8 @@ export const ChatsMessagesQuerySchema = z.object({
 export const ChatsSearchMessagesQuerySchema = z.object({
   query: z.string().trim().min(1).max(200),
   limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export const ChatsAddSourceSchema = z.object({
+  noteId: z.uuid(),
 });

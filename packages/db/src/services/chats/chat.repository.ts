@@ -1,4 +1,3 @@
-import { slugifyText } from '@hominem/utils/text';
 import type { Selectable } from 'kysely';
 
 import { NotFoundError, ValidationError } from '../../errors';
@@ -9,13 +8,19 @@ import {
   type ChatMessageToolCallRecord,
 } from '../../guards';
 import type { DbHandle } from '../../transaction';
-import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
+import type {
+  AppChatGenerationRuns,
+  AppChatMessages,
+  AppChatSources,
+  AppChats,
+} from '../../types/database';
 
 export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '../../guards';
 
 type ChatRow = Selectable<AppChats>;
 type ChatMessageRow = Selectable<AppChatMessages>;
 type ChatGenerationRunRow = Selectable<AppChatGenerationRuns>;
+type ChatSourceRow = Selectable<AppChatSources>;
 
 export interface ChatRecord {
   id: string;
@@ -29,11 +34,6 @@ export interface ChatRecord {
 
 export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
-export interface ReferencedNoteRecord {
-  id: string;
-  title: string | null;
-}
-
 export interface ChatMessageRecord {
   id: string;
   chatId: string;
@@ -41,12 +41,20 @@ export interface ChatMessageRecord {
   role: ChatMessageRole;
   content: string;
   files: ChatMessageFileRecord[] | null;
-  referencedNotes: ReferencedNoteRecord[] | null;
   toolCalls: ChatMessageToolCallRecord[] | null;
   reasoning: string | null;
   parentMessageId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ChatSourceRecord {
+  id: string;
+  chatId: string;
+  noteId: string;
+  title: string | null;
+  addedByUserId: string | null;
+  createdAt: string;
 }
 
 export interface DeleteChatMessagesResult {
@@ -60,7 +68,6 @@ export interface InsertChatMessageInput {
   role: ChatMessageRole;
   content: string;
   files?: unknown[] | null;
-  referencedNoteIds?: string[] | null;
   reasoning?: string | null;
   toolCalls?: unknown[] | null;
   parentMessageId?: string | null;
@@ -104,14 +111,7 @@ function toChatRecord(row: ChatRow): ChatRecord {
   };
 }
 
-function toChatMessageRecord(
-  row: ChatMessageRow,
-  noteTitlesById: Map<string, string | null>,
-): ChatMessageRecord {
-  const referencedNoteIds = Array.isArray(row.referencedNoteIds)
-    ? (row.referencedNoteIds as string[])
-    : [];
-
+function toChatMessageRecord(row: ChatMessageRow): ChatMessageRecord {
   return {
     id: row.id,
     chatId: row.chatId,
@@ -119,18 +119,31 @@ function toChatMessageRecord(
     role: row.role as ChatMessageRole,
     content: row.content,
     files: parseChatMessageFiles(row.files),
-    referencedNotes:
-      referencedNoteIds.length > 0
-        ? referencedNoteIds.map((id) => ({
-            id,
-            title: noteTitlesById.get(id) ?? null,
-          }))
-        : null,
     toolCalls: parseChatMessageToolCalls(row.toolCalls),
     reasoning: row.reasoning ?? null,
     parentMessageId: row.parentMessageId,
     createdAt: new Date(row.createdat).toISOString(),
     updatedAt: new Date(row.updatedat).toISOString(),
+  };
+}
+
+function toChatSourceRecord(
+  row: {
+    id: string;
+    chatId: string;
+    noteId: string;
+    addedByUserid: string | null;
+    createdAt: string | Date;
+  },
+  title: string | null,
+): ChatSourceRecord {
+  return {
+    id: row.id,
+    chatId: row.chatId,
+    noteId: row.noteId,
+    title,
+    addedByUserId: row.addedByUserid,
+    createdAt: new Date(row.createdAt).toISOString(),
   };
 }
 
@@ -428,12 +441,7 @@ export const ChatRepository = {
       .returningAll()
       .executeTakeFirstOrThrow()) as ChatMessageRow;
 
-    const noteIds = Array.isArray(updated.referencedNoteIds)
-      ? (updated.referencedNoteIds as string[])
-      : [];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return toChatMessageRecord(updated, noteTitlesById);
+    return toChatMessageRecord(updated);
   },
 
   async deleteUserMessageAndFollowing(
@@ -504,7 +512,7 @@ export const ChatRepository = {
   },
 
   /**
-   * Fetch a single message by id, enriched with referenced note titles.
+   * Fetch a single message by id.
    */
   async getMessageById(
     handle: DbHandle,
@@ -520,10 +528,7 @@ export const ChatRepository = {
 
     if (!row) return undefined;
 
-    const noteIds = Array.isArray(row.referencedNoteIds) ? (row.referencedNoteIds as string[]) : [];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return toChatMessageRecord(row, noteTitlesById);
+    return toChatMessageRecord(row);
   },
 
   /**
@@ -568,12 +573,7 @@ export const ChatRepository = {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
     }
 
-    const noteIds = Array.isArray(updated.referencedNoteIds)
-      ? (updated.referencedNoteIds as string[])
-      : [];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return toChatMessageRecord(updated, noteTitlesById);
+    return toChatMessageRecord(updated);
   },
 
   /**
@@ -596,16 +596,7 @@ export const ChatRepository = {
       .execute()) as ChatMessageRow[];
     messages.reverse();
 
-    const noteIds = [
-      ...new Set(
-        messages.flatMap((m) =>
-          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
-        ),
-      ),
-    ];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+    return messages.map(toChatMessageRecord);
   },
 
   /**
@@ -638,12 +629,7 @@ export const ChatRepository = {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
     }
 
-    const noteIds = Array.isArray(updated.referencedNoteIds)
-      ? (updated.referencedNoteIds as string[])
-      : [];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return toChatMessageRecord(updated, noteTitlesById);
+    return toChatMessageRecord(updated);
   },
 
   /**
@@ -658,23 +644,7 @@ export const ChatRepository = {
   },
 
   /**
-   * Fetch note titles for referenced note IDs (for message enrichment).
-   */
-  async getNoteTitles(handle: DbHandle, noteIds: string[]): Promise<Map<string, string | null>> {
-    if (noteIds.length === 0) {
-      return new Map();
-    }
-    const notes = (await handle
-      .selectFrom('app.notes')
-      .select(['id', 'title'])
-      .where('id', 'in', noteIds)
-      .execute()) as Array<{ id: string; title: string | null }>;
-
-    return new Map(notes.map((note) => [note.id, note.title]));
-  },
-
-  /**
-   * Get messages for a chat, enriched with referenced note titles.
+   * Get messages for a chat.
    *
    * Paginates from the most recent message backward: `offset=0` returns the
    * latest `limit` messages (chronological order), `offset=limit` returns
@@ -697,20 +667,11 @@ export const ChatRepository = {
       .execute()) as ChatMessageRow[];
     messages.reverse();
 
-    const noteIds = [
-      ...new Set(
-        messages.flatMap((m) =>
-          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
-        ),
-      ),
-    ];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+    return messages.map(toChatMessageRecord);
   },
 
   /**
-   * Search all messages in a chat by content, enriched with referenced note titles.
+   * Search all messages in a chat by content.
    */
   async searchMessages(
     handle: DbHandle,
@@ -729,16 +690,7 @@ export const ChatRepository = {
       .limit(limit)
       .execute()) as ChatMessageRow[];
 
-    const noteIds = [
-      ...new Set(
-        messages.flatMap((m) =>
-          Array.isArray(m.referencedNoteIds) ? (m.referencedNoteIds as string[]) : [],
-        ),
-      ),
-    ];
-    const noteTitlesById = await ChatRepository.getNoteTitles(handle, noteIds);
-
-    return messages.map((m) => toChatMessageRecord(m, noteTitlesById));
+    return messages.map(toChatMessageRecord);
   },
 
   /**
@@ -753,7 +705,6 @@ export const ChatRepository = {
         role: input.role,
         content: input.content,
         files: toJsonColumnValue(input.files as unknown[] | null),
-        referencedNoteIds: toJsonColumnValue(input.referencedNoteIds),
         reasoning: input.reasoning ?? null,
         toolCalls: toJsonColumnValue(input.toolCalls as unknown[] | null),
         parentMessageId: input.parentMessageId ?? null,
@@ -763,65 +714,111 @@ export const ChatRepository = {
   },
 
   /**
-   * Resolve note context for referenced notes (by explicit IDs and #mention slugs).
+   * Attach a note to a chat as a persistent context source. Idempotent --
+   * adding an already-attached note is a no-op, not an error.
    */
-  async resolveReferencedNotes(
+  async addChatSource(
     handle: DbHandle,
+    chatId: string,
+    noteId: string,
     userId: string,
-    explicitNoteIds: string[],
-    message: string,
-  ): Promise<NoteContext[]> {
-    const mentionedSlugs = extractMentionSlugs(message);
-    const explicitIds = [...new Set(explicitNoteIds)];
+  ): Promise<ChatSourceRecord> {
+    const note = await handle
+      .selectFrom('app.notes')
+      .select(['id', 'title'])
+      .where('id', '=', noteId)
+      .where('ownerUserid', '=', userId)
+      .executeTakeFirst();
 
-    type NoteInfo = { id: string; title: string | null; content: string; excerpt: string | null };
-
-    const explicitNotes: NoteInfo[] =
-      explicitIds.length > 0
-        ? ((await handle
-            .selectFrom('app.notes')
-            .select(['id', 'title', 'content', 'excerpt'])
-            .where('ownerUserid', '=', userId)
-            .where('id', 'in', explicitIds)
-            .execute()) as NoteInfo[])
-        : [];
-
-    if (explicitNotes.length !== explicitIds.length) {
-      throw new ValidationError('One or more referenced notes are unavailable');
+    if (!note) {
+      throw new ValidationError('Referenced note is unavailable');
     }
 
-    const candidateNotes: NoteInfo[] =
-      mentionedSlugs.length > 0
-        ? ((await handle
-            .selectFrom('app.notes')
-            .select(['id', 'title', 'content', 'excerpt'])
-            .where('ownerUserid', '=', userId)
-            .execute()) as NoteInfo[])
-        : [];
+    await handle
+      .insertInto('app.chatSources')
+      .values({ chatId, noteId, addedByUserid: userId })
+      .onConflict((oc) => oc.columns(['chatId', 'noteId']).doNothing())
+      .execute();
 
-    const matchedMentionNotes = candidateNotes.filter((note) => {
-      const slug = slugifyText(note.title);
-      return slug ? mentionedSlugs.includes(slug) : false;
-    });
+    const row = (await handle
+      .selectFrom('app.chatSources')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('noteId', '=', noteId)
+      .executeTakeFirstOrThrow()) as ChatSourceRow;
 
-    const mergedNotes = [...explicitNotes, ...matchedMentionNotes].reduce<Map<string, NoteContext>>(
-      (acc, note) => {
-        acc.set(note.id, {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          excerpt: note.excerpt,
-          files: [],
-        });
-        return acc;
-      },
-      new Map(),
-    );
+    return toChatSourceRecord(row, note.title);
+  },
 
-    const noteIds = [...mergedNotes.keys()];
-    if (noteIds.length === 0) {
+  /**
+   * Detach a note from a chat. Returns whether a source was actually removed.
+   */
+  async removeChatSource(handle: DbHandle, chatId: string, noteId: string): Promise<boolean> {
+    const result = await handle
+      .deleteFrom('app.chatSources')
+      .where('chatId', '=', chatId)
+      .where('noteId', '=', noteId)
+      .executeTakeFirst();
+
+    return (result.numDeletedRows ?? 0n) > 0n;
+  },
+
+  /**
+   * List the notes currently attached to a chat, most recently added first.
+   */
+  async listChatSources(handle: DbHandle, chatId: string): Promise<ChatSourceRecord[]> {
+    const rows = (await handle
+      .selectFrom('app.chatSources as source')
+      .innerJoin('app.notes as note', 'note.id', 'source.noteId')
+      .select([
+        'source.id',
+        'source.chatId',
+        'source.noteId',
+        'note.title',
+        'source.addedByUserid',
+        'source.createdAt',
+      ])
+      .where('source.chatId', '=', chatId)
+      .orderBy('source.createdAt', 'desc')
+      .execute()) as Array<{
+      id: string;
+      chatId: string;
+      noteId: string;
+      title: string | null;
+      addedByUserid: string | null;
+      createdAt: string | Date;
+    }>;
+
+    return rows.map((row) => toChatSourceRecord(row, row.title));
+  },
+
+  /**
+   * Resolve the full note context (content + attached files) for every note
+   * currently attached to a chat -- read once per generation turn.
+   */
+  async getChatSourceContext(handle: DbHandle, chatId: string): Promise<NoteContext[]> {
+    const notes = (await handle
+      .selectFrom('app.chatSources as source')
+      .innerJoin('app.notes as note', 'note.id', 'source.noteId')
+      .select(['note.id', 'note.title', 'note.content', 'note.excerpt'])
+      .where('source.chatId', '=', chatId)
+      .execute()) as Array<{
+      id: string;
+      title: string | null;
+      content: string;
+      excerpt: string | null;
+    }>;
+
+    if (notes.length === 0) {
       return [];
     }
+
+    const notesById = new Map<string, NoteContext>(
+      notes.map((note) => [
+        note.id,
+        { id: note.id, title: note.title, content: note.content, excerpt: note.excerpt, files: [] },
+      ]),
+    );
 
     const files = (await handle
       .selectFrom('app.noteFiles as noteFile')
@@ -833,7 +830,11 @@ export const ChatRepository = {
         'file.content',
         'file.textContent',
       ])
-      .where('noteFile.noteId', 'in', noteIds)
+      .where(
+        'noteFile.noteId',
+        'in',
+        notes.map((note) => note.id),
+      )
       .execute()) as Array<{
       noteId: string;
       id: string;
@@ -843,7 +844,7 @@ export const ChatRepository = {
     }>;
 
     for (const file of files) {
-      const note = mergedNotes.get(file.noteId);
+      const note = notesById.get(file.noteId);
       if (!note) continue;
       note.files.push({
         id: file.id,
@@ -853,7 +854,7 @@ export const ChatRepository = {
       });
     }
 
-    return [...mergedNotes.values()];
+    return [...notesById.values()];
   },
 
   /**
@@ -914,8 +915,4 @@ export interface NoteContext {
     content: string | null;
     textContent: string | null;
   }>;
-}
-
-function extractMentionSlugs(message: string): string[] {
-  return [...message.matchAll(/#([a-zA-Z0-9][\w-]*)/g)].map((match) => match[1]!.toLowerCase());
 }

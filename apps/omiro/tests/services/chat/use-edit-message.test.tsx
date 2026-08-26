@@ -46,7 +46,6 @@ function seedMessages(
       chat_id: CHAT_ID,
       profile_id: '',
       reasoning: null,
-      referencedNotes: null,
       toolCalls: null,
       isStreaming: false,
     },

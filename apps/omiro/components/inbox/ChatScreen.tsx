@@ -7,6 +7,7 @@ import { RefreshControl, Text, View } from 'react-native';
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
 import { ChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
+import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
 import { makeStyles } from '~/components/theme';
@@ -136,6 +137,7 @@ export function ChatScreen({ id }: { id: string }) {
   }, []);
 
   const [showChatSettings, setShowChatSettings] = useState(false);
+  const [showChatSources, setShowChatSources] = useState(false);
 
   const emptyState = useMemo(
     () => <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />,
@@ -174,6 +176,7 @@ export function ChatScreen({ id }: { id: string }) {
           onChatArchive={handleChatArchive}
           onOpenSearch={search.handleOpenSearch}
           onOpenSettings={() => setShowChatSettings(true)}
+          onOpenSources={() => setShowChatSources(true)}
           onToggleDebug={handleToggleDebug}
           onTransform={(type) => void extraction.handleTransform(type)}
           showDebug={showDebug}
@@ -192,6 +195,11 @@ export function ChatScreen({ id }: { id: string }) {
 
       <View style={styles.container}>
         <ChatSettingsSheet visible={showChatSettings} onClose={() => setShowChatSettings(false)} />
+        <ChatSourcesSheet
+          chatId={chatId}
+          visible={showChatSources}
+          onClose={() => setShowChatSources(false)}
+        />
         <ChatSearchModal
           visible={search.showSearch}
           searchQuery={search.searchQuery}

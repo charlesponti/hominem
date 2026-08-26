@@ -24,7 +24,6 @@ function triggerAssistantCompletionHaptic() {
 export interface SendInput {
   message: string;
   fileIds?: string[];
-  noteIds?: string[];
   responseModality?: 'text' | 'audio';
   messageId?: string;
 }
@@ -53,12 +52,12 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       const userMessageId = messageId ?? randomUUID();
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (previous = []) => [
         ...previous,
-        createOptimisticMessage(chatId, message, null, userMessageId),
+        createOptimisticMessage(chatId, message, userMessageId),
       ]);
       setCurrentGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
       return { userMessageId };
     },
-    mutationFn: async ({ generationId, message, fileIds, noteIds, responseModality }) => {
+    mutationFn: async ({ generationId, message, fileIds, responseModality }) => {
       const net = await NetInfo.fetch();
       if (net.isConnected === false) throw new Error(OFFLINE_UNAVAILABLE_ERROR);
 
@@ -70,7 +69,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           generationId,
           message: message.trim(),
           fileIds,
-          noteIds,
           responseModality,
           responseLength: getChatResponseLength(),
         },

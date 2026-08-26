@@ -2,7 +2,7 @@ import type {
   ChatMessageFileRecord,
   ChatMessageRecord,
   ChatRecord,
-  NoteContext,
+  ChatSourceRecord,
 } from '@hominem/db';
 
 export function toChatDto(record: ChatRecord) {
@@ -25,7 +25,6 @@ export function toChatMessageDto(record: ChatMessageRecord) {
     role: record.role,
     content: record.content,
     files: record.files,
-    referencedNotes: record.referencedNotes,
     toolCalls: record.toolCalls,
     reasoning: record.reasoning,
     parentMessageId: record.parentMessageId,
@@ -34,14 +33,23 @@ export function toChatMessageDto(record: ChatMessageRecord) {
   };
 }
 
+export function toChatSourceDto(record: ChatSourceRecord) {
+  return {
+    id: record.id,
+    chatId: record.chatId,
+    noteId: record.noteId,
+    title: record.title,
+    addedByUserId: record.addedByUserId,
+    createdAt: record.createdAt,
+  };
+}
+
 export function toStoredUserMessageContent(
   message: string,
-  notes: NoteContext[],
   files: ChatMessageFileRecord[],
 ): string {
   const trimmed = message.trim();
   if (trimmed.length > 0) return trimmed;
   if (files.length > 0) return files.map((file) => file.filename ?? 'Attachment').join(', ');
-  if (notes.length > 0) return notes.map((note) => note.title ?? 'Untitled note').join(', ');
   return '';
 }

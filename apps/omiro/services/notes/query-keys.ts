@@ -22,4 +22,5 @@ export const chatKeys = {
   messageSearch: (chatId: string, query: string) => queryKeys.chats.messageSearch(chatId, query),
   detail: (chatId: string) => ['chats', 'detail', chatId] as const,
   activeChat: (chatId: string | null) => ['chats', 'detail', chatId] as const,
+  sources: (chatId: string) => ['chats', 'sources', chatId] as const,
 } as const;

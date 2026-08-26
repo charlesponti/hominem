@@ -70,7 +70,6 @@ describe('useStartChat', () => {
     await result.current.start({
       fileIds: ['file-1'],
       message: 'Start here',
-      noteIds: ['note-1'],
       title: 'Start here',
     });
 
@@ -79,7 +78,6 @@ describe('useStartChat', () => {
         json: expect.objectContaining({
           fileIds: ['file-1'],
           message: 'Start here',
-          noteIds: ['note-1'],
           title: 'Start here',
           generationId: expect.any(String),
         }),

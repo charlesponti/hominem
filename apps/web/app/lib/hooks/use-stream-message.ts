@@ -20,7 +20,6 @@ export type StreamStatus =
 interface StreamInput {
   message: string;
   fileIds?: string[];
-  noteIds?: string[];
   responseLength?: ResponseLength;
   onAccepted?: (userMessage: ChatMessageDto | null) => void;
   onCommitted?: (message: ChatMessageDto) => void;
@@ -68,7 +67,6 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
               generationId,
               message: input.message,
               ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
-              ...(input.noteIds && input.noteIds.length > 0 ? { noteIds: input.noteIds } : {}),
               ...(input.responseLength ? { responseLength: input.responseLength } : {}),
             },
           },

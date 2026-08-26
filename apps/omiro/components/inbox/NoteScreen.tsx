@@ -25,7 +25,7 @@ import AppIcon from '~/components/ui/icon';
 import { useNoteEditor } from '~/hooks/use-note-editor';
 import { useNoteFormatting } from '~/hooks/use-note-formatting';
 import { useInlineEnhance } from '~/services/ai';
-import { normalizeChatTitle, useStartChat } from '~/services/chat';
+import { normalizeChatTitle, useAddChatSource, useStartChat } from '~/services/chat';
 import { isOfflineUnavailable } from '~/services/chat/chat-errors';
 import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
 import { HOME_ROUTE } from '~/services/navigation/routes';
@@ -205,6 +205,7 @@ function NoteEditorBody({
   } = useInlineEnhance();
 
   const { startChat, isStartingChat } = useStartChat();
+  const { mutateAsync: addChatSource } = useAddChatSource();
 
   const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
     useThemeColor([
@@ -289,11 +290,11 @@ function NoteEditorBody({
 
     try {
       await flushSave(draft.title, draft.content, fileIds);
-      await startChat({
+      const chatId = await startChat({
         title: normalizeChatTitle(draft.title || draft.content),
         message: t.notes.editor.startChatMessage,
-        noteIds: [note.id],
       });
+      await addChatSource({ chatId, noteId: note.id });
     } catch (error) {
       const message = isOfflineUnavailable(error)
         ? t.notes.editor.startChatErrorOffline
@@ -301,6 +302,7 @@ function NoteEditorBody({
       Alert.alert(t.notes.editor.startChatErrorTitle, message, [{ text: 'OK' }]);
     }
   }, [
+    addChatSource,
     closeEnhance,
     draft.content,
     draft.title,

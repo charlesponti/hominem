@@ -15,7 +15,6 @@ interface ComposerChatSend {
   sendChatMessage: (input: {
     message: string;
     fileIds?: string[];
-    noteIds?: string[];
     responseModality?: 'text' | 'audio';
     // See `SendInput.messageId` in use-send-message.ts -- lets the toast
     // handoff's flight and the real optimistic row share one id.

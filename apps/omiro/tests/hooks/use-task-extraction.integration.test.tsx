@@ -46,7 +46,6 @@ function message(role: ChatMessageItem['role'], text: string): ChatMessageItem {
     chat_id: CHAT_ID,
     profile_id: '',
     reasoning: null,
-    referencedNotes: null,
     toolCalls: null,
     isStreaming: false,
   } as ChatMessageItem;

@@ -58,7 +58,6 @@ describe('toMessageOutput', () => {
       createdAt: new Date().toISOString(),
       chatId: CHAT_ID,
       reasoning: null,
-      referencedNotes: null,
       toolCalls: null,
       files: [{ type: 'audio', url: 'https://example.com/a.mp3', mimeType: 'audio/mpeg' }],
     } as RpcChatMessageFixture);
@@ -113,7 +112,6 @@ describe('useChatMessages', () => {
       created_at: new Date().toISOString(),
       chat_id: CHAT_ID,
       profile_id: '',
-      referencedNotes: null,
       toolCalls: null,
       isStreaming: false,
     };

@@ -23,7 +23,6 @@ export function useStartChatSubmission() {
           title: normalizeChatTitle(message),
           message: message.trim(),
           fileIds,
-          noteIds: [],
           onReady: () => {
             clearComposer();
             onComplete?.();

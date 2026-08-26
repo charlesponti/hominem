@@ -61,9 +61,9 @@ export type {
   ChatMessageRole,
   ChatMessageToolCallRecord,
   ChatRecord,
+  ChatSourceRecord,
   InsertChatMessageInput,
   NoteContext,
-  ReferencedNoteRecord,
 } from './services/chats/chat.repository';
 
 export { FileRepository } from './services/files/file.repository';

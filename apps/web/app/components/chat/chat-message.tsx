@@ -163,7 +163,6 @@ export const ChatMessage = memo(function ChatMessage({
   const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
   const canDelete = message.role === 'user' && !message.isStreaming && Boolean(onDelete);
   const hasReasoning = Boolean(message.reasoning?.trim());
-  const hasReferencedNotes = (message.referencedNotes?.length ?? 0) > 0;
   const presentationState = message.failed
     ? message.role === 'assistant'
       ? 'interrupted'
@@ -278,19 +277,6 @@ export const ChatMessage = memo(function ChatMessage({
                     <ReasoningTrigger aria-label="Toggle reasoning" />
                     <ReasoningContent>{message.reasoning ?? ''}</ReasoningContent>
                   </Reasoning>
-                ) : null}
-                {hasReferencedNotes ? (
-                  <ul aria-label="Referenced notes" className="flex flex-wrap gap-1.5">
-                    {message.referencedNotes?.map((note) => (
-                      <li
-                        aria-label={`Referenced note: ${note.title || note.id}`}
-                        className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground"
-                        key={note.id}
-                      >
-                        {note.title || note.id}
-                      </li>
-                    ))}
-                  </ul>
                 ) : null}
                 {message.toolCalls?.map((toolCall) => (
                   <ToolCall

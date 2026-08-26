@@ -23,7 +23,6 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     chat_id: message.chatId,
     profile_id: '',
     reasoning: message.reasoning,
-    referencedNotes: message.referencedNotes ?? null,
     toolCalls: message.toolCalls ?? null,
     isStreaming: false,
     audio:

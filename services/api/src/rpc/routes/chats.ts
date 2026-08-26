@@ -25,6 +25,7 @@ import {
 import { planChatTools } from '../../mcp/llm-tools';
 import { callTool } from '../../mcp/tools';
 import {
+  ChatsAddSourceSchema,
   ChatsCreateSchema,
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
@@ -41,7 +42,12 @@ import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { CHAT_ASSISTANT_PROMPT, CHAT_RESPONSE_LENGTH_GUIDANCE } from '../prompts';
 import { runCompletionWithTools } from './chat-completion-loop';
 import { streamChatReplySpeech, synthesizeChatReplySpeech } from './chat-speech.service';
-import { toChatDto, toChatMessageDto, toStoredUserMessageContent } from './chats.mapper';
+import {
+  toChatDto,
+  toChatMessageDto,
+  toChatSourceDto,
+  toStoredUserMessageContent,
+} from './chats.mapper';
 
 type SynthesizedReplyAudio = {
   file: ChatMessageFileRecord | null;
@@ -338,6 +344,32 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
     return c.json(messages.map(toChatMessageDto));
+  })
+  .get('/sources', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const sources = await ChatRepository.listChatSources(db, chatId);
+    return c.json(sources.map(toChatSourceDto));
+  })
+  .post('/sources', zValidator('json', ChatsAddSourceSchema), async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const { noteId } = c.req.valid('json');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const source = await ChatRepository.addChatSource(db, chatId, noteId, userId);
+    return c.json(toChatSourceDto(source), 201);
+  })
+  .delete('/sources/:noteId', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const noteId = c.req.param('noteId');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const removed = await ChatRepository.removeChatSource(db, chatId, noteId);
+    return c.json({ removed });
   })
   .use(
     '/messages/:messageId/speech',
@@ -664,12 +696,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       const parentUserMessage = priorMessages[resolvedParentIndex]!;
       const history = priorMessages.slice(0, resolvedParentIndex);
 
-      const resolvedNotes = await ChatRepository.resolveReferencedNotes(
-        db,
-        userId,
-        parentUserMessage.referencedNotes?.map((note) => note.id) ?? [],
-        parentUserMessage.content,
-      );
+      const resolvedNotes = await ChatRepository.getChatSourceContext(db, chatId);
       const resolvedFiles = parentUserMessage.files ?? [];
       const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
       if (existingRun) {
@@ -1135,22 +1162,16 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     await assertUnderMonthlyUsageLimit(userId);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const {
-      generationId,
-      message,
-      fileIds = [],
-      noteIds = [],
-      responseModality,
-      responseLength,
-    } = c.req.valid('json');
+    const { generationId, message, fileIds = [], responseModality, responseLength } =
+      c.req.valid('json');
 
     const history = await ChatRepository.getMessages(db, chatId, 30, 0);
-    const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
+    const resolvedNotes = await ChatRepository.getChatSourceContext(db, chatId);
     const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
 
-    const storedUserContent = toStoredUserMessageContent(message, resolvedNotes, resolvedFiles);
+    const storedUserContent = toStoredUserMessageContent(message, resolvedFiles);
     if (!storedUserContent) {
-      throw new ValidationError('Message, notes, or files are required');
+      throw new ValidationError('Message or fileIds is required');
     }
 
     const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
@@ -1189,7 +1210,6 @@ const chatByIdRoutes = new Hono<AppContext>()
         role: 'user',
         content: storedUserContent,
         files: resolvedFiles.length > 0 ? resolvedFiles : null,
-        referencedNoteIds: resolvedNotes.length > 0 ? resolvedNotes.map((n) => n.id) : null,
       });
       await ChatRepository.touchLastMessage(trx, chatId);
       await ChatRepository.createGenerationRun(trx, {
@@ -1412,14 +1432,7 @@ export const chatsRoutes = new Hono<AppContext>()
   })
   .post('/start-stream', zValidator('json', ChatsStartStreamSchema), async (c) => {
     const userId = c.get('auth')!.userId;
-    const {
-      generationId,
-      title,
-      message,
-      fileIds = [],
-      noteIds = [],
-      responseLength,
-    } = c.req.valid('json');
+    const { generationId, title, message, fileIds = [], responseLength } = c.req.valid('json');
 
     // `/start-stream` has no chatId yet, so a retried generationId can't be
     // looked up the way `/stream`/`/regenerate` do — fall back to a
@@ -1453,26 +1466,20 @@ export const chatsRoutes = new Hono<AppContext>()
       });
     }
 
-    const resolvedNotes = await ChatRepository.resolveReferencedNotes(db, userId, noteIds, message);
     const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
-    const storedUserContent = toStoredUserMessageContent(message, resolvedNotes, resolvedFiles);
+    const storedUserContent = toStoredUserMessageContent(message, resolvedFiles);
     if (!storedUserContent) {
-      throw new ValidationError('Message, notes, or files are required');
+      throw new ValidationError('Message or fileIds is required');
     }
 
     const chatWithUserMessage = await runInTransaction(async (trx) => {
-      const createdChat = await ChatRepository.create(trx, {
-        userId,
-        title,
-        noteId: resolvedNotes.length === 1 ? resolvedNotes[0].id : null,
-      });
+      const createdChat = await ChatRepository.create(trx, { userId, title });
       const userMessage = await ChatRepository.insertMessage(trx, {
         chatId: createdChat.id,
         authorUserId: userId,
         role: 'user',
         content: storedUserContent,
         files: resolvedFiles.length > 0 ? resolvedFiles : null,
-        referencedNoteIds: resolvedNotes.length > 0 ? resolvedNotes.map((note) => note.id) : null,
       });
       await ChatRepository.touchLastMessage(trx, createdChat.id);
       await ChatRepository.createGenerationRun(trx, {
@@ -1491,7 +1498,7 @@ export const chatsRoutes = new Hono<AppContext>()
       chatWithUserMessage.userMessageId,
     );
 
-    const currentUserContent = formatUserContentWithContext(message, resolvedNotes, resolvedFiles);
+    const currentUserContent = formatUserContentWithContext(message, [], resolvedFiles);
     const chatMessages = buildMessages([], currentUserContent, getSystemPrompt(responseLength));
     const chatToolPlan = await planChatTools({ model: CHAT_MODEL, messages: chatMessages });
     const eventId = randomUUID();
@@ -1546,7 +1553,7 @@ export const chatsRoutes = new Hono<AppContext>()
           durationMs: getDurationMs(),
           metadata: {
             chatId: chat.id,
-            noteCount: resolvedNotes.length,
+            noteCount: 0,
             fileCount: resolvedFiles.length,
             toolCallCount: toolCallRecords.length,
           },

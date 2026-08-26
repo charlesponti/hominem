@@ -14,7 +14,6 @@ function fallbackId() {
 export function createOptimisticMessage(
   chatId: string,
   messageText: string,
-  referencedNotes: ChatMessageItem['referencedNotes'] = null,
   id = fallbackId(),
 ): ChatMessageItem {
   return {
@@ -26,7 +25,6 @@ export function createOptimisticMessage(
     chat_id: chatId,
     profile_id: '',
     reasoning: null,
-    referencedNotes,
     toolCalls: null,
     isStreaming: false,
   };
