@@ -1164,8 +1164,13 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     await assertUnderMonthlyUsageLimit(userId);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const { generationId, message, fileIds = [], responseModality, responseLength } =
-      c.req.valid('json');
+    const {
+      generationId,
+      message,
+      fileIds = [],
+      responseModality,
+      responseLength,
+    } = c.req.valid('json');
 
     const [history, resolvedNotes, resolvedFiles] = await Promise.all([
       ChatRepository.getMessages(db, chatId, 30, 0),

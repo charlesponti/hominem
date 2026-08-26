@@ -7,12 +7,12 @@ import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
-import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import {
   useAddChatSource,
   useChatSources,
   useRemoveChatSource,
 } from '~/services/chat/use-chat-sources';
+import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import t from '~/translations';
 
 interface ChatSourcesSheetProps {
@@ -38,12 +38,9 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
   const { mutate: removeSource, isPending: isRemoving } = useRemoveChatSource(chatId);
   const inbox = useInboxStreamItems({ enabled: visible });
 
-  const attachedNoteIds = useMemo(() => new Set(sources.map((source) => source.noteId)), [
-    sources,
-  ]);
+  const attachedNoteIds = useMemo(() => new Set(sources.map((source) => source.noteId)), [sources]);
   const availableNotes = useMemo(
-    () =>
-      inbox.items.filter((item) => item.kind === 'note' && !attachedNoteIds.has(item.entityId)),
+    () => inbox.items.filter((item) => item.kind === 'note' && !attachedNoteIds.has(item.entityId)),
     [attachedNoteIds, inbox.items],
   );
 

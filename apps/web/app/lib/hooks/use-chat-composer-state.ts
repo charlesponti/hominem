@@ -74,10 +74,7 @@ export function useChatComposerState({
     [addSource, chatId],
   );
 
-  const removeSelectedNote = useCallback(
-    (noteId: string) => removeSource(noteId),
-    [removeSource],
-  );
+  const removeSelectedNote = useCallback((noteId: string) => removeSource(noteId), [removeSource]);
 
   const attachFiles = useCallback(
     async (fileList: FileList | null) => {
@@ -101,7 +98,13 @@ export function useChatComposerState({
   }, []);
 
   const restore = useCallback(
-    ({ draft: nextDraft, attachments }: { draft: string; attachments: ChatComposerAttachment[] }) => {
+    ({
+      draft: nextDraft,
+      attachments,
+    }: {
+      draft: string;
+      attachments: ChatComposerAttachment[];
+    }) => {
       setDraft(nextDraft);
       setAttachedFiles(attachments);
     },
