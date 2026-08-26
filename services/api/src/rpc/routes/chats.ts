@@ -696,9 +696,11 @@ const chatByIdRoutes = new Hono<AppContext>()
       const parentUserMessage = priorMessages[resolvedParentIndex]!;
       const history = priorMessages.slice(0, resolvedParentIndex);
 
-      const resolvedNotes = await ChatRepository.getChatSourceContext(db, chatId);
       const resolvedFiles = parentUserMessage.files ?? [];
-      const existingRun = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+      const [resolvedNotes, existingRun] = await Promise.all([
+        ChatRepository.getChatSourceContext(db, chatId),
+        ChatRepository.getGenerationRun(db, chatId, generationId, userId),
+      ]);
       if (existingRun) {
         return streamSSE(c, async (stream) => {
           if (existingRun.status === 'committed' && existingRun.assistantMessageId) {
@@ -1165,9 +1167,11 @@ const chatByIdRoutes = new Hono<AppContext>()
     const { generationId, message, fileIds = [], responseModality, responseLength } =
       c.req.valid('json');
 
-    const history = await ChatRepository.getMessages(db, chatId, 30, 0);
-    const resolvedNotes = await ChatRepository.getChatSourceContext(db, chatId);
-    const resolvedFiles = await ChatRepository.resolveChatFiles(db, userId, fileIds);
+    const [history, resolvedNotes, resolvedFiles] = await Promise.all([
+      ChatRepository.getMessages(db, chatId, 30, 0),
+      ChatRepository.getChatSourceContext(db, chatId),
+      ChatRepository.resolveChatFiles(db, userId, fileIds),
+    ]);
 
     const storedUserContent = toStoredUserMessageContent(message, resolvedFiles);
     if (!storedUserContent) {
