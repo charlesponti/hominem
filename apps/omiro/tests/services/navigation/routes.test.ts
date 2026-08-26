@@ -20,7 +20,7 @@ describe('protected routes', () => {
     expect(ALL_ROUTE).toBe('/(protected)/all');
     expect(TIME_ROUTE).toBe('/(protected)/time');
     expect(SETTINGS_ROUTE).toBe('/(protected)/settings');
-    expect(ARCHIVED_CHATS_ROUTE).toBe('/(protected)/settings/archived-chats');
+    expect(ARCHIVED_CHATS_ROUTE).toBe('/(protected)/chats/archived');
     expect(getContentRoute('chat', 'chat-1')).toBe('/(protected)/chats/chat-1');
     expect(getContentRoute('note', 'note-1')).toBe('/(protected)/notes/note-1');
   });

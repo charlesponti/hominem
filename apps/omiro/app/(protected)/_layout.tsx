@@ -103,7 +103,6 @@ function ProtectedShell() {
                 title: 'Settings',
               }}
             />
-            <Stack.Screen name="settings/archived-chats" options={{ title: 'Archived Chats' }} />
             <Stack.Screen
               name="enhance-sheet"
               options={{

@@ -27,6 +27,7 @@ export default function ArchivedChatsScreen() {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           title: t.settings.archivedChatsScreen.title,
         }}
       />
