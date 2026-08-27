@@ -65,6 +65,11 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
       "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*", ".cache/**"]
     },
+    "@hominem/rpc#build": {
+      "dependsOn": ["^build", "@hominem/api#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
+      "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*", ".cache/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true,

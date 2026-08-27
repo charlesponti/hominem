@@ -6,12 +6,17 @@
     // AppType survives as a self-contained .d.ts. outDir is HARDCODED here on
     // purpose — never configure this emit via CLI flags or rootDir dances, or
     // declarations can land beside source (docs/type-system.md, Guards).
+    // incremental is force-disabled: the base profile turns it on, but a
+    // restored/stale tsBuildInfoFile (e.g. from turbo's cached ".cache/**"
+    // output without the matching "build/**" declarations) makes tsc believe
+    // it's already up to date and skip emitting entirely — a silent, "green"
+    // build that never wrote build/rpc/app.d.ts. Always emit fully.
+    "incremental": false,
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
     "rootDir": "src",
-    "outDir": "build",
-    "tsBuildInfoFile": "./.cache/tsconfig.emit.tsbuildinfo"
+    "outDir": "build"
   },
   "exclude": [
     "node_modules",

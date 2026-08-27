@@ -5,12 +5,14 @@
     // — see that package's tsconfig.emit.json). Consumers resolve the emitted
     // build/*.d.ts via package.json exports types; the path alias to the API
     // type contract points at the API's emitted declarations.
+    // incremental is force-disabled — see services/api/tsconfig.emit.json for
+    // why a stale tsBuildInfoFile can mask a build that emits nothing.
+    "incremental": false,
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
     "rootDir": "src",
-    "outDir": "build",
-    "tsBuildInfoFile": "./.cache/tsconfig.emit.tsbuildinfo"
+    "outDir": "build"
   },
   "exclude": [
     "node_modules",
