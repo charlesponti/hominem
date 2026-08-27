@@ -9,7 +9,7 @@ import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { OFFLINE_UNAVAILABLE_ERROR } from '~/services/chat/chat-errors';
-import { streamSSE } from '~/services/chat/stream-sse';
+import { consumeSseXhr } from '~/services/chat/consume-sse-xhr';
 import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { chatKeys } from '~/services/notes/query-keys';
@@ -51,7 +51,7 @@ export function useStartChat() {
       const generationId = randomUUID();
 
       try {
-        await streamSSE<ChatsStartStreamEvent>({
+        await consumeSseXhr<ChatsStartStreamEvent>({
           url: `${API_BASE_URL}/api/chats/start-stream`,
           payload: {
             ...input,

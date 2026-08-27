@@ -1,7 +1,7 @@
 import type { ChatStreamEvent } from '@hominem/rpc/types';
 import { describe, expect, it, vi } from 'vitest';
 
-import { consumeChatStream } from './stream-events';
+import { consumeSseResponse } from './consume-sse-response';
 
 function responseFor(chunks: string[]) {
   const encoder = new TextEncoder();
@@ -15,15 +15,16 @@ function responseFor(chunks: string[]) {
   return new Response(stream);
 }
 
-describe('consumeChatStream', () => {
+describe('consumeSseResponse', () => {
   it('parses events split across chunks and ignores malformed lines', async () => {
     const onEvent = vi.fn<(event: ChatStreamEvent) => void>();
 
-    await consumeChatStream(
+    await consumeSseResponse(
       responseFor([
         'data: {"type":"status","generationId":"g1","status":"preparing"}\n',
         'data: {"type":"committed","generationId":"g1","message":{"content":"hi"}}\n',
         'data: {bad}\n',
+        ': keep-alive\n',
         'data: [DONE]\n',
       ]),
       onEvent,
@@ -34,8 +35,16 @@ describe('consumeChatStream', () => {
     expect(onEvent.mock.calls[1]?.[0]).toMatchObject({ type: 'committed' });
   });
 
+  it('flushes a final event without a trailing newline', async () => {
+    const onEvent = vi.fn<(event: ChatStreamEvent) => void>();
+
+    await consumeSseResponse(responseFor(['data: {"type":"status"}']), onEvent);
+
+    expect(onEvent).toHaveBeenCalledWith({ type: 'status' });
+  });
+
   it('rejects when a response has no body', async () => {
-    await expect(consumeChatStream(new Response(null), vi.fn())).rejects.toThrow(
+    await expect(consumeSseResponse(new Response(null), vi.fn())).rejects.toThrow(
       'No response body',
     );
   });

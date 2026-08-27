@@ -667,6 +667,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@hominem/chat':
+        specifier: workspace:*
+        version: link:../../packages/chat
       '@hominem/env':
         specifier: workspace:*
         version: link:../../packages/env

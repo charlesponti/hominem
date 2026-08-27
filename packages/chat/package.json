@@ -25,6 +25,10 @@
     "./constants": {
       "types": "./build/constants.d.ts",
       "default": "./src/constants.ts"
+    },
+    "./sse": {
+      "types": "./build/sse.d.ts",
+      "default": "./src/sse.ts"
     }
   },
   "scripts": {

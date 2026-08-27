@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Range } from '~/components/ui/range';
 import type { ResponseLength } from '~/lib/hooks/use-response-length';
 
 const RESPONSE_LENGTHS: ResponseLength[] = ['short', 'medium', 'long'];
@@ -45,16 +46,14 @@ export function ChatResponseSettings({ value, onChange, onClose }: ChatResponseS
         </div>
 
         <div className="px-2">
-          <input
+          <Range
             aria-label="Response length"
-            className="response-length-slider h-6 w-full cursor-pointer"
             max={RESPONSE_LENGTHS.length - 1}
             min={0}
             onChange={(event) =>
               setDraftValue(RESPONSE_LENGTHS[Number(event.target.value)] ?? 'medium')
             }
             step={1}
-            type="range"
             value={selectedIndex}
           />
         </div>

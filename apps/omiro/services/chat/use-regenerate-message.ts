@@ -10,7 +10,7 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
-import { streamSSE } from './stream-sse';
+import { consumeSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -28,7 +28,7 @@ export function useRegenerateMessage(chatId: string) {
     mutationFn: async ({ messageId, generationId }) => {
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await streamSSE<ChatStreamEvent>({
+      await consumeSseXhr<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
         payload: { generationId, responseLength: getChatResponseLength() },
         getHeaders: getAuthHeaders,

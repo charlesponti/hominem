@@ -1,6 +1,7 @@
+import { decodeSSEFrame } from '@hominem/chat/sse';
 import { logger } from '@hominem/telemetry';
 
-export interface StreamSSEOptions<TEvent> {
+export interface ConsumeSseXhrOptions<TEvent> {
   url: string;
   payload: unknown;
   getHeaders: () => Promise<Record<string, string>>;
@@ -18,31 +19,18 @@ function getSSEFrameDelimiter(value: string): { index: number; length: number } 
   return match ? { index: match.index, length: match[0].length } : null;
 }
 
-function getFrameData(frame: string): string | null {
-  const dataLines = frame
-    .split(/\r?\n/)
-    .map((line) => line.trimEnd())
-    .flatMap((line) => {
-      if (line.startsWith('data: ')) return [line.slice(6)];
-      if (line.startsWith('data:')) return [line.slice(5)];
-      return [];
-    });
-
-  return dataLines.length > 0 ? dataLines.join('\n') : null;
-}
-
 // XHR-based SSE client for React Native / Hermes.
 // Hermes does not expose ReadableStream on fetch responses, but XHR.responseText
 // grows incrementally as data arrives — we slice from the last offset on each
 // readystatechange to extract new SSE lines without re-parsing the full body.
-export async function streamSSE<TEvent>({
+export async function consumeSseXhr<TEvent>({
   url,
   payload,
   getHeaders,
   onEvent,
   onDone,
   signal,
-}: StreamSSEOptions<TEvent>): Promise<void> {
+}: ConsumeSseXhrOptions<TEvent>): Promise<void> {
   if (signal?.aborted) throw getAbortError();
 
   const authHeaders = await getHeaders();
@@ -70,31 +58,30 @@ export async function streamSSE<TEvent>({
       reject(error);
     };
     const resolveOnce = () => {
-      if (settled) return;
       settled = true;
       cleanup();
       resolve();
     };
     const processFrame = (frame: string) => {
-      const data = getFrameData(frame);
-      if (data === null) return;
-      if (data === '[DONE]') {
-        onDone?.();
+      const decoded = decodeSSEFrame(frame);
+      if (decoded.kind !== 'event') {
+        if (decoded.kind === 'done') onDone?.();
         return;
       }
 
+      const data = decoded.data;
       try {
         const parsed = JSON.parse(data) as { type?: string; message?: string; error?: string };
         if (
           (parsed.type === 'error' || parsed.error) &&
           typeof (parsed.message ?? parsed.error) === 'string'
         ) {
-          rejectOnce(new Error(parsed.message ?? parsed.error ?? 'Stream error'));
+          rejectOnce(new Error(parsed.message ?? parsed.error));
           return;
         }
         onEvent(parsed as TEvent);
       } catch (error) {
-        logger.warn('[streamSSE] Dropped malformed SSE frame', { data, error });
+        logger.warn('[consumeSseXhr] Dropped malformed SSE frame', { data, error });
       }
     };
     const processBufferedFrames = () => {

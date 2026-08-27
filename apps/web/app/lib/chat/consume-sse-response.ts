@@ -1,6 +1,7 @@
+import { decodeSSEFrame } from '@hominem/chat/sse';
 import type { ChatStreamEvent } from '@hominem/rpc/types';
 
-export async function consumeChatStream(
+export async function consumeSseResponse(
   response: Response,
   onEvent: (event: ChatStreamEvent) => void,
 ): Promise<void> {
@@ -14,13 +15,12 @@ export async function consumeChatStream(
   let lineBuffer = '';
 
   const processLine = (line: string) => {
-    if (!line.startsWith('data: ')) return;
-    const payload = line.slice(6).trimEnd();
-    if (payload === '[DONE]') return;
+    const frame = decodeSSEFrame(line);
+    if (frame.kind !== 'event') return;
 
     let event: ChatStreamEvent;
     try {
-      event = JSON.parse(payload) as ChatStreamEvent;
+      event = JSON.parse(frame.data) as ChatStreamEvent;
     } catch {
       return;
     }
@@ -34,7 +34,7 @@ export async function consumeChatStream(
 
     lineBuffer += decoder.decode(value, { stream: true });
     const lines = lineBuffer.split('\n');
-    lineBuffer = lines.pop() ?? '';
+    lineBuffer = lines.pop() as string;
     lines.forEach(processLine);
   }
 

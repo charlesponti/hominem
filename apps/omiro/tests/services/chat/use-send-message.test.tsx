@@ -14,7 +14,7 @@ const mockImpactAsync = vi.fn().mockResolvedValue(undefined);
 const mockRandomUUID = vi.fn();
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({});
 const mockNetInfoFetch = vi.fn().mockResolvedValue({ isConnected: true });
-const mockStreamSSE = vi.fn();
+const mockConsumeSseXhr = vi.fn();
 
 vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
 vi.mock('expo-haptics', () => ({
@@ -27,7 +27,9 @@ vi.mock('~/services/auth/auth-provider', () => ({
 }));
 vi.mock('~/components/media/audio-playback.service', () => ({ playAudioReply: vi.fn() }));
 vi.mock('@react-native-community/netinfo', () => ({ default: { fetch: mockNetInfoFetch } }));
-vi.mock('~/services/chat/stream-sse', () => ({ streamSSE: mockStreamSSE }));
+vi.mock('~/services/chat/consume-sse-xhr', () => ({
+  consumeSseXhr: mockConsumeSseXhr,
+}));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: { id: string; role: 'user' | 'assistant'; content: string }) => ({
     id: message.id,
@@ -59,7 +61,7 @@ describe('useSendMessage', () => {
   beforeEach(() => {
     let count = 0;
     mockRandomUUID.mockImplementation(() => `uuid-${++count}`);
-    mockStreamSSE.mockImplementation(
+    mockConsumeSseXhr.mockImplementation(
       ({ onEvent }: { onEvent: (event: ChatStreamEvent) => void }) =>
         new Promise<void>((resolve) => {
           pending = { onEvent, resolve };
@@ -80,7 +82,7 @@ describe('useSendMessage', () => {
     act(() => {
       void result.current.sendChatMessage({ message: 'Hello there' });
     });
-    await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledOnce());
+    await waitFor(() => expect(mockConsumeSseXhr).toHaveBeenCalledOnce());
 
     expect(queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID))).toEqual([
       expect.objectContaining({ role: 'user', message: 'Hello there' }),
@@ -113,7 +115,7 @@ describe('useSendMessage', () => {
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useSendMessage({ chatId: CHAT_ID }),
     );
-    mockStreamSSE.mockRejectedValueOnce(new Error('generation failed'));
+    mockConsumeSseXhr.mockRejectedValueOnce(new Error('generation failed'));
 
     await act(async () => {
       await result.current.sendChatMessage({ message: 'Hello there' }).catch(() => undefined);

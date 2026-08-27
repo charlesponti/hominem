@@ -14,7 +14,7 @@ import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
-import { streamSSE } from './stream-sse';
+import { consumeSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -83,7 +83,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await streamSSE<ChatStreamEvent>({
+      await consumeSseXhr<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
         payload: {
           generationId,

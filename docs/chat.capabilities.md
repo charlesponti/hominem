@@ -88,7 +88,7 @@ contract identifies the transport boundary. Motion/UX design decisions live in
 
 | Area | Current tests/flows |
 | --- | --- |
-| Chat services | `tests/services/chat/use-chat-messages.test.tsx`, `use-send-message.test.tsx`, `use-start-chat.test.tsx`, `use-edit-message.test.tsx`, `use-chat-archive.test.tsx`, `use-auto-update-chat-title.test.tsx`, `chat-title.test.ts`, `chat-messages.test.ts`, `stream-sse.test.ts`, `assistant-completion-haptic-gate.test.ts` |
+| Chat services | `tests/services/chat/use-chat-messages.test.tsx`, `use-send-message.test.tsx`, `use-start-chat.test.tsx`, `use-edit-message.test.tsx`, `use-chat-archive.test.tsx`, `use-auto-update-chat-title.test.tsx`, `chat-title.test.ts`, `chat-messages.test.ts`, `stream-sse.test.ts` |
 | Chat hooks | `tests/hooks/use-chat-data.test.tsx`, `use-chat-search.test.ts`, `use-chat-search.render.test.tsx`, `use-chat-response-length.test.tsx`, `useArchivedChats.test.tsx`, `use-task-extraction*.test*` |
 | Chat component logic | `tests/components/chat/build-note-draft.test.ts`, inbox thread view-model tests, message-action tests |
 | Maestro flows | `tests/flows/chat-back-to-all.yaml`, `chat-to-note.yaml`, `chat-first-home.yaml`, plus chat states in `screenshot-tour.yaml` |

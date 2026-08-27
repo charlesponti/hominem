@@ -11,7 +11,7 @@ import { renderHookWithQueryClient } from '../../utils/render-hook';
 
 const mockRandomUUID = vi.fn();
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({});
-const mockStreamSSE = vi.fn();
+const mockConsumeSseXhr = vi.fn();
 
 vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
 vi.mock('expo-crypto', () => ({ randomUUID: mockRandomUUID }));
@@ -21,7 +21,9 @@ vi.mock('~/services/auth/auth-provider', () => ({
 vi.mock('@react-native-community/netinfo', () => ({
   default: { fetch: vi.fn().mockResolvedValue({ isConnected: true }) },
 }));
-vi.mock('~/services/chat/stream-sse', () => ({ streamSSE: mockStreamSSE }));
+vi.mock('~/services/chat/consume-sse-xhr', () => ({
+  consumeSseXhr: mockConsumeSseXhr,
+}));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: { id: string; role: 'user'; content: string }) => ({
     id: message.id,
@@ -37,7 +39,7 @@ const { useStartChat } = await import('~/services/chat/use-start-chat');
 describe('useStartChat', () => {
   beforeEach(() => {
     mockRandomUUID.mockReturnValue('generation-1');
-    mockStreamSSE.mockImplementation(
+    mockConsumeSseXhr.mockImplementation(
       ({ onEvent }: { onEvent: (event: ChatsStartStreamEvent) => void }) => {
         onEvent({
           type: 'accepted',
