@@ -8,7 +8,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 
 interface ListRowProps {
   accessibilityLabel: string;
@@ -35,7 +35,30 @@ export function ListRow({
   titleStyle,
   trailing,
 }: ListRowProps) {
-  const styles = listRowStyles;
+  const styles = useStyles((currentTheme) => ({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      minHeight: 56,
+      borderBottomWidth: 1,
+      borderBottomColor: currentTheme.colors.border,
+      paddingHorizontal: 2,
+      paddingVertical: 8,
+    } satisfies ViewStyle,
+    pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
+    leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
+    content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
+    title: {
+      ...currentTheme.textVariants.body,
+      color: currentTheme.colors.foreground,
+    } satisfies TextStyle,
+    subtitle: {
+      ...currentTheme.textVariants.caption1,
+      color: currentTheme.colors.mutedForeground,
+    } satisfies TextStyle,
+    trailing: { alignItems: 'center', justifyContent: 'center' } satisfies ViewStyle,
+  }));
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -60,28 +83,3 @@ export function ListRow({
     </Pressable>
   );
 }
-
-const listRowStyles = makeStyles((currentTheme) => ({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: currentTheme.colors.border,
-    paddingHorizontal: 2,
-    paddingVertical: 8,
-  } satisfies ViewStyle,
-  pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
-  leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
-  content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
-  title: {
-    ...currentTheme.typography.body,
-    color: currentTheme.colors.foreground,
-  } satisfies TextStyle,
-  subtitle: {
-    ...currentTheme.typography.caption1,
-    color: currentTheme.colors.mutedForeground,
-  } satisfies TextStyle,
-  trailing: { alignItems: 'center', justifyContent: 'center' } satisfies ViewStyle,
-}));

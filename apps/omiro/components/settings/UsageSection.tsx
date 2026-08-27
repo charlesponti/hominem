@@ -2,7 +2,7 @@ import type { MonthlyUsageStatus } from '@hominem/rpc/types';
 import { Text, View } from 'react-native';
 
 import { SectionLabel } from '~/components/settings/SettingsRow';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -25,11 +25,25 @@ function formatUsd(amount: number): string {
 }
 
 export function UsageSection({ monthlyUsage }: { monthlyUsage: MonthlyUsageStatus }) {
-  const [textPrimaryColor, borderDefaultColor, destructiveColor] = useThemeColor([
-    '--color-foreground',
-    '--color-border',
-    '--color-destructive',
-  ]) as string[];
+  const {
+    foreground: textPrimaryColor,
+    border: borderDefaultColor,
+    destructive: destructiveColor,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    usageSection: { gap: 8 },
+    usageSummary: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
+    usageAmount: {
+      fontSize: 28,
+      fontWeight: '700',
+      letterSpacing: -0.4,
+      color: theme.colors.foreground,
+    },
+    usageLimit: { color: theme.colors.mutedForeground },
+    usageBar: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
+    usageBarFill: { borderRadius: 4, height: 4 },
+    usageResetMessage: { color: theme.colors.tertiary, paddingHorizontal: 16 },
+  }));
 
   const usagePercent = Math.min(100, (monthlyUsage.totalCostUsd / monthlyUsage.limitUsd) * 100);
 
@@ -63,18 +77,3 @@ export function UsageSection({ monthlyUsage }: { monthlyUsage: MonthlyUsageStatu
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  usageSection: { gap: 8 },
-  usageSummary: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
-  usageAmount: {
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    color: theme.colors.foreground,
-  },
-  usageLimit: { color: theme.colors.mutedForeground },
-  usageBar: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
-  usageBarFill: { borderRadius: 4, height: 4 },
-  usageResetMessage: { color: theme.colors.tertiary, paddingHorizontal: 16 },
-}));

@@ -7,7 +7,7 @@ export function authSharedStyles(theme: Theme) {
     content: { width: '100%', alignItems: 'center' },
     form: { width: '100%', maxWidth: 420, gap: 18 },
     header: { gap: 8 },
-    title: { ...theme.typography.title1, color: theme.colors.foreground },
+    title: { ...theme.textVariants.title1, color: theme.colors.foreground },
     progressHelper: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -15,9 +15,9 @@ export function authSharedStyles(theme: Theme) {
       gap: 6,
       paddingHorizontal: 16,
     },
-    progressArrow: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
+    progressArrow: { ...theme.textVariants.footnote, color: theme.colors.mutedForeground },
     progressMessage: {
-      ...theme.typography.footnote,
+      ...theme.textVariants.footnote,
       color: theme.colors.mutedForeground,
       textAlign: 'center',
     },

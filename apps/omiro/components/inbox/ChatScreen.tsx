@@ -10,7 +10,7 @@ import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
@@ -44,6 +44,22 @@ export function ChatScreen({ id }: { id: string }) {
   const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
+  const styles = useStyles((theme) => ({
+    container: { flex: 1 },
+    offlineIndicator: {
+      backgroundColor: theme.colors.muted,
+      borderBottomWidth: 1,
+      borderColor: theme.colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    offlineText: {
+      ...theme.textVariants.footnote,
+      textAlign: 'center',
+      color: theme.colors.mutedForeground,
+    },
+    overlayContainer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  }));
 
   const source = NEW_SESSION_SOURCE;
 
@@ -243,20 +259,3 @@ export function ChatScreen({ id }: { id: string }) {
     </>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1 },
-  offlineIndicator: {
-    backgroundColor: theme.colors.muted,
-    borderBottomWidth: 1,
-    borderColor: theme.colors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  offlineText: {
-    ...theme.typography.footnote,
-    textAlign: 'center',
-    color: theme.colors.mutedForeground,
-  },
-  overlayContainer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-}));

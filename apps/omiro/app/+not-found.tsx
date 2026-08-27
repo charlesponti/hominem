@@ -2,14 +2,24 @@ import type { RelativePathString } from 'expo-router';
 import { Stack, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
 export default function NotFoundScreen() {
   const router = useRouter();
-  const [textSecondary] = useThemeColor(['--color-muted-foreground']) as string[];
+  const { mutedForeground: textSecondary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+    content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
+    title: { ...theme.textVariants.title1, textAlign: 'center', color: theme.colors.foreground },
+    message: {
+      ...theme.textVariants.callout,
+      textAlign: 'center',
+      color: theme.colors.mutedForeground,
+    },
+  }));
 
   return (
     <>
@@ -31,14 +41,3 @@ export default function NotFoundScreen() {
     </>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
-  title: { ...theme.typography.title1, textAlign: 'center', color: theme.colors.foreground },
-  message: {
-    ...theme.typography.callout,
-    textAlign: 'center',
-    color: theme.colors.mutedForeground,
-  },
-}));

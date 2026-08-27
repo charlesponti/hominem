@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { Card, IconButton } from '~/components/ui';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 import t from '~/translations';
@@ -24,7 +24,25 @@ export function ChatActivityTimeline({
   onCancel: () => void;
   onRetry?: () => void;
 }) {
-  const primary = useThemeColor('--color-primary') as string;
+  const { primary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    timeline: {
+      backgroundColor: theme.colors.muted,
+      borderWidth: 0,
+      alignSelf: 'flex-start',
+      maxWidth: '85%',
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    timelineContent: { flexShrink: 1, gap: 4 },
+    timelineTitle: { ...theme.textVariants.footnote, color: theme.colors.foreground },
+    timelineMeta: { ...theme.textVariants.caption1, color: theme.colors.mutedForeground },
+    timelineDescription: { ...theme.textVariants.footnote, color: theme.colors.mutedForeground },
+    timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
+    timelineActionText: { ...theme.textVariants.footnote, color: theme.colors.primary },
+  }));
   const isActive = generation.stage === 'preparing' || generation.stage === 'saving';
   const isStopping = generation.stage === 'stopping';
 
@@ -72,22 +90,3 @@ export function ChatActivityTimeline({
     </Card>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  timeline: {
-    backgroundColor: theme.colors.muted,
-    borderWidth: 0,
-    alignSelf: 'flex-start',
-    maxWidth: '85%',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  timelineContent: { flexShrink: 1, gap: 4 },
-  timelineTitle: { ...theme.typography.footnote, color: theme.colors.foreground },
-  timelineMeta: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-  timelineDescription: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
-  timelineActionText: { ...theme.typography.footnote, color: theme.colors.primary },
-}));

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { ModalProps } from 'react-native';
-import { Modal, Pressable, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme } from '~/components/theme';
 
 type ModalOverlayPosition = 'top' | 'center' | 'bottom';
 
@@ -23,12 +23,10 @@ export function ModalOverlay({
   children,
   position = 'center',
   dismissOnBackdropPress = true,
-  backdropToken = 'overlay-scrim',
   animationType = 'fade',
   statusBarTranslucent = false,
 }: ModalOverlayProps) {
-  const scrimColor = useThemeColor(`--color-${backdropToken}`) as string;
-  const styles = modalOverlayStyles;
+  const { overlayScrim: scrimColor } = useAppTheme().colors;
 
   return (
     <Modal
@@ -54,9 +52,9 @@ export function ModalOverlay({
   );
 }
 
-const modalOverlayStyles = makeStyles(() => ({
+const styles = StyleSheet.create({
   backdrop: { flex: 1 },
   top: { justifyContent: 'flex-start' },
   center: { justifyContent: 'center' },
   bottom: { justifyContent: 'flex-end' },
-}));
+});

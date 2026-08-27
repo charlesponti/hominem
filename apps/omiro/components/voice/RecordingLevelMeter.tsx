@@ -1,9 +1,9 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -39,13 +39,26 @@ function LevelBar({ db, tintColor }: LevelBarProps) {
 
   return (
     <Animated.View
-      style={[styles.bar, [{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]]}
+      style={[levelBarStyles.bar, [{ maxWidth: 3, backgroundColor: tintColor }, animatedStyle]]}
     />
   );
 }
 
+const levelBarStyles = StyleSheet.create({
+  bar: { flex: 1, borderRadius: 2 },
+});
+
 export function RecordingLevelMeter() {
-  const primaryColor = useThemeColor('--color-primary') as string;
+  const { primary: primaryColor } = useAppTheme().colors;
+  const styles = useStyles(() => ({
+    meter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 2,
+      width: '100%',
+    },
+  }));
   const meterings = useSyncExternalStore(
     subscribeRecording,
     () => getRecordingSnapshot().meterings,
@@ -65,14 +78,3 @@ export function RecordingLevelMeter() {
     </View>
   );
 }
-
-const styles = makeStyles(() => ({
-  bar: { flex: 1, borderRadius: 2 },
-  meter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 2,
-    width: '100%',
-  },
-}));

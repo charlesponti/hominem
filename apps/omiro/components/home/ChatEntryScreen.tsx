@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useLatestChat } from '~/services/chat/use-chats-list';
 import { NEW_CHAT_ROUTE, getContentRoute } from '~/services/navigation/routes';
@@ -11,6 +11,14 @@ export function ChatEntryScreen() {
   const router = useRouter();
   const latestChat = useLatestChat();
   const redirected = useRef(false);
+  const styles = useStyles((theme) => ({
+    container: {
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+      flex: 1,
+      justifyContent: 'center',
+    },
+  }));
 
   useEffect(() => {
     if (redirected.current || latestChat.isPending) return;
@@ -46,12 +54,3 @@ export function ChatEntryScreen() {
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    flex: 1,
-    justifyContent: 'center',
-  },
-}));

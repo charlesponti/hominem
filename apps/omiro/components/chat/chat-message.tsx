@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
@@ -55,12 +55,43 @@ export const ChatMessage = memo(function ChatMessage({
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const [textPrimary, primaryForeground, destructive, tertiary] = useThemeColor([
-    '--color-foreground',
-    '--color-primary-foreground',
-    '--color-destructive',
-    '--color-tertiary',
-  ]) as string[];
+  const {
+    foreground: textPrimary,
+    primaryForeground,
+    destructive,
+    tertiary,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    content: { gap: 8, width: '100%' },
+    reasoningPanel: {
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      width: '100%',
+    },
+    reasoningText: { ...theme.textVariants.mono, color: theme.colors.foreground, opacity: 0.8 },
+    retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+    interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    message: { width: '100%' },
+    messageUser: { alignItems: 'flex-end' },
+    messageAssistant: { alignItems: 'flex-start' },
+    userBubble: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadii.sm,
+      borderBottomRightRadius: 2,
+      paddingHorizontal: 12,
+    },
+    assistantBubble: {
+      borderRadius: theme.borderRadii.sm,
+      borderBottomLeftRadius: 2,
+      paddingHorizontal: 12,
+    },
+    continuous: { borderCurve: 'continuous' },
+  }));
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
@@ -217,35 +248,3 @@ export const ChatMessage = memo(function ChatMessage({
     </Animated.View>
   );
 });
-
-const styles = makeStyles((theme) => ({
-  content: { gap: 8, width: '100%' },
-  reasoningPanel: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    width: '100%',
-  },
-  reasoningText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
-  interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  message: { width: '100%' },
-  messageUser: { alignItems: 'flex-end' },
-  messageAssistant: { alignItems: 'flex-start' },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.sm,
-    borderBottomRightRadius: 2,
-    paddingHorizontal: 12,
-  },
-  assistantBubble: {
-    borderRadius: theme.radius.sm,
-    borderBottomLeftRadius: 2,
-    paddingHorizontal: 12,
-  },
-  continuous: { borderCurve: 'continuous' },
-}));

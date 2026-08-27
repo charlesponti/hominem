@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
@@ -27,7 +27,19 @@ function AuthScreen() {
   const [authError, setAuthError] = useState<string | null>(null);
   const normalizedEmail = normalizeEmail(email);
 
-  const [textPrimary] = useThemeColor(['--color-foreground']) as string[];
+  const { foreground: textPrimary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    ...authSharedStyles(theme),
+    restoringMessage: { ...theme.textVariants.subhead, color: theme.colors.mutedForeground },
+    inputContainer: { gap: 12 },
+    errorText: { ...theme.textVariants.footnote, color: theme.colors.destructive },
+    buttonContainer: {
+      position: 'relative',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  }));
 
   const getEmailProgress = () => {
     if (!email) return { stage: 0, message: 'Enter your email' };
@@ -196,16 +208,3 @@ const AuthWithErrorBoundary = () => (
 );
 
 export default AuthWithErrorBoundary;
-
-const styles = makeStyles((theme) => ({
-  ...authSharedStyles(theme),
-  restoringMessage: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
-  inputContainer: { gap: 12 },
-  errorText: { ...theme.typography.footnote, color: theme.colors.destructive },
-  buttonContainer: {
-    position: 'relative',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-}));

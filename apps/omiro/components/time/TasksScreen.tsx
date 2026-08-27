@@ -2,7 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { getTaskDetailRoute, getTaskScheduleRoute } from '~/services/navigation/routes';
@@ -16,7 +16,7 @@ function TaskRow({
   item: { id: string; title: string; durationMinutes?: number | null };
 }) {
   const router = useRouter();
-  const successColor = useThemeColor('--color-success') as string;
+  const { success: successColor } = useAppTheme().colors;
   return (
     <ListRow
       accessibilityLabel={item.title}
@@ -41,6 +41,10 @@ function TaskRow({
 export function TasksScreen() {
   const { data: tasks = [], isFetching, refetch } = useTasksQuery();
   const unscheduledTasks = getUnscheduledTasks(tasks);
+  const styles = useStyles((theme) => ({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    emptyStateText: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+  }));
 
   return (
     <View style={styles.container} testID="unscheduled-tasks-screen">
@@ -61,8 +65,3 @@ export function TasksScreen() {
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  emptyStateText: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
-}));

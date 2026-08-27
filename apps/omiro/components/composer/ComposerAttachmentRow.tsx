@@ -8,12 +8,52 @@ import {
   useComposerAttachments,
   type ComposerAttachment,
 } from '~/components/composer/ComposerContext';
-import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
+import { transitionDurations, useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
 
 const BADGE_SIZE = 16;
+
+function useComposerAttachmentStyles() {
+  return useStyles((theme) => ({
+    attachmentContainer: {
+      width: 48,
+      height: 48,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.card,
+    },
+    attachmentImage: { width: 48, height: 48 },
+    removeBadge: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      width: 16,
+      height: 16,
+      backgroundColor: theme.colors.overlayScrim,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    uploadOverlay: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: theme.colors.overlayScrim,
+    },
+    progressBarContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 4,
+      backgroundColor: theme.colors.overlayScrim,
+    },
+    progressBarFill: { backgroundColor: theme.colors.primary, height: '100%' },
+    errorText: { ...theme.textVariants.caption1, color: theme.colors.destructive },
+  }));
+}
 
 function AttachmentItem({
   attachment,
@@ -27,6 +67,7 @@ function AttachmentItem({
   progress: number;
 }) {
   const uploading = progress > 0 && progress < 100;
+  const styles = useComposerAttachmentStyles();
   return (
     <Pressable
       style={styles.attachmentContainer}
@@ -59,7 +100,8 @@ function AttachmentItem({
 export function ComposerAttachmentRow() {
   const { attachments, errors, isUploading, progressByAssetId, onRemove } =
     useComposerAttachments();
-  const [primaryForeground] = useThemeColor(['--color-primary-foreground']) as string[];
+  const { primaryForeground } = useAppTheme().colors;
+  const styles = useComposerAttachmentStyles();
   const prefersReducedMotion = useReducedMotion();
   const renderAttachment = useCallback(
     ({ item }: { item: ComposerAttachment }) => (
@@ -98,41 +140,3 @@ export function ComposerAttachmentRow() {
     </Animated.View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  attachmentContainer: {
-    width: 48,
-    height: 48,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.card,
-  },
-  attachmentImage: { width: 48, height: 48 },
-  removeBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 16,
-    height: 16,
-    backgroundColor: theme.colors.overlayScrim,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: theme.colors.overlayScrim,
-  },
-  progressBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: theme.colors.overlayScrim,
-  },
-  progressBarFill: { backgroundColor: theme.colors.primary, height: '100%' },
-  errorText: { ...theme.typography.caption1, color: theme.colors.destructive },
-}));

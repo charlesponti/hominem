@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -40,10 +40,15 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
 // makes switching legible -- see ComposerKindToggle in the /animate skill
 // output for the reasoning.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
-  const [primary, mutedForeground] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-  ]) as string[];
+  const { primary, mutedForeground } = useAppTheme().colors;
+  const styles = useStyles(() => ({
+    control: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 2,
+      paddingVertical: 2,
+    },
+  }));
   const reducedMotion = useReducedMotion();
   const selectedIndex = options.findIndex((option) => option.kind === selected);
   const progress = useSharedValue(selectedIndex);
@@ -104,13 +109,3 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
     </View>
   );
 }
-
-const styles = makeStyles(() => ({
-  control: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    background: 'red',
-    paddingHorizontal: 2,
-    paddingVertical: 2,
-  },
-}));

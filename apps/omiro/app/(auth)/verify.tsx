@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-n
 import Animated, { FadeIn, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -137,13 +137,56 @@ function VerifyScreen() {
     return () => clearTimeout(id);
   }, [verifySucceeded, router]);
 
-  const [primary, destructive, warning, textSecondary, success] = useThemeColor([
-    '--color-primary',
-    '--color-destructive',
-    '--color-warning',
-    '--color-muted-foreground',
-    '--color-success',
-  ]) as string[];
+  const {
+    primary,
+    destructive,
+    warning,
+    mutedForeground: textSecondary,
+    success,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    ...authSharedStyles(theme),
+    successContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    successContent: { alignItems: 'center', gap: 16 },
+    successMessage: { ...theme.textVariants.title2, color: theme.colors.foreground },
+    emailRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+    codeSentLabel: { ...theme.textVariants.subhead, color: theme.colors.mutedForeground },
+    emailChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      backgroundColor: theme.colors.card,
+    },
+    emailText: { ...theme.textVariants.body, fontWeight: '500', color: theme.colors.foreground },
+    otpContainer: { gap: 16, alignItems: 'center' },
+    error: { ...theme.textVariants.footnote, textAlign: 'center', color: theme.colors.destructive },
+    verifyButtonContainer: {
+      position: 'relative',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    resendButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: theme.colors.card,
+    },
+    resendText: { ...theme.textVariants.caption1, fontWeight: '600' },
+    busy: { opacity: 0.6 },
+  }));
 
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
@@ -356,47 +399,3 @@ const VerifyWithErrorBoundary = () => (
 );
 
 export default VerifyWithErrorBoundary;
-
-const styles = makeStyles((theme) => ({
-  ...authSharedStyles(theme),
-  successContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  successContent: { alignItems: 'center', gap: 16 },
-  successMessage: { ...theme.typography.title2, color: theme.colors.foreground },
-  emailRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
-  codeSentLabel: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
-  emailChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: theme.colors.card,
-  },
-  emailText: { ...theme.typography.body, fontWeight: '500', color: theme.colors.foreground },
-  otpContainer: { gap: 16, alignItems: 'center' },
-  error: { ...theme.typography.footnote, textAlign: 'center', color: theme.colors.destructive },
-  verifyButtonContainer: {
-    position: 'relative',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resendButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: theme.colors.card,
-  },
-  resendText: { ...theme.typography.caption1, fontWeight: '600' },
-  busy: { opacity: 0.6 },
-}));

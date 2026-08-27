@@ -1,10 +1,10 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { DiscreteSlider } from '~/components/ui/discrete-slider';
 import {
@@ -21,12 +21,26 @@ interface ChatSettingsSheetProps {
 
 export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) {
   const insets = useSafeAreaInsets();
-  const [borderDefault, background, textPrimary, textSecondary] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-foreground',
-    '--color-muted-foreground',
-  ]) as [string, string, string, string];
+  const {
+    border: borderDefault,
+    background,
+    foreground: textPrimary,
+    mutedForeground: textSecondary,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    sheetContent: { gap: 24, paddingHorizontal: 24 },
+    sheetTitle: { ...theme.textVariants.title2, fontWeight: '700' },
+    settingGroup: { gap: 8 },
+    settingLabel: { fontWeight: '600' },
+    settingDescription: { ...theme.textVariants.footnote },
+    metric: { alignItems: 'center', gap: 2, paddingVertical: 8 },
+    metricValue: { fontSize: 40 },
+    metricLabel: { fontWeight: '700' },
+    metricDetail: { ...theme.textVariants.footnote },
+    control: { paddingHorizontal: 8 },
+    controlRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8 },
+    empty: {},
+  }));
   const modalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['45%'], []);
   const responseLength = useChatResponseLength();
@@ -118,18 +132,3 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
     </BottomSheetModal>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  sheetContent: { gap: 24, paddingHorizontal: 24 },
-  sheetTitle: { ...theme.typography.title2, fontWeight: '700' },
-  settingGroup: { gap: 8 },
-  settingLabel: { fontWeight: '600' },
-  settingDescription: { ...theme.typography.footnote },
-  metric: { alignItems: 'center', gap: 2, paddingVertical: 8 },
-  metricValue: { fontSize: 40 },
-  metricLabel: { fontWeight: '700' },
-  metricDetail: { ...theme.typography.footnote },
-  control: { paddingHorizontal: 8 },
-  controlRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8 },
-  empty: {},
-}));

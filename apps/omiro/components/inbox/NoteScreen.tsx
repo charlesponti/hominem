@@ -18,7 +18,7 @@ import Markdown from 'react-native-markdown-display';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { useAppTheme, useStyles, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
@@ -58,7 +58,66 @@ function formatNoteDateline(
   }
 }
 
+function useNoteScreenStyles() {
+  return useStyles((theme) => ({
+    scrollContainer: { flex: 1 },
+    placeholderTitle: {
+      alignSelf: 'stretch',
+      borderRadius: 2,
+      height: 32,
+      marginBottom: 12,
+      width: '72%',
+    },
+    placeholderDateline: {
+      backgroundColor: theme.colors.border,
+      borderRadius: 2,
+      height: 12,
+      marginBottom: 14,
+      width: '36%',
+    },
+    placeholderDivider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+    placeholderLines: { gap: 14, paddingTop: 4 },
+    errorContainer: { flex: 1 },
+    editorContainer: { flex: 1 },
+    dateline: { ...theme.textVariants.overline, color: theme.colors.tertiary, marginBottom: 14 },
+    divider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
+    previewEmptyText: { color: theme.colors.tertiary, fontStyle: 'italic', minHeight: 240 },
+    attachmentsSection: { marginTop: 24, gap: 8 },
+    attachmentsHeader: {
+      fontWeight: '500',
+      letterSpacing: 0.4,
+      color: theme.colors.tertiary,
+      textTransform: 'uppercase',
+    },
+    attachmentsList: { gap: 6 },
+    attachmentCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: theme.colors.popover,
+      borderRadius: 10,
+    },
+    attachmentIcon: { width: 14, height: 14 },
+    attachmentName: { flex: 1, fontSize: 13, color: theme.colors.mutedForeground },
+    removeButton: { alignItems: 'center', justifyContent: 'center', width: 24, height: 24 },
+    enhanceTray: {
+      backgroundColor: theme.colors.background,
+      paddingTop: 16,
+      paddingBottom: 48,
+      paddingHorizontal: 16,
+      borderTopWidth: 1,
+      borderColor: withAlpha(theme.colors.mutedForeground, 0.1),
+    },
+    placeholderLine: { backgroundColor: theme.colors.border, borderRadius: 2, height: 16 },
+    placeholderShort: { width: '58%' },
+    placeholderFull: { width: '100%' },
+  }));
+}
+
 function NoteDetailPlaceholder() {
+  const styles = useNoteScreenStyles();
   return (
     <ScrollView
       style={styles.scrollContainer}
@@ -96,6 +155,7 @@ export function NoteScreen() {
 
 function NoteDetailEditor({ noteId }: { noteId: string }) {
   const router = useRouter();
+  const styles = useNoteScreenStyles();
 
   const { data: note, error, isInitialLoading, isRefreshing, refetch } = useNoteQuery({ noteId });
   const { save, flushSave, updateCache, detachFile } = useNoteEditor(noteId);
@@ -185,6 +245,7 @@ function NoteEditorBody({
   detachFile,
   onDeleteNote,
 }: NoteEditorBodyProps) {
+  const styles = useNoteScreenStyles();
   const contentInputRef = useRef<TextInput>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [draft, setDraft] = useState<NoteDraft>(() => ({
@@ -207,15 +268,14 @@ function NoteEditorBody({
   const { startChat, isStartingChat } = useStartChat();
   const { mutateAsync: addChatSource } = useAddChatSource();
 
-  const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
-    useThemeColor([
-      '--color-tertiary',
-      '--color-primary',
-      '--color-foreground',
-      '--color-muted-foreground',
-      '--color-border',
-      '--color-popover',
-    ]) as string[];
+  const {
+    tertiary,
+    primary: primaryColor,
+    foreground: textPrimary,
+    mutedForeground: textSecondary,
+    border: borderDefault,
+    popover,
+  } = useAppTheme().colors;
 
   const mdColors: Record<string, string> = {
     primary: primaryColor,
@@ -530,59 +590,3 @@ function markdownStyles(mdColors: Record<string, string>) {
     hr: { backgroundColor: mdColors['border'], height: 1, marginVertical: 12 },
   };
 }
-
-const styles = makeStyles((theme) => ({
-  scrollContainer: { flex: 1 },
-  placeholderTitle: {
-    alignSelf: 'stretch',
-    borderRadius: 2,
-    height: 32,
-    marginBottom: 12,
-    width: '72%',
-  },
-  placeholderDateline: {
-    backgroundColor: theme.colors.border,
-    borderRadius: 2,
-    height: 12,
-    marginBottom: 14,
-    width: '36%',
-  },
-  placeholderDivider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
-  placeholderLines: { gap: 14, paddingTop: 4 },
-  errorContainer: { flex: 1 },
-  editorContainer: { flex: 1 },
-  dateline: { ...theme.typography.overline, color: theme.colors.tertiary, marginBottom: 14 },
-  divider: { height: 1, backgroundColor: theme.colors.border, marginBottom: 20 },
-  previewEmptyText: { color: theme.colors.tertiary, fontStyle: 'italic', minHeight: 240 },
-  attachmentsSection: { marginTop: 24, gap: 8 },
-  attachmentsHeader: {
-    fontWeight: '500',
-    letterSpacing: 0.4,
-    color: theme.colors.tertiary,
-    textTransform: 'uppercase',
-  },
-  attachmentsList: { gap: 6 },
-  attachmentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: theme.colors.popover,
-    borderRadius: 10,
-  },
-  attachmentIcon: { width: 14, height: 14 },
-  attachmentName: { flex: 1, fontSize: 13, color: theme.colors.mutedForeground },
-  removeButton: { alignItems: 'center', justifyContent: 'center', width: 24, height: 24 },
-  enhanceTray: {
-    backgroundColor: theme.colors.background,
-    paddingTop: 16,
-    paddingBottom: 48,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderColor: withAlpha(theme.colors.mutedForeground, 0.1),
-  },
-  placeholderLine: { backgroundColor: theme.colors.border, borderRadius: 2, height: 16 },
-  placeholderShort: { width: '58%' },
-  placeholderFull: { width: '100%' },
-}));

@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { TextField } from '~/components/ui/text-field';
 
@@ -30,6 +30,22 @@ export function LocationSearchField({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const requestId = useRef(0);
+  const styles = useStyles((theme) => ({
+    field: { gap: 8 },
+    searchingState: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
+    searchingText: { ...theme.textVariants.footnote, color: theme.colors.mutedForeground },
+    suggestions: { gap: 4 },
+    suggestion: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 16,
+      backgroundColor: theme.colors.card,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    suggestionText: { ...theme.textVariants.body, flex: 1 },
+  }));
 
   useEffect(() => {
     const trimmed = value.trim();
@@ -101,20 +117,3 @@ export function LocationSearchField({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  field: { gap: 8 },
-  searchingState: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
-  searchingText: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  suggestions: { gap: 4 },
-  suggestion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: 16,
-    backgroundColor: theme.colors.card,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  suggestionText: { ...theme.typography.body, flex: 1 },
-}));

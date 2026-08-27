@@ -5,8 +5,8 @@ import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
-import { IconButton, nativeShadows } from '~/components/ui';
+import { useAppTheme, useStyles } from '~/components/theme';
+import { IconButton } from '~/components/ui';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
 
 import AppIcon from '../ui/icon';
@@ -34,6 +34,21 @@ export function TimeScreen() {
     (event: { id: string }) => router.push(getTimeBlockRoute('event', event.id)),
     [router],
   );
+  const theme = useAppTheme();
+  const styles = useStyles((theme) => ({
+    container: { backgroundColor: theme.colors.background, flex: 1 },
+    errorToast: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 4,
+      marginHorizontal: 16,
+      marginBottom: 4,
+      padding: 8,
+      borderColor: theme.colors.destructive,
+    },
+    errorContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
+    errorText: { ...theme.textVariants.footnote, color: theme.colors.destructive, flex: 1 },
+  }));
 
   return (
     <View style={styles.container} testID="time-screen">
@@ -41,7 +56,7 @@ export function TimeScreen() {
       {errorToast !== null ? (
         <View
           key={toastKey}
-          style={[styles.errorToast, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
+          style={[styles.errorToast, { borderCurve: 'continuous', boxShadow: theme.shadows.md }]}
         >
           <Pressable
             accessibilityLabel={`Error: ${errorToast}`}
@@ -131,18 +146,3 @@ function TimePreviewMenuButton() {
     </MenuView>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { backgroundColor: theme.colors.background, flex: 1 },
-  errorToast: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 4,
-    marginHorizontal: 16,
-    marginBottom: 4,
-    padding: 8,
-    borderColor: theme.colors.destructive,
-  },
-  errorContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  errorText: { ...theme.typography.footnote, color: theme.colors.destructive, flex: 1 },
-}));

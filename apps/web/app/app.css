@@ -47,6 +47,53 @@
   box-shadow: 0 20px 45px rgb(0 0 0 / 35%);
 }
 
+.response-length-slider {
+  appearance: none;
+  background: transparent;
+}
+
+.response-length-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-default);
+}
+
+.response-length-slider::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--text-primary);
+  box-shadow: none;
+}
+
+.response-length-slider:hover::-webkit-slider-thumb {
+  background: var(--text-primary);
+  box-shadow: none;
+}
+
+.response-length-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-default);
+}
+
+.response-length-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--text-primary);
+  box-shadow: none;
+}
+
+.response-length-slider:hover::-moz-range-thumb {
+  background: var(--text-primary);
+  box-shadow: none;
+}
+
 @media (min-width: 768px) {
   [data-slot='sheet-content'] {
     inset-inline: auto 0.5rem;

@@ -1,4 +1,5 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
+import { ThemeProvider as RestyleThemeProvider } from '@shopify/restyle';
 import { logger } from '@hominem/telemetry';
 import * as Sentry from '@sentry/react-native';
 import { useIsRestoring } from '@tanstack/react-query';
@@ -14,15 +15,15 @@ import {
   type RelativePathString,
 } from 'expo-router';
 import { PostHogProvider, type PostHog } from 'posthog-react-native';
-import React, { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { logError } from '~/components/error-boundary/log-error';
 import { RootErrorBoundary } from '~/components/error-boundary/RootErrorBoundary';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { darkTheme, lightTheme, useAppTheme } from '~/components/theme';
 import { E2E_TESTING } from '~/constants';
 import { useScreenCapture } from '~/hooks/use-screen-capture';
 import { AuthProvider, useAuth } from '~/services/auth/auth-provider';
@@ -38,6 +39,11 @@ import { recordActiveDay } from '~/services/review-prompt/review-prompt';
 SplashScreen.preventAutoHideAsync();
 
 function InnerRootLayout() {
+  const theme = useAppTheme();
+  const containerStyle = useMemo(
+    () => ({ flex: 1 as const, backgroundColor: theme.colors.background }),
+    [theme],
+  );
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments() as string[];
@@ -122,7 +128,7 @@ function InnerRootLayout() {
     <RootErrorBoundary
       onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}
     >
-      <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <SafeAreaView style={containerStyle} edges={['left', 'right']}>
         <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -160,14 +166,9 @@ function InnerRootLayout() {
 function RootLayout() {
   useScreenCapture();
 
-  const [background, border, card, notification, primary, text] = useThemeColor([
-    '--color-background',
-    '--color-border',
-    '--color-card',
-    '--color-primary',
-    '--color-primary',
-    '--color-foreground',
-  ]) as string[];
+  const colorScheme = useColorScheme();
+  const restyleTheme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const { background, border, card, primary, foreground: text } = restyleTheme.colors;
 
   const navigationTheme = {
     ...DefaultTheme,
@@ -176,7 +177,7 @@ function RootLayout() {
       background,
       border,
       card,
-      notification,
+      notification: primary,
       primary,
       text,
     },
@@ -194,21 +195,23 @@ function RootLayout() {
   }, []);
 
   const content = (
-    <ThemeProvider value={navigationTheme}>
-      <PersistQueryClientProvider client={queryClient} persistOptions={mobilePersistOptions}>
-        <SafeAreaProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <AuthProvider>
-                <BottomSheetModalProvider>
-                  <InnerRootLayout />
-                </BottomSheetModalProvider>
-              </AuthProvider>
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </SafeAreaProvider>
-      </PersistQueryClientProvider>
-    </ThemeProvider>
+    <RestyleThemeProvider theme={restyleTheme}>
+      <ThemeProvider value={navigationTheme}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={mobilePersistOptions}>
+          <SafeAreaProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <AuthProvider>
+                  <BottomSheetModalProvider>
+                    <InnerRootLayout />
+                  </BottomSheetModalProvider>
+                </AuthProvider>
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </SafeAreaProvider>
+        </PersistQueryClientProvider>
+      </ThemeProvider>
+    </RestyleThemeProvider>
   );
 
   return POSTHOG_ENABLED ? (
@@ -220,9 +223,8 @@ function RootLayout() {
 
 export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;
 
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+const styles = StyleSheet.create({
   e2eIndicator: { position: 'absolute', top: 8, left: 8, width: 2, height: 2, opacity: 0.02 },
   e2eAction: { position: 'absolute', top: 8, right: 8, width: 16, height: 16, opacity: 0.02 },
   e2eActionAlt: { position: 'absolute', top: 24, right: 8, width: 16, height: 16, opacity: 0.02 },
-}));
+});

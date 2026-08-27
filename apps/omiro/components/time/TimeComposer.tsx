@@ -18,8 +18,8 @@ import Animated, {
 
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
-import { Card, IconButton, nativeShadows, TextField } from '~/components/ui';
+import { useAppTheme, useStyles, withAlpha } from '~/components/theme';
+import { Card, IconButton, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
@@ -32,6 +32,51 @@ import { useTimeComposer } from './use-time-composer';
 
 interface TimeComposerProps {
   onOpenEvent: (event: { id: string }) => void;
+}
+
+function useTimeComposerStyles() {
+  return useStyles((theme) => ({
+    composerCard: { width: '100%', gap: 8, padding: 12 },
+    actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+    loadingState: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+    resultSurface: { width: '100%' },
+    resultCard: { gap: 8, padding: 12 },
+    answerText: { ...theme.textVariants.body, color: theme.colors.foreground },
+    eventChoiceHeading: { ...theme.textVariants.headline },
+    eventChoice: { gap: 4, paddingVertical: 8, minHeight: 44 },
+    eventTitle: { ...theme.textVariants.body },
+    eventTime: { color: theme.colors.mutedForeground },
+    availabilityHeading: { ...theme.textVariants.headline },
+    openingOption: { gap: 4, paddingVertical: 8, minHeight: 44 },
+    openingTime: { ...theme.textVariants.body },
+    openingEnd: { color: theme.colors.mutedForeground },
+    intentBadge: {
+      alignSelf: 'flex-start',
+      backgroundColor: withAlpha(theme.colors.muted, 0.7),
+      borderRadius: theme.borderRadii.sm,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    intentLabel: { ...theme.textVariants.caption1, color: theme.colors.mutedForeground },
+    fieldEditor: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    textField: {
+      borderRadius: 0,
+      borderWidth: 0,
+      minHeight: 0,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+    },
+    draftDetails: { ...theme.textVariants.body, color: theme.colors.mutedForeground },
+    resultActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+  }));
 }
 
 export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
@@ -50,7 +95,9 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
     updateDraft,
   } = controller;
   const disabled = state.kind === 'parsing' || isSaving;
-  const [primaryColor] = useThemeColor(['--color-primary']) as [string];
+  const theme = useAppTheme();
+  const { primary: primaryColor } = theme.colors;
+  const styles = useTimeComposerStyles();
   const inputRef = useRef<RNTextInput>(null);
   const reducedMotion = useReducedMotion();
 
@@ -107,7 +154,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
                 borderCurve: 'continuous',
                 borderRadius: 24,
                 borderWidth: 0,
-                boxShadow: nativeShadows.none,
+                boxShadow: theme.shadows.none,
               },
             ]}
             testID="time-composer"
@@ -208,6 +255,8 @@ function ResultSurface({
 }: ResultSurfaceProps) {
   const reducedMotion = useReducedMotion();
   const { height: screenHeight } = useWindowDimensions();
+  const theme = useAppTheme();
+  const styles = useTimeComposerStyles();
   let inner = children;
   if (isResultState(state)) {
     inner = (
@@ -245,7 +294,7 @@ function ResultSurface({
             borderCurve: 'continuous',
             borderRadius: 24,
             borderWidth: 0,
-            boxShadow: nativeShadows.none,
+            boxShadow: theme.shadows.none,
           },
         ]}
       >
@@ -278,6 +327,7 @@ type ResultContentProps = Pick<
 };
 
 function ResultContent({ state, ...actions }: ResultContentProps) {
+  const styles = useTimeComposerStyles();
   switch (state.kind) {
     case 'answer':
       return <Text style={styles.answerText}>{state.answer}</Text>;
@@ -297,6 +347,7 @@ function EventChoiceResult({
 }: Pick<ResultContentProps, 'onCancel' | 'onChooseEvent'> & {
   candidates: Extract<TimeInteractionState, { kind: 'event-choice' }>['candidates'];
 }) {
+  const styles = useTimeComposerStyles();
   return (
     <>
       <Text style={styles.eventChoiceHeading}>Which event did you mean?</Text>
@@ -324,6 +375,7 @@ function AvailabilityResult({
 }: Pick<ResultContentProps, 'onCancel' | 'onChooseOpening'> & {
   openings: TimeOpening[];
 }) {
+  const styles = useTimeComposerStyles();
   return (
     <>
       <Text style={styles.availabilityHeading}>Possible times</Text>
@@ -353,6 +405,7 @@ function DraftResult({
 }: Pick<ResultContentProps, 'isSaving' | 'onCancel' | 'onEditField' | 'onSubmitDraft'> & {
   block: Extract<TimeInteractionState, { kind: 'draft' }>['block'];
 }) {
+  const styles = useTimeComposerStyles();
   const canSubmit =
     block.primary_intent === 'add_task' ||
     ((block.primary_intent === 'add_event' || block.primary_intent === 'add_recurring_event') &&
@@ -394,6 +447,7 @@ function DraftResult({
 }
 
 function CancelRow({ onCancel, testID }: { onCancel?: () => void; testID: string }) {
+  const styles = useTimeComposerStyles();
   return (
     <View style={styles.resultActions}>
       <CancelButton testID={testID} onCancel={onCancel} />
@@ -433,45 +487,3 @@ function getIntentLabel(
   }[intent];
 }
 
-const styles = makeStyles((theme) => ({
-  composerCard: { width: '100%', gap: 8, padding: 12 },
-  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
-  loadingState: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
-  resultSurface: { width: '100%' },
-  resultCard: { gap: 8, padding: 12 },
-  answerText: { ...theme.typography.body, color: theme.colors.foreground },
-  eventChoiceHeading: { ...theme.typography.headline },
-  eventChoice: { gap: 4, paddingVertical: 8, minHeight: 44 },
-  eventTitle: { ...theme.typography.body },
-  eventTime: { color: theme.colors.mutedForeground },
-  availabilityHeading: { ...theme.typography.headline },
-  openingOption: { gap: 4, paddingVertical: 8, minHeight: 44 },
-  openingTime: { ...theme.typography.body },
-  openingEnd: { color: theme.colors.mutedForeground },
-  intentBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: withAlpha(theme.colors.muted, 0.7),
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  intentLabel: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-  fieldEditor: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  textField: {
-    borderRadius: 0,
-    borderWidth: 0,
-    minHeight: 0,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  draftDetails: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  resultActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-}));

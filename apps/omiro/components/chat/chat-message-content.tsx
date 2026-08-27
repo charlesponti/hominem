@@ -1,9 +1,9 @@
 import type { MarkdownComponent } from '@hominem/chat';
 import { logger } from '@hominem/telemetry';
 import { createElement, type ReactNode, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme } from '~/components/theme';
 
 async function loadMarkdown() {
   const mod = await import('react-native-markdown-display');
@@ -52,10 +52,7 @@ export function MessageContent({
 }) {
   const Markdown = useMarkdownComponent();
   const isStreaming = !enableMarkdown;
-  const [textPrimary, popover] = useThemeColor([
-    '--color-foreground',
-    '--color-popover',
-  ]) as string[];
+  const { foreground: textPrimary, popover } = useAppTheme().colors;
 
   const markdownStyle = useMemo(
     () => ({
@@ -98,6 +95,6 @@ export function MessageContent({
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   content: { gap: 8, width: '100%' },
-}));
+});

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { useInterruptibleMotion } from '~/services/motion/use-interruptible-motion';
 
@@ -28,7 +28,15 @@ export function ComposerToastFlight({
   onSettled: () => void;
 }) {
   const motion = useInterruptibleMotion();
-  const textPrimary = useThemeColor('--color-foreground') as string;
+  const { foreground: textPrimary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    toast: {
+      backgroundColor: theme.colors.popover,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 8,
+    },
+  }));
 
   useEffect(() => {
     motion.start();
@@ -61,12 +69,3 @@ export function ComposerToastFlight({
     </Animated.View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  toast: {
-    backgroundColor: theme.colors.popover,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-}));

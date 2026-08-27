@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Pressable, Text, TextInput } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme } from '~/components/theme';
 import { useShakeAnimation } from '~/services/motion/use-shake-animation';
 
 interface OtpInputProps {
@@ -106,12 +106,12 @@ export function OtpInput({
   testID,
   accessibilityLabel,
 }: OtpInputProps) {
-  const [borderDefault, primary, destructive, textPrimary] = useThemeColor([
-    '--color-border',
-    '--color-primary',
-    '--color-destructive',
-    '--color-foreground',
-  ]) as string[];
+  const {
+    border: borderDefault,
+    primary,
+    destructive,
+    foreground: textPrimary,
+  } = useAppTheme().colors;
   const inputRef = useRef<TextInput>(null);
 
   const shakeStyle = useShakeAnimation(error);
@@ -168,7 +168,7 @@ export function OtpInput({
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   caret: { borderRadius: 1, height: 24, width: 2 },
   cell: {
     alignItems: 'center',
@@ -182,4 +182,4 @@ const styles = makeStyles(() => ({
   container: { alignSelf: 'center' },
   cellsRow: { flexDirection: 'row', gap: 8 },
   hiddenInput: { height: '100%', left: 0, opacity: 0, position: 'absolute', top: 0, width: '100%' },
-}));
+});

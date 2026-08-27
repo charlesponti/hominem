@@ -8,9 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { View } from 'react-native';
-
-import { makeStyles } from '~/components/theme';
+import { StyleSheet, View } from 'react-native';
 import type { MeasuredRect } from '~/services/motion/use-measured-element';
 
 export interface LocalRect {
@@ -159,6 +157,6 @@ export function useChatMotionOverlay(): ChatMotionOverlayContextValue {
   return useContext(ChatMotionOverlayContext);
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-}));
+});

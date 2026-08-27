@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
 import t from '~/translations';
@@ -54,7 +54,16 @@ function usePrinterDot(delayMs: number, reducedMotion: boolean) {
 }
 
 export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }) {
-  const textPrimary = useThemeColor('--color-foreground') as string;
+  const { foreground: textPrimary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    indicatorContent: { gap: 8, width: '100%' },
+    indicatorRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dot: { borderRadius: 6, height: 8, width: 8 },
+    indicatorLabel: { marginLeft: 4, color: theme.colors.tertiary },
+    container: {},
+    compact: { paddingTop: 4 },
+    spacious: { paddingHorizontal: 16, paddingVertical: 8 },
+  }));
   const reducedMotion = useReducedMotion();
   const dot1Style = usePrinterDot(0, reducedMotion);
   const dot2Style = usePrinterDot(DOT_STAGGER_MS, reducedMotion);
@@ -81,13 +90,3 @@ export function ChatThinkingIndicator({ compact = false }: { compact?: boolean }
     </Animated.View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  indicatorContent: { gap: 8, width: '100%' },
-  indicatorRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { borderRadius: 6, height: 8, width: 8 },
-  indicatorLabel: { marginLeft: 4, color: theme.colors.tertiary },
-  container: {},
-  compact: { paddingTop: 4 },
-  spacious: { paddingHorizontal: 16, paddingVertical: 8 },
-}));

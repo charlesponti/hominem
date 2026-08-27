@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import { consumeActiveEnhanceSession } from '~/services/ai/active-enhance-session';
 import { useTextEnhance } from '~/services/ai/use-text-enhance';
 import t from '~/translations';
@@ -17,6 +17,10 @@ export default function EnhanceSheetScreen() {
   const { enhance, isEnhancing } = useTextEnhance();
   const [instruction, setInstruction] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const styles = useStyles((theme) => ({
+    container: { flex: 1, paddingHorizontal: 16, paddingTop: 24 },
+    title: { ...theme.textVariants.headline, color: theme.colors.foreground },
+  }));
 
   const runEnhance = useCallback(
     async (presetInstruction?: string) => {
@@ -55,8 +59,3 @@ export default function EnhanceSheetScreen() {
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 24 },
-  title: { ...theme.typography.headline, color: theme.colors.foreground },
-}));
