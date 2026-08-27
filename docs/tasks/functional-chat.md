@@ -21,6 +21,7 @@ This targets the chat generation/SSE protocol. The external MCP protocol remains
 - [x] Run local and test database migrations plus database code generation for the new schema.
 - [x] Add transport-independent JSON, message snapshot, turn, retry, checkpoint, and terminal metadata primitives for the durable event contract.
 - [x] Add stable idempotency keys to every semantic persist command emitted by the generation machine.
+- [x] Attach durable metadata variants and a type-safe discriminated envelope to the canonical generation event contract.
 
 ## Architecture Changes
 
@@ -160,6 +161,8 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 - A save command is not complete until its interpreter returns `generation-saved`; otherwise the machine remains in `saving` indefinitely. Every command that advances state needs an explicit effect result or a deliberate terminal/no-op contract.
 - Tool calls must remain queued when confirmation pauses execution. Approval must reinsert the confirmed call at the queue head before execution, or later tool calls can be silently dropped.
 - Stable effect keys need the generation, turn, and tool-call identity. The API tool adapter must consult the durable effect ledger before invoking MCP and persist the original result after the first invocation, including failures.
+- Semantic event keys belong on the machine's persist commands, not in an infrastructure callback. This keeps replay identity deterministic before the database or transport adapter runs.
+- The durable event contract can be strengthened incrementally: metadata primitives and discriminated payloads are now canonical, while unresolved message/navigation DTO decisions remain explicit follow-up work.
 - Provider streams are untrusted inputs: chunks may omit choices, deltas, IDs, names, arguments, or error objects. Normalization belongs in the API provider adapter; reconstruction and transition decisions belong in the pure machine.
 - Token and reasoning deltas are live-only, while semantic events are durable. Coverage of the reducer does not prove replay correctness; the next testing priority is the event-store/SSE handoff and crash boundary.
 - Removing unreachable guards improved both clarity and coverage. The registry handles `null` output before result-cap enforcement, so the cap helper only needs to handle records.
