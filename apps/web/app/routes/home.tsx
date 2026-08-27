@@ -51,7 +51,10 @@ export default function HomePage() {
       responseLength,
       onAccepted: (event) => {
         setDraft('');
-        navigate(`/chat/${event.chatId}`, { viewTransition: true });
+        navigate(`/chat/${event.chatId}`, {
+          state: { initialAgentSend: { message, responseLength } },
+          viewTransition: true,
+        });
       },
     });
   }

@@ -1,10 +1,15 @@
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
-import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
+import {
+  ChatApprovalOverlay,
+  ChatMessageList,
+  ChatReviewOverlay,
+  ChatSearchModal,
+} from '~/components/chat';
 import { ChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
@@ -26,7 +31,11 @@ import {
 } from '~/services/chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
-import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
+import {
+  clearResumeTarget,
+  consumePendingChatStart,
+  writeResumeTarget,
+} from '~/services/navigation/launch-state';
 import { HOME_ROUTE, NEW_CHAT_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
@@ -81,11 +90,22 @@ export function ChatScreen({ id }: { id: string }) {
   const {
     cancelGeneration,
     generation,
+    approveInterrupt,
+    interrupts,
     sendChatMessage,
     isChatSending,
     retryFailedMessage,
     retryLastGeneration,
   } = useSendMessage({ chatId });
+
+  const pendingStartConsumed = useRef(false);
+  useEffect(() => {
+    if (pendingStartConsumed.current || !activeChat) return;
+    const pending = consumePendingChatStart(chatId);
+    if (!pending) return;
+    pendingStartConsumed.current = true;
+    void sendChatMessage(pending).catch(() => undefined);
+  }, [activeChat, chatId, sendChatMessage]);
   const chatSend = useMemo(
     () => ({ sendChatMessage, isChatSending }),
     [sendChatMessage, isChatSending],
@@ -224,6 +244,7 @@ export function ChatScreen({ id }: { id: string }) {
         />
         {!isConversationGone ? (
           <>
+            <ChatApprovalOverlay approve={approveInterrupt} interrupts={interrupts} />
             <ComposerDock
               safeAreaBottom={safeAreaBottom}
               testID="chat-composer-dock"

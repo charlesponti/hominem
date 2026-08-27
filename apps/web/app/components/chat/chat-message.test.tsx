@@ -5,20 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatMessageView } from '~/lib/types/chat';
 
-const mockRespond = vi.hoisted(() => vi.fn());
-
 vi.mock('./speech-player', () => ({
   SpeechPlayer: () => <button type="button">Listen to response</button>,
-}));
-
-vi.mock('~/lib/hooks/use-tool-call-respond', () => ({
-  useToolCallRespond: () => ({ isResponding: false, respond: mockRespond }),
 }));
 
 import { ChatMessage } from './chat-message';
 
 afterEach(cleanup);
-afterEach(() => mockRespond.mockReset());
 
 function message(overrides: Partial<ChatMessageView> = {}): ChatMessageView {
   return {
@@ -42,34 +35,6 @@ describe('ChatMessage', () => {
         .closest('.is-assistant')
         ?.getAttribute('data-presentation-state'),
     ).toBe('complete');
-  });
-
-  it('renders tool approval actions and reports the selected action', () => {
-    render(
-      <ChatMessage
-        message={message({
-          content: '',
-          toolCalls: [
-            {
-              type: 'tool-call',
-              toolCallId: 'tool-1',
-              toolName: 'delete_note',
-              args: { noteId: 'note-1' },
-              preview: { title: 'Draft note' },
-              status: 'pending',
-            },
-          ],
-        })}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-    expect(mockRespond).toHaveBeenCalledWith({
-      approved: true,
-      messageId: 'message-1',
-      toolCallId: 'tool-1',
-    });
-    expect(screen.getByText('Draft note')).toBeTruthy();
   });
 
   it('does not render speech controls for user or streaming messages', () => {

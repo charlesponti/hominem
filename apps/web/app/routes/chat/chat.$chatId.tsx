@@ -7,36 +7,26 @@ import {
   SheetTitle,
 } from '@ponti-studios/ui/overlays';
 import { useCallback, useEffect, useState } from 'react';
-import { data, useNavigate } from 'react-router';
+import { data, useLocation, useNavigate } from 'react-router';
 
 import { preloadPersona } from '~/components/ai-elements/persona';
-import { Shimmer } from '~/components/ai-elements/shimmer';
+import { ChatApprovalDialog } from '~/components/chat/chat-approval-dialog';
 import { ChatComposerPanel } from '~/components/chat/chat-composer-panel';
 import { ChatConversation } from '~/components/chat/chat-conversation';
 import { ChatConversationActions } from '~/components/chat/chat-conversation-actions';
 import { ChatMessageSearch } from '~/components/chat/chat-message-search';
 import { ChatResponseSettings } from '~/components/chat/chat-response-settings';
-import { ChatTaskReview } from '~/components/chat/chat-task-review';
+import { ChatTaskExtractionDialog } from '~/components/chat/chat-task-extraction-dialog';
 import { ErrorState } from '~/components/error-state';
 import { RouteHeader } from '~/components/route-header';
-import { Button } from '~/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '~/components/ui/dialog';
-import {
-  useCreateChatTasks,
-  useExtractChatTasks,
-  type ProposedChatTask,
-} from '~/hooks/use-chat-tasks';
 import { useChatsList } from '~/hooks/use-chats';
 import { serverEnv } from '~/lib/env.server';
 import { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import { useChatMessageSearch } from '~/lib/hooks/use-chat-message-search';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
+import { useChatRuntime } from '~/lib/hooks/use-chat-runtime';
+import { useChatTaskExtraction } from '~/lib/hooks/use-chat-task-extraction';
+import { useInitialAgentSend } from '~/lib/hooks/use-initial-agent-send';
 import { useOnlineStatus } from '~/lib/hooks/use-online-status';
 import { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import { useResponseLength } from '~/lib/hooks/use-response-length';
@@ -94,14 +84,13 @@ export default function ChatPage({
 }) {
   const { seedNote, messages: initialMessages, messagesStatus } = loaderData;
   const { chatId } = params;
+  const location = useLocation();
+  const runtime = useChatRuntime({ chatId });
   const navigate = useNavigate();
   const isOnline = useOnlineStatus();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [proposedTasks, setProposedTasks] = useState<ProposedChatTask[] | null>(null);
-  const [taskError, setTaskError] = useState<string | null>(null);
   useEffect(() => {
     preloadPersona();
   }, []);
@@ -118,12 +107,10 @@ export default function ChatPage({
     chatId,
     ...(initialMessages ? { initialData: initialMessages } : {}),
   });
-  const streamMessage = useStreamMessage({ chatId });
-  const regeneration = useRegenerateMessage({ chatId });
+  const streamMessage = useStreamMessage({ chatId, runtime });
+  const regeneration = useRegenerateMessage({ chatId, runtime });
   const display = useChatDisplayMessages({ messages });
   const search = useChatMessageSearch(chatId, isSearchOpen);
-  const extractTasks = useExtractChatTasks();
-  const createTasks = useCreateChatTasks();
   const { data: chats = [] } = useChatsList();
   const { responseLength, setResponseLength } = useResponseLength();
   const currentChat = chats.find((chat) => chat.id === chatId);
@@ -136,6 +123,7 @@ export default function ChatPage({
     .join('\n\n');
   const canExtractTasks =
     transcript.length > 0 && !streamMessage.isStreaming && !regeneration.isRegenerating;
+  const taskExtraction = useChatTaskExtraction(transcript);
   const visibleMessages =
     isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
   const regenerateMessage = useCallback(
@@ -144,6 +132,8 @@ export default function ChatPage({
   );
   const cancelRegenerate = useCallback(() => void regeneration.cancel(), [regeneration.cancel]);
   const retryRegenerate = useCallback(() => void regeneration.retry(), [regeneration.retry]);
+
+  useInitialAgentSend(location, streamMessage);
 
   if (messagesStatus === 404 || isNotFound) {
     return (
@@ -173,6 +163,7 @@ export default function ChatPage({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <ChatApprovalDialog runtime={runtime} />
       <RouteHeader showNewChat={false}>
         <div className="relative flex min-w-0 flex-1 items-center">
           <div
@@ -188,7 +179,7 @@ export default function ChatPage({
               chatId={chatId}
               isDebugOpen={isDebugOpen}
               canExtractTasks={canExtractTasks}
-              isExtractingTasks={extractTasks.isPending}
+              isExtractingTasks={taskExtraction.isExtracting}
               isSearchOpen={isSearchOpen}
               isSettingsOpen={isSettingsOpen}
               onDebug={() => setIsDebugOpen((open) => !open)}
@@ -196,16 +187,7 @@ export default function ChatPage({
               onSearch={() => setIsSearchOpen(true)}
               onExtractTasks={() => {
                 if (!canExtractTasks) return;
-                setIsTaskDialogOpen(true);
-                setProposedTasks(null);
-                setTaskError(null);
-                extractTasks.mutate(
-                  { transcript },
-                  {
-                    onSuccess: (result) => setProposedTasks(result.tasks),
-                    onError: (error) => setTaskError(error.message),
-                  },
-                );
+                taskExtraction.open();
               }}
             />
           </div>
@@ -259,94 +241,7 @@ export default function ChatPage({
           onRetryRegenerate={retryRegenerate}
         />
 
-        <Dialog
-          onOpenChange={(open) => {
-            setIsTaskDialogOpen(open);
-            if (!open && !extractTasks.isPending && !createTasks.isPending) {
-              setProposedTasks(null);
-              setTaskError(null);
-            }
-          }}
-          open={isTaskDialogOpen}
-        >
-          <DialogContent
-            aria-describedby="task-extraction-description"
-            className="max-h-[min(80vh,42rem)] overflow-y-auto sm:max-w-lg"
-          >
-            <DialogHeader>
-              <DialogTitle>
-                {proposedTasks ? 'Review proposed tasks' : 'Extracting tasks'}
-              </DialogTitle>
-              <DialogDescription id="task-extraction-description">
-                {proposedTasks
-                  ? 'Choose the tasks you want to add to your task list.'
-                  : 'Reading this conversation for actionable tasks.'}
-              </DialogDescription>
-            </DialogHeader>
-            {extractTasks.isPending ? (
-              <div
-                aria-label="Extracting tasks"
-                className="flex min-h-48 items-center justify-center"
-                role="status"
-              >
-                <Shimmer duration={1}>Thinking</Shimmer>
-              </div>
-            ) : proposedTasks ? (
-              <ChatTaskReview
-                error={taskError ?? undefined}
-                isSaving={createTasks.isPending}
-                onAccept={(tasks) => {
-                  setTaskError(null);
-                  createTasks.mutate(
-                    { tasks },
-                    {
-                      onSuccess: () => {
-                        setProposedTasks(null);
-                        setIsTaskDialogOpen(false);
-                      },
-                      onError: (error) => setTaskError(error.message),
-                    },
-                  );
-                }}
-                onReject={(title) =>
-                  setProposedTasks((tasks) => tasks?.filter((task) => task.title !== title) ?? null)
-                }
-                onRetry={() => {
-                  setTaskError(null);
-                  extractTasks.mutate(
-                    { transcript },
-                    {
-                      onSuccess: (result) => setProposedTasks(result.tasks),
-                      onError: (error) => setTaskError(error.message),
-                    },
-                  );
-                }}
-                tasks={proposedTasks}
-              />
-            ) : taskError ? (
-              <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
-                <p className="text-sm text-destructive">{taskError}</p>
-                <Button
-                  onClick={() => {
-                    setTaskError(null);
-                    extractTasks.mutate(
-                      { transcript },
-                      {
-                        onSuccess: (result) => setProposedTasks(result.tasks),
-                        onError: (error) => setTaskError(error.message),
-                      },
-                    );
-                  }}
-                  size="sm"
-                  type="button"
-                  variant="secondary"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-          </DialogContent>
-        </Dialog>
+        <ChatTaskExtractionDialog extraction={taskExtraction} />
 
         <div className="mx-auto w-full max-w-5xl">
           <ChatComposerPanel

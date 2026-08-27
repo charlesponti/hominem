@@ -19,8 +19,8 @@ export function useChatSources(chatId: string) {
 
 /**
  * chatId is a mutation-time argument rather than a hook-level one, since
- * "start a chat from this note" only learns the new chat's id once the
- * start-stream call resolves -- unlike useChatSources/useRemoveChatSource,
+ * "start a chat from this note" only learns the new chat's id after CRUD
+ * creation -- unlike useChatSources/useRemoveChatSource,
  * which manage sources for an already-known chat.
  */
 export function useAddChatSource() {

@@ -35,7 +35,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const lastInputRef = useRef<SendInput | null>(null);
   const { generation, generationRef, setGeneration } = useChatGeneration({
     chatId,
-    getAuthHeaders,
   });
   const chat = useChat({
     threadId: chatId,
@@ -120,8 +119,11 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   }, [chat, chatId, generationRef, getAuthHeaders, setGeneration]);
 
   return {
+    approveInterrupt: (id: string, approved: boolean) =>
+      chat.addToolApprovalResponse({ id, approved }),
     cancelGeneration,
     generation,
+    interrupts: chat.interrupts,
     isChatSending: mutation.isPending,
     retryFailedMessage: retryLastGeneration,
     retryLastGeneration,

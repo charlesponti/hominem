@@ -1,10 +1,10 @@
 import type { ChatMessageDto } from '@hominem/rpc/types';
-import { fetchHttpStream, useChat } from '@tanstack/ai-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
+import type { ChatRuntime } from './use-chat-runtime';
 import type { ResponseLength } from './use-response-length';
 
 export type RegenerationStatus =
@@ -16,7 +16,13 @@ export type RegenerationStatus =
   | 'committed'
   | 'failed';
 
-export function useRegenerateMessage({ chatId }: { chatId: string }) {
+export function useRegenerateMessage({
+  chatId,
+  runtime,
+}: {
+  chatId: string;
+  runtime: ChatRuntime;
+}) {
   const queryClient = useQueryClient();
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [status, setStatus] = useState<RegenerationStatus>('idle');
@@ -24,29 +30,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
   const lastRequestRef = useRef<{ messageId: string; responseLength?: ResponseLength } | null>(
     null,
   );
-  const chat = useChat({
-    threadId: chatId,
-    persistence: true,
-    queue: 'drop',
-    connection: fetchHttpStream(
-      `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent`,
-      { credentials: 'include' },
-    ),
-    onFinish: () => {
-      setStatus('committed');
-      setActiveMessageId(null);
-      void Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-      ]);
-    },
-    onError: (nextError) => {
-      setError(nextError);
-      setStatus('failed');
-      setActiveMessageId(null);
-    },
-  });
+  const chat = runtime;
 
   const regenerate = useCallback(
     async (messageId: string, responseLength?: ResponseLength) => {
@@ -61,6 +45,13 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
             operation: { kind: 'regenerate', assistantMessageId: messageId, responseLength },
           },
         });
+        setStatus('committed');
+        setActiveMessageId(null);
+        void Promise.all([
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
+        ]);
       } catch (caught) {
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
@@ -68,7 +59,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
         setActiveMessageId(null);
       }
     },
-    [chat],
+    [chat, chatId, queryClient],
   );
 
   const cancel = useCallback(() => {

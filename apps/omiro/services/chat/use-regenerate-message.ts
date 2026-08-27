@@ -17,7 +17,6 @@ export function useRegenerateMessage(chatId: string) {
   const lastMessageIdRef = useRef<string | null>(null);
   const { generation, generationRef, setGeneration } = useChatGeneration({
     chatId,
-    getAuthHeaders,
   });
   const chat = useChat({
     threadId: chatId,

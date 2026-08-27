@@ -1,23 +1,18 @@
-import type { ChatsStartStreamEvent } from '@hominem/rpc/types';
+import { useApiClient } from '@hominem/rpc/react';
+import type { Chat } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { randomUUID } from 'expo-crypto';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
-import { API_BASE_URL } from '~/constants';
-import { getChatResponseLength } from '~/hooks/use-chat-response-length';
-import { useAuth } from '~/services/auth/auth-provider';
 import { OFFLINE_UNAVAILABLE_ERROR } from '~/services/chat/chat-errors';
-import type { MessageOutput } from '~/services/chat/chatMessages';
-import { streamSSE } from '~/services/chat/stream-sse';
-import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
+import { writePendingChatStart } from '~/services/navigation/launch-state';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
 
 interface StartChatOptions {
-  onAccepted?: (event: Extract<ChatsStartStreamEvent, { type: 'accepted' }>) => void;
+  onAccepted?: (event: { chatId: string; chat: Chat }) => void;
 }
 
 type StartChatInput = {
@@ -27,18 +22,8 @@ type StartChatInput = {
 };
 
 export function useStartChat() {
-  const { getAuthHeaders } = useAuth();
+  const apiClient = useApiClient();
   const queryClient = useQueryClient();
-
-  const startedChatIdRef = useRef<string | null>(null);
-  const reconcileStartedChat = useCallback(
-    (chatId: string) =>
-      Promise.all([
-        invalidateInboxQueries(queryClient),
-        invalidateChatQueries(queryClient, chatId),
-      ]),
-    [queryClient],
-  );
 
   const mutation = useMutation<string, Error, StartChatInput & StartChatOptions>({
     mutationFn: async ({ onAccepted, ...input }) => {
@@ -47,61 +32,20 @@ export function useStartChat() {
         throw new Error(OFFLINE_UNAVAILABLE_ERROR);
       }
 
-      startedChatIdRef.current = null;
-      const generationId = randomUUID();
-
-      try {
-        await streamSSE<ChatsStartStreamEvent>({
-          url: `${API_BASE_URL}/api/chats/start-stream`,
-          payload: {
-            ...input,
-            generationId,
-            responseLength: getChatResponseLength(),
-          },
-          getHeaders: getAuthHeaders,
-          onEvent: (event) => {
-            if (event.type === 'accepted') {
-              startedChatIdRef.current = event.chatId;
-              const userMessage = event.userMessage ? toMessageOutput(event.userMessage) : null;
-              queryClient.setQueryData(chatKeys.activeChat(event.chatId), event.chat);
-              queryClient.setQueryData<MessageOutput[]>(
-                chatKeys.messages(event.chatId),
-                userMessage ? [userMessage] : [],
-              );
-
-              void reconcileStartedChat(event.chatId);
-              onAccepted?.(event);
-              return;
-            }
-
-            if (event.type === 'committed') {
-              const assistantMessage = toMessageOutput(event.message);
-              if (!assistantMessage || !startedChatIdRef.current) return;
-              queryClient.setQueryData<MessageOutput[]>(
-                chatKeys.messages(startedChatIdRef.current),
-                (messages = []) => [...messages, assistantMessage],
-              );
-            }
-          },
-          onDone: () => {
-            if (!startedChatIdRef.current) {
-              return;
-            }
-            void reconcileStartedChat(startedChatIdRef.current);
-          },
-        });
-      } catch (error) {
-        if (!startedChatIdRef.current) {
-          throw error;
-        }
-        void reconcileStartedChat(startedChatIdRef.current);
-        throw error;
-      }
-
-      if (!startedChatIdRef.current) {
-        throw new Error('Chat was not created');
-      }
-      return startedChatIdRef.current;
+      const response = await apiClient.api.chats.$post({ json: { title: input.title } });
+      if (!response.ok) throw new Error('Unable to create chat.');
+      const chat = (await response.json()) as Chat;
+      writePendingChatStart(chat.id, {
+        message: input.message,
+        ...(input.fileIds ? { fileIds: input.fileIds } : {}),
+      });
+      queryClient.setQueryData(chatKeys.activeChat(chat.id), chat);
+      void Promise.all([
+        invalidateInboxQueries(queryClient),
+        invalidateChatQueries(queryClient, chat.id),
+      ]);
+      onAccepted?.({ chatId: chat.id, chat });
+      return chat.id;
     },
   });
 

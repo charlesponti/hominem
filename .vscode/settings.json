@@ -1,0 +1,50 @@
+{
+  // Keep the file watcher on real source only. This repo used to put ~240K
+  // cache/worktree files inside the workspace (.claude/worktrees, .pnpm-store,
+  // .turbo), which blew past macOS's per-process fd limit (kern.maxfilesperproc
+  // = 122880) and made VSCode fall back to polling. These dirs change only via
+  // external tooling, never from editor edits, so excluding them is safe.
+  "files.watcherExclude": {
+    "**/.cache/**": true,
+    "**/.claude/**": true,
+    "**/.expo/**": true,
+    "**/.git/**": true,
+    "**/.next/**": true,
+    "**/.pnpm-store/**": true,
+    "**/.turbo/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true,
+    "**/output/**": true,
+    "**/apps/omiro/android/**": true,
+    "**/apps/omiro/ios/**": true
+  },
+  "files.exclude": {
+    "**/.claude/worktrees": true,
+    "**/.pnpm-store": true,
+    "**/.turbo": true,
+    "**/coverage": true,
+    "**/output": true
+  },
+  "search.exclude": {
+    "**/.cache/**": true,
+    "**/.claude/**": true,
+    "**/.pnpm-store/**": true,
+    "**/.turbo/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true,
+    "**/output/**": true
+  },
+  // Use the workspace's TypeScript (catalog-pinned 6.0.3) instead of VSCode's
+  // bundled one, so tsserver honors tsconfig.base.json's
+  // assumeChangesOnlyAffectDirectDependencies edit-scan limit.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  // ~1.4K hand-written files across ~18 programs (each app overlaps the shared
+  // package graph + the @hominem/api source alias). 3.5 GB default heap is
+  // enough, but headroom prevents GC churn while holding 4 app programs and
+  // expo/hono's type-heavy .d.ts in memory simultaneously.
+  "typescript.tsserver.maxTsServerMemory": 8192
+}

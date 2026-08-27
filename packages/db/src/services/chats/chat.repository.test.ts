@@ -69,18 +69,6 @@ describe('ChatRepository message deletion', () => {
       ])
       .execute();
 
-    await db
-      .insertInto('app.chatGenerationRuns')
-      .values({
-        id: randomUUID(),
-        chatId,
-        ownerUserId: userId,
-        kind: 'regenerate',
-        status: 'committed',
-        targetAssistantMessageId: messageIds.later,
-      })
-      .execute();
-
     return { chatId, messageIds, userId };
   }
 
@@ -102,13 +90,6 @@ describe('ChatRepository message deletion', () => {
     await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toMatchObject([
       { id: fixture.messageIds.first, content: 'Keep this message' },
     ]);
-    await expect(
-      db
-        .selectFrom('app.chatGenerationRuns')
-        .select('id')
-        .where('chatId', '=', fixture.chatId)
-        .execute(),
-    ).resolves.toEqual([]);
     const chat = await db
       .selectFrom('app.chats')
       .select('lastMessageAt')

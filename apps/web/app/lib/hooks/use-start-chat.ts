@@ -1,73 +1,43 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
+import type { Chat } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
-
-import { consumeChatStream } from '../chat/stream-events';
 
 interface StartChatInput {
   title: string;
   message: string;
   fileIds?: string[];
   responseLength?: 'short' | 'medium' | 'long';
-  onAccepted?: (event: Extract<ChatStreamEvent, { type: 'accepted' }>) => void;
-  onCommitted?: (event: Extract<ChatStreamEvent, { type: 'committed' }>) => void;
+  onAccepted?: (event: { chatId: string; chat: Chat }) => void;
 }
 
 export function useStartChat() {
   const client = useQueryClient();
   const apiClient = useApiClient();
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const mutation = useMutation<void, Error, StartChatInput>({
-    mutationFn: async ({ onAccepted, onCommitted, ...input }) => {
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-
-      try {
-        const response = await apiClient.api.chats['start-stream'].$post(
-          {
-            json: {
-              ...input,
-              generationId: crypto.randomUUID(),
-            },
-          },
-          { init: { signal: abortController.signal } },
-        );
-
-        await consumeChatStream(response, (event) => {
-          if (event.type === 'accepted') {
-            client.setQueryData(chatQueryKeys.get(event.chatId), event.chat);
-            client.setQueryData(
-              chatQueryKeys.messages(event.chatId),
-              event.userMessage ? [event.userMessage] : [],
-            );
-            onAccepted?.(event);
-          }
-
-          if (event.type === 'committed') {
-            client.setQueryData<ChatMessageDto[]>(
-              chatQueryKeys.messages(event.message.chatId),
-              (messages = []) => [...messages, event.message],
-            );
-            onCommitted?.(event);
-          }
-        });
-
-        await client.invalidateQueries({ queryKey: chatQueryKeys.list });
-      } finally {
-        abortControllerRef.current = null;
-      }
+  const mutation = useMutation<Chat, Error, StartChatInput>({
+    mutationFn: async ({ title }) => {
+      const response = await apiClient.api.chats.$post({ json: { title } });
+      if (!response.ok) throw new Error('Unable to create chat.');
+      return response.json() as Promise<Chat>;
+    },
+    onSuccess: (chat) => {
+      client.setQueryData(chatQueryKeys.get(chat.id), chat);
+      void client.invalidateQueries({ queryKey: chatQueryKeys.list });
     },
   });
 
-  const start = useCallback((input: StartChatInput) => mutation.mutateAsync(input), [mutation]);
+  const start = useCallback(
+    async (input: StartChatInput) => {
+      const chat = await mutation.mutateAsync(input);
+      input.onAccepted?.({ chatId: chat.id, chat });
+    },
+    [mutation],
+  );
 
-  const cancel = useCallback(() => {
-    abortControllerRef.current?.abort();
-  }, []);
+  const cancel = useCallback(() => undefined, []);
 
   return {
     cancel,
