@@ -1,3 +1,4 @@
+import type { ChatGenerationKind, ChatGenerationStatus } from '@hominem/chat';
 import type { Selectable } from 'kysely';
 
 import { NotFoundError, ValidationError } from '../../errors';
@@ -79,8 +80,7 @@ export interface InsertChatMessageInput {
   parentMessageId?: string | null;
 }
 
-export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
-export type ChatGenerationStatus = 'preparing' | 'saving' | 'committed' | 'cancelled' | 'failed';
+export type { ChatGenerationKind, ChatGenerationStatus } from '@hominem/chat';
 
 export interface ChatGenerationRunRecord {
   id: string;

@@ -5,11 +5,12 @@
     "outDir": "./build",
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     "paths": {
+      "@hominem/chat": ["../chat/build/index.d.ts"],
       "@hominem/db/schema/*": ["./src/migrations/schema.ts"],
       "@hominem/db/services/*": ["./src/services/*"]
     }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "build", "dist", ".turbo", ".cache", "coverage", "*.tsbuildinfo"],
-  "references": [{ "path": "../env" }, { "path": "../utils" }]
+  "references": [{ "path": "../chat" }, { "path": "../env" }, { "path": "../utils" }]
 }
