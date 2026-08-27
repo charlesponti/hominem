@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import type { MeasuredRect } from '~/services/motion/use-measured-element';
 
 export interface LocalRect {

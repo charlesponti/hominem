@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './finance';
+import { callTool, type McpToolResult } from '../tools';
 
 const userId = 'f1000000-0000-4000-8000-000000000001';
 
@@ -200,9 +201,6 @@ beforeAll(async () => {
 
 describe('finance_net_worth', () => {
   it('adds posted transaction activity since the latest statement to compute balances', async () => {
-    await import('./finance');
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'finance_net_worth', {
       includeClosed: false,
     });
@@ -222,8 +220,6 @@ describe('finance_net_worth', () => {
   });
 
   it('excludes closed accounts unless requested', async () => {
-    const { callTool } = await import('../tools');
-
     const withoutClosed = await callTool(userId, 'finance_net_worth', {
       includeClosed: false,
     });
@@ -241,8 +237,6 @@ describe('finance_net_worth', () => {
 
 describe('finance_recent_transactions', () => {
   it('returns posted transactions only, newest first, with category names', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'finance_recent_transactions', {
       limit: 20,
     });
@@ -275,8 +269,6 @@ describe('finance_recent_transactions', () => {
 
 describe('finance_spending_by_category', () => {
   it('sums posted, non-excluded, non-transfer spending by category', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'finance_spending_by_category', {
       from: '2026-06-30',
       to: '2026-07-20',

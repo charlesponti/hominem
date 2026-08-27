@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './tags';
+import { callTool, type McpToolResult } from '../tools';
 
 const userId = 'd1000000-0000-4000-8000-000000000001';
 
@@ -44,9 +45,6 @@ beforeAll(async () => {
 
 describe('tag_entity / untag_entity / entity_tags', () => {
   it('creates a new tag and assigns it to a person', async () => {
-    await import('./tags');
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'tag_entity', {
       entityType: 'people',
       entityId: personId,
@@ -64,8 +62,6 @@ describe('tag_entity / untag_entity / entity_tags', () => {
   });
 
   it('reuses an existing tag by name case-insensitively instead of creating a duplicate', async () => {
-    const { callTool } = await import('../tools');
-
     const first = await callTool(userId, 'tag_entity', {
       entityType: 'places',
       entityId: placeId,
@@ -81,8 +77,6 @@ describe('tag_entity / untag_entity / entity_tags', () => {
   });
 
   it('is idempotent — tagging the same entity with the same tag twice does not duplicate', async () => {
-    const { callTool } = await import('../tools');
-
     await callTool(userId, 'tag_entity', {
       entityType: 'places',
       entityId: placeId,
@@ -103,8 +97,6 @@ describe('tag_entity / untag_entity / entity_tags', () => {
   });
 
   it('returns an empty list for an entity with no tags', async () => {
-    const { callTool } = await import('../tools');
-
     const untaggedPersonId = 'd1000001-0000-4000-8000-000000000002';
     await db
       .insertInto('app.people')
@@ -121,8 +113,6 @@ describe('tag_entity / untag_entity / entity_tags', () => {
   });
 
   it('removes a tag assignment and reports removed: true', async () => {
-    const { callTool } = await import('../tools');
-
     const tagged = await callTool(userId, 'tag_entity', {
       entityType: 'people',
       entityId: personId,
@@ -145,8 +135,6 @@ describe('tag_entity / untag_entity / entity_tags', () => {
   });
 
   it('reports removed: false when there was nothing to remove', async () => {
-    const { callTool } = await import('../tools');
-
     const tagged = await callTool(userId, 'tag_entity', {
       entityType: 'people',
       entityId: personId,

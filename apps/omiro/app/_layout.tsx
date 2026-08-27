@@ -1,7 +1,7 @@
 import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
-import { ThemeProvider as RestyleThemeProvider } from '@shopify/restyle';
 import { logger } from '@hominem/telemetry';
 import * as Sentry from '@sentry/react-native';
+import { ThemeProvider as RestyleThemeProvider } from '@shopify/restyle';
 import { useIsRestoring } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import {

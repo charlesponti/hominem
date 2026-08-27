@@ -49,7 +49,6 @@ export const queryKeys = {
     timeseries: (options: { from: string; to: string; granularity: 'day' | 'month' }) =>
       ['usage', 'timeseries', options] as const,
   },
-
 } as const;
 
 export type QueryKeys = typeof queryKeys;

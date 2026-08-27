@@ -2,6 +2,8 @@
   "name": "@hominem/ori",
   "private": true,
   "scripts": {
+    "format": "oxfmt evals data types --write '!data/**/*.html'",
+    "format:check": "oxfmt evals data types --check '!data/**/*.html'",
     "typecheck": "tsc -p tsconfig.json",
     "eval:chat-assistant": "ori eval evals/chat-assistant.eval.ts",
     "eval:career-job-import": "ori eval evals/career-job-import.eval.ts",

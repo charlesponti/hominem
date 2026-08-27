@@ -1,7 +1,11 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 
-import { StreamScreen, streamFilterOptions, type StreamFilter } from '~/components/inbox/StreamScreen';
+import {
+  StreamScreen,
+  streamFilterOptions,
+  type StreamFilter,
+} from '~/components/inbox/StreamScreen';
 import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
 import { RootSceneGesture } from '~/components/navigation/RootSceneGesture';
 import { SegmentedControl } from '~/components/ui';

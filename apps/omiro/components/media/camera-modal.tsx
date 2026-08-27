@@ -38,11 +38,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const photoOutput = usePhotoOutput();
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
-  const {
-    border: borderDefault,
-    background,
-    primaryForeground,
-  } = useAppTheme().colors;
+  const { border: borderDefault, background, primaryForeground } = useAppTheme().colors;
   const styles = useStyles((theme) => ({
     cameraContainer: { flex: 1 },
     controls: {

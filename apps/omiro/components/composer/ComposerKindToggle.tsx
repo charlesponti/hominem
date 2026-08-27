@@ -14,7 +14,8 @@ import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 import type { ComposerEntryKind } from './composer.types';
 
-const SEGMENT_SIZE = 32;
+const SEGMENT_SIZE = 34;
+const TRACK_PADDING = 2;
 // Matches on-screen movement per the app's motion guidelines (--ease-in-out).
 const MOVE_EASING = Easing.bezier(0.77, 0, 0.175, 1);
 
@@ -40,13 +41,16 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
 // makes switching legible -- see ComposerKindToggle in the /animate skill
 // output for the reasoning.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
-  const { primary, mutedForeground } = useAppTheme().colors;
+  const theme = useAppTheme();
+  const { card, foreground, mutedForeground, muted } = theme.colors;
   const styles = useStyles(() => ({
     control: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 2,
-      paddingVertical: 2,
+      backgroundColor: muted,
+      borderRadius: 999,
+      borderCurve: 'continuous',
+      padding: TRACK_PADDING,
     },
   }));
   const reducedMotion = useReducedMotion();
@@ -69,13 +73,14 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
         pointerEvents="none"
         style={[
           {
-            backgroundColor: primary,
+            backgroundColor: card,
+            borderCurve: 'continuous',
             borderRadius: 999,
+            boxShadow: theme.shadows.sm,
             height: SEGMENT_SIZE,
-            left: 0,
-            opacity: 0.15,
+            left: TRACK_PADDING,
             position: 'absolute',
-            top: 0,
+            top: TRACK_PADDING,
             width: SEGMENT_SIZE,
           },
           thumbStyle,
@@ -101,7 +106,7 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
             <AppIcon
               name={isSelected ? option.iconFilled : option.icon}
               size={18}
-              tintColor={isSelected ? primary : mutedForeground}
+              tintColor={isSelected ? foreground : mutedForeground}
             />
           </Pressable>
         );

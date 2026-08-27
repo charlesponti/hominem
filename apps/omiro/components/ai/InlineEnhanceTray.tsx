@@ -42,12 +42,7 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const {
-    primary,
-    mutedForeground,
-    popover,
-    foreground: textPrimary,
-  } = useAppTheme().colors;
+  const { primary, mutedForeground, popover, foreground: textPrimary } = useAppTheme().colors;
   const styles = useStyles((theme) => ({
     container: { gap: 8, marginVertical: 16 },
     actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },

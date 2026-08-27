@@ -34,7 +34,7 @@ function getActiveDestination(segments: readonly string[]): Destination | null {
 
 export function NavDrawerMenuButton() {
   const segments = useSegments();
-  const active = getActiveDestination(segments as string[]);
+  const active = getActiveDestination(segments);
   const router = useRouter();
 
   const actions: MenuAction[] = [
@@ -72,7 +72,7 @@ export function NavDrawerMenuButton() {
         testID="nav-drawer-menu-button"
         variant="plain"
       >
-        <AppIcon name="line.3.horizontal" size={20} />
+        <AppIcon name="line.3.horizontal" size={20} tintColor="black" />
       </IconButton>
     </MenuView>
   );

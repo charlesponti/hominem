@@ -13,6 +13,7 @@
     "eval:career-job-import": "npx deepeval test run evals/suites/career-job-import.test.ts",
     "eval:all": "npx deepeval test run evals/suites",
     "format": "oxfmt evals datasets --write '!datasets/**/*.html'",
+    "format:check": "oxfmt evals datasets --check '!datasets/**/*.html'",
     "typecheck": "tsc"
   },
   "devDependencies": {

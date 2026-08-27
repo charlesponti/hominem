@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
-import { ChatActionsMenu } from '~/components/chat/chat-actions-menu';
+import { useChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
 import { Composer } from '~/components/composer/Composer';
@@ -143,6 +143,20 @@ export function ChatScreen({ id }: { id: string }) {
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [showChatSources, setShowChatSources] = useState(false);
 
+  const chatMenuActions = useChatActionsMenu({
+    chatId,
+    canTransform: extraction.canTransform,
+    isConversationGone,
+    messages,
+    onChatArchive: handleChatArchive,
+    onOpenSearch: search.handleOpenSearch,
+    onOpenSettings: () => setShowChatSettings(true),
+    onOpenSources: () => setShowChatSources(true),
+    onToggleDebug: handleToggleDebug,
+    onTransform: (type) => void extraction.handleTransform(type),
+    showDebug,
+  });
+
   const emptyState = <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />;
   const errorState = (
     <EmptyState
@@ -163,19 +177,12 @@ export function ChatScreen({ id }: { id: string }) {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <ChatActionsMenu
-          chatId={chatId}
-          canTransform={extraction.canTransform}
-          isConversationGone={isConversationGone}
-          messages={messages}
-          onChatArchive={handleChatArchive}
-          onOpenSearch={search.handleOpenSearch}
-          onOpenSettings={() => setShowChatSettings(true)}
-          onOpenSources={() => setShowChatSources(true)}
-          onToggleDebug={handleToggleDebug}
-          onTransform={(type) => void extraction.handleTransform(type)}
-          showDebug={showDebug}
-        />
+        <Stack.Toolbar.Menu
+          accessibilityLabel={t.chat.conversationActionsLabel}
+          icon="ellipsis.circle"
+        >
+          {chatMenuActions}
+        </Stack.Toolbar.Menu>
         <Stack.Toolbar.Button
           accessibilityLabel="New chat"
           icon="square.and.pencil"

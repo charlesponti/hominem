@@ -14,7 +14,7 @@ export interface McpToolDefinition<
   inputSchema: TInputSchema;
   outputSchema: TOutputSchema;
   readOnly: boolean;
-  scopes: readonly string[];
+  scopes: CapabilityByScope[];
   sensitivity: CapabilityDefinition['sensitivity'];
   resultCap: number;
   destructive?: boolean;
@@ -58,7 +58,7 @@ export const CHAT_CAPABILITIES = [
 
 export type ChatCapability = (typeof CHAT_CAPABILITIES)[number];
 
-const capabilityByScope: Record<string, ChatCapability> = {
+const capabilityByScope = {
   'calendar:read': 'calendar',
   'career:read': 'career',
   'career:write': 'career',
@@ -75,7 +75,8 @@ const capabilityByScope: Record<string, ChatCapability> = {
   'tags:read': 'tags',
   'tags:write': 'tags',
   'travel:read': 'travel',
-};
+} as const;
+type CapabilityByScope = keyof typeof capabilityByScope;
 
 export function getToolCapabilities(definition: McpToolDefinition): ChatCapability[] {
   return [...new Set(definition.scopes.flatMap((scope) => capabilityByScope[scope] ?? []))];

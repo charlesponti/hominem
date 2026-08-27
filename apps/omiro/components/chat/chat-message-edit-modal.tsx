@@ -21,11 +21,7 @@ export function MessageEditModal({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const {
-    foreground: textPrimary,
-    card,
-    border: borderDefault,
-  } = useAppTheme().colors;
+  const { foreground: textPrimary, card, border: borderDefault } = useAppTheme().colors;
   const styles = useStyles((theme) => ({
     modalContainer: { paddingHorizontal: 20, width: '100%' },
     modalCard: {

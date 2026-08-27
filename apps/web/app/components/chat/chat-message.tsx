@@ -160,8 +160,9 @@ export const ChatMessage = memo(function ChatMessage({
     regenerationStatus === 'streaming' ||
     regenerationStatus === 'stopping';
   const isRegenerationStopping = regenerationStatus === 'stopping';
-  const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
-  const canDelete = message.role === 'user' && !message.isStreaming && Boolean(onDelete);
+  const isUserNotStreaming = message.role === 'user' && !message.isStreaming;
+  const canEdit = isUserNotStreaming && Boolean(onEdit);
+  const canDelete = isUserNotStreaming && Boolean(onDelete);
   const hasReasoning = Boolean(message.reasoning?.trim());
   const presentationState = message.failed
     ? message.role === 'assistant'

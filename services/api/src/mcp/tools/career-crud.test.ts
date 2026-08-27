@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './career';
+import { callTool, type McpToolResult } from '../tools';
 
 const userId = 'a3000001-0000-4000-8000-000000000001';
 const otherUserId = 'a3000001-0000-4000-8000-000000000002';
@@ -17,13 +18,10 @@ beforeAll(async () => {
       [id, `Career CRUD Test User ${id}`, `${id}@test.hominem.dev`, true],
     );
   }
-  await import('./career');
 });
 
 describe('career_engagement_create', () => {
   it('creates an engagement visible in career_engagements', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_engagement_create', {
         company: 'Create Co',
@@ -43,8 +41,6 @@ describe('career_engagement_create', () => {
 
 describe('career application MCP tools', () => {
   it('round-trips create -> list -> update -> delete', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_application_create', {
         company: 'App Co',
@@ -80,7 +76,6 @@ describe('career application MCP tools', () => {
   });
 
   it('does not update or delete another user’s application', async () => {
-    const { callTool } = await import('../tools');
     const application = await db
       .insertInto('app.careerApplications')
       .values({
@@ -109,7 +104,6 @@ describe('career application MCP tools', () => {
   });
 
   it('adds and removes an application note', async () => {
-    const { callTool } = await import('../tools');
     const application = await db
       .insertInto('app.careerApplications')
       .values({ ownerUserid: userId, company: 'Note Co', title: 'Note role', status: 'WISHLIST' })
@@ -136,7 +130,6 @@ describe('career application MCP tools', () => {
   });
 
   it('rejects note operations on another user’s application', async () => {
-    const { callTool } = await import('../tools');
     const application = await db
       .insertInto('app.careerApplications')
       .values({
@@ -160,7 +153,6 @@ describe('career application MCP tools', () => {
   });
 
   it('adds and removes an application file', async () => {
-    const { callTool } = await import('../tools');
     const application = await db
       .insertInto('app.careerApplications')
       .values({ ownerUserid: userId, company: 'File Co', title: 'File role', status: 'WISHLIST' })
@@ -190,8 +182,6 @@ describe('career application MCP tools', () => {
 
 describe('career education MCP tools', () => {
   it('round-trips create -> list -> update -> delete', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_education_create', {
         school: 'MCP University',
@@ -227,7 +217,6 @@ describe('career education MCP tools', () => {
   });
 
   it('does not update or delete another user’s education entry', async () => {
-    const { callTool } = await import('../tools');
     const education = await db
       .insertInto('app.careerEducation')
       .values({ ownerUserid: userId, school: 'Private University' })
@@ -253,8 +242,6 @@ describe('career education MCP tools', () => {
 
 describe('career skill MCP tools', () => {
   it('round-trips create -> list -> update -> delete', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_skill_create', { name: 'Rust', category: 'technical' }),
     ) as { skill: { id: string; name: string } };
@@ -280,7 +267,6 @@ describe('career skill MCP tools', () => {
   });
 
   it('does not update or delete another user’s skill', async () => {
-    const { callTool } = await import('../tools');
     const skill = await db
       .insertInto('app.careerSkills')
       .values({ ownerUserid: userId, name: 'Private Skill' })
@@ -306,8 +292,6 @@ describe('career skill MCP tools', () => {
 
 describe('career_project_create', () => {
   it('creates a project visible in career_projects', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_project_create', { title: 'MCP Test Project' }),
     ) as { project: { id: string; title: string } };
@@ -324,8 +308,6 @@ describe('career_project_create', () => {
 
 describe('career testimonial MCP tools', () => {
   it('round-trips create -> list -> update -> delete', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_testimonial_create', {
         name: 'Jane Manager',
@@ -354,7 +336,6 @@ describe('career testimonial MCP tools', () => {
   });
 
   it('does not update or delete another user’s testimonial', async () => {
-    const { callTool } = await import('../tools');
     const testimonial = await db
       .insertInto('app.careerTestimonials')
       .values({ ownerUserid: userId, name: 'Private Person', content: 'Private content' })
@@ -380,8 +361,6 @@ describe('career testimonial MCP tools', () => {
 
 describe('career certification MCP tools', () => {
   it('round-trips create -> list -> update -> delete', async () => {
-    const { callTool } = await import('../tools');
-
     const created = resultContent(
       await callTool(userId, 'career_certification_create', {
         name: 'AWS Certified',
@@ -410,7 +389,6 @@ describe('career certification MCP tools', () => {
   });
 
   it('does not update or delete another user’s certification', async () => {
-    const { callTool } = await import('../tools');
     const certification = await db
       .insertInto('app.careerCertifications')
       .values({ ownerUserid: userId, name: 'Private Cert', issuingOrganization: 'Private Org' })
@@ -436,8 +414,6 @@ describe('career certification MCP tools', () => {
 
 describe('career_social_links_save', () => {
   it('saves and reads back social links', async () => {
-    const { callTool } = await import('../tools');
-
     const saved = resultContent(
       await callTool(userId, 'career_social_links_save', {
         github: 'https://github.com/mcp-test',

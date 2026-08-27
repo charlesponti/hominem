@@ -486,4 +486,3 @@ function getIntentLabel(
     schedule_gap_fill: 'Find time',
   }[intent];
 }
-

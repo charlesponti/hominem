@@ -8,6 +8,7 @@ vi.mock('~/services/storage/mmkv', () => mockMmkvModule());
 
 const { useChatResponseLength, getChatResponseLength, setChatResponseLength } =
   await import('~/hooks/use-chat-response-length');
+const { storage } = await import('~/services/storage/mmkv');
 
 describe('useChatResponseLength', () => {
   afterEach(() => {
@@ -26,8 +27,7 @@ describe('useChatResponseLength', () => {
     expect(result.current).toBe('long');
   });
 
-  it('ignores an invalid stored value and falls back to the default', async () => {
-    const { storage } = await import('~/services/storage/mmkv');
+  it('ignores an invalid stored value and falls back to the default', () => {
     storage.set('chat_response_length', 'extra-long');
     expect(getChatResponseLength()).toBe('medium');
   });

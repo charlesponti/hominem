@@ -29,6 +29,8 @@
     }
   },
   "scripts": {
+    "format": "oxfmt src --write",
+    "format:check": "oxfmt src --check",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
