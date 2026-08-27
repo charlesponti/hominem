@@ -106,9 +106,7 @@ $D delete-user owner-e2e@test.hominem.dev
    the first attempt, so always request a fresh code before signing in
    (the curl helpers always send first; a browser session that verifies
    once then signs out must walk the flow again, not re-type the same
-   code — it would fail with INVALID_OTP). Note this only holds while
-   `SEND_EMAILS` is not `true` in dev — with it set, the API generates and
-   emails real random codes.
+   code — it would fail with INVALID_OTP).
 4. Click Verify — redirects back to `:4445`, signed in.
 
 ## Logging the browser out
