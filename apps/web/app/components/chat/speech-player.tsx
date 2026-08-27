@@ -1,5 +1,5 @@
 import { Headphones, LoaderCircle } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { MessageAction } from '~/components/ai-elements/message';
 import { Persona } from '~/components/ai-elements/persona';
@@ -34,31 +34,11 @@ export function SpeechPlayer({
   const suppressPauseRef = useRef(false);
   const reducedMotionRef = useRef(false);
   const telemetryRef = useRef<SpeechPlaybackTelemetry | null>(null);
-  const messageIdRef = useRef(messageId);
-  const onDeactivateRef = useRef(onDeactivate);
   const [state, setState] = useState<SpeechState>('idle');
   const [personaMounted, setPersonaMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const showBrowserControls = isActive && (state === 'loading' || state === 'playing');
   const showPersona = isActive && personaMounted;
-  useEffect(() => {
-    messageIdRef.current = messageId;
-    onDeactivateRef.current = onDeactivate;
-  }, [messageId, onDeactivate]);
-
-  const scheduleDeactivation = useCallback(() => {
-    if (deactivateTimerRef.current !== null) {
-      window.clearTimeout(deactivateTimerRef.current);
-    }
-    deactivateTimerRef.current = window.setTimeout(
-      () => {
-        deactivateTimerRef.current = null;
-        setPersonaMounted(false);
-        onDeactivateRef.current(messageIdRef.current);
-      },
-      reducedMotionRef.current ? 0 : personaTransitionMs,
-    );
-  }, []);
 
   useEffect(() => {
     if (!window.matchMedia) return;
@@ -89,7 +69,7 @@ export function SpeechPlayer({
       }
       if (audio.ended) {
         setState('idle');
-        onDeactivateRef.current(messageIdRef.current);
+        onDeactivate(messageId);
         return;
       }
       setState('paused');
@@ -125,7 +105,7 @@ export function SpeechPlayer({
       endSpeechPlaybackTelemetry(telemetryRef.current);
       telemetryRef.current = null;
     };
-  }, [messageId, scheduleDeactivation, src]);
+  }, [messageId, onDeactivate, src]);
 
   useEffect(() => {
     if (isActive) return;
@@ -137,6 +117,8 @@ export function SpeechPlayer({
     suppressPauseRef.current = true;
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
+    setPersonaMounted(false);
+    setState('idle');
     endSpeechPlaybackTelemetry(telemetryRef.current);
     telemetryRef.current = null;
   }, [isActive]);
@@ -149,6 +131,20 @@ export function SpeechPlayer({
     },
     [],
   );
+
+  function scheduleDeactivation() {
+    if (deactivateTimerRef.current !== null) {
+      window.clearTimeout(deactivateTimerRef.current);
+    }
+    deactivateTimerRef.current = window.setTimeout(
+      () => {
+        deactivateTimerRef.current = null;
+        setPersonaMounted(false);
+        onDeactivate(messageId);
+      },
+      reducedMotionRef.current ? 0 : personaTransitionMs,
+    );
+  }
 
   const controlTransition = cn(
     'absolute inset-0  duration-200',
@@ -219,7 +215,7 @@ export function SpeechPlayer({
           <Headphones aria-hidden="true" />
         </MessageAction>
 
-        {showPersona ? (
+        {personaMounted ? (
           <MessageAction
             aria-hidden={!showPersona || state !== 'playing'}
             aria-label="Stop listening"

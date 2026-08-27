@@ -5,20 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatMessageView } from '~/lib/types/chat';
 
-const mockRespond = vi.hoisted(() => vi.fn());
-
 vi.mock('./speech-player', () => ({
   SpeechPlayer: () => <button type="button">Listen to response</button>,
-}));
-
-vi.mock('~/lib/hooks/use-tool-call-respond', () => ({
-  useToolCallRespond: () => ({ isResponding: false, respond: mockRespond }),
 }));
 
 import { ChatMessage } from './chat-message';
 
 afterEach(cleanup);
-afterEach(() => mockRespond.mockReset());
 
 function message(overrides: Partial<ChatMessageView> = {}): ChatMessageView {
   return {
@@ -32,7 +25,14 @@ function message(overrides: Partial<ChatMessageView> = {}): ChatMessageView {
 
 describe('ChatMessage', () => {
   it('renders the message role and assistant speech control', () => {
-    render(<ChatMessage message={message()} speechSrc="/speech/message-1" />);
+    render(
+      <ChatMessage
+        message={message()}
+        onActivateSpeech={() => undefined}
+        onDeactivateSpeech={() => undefined}
+        speechSrc="/speech/message-1"
+      />,
+    );
 
     expect(screen.getByText('Hello from the assistant')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Listen to response' })).toBeTruthy();
@@ -45,6 +45,8 @@ describe('ChatMessage', () => {
   });
 
   it('renders tool approval actions and reports the selected action', () => {
+    const onApproveTool = vi.fn();
+    const onRejectTool = vi.fn();
     render(
       <ChatMessage
         message={message({
@@ -60,15 +62,13 @@ describe('ChatMessage', () => {
             },
           ],
         })}
+        onApproveTool={onApproveTool}
+        onRejectTool={onRejectTool}
       />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-    expect(mockRespond).toHaveBeenCalledWith({
-      approved: true,
-      messageId: 'message-1',
-      toolCallId: 'tool-1',
-    });
+    expect(onApproveTool).toHaveBeenCalledWith({ messageId: 'message-1', toolCallId: 'tool-1' });
     expect(screen.getByText('Draft note')).toBeTruthy();
   });
 
@@ -76,13 +76,20 @@ describe('ChatMessage', () => {
     const { rerender } = render(
       <ChatMessage
         message={message({ role: 'user', content: 'User message' })}
+        onActivateSpeech={() => undefined}
+        onDeactivateSpeech={() => undefined}
         speechSrc="/speech/message-1"
       />,
     );
     expect(screen.queryByRole('button', { name: 'Listen to response' })).toBeNull();
 
     rerender(
-      <ChatMessage message={message({ isStreaming: true })} speechSrc="/speech/message-1" />,
+      <ChatMessage
+        message={message({ isStreaming: true })}
+        onActivateSpeech={() => undefined}
+        onDeactivateSpeech={() => undefined}
+        speechSrc="/speech/message-1"
+      />,
     );
     expect(screen.queryByRole('button', { name: 'Listen to response' })).toBeNull();
   });
@@ -92,27 +99,6 @@ describe('ChatMessage', () => {
 
     expect(screen.getByRole('status', { name: 'Response is streaming' })).toBeTruthy();
     expect(screen.getByLabelText('Message streaming')).toBeTruthy();
-  });
-
-  it('keeps the response subtree mounted as streamed content changes', () => {
-    const { container, rerender } = render(
-      <ChatMessage
-        message={message({ content: 'Partial answer', isStreaming: true, updatedAt: 'first' })}
-      />,
-    );
-    const response = container.querySelector('.font-assistant');
-
-    rerender(
-      <ChatMessage
-        message={message({
-          content: 'Partial answer with more text',
-          isStreaming: true,
-          updatedAt: 'second',
-        })}
-      />,
-    );
-
-    expect(container.querySelector('.font-assistant')).toBe(response);
   });
 
   it('edits persisted user messages and rejects empty content', async () => {

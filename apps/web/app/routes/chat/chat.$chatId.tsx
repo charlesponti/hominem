@@ -32,7 +32,7 @@ import {
   useExtractChatTasks,
   type ProposedChatTask,
 } from '~/hooks/use-chat-tasks';
-import { useChatsList } from '~/hooks/use-chats';
+import { useChatsList, useUpdateChatTitle } from '~/hooks/use-chats';
 import { serverEnv } from '~/lib/env.server';
 import { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import { useChatMessageSearch } from '~/lib/hooks/use-chat-message-search';
@@ -41,6 +41,7 @@ import { useOnlineStatus } from '~/lib/hooks/use-online-status';
 import { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import { useResponseLength } from '~/lib/hooks/use-response-length';
 import { useStreamMessage } from '~/lib/hooks/use-stream-message';
+import { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -52,7 +53,6 @@ type NoteLoaderData = {
   excerpt?: string | null;
 };
 
-// eslint-disable-next-line react-doctor/only-export-components -- React Router route modules require loader exports alongside the route component.
 export async function loader({ request, params }: Route.LoaderArgs) {
   const cookie = request.headers.get('cookie');
   const headers = cookie ? { cookie } : undefined;
@@ -96,12 +96,25 @@ export default function ChatPage({
   const { chatId } = params;
   const navigate = useNavigate();
   const isOnline = useOnlineStatus();
+  const [isRetryable, setIsRetryable] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [proposedTasks, setProposedTasks] = useState<ProposedChatTask[] | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
+  const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
+
+  const activateSpeech = useCallback((messageId: string) => {
+    setActiveSpeechMessageId(messageId);
+  }, []);
+
+  const deactivateSpeech = useCallback((messageId: string) => {
+    setActiveSpeechMessageId((activeMessageId) =>
+      activeMessageId === messageId ? null : activeMessageId,
+    );
+  }, []);
+
   useEffect(() => {
     preloadPersona();
   }, []);
@@ -120,10 +133,12 @@ export default function ChatPage({
   });
   const streamMessage = useStreamMessage({ chatId });
   const regeneration = useRegenerateMessage({ chatId });
+  const toolCallRespond = useToolCallRespond({ chatId });
   const display = useChatDisplayMessages({ messages });
   const search = useChatMessageSearch(chatId, isSearchOpen);
   const extractTasks = useExtractChatTasks();
   const createTasks = useCreateChatTasks();
+  const updateChatTitle = useUpdateChatTitle();
   const { data: chats = [] } = useChatsList();
   const { responseLength, setResponseLength } = useResponseLength();
   const currentChat = chats.find((chat) => chat.id === chatId);
@@ -242,6 +257,7 @@ export default function ChatPage({
         </Sheet>
 
         <ChatConversation
+          activeSpeechMessageId={activeSpeechMessageId}
           chatId={chatId}
           display={display}
           isDebugOpen={isDebugOpen}
@@ -250,7 +266,10 @@ export default function ChatPage({
           search={search}
           seedNote={seedNote}
           streamMessage={streamMessage}
+          toolCallRespond={toolCallRespond}
           visibleMessages={visibleMessages}
+          onActivateSpeech={activateSpeech}
+          onDeactivateSpeech={deactivateSpeech}
           onDelete={deleteMessage}
           onUpdateMessage={updateMessage}
           isDeleting={isDeleting}
@@ -354,10 +373,13 @@ export default function ChatPage({
             currentChatTitle={currentChat?.title}
             display={display}
             isOnline={isOnline}
+            isRetryable={isRetryable}
             regeneration={regeneration}
             responseLength={responseLength}
             seedNote={seedNote}
+            setIsRetryable={setIsRetryable}
             streamMessage={streamMessage}
+            updateChatTitle={updateChatTitle}
           />
         </div>
       </div>

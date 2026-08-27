@@ -52,7 +52,7 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
       // until the menu has finished closing.
       const timeout = setTimeout(() => {
         modalRef.current?.present();
-      }, 350);
+      }, 100);
       return () => clearTimeout(timeout);
     }
 

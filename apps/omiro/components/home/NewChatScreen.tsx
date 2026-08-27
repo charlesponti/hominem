@@ -35,5 +35,5 @@ export function NewChatScreen() {
 }
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1 },
+  container: { backgroundColor: theme.colors.background, flex: 1 },
 }));

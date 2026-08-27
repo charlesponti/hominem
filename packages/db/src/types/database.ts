@@ -64,52 +64,6 @@ export interface Account {
   userId: string;
 }
 
-export interface AppAiChatInterrupts {
-  interruptId: string;
-  payload: Json;
-  requestedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  resolvedAt: ColumnType<string, Date | string, Date | string> | null;
-  response: Json | null;
-  runId: string;
-  status: Generated<string>;
-  threadId: string;
-}
-
-export interface AppAiChatMessages {
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  id: string;
-  message: Json;
-  sourceMessageId: string | null;
-  threadId: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
-export interface AppAiChatRuns {
-  cancelRequested: Generated<boolean>;
-  error: Json | null;
-  finishedAt: ColumnType<string, Date | string, Date | string> | null;
-  runId: string;
-  startedAt: ColumnType<string, Date | string, Date | string>;
-  status: string;
-  threadId: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  usage: Json | null;
-}
-
-export interface AppAiChatStreamEvents {
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  payload: Json;
-  runId: string;
-  sequence: Int8;
-}
-
-export interface AppAiChatThreads {
-  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
-  ownerUserId: string;
-  threadId: string;
-  updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
-}
-
 export interface AppAiUsageEvents {
   cachedInputTokens: number | null;
   costUsd: Numeric | null;
@@ -1468,11 +1422,6 @@ export interface Verification {
 
 export interface DB {
   account: Account;
-  'app.aiChatInterrupts': AppAiChatInterrupts;
-  'app.aiChatMessages': AppAiChatMessages;
-  'app.aiChatRuns': AppAiChatRuns;
-  'app.aiChatStreamEvents': AppAiChatStreamEvents;
-  'app.aiChatThreads': AppAiChatThreads;
   'app.aiUsageEvents': AppAiUsageEvents;
   'app.calendarEventAttendees': AppCalendarEventAttendees;
   'app.calendarEvents': AppCalendarEvents;

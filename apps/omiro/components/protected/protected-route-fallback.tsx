@@ -7,5 +7,5 @@ export function ProtectedRouteFallback() {
 }
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: theme.colors.background },
 }));

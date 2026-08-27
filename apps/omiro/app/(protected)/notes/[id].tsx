@@ -1,5 +1,10 @@
+import { InboxDetailChrome } from '~/components/inbox/InboxDetailChrome';
 import { NoteScreen } from '~/components/inbox/NoteScreen';
 
 export default function NoteDetailRoute() {
-  return <NoteScreen />;
+  return (
+    <InboxDetailChrome>
+      <NoteScreen />
+    </InboxDetailChrome>
+  );
 }

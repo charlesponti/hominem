@@ -7,10 +7,6 @@ import { type MessageOutput } from './chatMessages';
 
 export const CHAT_MESSAGES_LIMIT = 50;
 
-function normalizeToolCallStatus(status: string) {
-  return status === 'completed' || status === 'rejected' ? status : status ? 'pending' : undefined;
-}
-
 export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
   if (message.role === 'tool') {
     return null;
@@ -27,11 +23,7 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     chat_id: message.chatId,
     profile_id: '',
     reasoning: message.reasoning,
-    toolCalls:
-      message.toolCalls?.map((toolCall) => ({
-        ...toolCall,
-        ...(toolCall.status ? { status: normalizeToolCallStatus(toolCall.status) } : {}),
-      })) ?? null,
+    toolCalls: message.toolCalls ?? null,
     isStreaming: false,
     audio:
       audioFile?.url && audioFile.mimeType

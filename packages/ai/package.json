@@ -27,10 +27,8 @@
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@openrouter/sdk": "^0.12.35",
-    "@tanstack/ai": "^0.49.1",
-    "@tanstack/ai-durable-stream": "0.1.6",
-    "@tanstack/ai-openrouter": "0.19.1",
-    "@tanstack/ai-persistence": "0.5.1",
+    "@tanstack/ai": "^0.22.1",
     "zod": "catalog:"
-  }
+  },
+  "devDependencies": {}
 }

@@ -5,7 +5,6 @@
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 - Never start long-running services (Expo/Metro, `pnpm dev`, the API, workers, databases, Docker containers, etc.) on your own. The user starts services for you. If a service is needed and not running, say so and ask the user to start it.
 - **After any `packages/db` schema/migration change, run it yourself**: `just db migrate` (and `just db migrate test` if a test DB is running) then `just db codegen`, against the already-running local dev/test databases — do not leave this as a follow-up for the user. This is a one-shot command against an already-running database, not starting a new service, so it is not covered by the rule above. See [packages/db/AGENTS.md](packages/db/AGENTS.md).
-- **Local database**: the OrbStack dev PostgreSQL container is exposed at `postgresql://postgres:postgres@127.0.0.1:5434/hominem`. Set `DATABASE_URL` to this value before running `just db migrate` or `just db codegen`; the test database is `postgresql://postgres:postgres@127.0.0.1:4433/hominem-test` and is selected by `just db migrate test`.
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md). 
 - **Production web auth**: Career and Finance redirect unauthenticated browsers to the API hosted login. Browser traffic uses the public API, while server auth/data calls require the private Railway API URL. See [docs/auth-production.md](docs/auth-production.md).
 

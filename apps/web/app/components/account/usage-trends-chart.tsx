@@ -1,11 +1,19 @@
-import { use, useMemo, useState } from 'react';
-import type * as Recharts from 'recharts';
+import { useMemo, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { Button } from '~/components/ui/button';
 import { useUsageTimeseries } from '~/hooks/use-usage';
 
 const colors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626', '#0891b2'];
-const rechartsPromise = import('recharts');
 const usd = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -33,7 +41,6 @@ function exclusiveDate(input: string) {
 }
 
 export function UsageTrendsChart() {
-  const recharts = use(rechartsPromise) as typeof Recharts;
   const range = useMemo(currentRange, []);
   const [from, setFrom] = useState(range.from);
   const [to, setTo] = useState(range.to);
@@ -45,29 +52,14 @@ export function UsageTrendsChart() {
     [from, granularity, to],
   );
   const { data, error, isPending, refetch } = useUsageTimeseries(options);
-
   const models = useMemo(
     () => [...new Set(data?.points.map((point) => formatModel(point.model)) ?? [])],
     [data],
   );
-  const selectedModelSet = useMemo(
-    () => (selectedModels === null ? null : new Set(selectedModels)),
-    [selectedModels],
-  );
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(
-        'en-US',
-        granularity === 'day'
-          ? { month: 'short', day: 'numeric', timeZone: 'UTC' }
-          : { month: 'short', year: 'numeric', timeZone: 'UTC' },
-      ),
-    [granularity],
-  );
   const chart = useMemo(() => {
     if (!data) return { names: [], rows: [] };
     const points = data.points.filter(
-      (point) => selectedModelSet === null || selectedModelSet.has(formatModel(point.model)),
+      (point) => selectedModels === null || selectedModels.includes(formatModel(point.model)),
     );
     const names = [...new Set(points.map((point) => formatModel(point.model)))];
     const buckets = new Map<string, Record<string, number>>();
@@ -85,10 +77,10 @@ export function UsageTrendsChart() {
         ...Object.fromEntries(names.map((model) => [model, values[model] ?? 0])),
       })),
     };
-  }, [data, metric, selectedModelSet]);
+  }, [data, metric, selectedModels]);
   const toggleModel = (model: string) => {
     if (selectedModels === null) return setSelectedModels(models.filter((item) => item !== model));
-    if (selectedModelSet?.has(model))
+    if (selectedModels.includes(model))
       return setSelectedModels(
         selectedModels.length > 1
           ? selectedModels.filter((item) => item !== model)
@@ -167,12 +159,14 @@ export function UsageTrendsChart() {
           <div className="flex flex-wrap gap-2" aria-label="AI models">
             {models.map((model, index) => (
               <Button
-                aria-pressed={selectedModels === null || selectedModelSet?.has(model)}
+                aria-pressed={selectedModels === null || selectedModels.includes(model)}
                 key={model}
                 onClick={() => toggleModel(model)}
                 size="sm"
                 variant={
-                  selectedModels === null || selectedModelSet?.has(model) ? 'secondary' : 'outline'
+                  selectedModels === null || selectedModels.includes(model)
+                    ? 'secondary'
+                    : 'outline'
                 }
               >
                 <span
@@ -199,36 +193,38 @@ export function UsageTrendsChart() {
       ) : null}
       {chart.rows.length ? (
         <div className="h-80 w-full" data-testid="usage-trends-chart">
-          <recharts.ResponsiveContainer height="100%" width="100%">
-            <recharts.BarChart
-              data={chart.rows}
-              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-            >
-              <recharts.CartesianGrid strokeDasharray="3 3" />
-              <recharts.XAxis
+          <ResponsiveContainer height="100%" width="100%">
+            <BarChart data={chart.rows} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
                 dataKey="name"
-                tickFormatter={(value: string) => dateFormatter.format(new Date(value))}
+                tickFormatter={(value: string) =>
+                  new Intl.DateTimeFormat(
+                    'en-US',
+                    granularity === 'day'
+                      ? { month: 'short', day: 'numeric', timeZone: 'UTC' }
+                      : { month: 'short', year: 'numeric', timeZone: 'UTC' },
+                  ).format(new Date(value))
+                }
               />
-              <recharts.YAxis
+              <YAxis
                 allowDecimals={metric === 'price'}
                 tickFormatter={(value: number) =>
                   metric === 'price' ? usd.format(value) : number.format(value)
                 }
               />
-              <recharts.Tooltip
-                labelFormatter={(value) => new Date(String(value)).toLocaleDateString()}
-              />
-              <recharts.Legend />
+              <Tooltip labelFormatter={(value) => new Date(String(value)).toLocaleDateString()} />
+              <Legend />
               {chart.names.map((model, index) => (
-                <recharts.Bar
+                <Bar
                   dataKey={model}
                   fill={colors[index % colors.length]}
                   key={model}
                   stackId="usage"
                 />
               ))}
-            </recharts.BarChart>
-          </recharts.ResponsiveContainer>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       ) : null}
       {metric === 'price' &&

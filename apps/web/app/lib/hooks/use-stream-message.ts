@@ -1,10 +1,11 @@
-import type { ChatMessageDto } from '@hominem/rpc/types';
-import { fetchHttpStream, useChat } from '@tanstack/ai-react';
+import { useApiClient } from '@hominem/rpc/react';
+import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
+import { consumeChatStream } from '../chat/stream-events';
 import type { ResponseLength } from './use-response-length';
 
 export type StreamStatus =
@@ -26,162 +27,166 @@ interface StreamInput {
   onFailed?: (error: Error) => void;
 }
 
-type MessagePart = {
-  type?: string;
-  content?: unknown;
-  text?: unknown;
-  name?: unknown;
-  toolCallId?: unknown;
-  state?: unknown;
-};
-
-function partsOf(value: unknown): MessagePart[] {
-  if (!value || typeof value !== 'object' || !('parts' in value)) return [];
-  const parts = (value as { parts?: unknown }).parts;
-  return Array.isArray(parts) ? (parts as MessagePart[]) : [];
-}
-
-function textFromParts(parts: MessagePart[], type: string) {
-  return parts.reduce((text, part) => {
-    if (part.type !== type) return text;
-    return `${text}${typeof part.content === 'string' ? part.content : typeof part.text === 'string' ? part.text : ''}`;
-  }, '');
-}
-
-type ToolStatus = 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-
-function toolStepsFromParts(parts: MessagePart[]): Array<{
-  toolCallId: string;
-  toolName: string;
-  status: ToolStatus;
-}> {
-  return parts.reduce<Array<{ toolCallId: string; toolName: string; status: ToolStatus }>>(
-    (steps, part) => {
-      if (!part.type?.includes('tool')) return steps;
-      steps.push({
-        toolCallId: typeof part.toolCallId === 'string' ? part.toolCallId : crypto.randomUUID(),
-        toolName: typeof part.name === 'string' ? part.name : 'tool',
-        status:
-          part.state === 'output-available'
-            ? 'completed'
-            : part.state === 'output-error'
-              ? 'failed'
-              : part.state === 'input-available'
-                ? 'requested'
-                : 'running',
-      });
-      return steps;
-    },
-    [],
-  );
-}
-
-function messageDto(chatId: string, role: 'user' | 'assistant', content: string): ChatMessageDto {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    chatId,
-    userId: '',
-    role,
-    content,
-    files: null,
-    toolCalls: null,
-    reasoning: null,
-    parentMessageId: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
-
 export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
-  const inputRef = useRef<StreamInput | null>(null);
+  const client = useApiClient();
+  const [text, setText] = useState('');
+  const [reasoning, setReasoning] = useState('');
+  const [toolSteps, setToolSteps] = useState<
+    Array<{
+      toolCallId: string;
+      toolName: string;
+      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
+    }>
+  >([]);
   const [status, setStatus] = useState<StreamStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
-  const chat = useChat({
-    threadId: chatId,
-    persistence: true,
-    queue: 'drop',
-    connection: fetchHttpStream(
-      `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent`,
-      {
-        credentials: 'include',
-      },
-    ),
-    onFinish: (message) => {
-      const parts = partsOf(message);
-      const committed = messageDto(chatId, 'assistant', textFromParts(parts, 'text'));
-      committed.reasoning = textFromParts(parts, 'reasoning') || null;
-      setStatus('committed');
-      inputRef.current?.onCommitted?.(committed);
-      void Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-      ]);
-    },
-    onError: (nextError) => {
-      setError(nextError);
-      setStatus('failed');
-      inputRef.current?.onFailed?.(nextError);
-    },
-  });
-
-  const assistantParts = useMemo(() => {
-    const message = [...chat.messages]
-      .reverse()
-      .find((candidate) => candidate.role === 'assistant');
-    return partsOf(message);
-  }, [chat.messages]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const generationIdRef = useRef<string | null>(null);
+  const cancelRequestedRef = useRef(false);
 
   const stream = useCallback(
     async (input: StreamInput) => {
-      inputRef.current = input;
-      setError(null);
+      const generationId = crypto.randomUUID();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      generationIdRef.current = generationId;
+      cancelRequestedRef.current = false;
+      let terminalStatus: StreamStatus | null = null;
+      setText('');
+      setReasoning('');
+      setToolSteps([]);
       setStatus('preparing');
-      input.onAccepted?.(messageDto(chatId, 'user', input.message));
+      setError(null);
+
       try {
-        await chat.sendMessage(input.message, {
-          body: {
-            operation: {
-              kind: 'send',
-              fileIds: input.fileIds,
-              responseLength: input.responseLength,
+        const streamRes = await client.api.chats[':id'].stream.$post(
+          {
+            param: { id: chatId },
+            json: {
+              generationId,
+              message: input.message,
+              ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
+              ...(input.responseLength ? { responseLength: input.responseLength } : {}),
             },
           },
+          { init: { signal: abortController.signal } },
+        );
+
+        await consumeChatStream(streamRes, (event: ChatStreamEvent) => {
+          if (event.type === 'error') {
+            throw new Error(event.message);
+          }
+
+          if (event.type === 'accepted') {
+            input.onAccepted?.(event.userMessage);
+            return;
+          }
+
+          if (event.type === 'status') {
+            terminalStatus = event.status === 'preparing' ? 'preparing' : 'streaming';
+            setStatus(terminalStatus);
+            return;
+          }
+
+          if (event.type === 'text-delta') {
+            setText((current) => current + event.text);
+            return;
+          }
+
+          if (event.type === 'reasoning-delta') {
+            setReasoning((current) => current + event.text);
+            return;
+          }
+
+          if (event.type === 'tool-step') {
+            setToolSteps((current) => {
+              const index = current.findIndex((step) => step.toolCallId === event.toolCallId);
+              const next = {
+                toolCallId: event.toolCallId,
+                toolName: event.toolName,
+                status: event.status,
+              };
+              if (index === -1) return [...current, next];
+              return current.map((step, stepIndex) => (stepIndex === index ? next : step));
+            });
+            return;
+          }
+
+          if (event.type === 'cancelled') {
+            terminalStatus = 'cancelled';
+            setStatus('cancelled');
+            input.onCancelled?.();
+            return;
+          }
+
+          if (event.type === 'committed') {
+            terminalStatus = 'committed';
+            setText(event.message.content);
+            setStatus('committed');
+            input.onCommitted?.(event.message);
+          }
         });
+
+        if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+            queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
+          ]);
+        }
       } catch (caught) {
+        if (
+          cancelRequestedRef.current ||
+          (caught instanceof DOMException && caught.name === 'AbortError')
+        ) {
+          setStatus('cancelled');
+          input.onCancelled?.();
+          return;
+        }
+
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
         setStatus('failed');
         input.onFailed?.(nextError);
+      } finally {
+        abortControllerRef.current = null;
+        generationIdRef.current = null;
       }
     },
-    [chat, chatId],
+    [chatId, client, queryClient],
   );
 
-  const cancel = useCallback(() => {
+  const cancel = useCallback(async () => {
+    const generationId = generationIdRef.current;
+    const abortController = abortControllerRef.current;
+    if (!generationId || !abortController || status === 'stopping') return;
+
+    cancelRequestedRef.current = true;
     setStatus('stopping');
-    if (chat.runId) {
-      void fetch(
-        `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent/runs/${chat.runId}/cancel`,
-        { method: 'POST', credentials: 'include' },
-      );
+
+    try {
+      await client.api.chats[':id'].generations[':generationId'].cancel.$post({
+        param: { id: chatId, generationId },
+      });
+      abortController.abort();
+      setStatus('cancelled');
+    } catch (caught) {
+      cancelRequestedRef.current = false;
+      setError(caught instanceof Error ? caught : new Error(String(caught)));
+      setStatus('failed');
     }
-    chat.stop();
-    setStatus('cancelled');
-    inputRef.current?.onCancelled?.();
-  }, [chat, chatId]);
+  }, [chatId, client, status]);
 
   return {
     cancel,
     error,
-    generationId: chat.runId,
-    isStreaming: chat.isLoading,
-    status: chat.isLoading ? 'streaming' : status,
+    generationId: generationIdRef.current,
+    isStreaming: status === 'preparing' || status === 'streaming',
+    status,
     stream,
-    text: textFromParts(assistantParts, 'text'),
-    reasoning: textFromParts(assistantParts, 'reasoning'),
-    toolSteps: toolStepsFromParts(assistantParts),
+    text,
+    reasoning,
+    toolSteps,
   };
 }

@@ -5,24 +5,20 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-const mockTanstack = vi.hoisted(() => ({
-  finish: undefined as ((message: unknown) => void) | undefined,
-  sendMessage: vi.fn(),
-  stop: vi.fn(),
+const mockClient = vi.hoisted(() => ({
+  api: {
+    chats: {
+      ':id': {
+        stream: { $post: vi.fn() },
+        generations: { ':generationId': { cancel: { $post: vi.fn() } } },
+      },
+    },
+  },
 }));
 
-vi.mock('@tanstack/ai-react', () => ({
-  fetchHttpStream: vi.fn(() => ({})),
-  useChat: (options: { onFinish?: (message: unknown) => void }) => {
-    mockTanstack.finish = options.onFinish;
-    return {
-      messages: [],
-      isLoading: false,
-      runId: 'run-1',
-      sendMessage: mockTanstack.sendMessage,
-      stop: mockTanstack.stop,
-    };
-  },
+vi.mock('@hominem/rpc/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@hominem/rpc/react')>()),
+  useApiClient: () => mockClient,
 }));
 
 import { useStreamMessage } from './use-stream-message';
@@ -31,29 +27,68 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
 }
 
+function streamResponse(events: string[]) {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      events.forEach((event) => controller.enqueue(encoder.encode(`data: ${event}\n`)));
+      controller.close();
+    },
+  });
+  return new Response(body);
+}
+
 describe('useStreamMessage', () => {
-  it('sends through TanStack and projects the finished assistant message', async () => {
-    mockTanstack.sendMessage.mockImplementationOnce(async () => {
-      mockTanstack.finish?.({
-        role: 'assistant',
-        parts: [{ type: 'text', content: 'Done' }],
-      });
-    });
+  it('passes the abort signal and records a committed response', async () => {
+    mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({ type: 'status', generationId: 'g1', status: 'preparing' }),
+        JSON.stringify({
+          type: 'committed',
+          generationId: 'g1',
+          message: { id: 'm1', chatId: 'chat-1', content: 'Done' },
+        }),
+      ]),
+    );
 
-    const onCommitted = vi.fn();
     const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
-    await result.current.stream({ message: 'Hello', onCommitted });
-
+    await result.current.stream({ message: 'Hello' });
     await waitFor(() => expect(result.current.status).toBe('committed'));
-    expect(mockTanstack.sendMessage).toHaveBeenCalledWith('Hello', expect.any(Object));
-    expect(onCommitted).toHaveBeenCalledWith(expect.objectContaining({ content: 'Done' }));
+
+    const [, options] = mockClient.api.chats[':id'].stream.$post.mock.calls[0] as [
+      unknown,
+      { init: RequestInit },
+    ];
+    expect(options.init.signal).toBeInstanceOf(AbortSignal);
+    expect(result.current.status).toBe('committed');
+    expect(result.current.text).toBe('Done');
   });
 
-  it('stops the TanStack run and reports cancellation', async () => {
-    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
-    await result.current.cancel();
+  it('requests server cancellation before aborting the stream', async () => {
+    let resolveStream: (response: Response) => void = () => undefined;
+    mockClient.api.chats[':id'].stream.$post.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveStream = resolve;
+        }),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].cancel.$post.mockResolvedValueOnce(
+      new Response(null, { status: 204 }),
+    );
 
-    expect(mockTanstack.stop).toHaveBeenCalledOnce();
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+    const streamPromise = result.current.stream({ message: 'Stop this' });
+    await waitFor(() => expect(result.current.status).toBe('preparing'));
+    await result.current.cancel();
+    resolveStream(new Response(null));
+    await streamPromise;
     await waitFor(() => expect(result.current.status).toBe('cancelled'));
+
+    expect(
+      mockClient.api.chats[':id'].generations[':generationId'].cancel.$post,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ param: expect.objectContaining({ id: 'chat-1' }) }),
+    );
+    expect(result.current.status).toBe('cancelled');
   });
 });

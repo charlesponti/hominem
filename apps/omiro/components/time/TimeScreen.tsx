@@ -133,7 +133,7 @@ function TimePreviewMenuButton() {
 }
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1 },
+  container: { backgroundColor: theme.colors.background, flex: 1 },
   errorToast: {
     flexDirection: 'row',
     alignItems: 'flex-start',

@@ -80,12 +80,6 @@ const t = {
     tapToRetry: 'Tap to retry',
     retryMessageA11y: 'Retry sending message',
     responseInterrupted: 'Response interrupted',
-    reasoning: {
-      thinking: 'Thinking…',
-      thought: 'Thought',
-      thoughtFor: (seconds: number) => `Thought for ${seconds} second${seconds === 1 ? '' : 's'}`,
-      toggleA11y: 'Toggle reasoning',
-    },
     input: {
       messagePlaceholder: 'Message',
       messageTooLongA11y: 'Message length limit reached',

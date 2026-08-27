@@ -2,7 +2,7 @@
 
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from 'ai';
 import { CornerDownLeftIcon, ImageIcon, Monitor, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
-import { domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
+import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
 import { nanoid } from 'nanoid';
 import type {
   ChangeEvent,
@@ -905,7 +905,7 @@ export const PromptInputTextarea = ({
 }: PromptInputTextareaProps) => {
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
-  const isComposingRef = useRef(false);
+  const [isComposing, setIsComposing] = useState(false);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
@@ -918,7 +918,7 @@ export const PromptInputTextarea = ({
       }
 
       if (e.key === 'Enter') {
-        if (isComposingRef.current || e.nativeEvent.isComposing) {
+        if (isComposing || e.nativeEvent.isComposing) {
           return;
         }
         if (e.shiftKey) {
@@ -947,7 +947,7 @@ export const PromptInputTextarea = ({
         }
       }
     },
-    [onKeyDown, attachments],
+    [onKeyDown, isComposing, attachments],
   );
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = useCallback(
@@ -977,12 +977,8 @@ export const PromptInputTextarea = ({
     [attachments],
   );
 
-  const handleCompositionEnd = useCallback(() => {
-    isComposingRef.current = false;
-  }, []);
-  const handleCompositionStart = useCallback(() => {
-    isComposingRef.current = true;
-  }, []);
+  const handleCompositionEnd = useCallback(() => setIsComposing(false), []);
+  const handleCompositionStart = useCallback(() => setIsComposing(true), []);
 
   const controlledProps = controller
     ? {
@@ -1176,13 +1172,17 @@ export const PromptInputSubmit = ({
       {...props}
     >
       {children ?? (
-        <m.span
-          animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
-          initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
-          transition={{ duration: reduceMotion ? 0.08 : 0.15, ease: [0.23, 1, 0.32, 1] }}
-        >
-          {Icon}
-        </m.span>
+        <AnimatePresence initial={false} mode="wait">
+          <m.span
+            animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
+            exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+            initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+            key={status ?? 'ready'}
+            transition={{ duration: reduceMotion ? 0.08 : 0.15, ease: [0.23, 1, 0.32, 1] }}
+          >
+            {Icon}
+          </m.span>
+        </AnimatePresence>
       )}
     </InputGroupButton>
   );

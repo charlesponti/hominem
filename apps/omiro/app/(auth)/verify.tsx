@@ -363,6 +363,7 @@ const styles = makeStyles((theme) => ({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.background,
   },
   successContent: { alignItems: 'center', gap: 16 },
   successMessage: { ...theme.typography.title2, color: theme.colors.foreground },

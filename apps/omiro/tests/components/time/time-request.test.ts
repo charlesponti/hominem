@@ -60,7 +60,6 @@ describe('resolveTimeRequest', () => {
     });
 
     expect(result).toEqual({
-      code: 'calendar_permission',
       kind: 'error',
       message: 'Connect your iOS Calendar to search scheduled events.',
       submittedPrompt: 'Find my next meeting',

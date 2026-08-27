@@ -83,10 +83,10 @@ function ProtectedShell() {
             initialRouteName="index"
             screenOptions={{
               ...screenOptions,
+              contentStyle: { backgroundColor: background },
               headerLargeTitle: false,
               headerShadowVisible: false,
               headerTintColor: textPrimary,
-              headerStyle: { backgroundColor: background },
             }}
           >
             <Stack.Screen name="index" />

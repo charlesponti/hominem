@@ -1,8 +1,7 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { ChatComposer } from '~/components/chat/chat-composer';
-import { useUpdateChatTitle } from '~/hooks/use-chats';
 import { getAutomaticChatTitle } from '~/lib/chat/chat-title';
 import { useChatComposerState } from '~/lib/hooks/use-chat-composer-state';
 import type { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
@@ -22,10 +21,13 @@ interface ChatComposerPanelProps {
   currentChatTitle?: string;
   display: ReturnType<typeof useChatDisplayMessages>;
   isOnline: boolean;
+  isRetryable: boolean;
   regeneration: ReturnType<typeof useRegenerateMessage>;
   responseLength: ReturnType<typeof useResponseLength>['responseLength'];
   seedNote: SeedNote | null;
+  setIsRetryable: (value: boolean) => void;
   streamMessage: ReturnType<typeof useStreamMessage>;
+  updateChatTitle: { mutate: (input: { chatId: string; title: string }) => void };
 }
 
 export function ChatComposerPanel({
@@ -33,15 +35,16 @@ export function ChatComposerPanel({
   currentChatTitle,
   display,
   isOnline,
+  isRetryable,
   regeneration,
   responseLength,
   seedNote,
+  setIsRetryable,
   streamMessage,
+  updateChatTitle,
 }: ChatComposerPanelProps) {
-  const [isRetryable, setIsRetryable] = useState(false);
   const composer = useChatComposerState({ chatId, seedNote });
   const speech = useSpeechToText({ onTranscript: composer.setDraft });
-  const updateChatTitle = useUpdateChatTitle();
   const { setPendingAssistantMessage } = display;
 
   useEffect(() => {
@@ -53,7 +56,6 @@ export function ChatComposerPanel({
     }
 
     const now = new Date().toISOString();
-    // react-doctor-disable-next-line no-pass-data-to-parent -- the composer owns the stream projection and must publish it to the conversation display.
     setPendingAssistantMessage({
       id: `stream-${chatId}`,
       chatId,
@@ -66,14 +68,6 @@ export function ChatComposerPanel({
         type: 'tool-call' as const,
         toolCallId: step.toolCallId,
         args: {},
-        status:
-          step.status === 'failed'
-            ? ('failed' as const)
-            : step.status === 'running'
-              ? ('running' as const)
-              : String(step.status) === 'requested'
-                ? ('requested' as const)
-                : ('completed' as const),
       })),
       reasoning: streamMessage.reasoning || null,
       parentMessageId: null,

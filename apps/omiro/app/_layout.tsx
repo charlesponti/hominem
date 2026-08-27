@@ -123,7 +123,7 @@ function InnerRootLayout() {
       onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}
     >
       <SafeAreaView style={styles.container} edges={['left', 'right']}>
-        <Stack>
+        <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack>
@@ -221,7 +221,7 @@ function RootLayout() {
 export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: theme.colors.background },
   e2eIndicator: { position: 'absolute', top: 8, left: 8, width: 2, height: 2, opacity: 0.02 },
   e2eAction: { position: 'absolute', top: 8, right: 8, width: 16, height: 16, opacity: 0.02 },
   e2eActionAlt: { position: 'absolute', top: 24, right: 8, width: 16, height: 16, opacity: 0.02 },

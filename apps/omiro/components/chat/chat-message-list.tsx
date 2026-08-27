@@ -57,12 +57,6 @@ interface ChatMessageListProps {
    * the composer occupies real layout space there.
    */
   bottomInset?: number;
-  /**
-   * Measured height of the docked composer, used as static clearance below
-   * the last message so it isn't visually flush against (or clipped by) the
-   * composer at rest.
-   */
-  composerHeight?: number;
   generation?: ChatGenerationState | null;
   onCancelGeneration?: () => void;
   onRetryGeneration?: () => void;
@@ -82,7 +76,6 @@ export function ChatMessageList({
   emptyState,
   refreshControl,
   bottomInset = 0,
-  composerHeight = 0,
   generation,
   onCancelGeneration,
   onRetryGeneration,
@@ -239,7 +232,7 @@ export function ChatMessageList({
           <Pressable
             accessibilityLabel="Chat message list bottom"
             onPress={() => setActiveActionMessageId(null)}
-            style={[styles.bottomSentinel, { minHeight: composerHeight + 32 }]}
+            style={styles.bottomSentinel}
             testID="chat-message-list-bottom-sentinel"
           />
         ) : null
