@@ -2,18 +2,18 @@
   "extends": "../../tsconfig.profiles/react-package.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
-    // This package has no build script (nothing consumes dist/ — downstream
-    // packages resolve @hominem/rpc to src via package.json exports), so
-    // composite mode plus a fixed rootDir/outDir only get in the way of the
-    // @hominem/api/types path alias below, which points outside src/ on
-    // purpose.
+    // This package emits declarations to build/ via tsconfig.emit.json (see
+    // packages/rpc/package.json's build script); consumers resolve them
+    // through package.json exports types. Composite mode plus a fixed
+    // rootDir/outDir here would only get in the way of the @hominem/api/types
+    // path alias below, which points outside src/ on purpose.
     "composite": false,
     // Type-only: this package never imports @hominem/api at runtime (only
     // `import type` for the Hono RPC client), so it isn't a real workspace
     // dependency — see services/api/src/rpc/app.ts for the actual export.
     // Keep this path in sync with services/api/package.json's "./types" export.
     "paths": {
-      "@hominem/api/types": ["../../services/api/src/rpc/app.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
     }
   },
   "include": ["src/**/*"],

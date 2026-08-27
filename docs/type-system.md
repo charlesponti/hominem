@@ -75,9 +75,11 @@ Temporary execution belongs to the work tracker; promote these to `docs/tasks/` 
 - **Steps:** flip `exports` `types` conditions (`"."` and subpath patterns) to `./build/*.d.ts` for the core packages first (`db`, `env`, `telemetry`, `utils`), run the full gate, then the remaining composite packages, gate again.
 - **Acceptance:** consumers resolve `packages/*/build/*.d.ts` (verify via `--traceResolution` on one composite and one app consumer); no runtime behavior change; `pnpm run check` green after each batch.
 
-### Task 2 — `services/api` + `packages/rpc` emit declarations; aliases retarget
+### Task 2 — `services/api` + `packages/rpc` emit declarations; aliases retarget — COMPLETE (2026-08-27)
 
 - **Objective:** api/rpc expose compiled contracts; consumers stop compiling api source.
+- **Done:** `services/api/tsconfig.emit.json` and `packages/rpc/tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`, tests excluded); `build:types` chained into `services/api`'s `build`; `packages/rpc` gained a `build` script and its exports `types` flipped to `build/*.d.ts`; the `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, and `packages/rpc` now target the emitted declarations; `scripts/check-src-declarations.sh` fails on any untracked `.d.ts` under `src/` and runs first in `check:all`; `check:all` reordered to build before typecheck so consumer checks never race the api emit.
+- **Evidence:** api emits 135 declarations (tests excluded), rpc 21; `--listFiles` shows **zero `services/api/src` and zero `packages/rpc/src` files** in the `omiro`, `career`, and `finance` programs (declarations exclusively); rpc/omiro/career/finance typecheck clean against the emitted `AppType`; full `pnpm run check` green (guard → lint 17 → build 17 → typecheck 33 → test 24).
 - **Steps:** add `tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`) + `build:types` scripts; retarget `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, `packages/rpc` to the emitted declarations; add the `*.d.ts`-under-`src/` guard script; verify rpc/omiro/career/finance typechecks resolve declarations exclusively.
 - **Acceptance:** zero `services/api/src` or `packages/rpc/src` files in consumer programs; `AppType` and client inference intact; guard script wired into the gate.
 

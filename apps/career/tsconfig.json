@@ -16,7 +16,7 @@
     // Keep this path in sync with services/api/package.json's "./career" export.
     "paths": {
       "~/*": ["./app/*"],
-      "@hominem/api/career": ["../../services/api/src/rpc/routes/career.ts"]
+      "@hominem/api/career": ["../../services/api/build/rpc/routes/career.d.ts"]
     }
   },
   "include": [

@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Declaration-only emit for @hominem/rpc (non-composite, like services/api
+    // — see that package's tsconfig.emit.json). Consumers resolve the emitted
+    // build/*.d.ts via package.json exports types; the path alias to the API
+    // type contract points at the API's emitted declarations.
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "build",
+    "tsBuildInfoFile": "./.cache/tsconfig.emit.tsbuildinfo"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "*.tsbuildinfo",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}

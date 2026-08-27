@@ -4,31 +4,32 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
     "./finance": {
-      "types": "./src/finance.ts",
+      "types": "./build/finance.d.ts",
       "default": "./src/finance.ts"
     },
     "./react": {
-      "types": "./src/react/index.ts",
+      "types": "./build/react/index.d.ts",
       "default": "./src/react/index.ts"
     },
     "./types": {
-      "types": "./src/types/index.ts",
+      "types": "./build/types/index.d.ts",
       "default": "./src/types/index.ts"
     },
     "./types/*": {
-      "types": "./src/types/*.ts",
+      "types": "./build/types/*.d.ts",
       "default": "./src/types/*.ts"
     },
     "./voice-events": {
-      "types": "./src/voice-events.ts",
+      "types": "./build/voice-events.d.ts",
       "default": "./src/voice-events.ts"
     }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.emit.json",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "typecheck": "tsc --noEmit"

@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Declaration-only emit for services/api. Non-composite (see tsconfig.json
+    // comment): emitDeclarationOnly sidesteps TS2883 so Hono's inferred
+    // AppType survives as a self-contained .d.ts. outDir is HARDCODED here on
+    // purpose — never configure this emit via CLI flags or rootDir dances, or
+    // declarations can land beside source (docs/type-system.md, Guards).
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "build",
+    "tsBuildInfoFile": "./.cache/tsconfig.emit.tsbuildinfo"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "*.tsbuildinfo",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}
