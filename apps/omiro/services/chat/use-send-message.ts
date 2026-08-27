@@ -98,10 +98,12 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if (event.type === 'accepted' && event.userMessage) {
             const userMessage = toMessageOutput(event.userMessage);
             if (userMessage) {
-              queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (current = []) =>
-                current.map((item) =>
-                  item.id === generationRef.current?.userMessageId ? userMessage : item,
-                ),
+              queryClient.setQueryData<ChatMessageItem[]>(
+                chatKeys.messages(chatId),
+                (current = []) =>
+                  current.map((item) =>
+                    item.id === generationRef.current?.userMessageId ? userMessage : item,
+                  ),
               );
             }
             return;

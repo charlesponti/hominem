@@ -28,7 +28,9 @@ export function useEditChatMessage(chatId: string) {
     },
     onMutate: async ({ messageId, content }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
-      const previousMessages = queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(chatId));
+      const previousMessages = queryClient.getQueryData<ChatMessageItem[]>(
+        chatKeys.messages(chatId),
+      );
 
       queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (prev) =>
         prev?.map((m) => (m.id === messageId ? { ...m, message: content } : m)),

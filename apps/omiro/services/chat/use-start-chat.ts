@@ -4,10 +4,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
 
+import type { ChatMessageItem } from '~/components/chat';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
-import type { ChatMessageItem } from '~/components/chat';
 import { OFFLINE_UNAVAILABLE_ERROR } from '~/services/chat/chat-errors';
 import { streamSSE } from '~/services/chat/stream-sse';
 import { toMessageOutput } from '~/services/chat/use-chat-messages';

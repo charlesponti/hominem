@@ -3,12 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
 
+import type { ChatMessageItem } from '~/components/chat';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
-
-import type { ChatMessageItem } from '~/components/chat';
 
 import { invalidateChatQueries } from './chat-cache';
 import { streamSSE } from './stream-sse';

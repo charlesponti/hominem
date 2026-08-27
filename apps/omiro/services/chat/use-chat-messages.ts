@@ -1,6 +1,6 @@
+import type { ChatMessageItem } from '@hominem/chat';
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessageDto as RpcChatMessage } from '@hominem/rpc/types';
-import type { ChatMessageItem } from '@hominem/chat';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatKeys } from '../notes/query-keys';
@@ -32,7 +32,10 @@ export function toMessageOutput(message: RpcChatMessage): ChatMessageItem | null
   };
 }
 
-export function preserveRenderKeys(messages: ChatMessageItem[], previousMessages: ChatMessageItem[]) {
+export function preserveRenderKeys(
+  messages: ChatMessageItem[],
+  previousMessages: ChatMessageItem[],
+) {
   const usedPreviousIndexes = new Set<number>();
 
   return messages.map((message) => {
