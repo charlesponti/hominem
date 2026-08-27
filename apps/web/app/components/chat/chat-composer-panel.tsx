@@ -1,5 +1,5 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { ChatComposer } from '~/components/chat/chat-composer';
 import { getAutomaticChatTitle } from '~/lib/chat/chat-title';
@@ -46,16 +46,21 @@ export function ChatComposerPanel({
   const composer = useChatComposerState({ chatId, seedNote });
   const speech = useSpeechToText({ onTranscript: composer.setDraft });
   const { setPendingAssistantMessage } = display;
+  const streamStartedAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (
       !streamMessage.isStreaming ||
       (!streamMessage.text && !streamMessage.reasoning && streamMessage.toolSteps.length === 0)
     ) {
+      streamStartedAtRef.current = null;
       return;
     }
 
-    const now = new Date().toISOString();
+    // Stable per stream, not per token: nothing reads this timestamp, but a
+    // fresh value on every delta falsely implies a write happens per token.
+    streamStartedAtRef.current ??= new Date().toISOString();
+    const startedAt = streamStartedAtRef.current;
     setPendingAssistantMessage({
       id: `stream-${chatId}`,
       chatId,
@@ -71,8 +76,8 @@ export function ChatComposerPanel({
       })),
       reasoning: streamMessage.reasoning || null,
       parentMessageId: null,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: startedAt,
+      updatedAt: startedAt,
       isStreaming: true,
     } as ChatMessageDto);
   }, [

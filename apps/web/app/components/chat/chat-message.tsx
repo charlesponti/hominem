@@ -267,7 +267,7 @@ export const ChatMessage = memo(function ChatMessage({
               <m.div
                 animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}
                 initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(4px)' }}
-                key={`message-content-${message.id}-${message.updatedAt}`}
+                key={`message-content-${message.id}`}
                 transition={{
                   duration: reduceMotion ? 0.08 : 0.18,
                   ease: [0.23, 1, 0.32, 1],
