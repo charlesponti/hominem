@@ -167,56 +167,109 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 - Token and reasoning deltas are live-only, while semantic events are durable. Coverage of the reducer does not prove replay correctness; the next testing priority is the event-store/SSE handoff and crash boundary.
 - Removing unreachable guards improved both clarity and coverage. The registry handles `null` output before result-cap enforcement, so the cap helper only needs to handle records.
 
-## Migration Plan
+## Migration Plan — Sequential Phases
 
-1. [x] Add the database migration for the idempotency key, encrypted snapshot, terminal uniqueness, and tool-effect ledger; run migration/test migration/codegen.
-2. [ ] Introduce RPC v1 event types and DTOs without changing the existing stream route.
-3. [x] Implement and test the pure machine and fake-port interpreter against the current loop's behavioral cases.
-4. [ ] Move the API route to the interpreter and SSE adapter, including cursor replay and atomic durable publication.
-5. [ ] Move web and Omiro consumers and their parsers to the v1 reducers and reconnect contract in the same change.
-6. [ ] Delete the callback-based completion loop and old `ChatStreamEvent` protocol after all consumers use v1.
+Each phase produces a reviewable boundary and must pass its gate before the next phase starts. The external MCP HTTP protocol remains unchanged throughout the migration.
 
-## Next Tasks
+### Phase 0 — Foundation (complete)
 
-### Domain and persistence
+The pure machine, generic interpreter, API provider/tool adapters, durable recovery schema, repository, idempotency plumbing, and focused tests are in the draft PR.
 
-- [ ] Define the complete typed `GenerationDomainEvent` payload union, including required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
-- [x] Add explicit idempotency keys to every semantic persist command and verify repeated commands return the original durable event.
-- [ ] Add encrypted snapshot serialization, key management, minimum resume state, and snapshot integrity/version validation.
-- [ ] Finish exporting the generation repository through the database package boundary without introducing a runtime `@hominem/db` dependency into `@hominem/chat`.
-- [ ] Add event-history-to-run projection rebuilding and verify `chat_generation_runs` can be reconstructed from authoritative events.
-- [ ] Enforce repository-level legal transition checks, terminal-event exclusivity, safe-integer sequence conversion, and rollback behavior.
-- [ ] Add concurrent database tests for sequence allocation, duplicate idempotency keys, projection atomicity, ownership, and terminal uniqueness.
+Gate: focused machine, interpreter, provider, tools, registry, and database tests pass; the changed generation components have 100% focused statement/branch/function/line coverage; migrations and code generation pass.
 
-### Interpreter and API
+### Phase 1 — Canonical domain and RPC contract
 
-- [ ] Add injected sleep/retry timing and cancellation checks before every provider, tool, persistence, and delivery effect.
-- [ ] Add crash-recovery orchestration around provider turns, confirmation waits, snapshots, and replayed write effects.
-- [ ] Replace the existing callback-based completion loop with `runGenerationWithPorts` in the API.
-- [ ] Implement the API event-store/live-delivery adapter and ensure durable events publish only after transactional append succeeds.
-- [ ] Implement one SSE adapter for versioned domain/live events with durable-only SSE IDs.
-- [ ] Add validated `Last-Event-ID` and `afterSequence` parsing, including negative, malformed, and unsafe-integer rejection.
-- [ ] Register live subscribers before replay, buffer during replay, flush by sequence, and deduplicate by `(generationId, sequence)`.
-- [ ] Add API routes/commands for generation start, stream attachment, cancellation, approval, rejection, and regeneration.
-- [ ] Add API integration tests for terminal replay, confirmation replay, reconnect races, cancellation, retry, and crash recovery.
+Define the complete versioned event contract before changing any route or client.
 
-### Web and Omiro
+Gate: API, web, Omiro, and database DTO consumers compile against the v1 types while the existing stream route still operates unchanged.
 
-- [ ] Replace `ChatStreamEvent` imports and fixtures with the versioned domain/live event contract.
+### Phase 2 — Durable repository correctness
+
+Complete repository invariants and recovery primitives before production orchestration depends on them.
+
+Gate: event history can rebuild the run projection; concurrent append, idempotency, ownership, terminal uniqueness, rollback, snapshot, and safe-sequence tests pass.
+
+### Phase 3 — Interpreter-backed API generation
+
+Replace the API’s production completion loop with the port-based interpreter while keeping the current client stream temporarily available behind the adapter.
+
+Gate: send, tool execution, confirmation, retry, cancellation, regeneration, failure, and write-effect replay use the interpreter and pass API integration tests.
+
+### Phase 4 — Replay-safe SSE transport
+
+Introduce the single v1 SSE adapter and close the replay/live subscription race before exposing the new stream to clients.
+
+Gate: durable events receive sequence IDs, live deltas receive no IDs, cursors are validated, and reconnect tests prove no durable event is lost or duplicated.
+
+### Phase 5 — Coordinated client cutover
+
+Move web and Omiro to v1 event reducers and reconnect behavior in one coordinated hard cutover.
+
+Gate: both clients converge on equivalent committed, failed, cancelled, and awaiting-confirmation state after replay and forced reconnect.
+
+### Phase 6 — Remove legacy paths and release evidence
+
+Delete the callback loop and `ChatStreamEvent`, remove duplicate types, enforce coverage thresholds, and complete end-to-end evidence.
+
+Gate: full `pnpm run check`, migration/codegen checks, browser flows, Omiro simulator flows, and the evidence checklist pass; the draft PR is ready for review.
+
+## Next Tasks — By Phase
+
+### Phase 1 — Canonical domain and RPC contract
+
+- [ ] Define the complete `GenerationDomainEvent` payload union with required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
+- [ ] Decide and document the exact accepted/start-generation message DTO shape used for optimistic reconciliation and navigation.
+- [ ] Add versioned `GenerationDomainEvent` and `GenerationLiveEvent` types to `packages/rpc` with durable/live discriminants and compile-time payload alignment.
+- [ ] Add RPC fixtures for every durable event, live delta, malformed version, mismatched payload, and unknown event type.
+- [ ] Make API, database DTOs, web, and Omiro consume the canonical v1 types without changing runtime streaming yet.
+
+### Phase 2 — Durable repository correctness
+
+- [ ] Export the generation repository through the database package boundary without creating a runtime `@hominem/db` dependency in `@hominem/chat`.
+- [ ] Implement encrypted snapshot serialization, key management, minimum resume state, and snapshot version/integrity validation.
+- [ ] Implement event-history-to-run projection rebuilding and prove the run projection is disposable.
+- [ ] Enforce repository legal-transition checks, terminal-event exclusivity, safe-integer sequence conversion, and atomic rollback.
+- [ ] Verify repeated semantic idempotency keys return the original event without consuming a sequence or changing projection state.
+- [ ] Add concurrent database tests for sequence allocation, ownership, idempotency, projection atomicity, terminal uniqueness, snapshots, and tool effects.
+
+### Phase 3 — Interpreter-backed API generation
+
+- [ ] Add injected sleep/retry timing and cancellation checks before every provider, tool, persistence, snapshot, and delivery effect.
+- [ ] Define the crash-recovery protocol around provider turns, confirmation waits, snapshots, and replayed write effects.
+- [ ] Replace the production callback-based completion loop with `runGenerationWithPorts`.
+- [ ] Adapt OpenRouter transcript/message persistence to the machine’s turn and checkpoint semantics.
+- [ ] Adapt MCP tool execution to the durable effect ledger and prove replay cannot duplicate writes.
+- [ ] Add API commands for generation start, cancellation, confirmation approval/rejection, and regeneration.
+- [ ] Add API integration tests for send, approval, rejection, cancellation, retry, regeneration, failure, and crash recovery.
+
+### Phase 4 — Replay-safe SSE transport
+
+- [ ] Implement the API event-store/live-delivery adapter and publish durable events only after transactional append succeeds.
+- [ ] Implement one SSE adapter for v1 domain/live events with IDs only on durable events.
+- [ ] Validate `Last-Event-ID` and `afterSequence`, rejecting malformed, negative, and unsafe-integer cursors.
+- [ ] Register subscribers before replay, buffer concurrent publications, flush after replay, and deduplicate by `(generationId, sequence)`.
+- [ ] Define terminal stream completion and awaiting-confirmation stream lifetime behavior.
+- [ ] Add SSE tests for replay ordering, handoff races, duplicate delivery, terminal replay, confirmation replay, and authorization.
+
+### Phase 5 — Coordinated client cutover
+
+- [ ] Replace `ChatStreamEvent` imports and fixtures with the v1 domain/live contract.
 - [ ] Add equivalent web and Omiro generation reducers with durable sequence tracking and duplicate no-op behavior.
-- [ ] Update web reconnect logic to use `Last-Event-ID` and restore semantic state without token replay.
-- [ ] Update Omiro reconnect logic to use the validated `afterSequence` fallback and preserve Apple-only transport behavior.
-- [ ] Ensure committed, failed, cancelled, and awaiting-confirmation replay converge to equivalent state on web and Omiro.
-- [ ] Add web and Omiro reducer/reconnect tests.
+- [ ] Update web reconnect logic to use `Last-Event-ID` without token replay.
+- [ ] Update Omiro reconnect logic to use the validated `afterSequence` fallback while preserving Apple-only transport behavior.
+- [ ] Verify both clients converge after committed, failed, cancelled, and awaiting-confirmation replay.
+- [ ] Add web and Omiro reducer, replay, reconnect, and forced-disconnect tests.
 
-### Cleanup and verification
+### Phase 6 — Remove legacy paths and release evidence
 
-- [ ] Remove the old callback loop after route migration and delete `ChatStreamEvent` only after all consumers compile on v1.
+- [ ] Remove the old callback loop after the v1 route is proven in production-like integration tests.
+- [ ] Delete `ChatStreamEvent` only after API, web, Omiro, and fixtures compile on v1.
 - [ ] Remove obsolete duplicated generation types from API and database boundaries.
-- [ ] Add 100% statement and branch coverage thresholds for the completed pure-machine and adapter test projects.
-- [ ] Run database migration/test migration/codegen after any further schema change.
-- [ ] Run focused tests for machine, interpreter, API, database, web, and Omiro.
+- [ ] Add 100% statement and branch coverage thresholds to the completed machine, interpreter, repository, API, web, and Omiro test projects.
+- [ ] Run database migration, test migration, and code generation after any schema change.
+- [ ] Run focused tests for machine, interpreter, database, API, web, and Omiro.
 - [ ] Run browser and simulator flows for send, approval, cancellation, retry, regeneration, and forced reconnect.
+- [ ] Update `docs/chat.capabilities.md` only with completed evidence.
 - [ ] Run the full `pnpm run check` gate and complete the evidence checklist before marking the plan complete.
 
 ## Testing
