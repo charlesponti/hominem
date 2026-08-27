@@ -53,7 +53,11 @@ describe('generation interpreter', () => {
     const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
 
     await interpreter.execute(
-      { type: 'persist', event: { type: 'generation.started', generationId: state.generationId } },
+      {
+        type: 'persist',
+        event: { type: 'generation.started', generationId: state.generationId },
+        idempotencyKey: 'generation-1:generation.started',
+      },
       state,
     );
     await interpreter.execute({ type: 'emit', event: { type: 'text-delta', text: 'x' } }, state);
