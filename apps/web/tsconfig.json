@@ -13,7 +13,7 @@
     // Keep this path in sync with services/api/package.json's "./types" export.
     "paths": {
       "~/*": ["./app/*"],
-      "@hominem/api/types": ["../../services/api/src/rpc/app.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
     }
   },
   "include": [
@@ -32,5 +32,13 @@
     "coverage",
     ".react-router/cache",
     "*.tsbuildinfo"
+  ],
+  "references": [
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/chat" },
+    { "path": "../../packages/env" },
+    { "path": "../../packages/storage" },
+    { "path": "../../packages/telemetry" },
+    { "path": "../../packages/utils" }
   ]
 }
