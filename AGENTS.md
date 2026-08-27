@@ -70,13 +70,13 @@ just db migrate
 
 ## Adding a new package, app, or service
 
-**Never add a `workspace:*` dependency for a type-only import.** If you only `import type { X } from '@hominem/y'`, do not list `@hominem/y` in `package.json`. pnpm/turbo build their task graph from `package.json` edges with no idea an import is type-only — a single `import type` turned into a real dependency once dragged another package's entire build/test/lint/typecheck into every consumer's CI scope. Instead, add a `paths` alias directly in your own `tsconfig.json` pointing at the real source file:
+**Never add a `workspace:*` dependency for a type-only import.** If you only `import type { X } from '@hominem/y'`, do not list `@hominem/y` in `package.json`. pnpm/turbo build their task graph from `package.json` edges with no idea an import is type-only — a single `import type` turned into a real dependency once dragged another package's entire build/test/lint/typecheck into every consumer's CI scope. Instead, add a `paths` alias directly in your own `tsconfig.json` pointing at the emitted declaration, never at source (see `docs/type-system.md` D1/D3 — resolving another package's source instead of its `.d.ts` is exactly the failure class that document exists to eliminate):
 
 ```json
-"paths": { "@hominem/api/types": ["../../services/api/src/rpc/app.ts"] }
+"paths": { "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"] }
 ```
 
-Keep it in sync with whatever `services/api/package.json`'s `exports` map says that subpath resolves to. `packages/rpc`, `apps/career`, `apps/omiro`, and `apps/finance` all do this for `@hominem/api` — copy the pattern.
+Keep it in sync with whatever `services/api/package.json`'s `exports` map says that subpath resolves to. `packages/rpc`, `apps/career`, `apps/omiro`, `apps/finance`, and `apps/web` all do this for `@hominem/api` — copy the pattern.
 
 **New library package (something other packages depend on at runtime):**
 
