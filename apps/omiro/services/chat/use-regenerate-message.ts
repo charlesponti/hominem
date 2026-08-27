@@ -8,8 +8,9 @@ import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
+import type { ChatMessageItem } from '~/components/chat';
+
 import { invalidateChatQueries } from './chat-cache';
-import type { MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
@@ -43,7 +44,7 @@ export function useRegenerateMessage(chatId: string) {
           if (event.type === 'committed') {
             const message = toMessageOutput(event.message);
             if (message) {
-              queryClient.setQueryData<MessageOutput[]>(
+              queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
                 (messages = []) =>
                   messages.map((item) => (item.id === current.targetMessageId ? message : item)),

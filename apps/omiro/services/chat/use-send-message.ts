@@ -5,6 +5,7 @@ import { randomUUID } from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useRef } from 'react';
 
+import type { ChatMessageItem } from '~/components/chat';
 import { playAudioReply } from '~/components/media/audio-playback.service';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
@@ -13,13 +14,38 @@ import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
-import { createOptimisticMessage, type MessageOutput } from './chatMessages';
 import { streamSSE } from './stream-sse';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
 function triggerAssistantCompletionHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}
+
+function fallbackId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  return `msg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createOptimisticMessage(
+  chatId: string,
+  messageText: string,
+  id = fallbackId(),
+): ChatMessageItem {
+  return {
+    id,
+    renderKey: id,
+    role: 'user',
+    message: messageText,
+    created_at: new Date().toISOString(),
+    chat_id: chatId,
+    profile_id: '',
+    reasoning: null,
+    toolCalls: null,
+    isStreaming: false,
+  };
 }
 
 export interface SendInput {
@@ -44,7 +70,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     onMutate: async ({ message, generationId }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
       const userMessageId = randomUUID();
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (previous = []) => [
+      queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (previous = []) => [
         ...previous,
         createOptimisticMessage(chatId, message, userMessageId),
       ]);
@@ -72,7 +98,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if (event.type === 'accepted' && event.userMessage) {
             const userMessage = toMessageOutput(event.userMessage);
             if (userMessage) {
-              queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (current = []) =>
+              queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (current = []) =>
                 current.map((item) =>
                   item.id === generationRef.current?.userMessageId ? userMessage : item,
                 ),
@@ -90,7 +116,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if (event.type === 'committed') {
             const committed = toMessageOutput(event.message);
             if (committed) {
-              queryClient.setQueryData<MessageOutput[]>(
+              queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
                 (current = []) => [
                   ...current.filter((item) => item.id !== committed.id),
@@ -120,7 +146,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       const current = generationRef.current;
       if (current) setGeneration({ ...current, stage: 'failed', error: error.message });
       if (!context) return;
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (messages = []) =>
+      queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (messages = []) =>
         messages.filter(
           (item) => item.id !== context.userMessageId || item.message.trim().length > 0,
         ),

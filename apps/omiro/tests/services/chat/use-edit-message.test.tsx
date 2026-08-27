@@ -3,7 +3,7 @@ import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { MessageOutput } from '~/services/chat/chatMessages';
+import type { ChatMessageItem } from '~/components/chat';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
@@ -36,7 +36,7 @@ const CHAT_ID = 'chat-1';
 
 function seedMessages(
   queryClient: ReturnType<typeof renderHookWithQueryClient>['queryClient'],
-): MessageOutput[] {
+): ChatMessageItem[] {
   const messages = [
     {
       id: 'msg-1',
@@ -49,7 +49,7 @@ function seedMessages(
       toolCalls: null,
       isStreaming: false,
     },
-  ] as MessageOutput[];
+  ] as ChatMessageItem[];
   queryClient.setQueryData(chatKeys.messages(CHAT_ID), messages);
   return messages;
 }
@@ -65,7 +65,7 @@ describe('useEditChatMessage', () => {
     });
 
     await waitFor(() => {
-      const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(CHAT_ID));
+      const messages = queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID));
       expect(messages?.[0]?.message).toBe('edited text');
     });
   });
@@ -81,7 +81,7 @@ describe('useEditChatMessage', () => {
         .catch(() => undefined);
     });
 
-    const messages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(CHAT_ID));
+    const messages = queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID));
     expect(messages).toEqual(original);
   });
 

@@ -4,7 +4,7 @@ import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { MessageOutput } from '~/services/chat/chatMessages';
+import type { ChatMessageItem } from '~/components/chat';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { mockMmkvModule } from '../../mocks/mmkv';
@@ -82,7 +82,7 @@ describe('useSendMessage', () => {
     });
     await waitFor(() => expect(mockStreamSSE).toHaveBeenCalledOnce());
 
-    expect(queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(CHAT_ID))).toEqual([
+    expect(queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID))).toEqual([
       expect.objectContaining({ role: 'user', message: 'Hello there' }),
     ]);
     expect(result.current.generation).toMatchObject({ stage: 'preparing' });
@@ -102,7 +102,7 @@ describe('useSendMessage', () => {
     });
 
     await waitFor(() => expect(result.current.generation).toBeNull());
-    expect(queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(CHAT_ID))).toEqual([
+    expect(queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID))).toEqual([
       expect.objectContaining({ role: 'user', message: 'Hello there' }),
       expect.objectContaining({ role: 'assistant', message: 'A durable reply.' }),
     ]);
@@ -119,7 +119,7 @@ describe('useSendMessage', () => {
       await result.current.sendChatMessage({ message: 'Hello there' }).catch(() => undefined);
     });
 
-    expect(queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(CHAT_ID))).toEqual([
+    expect(queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(CHAT_ID))).toEqual([
       expect.objectContaining({ role: 'user', message: 'Hello there' }),
     ]);
     expect(result.current.generation).toMatchObject({

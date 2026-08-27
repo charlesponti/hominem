@@ -7,8 +7,8 @@ import { useCallback, useRef } from 'react';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
+import type { ChatMessageItem } from '~/components/chat';
 import { OFFLINE_UNAVAILABLE_ERROR } from '~/services/chat/chat-errors';
-import type { MessageOutput } from '~/services/chat/chatMessages';
 import { streamSSE } from '~/services/chat/stream-sse';
 import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
@@ -64,7 +64,7 @@ export function useStartChat() {
               startedChatIdRef.current = event.chatId;
               const userMessage = event.userMessage ? toMessageOutput(event.userMessage) : null;
               queryClient.setQueryData(chatKeys.activeChat(event.chatId), event.chat);
-              queryClient.setQueryData<MessageOutput[]>(
+              queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(event.chatId),
                 userMessage ? [userMessage] : [],
               );
@@ -77,7 +77,7 @@ export function useStartChat() {
             if (event.type === 'committed') {
               const assistantMessage = toMessageOutput(event.message);
               if (!assistantMessage || !startedChatIdRef.current) return;
-              queryClient.setQueryData<MessageOutput[]>(
+              queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(startedChatIdRef.current),
                 (messages = []) => [...messages, assistantMessage],
               );

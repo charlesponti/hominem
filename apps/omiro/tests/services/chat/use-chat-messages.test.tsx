@@ -2,7 +2,7 @@
 import { waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { MessageOutput } from '~/services/chat/chatMessages';
+import type { ChatMessageItem } from '~/components/chat';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
@@ -104,7 +104,7 @@ describe('useChatMessages', () => {
   });
 
   it('keeps the optimistic render key when the server assigns a message id', () => {
-    const previous: MessageOutput = {
+    const previous: ChatMessageItem = {
       id: 'optimistic-assistant',
       renderKey: 'optimistic-assistant',
       role: 'assistant',

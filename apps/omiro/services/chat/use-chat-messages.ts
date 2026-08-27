@@ -1,13 +1,13 @@
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessageDto as RpcChatMessage } from '@hominem/rpc/types';
+import type { ChatMessageItem } from '@hominem/chat';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatKeys } from '../notes/query-keys';
-import { type MessageOutput } from './chatMessages';
 
 export const CHAT_MESSAGES_LIMIT = 50;
 
-export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
+export function toMessageOutput(message: RpcChatMessage): ChatMessageItem | null {
   if (message.role === 'tool') {
     return null;
   }
@@ -32,7 +32,7 @@ export function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
   };
 }
 
-export function preserveRenderKeys(messages: MessageOutput[], previousMessages: MessageOutput[]) {
+export function preserveRenderKeys(messages: ChatMessageItem[], previousMessages: ChatMessageItem[]) {
   const usedPreviousIndexes = new Set<number>();
 
   return messages.map((message) => {
@@ -53,7 +53,7 @@ export function preserveRenderKeys(messages: MessageOutput[], previousMessages: 
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const client = useApiClient();
   const queryClient = useQueryClient();
-  return useQuery<MessageOutput[]>({
+  return useQuery<ChatMessageItem[]>({
     queryKey: chatKeys.messages(chatId),
     queryFn: async () => {
       const res = await client.api.chats[':id'].messages.$get({
@@ -68,7 +68,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
       });
       return preserveRenderKeys(
         nextMessages,
-        queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) ?? [],
+        queryClient.getQueryData<ChatMessageItem[]>(chatKeys.messages(chatId)) ?? [],
       );
     },
     enabled: Boolean(chatId),
