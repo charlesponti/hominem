@@ -13,8 +13,6 @@ import {
 } from '../../schemas/finance.schema';
 import { registerTool } from '../tools';
 
-const FINANCE_READ_SCOPES = ['finance:read'] as const;
-
 // ── finance_net_worth ───────────────────────────────────────────────
 
 registerTool(
@@ -26,7 +24,7 @@ registerTool(
     inputSchema: financeNetWorthInputSchema,
     outputSchema: financeNetWorthOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
+    scopes: ['finance:read'],
     sensitivity: 'sensitive',
     resultCap: 50,
   },
@@ -44,7 +42,7 @@ registerTool(
     inputSchema: financeRecentTransactionsInputSchema,
     outputSchema: financeRecentTransactionsOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
+    scopes: ['finance:read'],
     sensitivity: 'sensitive',
     resultCap: 50,
   },
@@ -62,7 +60,7 @@ registerTool(
     inputSchema: financeSpendingByCategoryInputSchema,
     outputSchema: financeSpendingByCategoryOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
+    scopes: ['finance:read'],
     sensitivity: 'sensitive',
     resultCap: 50,
   },
