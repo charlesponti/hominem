@@ -19,7 +19,7 @@ vi.mock('@hominem/ai', () => ({
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
-vi.mock('../../mcp/tools', () => ({
+vi.mock('../../mcp/tool-registry', () => ({
   callTool: mocks.callTool,
   getToolDefinition: mocks.getToolDefinition,
 }));

@@ -19,7 +19,6 @@ export const MCP_SCOPES = [
   'memory:write',
   'people:read',
   'places:read',
-  'services:read',
   'social:read',
   'tags:read',
   'tags:write',

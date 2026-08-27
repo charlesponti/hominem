@@ -8,7 +8,7 @@ import { setMcpAuthContext } from '../middleware/auth';
 import { MCP_SCOPES } from '../scopes';
 import { checkRateLimit } from './rate-limiter';
 import { ensureMcpToolsRegistered } from './register-tools';
-import { handleMcpRequestWithSession, type McpHonoEnv } from './server';
+import { handleMcpRequest, type McpHonoEnv } from './server';
 
 // Use top-level await via ESM (services/api is ESM)
 await ensureMcpToolsRegistered();
@@ -60,8 +60,8 @@ export async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: N
 
 export const mcpRoutes = new Hono<McpHonoEnv>()
   .use('*', mcpAuthorizationMiddleware)
-  .all('/', handleMcpRequestWithSession)
-  .all('/*', handleMcpRequestWithSession);
+  .all('/', handleMcpRequest)
+  .all('/*', handleMcpRequest);
 
 /**
  * OAuth discovery routes — mounted at the server root so MCP clients

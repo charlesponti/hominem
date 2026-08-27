@@ -8,8 +8,14 @@ import {
 import { logger } from '@hominem/telemetry';
 import * as z from 'zod';
 
+import type { CapabilityDefinition } from '../application/capability';
 import { ensureMcpToolsRegistered } from './register-tools';
-import { CHAT_CAPABILITIES, type ChatCapability, getToolCapabilities, listTools } from './tools';
+import {
+  CHAT_CAPABILITIES,
+  type ChatCapability,
+  getToolCapabilities,
+  listTools,
+} from './tool-registry';
 
 const chatToolPlanSchema = z.object({
   capabilities: z.array(z.enum(CHAT_CAPABILITIES)).max(CHAT_CAPABILITIES.length),
@@ -27,7 +33,7 @@ const ROUTING_PROMPT = `Classify whether the latest user request needs current p
 
 type ChatFunctionToolDefinition = Extract<ChatFunctionTool, { function: unknown }>;
 
-function toChatTool(tool: ReturnType<typeof listTools>[number]): ChatFunctionToolDefinition {
+function toChatTool(tool: CapabilityDefinition): ChatFunctionToolDefinition {
   return {
     type: 'function',
     function: {
@@ -36,6 +42,21 @@ function toChatTool(tool: ReturnType<typeof listTools>[number]): ChatFunctionToo
       parameters: convertSchemaToJsonSchema(tool.inputSchema) as Record<string, unknown>,
     },
   };
+}
+
+let chatToolProjection: {
+  definitions: readonly CapabilityDefinition[];
+  tools: readonly ChatFunctionToolDefinition[];
+} | null = null;
+
+function getChatToolProjection(
+  definitions: readonly CapabilityDefinition[],
+): readonly ChatFunctionToolDefinition[] {
+  if (chatToolProjection?.definitions === definitions) return chatToolProjection.tools;
+
+  const tools = definitions.map(toChatTool);
+  chatToolProjection = { definitions, tools };
+  return tools;
 }
 
 /**
@@ -49,7 +70,7 @@ function toChatTool(tool: ReturnType<typeof listTools>[number]): ChatFunctionToo
  */
 export async function getChatTools(): Promise<ChatFunctionTool[]> {
   await ensureMcpToolsRegistered();
-  return listTools().map(toChatTool);
+  return [...getChatToolProjection(listTools())];
 }
 
 export async function planChatTools(input: {
@@ -58,6 +79,7 @@ export async function planChatTools(input: {
 }): Promise<ChatToolPlan> {
   await ensureMcpToolsRegistered();
   const definitions = listTools();
+  const projectedTools = getChatToolProjection(definitions);
   const { output, usage } = await createStructuredChatCompletion({
     model: input.model,
     messages: [
@@ -71,11 +93,11 @@ export async function planChatTools(input: {
   });
   const capabilities: ChatCapability[] = [...new Set(output.capabilities)];
   const selectedCapabilities = new Set(capabilities);
-  const tools = definitions
-    .filter((definition) =>
-      getToolCapabilities(definition).some((capability) => selectedCapabilities.has(capability)),
-    )
-    .map(toChatTool);
+  const tools = definitions.flatMap((definition, index) =>
+    getToolCapabilities(definition).some((capability) => selectedCapabilities.has(capability))
+      ? [projectedTools[index]]
+      : [],
+  );
   if (output.requiresLookup && tools.length === 0) {
     throw new Error('No eligible tool is available for this private-data request');
   }

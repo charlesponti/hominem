@@ -29,7 +29,7 @@ import {
   removeCollectionItemInputSchema,
   removeCollectionItemOutputSchema,
 } from '../../schemas/collections.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

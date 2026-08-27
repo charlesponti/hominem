@@ -11,7 +11,7 @@ import {
   financeSpendingByCategoryInputSchema,
   financeSpendingByCategoryOutputSchema,
 } from '../../schemas/finance.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 // ── finance_net_worth ───────────────────────────────────────────────
 

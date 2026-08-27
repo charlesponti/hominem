@@ -8,7 +8,7 @@ import {
   socialEngagementSummaryInputSchema,
   socialEngagementSummaryOutputSchema,
 } from '../../schemas/social.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

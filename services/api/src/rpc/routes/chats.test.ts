@@ -142,7 +142,7 @@ vi.mock('./chat-speech.service', () => ({
   synthesizeChatReplySpeech: mocks.synthesizeChatReplySpeech,
 }));
 
-vi.mock('../../mcp/llm-tools', () => ({
+vi.mock('../../mcp/chat-tool-adapter', () => ({
   planChatTools: vi.fn().mockResolvedValue({ capabilities: [], requiresLookup: false, tools: [] }),
 }));
 

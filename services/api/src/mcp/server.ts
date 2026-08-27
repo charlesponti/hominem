@@ -10,7 +10,7 @@ import type { Context } from 'hono';
 import type { CapabilityDefinition } from '../application/capability';
 import type { AuthContext } from '../auth/types';
 import { UnauthorizedError } from '../errors';
-import { callTool, listToolsForScopes } from './tools';
+import { callTool, listToolsForScopes } from './tool-registry';
 
 export type McpHonoEnv = {
   Variables: {
@@ -108,11 +108,11 @@ const mcpHandler = createMcpHandler(({ authInfo }) => createMcpServer(authInfo),
   responseMode: 'json',
 });
 
-export async function handleMcpRequestWithSession(c: Context<McpHonoEnv>): Promise<Response> {
+export async function handleMcpRequest(c: Context<McpHonoEnv>): Promise<Response> {
   const auth = c.get('auth');
 
   if (!auth) {
-    throw new UnauthorizedError('MCP session required');
+    throw new UnauthorizedError('MCP authentication required');
   }
 
   const authInfo: AuthInfo = {

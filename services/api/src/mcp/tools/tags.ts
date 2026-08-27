@@ -13,7 +13,7 @@ import {
   untagEntityInputSchema,
   untagEntityOutputSchema,
 } from '../../schemas/tags.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

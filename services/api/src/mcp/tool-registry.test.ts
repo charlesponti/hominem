@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as z from 'zod';
 
-import { callTool, listTools, registerTool } from './tools';
+import { callTool, listTools, registerTool } from './tool-registry';
 
 const userId = '11111111-1111-4111-8111-111111111111';
 
@@ -9,6 +9,29 @@ describe('MCP tool registry', () => {
   it('starts with no registered tools', () => {
     const tools = listTools();
     expect(tools).toHaveLength(0);
+  });
+
+  it('keeps an immutable tool snapshot until registration changes', () => {
+    const initialTools = listTools();
+    expect(listTools()).toBe(initialTools);
+    expect(Object.isFrozen(initialTools)).toBe(true);
+
+    registerTool(
+      {
+        name: 'snapshot_test_tool',
+        title: 'Snapshot test tool',
+        description: 'Used to verify registry snapshots.',
+        inputSchema: z.object({}),
+        outputSchema: z.object({ value: z.string() }),
+        readOnly: true,
+        scopes: ['career:read'],
+        resultCap: 1,
+      },
+      async () => ({ value: 'snapshot' }),
+    );
+
+    expect(listTools()).not.toBe(initialTools);
+    expect(listTools()).toHaveLength(1);
   });
 
   it('rejects unknown tool names with a stable validation error', async () => {

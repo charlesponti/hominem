@@ -21,31 +21,14 @@ export const CHAT_CAPABILITIES = [
 
 export type ChatCapability = (typeof CHAT_CAPABILITIES)[number];
 
-const capabilityByScope: Record<string, ChatCapability> = {
-  'calendar:read': 'calendar',
-  'career:read': 'career',
-  'career:write': 'career',
-  'collections:read': 'collections',
-  'collections:write': 'collections',
-  'finance:read': 'finance',
-  'health:read': 'health',
-  'media:read': 'media',
-  'memory:read': 'memory',
-  'memory:write': 'memory',
-  'people:read': 'people',
-  'places:read': 'places',
-  'social:read': 'social',
-  'tags:read': 'tags',
-  'tags:write': 'tags',
-  'travel:read': 'travel',
-} as const;
+const chatCapabilities = new Set<string>(CHAT_CAPABILITIES);
 
 export function getToolCapabilities(definition: CapabilityDefinition): ChatCapability[] {
   return [
     ...new Set(
       definition.scopes.flatMap((scope) => {
-        const capability = capabilityByScope[scope];
-        return capability ? [capability] : [];
+        const capability = scope.slice(0, scope.indexOf(':'));
+        return chatCapabilities.has(capability) ? [capability as ChatCapability] : [];
       }),
     ),
   ];
@@ -89,9 +72,16 @@ function enforceResultCap(
 }
 
 const tools = new Map<string, RegisteredTool>();
+let toolDefinitionsSnapshot: readonly CapabilityDefinition[] | null = null;
 
-export function listTools(): CapabilityDefinition[] {
-  return [...tools.values()].map(({ definition }) => definition);
+export function listTools(): readonly CapabilityDefinition[] {
+  if (!toolDefinitionsSnapshot) {
+    toolDefinitionsSnapshot = Object.freeze(
+      [...tools.values()].map(({ definition }) => definition),
+    );
+  }
+
+  return toolDefinitionsSnapshot;
 }
 
 export function listToolsForScopes(grantedScopes: readonly string[]): CapabilityDefinition[] {
@@ -115,6 +105,7 @@ export function registerTool<TInputSchema extends z.ZodType, TOutputSchema exten
     definition,
     invoke: (ownerUserId, input) => invoke(ownerUserId, definition.inputSchema.parse(input)),
   });
+  toolDefinitionsSnapshot = null;
 }
 
 export async function callTool(

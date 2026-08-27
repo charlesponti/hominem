@@ -95,7 +95,7 @@ import {
   careerWishlistCompanySchema,
   careerWishlistCompanyUpdateSchema,
 } from '../../schemas/career.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 const noInputSchema = z.object({});
 const profileResultSchema = z.object({

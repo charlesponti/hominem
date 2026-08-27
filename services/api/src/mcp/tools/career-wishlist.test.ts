@@ -2,7 +2,7 @@ import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import './career';
-import { callTool, type McpToolResult } from '../tools';
+import { callTool, type McpToolResult } from '../tool-registry';
 
 const userId = 'a2000001-0000-4000-8000-000000000001';
 

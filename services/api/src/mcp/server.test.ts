@@ -9,7 +9,7 @@ import { requestIdMiddleware } from '../rpc/middleware/auth';
 import { apiErrorHandler } from '../rpc/middleware/error';
 import { validationErrorMiddleware } from '../rpc/middleware/validation';
 import { mcpRoutes, oauthDiscoveryRoutes } from './routes';
-import { listTools, registerTool } from './tools';
+import { listTools, registerTool } from './tool-registry';
 
 vi.mock('@better-auth/mcp', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@better-auth/mcp')>()),

@@ -11,7 +11,7 @@ import {
   healthSleepSummaryInputSchema,
   healthSleepSummaryOutputSchema,
 } from '../../schemas/health.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

@@ -3,7 +3,7 @@ import {
   placeVisitHistoryInputSchema,
   placeVisitHistoryOutputSchema,
 } from '../../schemas/places.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

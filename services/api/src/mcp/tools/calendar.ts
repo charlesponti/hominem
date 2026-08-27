@@ -11,7 +11,7 @@ import {
   tripHistoryInputSchema,
   tripHistoryOutputSchema,
 } from '../../schemas/calendar.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

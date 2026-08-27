@@ -22,8 +22,8 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
-import { planChatTools } from '../../mcp/llm-tools';
-import { callTool } from '../../mcp/tools';
+import { planChatTools } from '../../mcp/chat-tool-adapter';
+import { callTool } from '../../mcp/tool-registry';
 import {
   ChatsAddSourceSchema,
   ChatsCreateSchema,

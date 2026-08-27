@@ -12,7 +12,7 @@ import {
   searchMemoriesInputSchema,
   searchMemoriesOutputSchema,
 } from '../../schemas/memory.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 // Marks a note as an assistant-managed memory via the typed `kind` column —
 // memories show up wherever notes already appear in the app.

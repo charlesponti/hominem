@@ -10,7 +10,7 @@ import {
 } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
-import { callTool, getToolDefinition, type McpToolResult } from '../../mcp/tools';
+import { callTool, getToolDefinition, type McpToolResult } from '../../mcp/tool-registry';
 
 const DEFAULT_MAX_ITERATIONS = 4;
 const MAX_PROVIDER_RETRIES = 2;

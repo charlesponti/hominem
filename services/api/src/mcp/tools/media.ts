@@ -17,7 +17,7 @@ import {
   musicRecentPlaysInputSchema,
   musicRecentPlaysOutputSchema,
 } from '../../schemas/media.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {

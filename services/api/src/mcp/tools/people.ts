@@ -5,7 +5,7 @@ import {
   personTimelineInputSchema,
   personTimelineOutputSchema,
 } from '../../schemas/people.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {
