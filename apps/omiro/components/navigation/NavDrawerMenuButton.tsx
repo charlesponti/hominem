@@ -72,7 +72,7 @@ export function NavDrawerMenuButton() {
         testID="nav-drawer-menu-button"
         variant="plain"
       >
-        <AppIcon name="line.3.horizontal" size={20} tintColor="black" />
+        <AppIcon name="line.3.horizontal" size={20} />
       </IconButton>
     </MenuView>
   );

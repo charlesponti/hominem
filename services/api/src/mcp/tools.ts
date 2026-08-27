@@ -76,7 +76,7 @@ const capabilityByScope = {
   'tags:write': 'tags',
   'travel:read': 'travel',
 } as const;
-type CapabilityByScope = keyof typeof capabilityByScope;
+export type CapabilityByScope = keyof typeof capabilityByScope;
 
 export function getToolCapabilities(definition: McpToolDefinition): ChatCapability[] {
   return [...new Set(definition.scopes.flatMap((scope) => capabilityByScope[scope] ?? []))];
