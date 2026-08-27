@@ -1,4 +1,4 @@
-import { decodeSSEFrame } from '@hominem/chat/sse';
+import { createSseDecoder, finishSse, pushSseChunk, type SseOutput } from '@hominem/chat/sse';
 import { logger } from '@hominem/telemetry';
 
 export interface ConsumeSseXhrOptions<TEvent> {
@@ -12,11 +12,6 @@ export interface ConsumeSseXhrOptions<TEvent> {
 
 function getAbortError() {
   return new DOMException('Aborted', 'AbortError');
-}
-
-function getSSEFrameDelimiter(value: string): { index: number; length: number } | null {
-  const match = /\r?\n\r?\n/.exec(value);
-  return match ? { index: match.index, length: match[0].length } : null;
 }
 
 // XHR-based SSE client for React Native / Hermes.
@@ -37,7 +32,7 @@ export async function consumeSseXhr<TEvent>({
   if (signal?.aborted) throw getAbortError();
 
   return new Promise<void>((resolve, reject) => {
-    let buffer = '';
+    let decoder = createSseDecoder();
     let offset = 0;
     let settled = false;
 
@@ -62,36 +57,34 @@ export async function consumeSseXhr<TEvent>({
       cleanup();
       resolve();
     };
-    const processFrame = (frame: string) => {
-      const decoded = decodeSSEFrame(frame);
-      if (decoded.kind !== 'event') {
-        if (decoded.kind === 'done') onDone?.();
-        return;
-      }
+    const processOutputs = (outputs: SseOutput<TEvent>[]) => {
+      for (const output of outputs) {
+        if (output.kind === 'done') {
+          onDone?.();
+          continue;
+        }
+        if (output.kind === 'malformed') {
+          logger.warn('[consumeSseXhr] Dropped malformed SSE frame', {
+            data: output.data,
+            error: output.error,
+          });
+          continue;
+        }
+        if (output.kind !== 'event') continue;
 
-      const data = decoded.data;
-      try {
-        const parsed = JSON.parse(data) as { type?: string; message?: string; error?: string };
+        const event = output.event as TEvent & {
+          type?: string;
+          message?: string;
+          error?: string;
+        };
         if (
-          (parsed.type === 'error' || parsed.error) &&
-          typeof (parsed.message ?? parsed.error) === 'string'
+          (event.type === 'error' || event.error) &&
+          typeof (event.message ?? event.error) === 'string'
         ) {
-          rejectOnce(new Error(parsed.message ?? parsed.error));
+          rejectOnce(new Error(event.message ?? event.error));
           return;
         }
-        onEvent(parsed as TEvent);
-      } catch (error) {
-        logger.warn('[consumeSseXhr] Dropped malformed SSE frame', { data, error });
-      }
-    };
-    const processBufferedFrames = () => {
-      let delimiter = getSSEFrameDelimiter(buffer);
-      while (delimiter) {
-        const frame = buffer.slice(0, delimiter.index);
-        buffer = buffer.slice(delimiter.index + delimiter.length);
-        processFrame(frame);
-        if (settled) return;
-        delimiter = getSSEFrameDelimiter(buffer);
+        onEvent(output.event);
       }
     };
 
@@ -108,16 +101,16 @@ export async function consumeSseXhr<TEvent>({
 
       const newText = xhr.responseText.slice(offset);
       offset = xhr.responseText.length;
-      buffer += newText;
-      processBufferedFrames();
+      const result = pushSseChunk<TEvent>(decoder, newText);
+      decoder = result.state;
+      processOutputs(result.outputs);
       if (settled) return;
 
       if (xhr.readyState === 4) {
-        if (buffer.trim().length > 0) {
-          processFrame(buffer);
-          buffer = '';
-          if (settled) return;
-        }
+        const finalResult = finishSse<TEvent>(decoder);
+        processOutputs(finalResult.outputs);
+        decoder = finalResult.state;
+        if (settled) return;
 
         if (xhr.status >= 200 && xhr.status < 300) {
           resolveOnce();

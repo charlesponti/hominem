@@ -21,11 +21,11 @@ describe('consumeSseResponse', () => {
 
     await consumeSseResponse(
       responseFor([
-        'data: {"type":"status","generationId":"g1","status":"preparing"}\n',
-        'data: {"type":"committed","generationId":"g1","message":{"content":"hi"}}\n',
-        'data: {bad}\n',
-        ': keep-alive\n',
-        'data: [DONE]\n',
+        'data: {"type":"status","generationId":"g1","status":"preparing"}\n\n',
+        'data: {"type":"committed","generationId":"g1","message":{"content":"hi"}}\n\n',
+        'data: {bad}\n\n',
+        ': keep-alive\n\n',
+        'data: [DONE]\n\n',
       ]),
       onEvent,
     );

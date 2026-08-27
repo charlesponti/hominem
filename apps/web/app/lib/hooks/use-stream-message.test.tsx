@@ -31,7 +31,7 @@ function streamResponse(events: string[]) {
   const encoder = new TextEncoder();
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
-      events.forEach((event) => controller.enqueue(encoder.encode(`data: ${event}\n`)));
+      events.forEach((event) => controller.enqueue(encoder.encode(`data: ${event}\n\n`)));
       controller.close();
     },
   });
