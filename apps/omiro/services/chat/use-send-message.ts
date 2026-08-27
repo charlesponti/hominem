@@ -26,7 +26,6 @@ export interface SendInput {
   message: string;
   fileIds?: string[];
   responseModality?: 'text' | 'audio';
-  messageId?: string;
 }
 
 type MutationInput = SendInput & { generationId: string };
@@ -42,9 +41,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const mutation = useMutation<void, Error, MutationInput, SendContext>({
     mutationKey: ['chat-generation', chatId],
     retry: false,
-    onMutate: async ({ message, messageId, generationId }) => {
+    onMutate: async ({ message, generationId }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
-      const userMessageId = messageId ?? randomUUID();
+      const userMessageId = randomUUID();
       queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (previous = []) => [
         ...previous,
         createOptimisticMessage(chatId, message, userMessageId),

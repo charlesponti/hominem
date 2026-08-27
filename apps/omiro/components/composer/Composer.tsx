@@ -21,7 +21,6 @@ import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
-import { useComposerToastHandoff } from './useComposerToastHandoff';
 import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
 
 export type { ComposerProps } from './composer.types';
@@ -44,7 +43,6 @@ export function Composer(props: ComposerProps) {
 
 function ComposerContent(props: ComposerProps) {
   const submission = useComposerSubmission(props);
-  const toastHandoff = useComposerToastHandoff(props.mode === 'chat');
   const clearComposerRef = useRef<() => void>(() => {});
   const handleWalkieTalkieTranscript = useCallback(
     (rawText: string) => {
@@ -84,20 +82,12 @@ function ComposerContent(props: ComposerProps) {
       if (canSubmit) {
         controller.markAttachmentsSubmitted(controller.uploadedAttachmentIds);
       }
-      // The toast only makes sense for an actual chat message with visible
-      // text -- an attachment-only send or a note/start-chat submit has
-      // nothing in the composer worth flying out of it.
-      const messageId =
-        canSubmit && kind === 'message' && props.mode === 'chat' && message.trim()
-          ? toastHandoff.beginHandoff(message.trim())
-          : undefined;
       void submission.submit(
         {
           canSubmit,
           clearComposer: controller.clearComposer,
           fileIds: controller.uploadedAttachmentIds,
           message,
-          messageId,
         },
         kind,
       );
@@ -106,9 +96,7 @@ function ComposerContent(props: ComposerProps) {
       controller.clearComposer,
       controller.markAttachmentsSubmitted,
       controller.uploadedAttachmentIds,
-      props.mode,
       submission,
-      toastHandoff,
     ],
   );
 
@@ -151,12 +139,7 @@ function ComposerContent(props: ComposerProps) {
     : FadeOutUp.duration(transitionDurations[100]);
 
   return (
-    <Animated.View
-      style={styles.composer}
-      layout={bannerLayout}
-      ref={toastHandoff.ref}
-      testID={presentation.shellTestID}
-    >
+    <Animated.View style={styles.composer} layout={bannerLayout} testID={presentation.shellTestID}>
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
 
       <Card
