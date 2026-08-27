@@ -5,6 +5,14 @@
  * turns its commands into provider, tool, persistence, and delivery effects.
  */
 
+import type {
+  GenerationCheckpoint,
+  GenerationMessageSnapshot,
+  GenerationRequestContext,
+  GenerationRetryMetadata,
+  GenerationTerminalMetadata,
+} from './generation-events';
+
 export type GenerationPhase =
   | 'preparing'
   | 'running'
@@ -61,18 +69,39 @@ export type GenerationState = {
 };
 
 export type GenerationEventPayload =
-  | { type: 'generation.started'; generationId: string }
+  | {
+      type: 'generation.started';
+      generationId: string;
+      context?: {
+        chatId: string;
+        kind: ChatGenerationKind;
+        userMessageId: string | null;
+        requestContext: GenerationRequestContext;
+      };
+    }
+  | {
+      type: 'generation.accepted';
+      chatId: string;
+      userMessage: GenerationMessageSnapshot;
+    }
   | { type: 'generation.phase_changed'; phase: GenerationPhase }
+  | { type: 'generation.cancel_requested'; requestedAt: string; requestedBy: string }
+  | { type: 'generation.checkpointed'; checkpoint: GenerationCheckpoint }
   | { type: 'tool.requested'; call: GenerationToolCall }
   | { type: 'tool.completed'; result: ToolResult }
   | { type: 'tool.failed'; result: ToolResult }
   | { type: 'confirmation.required'; call: GenerationToolCall }
-  | { type: 'confirmation.approved'; callId: string }
-  | { type: 'confirmation.rejected'; callId: string; reason: string }
-  | { type: 'generation.retry_scheduled'; attempt: number; maxAttempts: number }
-  | { type: 'generation.committed' }
-  | { type: 'generation.cancelled' }
-  | { type: 'generation.failed'; message: string };
+  | { type: 'confirmation.approved'; callId: string; call?: GenerationToolCall }
+  | { type: 'confirmation.rejected'; callId: string; reason: string; call?: GenerationToolCall }
+  | {
+      type: 'generation.retry_scheduled';
+      attempt: number;
+      maxAttempts: number;
+      metadata?: GenerationRetryMetadata;
+    }
+  | { type: 'generation.committed'; metadata?: GenerationTerminalMetadata }
+  | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
+  | { type: 'generation.failed'; message: string; metadata?: GenerationTerminalMetadata };
 
 export type GenerationEventType = GenerationEventPayload['type'];
 

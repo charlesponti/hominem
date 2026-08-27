@@ -59,11 +59,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function enforceResultCap(
-  result: Record<string, unknown> | null,
-  toolName: string,
-  resultCap: number,
-) {
+function enforceResultCap(result: Record<string, unknown>, toolName: string, resultCap: number) {
   for (const [field, value] of Object.entries(result)) {
     if (Array.isArray(value) && value.length > resultCap) {
       throw new ValidationError(
