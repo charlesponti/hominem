@@ -38,13 +38,10 @@ async function findOrCreateTag(
       .values({
         id: crypto.randomUUID(),
         ownerUserid: userId,
-        createdByUserid: userId,
         name,
         slug,
         path,
         color: null,
-        description: null,
-        icon: null,
         archivedAt: null,
       })
       .returning('id')
@@ -213,9 +210,7 @@ export async function applyCopilotImportBatch(
             tagId,
             entityTable: 'app.financeTransactions',
             entityId: transactionId,
-            assignedByUserid: input.userId,
             assignmentSource: 'copilot-money-import',
-            confidence: null,
             removedAt: null,
           })
           .onConflict((conflict) =>

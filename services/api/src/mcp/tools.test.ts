@@ -28,7 +28,6 @@ describe('MCP tool registry', () => {
         outputSchema: z.object({ value: z.string() }).nullable(),
         readOnly: true,
         scopes: ['career:read'],
-        sensitivity: 'standard',
         resultCap: 1,
       },
       async () => null,
@@ -50,7 +49,6 @@ describe('MCP tool registry', () => {
         outputSchema: z.object({ value: z.string().refine(() => false) }),
         readOnly: true,
         scopes: ['career:read'],
-        sensitivity: 'standard',
         resultCap: 1,
       },
       async () => ({ value: 'valid before output validation' }),
@@ -69,12 +67,29 @@ describe('MCP tool registry', () => {
         outputSchema: z.object({ items: z.array(z.number()) }),
         readOnly: true,
         scopes: ['career:read'],
-        sensitivity: 'standard',
         resultCap: 1,
       },
       async () => ({ items: [1, 2] }),
     );
 
     await expect(callTool(userId, 'oversized_output_tool', {})).rejects.toThrow(/cap/);
+  });
+
+  it('rejects duplicate tool names', () => {
+    const definition = {
+      name: 'duplicate_tool',
+      title: 'Duplicate tool',
+      description: 'Used to verify registry uniqueness.',
+      inputSchema: z.object({}),
+      outputSchema: z.object({ value: z.string() }),
+      readOnly: true,
+      scopes: ['career:read'],
+      resultCap: 1,
+    } as const;
+
+    registerTool(definition, async () => ({ value: 'first' }));
+    expect(() => registerTool(definition, async () => ({ value: 'second' }))).toThrow(
+      'MCP tool is already registered: duplicate_tool',
+    );
   });
 });

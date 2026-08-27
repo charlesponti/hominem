@@ -25,10 +25,17 @@ export type ChatToolPlan = {
 
 const ROUTING_PROMPT = `Classify whether the latest user request needs current private Hominem data.\n\nUse requiresLookup=true for requests asking about the user's saved, current, or historical data. Select every relevant capability; when ambiguous, include each plausible capability. Use requiresLookup=false for general knowledge, writing, and conversation. Never select a capability merely because it could be useful.\n\nCapabilities: calendar (events), travel (trips), career (career data), collections (any saved entities), finance, health, media (watching/activity), memory, people, places, social, tags.`;
 
-function isFunctionTool(
-  tool: ChatFunctionTool,
-): tool is Extract<ChatFunctionTool, { function: unknown }> {
-  return 'function' in tool;
+type ChatFunctionToolDefinition = Extract<ChatFunctionTool, { function: unknown }>;
+
+function toChatTool(tool: ReturnType<typeof listTools>[number]): ChatFunctionToolDefinition {
+  return {
+    type: 'function',
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: convertSchemaToJsonSchema(tool.inputSchema) as Record<string, unknown>,
+    },
+  };
 }
 
 /**
@@ -42,15 +49,7 @@ function isFunctionTool(
  */
 export async function getChatTools(): Promise<ChatFunctionTool[]> {
   await ensureMcpToolsRegistered();
-
-  return listTools().map((tool) => ({
-    type: 'function' as const,
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: convertSchemaToJsonSchema(tool.inputSchema) as Record<string, unknown>,
-    },
-  }));
+  return listTools().map(toChatTool);
 }
 
 export async function planChatTools(input: {
@@ -58,6 +57,7 @@ export async function planChatTools(input: {
   messages: ChatMessages[];
 }): Promise<ChatToolPlan> {
   await ensureMcpToolsRegistered();
+  const definitions = listTools();
   const { output, usage } = await createStructuredChatCompletion({
     model: input.model,
     messages: [
@@ -70,13 +70,12 @@ export async function planChatTools(input: {
     maxCompletionTokens: 120,
   });
   const capabilities: ChatCapability[] = [...new Set(output.capabilities)];
-  const tools = (await getChatTools()).filter((tool) => {
-    if (!isFunctionTool(tool)) return false;
-    const definition = listTools().find((candidate) => candidate.name === tool.function.name);
-    return definition
-      ? getToolCapabilities(definition).some((capability) => capabilities.includes(capability))
-      : false;
-  });
+  const selectedCapabilities = new Set(capabilities);
+  const tools = definitions
+    .filter((definition) =>
+      getToolCapabilities(definition).some((capability) => selectedCapabilities.has(capability)),
+    )
+    .map(toChatTool);
   if (output.requiresLookup && tools.length === 0) {
     throw new Error('No eligible tool is available for this private-data request');
   }
@@ -84,7 +83,7 @@ export async function planChatTools(input: {
     model: input.model,
     capabilities,
     requiresLookup: output.requiresLookup,
-    candidateTools: tools.filter(isFunctionTool).map((tool) => tool.function.name),
+    candidateTools: tools.map((tool) => tool.function.name),
   });
   return { capabilities, requiresLookup: output.requiresLookup, tools, usage };
 }

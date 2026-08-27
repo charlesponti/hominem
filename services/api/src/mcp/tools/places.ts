@@ -15,7 +15,6 @@ registerTool(
     outputSchema: placeVisitHistoryOutputSchema,
     readOnly: true,
     scopes: ['places:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => getPlaceVisitHistory(ownerUserId, input),

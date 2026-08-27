@@ -25,7 +25,6 @@ registerTool(
     outputSchema: tagEntityOutputSchema,
     readOnly: false,
     scopes: ['tags:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => tagEntity(ownerUserId, input),
@@ -40,7 +39,6 @@ registerTool(
     outputSchema: untagEntityOutputSchema,
     readOnly: false,
     scopes: ['tags:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
     preview: async (ownerUserId, input) => {
@@ -68,7 +66,6 @@ registerTool(
     outputSchema: entityTagsOutputSchema,
     readOnly: true,
     scopes: ['tags:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   async (ownerUserId, input) => listEntityTags(ownerUserId, input),

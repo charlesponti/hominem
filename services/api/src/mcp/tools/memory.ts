@@ -14,10 +14,9 @@ import {
 } from '../../schemas/memory.schema';
 import { registerTool } from '../tools';
 
-// Marks a note as an assistant-managed memory via the otherwise-unused
-// `app.notes.source` column — no schema change needed, and memories show up
-// wherever notes already appear in the app.
-const MEMORY_SOURCE = 'memory';
+// Marks a note as an assistant-managed memory via the typed `kind` column —
+// memories show up wherever notes already appear in the app.
+const MEMORY_KIND = 'memory' as const;
 
 const noteService = new NoteService();
 
@@ -50,14 +49,13 @@ registerTool(
     outputSchema: rememberOutputSchema,
     readOnly: false,
     scopes: ['memory:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => {
     const note = await noteService.createNote(ownerUserId, {
       title: input.title ?? null,
       content: input.content,
-      source: MEMORY_SOURCE,
+      kind: MEMORY_KIND,
     });
     await enqueueMemoryEmbedding(ownerUserId, note.id);
     return toMemorySummary(note);
@@ -73,13 +71,12 @@ registerTool(
     outputSchema: listMemoriesOutputSchema,
     readOnly: true,
     scopes: ['memory:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => {
     const notes = await NoteRepository.list(db, {
       userId: ownerUserId,
-      source: MEMORY_SOURCE,
+      kind: MEMORY_KIND,
       sortBy: 'createdAt',
       sortOrder: 'desc',
       limit: input.limit ?? 20,
@@ -100,14 +97,13 @@ registerTool(
     outputSchema: searchMemoriesOutputSchema,
     readOnly: true,
     scopes: ['memory:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => {
     const limit = input.limit ?? 20;
     const notes = await NoteRepository.list(db, {
       userId: ownerUserId,
-      source: MEMORY_SOURCE,
+      kind: MEMORY_KIND,
       query: input.query,
       limit,
     });
@@ -119,7 +115,7 @@ registerTool(
     if (notes.length === 0) {
       const allNotes = await NoteRepository.list(db, {
         userId: ownerUserId,
-        source: MEMORY_SOURCE,
+        kind: MEMORY_KIND,
         limit,
       });
       return { memories: allNotes.map(toMemorySummary) };
@@ -137,14 +133,13 @@ registerTool(
     outputSchema: forgetMemoryOutputSchema,
     readOnly: false,
     scopes: ['memory:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
     preview: async (ownerUserId, input) => {
       const parsed = forgetMemoryInputSchema.safeParse(input);
       if (!parsed.success) return null;
       const note = await NoteRepository.getOwned(db, parsed.data.id, ownerUserId);
-      if (!note || note.source !== MEMORY_SOURCE) return null;
+      if (!note || note.kind !== MEMORY_KIND) return null;
       return {
         title: note.title ?? '(untitled)',
         excerpt: note.excerpt ?? note.content.slice(0, 200),
@@ -153,7 +148,7 @@ registerTool(
   },
   async (ownerUserId, input) => {
     const note = await NoteRepository.getOwned(db, input.id, ownerUserId);
-    if (!note || note.source !== MEMORY_SOURCE) {
+    if (!note || note.kind !== MEMORY_KIND) {
       return { removed: false };
     }
     await NoteRepository.hardDelete(db, { noteId: input.id, userId: ownerUserId });

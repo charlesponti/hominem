@@ -66,7 +66,7 @@ import {
   careerEngagementUpdateSchema,
   careerEngagementsQuerySchema,
   careerEngagementsSchema,
-  careerProfileSchema,
+  careerMcpProfileSchema,
   careerProjectDeleteSchema,
   careerProjectSchema,
   careerProjectUpdateSchema,
@@ -95,55 +95,33 @@ import {
   careerWishlistCompanySchema,
   careerWishlistCompanyUpdateSchema,
 } from '../../schemas/career.schema';
-import { logRedaction } from '../evidence';
 import { registerTool } from '../tools';
 
 const noInputSchema = z.object({});
 const profileResultSchema = z.object({
-  profile: careerProfileSchema.nullable(),
+  profile: careerMcpProfileSchema.nullable(),
 });
-
-const REDACTED_FIELDS = [
-  'baseSalary',
-  'signingBonus',
-  'annualBonus',
-  'currency',
-  'bonusHistory',
-  'salaryAdjustments',
-  'salaryRange',
-  'benefits',
-  'performanceRatings',
-  'reasonForLeaving',
-  'exitNotes',
-  'reportsTo',
-  'directReports',
-  'teamSize',
-];
 
 registerTool(
   {
     name: 'career_profile',
     title: 'Get your career profile',
-    description:
-      'Returns the authenticated user career profile (name, headline, summary, contact info).',
+    description: 'Returns the authenticated user career profile without contact information.',
     inputSchema: noInputSchema,
     outputSchema: profileResultSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, _input) => {
     const profile = await getCareerProfile(ownerUserId);
-    logRedaction('career_profile', REDACTED_FIELDS, profile ? 1 : 0);
-    return { profile };
+    return { profile: profile ? careerMcpProfileSchema.parse(profile) : null };
   },
 );
 
 const writeTool = {
   readOnly: false as const,
   scopes: ['career:write'] as ['career:write'],
-  sensitivity: 'sensitive' as const,
   resultCap: 1,
 };
 
@@ -497,12 +475,10 @@ registerTool(
     outputSchema: careerEngagementsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => {
     const result = await listCareerEngagements(ownerUserId, input);
-    logRedaction('career_engagements', REDACTED_FIELDS, result.engagements.length);
     return result;
   },
 );
@@ -516,7 +492,6 @@ registerTool(
     outputSchema: careerWishlistCompaniesSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   (ownerUserId, input) => listCareerWishlistCompanies(ownerUserId, input.limit),
@@ -531,7 +506,6 @@ registerTool(
     outputSchema: z.object({ company: careerWishlistCompanySchema }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => ({
@@ -548,7 +522,6 @@ registerTool(
     outputSchema: z.object({ company: careerWishlistCompanySchema.nullable() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => ({
@@ -565,7 +538,6 @@ registerTool(
     outputSchema: z.object({ removed: z.boolean() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
     preview: async (ownerUserId, input) => {
@@ -591,7 +563,6 @@ registerTool(
     outputSchema: z.object({ engagement: careerEngagementSchema.nullable() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => ({
@@ -608,7 +579,6 @@ registerTool(
     outputSchema: z.object({ removed: z.boolean() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
     preview: async (ownerUserId, input) => {
@@ -634,12 +604,10 @@ registerTool(
     outputSchema: careerApplicationsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => {
     const result = await listCareerApplications(ownerUserId, input);
-    logRedaction('career_applications', REDACTED_FIELDS, result.applications.length);
     return result;
   },
 );
@@ -653,12 +621,10 @@ registerTool(
     outputSchema: careerApplicationDetailSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => {
     const result = await getCareerApplicationDetail(ownerUserId, input.id);
-    logRedaction('career_application_detail', REDACTED_FIELDS, result.application ? 1 : 0);
     return result;
   },
 );
@@ -674,12 +640,10 @@ registerTool(
     outputSchema: careerEducationSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 20,
   },
   async (ownerUserId, input) => {
     const result = await listCareerEducation(ownerUserId, input.limit);
-    logRedaction('career_education', REDACTED_FIELDS, result.education.length);
     return result;
   },
 );
@@ -693,12 +657,10 @@ registerTool(
     outputSchema: careerSkillsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   async (ownerUserId, _input) => {
     const result = await listCareerSkills(ownerUserId);
-    logRedaction('career_skills', REDACTED_FIELDS, result.skills.length);
     return result;
   },
 );
@@ -712,12 +674,10 @@ registerTool(
     outputSchema: careerProjectsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   async (ownerUserId, _input) => {
     const result = await listCareerProjects(ownerUserId);
-    logRedaction('career_projects', REDACTED_FIELDS, result.projects.length);
     return careerProjectsSchema.parse(result);
   },
 );
@@ -732,7 +692,6 @@ registerTool(
     outputSchema: z.object({ project: careerProjectSchema.nullable() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, input) => ({
@@ -749,7 +708,6 @@ registerTool(
     outputSchema: z.object({ removed: z.boolean() }),
     readOnly: false,
     scopes: ['career:write'],
-    sensitivity: 'sensitive',
     resultCap: 1,
     requiresConfirmation: true,
     preview: async (ownerUserId, input) => {
@@ -774,12 +732,10 @@ registerTool(
     outputSchema: careerTestimonialsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   async (ownerUserId, _input) => {
     const result = await listCareerTestimonials(ownerUserId);
-    logRedaction('career_testimonials', REDACTED_FIELDS, result.testimonials.length);
     return result;
   },
 );
@@ -793,12 +749,10 @@ registerTool(
     outputSchema: careerCertificationsSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 100,
   },
   async (ownerUserId, _input) => {
     const result = await listCareerCertifications(ownerUserId);
-    logRedaction('career_certifications', REDACTED_FIELDS, result.certifications.length);
     return result;
   },
 );
@@ -812,12 +766,10 @@ registerTool(
     outputSchema: careerSocialLinksSchema,
     readOnly: true,
     scopes: ['career:read'],
-    sensitivity: 'sensitive',
     resultCap: 1,
   },
   async (ownerUserId, _input) => {
     const result = await getCareerSocialLinks(ownerUserId);
-    logRedaction('career_social_links', REDACTED_FIELDS, result.socialLinks ? 1 : 0);
     return result;
   },
 );

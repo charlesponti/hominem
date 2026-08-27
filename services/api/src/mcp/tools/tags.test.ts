@@ -8,6 +8,7 @@ const userId = 'd1000000-0000-4000-8000-000000000001';
 
 const personId = 'd1000001-0000-4000-8000-000000000001';
 const placeId = 'd1000002-0000-4000-8000-000000000001';
+const noteId = 'd1000003-0000-4000-8000-000000000001';
 
 type TestTag = { id: string; name: string };
 type TestResultContent = {
@@ -41,6 +42,14 @@ beforeAll(async () => {
     .values([{ id: placeId, ownerUserid: userId, name: 'Tag Target Place' }])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
+
+  await db
+    .insertInto('app.notes')
+    .values([
+      { id: noteId, ownerUserid: userId, kind: 'note', title: 'Tag Target Note', content: 'body' },
+    ])
+    .onConflict((oc) => oc.column('id').doNothing())
+    .execute();
 });
 
 describe('tag_entity / untag_entity / entity_tags', () => {
@@ -59,6 +68,23 @@ describe('tag_entity / untag_entity / entity_tags', () => {
       entityId: personId,
     });
     expect(resultContent(listed).tags).toEqual([{ id: data.tag?.id, name: 'Close Friend' }]);
+  });
+
+  it('creates a new tag and assigns it to a note (notes are graph nodes)', async () => {
+    const result = await callTool(userId, 'tag_entity', {
+      entityType: 'notes',
+      entityId: noteId,
+      tagName: 'Deep Work',
+    });
+    expect(resultContent(result).tag?.name).toBe('Deep Work');
+
+    const listed = await callTool(userId, 'entity_tags', {
+      entityType: 'notes',
+      entityId: noteId,
+    });
+    expect(resultContent(listed).tags).toEqual([
+      { id: resultContent(result).tag?.id, name: 'Deep Work' },
+    ]);
   });
 
   it('reuses an existing tag by name case-insensitively instead of creating a duplicate', async () => {

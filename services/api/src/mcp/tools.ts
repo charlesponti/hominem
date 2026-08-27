@@ -4,43 +4,6 @@ import * as z from 'zod';
 
 import type { CapabilityDefinition } from '../application/capability';
 
-export interface McpToolDefinition<
-  TInputSchema extends z.ZodType = z.ZodType,
-  TOutputSchema extends z.ZodType = z.ZodType,
-> {
-  name: string;
-  title: string;
-  description: string;
-  inputSchema: TInputSchema;
-  outputSchema: TOutputSchema;
-  readOnly: boolean;
-  scopes: CapabilityByScope[];
-  sensitivity: CapabilityDefinition['sensitivity'];
-  resultCap: number;
-  destructive?: boolean;
-  idempotent?: boolean;
-  openWorld?: boolean;
-  invoking?: string;
-  invoked?: string;
-  /**
-   * Gates in-app chat execution behind an explicit user approve/reject step
-   * (see chat-completion-loop.ts). Independent of `destructive`, which is a
-   * display annotation for the external MCP-over-HTTP surface.
-   */
-  requiresConfirmation?: boolean;
-  /**
-   * For `requiresConfirmation` tools: fetches a small, human-readable
-   * description of the specific record the call would affect (e.g. a
-   * skill's name and level, not just the id in the raw args), so the
-   * approval UI can show what's actually about to be deleted. Returning
-   * null means "couldn't resolve a preview" — the UI falls back to raw args.
-   */
-  preview?: (
-    ownerUserId: string,
-    input: Record<string, unknown>,
-  ) => Promise<Record<string, unknown> | null>;
-}
-
 export const CHAT_CAPABILITIES = [
   'calendar',
   'career',
@@ -58,7 +21,7 @@ export const CHAT_CAPABILITIES = [
 
 export type ChatCapability = (typeof CHAT_CAPABILITIES)[number];
 
-const capabilityByScope = {
+const capabilityByScope: Record<string, ChatCapability> = {
   'calendar:read': 'calendar',
   'career:read': 'career',
   'career:write': 'career',
@@ -76,10 +39,16 @@ const capabilityByScope = {
   'tags:write': 'tags',
   'travel:read': 'travel',
 } as const;
-export type CapabilityByScope = keyof typeof capabilityByScope;
 
-export function getToolCapabilities(definition: McpToolDefinition): ChatCapability[] {
-  return [...new Set(definition.scopes.flatMap((scope) => capabilityByScope[scope] ?? []))];
+export function getToolCapabilities(definition: CapabilityDefinition): ChatCapability[] {
+  return [
+    ...new Set(
+      definition.scopes.flatMap((scope) => {
+        const capability = capabilityByScope[scope];
+        return capability ? [capability] : [];
+      }),
+    ),
+  ];
 }
 
 export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
@@ -88,7 +57,7 @@ export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
 };
 
 type RegisteredTool = {
-  definition: McpToolDefinition;
+  definition: CapabilityDefinition;
   invoke: (ownerUserId: string, input: unknown) => Promise<unknown>;
 };
 
@@ -121,23 +90,27 @@ function enforceResultCap(
 
 const tools = new Map<string, RegisteredTool>();
 
-export function listTools(): McpToolDefinition[] {
-  return [...tools.values()].map((t) => t.definition);
+export function listTools(): CapabilityDefinition[] {
+  return [...tools.values()].map(({ definition }) => definition);
 }
 
-export function listToolsForScopes(grantedScopes: readonly string[]): McpToolDefinition[] {
+export function listToolsForScopes(grantedScopes: readonly string[]): CapabilityDefinition[] {
   const granted = new Set(grantedScopes);
   return listTools().filter((tool) => tool.scopes.every((scope) => granted.has(scope)));
 }
 
-export function getToolDefinition(name: string): McpToolDefinition | undefined {
+export function getToolDefinition(name: string): CapabilityDefinition | undefined {
   return tools.get(name)?.definition;
 }
 
 export function registerTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodType>(
-  definition: McpToolDefinition<TInputSchema, TOutputSchema>,
+  definition: CapabilityDefinition<string, TInputSchema, TOutputSchema>,
   invoke: (ownerUserId: string, input: z.output<TInputSchema>) => Promise<z.output<TOutputSchema>>,
 ): void {
+  if (tools.has(definition.name)) {
+    throw new ValidationError(`MCP tool is already registered: ${definition.name}`);
+  }
+
   tools.set(definition.name, {
     definition,
     invoke: (ownerUserId, input) => invoke(ownerUserId, definition.inputSchema.parse(input)),

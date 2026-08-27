@@ -327,7 +327,6 @@ describe('mcp server transport', () => {
         outputSchema: z.object({ value: z.string() }),
         readOnly: true,
         scopes: ['career:read'],
-        sensitivity: 'standard',
         resultCap: 1,
       },
       async () => {

@@ -34,9 +34,12 @@ export interface NoteFileRecord {
   metadata?: Record<string, unknown>;
 }
 
+export type NoteKind = 'note' | 'memory';
+
 export interface NoteRecord {
   id: string;
   userId: string;
+  kind: NoteKind;
   title: string | null;
   content: string;
   excerpt: string | null;
@@ -47,10 +50,10 @@ export interface NoteRecord {
 
 export interface CreateNoteInput {
   userId: string;
+  kind?: NoteKind;
   title: string | null;
   content: string;
   excerpt: string | null;
-  source?: string | null;
 }
 
 export interface UpdateNoteInput {
@@ -78,7 +81,7 @@ export interface ListNotesInput {
   offset?: number;
   since?: string;
   query?: string;
-  source?: string;
+  kind?: NoteKind;
   sortBy?: 'createdAt' | 'updatedAt' | 'title';
   sortOrder?: 'asc' | 'desc';
 }
@@ -121,6 +124,7 @@ function toNoteRecord(row: NoteRow, files: NoteFileRecord[]): NoteRecord {
   return {
     id: row.id,
     userId: row.ownerUserid,
+    kind: row.kind as NoteKind,
     title: row.title,
     content: row.content,
     excerpt: row.excerpt,
@@ -239,8 +243,8 @@ export const NoteRepository = {
       query = query.where('updatedat', '>=', new Date(input.since).toISOString());
     }
 
-    if (input.source) {
-      query = query.where('source', '=', input.source);
+    if (input.kind) {
+      query = query.where('kind', '=', input.kind);
     }
 
     if (input.query) {
@@ -332,10 +336,10 @@ export const NoteRepository = {
       .insertInto('app.notes')
       .values({
         ownerUserid: input.userId,
+        kind: input.kind ?? 'note',
         title: input.title,
         content: input.content,
         excerpt: input.excerpt,
-        ...(input.source !== undefined ? { source: input.source } : {}),
       })
       .returningAll()
       .executeTakeFirstOrThrow();

@@ -1,11 +1,11 @@
-import type { NoteRecord } from '@hominem/db';
+import type { NoteKind, NoteRecord } from '@hominem/db';
 import { NoteRepository, runInTransaction } from '@hominem/db';
 
 interface CreateNoteParams {
+  kind?: NoteKind;
   title?: string | null | undefined;
   content: string;
   fileIds?: string[];
-  source?: string | null;
 }
 
 interface UpdateNoteParams {
@@ -24,10 +24,10 @@ export class NoteService {
 
       const created = await NoteRepository.create(trx, {
         userId,
+        kind: input.kind,
         title,
         content,
         excerpt,
-        source: input.source ?? null,
       });
 
       await NoteRepository.syncFiles(trx, {

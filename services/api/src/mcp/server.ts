@@ -7,9 +7,10 @@ import {
 } from '@modelcontextprotocol/server';
 import type { Context } from 'hono';
 
+import type { CapabilityDefinition } from '../application/capability';
 import type { AuthContext } from '../auth/types';
 import { UnauthorizedError } from '../errors';
-import { callTool, listToolsForScopes, type McpToolDefinition } from './tools';
+import { callTool, listToolsForScopes } from './tools';
 
 export type McpHonoEnv = {
   Variables: {
@@ -42,7 +43,7 @@ function hasRequiredScopes(grantedScopes: Set<string>, requiredScopes: readonly 
   return requiredScopes.every((scope) => grantedScopes.has(scope));
 }
 
-function createToolHandler(definition: McpToolDefinition, fallbackAuthInfo?: AuthInfo) {
+function createToolHandler(definition: CapabilityDefinition, fallbackAuthInfo?: AuthInfo) {
   return async (args: unknown, extra: { authInfo?: AuthInfo }) => {
     const context = resolveRequestContext(extra.authInfo ?? fallbackAuthInfo);
     if (!context) {

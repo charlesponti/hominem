@@ -13,6 +13,7 @@ export const ENTITY_TABLE_MAP: Record<EntityType, string> = {
   people: 'app.people',
   places: 'app.places',
   possessions: 'app.possessions',
+  notes: 'app.notes',
 };
 
 function slugify(name: string): string {
@@ -148,6 +149,16 @@ export async function getEntityDisplayName(
     if (row.displayName) return row.displayName;
     const fullName = [row.firstName, row.lastName].filter(Boolean).join(' ');
     return fullName || null;
+  }
+
+  if (entityType === 'notes') {
+    const row = await db
+      .selectFrom('app.notes')
+      .select('title')
+      .where('id', '=', entityId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+    return row?.title || '(untitled note)';
   }
 
   const table = entityType === 'places' ? 'app.places' : 'app.possessions';
