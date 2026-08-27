@@ -20,11 +20,12 @@
   "scripts": {
     "build": "turbo run build",
     "check": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test AUTH_E2E_SECRET=otp-secret pnpm run check:all",
-    "check:all": "pnpm run lint && pnpm run typecheck && pnpm run build && pnpm run test",
-    "dev": "turbo run dev --ui stream --filter='!@hominem/omiro'",
-    "dev:api": "turbo run dev --filter @hominem/api",
-    "dev:career": "turbo run dev --filter @hominem/career",
-    "dev:finance": "turbo run dev --filter @hominem/finance",
+    "check:all": "pnpm run check:dts && pnpm run lint && pnpm run build && pnpm run typecheck && pnpm run test",
+    "dev": "turbo run dev:types dev --ui stream --filter='!@hominem/omiro'",
+    "dev:api": "turbo run dev:types dev --filter @hominem/api",
+    "dev:career": "turbo run dev:types dev --filter @hominem/career",
+    "dev:finance": "turbo run dev:types dev --filter @hominem/finance",
+    "dev:types": "bash scripts/watch-types.sh",
     "dev:worker": "pnpm run --filter @hominem/api dev:worker",
     "mobile:prebuild": "pnpm --filter @hominem/omiro prebuild:dev",
     "mobile:dev": "pnpm --filter @hominem/omiro dev",
@@ -35,7 +36,8 @@
     "lint:fix": "turbo run lint:fix",
     "test": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test AUTH_E2E_SECRET=otp-secret turbo run test",
     "typecheck": "turbo run typecheck",
-    "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' ."
+    "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' .",
+    "check:dts": "bash scripts/check-src-declarations.sh"
   },
   "dependencies": {
     "@ponti-studios/ui": "catalog:"

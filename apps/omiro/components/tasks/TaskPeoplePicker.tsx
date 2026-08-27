@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { useStyles, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import {
@@ -22,6 +22,35 @@ export function TaskPeoplePicker({
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [createError, setCreateError] = useState('');
+  const styles = useStyles((theme) => ({
+    container: { gap: 12 },
+    selectedList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    personChip: {
+      backgroundColor: withAlpha(theme.colors.primary, 0.15),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    personName: { ...theme.textVariants.footnote, color: theme.colors.foreground },
+    removeIcon: { ...theme.textVariants.footnote, color: theme.colors.mutedForeground },
+    resultRow: {
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      borderWidth: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    resultName: { color: theme.colors.foreground },
+    resultEmail: { color: theme.colors.mutedForeground },
+    createForm: { gap: 12 },
+    createError: { ...theme.textVariants.footnote, color: theme.colors.destructive },
+    createActions: { flexDirection: 'row', gap: 8 },
+    cancelAction: { flex: 1 },
+    submitAction: { flex: 1 },
+  }));
   const peopleQuery = usePeopleSearch(query);
   const createPerson = useCreatePerson();
   const results = peopleQuery.data?.people ?? [];
@@ -145,33 +174,3 @@ export function TaskPeoplePicker({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { gap: 12 },
-  selectedList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  personChip: {
-    backgroundColor: withAlpha(theme.colors.primary, 0.15),
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  personName: { ...theme.typography.footnote, color: theme.colors.foreground },
-  removeIcon: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
-  resultRow: {
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  resultName: { color: theme.colors.foreground },
-  resultEmail: { color: theme.colors.mutedForeground },
-  createForm: { gap: 12 },
-  createError: { ...theme.typography.footnote, color: theme.colors.destructive },
-  createActions: { flexDirection: 'row', gap: 8 },
-  cancelAction: { flex: 1 },
-  submitAction: { flex: 1 },
-}));

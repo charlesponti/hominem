@@ -1,8 +1,5 @@
 import type { z } from 'zod';
 
-type CapabilityTransport = 'rpc' | 'mcp';
-type Sensitivity = 'standard' | 'sensitive' | 'highly_sensitive' | 'public';
-
 export interface CapabilityDefinition<
   Name extends string = string,
   InputSchema extends z.ZodType = z.ZodType,
@@ -15,9 +12,17 @@ export interface CapabilityDefinition<
   outputSchema: OutputSchema;
   readOnly: boolean;
   scopes: readonly string[];
-  sensitivity: Sensitivity;
   resultCap: number;
-  transports: readonly CapabilityTransport[];
+  destructive?: boolean;
+  idempotent?: boolean;
+  openWorld?: boolean;
+  invoking?: string;
+  invoked?: string;
+  requiresConfirmation?: boolean;
+  preview?: (
+    ownerUserId: string,
+    input: Record<string, unknown>,
+  ) => Promise<Record<string, unknown> | null>;
 }
 
 export type CapabilityInput<T extends CapabilityDefinition> = z.infer<T['inputSchema']>;
@@ -39,18 +44,4 @@ export function parseCapabilityOutput<T extends CapabilityDefinition>(
   output: unknown,
 ): CapabilityOutput<T> {
   return definition.outputSchema.parse(output) as CapabilityOutput<T>;
-}
-
-export function assertReadOnlyMcpCapability(definition: CapabilityDefinition): void {
-  if (!definition.transports.includes('mcp')) {
-    return;
-  }
-
-  if (!definition.readOnly) {
-    throw new Error(`MCP capability must be read-only: ${definition.name}`);
-  }
-
-  if (definition.resultCap < 1 || definition.resultCap > 50) {
-    throw new Error(`MCP capability resultCap must be between 1 and 50: ${definition.name}`);
-  }
 }

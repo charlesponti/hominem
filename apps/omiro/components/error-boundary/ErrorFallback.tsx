@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 
@@ -23,7 +23,22 @@ export function ErrorFallback({
   onAction,
   buttonVariant = 'primary',
 }: ErrorFallbackProps) {
-  const [destructive] = useThemeColor(['--color-destructive']) as string[];
+  const { destructive } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+    content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
+    message: { lineHeight: 22, textAlign: 'center', color: theme.colors.mutedForeground },
+    debugMessage: {
+      ...theme.textVariants.caption1,
+      fontFamily: 'Menlo',
+      lineHeight: 18,
+      textAlign: 'center',
+      color: theme.colors.tertiary,
+    },
+    title: { fontWeight: '700', textAlign: 'center', color: theme.colors.foreground },
+    title1: theme.textVariants.title1,
+    title2: theme.textVariants.title2,
+  }));
 
   return (
     <View style={styles.container}>
@@ -41,19 +56,3 @@ export function ErrorFallback({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
-  message: { lineHeight: 22, textAlign: 'center', color: theme.colors.mutedForeground },
-  debugMessage: {
-    ...theme.typography.caption1,
-    fontFamily: 'Menlo',
-    lineHeight: 18,
-    textAlign: 'center',
-    color: theme.colors.tertiary,
-  },
-  title: { fontWeight: '700', textAlign: 'center', color: theme.colors.foreground },
-  title1: theme.typography.title1,
-  title2: theme.typography.title2,
-}));

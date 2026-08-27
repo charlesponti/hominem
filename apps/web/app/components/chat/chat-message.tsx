@@ -160,8 +160,9 @@ export const ChatMessage = memo(function ChatMessage({
     regenerationStatus === 'streaming' ||
     regenerationStatus === 'stopping';
   const isRegenerationStopping = regenerationStatus === 'stopping';
-  const canEdit = message.role === 'user' && !message.isStreaming && Boolean(onEdit);
-  const canDelete = message.role === 'user' && !message.isStreaming && Boolean(onDelete);
+  const isUserNotStreaming = message.role === 'user' && !message.isStreaming;
+  const canEdit = isUserNotStreaming && Boolean(onEdit);
+  const canDelete = isUserNotStreaming && Boolean(onDelete);
   const hasReasoning = Boolean(message.reasoning?.trim());
   const presentationState = message.failed
     ? message.role === 'assistant'
@@ -266,7 +267,7 @@ export const ChatMessage = memo(function ChatMessage({
               <m.div
                 animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}
                 initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(4px)' }}
-                key={`message-content-${message.id}-${message.updatedAt}`}
+                key={`message-content-${message.id}`}
                 transition={{
                   duration: reduceMotion ? 0.08 : 0.18,
                   ease: [0.23, 1, 0.32, 1],

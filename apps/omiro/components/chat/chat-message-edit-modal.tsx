@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
@@ -21,11 +21,23 @@ export function MessageEditModal({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const [textPrimary, card, borderDefault] = useThemeColor([
-    '--color-foreground',
-    '--color-card',
-    '--color-border',
-  ]) as string[];
+  const { foreground: textPrimary, card, border: borderDefault } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    modalContainer: { paddingHorizontal: 20, width: '100%' },
+    modalCard: {
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      width: '100%',
+    },
+    modalActions: { flexDirection: 'row', gap: 8 },
+    cancelAction: { flex: 1 },
+    saveAction: { flex: 1 },
+  }));
 
   return (
     <ModalOverlay
@@ -75,20 +87,3 @@ export function MessageEditModal({
     </ModalOverlay>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  modalContainer: { paddingHorizontal: 20, width: '100%' },
-  modalCard: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    width: '100%',
-  },
-  modalActions: { flexDirection: 'row', gap: 8 },
-  cancelAction: { flex: 1 },
-  saveAction: { flex: 1 },
-}));

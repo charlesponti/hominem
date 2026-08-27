@@ -42,10 +42,6 @@ export const apiSchema = baseSchema.extend({
   RESEND_API_KEY: z.string(),
   RESEND_FROM_EMAIL: z.string(),
   RESEND_FROM_NAME: z.string(),
-  SEND_EMAILS: z
-    .enum(['true', 'false'])
-    .default('false')
-    .describe('Whether to actually send emails via Resend'),
   OPENROUTER_API_KEY: z.string(),
   SENTRY_DSN: z.string().optional(),
   OPENAI_APPS_CHALLENGE: z.string().optional(),

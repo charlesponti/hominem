@@ -8,7 +8,7 @@ import { Pressable, Text, View } from 'react-native';
 import { PRESET_INSTRUCTIONS } from '~/components/chat/build-note-draft';
 import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
 import { NoteDraftPreview } from '~/components/notes/NoteDraftPreview';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -47,7 +47,44 @@ export default function ChatToNoteSheetScreen() {
   const [instruction, setInstruction] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const customInputRef = useRef<TextInput>(null);
-  const [mutedForeground] = useThemeColor(['--color-muted-foreground']) as string[];
+  const { mutedForeground } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    container: { flex: 1, paddingHorizontal: 16, paddingTop: 36, paddingBottom: 24, gap: 24 },
+    title: {
+      ...theme.textVariants.headline,
+      color: theme.colors.foreground,
+      ...theme.textVariants.title1,
+    },
+    label: {
+      ...theme.textVariants.footnote,
+      color: theme.colors.mutedForeground,
+      marginTop: 4,
+    },
+    selectRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.colors.popover,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    selectRowLabel: { ...theme.textVariants.body, color: theme.colors.foreground },
+    customInput: {
+      backgroundColor: theme.colors.popover,
+      borderRadius: 12,
+      color: theme.colors.foreground,
+      fontSize: 15,
+      lineHeight: 20,
+      minHeight: 88,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      textAlignVertical: 'top',
+    },
+    error: { ...theme.textVariants.footnote, color: theme.colors.destructive },
+    footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+    submitButton: { flex: 1 },
+  }));
 
   const isLoading = phase.kind === 'loading';
 
@@ -198,41 +235,3 @@ export default function ChatToNoteSheetScreen() {
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 36, paddingBottom: 24, gap: 24 },
-  title: {
-    ...theme.typography.headline,
-    color: theme.colors.foreground,
-    ...theme.typography.title1,
-  },
-  label: {
-    ...theme.typography.footnote,
-    color: theme.colors.mutedForeground,
-    marginTop: 4,
-  },
-  selectRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.popover,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  selectRowLabel: { ...theme.typography.body, color: theme.colors.foreground },
-  customInput: {
-    backgroundColor: theme.colors.popover,
-    borderRadius: 12,
-    color: theme.colors.foreground,
-    fontSize: 15,
-    lineHeight: 20,
-    minHeight: 88,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    textAlignVertical: 'top',
-  },
-  error: { ...theme.typography.footnote, color: theme.colors.destructive },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
-  submitButton: { flex: 1 },
-}));

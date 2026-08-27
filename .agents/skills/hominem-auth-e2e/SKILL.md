@@ -82,7 +82,7 @@ bash-startup round trip it doesn't need to.
 ## Using it standalone
 
 ```bash
-D=.claude/skills/hominem-auth-e2e/driver.sh
+D=.agents/skills/hominem-auth-e2e/driver.sh
 $D signin-default
 $D whoami test@hominem.local
 
@@ -99,8 +99,14 @@ $D delete-user owner-e2e@test.hominem.dev
 3. The OTP screen is 6 separate single-char boxes, not one field.
    **Bulk `type("000000")` only fills the first box** — click the first
    box once, then issue six separate single-character `type("0")` calls;
-   focus auto-advances between boxes. Dev mode always accepts `000000`
-   regardless of what a real code would be.
+   focus auto-advances between boxes. `000000` works because the dev API
+   *generates* that exact code (better-auth 1.7+ removed the old hardcoded
+   `000000` verification bypass — verification is a strict compare against
+   the stored code). It is also single-use: the stored code is consumed on
+   the first attempt, so always request a fresh code before signing in
+   (the curl helpers always send first; a browser session that verifies
+   once then signs out must walk the flow again, not re-type the same
+   code — it would fail with INVALID_OTP).
 4. Click Verify — redirects back to `:4445`, signed in.
 
 ## Logging the browser out

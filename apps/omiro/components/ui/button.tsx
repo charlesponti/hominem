@@ -9,7 +9,7 @@ import {
   type PressableStateCallbackType,
 } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 
 /**
  * shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
@@ -44,15 +44,14 @@ export function Button({
   variant = 'primary',
   testID,
 }: ButtonProps) {
-  const [primary, primaryForeground, muted, destructive, borderDefault, textPrimary] =
-    useThemeColor([
-      '--color-primary',
-      '--color-primary-foreground',
-      '--color-muted',
-      '--color-destructive',
-      '--color-border',
-      '--color-foreground',
-    ]) as string[];
+  const {
+    primary,
+    primaryForeground,
+    muted,
+    destructive,
+    border: borderDefault,
+    foreground: textPrimary,
+  } = useAppTheme().colors;
 
   const colorTokens = useMemo(
     () => ({
@@ -110,6 +109,19 @@ export function Button({
     [variant, textColor, disabled],
   );
 
+  const styles = useStyles((theme) => ({
+    button: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'stretch',
+      borderRadius: theme.borderRadii.md,
+    },
+    smallButton: { paddingVertical: 8, paddingHorizontal: 16, height: 36 },
+    mediumButton: { paddingVertical: 12, paddingHorizontal: 16, height: 44 },
+    smallText: { ...theme.textVariants.footnote, fontWeight: '600' },
+    mediumText: { ...theme.textVariants.body, fontWeight: '600', lineHeight: 20 },
+  }));
+
   const isInteractionDisabled = disabled || loading;
 
   const pressableStyle = useCallback(
@@ -143,16 +155,3 @@ export function Button({
     </Pressable>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  button: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'stretch',
-    borderRadius: theme.radius.md,
-  },
-  smallButton: { paddingVertical: 8, paddingHorizontal: 16, height: 36 },
-  mediumButton: { paddingVertical: 12, paddingHorizontal: 16, height: 44 },
-  smallText: { ...theme.typography.footnote, fontWeight: '600' },
-  mediumText: { ...theme.typography.body, fontWeight: '600', lineHeight: 20 },
-}));

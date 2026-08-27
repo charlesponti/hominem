@@ -11,7 +11,8 @@ describe('ChatResponseSettings', () => {
     const onClose = vi.fn();
     render(<ChatResponseSettings onChange={onChange} onClose={onClose} value="medium" />);
 
-    fireEvent.change(screen.getByLabelText('Response length'), { target: { value: 'long' } });
+    fireEvent.change(screen.getByLabelText('Response length'), { target: { value: '2' } });
+    expect(onChange).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Close response settings' }));
 
     expect(onChange).toHaveBeenCalledWith('long');

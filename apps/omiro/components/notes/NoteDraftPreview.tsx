@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
 
@@ -28,11 +28,15 @@ interface NoteDraftPreviewProps {
 // heading. While loading, pulses skeleton bars instead of text that doesn't
 // exist yet; once settled, crossfades into the real content.
 export function NoteDraftPreview({ text, isLoading, testID }: NoteDraftPreviewProps) {
-  const [foreground, muted, popover] = useThemeColor([
-    '--color-foreground',
-    '--color-muted',
-    '--color-popover',
-  ]) as string[];
+  const { foreground, muted, popover } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    container: { borderRadius: 12, flex: 1, padding: 12 },
+    scroll: { flex: 1 },
+    scrollContent: { flexGrow: 1 },
+    skeleton: { gap: 10 },
+    skeletonBar: { borderRadius: 6, height: 14 },
+    text: { ...theme.textVariants.body },
+  }));
   const reducedMotion = useReducedMotion();
   const opacity = useSharedValue(isLoading ? 1 : 0);
 
@@ -86,12 +90,3 @@ export function NoteDraftPreview({ text, isLoading, testID }: NoteDraftPreviewPr
     </Animated.View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { borderRadius: 12, flex: 1, padding: 12 },
-  scroll: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
-  skeleton: { gap: 10 },
-  skeletonBar: { borderRadius: 6, height: 14 },
-  text: { ...theme.typography.body },
-}));

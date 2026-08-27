@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 
@@ -21,15 +21,64 @@ export const TimeRow = memo(function TimeRow({
   onToggleTask,
   showDayLabel,
 }: TimeRowProps) {
-  const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useThemeColor([
-    '--color-chart-1',
-    '--color-chart-2',
-    '--color-chart-3',
-    '--color-chart-4',
-    '--color-chart-5',
-    '--color-success',
-    '--color-muted',
-  ]) as string[];
+  const {
+    chart1,
+    chart2,
+    chart3,
+    chart4,
+    chart5,
+    success: successColor,
+    muted,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    dayHeader: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      paddingTop: 20,
+    },
+    dayLabel: {
+      ...theme.textVariants.caption2,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0,
+      color: theme.colors.foreground,
+    },
+    dayDate: {
+      ...theme.textVariants.caption2,
+      textTransform: 'uppercase',
+      letterSpacing: 0,
+      color: theme.colors.mutedForeground,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      gap: 12,
+      borderBottomWidth: 1,
+      borderColor: theme.colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    timeColumn: { width: 64, alignItems: 'flex-end', paddingTop: 2 },
+    timePrimary: {
+      ...theme.textVariants.caption2,
+      fontFamily: 'Menlo',
+      letterSpacing: 0,
+      color: theme.colors.mutedForeground,
+    },
+    timeSecondary: {
+      ...theme.textVariants.caption2,
+      fontFamily: 'Menlo',
+      letterSpacing: 0,
+      color: theme.colors.mutedForeground,
+      opacity: 0.6,
+    },
+    accentBar: { width: 4, borderRadius: 999 },
+    itemContent: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
+    itemTitle: { ...theme.textVariants.body, color: theme.colors.foreground },
+    itemSupportingText: { ...theme.textVariants.caption2, color: theme.colors.mutedForeground },
+  }));
   const isTask = item.kind === 'task';
   const completed = isTask && item.value.status === 'completed';
   const supportingText = isTask
@@ -105,53 +154,3 @@ export const TimeRow = memo(function TimeRow({
     </View>
   );
 });
-
-const styles = makeStyles((theme) => ({
-  dayHeader: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    paddingTop: 20,
-  },
-  dayLabel: {
-    ...theme.typography.caption2,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0,
-    color: theme.colors.foreground,
-  },
-  dayDate: {
-    ...theme.typography.caption2,
-    textTransform: 'uppercase',
-    letterSpacing: 0,
-    color: theme.colors.mutedForeground,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    gap: 12,
-    borderBottomWidth: 1,
-    borderColor: theme.colors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  timeColumn: { width: 64, alignItems: 'flex-end', paddingTop: 2 },
-  timePrimary: {
-    ...theme.typography.caption2,
-    fontFamily: 'Menlo',
-    letterSpacing: 0,
-    color: theme.colors.mutedForeground,
-  },
-  timeSecondary: {
-    ...theme.typography.caption2,
-    fontFamily: 'Menlo',
-    letterSpacing: 0,
-    color: theme.colors.mutedForeground,
-    opacity: 0.6,
-  },
-  accentBar: { width: 4, borderRadius: 999 },
-  itemContent: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
-  itemTitle: { ...theme.typography.body, color: theme.colors.foreground },
-  itemSupportingText: { ...theme.typography.caption2, color: theme.colors.mutedForeground },
-}));

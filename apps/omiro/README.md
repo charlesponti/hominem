@@ -126,14 +126,12 @@ Motion should explain continuity, not compete for attention. It should preserve 
 
 ### Chat conversation motion
 
-Chat uses **kinetic correspondence**: the composer is the physical source of a
-new turn, and the transcript is the durable record. Motion may explain that
-handoff, but it must never delay reading, typing, scrolling, or recovering a
-message.
+Chat animates only new-message events; motion must never delay reading,
+typing, scrolling, or recovering a message. See
+[docs/chat.design.md](../../docs/chat.design.md) for the full rule set.
 
-- A submitted user message may travel from the composer and settle in its
-  transcript position as a short, upward "toast" handoff. The handoff is
-  acknowledgement and spatial continuity, not a second copy of the message.
+- A submitted user message lifts and fades in at its own position in the
+  transcript — a plain row entrance, not a clone traveling from the composer.
 - An active assistant reply is a printer surface. Before text arrives, an
   in-surface activity carriage signals that the reply is being produced. Once
   text arrives, render it immediately as stream data is received; do not batch,

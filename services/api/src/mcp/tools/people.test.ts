@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './people';
+import { callTool, type McpToolResult } from '../tool-registry';
 
 const userId = 'b1000000-0000-4000-8000-000000000001';
 
@@ -210,9 +211,6 @@ beforeAll(async () => {
 
 describe('people_lookup', () => {
   it('matches on display name and returns contact/organization details', async () => {
-    await import('./people');
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'people_lookup', { query: 'ada', limit: 10 });
     const data = resultContent(result);
 
@@ -226,8 +224,6 @@ describe('people_lookup', () => {
   });
 
   it('matches on alias', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'people_lookup', { query: 'Amazing Grace', limit: 10 });
     const data = resultContent(result);
 
@@ -236,8 +232,6 @@ describe('people_lookup', () => {
   });
 
   it('includes tag names via the generic tag-assignment join', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'people_lookup', { query: 'Grace', limit: 10 });
     const data = resultContent(result);
 
@@ -245,8 +239,6 @@ describe('people_lookup', () => {
   });
 
   it('returns no matches for an unrelated query', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'people_lookup', { query: 'nonexistent-xyz', limit: 10 });
     expect(resultContent(result).count).toBe(0);
   });
@@ -254,9 +246,6 @@ describe('people_lookup', () => {
 
 describe('person_timeline', () => {
   it('returns the person summary with calendar events, trips, and relations', async () => {
-    await import('./people');
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'person_timeline', { personId: adaId });
     const data = resultContent(result);
 
@@ -293,8 +282,6 @@ describe('person_timeline', () => {
   });
 
   it('returns an empty timeline for a person not owned by the caller', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'person_timeline', {
       personId: '99999999-9999-4999-8999-999999999999',
     });

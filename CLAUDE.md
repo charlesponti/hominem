@@ -4,4 +4,4 @@ Never start long-running services (Expo/Metro, `pnpm dev`, the API, workers, dat
 
 The root [AGENTS.md](AGENTS.md) is the sole agent instruction authority for this repository.
 
-For Career and Finance production authentication, follow [docs/auth-production.md](docs/auth-production.md): browsers use the API hosted login and public API URL, while SSR session and data calls require the private Railway API URL.
+For how web authentication works — the hosted login, the shared session cookie, and how apps talk to the API — follow [docs/authentication.md](docs/authentication.md): browsers use the API hosted login and public API URL, while SSR session and data calls require the private (Railway in production) API URL.

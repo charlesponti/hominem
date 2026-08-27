@@ -2,6 +2,11 @@ import { createHash } from 'node:crypto';
 
 const MAX_REQUESTS_PER_SEC = 5;
 const WINDOW_SEC = 1;
+const INCREMENT_SCRIPT = `
+  local count = redis.call('INCR', KEYS[1])
+  if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+  return count
+`;
 
 function rateLimitKey(userId: string) {
   const identifier = createHash('sha256').update(userId).digest('hex').slice(0, 32);
@@ -20,10 +25,9 @@ export type RateLimitResult = 'allowed' | 'limited' | 'unavailable';
 export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
   try {
     const { redis } = await import('@hominem/services/redis');
-    const count = await redis.incr(rateLimitKey(userId));
-    if (count === 1) {
-      await redis.expire(rateLimitKey(userId), WINDOW_SEC);
-    }
+    const count = Number(
+      await redis.eval(INCREMENT_SCRIPT, 1, rateLimitKey(userId), String(WINDOW_SEC)),
+    );
     return count > MAX_REQUESTS_PER_SEC ? 'limited' : 'allowed';
   } catch {
     return 'unavailable';

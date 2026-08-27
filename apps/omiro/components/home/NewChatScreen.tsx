@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import {
   clearNewChatDraft,
   readNewChatDraft,
@@ -16,6 +16,9 @@ export function NewChatScreen() {
   const { seed } = useLocalSearchParams<{ seed?: string }>();
   const { safeAreaBottom } = useComposerDockMetrics();
   const initialMessage = seed?.trim() || readNewChatDraft();
+  const styles = useStyles((theme) => ({
+    container: { backgroundColor: theme.colors.background, flex: 1 },
+  }));
 
   return (
     <View style={styles.container} testID="new-chat-screen">
@@ -33,7 +36,3 @@ export function NewChatScreen() {
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { backgroundColor: theme.colors.background, flex: 1 },
-}));

@@ -11,7 +11,7 @@ import {
   healthSleepSummaryInputSchema,
   healthSleepSummaryOutputSchema,
 } from '../../schemas/health.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {
@@ -23,7 +23,6 @@ registerTool(
     outputSchema: healthDailySummaryOutputSchema,
     readOnly: true,
     scopes: ['health:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => listHealthDailySummary(ownerUserId, input),
@@ -39,7 +38,6 @@ registerTool(
     outputSchema: healthRecentWorkoutsOutputSchema,
     readOnly: true,
     scopes: ['health:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => listHealthRecentWorkouts(ownerUserId, input),
@@ -55,7 +53,6 @@ registerTool(
     outputSchema: healthSleepSummaryOutputSchema,
     readOnly: true,
     scopes: ['health:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => listHealthSleepSummary(ownerUserId, input),

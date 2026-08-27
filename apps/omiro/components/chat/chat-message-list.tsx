@@ -4,7 +4,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 
 import { ChatActivityTimeline } from './chat-activity-timeline';
@@ -80,6 +80,15 @@ export function ChatMessageList({
   onCancelGeneration,
   onRetryGeneration,
 }: ChatMessageListProps) {
+  const styles = useStyles((theme) => ({
+    emptySearch: { alignItems: 'center', paddingTop: 28 },
+    emptySearchText: { fontFamily: 'Menlo', color: theme.colors.tertiary },
+    loadingState: { flex: 1, paddingTop: 12 },
+    emptyState: { flex: 1 },
+    list: { flex: 1 },
+    bottomSentinel: { flexGrow: 1, minHeight: 32 },
+    itemSeparator: { height: 20 },
+  }));
   const renderedMessages = useMemo(
     () =>
       generation?.targetMessageId
@@ -164,21 +173,30 @@ export function ChatMessageList({
   );
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
-    ({ item }) => (
-      <ChatMessage
-        formatTimestamp={formatTimestamp}
-        message={item}
-        {...{
-          isActive: !item.isStreaming && activeActionMessageId === item.id,
-          onActivate: item.isStreaming ? undefined : onActivate,
-          onEdit: item.isStreaming ? undefined : onEdit,
-          onRegenerate: item.isStreaming ? undefined : onRegenerate,
-          onDelete: item.isStreaming ? undefined : onDelete,
-          onRetry,
-          showDebug,
-        }}
-      />
-    ),
+    ({ item }) => {
+      // A row is "new" only once its id hasn't been seen by the announcement
+      // bookkeeping above -- which is itself seeded from the first
+      // non-loading render, so historical rows (chat open, pagination) never
+      // qualify, only a message added after that initial population.
+      const isNewMessage =
+        didInitializeAnnouncementsRef.current && !announcedMessagesRef.current.has(item.id);
+      return (
+        <ChatMessage
+          formatTimestamp={formatTimestamp}
+          isNewMessage={isNewMessage}
+          message={item}
+          {...{
+            isActive: !item.isStreaming && activeActionMessageId === item.id,
+            onActivate: item.isStreaming ? undefined : onActivate,
+            onEdit: item.isStreaming ? undefined : onEdit,
+            onRegenerate: item.isStreaming ? undefined : onRegenerate,
+            onDelete: item.isStreaming ? undefined : onDelete,
+            onRetry,
+            showDebug,
+          }}
+        />
+      );
+    },
     [
       activeActionMessageId,
       onActivate,
@@ -259,13 +277,3 @@ export function ChatMessageList({
     />
   );
 }
-
-const styles = makeStyles((theme) => ({
-  emptySearch: { alignItems: 'center', paddingTop: 28 },
-  emptySearchText: { fontFamily: 'Menlo', color: theme.colors.tertiary },
-  loadingState: { flex: 1, paddingTop: 12 },
-  emptyState: { flex: 1 },
-  list: { flex: 1 },
-  bottomSentinel: { flexGrow: 1, minHeight: 32 },
-  itemSeparator: { height: 20 },
-}));

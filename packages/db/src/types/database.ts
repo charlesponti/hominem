@@ -783,8 +783,8 @@ export interface AppNotes {
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   excerpt: string | null;
   id: Generated<string>;
+  kind: Generated<string>;
   ownerUserid: string;
-  source: string | null;
   title: string | null;
   updatedat: Generated<ColumnType<string, Date | string, Date | string>>;
 }
@@ -1068,10 +1068,7 @@ export interface AppSocialThreads {
 }
 
 export interface AppTagAssignments {
-  assignedByUserid: string | null;
-  assignmentPeriod: Generated<string | null>;
   assignmentSource: Generated<string>;
-  confidence: Numeric | null;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
   entityId: string;
   entityTable: string;
@@ -1084,9 +1081,6 @@ export interface AppTags {
   archivedAt: ColumnType<string, Date | string, Date | string> | null;
   color: string | null;
   createdat: Generated<ColumnType<string, Date | string, Date | string>>;
-  createdByUserid: string | null;
-  description: string | null;
-  icon: string | null;
   id: Generated<string>;
   name: string;
   ownerUserid: string;

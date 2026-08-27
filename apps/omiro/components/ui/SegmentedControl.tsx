@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 const MOVE_EASING = Easing.bezier(0.77, 0, 0.175, 1);
@@ -30,10 +30,30 @@ export function SegmentedControl<T extends string>({
   onChange,
   testID,
 }: SegmentedControlProps<T>) {
-  const [primary, mutedForeground] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-  ]) as string[];
+  const { primary, mutedForeground } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    control: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.popover,
+      borderRadius: 10,
+      padding: 2,
+    },
+    thumb: {
+      position: 'absolute',
+      top: 2,
+      bottom: 2,
+      borderRadius: 8,
+      opacity: 0.15,
+    },
+    segment: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+    },
+    label: { fontSize: 13, fontWeight: '600' },
+  }));
   const reducedMotion = useReducedMotion();
   const selectedIndex = Math.max(
     0,
@@ -85,27 +105,3 @@ export function SegmentedControl<T extends string>({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  control: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.popover,
-    borderRadius: 10,
-    padding: 2,
-  },
-  thumb: {
-    position: 'absolute',
-    top: 2,
-    bottom: 2,
-    borderRadius: 8,
-    opacity: 0.15,
-  },
-  segment: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-  },
-  label: { fontSize: 13, fontWeight: '600' },
-}));

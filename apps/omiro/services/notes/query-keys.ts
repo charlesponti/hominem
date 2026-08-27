@@ -16,7 +16,7 @@ export const noteKeys = {
 } as const;
 
 export const chatKeys = {
-  list: ['chats', 'list'] as const,
+  list: queryKeys.chats.list,
   latest: [...queryKeys.chats.list, 'latest'] as const,
   page: (options: { cursor?: string | null; includeArchived?: boolean; limit: number }) =>
     queryKeys.chats.page(options),
@@ -24,7 +24,8 @@ export const chatKeys = {
   archivedChats: queryKeys.chats.archived,
   messages: (chatId: string) => queryKeys.chats.messages(chatId),
   messageSearch: (chatId: string, query: string) => queryKeys.chats.messageSearch(chatId, query),
-  detail: (chatId: string) => ['chats', 'detail', chatId] as const,
-  activeChat: (chatId: string | null) => ['chats', 'detail', chatId] as const,
+  detail: queryKeys.chats.detail,
+  activeChat: (chatId: string | null) =>
+    chatId === null ? (['chats', 'detail', null] as const) : queryKeys.chats.detail(chatId),
   sources: (chatId: string) => ['chats', 'sources', chatId] as const,
 } as const;

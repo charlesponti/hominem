@@ -91,12 +91,10 @@ function generateNumericOtp({ length, isTest }: { length: number; isTest?: boole
     .padStart(length, '0');
 }
 
+// Only production actually delivers OTP emails; everywhere else the code is
+// deterministic (000000) and routed to the test OTP store instead.
 function shouldSendEmails(): boolean {
-  if (env.SEND_EMAILS === 'true') return true;
-  if (env.NODE_ENV === 'test') return false;
-  if (env.NODE_ENV === 'development') return false;
-  if (env.NODE_ENV === 'production') return true;
-  return false;
+  return env.NODE_ENV === 'production';
 }
 
 // A stable, non-PII identifier for correlating log lines about the same
@@ -113,11 +111,6 @@ function emailLogContext(email: string): { recipientHash: string; recipientDomai
 }
 
 async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<void> {
-  if (!shouldSendEmails()) {
-    logger.info('email_skipped', { ...emailLogContext(to), subject });
-    return;
-  }
-
   const from = env.RESEND_FROM_NAME
     ? `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`
     : env.RESEND_FROM_EMAIL;
@@ -199,7 +192,7 @@ function getAuthPlugins() {
       resendStrategy: 'reuse',
       generateOTP: () => generateNumericOtp({ length: 6, isTest: !shouldSendEmails() }),
       sendVerificationOTP: async ({ email, otp, type }) => {
-        if (env.NODE_ENV !== 'production') {
+        if (!shouldSendEmails()) {
           logger.info('[auth:email-otp] routed to test OTP store, not sent', {
             ...emailLogContext(email),
             type,

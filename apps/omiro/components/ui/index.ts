@@ -13,5 +13,4 @@ export { ListRow } from './list-row';
 export { SegmentedControl } from './SegmentedControl';
 export { AnimatedCanvasButton } from './animated-canvas-button';
 export { TextField } from './text-field';
-export { nativeShadows } from '~/components/theme';
 export { useColorMode } from '~/components/theme';

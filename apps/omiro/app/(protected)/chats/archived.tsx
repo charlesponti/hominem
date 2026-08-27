@@ -4,7 +4,7 @@ import { Stack, useIsFocused, useRouter } from 'expo-router';
 import { memo, useCallback, useMemo } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useArchivedChats } from '~/hooks/useArchivedChats';
@@ -44,6 +44,28 @@ export default function ArchivedChatsScreen() {
   );
 }
 
+function useArchivedStyles() {
+  return useStyles((theme) => ({
+    headerContainer: { paddingBottom: 8, paddingHorizontal: 16, paddingTop: 8 },
+    description: { fontSize: 15, lineHeight: 22, color: theme.colors.mutedForeground },
+    emptyContainer: { paddingTop: 32 },
+    emptyContent: { gap: 2, paddingVertical: 2 },
+    emptyTitle: { fontSize: 15, color: theme.colors.foreground },
+    emptyMessage: { lineHeight: 20, color: theme.colors.mutedForeground },
+    rowContainer: { paddingHorizontal: 16 },
+    row: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 10,
+      minHeight: 52,
+      paddingVertical: 12,
+    },
+    chatContent: { flex: 1, gap: 2 },
+    chatTitle: { fontSize: 15, color: theme.colors.foreground },
+    archivedLabel: { color: theme.colors.mutedForeground },
+  }));
+}
+
 function ArchivedChatsSwiftUI({
   chats,
   error,
@@ -57,13 +79,14 @@ function ArchivedChatsSwiftUI({
   onPressChat: (chatId: string) => void;
   onRefresh: () => void;
 }) {
+  const styles = useArchivedStyles();
   const header = useMemo(
     () => (
       <View style={styles.headerContainer}>
         <Text style={styles.description}>{t.settings.archivedChatsScreen.description}</Text>
       </View>
     ),
-    [],
+    [styles],
   );
   const empty = useMemo(
     () => (
@@ -82,7 +105,7 @@ function ArchivedChatsSwiftUI({
         )}
       </View>
     ),
-    [error, onRefresh],
+    [error, onRefresh, styles],
   );
   const renderItem = useCallback<ListRenderItem<(typeof chats)[number]>>(
     ({ item }) => <ArchivedChatRow chat={item} onPressChat={onPressChat} />,
@@ -111,10 +134,8 @@ const ArchivedChatRow = memo(
     chat: NonNullable<ReturnType<typeof useArchivedChats>['data']>[number];
     onPressChat: (chatId: string) => void;
   }) => {
-    const [textSecondary, tertiary] = useThemeColor([
-      '--color-muted-foreground',
-      '--color-tertiary',
-    ]) as string[];
+    const { mutedForeground: textSecondary, tertiary } = useAppTheme().colors;
+    const styles = useArchivedStyles();
 
     return (
       <View style={styles.rowContainer}>
@@ -137,17 +158,3 @@ const ArchivedChatRow = memo(
 );
 
 ArchivedChatRow.displayName = 'ArchivedChatRow';
-
-const styles = makeStyles((theme) => ({
-  headerContainer: { paddingBottom: 8, paddingHorizontal: 16, paddingTop: 8 },
-  description: { fontSize: 15, lineHeight: 22, color: theme.colors.mutedForeground },
-  emptyContainer: { paddingTop: 32 },
-  emptyContent: { gap: 2, paddingVertical: 2 },
-  emptyTitle: { fontSize: 15, color: theme.colors.foreground },
-  emptyMessage: { lineHeight: 20, color: theme.colors.mutedForeground },
-  rowContainer: { paddingHorizontal: 16 },
-  row: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 52, paddingVertical: 12 },
-  chatContent: { flex: 1, gap: 2 },
-  chatTitle: { fontSize: 15, color: theme.colors.foreground },
-  archivedLabel: { color: theme.colors.mutedForeground },
-}));

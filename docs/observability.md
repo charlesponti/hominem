@@ -10,56 +10,12 @@ Hominem uses two production observability surfaces with different jobs:
 Do not use Sentry as a live stdout log tail. Do not put OTLP credentials in the
 Web bundle.
 
-## Production logs
+## Production logs and Sentry navigation
 
-The repository includes a safe wrapper around the Railway CLI:
-
-```bash
-scripts/railway-logs.sh api --since 1h
-scripts/railway-logs.sh worker --filter '@level:error OR @level:warn'
-scripts/railway-logs.sh api --http --status '>=400' --since 1h
-scripts/railway-logs.sh worker --follow
-scripts/diagnose-speech.sh 30m
-```
-
-Supported service aliases are `api`, `worker`, `redis`, and `database`. The
-script selects the Hominem production project explicitly, so it does not depend
-on the caller's locally linked Railway project. Override the project or
-environment when needed:
-
-```bash
-RAILWAY_PROJECT_ID=<project-id> RAILWAY_ENVIRONMENT=staging \
-  scripts/railway-logs.sh api --since 30m
-```
-
-The equivalent repository script is:
-
-```bash
-scripts/railway-logs.sh api --lines 200
-```
-
-The dashboard path is Railway → Hominem → environment → service → Logs. Choose
-API for HTTP/runtime logs, worker for queue processing, Redis for cache health,
-and database for database service events. Use the HTTP log view when a request
-status, path, duration, or Railway request ID is more useful than an application
-structured log.
-
-For an incident-oriented speech report, `scripts/diagnose-speech.sh` combines
-API and worker log filters with the GitHub Actions status for the current commit.
-For aggregate database verification, set an explicit `DATABASE_URL` and run
-`scripts/diagnose-usage.sh`; it reports reconciliation states, missing usage
-events, and current-month feature totals without printing individual users.
-
-## Sentry
-
-In Sentry, select the `hominem` project before interpreting the issue list. The
-main navigation is:
-
-- Issues: unhandled exceptions and application errors.
-- Explore → Traces: `chat.speech`, `speech.playback`,
-  `speech.reconciliation`, and `http.server` spans.
-- Dashboards: latency, failure, usage, and reconciliation panels.
-- Monitors: threshold alerts and notification ownership.
+Pulling live logs, navigating Sentry, and the incident response procedure are
+runbook steps — see the `hominem-observability` skill
+(`.agents/skills/hominem-observability/`) for the exact commands and
+navigation path.
 
 The API and worker export directly to Sentry's generated OTLP endpoint. Configure
 these Railway variables on both services:
@@ -116,34 +72,10 @@ into an indexed event or leaking sensitive context.
 
 ## Dashboards and alerts
 
-Create a Sentry Explore dashboard with these panels:
-
-1. API speech p50/p95 `speech.time_to_first_audio_byte_ms`.
-2. Browser p50/p95 `speech.request_to_first_playable_ms`.
-3. Speech request count by `speech.outcome` and service.
-4. Browser playback count by completed, stopped, and failed.
-5. Reconciliation success, retry, missing-generation-ID, and terminal-failure
-   counts.
-6. Usage-available ratio for `chat_speech`.
-7. API p50/p95 latency and 4xx/5xx rate by `http.route`.
-8. Worker queue snapshots and stalled-job count.
-
-Recommended alerts:
-
-- browser first playable p95 above 5 seconds for five minutes;
-- failed browser playback above 5% for five minutes;
-- any missing generation ID after a successful provider stream;
-- reconciliation terminal failures greater than zero;
-- usage-available ratio below 99% over 15 minutes;
-- pending speech runs older than five minutes;
-- API 5xx rate above 2% for five minutes;
-- any worker queue stalled event;
-- Redis/database connectivity failure from `/api/status`.
-
-Alert ownership should point to the API/service owner. The response procedure is
-Railway logs → Sentry trace waterfall → database usage/reconciliation rows →
-local reproduction. Do not change provider or deployment configuration based on
-a dashboard aggregate alone.
+Alert ownership points to the API/service owner. Do not change provider or
+deployment configuration based on a dashboard aggregate alone. The panel list
+and recommended alert thresholds to set up are in the `hominem-observability`
+skill (`.agents/skills/hominem-observability/`).
 
 ## Analytics backlog
 
@@ -174,26 +106,9 @@ a dashboard aggregate alone.
 - Add a provider comparison dimension once more than one provider/model is
   active; do not expose provider generation IDs.
 
-## Local verification
+## Local and post-deploy verification
 
-Run the foundation stack before starting the API or worker:
-
-```bash
-cd ~/Developer/infra/foundation
-just up
-just health
-just logs otel-collector
-```
-
-Jaeger is available at `http://localhost:16686`. Local application logs remain
-in the API or worker terminal. Stop the foundation stack when finished with:
-
-```bash
-cd ~/Developer/infra/foundation
-just down
-```
-
-After deployment, authenticate a controlled Web session, play one response, and
-verify exactly one `speech.playback` span and one API `chat.speech` trace. Then
-confirm that the usage event becomes available and the reconciliation run ends
-in `succeeded`.
+Run the `hominem-observability` skill's local verification loop
+(foundation stack + Jaeger) and post-deploy check (confirm one
+`speech.playback` span, one `chat.speech` trace, and a `succeeded`
+reconciliation run) — see `.agents/skills/hominem-observability/`.

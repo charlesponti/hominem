@@ -34,7 +34,7 @@ function getActiveDestination(segments: readonly string[]): Destination | null {
 
 export function NavDrawerMenuButton() {
   const segments = useSegments();
-  const active = getActiveDestination(segments as string[]);
+  const active = getActiveDestination(segments);
   const router = useRouter();
 
   const actions: MenuAction[] = [

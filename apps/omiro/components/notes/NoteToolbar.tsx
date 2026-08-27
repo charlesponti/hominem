@@ -3,8 +3,8 @@ import React from 'react';
 import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
-import { makeStyles } from '~/components/theme';
-import { IconButton, nativeShadows } from '~/components/ui';
+import { useAppTheme, useStyles } from '~/components/theme';
+import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -21,6 +21,34 @@ interface ToolbarButtonProps {
   label: string;
 }
 
+function useNoteToolbarStyles() {
+  return useStyles((theme) => ({
+    divider: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
+    scrollContainer: { flex: 1 },
+    inlineFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    blockFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    listFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    indentGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    toolbarCard: {
+      backgroundColor: theme.colors.card,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 8,
+      alignSelf: 'stretch',
+      flexDirection: 'row',
+      height: 48,
+      marginHorizontal: 16,
+    },
+    toolbarContent: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      flex: 1,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+    },
+  }));
+}
+
 function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButtonProps) {
   return (
     <IconButton accessibilityLabel={label} disabled={disabled} onPress={onPress}>
@@ -30,10 +58,12 @@ function ToolbarButton({ icon, onPress, disabled = false, label }: ToolbarButton
 }
 
 function ToolbarDivider() {
+  const styles = useNoteToolbarStyles();
   return <View style={styles.divider} />;
 }
 
 function ToolbarButtons({ onAction }: NoteToolbarProps) {
+  const styles = useNoteToolbarStyles();
   return (
     <>
       <ScrollView
@@ -129,10 +159,12 @@ function ToolbarButtons({ onAction }: NoteToolbarProps) {
 }
 
 export function NoteToolbar(props: NoteToolbarProps) {
+  const theme = useAppTheme();
+  const styles = useNoteToolbarStyles();
   return (
     <InputAccessoryView nativeID={NOTE_TOOLBAR_ID} backgroundColor="transparent">
       <View
-        style={[styles.toolbarCard, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
+        style={[styles.toolbarCard, { borderCurve: 'continuous', boxShadow: theme.shadows.md }]}
       >
         <View style={styles.toolbarContent}>
           <ToolbarButtons {...props} />
@@ -141,29 +173,3 @@ export function NoteToolbar(props: NoteToolbarProps) {
     </InputAccessoryView>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  divider: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
-  scrollContainer: { flex: 1 },
-  inlineFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  blockFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  listFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  indentGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  toolbarCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    height: 48,
-    marginHorizontal: 16,
-  },
-  toolbarContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flex: 1,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-}));

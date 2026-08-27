@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import t from '~/translations';
@@ -32,10 +32,24 @@ export function AccountIdentitySection({
   saveError: string | null;
   saveStatus: 'idle' | 'saving' | 'saved';
 }) {
-  const [popoverColor, textPrimaryColor] = useThemeColor([
-    '--color-popover',
-    '--color-foreground',
-  ]) as string[];
+  const { popover: popoverColor, foreground: textPrimaryColor } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    identityRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+    avatar: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      height: 52,
+      width: 52,
+    },
+    avatarText: { fontSize: 19, fontWeight: '700', color: theme.colors.foreground },
+    identityContent: { flex: 1, gap: 2 },
+    nameField: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, padding: 0 },
+    email: { fontSize: 13, color: theme.colors.mutedForeground },
+    saveRow: { alignItems: 'flex-start', paddingHorizontal: 16 },
+    savedMessage: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
+    saveError: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
+  }));
 
   return (
     <>
@@ -81,21 +95,3 @@ export function AccountIdentitySection({
     </>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  identityRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
-  avatar: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    height: 52,
-    width: 52,
-  },
-  avatarText: { fontSize: 19, fontWeight: '700', color: theme.colors.foreground },
-  identityContent: { flex: 1, gap: 2 },
-  nameField: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, padding: 0 },
-  email: { fontSize: 13, color: theme.colors.mutedForeground },
-  saveRow: { alignItems: 'flex-start', paddingHorizontal: 16 },
-  savedMessage: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
-  saveError: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
-}));

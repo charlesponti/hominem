@@ -14,7 +14,7 @@
     // "./types" export.
     "paths": {
       "~/*": ["./app/*"],
-      "@hominem/api/types": ["../../services/api/src/rpc/app.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
     }
   },
   "include": [

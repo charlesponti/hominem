@@ -29,6 +29,8 @@ export const careerProfileSchema = z.object({
   twitterHandles: z.string().nullable(),
 });
 
+export const careerMcpProfileSchema = careerProfileSchema.omit({ email: true, phone: true });
+
 const careerEngagementKindSchema = z.enum([
   'EMPLOYMENT',
   'CONTRACT',

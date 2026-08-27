@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './career';
+import { callTool, type McpToolResult } from '../tool-registry';
 
 const userId = 'a2000001-0000-4000-8000-000000000001';
 
@@ -15,12 +16,10 @@ beforeAll(async () => {
     'INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, $4)',
     [userId, 'Wishlist Test User', `${userId}@test.hominem.dev`, true],
   );
-  await import('./career');
 });
 
 describe('career wishlist MCP tools', () => {
   it('creates, lists, updates, and removes a wishlist company', async () => {
-    const { callTool } = await import('../tools');
     const created = resultContent(
       await callTool(userId, 'career_wishlist_add', { company: 'OpenAI' }),
     ) as { company: { id: string; company: string } };
@@ -61,7 +60,6 @@ describe('career wishlist MCP tools', () => {
       .values({ ownerUserid: userId, company: 'Secret Co', title: 'Secret Co', status: 'WISHLIST' })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const { callTool } = await import('../tools');
 
     const result = resultContent(
       await callTool(otherUserId, 'career_wishlist_remove', { id: entry.id }),

@@ -4,8 +4,10 @@ import type { CareerProfileRecord } from '@hominem/db';
 import type { AuthUser as User } from '@ponti-studios/auth/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const ensureUserHasProfile = vi.fn();
-const getServerSession = vi.fn();
+const { ensureUserHasProfile, getServerSession } = vi.hoisted(() => ({
+  ensureUserHasProfile: vi.fn(),
+  getServerSession: vi.fn(),
+}));
 
 vi.mock('./portfolio.server', () => ({
   ensureUserHasProfile,
@@ -14,6 +16,8 @@ vi.mock('./portfolio.server', () => ({
 vi.mock('./auth.server', () => ({
   getServerSession,
 }));
+
+import { requireAuthMiddleware, sessionMiddleware, userContext } from './middleware';
 
 const testUser = {
   id: 'auth-user-id',
@@ -52,7 +56,6 @@ describe('career middleware', () => {
   });
 
   it('hydrates user context when a session exists', async () => {
-    const { sessionMiddleware, userContext } = await import('./middleware');
     const requestContext = createRequestContext();
     getServerSession.mockResolvedValue({ user: testUser, headers: new Headers() });
 
@@ -69,7 +72,6 @@ describe('career middleware', () => {
   });
 
   it('forwards every refreshed Better Auth cookie to the browser', async () => {
-    const { sessionMiddleware } = await import('./middleware');
     const requestContext = createRequestContext();
     const headers = new Headers();
     headers.append('set-cookie', 'better-auth.session_token=token; Path=/; HttpOnly');
@@ -88,8 +90,6 @@ describe('career middleware', () => {
   });
 
   it('redirects page requests when auth is required and no session exists', async () => {
-    const { requireAuthMiddleware } = await import('./middleware');
-
     const result = await requireAuthMiddleware(
       {
         request: new Request('http://localhost/account'),
@@ -105,8 +105,6 @@ describe('career middleware', () => {
   });
 
   it('uses the configured public origin for hosted login redirects', async () => {
-    const { requireAuthMiddleware } = await import('./middleware');
-
     const result = await requireAuthMiddleware(
       {
         request: new Request('http://career-internal/work'),
@@ -121,8 +119,6 @@ describe('career middleware', () => {
   });
 
   it('returns 401 for authenticated api requests without a session', async () => {
-    const { requireAuthMiddleware } = await import('./middleware');
-
     const result = await requireAuthMiddleware(
       {
         request: new Request('http://localhost/api/resume/convert'),

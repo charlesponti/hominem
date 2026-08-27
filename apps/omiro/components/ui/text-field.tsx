@@ -2,7 +2,7 @@ import { forwardRef, useState } from 'react';
 import { TextInput, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-import { fontFamilies, makeStyles, useTheme } from '~/components/theme';
+import { fontFamilies, useAppTheme, useStyles } from '~/components/theme';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -15,9 +15,19 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   { style, focusBorder = true, hasError = false, onFocus, onBlur, ...props },
   ref,
 ) {
-  const styles = useStyles;
   const [focused, setFocused] = useState(false);
-  const { colors } = useTheme();
+  const { colors } = useAppTheme();
+  const styles = useStyles((theme) => ({
+    input: {
+      minHeight: 50,
+      paddingHorizontal: 16,
+      borderCurve: 'continuous',
+      borderRadius: 6,
+      fontFamily: fontFamilies.sans,
+      fontSize: 18,
+      color: theme.colors.foreground,
+    } satisfies TextStyle & ViewStyle,
+  }));
 
   const focusStyle = useAnimatedStyle(() => {
     if (!focusBorder) {
@@ -47,15 +57,3 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
     />
   );
 });
-
-const useStyles = makeStyles((theme) => ({
-  input: {
-    minHeight: 50,
-    paddingHorizontal: 16,
-    borderCurve: 'continuous',
-    borderRadius: 6,
-    fontFamily: fontFamilies.sans,
-    fontSize: 18,
-    color: theme.colors.foreground,
-  } satisfies TextStyle & ViewStyle,
-}));

@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import {
   useCalendarEvents,
@@ -41,6 +41,23 @@ export const TimeStream = memo(function TimeStream({
   const { data: tasks = [] } = useTasksQuery({ enabled: isFocused });
   const { mutate: toggleTask } = useTaskComplete();
   const connectCalendar = useConnectCalendar();
+  const styles = useStyles((theme) => ({
+    stream: { flex: 1 },
+    permissionNotice: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      gap: 8,
+      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    permissionTitle: { ...theme.textVariants.subhead, color: theme.colors.foreground },
+    permissionDescription: { color: theme.colors.mutedForeground },
+    emptyState: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
+    loadingState: { gap: 8, padding: 16 },
+    skeletonBlock: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
+  }));
   const scrollOffsetRef = useRef(0);
   const errorRef = useRef<string | null>(null);
   const previewEvents = scenario ? scenario.events : calendar.events;
@@ -167,21 +184,3 @@ export const TimeStream = memo(function TimeStream({
     </View>
   );
 });
-
-const styles = makeStyles((theme) => ({
-  stream: { flex: 1 },
-  permissionNotice: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 8,
-    padding: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  permissionTitle: { ...theme.typography.subhead, color: theme.colors.foreground },
-  permissionDescription: { color: theme.colors.mutedForeground },
-  emptyState: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
-  loadingState: { gap: 8, padding: 16 },
-  skeletonBlock: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
-}));

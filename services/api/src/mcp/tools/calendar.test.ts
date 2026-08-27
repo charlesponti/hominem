@@ -1,7 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './calendar';
+import { callTool, type McpToolResult } from '../tool-registry';
 
 const userId = 'e1000000-0000-4000-8000-000000000001';
 
@@ -106,9 +107,6 @@ beforeAll(async () => {
 
 describe('calendar_search', () => {
   it('matches events by title text and joins calendar/place names', async () => {
-    await import('./calendar');
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'calendar_search', { query: 'planning' });
     const data = resultContent(result);
 
@@ -121,8 +119,6 @@ describe('calendar_search', () => {
   });
 
   it('excludes cancelled events unless requested', async () => {
-    const { callTool } = await import('../tools');
-
     const withoutCancelled = await callTool(userId, 'calendar_search', { query: 'sync' });
     expect(resultContent(withoutCancelled).count).toBe(0);
 
@@ -134,8 +130,6 @@ describe('calendar_search', () => {
   });
 
   it('rejects a from date after the to date', async () => {
-    const { callTool } = await import('../tools');
-
     await expect(
       callTool(userId, 'calendar_search', { query: 'x', from: '2026-07-20', to: '2026-07-10' }),
     ).rejects.toThrow();
@@ -144,8 +138,6 @@ describe('calendar_search', () => {
 
 describe('calendar_upcoming', () => {
   it('lists non-cancelled events within the window, ordered by start time', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'calendar_upcoming', {
       from: '2026-07-09',
       days: 5,
@@ -158,8 +150,6 @@ describe('calendar_upcoming', () => {
 
 describe('trip_history', () => {
   it('returns trips with resolved attendee names', async () => {
-    const { callTool } = await import('../tools');
-
     const result = await callTool(userId, 'trip_history', { limit: 20 });
     const data = resultContent(result);
 

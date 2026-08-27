@@ -1,4 +1,4 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,7 +11,7 @@ import {
   usePhotoOutput,
 } from 'react-native-vision-camera';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -38,11 +38,70 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const photoOutput = usePhotoOutput();
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
-  const [borderDefault, background, primaryForeground] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-primary-foreground',
-  ]) as [string, string, string];
+  const { border: borderDefault, background, primaryForeground } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    cameraContainer: { flex: 1 },
+    controls: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+    },
+    closeButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 48,
+      height: 48,
+      borderRadius: 6,
+      backgroundColor: theme.colors.overlayScrim,
+    },
+    captureIndicator: {
+      width: 56,
+      height: 56,
+      borderRadius: 6,
+      backgroundColor: theme.colors.primaryForeground,
+    },
+    flipButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 48,
+      height: 48,
+      borderRadius: 6,
+      backgroundColor: theme.colors.overlayScrim,
+    },
+    permissionContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      paddingHorizontal: 24,
+    },
+    permissionMessage: { ...theme.textVariants.body, color: theme.colors.foreground },
+    grantButton: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    grantButtonText: { ...theme.textVariants.body, color: theme.colors.foreground },
+    cancelButton: { paddingHorizontal: 16, paddingVertical: 8 },
+    cancelButtonText: { ...theme.textVariants.body, color: theme.colors.mutedForeground },
+    captureButton: {
+      width: 72,
+      height: 72,
+      borderRadius: 2,
+      borderWidth: 4,
+      borderColor: theme.colors.primaryForeground,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    captureButtonDisabled: { opacity: 0.5 },
+  }));
 
   const handleCapture = async () => {
     if (isTakingPhoto || !device) return;
@@ -173,67 +232,3 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
     </BottomSheetModal>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  cameraContainer: { flex: 1 },
-  controls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-  },
-  closeButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 6,
-    backgroundColor: theme.colors.overlayScrim,
-  },
-  captureIndicator: {
-    width: 56,
-    height: 56,
-    borderRadius: 6,
-    backgroundColor: theme.colors.primaryForeground,
-  },
-  flipButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 6,
-    backgroundColor: theme.colors.overlayScrim,
-  },
-  permissionContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    paddingHorizontal: 24,
-  },
-  permissionMessage: { ...theme.typography.body, color: theme.colors.foreground },
-  grantButton: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  grantButtonText: { ...theme.typography.body, color: theme.colors.foreground },
-  cancelButton: { paddingHorizontal: 16, paddingVertical: 8 },
-  cancelButtonText: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  captureButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 2,
-    borderWidth: 4,
-    borderColor: theme.colors.primaryForeground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  captureButtonDisabled: { opacity: 0.5 },
-}));

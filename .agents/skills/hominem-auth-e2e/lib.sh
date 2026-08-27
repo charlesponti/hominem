@@ -122,7 +122,18 @@ hominem_delete_user() {
     exit 1
   fi
   hominem_require_test_email "$email"
-  psql "$(hominem_db_url)" -v ON_ERROR_STOP=1 -v email="$email" \
-    -c 'DELETE FROM "user" WHERE email = :'"'"'email'"'"';'
+  # psql >= 18 does not interpolate -v variables inside -c strings (they are
+  # only expanded in scripts read from stdin/-f), so pipe the DELETE in via a
+  # heredoc instead. Capture output and fail loudly on error rather than
+  # silently reporting success with the row still present.
+  local out
+  if ! out="$(psql "$(hominem_db_url)" -v ON_ERROR_STOP=1 -v email="$email" 2>&1 <<'SQL'
+DELETE FROM "user" WHERE email = :'email';
+SQL
+)"; then
+    echo "delete failed for $email:" >&2
+    echo "$out" >&2
+    exit 1
+  fi
   rm -f "$(hominem_cookiejar_for "$email")"
 }

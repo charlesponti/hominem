@@ -11,9 +11,9 @@ import {
 } from '../../schemas/memory.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
-// Memories are notes tagged via the otherwise-unused `app.notes.source`
-// column — see mcp/tools/memory.ts for the AI-facing surface over the same rows.
-const MEMORY_SOURCE = 'memory';
+// Memories are notes discriminated by the typed `kind` column — see
+// mcp/tools/memory.ts for the AI-facing surface over the same rows.
+const MEMORY_KIND = 'memory' as const;
 
 const noteService = new NoteService();
 
@@ -45,7 +45,7 @@ function toMemoryDto(note: {
 
 async function assertOwnedMemory(id: string, userId: string) {
   const note = await NoteRepository.getOwnedOrThrow(db, id, userId);
-  if (note.source !== MEMORY_SOURCE) {
+  if (note.kind !== MEMORY_KIND) {
     throw new NotFoundError('Memory', { id });
   }
 }
@@ -57,7 +57,7 @@ export const memoryRoutes = new Hono<AppContext>()
     const { limit } = c.req.valid('query');
     const notes = await NoteRepository.list(db, {
       userId,
-      source: MEMORY_SOURCE,
+      kind: MEMORY_KIND,
       sortBy: 'createdAt',
       sortOrder: 'desc',
       limit: limit ?? 50,

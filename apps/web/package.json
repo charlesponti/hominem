@@ -17,6 +17,7 @@
     "typecheck": "react-router typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/rpc": "workspace:*",
     "@hominem/storage": "workspace:*",

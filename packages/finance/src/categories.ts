@@ -32,7 +32,6 @@ export async function createTag(
       ownerUserid: input.ownerUserid,
       name: input.name,
       color: input.color ?? null,
-      description: input.description ?? null,
       slug: input.slug ?? input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       path: input.path ?? input.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
     })

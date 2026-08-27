@@ -1,11 +1,5 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@ponti-studios/ui/overlays';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@ponti-studios/ui/overlays';
 import { useCallback, useEffect, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
@@ -243,9 +237,6 @@ export default function ChatPage({
             <SheetContent aria-label="Chat settings">
               <SheetHeader>
                 <SheetTitle>Chat settings</SheetTitle>
-                <SheetDescription>
-                  Choose how the next response should be generated.
-                </SheetDescription>
               </SheetHeader>
               <ChatResponseSettings
                 onChange={setResponseLength}

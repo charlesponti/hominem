@@ -13,6 +13,7 @@ export type NoteFile = {
 export type Note = {
   id: string;
   userId: string;
+  kind: 'note' | 'memory';
   title: string | null;
   content: string;
   excerpt: string | null;

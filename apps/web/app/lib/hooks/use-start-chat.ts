@@ -5,7 +5,7 @@ import { useCallback, useRef } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
-import { consumeChatStream } from '../chat/stream-events';
+import { consumeSseResponse } from '../chat/consume-sse-response';
 
 interface StartChatInput {
   title: string;
@@ -37,7 +37,7 @@ export function useStartChat() {
           { init: { signal: abortController.signal } },
         );
 
-        await consumeChatStream(response, (event) => {
+        await consumeSseResponse(response, (event) => {
           if (event.type === 'accepted') {
             client.setQueryData(chatQueryKeys.get(event.chatId), event.chat);
             client.setQueryData(

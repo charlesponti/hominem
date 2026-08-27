@@ -5,7 +5,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { LocationSearchField } from '~/components/time/LocationSearchField';
 import type {
   ActiveField,
@@ -21,6 +21,64 @@ export type { TimeBlockDetailSource } from '~/components/time/use-time-block-edi
 
 function formatInterval(start: Date, end: Date) {
   return `${start.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · ${formatClockTime(start)}–${formatClockTime(end)}`;
+}
+
+function useTimeBlockDetailStyles() {
+  return useStyles((theme) => ({
+    fieldCard: {
+      flexDirection: 'row',
+      gap: 12,
+      borderRadius: 24,
+      backgroundColor: theme.colors.card,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    fieldIcon: {
+      height: 36,
+      width: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+    },
+    fieldContent: { flex: 1, gap: 4 },
+    loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+    loadingText: { color: theme.colors.mutedForeground },
+    errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
+    errorText: { color: theme.colors.destructive },
+    editor: { flex: 1 },
+    scrollView: { flex: 1 },
+    header: { gap: 12 },
+    intentBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+    },
+    intentLabel: { ...theme.textVariants.caption1, fontWeight: '600' },
+    title: { ...theme.textVariants.display },
+    completedLabel: { color: theme.colors.mutedForeground },
+    readOnlyNotice: { color: theme.colors.mutedForeground },
+    fields: { gap: 10 },
+    timeEditor: { gap: 8 },
+    timeValue: { ...theme.textVariants.body },
+    unsetValue: { ...theme.textVariants.body, color: theme.colors.mutedForeground },
+    participants: { ...theme.textVariants.body },
+    fieldValue: { ...theme.textVariants.body },
+    footer: {
+      borderTopWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 16,
+    },
+    footerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+    foreground: { color: theme.colors.foreground },
+    mutedForeground: { color: theme.colors.mutedForeground },
+  }));
 }
 
 function FieldCard({
@@ -39,6 +97,7 @@ function FieldCard({
   onPress?: () => void;
   testID?: string;
 }) {
+  const styles = useTimeBlockDetailStyles();
   return (
     <Pressable
       accessibilityLabel={label}
@@ -101,13 +160,14 @@ export function TimeBlockDetail({
     title,
     toggleTask,
   } = useTimeBlockEditorState({ id, initialActiveField, onClose, source });
-  const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useThemeColor([
-    '--color-chart-1',
-    '--color-chart-2',
-    '--color-chart-3',
-    '--color-chart-4',
-    '--color-chart-5',
-  ]) as string[];
+  const {
+    chart1: chartBlue,
+    chart2: chartPurple,
+    chart3: chartTeal,
+    chart4: chartOrange,
+    chart5: chartGray,
+  } = useAppTheme().colors;
+  const styles = useTimeBlockDetailStyles();
 
   if (isLoading) {
     return (
@@ -351,59 +411,3 @@ export function TimeBlockDetail({
     </>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  fieldCard: {
-    flexDirection: 'row',
-    gap: 12,
-    borderRadius: 24,
-    backgroundColor: theme.colors.card,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  fieldIcon: {
-    height: 36,
-    width: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  fieldContent: { flex: 1, gap: 4 },
-  loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
-  loadingText: { color: theme.colors.mutedForeground },
-  errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 16 },
-  errorText: { color: theme.colors.destructive },
-  editor: { flex: 1 },
-  scrollView: { flex: 1 },
-  header: { gap: 12 },
-  intentBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  intentLabel: { ...theme.typography.caption1, fontWeight: '600' },
-  title: { ...theme.typography.display },
-  completedLabel: { color: theme.colors.mutedForeground },
-  readOnlyNotice: { color: theme.colors.mutedForeground },
-  fields: { gap: 10 },
-  timeEditor: { gap: 8 },
-  timeValue: { ...theme.typography.body },
-  unsetValue: { ...theme.typography.body, color: theme.colors.mutedForeground },
-  participants: { ...theme.typography.body },
-  fieldValue: { ...theme.typography.body },
-  footer: {
-    borderTopWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-  },
-  footerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  foreground: { color: theme.colors.foreground },
-  mutedForeground: { color: theme.colors.mutedForeground },
-}));

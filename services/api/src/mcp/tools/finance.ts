@@ -11,9 +11,7 @@ import {
   financeSpendingByCategoryInputSchema,
   financeSpendingByCategoryOutputSchema,
 } from '../../schemas/finance.schema';
-import { registerTool } from '../tools';
-
-const FINANCE_READ_SCOPES = ['finance:read'] as const;
+import { registerTool } from '../tool-registry';
 
 // ── finance_net_worth ───────────────────────────────────────────────
 
@@ -26,8 +24,7 @@ registerTool(
     inputSchema: financeNetWorthInputSchema,
     outputSchema: financeNetWorthOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
-    sensitivity: 'sensitive',
+    scopes: ['finance:read'],
     resultCap: 50,
   },
   async (ownerUserId, input) => getFinanceNetWorth(ownerUserId, input.includeClosed),
@@ -44,8 +41,7 @@ registerTool(
     inputSchema: financeRecentTransactionsInputSchema,
     outputSchema: financeRecentTransactionsOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
-    sensitivity: 'sensitive',
+    scopes: ['finance:read'],
     resultCap: 50,
   },
   async (ownerUserId, input) => getFinanceRecentTransactions(ownerUserId, input),
@@ -62,8 +58,7 @@ registerTool(
     inputSchema: financeSpendingByCategoryInputSchema,
     outputSchema: financeSpendingByCategoryOutputSchema,
     readOnly: true,
-    scopes: FINANCE_READ_SCOPES,
-    sensitivity: 'sensitive',
+    scopes: ['finance:read'],
     resultCap: 50,
   },
   async (ownerUserId, input) => getFinanceSpendingByCategory(ownerUserId, input),

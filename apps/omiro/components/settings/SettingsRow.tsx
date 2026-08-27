@@ -2,8 +2,26 @@ import type { SFSymbol } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
+
+function useSettingsRowStyles() {
+  return useStyles((theme) => ({
+    row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    labelContent: { flex: 1, gap: 2 },
+    label: {},
+    description: { fontSize: 13, color: theme.colors.mutedForeground },
+    staticRow: { paddingHorizontal: 16 },
+    pressableRow: { paddingHorizontal: 16 },
+    sectionLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.colors.mutedForeground,
+      paddingHorizontal: 16,
+    },
+  }));
+}
 
 export function SettingsRow({
   icon,
@@ -22,11 +40,12 @@ export function SettingsRow({
   destructive?: boolean;
   testID?: string;
 }) {
-  const [destructiveColor, textPrimaryColor, tertiaryColor] = useThemeColor([
-    '--color-destructive',
-    '--color-foreground',
-    '--color-tertiary',
-  ]) as string[];
+  const {
+    destructive: destructiveColor,
+    foreground: textPrimaryColor,
+    tertiary: tertiaryColor,
+  } = useAppTheme().colors;
+  const styles = useSettingsRowStyles();
 
   const labelColor = destructive ? destructiveColor : textPrimaryColor;
 
@@ -63,21 +82,6 @@ export function SettingsRow({
 }
 
 export function SectionLabel({ children }: { children: string }) {
+  const styles = useSettingsRowStyles();
   return <Text style={styles.sectionLabel}>{children}</Text>;
 }
-
-const styles = makeStyles((theme) => ({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  labelContent: { flex: 1, gap: 2 },
-  label: {},
-  description: { fontSize: 13, color: theme.colors.mutedForeground },
-  staticRow: { paddingHorizontal: 16 },
-  pressableRow: { paddingHorizontal: 16 },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.mutedForeground,
-    paddingHorizontal: 16,
-  },
-}));

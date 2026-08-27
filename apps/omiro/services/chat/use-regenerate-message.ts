@@ -3,14 +3,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
 
+import type { ChatMessageItem } from '~/components/chat';
 import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
-import type { MessageOutput } from './chatMessages';
-import { streamSSE } from './stream-sse';
+import { consumeSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -28,7 +28,7 @@ export function useRegenerateMessage(chatId: string) {
     mutationFn: async ({ messageId, generationId }) => {
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await streamSSE<ChatStreamEvent>({
+      await consumeSseXhr<ChatStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
         payload: { generationId, responseLength: getChatResponseLength() },
         getHeaders: getAuthHeaders,
@@ -43,7 +43,7 @@ export function useRegenerateMessage(chatId: string) {
           if (event.type === 'committed') {
             const message = toMessageOutput(event.message);
             if (message) {
-              queryClient.setQueryData<MessageOutput[]>(
+              queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
                 (messages = []) =>
                   messages.map((item) => (item.id === current.targetMessageId ? message : item)),

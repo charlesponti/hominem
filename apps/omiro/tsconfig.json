@@ -20,7 +20,7 @@
       // and not a real dependency of this app or @hominem/rpc — see that
       // package's tsconfig.json for the same alias. Keep in sync with
       // services/api/package.json's "./types" export.
-      "@hominem/api/types": ["../../services/api/src/rpc/app.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
     },
     "noEmit": true
   },

@@ -3,7 +3,7 @@ import {
   placeVisitHistoryInputSchema,
   placeVisitHistoryOutputSchema,
 } from '../../schemas/places.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {
@@ -15,7 +15,6 @@ registerTool(
     outputSchema: placeVisitHistoryOutputSchema,
     readOnly: true,
     scopes: ['places:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => getPlaceVisitHistory(ownerUserId, input),

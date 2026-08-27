@@ -3,9 +3,8 @@ import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
-import { chatQueryKeys } from '~/lib/query-keys';
-
-import { consumeChatStream } from '../chat/stream-events';
+import { invalidateChatQueries } from '../chat/chat-cache';
+import { consumeSseResponse } from '../chat/consume-sse-response';
 import type { ResponseLength } from './use-response-length';
 
 export type StreamStatus =
@@ -73,7 +72,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           { init: { signal: abortController.signal } },
         );
 
-        await consumeChatStream(streamRes, (event: ChatStreamEvent) => {
+        await consumeSseResponse(streamRes, (event: ChatStreamEvent) => {
           if (event.type === 'error') {
             throw new Error(event.message);
           }
@@ -129,11 +128,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         });
 
         if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
-            queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
-            queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-          ]);
+          await invalidateChatQueries(queryClient, chatId);
         }
       } catch (caught) {
         if (

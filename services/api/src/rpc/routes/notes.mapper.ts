@@ -4,6 +4,7 @@ export function toNoteDto(record: NoteRecord) {
   return {
     id: record.id,
     userId: record.userId,
+    kind: record.kind,
     title: record.title,
     content: record.content,
     excerpt: record.excerpt,

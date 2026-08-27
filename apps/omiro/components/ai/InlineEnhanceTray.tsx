@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import { Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { IconButton, TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -42,12 +42,13 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const [primary, mutedForeground, popover, textPrimary] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-    '--color-popover',
-    '--color-foreground',
-  ]) as string[];
+  const { primary, mutedForeground, popover, foreground: textPrimary } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    container: { gap: 8, marginVertical: 16 },
+    actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+    errorText: { color: theme.colors.destructive, lineHeight: 16 },
+    suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  }));
   const customInputRef = useRef<TextInput>(null);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
@@ -145,10 +146,3 @@ export function InlineEnhanceTray({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  container: { gap: 8, marginVertical: 16 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  errorText: { color: theme.colors.destructive, lineHeight: 16 },
-  suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-}));

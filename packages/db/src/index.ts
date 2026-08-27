@@ -34,6 +34,7 @@ export type {
   ListNotesInput,
   CreateNoteInput as NoteCreateInput,
   NoteFileRecord,
+  NoteKind,
   NoteMutationCommand,
   NoteRecord,
   UpdateNoteInput as NoteUpdateInput,

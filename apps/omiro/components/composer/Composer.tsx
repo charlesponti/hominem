@@ -7,8 +7,8 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 
-import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
-import { Card, nativeShadows } from '~/components/ui';
+import { transitionDurations, useAppTheme, useStyles } from '~/components/theme';
+import { Card } from '~/components/ui';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -21,7 +21,6 @@ import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import { ComposerToolbar } from './ComposerToolbar';
 import { useComposerController } from './useComposerController';
 import { useComposerSubmission } from './useComposerSubmission';
-import { useComposerToastHandoff } from './useComposerToastHandoff';
 import { getVoiceComposerErrorPresentation } from './voiceComposerInput.helpers';
 
 export type { ComposerProps } from './composer.types';
@@ -44,7 +43,6 @@ export function Composer(props: ComposerProps) {
 
 function ComposerContent(props: ComposerProps) {
   const submission = useComposerSubmission(props);
-  const toastHandoff = useComposerToastHandoff(props.mode === 'chat');
   const clearComposerRef = useRef<() => void>(() => {});
   const handleWalkieTalkieTranscript = useCallback(
     (rawText: string) => {
@@ -84,20 +82,12 @@ function ComposerContent(props: ComposerProps) {
       if (canSubmit) {
         controller.markAttachmentsSubmitted(controller.uploadedAttachmentIds);
       }
-      // The toast only makes sense for an actual chat message with visible
-      // text -- an attachment-only send or a note/start-chat submit has
-      // nothing in the composer worth flying out of it.
-      const messageId =
-        canSubmit && kind === 'message' && props.mode === 'chat' && message.trim()
-          ? toastHandoff.beginHandoff(message.trim())
-          : undefined;
       void submission.submit(
         {
           canSubmit,
           clearComposer: controller.clearComposer,
           fileIds: controller.uploadedAttachmentIds,
           message,
-          messageId,
         },
         kind,
       );
@@ -106,9 +96,7 @@ function ComposerContent(props: ComposerProps) {
       controller.clearComposer,
       controller.markAttachmentsSubmitted,
       controller.uploadedAttachmentIds,
-      props.mode,
       submission,
-      toastHandoff,
     ],
   );
 
@@ -117,11 +105,12 @@ function ComposerContent(props: ComposerProps) {
     [controller.voice],
   );
 
-  const [primary, destructive, borderDefault] = useThemeColor([
-    '--color-primary',
-    '--color-destructive',
-    '--color-border',
-  ]) as string[];
+  const theme = useAppTheme();
+  const { primary, destructive, border: borderDefault } = theme.colors;
+  const styles = useStyles(() => ({
+    composer: { width: '100%', gap: 12 },
+    fields: { gap: 8 },
+  }));
   const prefersReducedMotion = useReducedMotion();
 
   const isRecording = controller.voice.isRecording;
@@ -150,12 +139,7 @@ function ComposerContent(props: ComposerProps) {
     : FadeOutUp.duration(transitionDurations[100]);
 
   return (
-    <Animated.View
-      style={styles.composer}
-      layout={bannerLayout}
-      ref={toastHandoff.ref}
-      testID={presentation.shellTestID}
-    >
+    <Animated.View style={styles.composer} layout={bannerLayout} testID={presentation.shellTestID}>
       {controller.showAttachments ? <ComposerAttachmentRow /> : undefined}
 
       <Card
@@ -163,7 +147,7 @@ function ComposerContent(props: ComposerProps) {
           borderColor,
           borderCurve: 'continuous',
           borderRadius: 24,
-          boxShadow: nativeShadows.sm,
+          boxShadow: theme.shadows.sm,
           paddingBottom: 4,
         }}
         testID={`${presentation.shellTestID ?? 'composer'}-surface`}
@@ -232,8 +216,3 @@ function ComposerContent(props: ComposerProps) {
     </Animated.View>
   );
 }
-
-const styles = makeStyles(() => ({
-  composer: { width: '100%', gap: 12 },
-  fields: { gap: 8 },
-}));

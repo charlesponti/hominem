@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
+import { transitionDurations, useAppTheme } from '~/components/theme';
 
 const SHIMMER_DURATION = transitionDurations[150] * 5;
 
@@ -32,8 +32,7 @@ interface ChatShimmerMessageProps {
 }
 
 export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
-  const cardBg = useThemeColor('--color-card') as string;
-  const popoverBg = useThemeColor('--color-popover') as string;
+  const { card: cardBg, popover: popoverBg } = useAppTheme().colors;
   const animatedStyle = usePulse();
 
   if (variant === 'user') {
@@ -64,7 +63,7 @@ export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessage
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   userShimmer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -78,4 +77,4 @@ const styles = makeStyles(() => ({
   assistantContent: { flex: 1, gap: 8 },
   assistantLine: { borderRadius: 6, height: 16, width: '100%' },
   assistantLineShort: { borderRadius: 6, height: 16, width: 1 },
-}));
+});

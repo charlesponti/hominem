@@ -1,9 +1,9 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -23,13 +23,25 @@ interface ChatSourcesSheetProps {
 
 export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetProps) {
   const insets = useSafeAreaInsets();
-  const [borderDefault, background, textPrimary, textSecondary, destructive] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-foreground',
-    '--color-muted-foreground',
-    '--color-destructive',
-  ]) as [string, string, string, string, string];
+  const {
+    border: borderDefault,
+    background,
+    foreground: textPrimary,
+    mutedForeground: textSecondary,
+    destructive,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    sheetContent: { gap: 16, paddingHorizontal: 24 },
+    sheetTitle: { ...theme.textVariants.title2, fontWeight: '700' },
+    sheetDescription: { ...theme.textVariants.footnote },
+    section: { gap: 4 },
+    sectionLabel: {
+      ...theme.textVariants.caption1,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    empty: { ...theme.textVariants.footnote, paddingVertical: 8 },
+  }));
   const modalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['70%'], []);
 
@@ -124,12 +136,3 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
     </BottomSheetModal>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  sheetContent: { gap: 16, paddingHorizontal: 24 },
-  sheetTitle: { ...theme.typography.title2, fontWeight: '700' },
-  sheetDescription: { ...theme.typography.footnote },
-  section: { gap: 4 },
-  sectionLabel: { ...theme.typography.caption1, fontWeight: '600', textTransform: 'uppercase' },
-  empty: { ...theme.typography.footnote, paddingVertical: 8 },
-}));

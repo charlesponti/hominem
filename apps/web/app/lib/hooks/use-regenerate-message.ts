@@ -3,9 +3,8 @@ import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
-import { chatQueryKeys } from '~/lib/query-keys';
-
-import { consumeChatStream } from '../chat/stream-events';
+import { invalidateChatQueries } from '../chat/chat-cache';
+import { consumeSseResponse } from '../chat/consume-sse-response';
 import type { ResponseLength } from './use-response-length';
 
 export type RegenerationStatus =
@@ -29,16 +28,6 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
     null,
   );
   const cancelRequestedRef = useRef(false);
-
-  const reconcile = useCallback(
-    () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-      ]),
-    [chatId, queryClient],
-  );
 
   const regenerate = useCallback(
     async (messageId: string, responseLength?: ResponseLength) => {
@@ -64,7 +53,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
           },
           { init: { signal: abortController.signal } },
         );
-        await consumeChatStream(response, (event: ChatStreamEvent) => {
+        await consumeSseResponse(response, (event: ChatStreamEvent) => {
           if (event.type === 'error') throw new Error(event.message);
           if (event.type === 'status') {
             setStatus(event.status === 'preparing' ? 'preparing' : 'streaming');
@@ -72,18 +61,18 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
           if (event.type === 'committed') setStatus('committed');
           if (event.type === 'cancelled') setStatus('cancelled');
         });
-        await reconcile();
+        await invalidateChatQueries(queryClient, chatId);
       } catch (caught) {
         if (
           cancelRequestedRef.current ||
           (caught instanceof DOMException && caught.name === 'AbortError')
         ) {
           setStatus('cancelled');
-          await reconcile();
+          await invalidateChatQueries(queryClient, chatId);
         } else {
           setStatus('failed');
           setError(caught instanceof Error ? caught : new Error(String(caught)));
-          await reconcile();
+          await invalidateChatQueries(queryClient, chatId);
         }
       } finally {
         abortControllerRef.current = null;
@@ -91,7 +80,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
         setActiveMessageId(null);
       }
     },
-    [activeMessageId, chatId, client, reconcile],
+    [activeMessageId, chatId, client, queryClient],
   );
 
   const cancel = useCallback(async () => {

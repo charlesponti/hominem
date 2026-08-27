@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 
 interface IconButtonProps {
   accessibilityLabel?: string;
@@ -22,7 +22,19 @@ export function IconButton({
   testID,
   variant = 'bordered',
 }: IconButtonProps) {
-  const styles = iconButtonStyles;
+  const styles = useStyles((currentTheme) => ({
+    button: {
+      width: 32,
+      height: 32,
+      borderRadius: 999,
+      alignItems: 'center',
+      justifyContent: 'center',
+    } satisfies ViewStyle,
+    bordered: { borderWidth: 1, borderColor: currentTheme.colors.border } satisfies ViewStyle,
+    plain: { borderWidth: 0, borderColor: 'transparent' } satisfies ViewStyle,
+    pressed: { opacity: 0.7 } satisfies ViewStyle,
+    disabled: { opacity: 0.4 } satisfies ViewStyle,
+  }));
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -42,17 +54,3 @@ export function IconButton({
     </Pressable>
   );
 }
-
-const iconButtonStyles = makeStyles((currentTheme) => ({
-  button: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  } satisfies ViewStyle,
-  bordered: { borderWidth: 1, borderColor: currentTheme.colors.border } satisfies ViewStyle,
-  plain: { borderWidth: 0, borderColor: 'transparent' } satisfies ViewStyle,
-  pressed: { opacity: 0.7 } satisfies ViewStyle,
-  disabled: { opacity: 0.4 } satisfies ViewStyle,
-}));

@@ -1,9 +1,8 @@
 import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import type { ChatMessageItem } from '~/components/chat';
 import { chatKeys } from '~/services/notes/query-keys';
-
-import type { MessageOutput } from './chatMessages';
 
 interface EditMessageInput {
   messageId: string;
@@ -18,7 +17,7 @@ export function useEditChatMessage(chatId: string) {
     unknown,
     Error,
     EditMessageInput,
-    { previousMessages: MessageOutput[] | undefined }
+    { previousMessages: ChatMessageItem[] | undefined }
   >({
     mutationFn: async ({ messageId, content }) => {
       const res = await client.api.chats[':id'].messages[':messageId'].$patch({
@@ -29,9 +28,11 @@ export function useEditChatMessage(chatId: string) {
     },
     onMutate: async ({ messageId, content }) => {
       await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
-      const previousMessages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId));
+      const previousMessages = queryClient.getQueryData<ChatMessageItem[]>(
+        chatKeys.messages(chatId),
+      );
 
-      queryClient.setQueryData<MessageOutput[]>(chatKeys.messages(chatId), (prev) =>
+      queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (prev) =>
         prev?.map((m) => (m.id === messageId ? { ...m, message: content } : m)),
       );
 

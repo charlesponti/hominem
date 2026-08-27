@@ -1,8 +1,8 @@
 import type React from 'react';
 import { Pressable, Text, View, type TextInput } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
-import { nativeShadows, TextField } from '~/components/ui';
+import { useAppTheme, useStyles } from '~/components/theme';
+import { TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';
@@ -24,17 +24,35 @@ export function ChatSearchModal({
   onClose,
   onChangeSearchQuery,
 }: ChatSearchModalProps) {
-  const [card, textPrimary, textSecondary] = useThemeColor([
-    '--color-card',
-    '--color-foreground',
-    '--color-muted-foreground',
-  ]) as string[];
+  const theme = useAppTheme();
+  const { card, foreground: textPrimary, mutedForeground: textSecondary } = theme.colors;
+  const styles = useStyles((theme) => ({
+    modalContent: { paddingHorizontal: 16, paddingTop: 28 },
+    searchCard: {
+      backgroundColor: theme.colors.card,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 24,
+      paddingHorizontal: 4,
+      paddingVertical: 16,
+    },
+    searchBody: { gap: 12, paddingHorizontal: 16, paddingVertical: 4 },
+    header: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 8,
+      justifyContent: 'space-between',
+    },
+    titleText: { ...theme.textVariants.headline, color: theme.colors.foreground, flex: 1 },
+    closeButton: { alignItems: 'center', justifyContent: 'center', height: 32, width: 32 },
+    captionText: { ...theme.textVariants.caption1, color: theme.colors.mutedForeground },
+  }));
 
   return (
     <ModalOverlay visible={visible} onClose={onClose} position="top">
       <View style={styles.modalContent}>
         <View
-          style={[styles.searchCard, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}
+          style={[styles.searchCard, { borderCurve: 'continuous', boxShadow: theme.shadows.md }]}
         >
           <View style={styles.searchBody}>
             <View style={styles.header}>
@@ -74,20 +92,3 @@ export function ChatSearchModal({
     </ModalOverlay>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  modalContent: { paddingHorizontal: 16, paddingTop: 28 },
-  searchCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 24,
-    paddingHorizontal: 4,
-    paddingVertical: 16,
-  },
-  searchBody: { gap: 12, paddingHorizontal: 16, paddingVertical: 4 },
-  header: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
-  titleText: { ...theme.typography.headline, color: theme.colors.foreground, flex: 1 },
-  closeButton: { alignItems: 'center', justifyContent: 'center', height: 32, width: 32 },
-  captionText: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-}));

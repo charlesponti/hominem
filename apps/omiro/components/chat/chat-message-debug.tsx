@@ -1,7 +1,7 @@
 import type { ChatMessageItem } from '@hominem/chat';
 import { Text, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { useStyles } from '~/components/theme';
 
 export function MessageDebug({
   message,
@@ -10,6 +10,19 @@ export function MessageDebug({
   message: ChatMessageItem;
   hasReasoning: boolean;
 }) {
+  const styles = useStyles((theme) => ({
+    debugPanel: {
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      width: '100%',
+    },
+    debugText: { ...theme.textVariants.mono, color: theme.colors.foreground, opacity: 0.8 },
+  }));
   return (
     <View style={styles.debugPanel}>
       <Text style={styles.debugText}>ID: {message.id}</Text>
@@ -20,17 +33,3 @@ export function MessageDebug({
     </View>
   );
 }
-
-const styles = makeStyles((theme) => ({
-  debugPanel: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    width: '100%',
-  },
-  debugText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-}));

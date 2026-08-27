@@ -1,7 +1,8 @@
 import { CareerRepository, db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { McpToolResult } from '../tools';
+import './career';
+import { callTool, type McpToolResult } from '../tool-registry';
 
 const userId = 'a2000001-0000-4000-8000-000000000003';
 const otherUserId = 'a2000001-0000-4000-8000-000000000004';
@@ -17,7 +18,6 @@ beforeAll(async () => {
       [id, `Engagement Test User ${id}`, `${id}@test.hominem.dev`, true],
     );
   }
-  await import('./career');
 });
 
 describe('career engagement MCP tools', () => {
@@ -27,7 +27,6 @@ describe('career engagement MCP tools', () => {
       .values({ ownerUserid: userId, company: 'Acme', title: 'Engineer' })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const { callTool } = await import('../tools');
 
     const updated = resultContent(
       await callTool(userId, 'career_engagement_update', {
@@ -68,7 +67,6 @@ describe('career engagement MCP tools', () => {
       .values({ ownerUserid: userId, company: 'Secret Co', title: 'Secret role' })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const { callTool } = await import('../tools');
 
     const updated = resultContent(
       await callTool(otherUserId, 'career_engagement_update', {
@@ -104,7 +102,6 @@ describe('career project MCP tools', () => {
       .values({ ownerUserid: userId, title: 'Seed Project' })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const { callTool } = await import('../tools');
 
     const updated = resultContent(
       await callTool(userId, 'career_project_update', {
@@ -149,7 +146,6 @@ describe('career project MCP tools', () => {
       .values({ ownerUserid: userId, title: 'Private project' })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const { callTool } = await import('../tools');
 
     const updated = resultContent(
       await callTool(otherUserId, 'career_project_update', {

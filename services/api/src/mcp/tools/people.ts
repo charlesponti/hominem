@@ -5,7 +5,7 @@ import {
   personTimelineInputSchema,
   personTimelineOutputSchema,
 } from '../../schemas/people.schema';
-import { registerTool } from '../tools';
+import { registerTool } from '../tool-registry';
 
 registerTool(
   {
@@ -17,7 +17,6 @@ registerTool(
     outputSchema: peopleLookupOutputSchema,
     readOnly: true,
     scopes: ['people:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) =>
@@ -34,7 +33,6 @@ registerTool(
     outputSchema: personTimelineOutputSchema,
     readOnly: true,
     scopes: ['people:read', 'calendar:read', 'travel:read', 'social:read'],
-    sensitivity: 'sensitive',
     resultCap: 50,
   },
   async (ownerUserId, input) => getPersonTimeline({ ownerUserId, personId: input.personId }),

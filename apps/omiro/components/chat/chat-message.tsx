@@ -7,15 +7,12 @@ import Animated, {
   FadeOut,
   FadeOutUp,
   LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
-import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
+import { nativeMotionContracts } from '~/services/motion/native-motion';
 import t from '~/translations';
 
 import { ActiveMessageActions } from './chat-message-actions';
@@ -23,14 +20,7 @@ import { MessageContent } from './chat-message-content';
 import { MessageDebug } from './chat-message-debug';
 import { MessageEditModal } from './chat-message-edit-modal';
 import { MessageToolCalls } from './chat-message-tool-calls';
-import { useChatMotionOverlay } from './chat-motion-overlay';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
-
-// Generous multiple of the toast flight's own duration (nativeMotionTiming
-// quick/enter, both well under 300ms). If the overlay never calls dismiss --
-// a measurement failure, a stuck animation -- the row must still reveal
-// itself rather than stay invisible forever.
-const HANDOFF_REVEAL_FALLBACK_MS = 1500;
 
 type ChatMessageProps = {
   message: ChatMessageItem;
@@ -42,6 +32,13 @@ type ChatMessageProps = {
   isActive?: boolean;
   onActivate?: (messageId: string) => void;
   formatTimestamp: (value: string) => string;
+  /**
+   * True only for a row that was just added to the list this session (a
+   * freshly sent user message), as opposed to a historical row present when
+   * the screen or a page of history first loaded. Gates the row's entrance
+   * animation so opening a chat doesn't replay it for every existing message.
+   */
+  isNewMessage?: boolean;
 };
 
 export const ChatMessage = memo(function ChatMessage({
@@ -54,39 +51,58 @@ export const ChatMessage = memo(function ChatMessage({
   isActive = false,
   onActivate,
   formatTimestamp,
+  isNewMessage = false,
 }: ChatMessageProps) {
-  const [textPrimary, primaryForeground, destructive, tertiary] = useThemeColor([
-    '--color-foreground',
-    '--color-primary-foreground',
-    '--color-destructive',
-    '--color-tertiary',
-  ]) as string[];
+  const {
+    foreground: textPrimary,
+    primaryForeground,
+    destructive,
+    tertiary,
+  } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    content: { gap: 8, width: '100%' },
+    reasoningPanel: {
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 6,
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      width: '100%',
+    },
+    reasoningText: { ...theme.textVariants.mono, color: theme.colors.foreground, opacity: 0.8 },
+    retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+    interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    message: { width: '100%' },
+    messageUser: { alignItems: 'flex-end' },
+    messageAssistant: { alignItems: 'flex-start' },
+    userBubble: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadii.sm,
+      borderBottomRightRadius: 2,
+      paddingHorizontal: 12,
+    },
+    assistantBubble: {
+      borderRadius: theme.borderRadii.sm,
+      borderBottomLeftRadius: 2,
+      paddingHorizontal: 12,
+    },
+    continuous: { borderCurve: 'continuous' },
+  }));
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
   const handleActivate = useCallback(() => onActivate?.(message.id), [onActivate, message.id]);
   const reducedMotion = useReducedMotion();
-  const overlay = useChatMotionOverlay();
-  const inFlight = isUser && overlay.isInFlight(message.renderKey ?? message.id);
-  const revealOpacity = useSharedValue(inFlight ? 0 : 1);
-
-  useEffect(() => {
-    if (!inFlight) {
-      // Historical messages start at opacity 1 and were never in flight --
-      // skip scheduling a no-op 1-to-1 animation for every row on mount.
-      if (revealOpacity.value !== 1) {
-        revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
-      }
-      return;
-    }
-    // Safety net for a flight that never calls dismiss -- see the constant.
-    const fallback = setTimeout(() => {
-      revealOpacity.value = withTiming(1, nativeMotionTiming.quick);
-    }, HANDOFF_REVEAL_FALLBACK_MS);
-    return () => clearTimeout(fallback);
-  }, [inFlight, revealOpacity]);
-
-  const revealStyle = useAnimatedStyle(() => ({ opacity: revealOpacity.value }));
+  // A just-sent user message lifts and fades in from its own list position;
+  // historical rows (chat open, pagination) mount with no entrance.
+  const rowEntering =
+    isUser && isNewMessage
+      ? reducedMotion
+        ? FadeIn.duration(nativeMotionContracts.duration.quick)
+        : FadeInDown.duration(nativeMotionContracts.duration.quick)
+      : undefined;
   // The row settles its own height when the printer indicator is removed,
   // Markdown reflows in, or a failure/retry banner appears or clears,
   // instead of jumping. A no-op for rows whose height never changes.
@@ -144,7 +160,8 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <Animated.View
       layout={rowLayout}
-      style={[styles.message, isUser ? styles.messageUser : styles.messageAssistant, revealStyle]}
+      entering={rowEntering}
+      style={[styles.message, isUser ? styles.messageUser : styles.messageAssistant]}
     >
       <MessageToolCalls toolCalls={renderedToolCalls} />
       <Pressable
@@ -217,35 +234,3 @@ export const ChatMessage = memo(function ChatMessage({
     </Animated.View>
   );
 });
-
-const styles = makeStyles((theme) => ({
-  content: { gap: 8, width: '100%' },
-  reasoningPanel: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    width: '100%',
-  },
-  reasoningText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-  retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
-  interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  message: { width: '100%' },
-  messageUser: { alignItems: 'flex-end' },
-  messageAssistant: { alignItems: 'flex-start' },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.sm,
-    borderBottomRightRadius: 2,
-    paddingHorizontal: 12,
-  },
-  assistantBubble: {
-    borderRadius: theme.radius.sm,
-    borderBottomLeftRadius: 2,
-    paddingHorizontal: 12,
-  },
-  continuous: { borderCurve: 'continuous' },
-}));

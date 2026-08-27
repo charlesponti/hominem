@@ -23,6 +23,7 @@ function buildOptimisticNote(text: string, title: string | undefined, optimistic
 
   return {
     id: optimisticId,
+    kind: 'note',
     title: title ?? null,
     content: trimmed,
     excerpt: buildContentPreview(null, trimmed) || null,
