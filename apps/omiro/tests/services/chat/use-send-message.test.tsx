@@ -8,21 +8,14 @@ import { chatKeys } from '~/services/notes/query-keys';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
-const {
-  mockFinish,
-  mockGetAuthHeaders,
-  mockImpactAsync,
-  mockNetInfoFetch,
-  mockRandomUUID,
-  mockSendMessage,
-} = vi.hoisted(() => ({
-  mockFinish: vi.fn(),
-  mockGetAuthHeaders: vi.fn().mockResolvedValue({}),
-  mockImpactAsync: vi.fn().mockResolvedValue(undefined),
-  mockNetInfoFetch: vi.fn().mockResolvedValue({ isConnected: true }),
-  mockRandomUUID: vi.fn(() => 'uuid-1'),
-  mockSendMessage: vi.fn(),
-}));
+const { mockGetAuthHeaders, mockImpactAsync, mockNetInfoFetch, mockRandomUUID, mockSendMessage } =
+  vi.hoisted(() => ({
+    mockGetAuthHeaders: vi.fn().mockResolvedValue({}),
+    mockImpactAsync: vi.fn().mockResolvedValue(undefined),
+    mockNetInfoFetch: vi.fn().mockResolvedValue({ isConnected: true }),
+    mockRandomUUID: vi.fn(() => 'uuid-1'),
+    mockSendMessage: vi.fn(),
+  }));
 
 vi.mock('expo-haptics', () => ({
   impactAsync: mockImpactAsync,
@@ -44,17 +37,16 @@ vi.mock('@hominem/rpc/react', () => ({
     api: { chats: { ':id': { generations: { ':generationId': { cancel: { $post: vi.fn() } } } } } },
   }),
 }));
-vi.mock('@tanstack/ai-react', () => ({
-  xhrHttpStream: vi.fn(() => ({})),
-  useChat: (options: { onFinish?: () => void }) => {
-    if (options.onFinish) mockFinish.mockImplementation(options.onFinish);
-    return {
-      sendMessage: mockSendMessage,
-      messages: [],
-      isLoading: false,
-      runId: 'run-1',
-    };
-  },
+vi.mock('~/services/chat/chat-runtime', () => ({
+  useChatRuntime: () => ({
+    sendMessage: mockSendMessage,
+    messages: [],
+    isLoading: false,
+    runId: 'run-1',
+    stop: vi.fn(),
+    addToolApprovalResponse: vi.fn(),
+    interrupts: [],
+  }),
 }));
 
 const { useSendMessage } = await import('~/services/chat/use-send-message');
@@ -65,7 +57,7 @@ describe('useSendMessage', () => {
   afterEach(() => vi.clearAllMocks());
 
   it('keeps generated prose out of the cache until TanStack finishes', async () => {
-    mockSendMessage.mockImplementationOnce(async () => mockFinish());
+    mockSendMessage.mockResolvedValueOnce(undefined);
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useSendMessage({ chatId: CHAT_ID }),
     );

@@ -1,12 +1,15 @@
+import { useTheme } from '@shopify/restyle';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
+  DynamicColorIOS,
 } from 'react-native';
 import Animated, {
   FadeIn,
@@ -18,7 +21,7 @@ import Animated, {
 
 import { useVoiceComposerInput } from '~/components/composer/useVoiceComposerInput';
 import { getVoiceComposerErrorPresentation } from '~/components/composer/voiceComposerInput.helpers';
-import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
+import { palette, theme, withAlpha } from '~/components/theme';
 import { Card, IconButton, nativeShadows, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
@@ -65,7 +68,7 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
     updateDraft,
   } = controller;
   const disabled = state.kind === 'parsing' || isSaving;
-  const [primaryColor] = useThemeColor(['--color-primary']) as [string];
+  const { primary: primaryColor } = useTheme().colors;
   const inputRef = useRef<RNTextInput>(null);
   const reducedMotion = useReducedMotion();
 
@@ -463,7 +466,12 @@ function getIntentLabel(
   }[intent];
 }
 
-const styles = makeStyles((theme) => ({
+const intentBadgeBackground = DynamicColorIOS({
+  light: withAlpha(palette.light.muted, 0.7),
+  dark: withAlpha(palette.dark.muted, 0.7),
+});
+
+const styles = StyleSheet.create({
   composerCard: { width: '100%', gap: 8, padding: 12 },
   actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   loadingState: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
@@ -480,7 +488,7 @@ const styles = makeStyles((theme) => ({
   openingEnd: { color: theme.colors.mutedForeground },
   intentBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: withAlpha(theme.colors.muted, 0.7),
+    backgroundColor: intentBadgeBackground,
     borderRadius: theme.radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -504,4 +512,4 @@ const styles = makeStyles((theme) => ({
     justifyContent: 'space-between',
     gap: 8,
   },
-}));
+});

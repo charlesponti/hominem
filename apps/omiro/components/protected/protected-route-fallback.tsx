@@ -1,11 +1,11 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 export function ProtectedRouteFallback() {
   return <View testID="protected-route-fallback" style={styles.container} />;
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1 },
-}));
+});

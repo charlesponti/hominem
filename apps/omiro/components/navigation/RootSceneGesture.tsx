@@ -1,11 +1,11 @@
 import { usePathname, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { STREAM_ROUTE, TIME_ROUTE } from '~/services/navigation/routes';
@@ -133,7 +133,7 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1, overflow: 'hidden' },
   preview: {
     position: 'absolute',
@@ -146,4 +146,4 @@ const styles = makeStyles((theme) => ({
   previewContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   previewText: { ...theme.typography.title2, color: theme.colors.secondaryForeground },
   content: { flex: 1 },
-}));
+});

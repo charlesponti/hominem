@@ -1,8 +1,9 @@
+import { useTheme } from '@shopify/restyle';
 import type { SFSymbol } from 'expo-symbols';
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 
 export function SettingsRow({
@@ -22,11 +23,11 @@ export function SettingsRow({
   destructive?: boolean;
   testID?: string;
 }) {
-  const [destructiveColor, textPrimaryColor, tertiaryColor] = useThemeColor([
-    '--color-destructive',
-    '--color-foreground',
-    '--color-tertiary',
-  ]) as string[];
+  const {
+    destructive: destructiveColor,
+    foreground: textPrimaryColor,
+    tertiary: tertiaryColor,
+  } = useTheme().colors;
 
   const labelColor = destructive ? destructiveColor : textPrimaryColor;
 
@@ -66,7 +67,7 @@ export function SectionLabel({ children }: { children: string }) {
   return <Text style={styles.sectionLabel}>{children}</Text>;
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   labelContent: { flex: 1, gap: 2 },
@@ -80,4 +81,4 @@ const styles = makeStyles((theme) => ({
     color: theme.colors.mutedForeground,
     paddingHorizontal: 16,
   },
-}));
+});

@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { useThemeColor } from '~/components/theme';
+import { palette, useColorMode } from '~/components/theme';
 
 interface AnimatedCanvasButtonProps extends Pick<ViewProps, 'children' | 'style'> {
   progress: number;
@@ -27,10 +27,9 @@ export function AnimatedCanvasButton({
   borderRadius = DEFAULT_BORDER_RADIUS,
   style,
 }: AnimatedCanvasButtonProps) {
-  const [primary, mutedForeground] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-  ]) as string[];
+  const colorMode = useColorMode();
+  const primary = palette[colorMode].primary;
+  const mutedForeground = palette[colorMode].mutedForeground;
   const [width, setWidth] = React.useState(0);
   const clampedProgress = Math.max(0, Math.min(1, progress));
   const borderPath = React.useMemo(() => {

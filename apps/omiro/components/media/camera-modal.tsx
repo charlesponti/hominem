@@ -1,8 +1,9 @@
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
+import { useTheme } from '@shopify/restyle';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Camera,
@@ -11,7 +12,7 @@ import {
   usePhotoOutput,
 } from 'react-native-vision-camera';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
@@ -38,11 +39,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   const photoOutput = usePhotoOutput();
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
-  const [borderDefault, background, primaryForeground] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-primary-foreground',
-  ]) as [string, string, string];
+  const { border: borderDefault, background, primaryForeground } = useTheme().colors;
 
   const handleCapture = async () => {
     if (isTakingPhoto || !device) return;
@@ -174,7 +171,7 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   cameraContainer: { flex: 1 },
   controls: {
     position: 'absolute',
@@ -236,4 +233,4 @@ const styles = makeStyles((theme) => ({
     justifyContent: 'center',
   },
   captureButtonDisabled: { opacity: 0.5 },
-}));
+});

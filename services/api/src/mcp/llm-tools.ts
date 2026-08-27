@@ -34,8 +34,8 @@ function isFunctionTool(
 /**
  * All registered MCP tools, converted to the JSON-Schema function-tool shape
  * OpenRouter expects. Write tools are included — tools flagged
- * `requiresConfirmation` are gated at execution time in
- * chat-completion-loop.ts, not hidden from the model here.
+ * `requiresConfirmation` are gated at execution time by the TanStack chat
+ * agent runtime, not hidden from the model here.
  *
  * Registration failures are surfaced to the caller so a private-data request
  * can never silently degrade into an ungrounded answer.

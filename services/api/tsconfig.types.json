@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Types-only emit for downstream consumers (@hominem/api/* path aliases in
+    // apps/finance, apps/career, packages/rpc). This config stays NON-composite
+    // (inherited from ./tsconfig.json) so we dodge TS2883's "portable type"
+    // rule, and emitDeclarationOnly means we never write runnable JS here —
+    // just the .d.ts menu for AppType/careerRoutes.
+    //
+    // Dev flow: keep `pnpm --filter @hominem/api build:types:watch` running in
+    // a terminal; it regenerates build/types/ within ~1s of each save. The
+    // emitted files live inside build/ (gitignored), so the CI gate stalls them
+    // via turbo's typecheck dependsOn (see turbo.json).
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "./build/types",
+    "tsBuildInfoFile": "./.cache/tsconfig.types.tsbuildinfo"
+  }
+}

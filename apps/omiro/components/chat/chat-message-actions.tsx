@@ -1,8 +1,9 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { Text, View } from 'react-native';
+import { useTheme } from '@shopify/restyle';
+import { StyleSheet, Text, View } from 'react-native';
 import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 import { ActionIconButton } from '../ui/action-icon-button';
 import { ChatCopyButton } from './chat-copy-button';
@@ -32,7 +33,7 @@ export function ActiveMessageActions({
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
 }) {
-  const [tertiary] = useThemeColor(['--color-tertiary']) as string[];
+  const { tertiary } = useTheme().colors;
 
   if (!isActive) {
     return null;
@@ -62,8 +63,8 @@ export function ActiveMessageActions({
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   actionContainer: { marginTop: 4 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   actionsEnd: { justifyContent: 'flex-end' },
-}));
+});

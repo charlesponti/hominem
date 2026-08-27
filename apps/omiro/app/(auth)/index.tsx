@@ -1,11 +1,12 @@
+import { useTheme } from '@shopify/restyle';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import { IconChip } from '~/components/ui/icon-chip';
@@ -27,7 +28,7 @@ function AuthScreen() {
   const [authError, setAuthError] = useState<string | null>(null);
   const normalizedEmail = normalizeEmail(email);
 
-  const [textPrimary] = useThemeColor(['--color-foreground']) as string[];
+  const { foreground: textPrimary } = useTheme().colors;
 
   const getEmailProgress = () => {
     if (!email) return { stage: 0, message: 'Enter your email' };
@@ -197,7 +198,7 @@ const AuthWithErrorBoundary = () => (
 
 export default AuthWithErrorBoundary;
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   ...authSharedStyles(theme),
   restoringMessage: { ...theme.typography.subhead, color: theme.colors.mutedForeground },
   inputContainer: { gap: 12 },
@@ -208,4 +209,4 @@ const styles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-}));
+});

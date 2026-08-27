@@ -1,8 +1,9 @@
 import type { MonthlyUsageStatus } from '@hominem/rpc/types';
-import { Text, View } from 'react-native';
+import { useTheme } from '@shopify/restyle';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { SectionLabel } from '~/components/settings/SettingsRow';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -25,11 +26,11 @@ function formatUsd(amount: number): string {
 }
 
 export function UsageSection({ monthlyUsage }: { monthlyUsage: MonthlyUsageStatus }) {
-  const [textPrimaryColor, borderDefaultColor, destructiveColor] = useThemeColor([
-    '--color-foreground',
-    '--color-border',
-    '--color-destructive',
-  ]) as string[];
+  const {
+    foreground: textPrimaryColor,
+    border: borderDefaultColor,
+    destructive: destructiveColor,
+  } = useTheme().colors;
 
   const usagePercent = Math.min(100, (monthlyUsage.totalCostUsd / monthlyUsage.limitUsd) * 100);
 
@@ -64,7 +65,7 @@ export function UsageSection({ monthlyUsage }: { monthlyUsage: MonthlyUsageStatu
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   usageSection: { gap: 8 },
   usageSummary: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 16 },
   usageAmount: {
@@ -77,4 +78,4 @@ const styles = makeStyles((theme) => ({
   usageBar: { borderRadius: 4, height: 4, marginHorizontal: 4, overflow: 'hidden' },
   usageBarFill: { borderRadius: 4, height: 4 },
   usageResetMessage: { color: theme.colors.tertiary, paddingHorizontal: 16 },
-}));
+});

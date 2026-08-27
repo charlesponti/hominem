@@ -31,3 +31,20 @@ export const ChatsSearchMessagesQuerySchema = z.object({
 export const ChatsAddSourceSchema = z.object({
   noteId: z.uuid(),
 });
+
+export const ChatsAgentOperationSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('send'),
+    fileIds: z.array(z.uuid()).optional(),
+    responseLength: z.enum(['short', 'medium', 'long']).optional(),
+    responseModality: z.enum(['text', 'audio']).optional(),
+  }),
+  z.object({
+    kind: z.literal('regenerate'),
+    assistantMessageId: z.uuid(),
+    responseLength: z.enum(['short', 'medium', 'long']).optional(),
+  }),
+  z.object({ kind: z.literal('resume') }),
+]);
+
+export type ChatsAgentOperation = z.infer<typeof ChatsAgentOperationSchema>;

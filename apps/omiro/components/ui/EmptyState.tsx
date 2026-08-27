@@ -1,9 +1,10 @@
+import { useTheme } from '@shopify/restyle';
 import { Image, type ImageSource } from 'expo-image';
 import type { SFSymbol } from 'expo-symbols';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 import { Button } from './button';
 import AppIcon from './icon';
@@ -17,7 +18,7 @@ interface EmptyStateProps {
 }
 
 function EmptyState({ action, description, imageSource, sfSymbol, title }: EmptyStateProps) {
-  const [textSecondary] = useThemeColor(['--color-muted-foreground']) as [string];
+  const { mutedForeground: textSecondary } = useTheme().colors;
 
   return (
     <Reanimated.View entering={FadeIn.duration(280)} style={styles.container}>
@@ -44,10 +45,10 @@ function EmptyState({ action, description, imageSource, sfSymbol, title }: Empty
 
 export { EmptyState };
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { width: '100%', maxWidth: 320, alignItems: 'center', gap: 12, paddingHorizontal: 24 },
   image: { height: 112, width: 112 },
   title: { fontSize: 18, color: theme.colors.foreground, fontWeight: '600', textAlign: 'center' },
   description: { textAlign: 'center', color: theme.colors.mutedForeground },
-}));
+});

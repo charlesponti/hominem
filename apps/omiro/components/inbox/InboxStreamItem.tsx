@@ -1,3 +1,4 @@
+import { useTheme } from '@shopify/restyle';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
@@ -8,7 +9,6 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { useThemeColor } from '~/components/theme';
 import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -35,7 +35,7 @@ export const InboxStreamItem = memo(
     const previewText = cleanText(item.preview ? stripPreviewMarkdown(item.preview) : item.preview);
     const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
     const isChat = item.kind === 'chat';
-    const mutedForegroundColor = useThemeColor('--color-muted-foreground') as string;
+    const mutedForegroundColor = useTheme().colors.mutedForeground;
     const shouldAnimateIn = animateOnMount || isNew;
     const entranceOffset = reducedMotion || !shouldAnimateIn ? 0 : animateOnMount ? 8 : -8;
     const entrance = useSharedValue(entranceOffset === 0 ? 1 : 0);

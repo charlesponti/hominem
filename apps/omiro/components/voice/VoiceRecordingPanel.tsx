@@ -1,5 +1,6 @@
+import { useTheme } from '@shopify/restyle';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { RecordingLevelMeter } from '~/components/voice/RecordingLevelMeter';
@@ -32,11 +33,11 @@ export function VoiceRecordingPanel({
   doneAccessibilityLabel,
   phase = 'recording',
 }: VoiceRecordingPanelProps) {
-  const [cardColor, destructiveColor, textSecondaryColor] = useThemeColor([
-    '--color-card',
-    '--color-destructive',
-    '--color-muted-foreground',
-  ]) as string[];
+  const {
+    card: cardColor,
+    destructive: destructiveColor,
+    mutedForeground: textSecondaryColor,
+  } = useTheme().colors;
   const elapsed = useElapsedTimer(startedAt);
   const dotOpacity = useAnimatedStyle(() => ({
     opacity: withRepeat(
@@ -130,11 +131,11 @@ export function VoiceRecordingPanel({
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   sendingContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
   sendingContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   recordingDot: { width: 8, height: 8, borderRadius: 999 },
   recordingContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
   recordingContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   meterContainer: { flex: 1 },
-}));
+});

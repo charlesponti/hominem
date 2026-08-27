@@ -1,7 +1,8 @@
+import { useTheme } from '@shopify/restyle';
 import type { SFSymbol } from 'expo-symbols';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 
 interface ComposerSendButtonProps {
@@ -24,10 +25,7 @@ export function ComposerSendButton({
   onPress,
   testID,
 }: ComposerSendButtonProps) {
-  const [primary, primaryForeground] = useThemeColor([
-    '--color-primary',
-    '--color-primary-foreground',
-  ]) as string[];
+  const { primary, primaryForeground } = useTheme().colors;
 
   return (
     <Pressable
@@ -48,7 +46,7 @@ export function ComposerSendButton({
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   sendButton: {
     width: 32,
     height: 32,
@@ -56,4 +54,4 @@ const styles = makeStyles(() => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-}));
+});

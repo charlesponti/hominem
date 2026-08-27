@@ -66,6 +66,15 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
       "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*", ".cache/**"]
     },
+    "build:types": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
+      // Emits services/api's .d.ts menu (build/types/) for the @hominem/api/*
+      // paths aliases in apps/finance, apps/career, packages/rpc. Runs before
+      // every typecheck (see below) so the gitignored build/types/ exists on
+      // clean clones; tsc's incremental + turbo's cache keep it fast.
+      "outputs": ["build/types/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true,
@@ -107,7 +116,7 @@
       "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@hominem/api#build:types"],
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
       "outputs": []
     }

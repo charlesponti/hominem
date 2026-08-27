@@ -1,5 +1,6 @@
+import { useTheme } from '@shopify/restyle';
 import { useEffect } from 'react';
-import { Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
 const MOVE_EASING = Easing.bezier(0.77, 0, 0.175, 1);
@@ -28,7 +29,7 @@ interface SegmentedControlProps<T extends string> {
    * `headerTitle` custom view) can resolve this app's DynamicColorIOS-based
    * theme colors against the wrong system appearance, so screens that render
    * this control there should pass explicit colors instead of relying on
-   * useThemeColor.
+   * resolved theme colors.
    */
   trackColor?: string;
   activeColor?: string;
@@ -45,10 +46,7 @@ export function SegmentedControl<T extends string>({
   activeColor,
   inactiveColor,
 }: SegmentedControlProps<T>) {
-  const [themePrimary, themeMutedForeground] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-  ]) as string[];
+  const { primary: themePrimary, mutedForeground: themeMutedForeground } = useTheme().colors;
   const primary = activeColor ?? themePrimary;
   const mutedForeground = inactiveColor ?? themeMutedForeground;
   const reducedMotion = useReducedMotion();
@@ -106,7 +104,7 @@ export function SegmentedControl<T extends string>({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   control: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -128,4 +126,4 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 6,
   },
   label: { fontSize: 13, fontWeight: '600' },
-}));
+});

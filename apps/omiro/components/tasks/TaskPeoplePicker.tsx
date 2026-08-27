@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { DynamicColorIOS, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, withAlpha } from '~/components/theme';
+import { palette, theme, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import {
@@ -146,11 +146,16 @@ export function TaskPeoplePicker({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const ACTION_SELECTED_BACKGROUND = DynamicColorIOS({
+  light: withAlpha(palette.light.primary, 0.15),
+  dark: withAlpha(palette.dark.primary, 0.15),
+});
+
+const styles = StyleSheet.create({
   container: { gap: 12 },
   selectedList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   personChip: {
-    backgroundColor: withAlpha(theme.colors.primary, 0.15),
+    backgroundColor: ACTION_SELECTED_BACKGROUND,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -174,4 +179,4 @@ const styles = makeStyles((theme) => ({
   createActions: { flexDirection: 'row', gap: 8 },
   cancelAction: { flex: 1 },
   submitAction: { flex: 1 },
-}));
+});

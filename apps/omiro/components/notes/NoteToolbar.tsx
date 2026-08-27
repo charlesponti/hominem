@@ -1,9 +1,9 @@
 import type { SFSymbol } from 'expo-symbols';
 import React from 'react';
-import { InputAccessoryView, Keyboard, ScrollView, View } from 'react-native';
+import { InputAccessoryView, Keyboard, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { FormatCommand } from '~/components/notes/note-formatting';
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
@@ -142,7 +142,7 @@ export function NoteToolbar(props: NoteToolbarProps) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   divider: { backgroundColor: theme.colors.border, height: 20, marginHorizontal: 16, width: 1 },
   scrollContainer: { flex: 1 },
   inlineFormattingGroup: { alignItems: 'center', flexDirection: 'row', gap: 8 },
@@ -166,4 +166,4 @@ const styles = makeStyles((theme) => ({
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
-}));
+});

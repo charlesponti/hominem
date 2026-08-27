@@ -29,6 +29,8 @@ import {
 } from '../../application/ai-usage.service';
 import {
   ChatsAddSourceSchema,
+  ChatsAgentOperationSchema,
+  type ChatsAgentOperation,
   ChatsCreateSchema,
   ChatsEditMessageSchema,
   ChatsListQuerySchema,
@@ -43,6 +45,8 @@ import { createTanStackChatStream } from './chat-agent';
 import {
   createChatPersistence,
   createChatStreamDurability,
+  ensureChatRun,
+  getOwnedChatRun,
   getChatRunStore,
 } from './chat-agent-persistence';
 import { streamChatReplySpeech } from './chat-speech.service';
@@ -130,17 +134,7 @@ function getChatId(c: { req: { param: (name: string) => string | undefined } }):
   return chatId;
 }
 
-type AgentOperation =
-  | {
-      kind: 'send';
-      fileIds?: string[];
-      responseLength?: 'short' | 'medium' | 'long';
-      responseModality?: 'text' | 'audio';
-    }
-  | { kind: 'regenerate'; assistantMessageId: string; responseLength?: 'short' | 'medium' | 'long' }
-  | { kind: 'resume' };
-
-function parseAgentOperation(body: unknown): AgentOperation {
+function parseAgentOperation(body: unknown): ChatsAgentOperation {
   const forwardedProps =
     body && typeof body === 'object' && 'forwardedProps' in body
       ? (body as { forwardedProps?: unknown }).forwardedProps
@@ -149,39 +143,10 @@ function parseAgentOperation(body: unknown): AgentOperation {
     forwardedProps && typeof forwardedProps === 'object' && 'operation' in forwardedProps
       ? (forwardedProps as { operation?: unknown }).operation
       : null;
-  if (!operation || typeof operation !== 'object' || !('kind' in operation)) {
-    throw new ValidationError('Agent operation is required');
-  }
-  const value = operation as Record<string, unknown>;
-  if (value.kind === 'send') {
-    return {
-      kind: 'send',
-      ...(Array.isArray(value.fileIds) && value.fileIds.every((id) => typeof id === 'string')
-        ? { fileIds: value.fileIds }
-        : {}),
-      ...(value.responseLength === 'short' ||
-      value.responseLength === 'medium' ||
-      value.responseLength === 'long'
-        ? { responseLength: value.responseLength }
-        : {}),
-      ...(value.responseModality === 'text' || value.responseModality === 'audio'
-        ? { responseModality: value.responseModality }
-        : {}),
-    };
-  }
-  if (value.kind === 'regenerate' && typeof value.assistantMessageId === 'string') {
-    return {
-      kind: 'regenerate',
-      assistantMessageId: value.assistantMessageId,
-      ...(value.responseLength === 'short' ||
-      value.responseLength === 'medium' ||
-      value.responseLength === 'long'
-        ? { responseLength: value.responseLength }
-        : {}),
-    };
-  }
-  if (value.kind === 'resume') return { kind: 'resume' };
-  throw new ValidationError('Invalid agent operation');
+  if (!operation) throw new ValidationError('Agent operation is required');
+  const parsed = ChatsAgentOperationSchema.safeParse(operation);
+  if (!parsed.success) throw new ValidationError('Invalid agent operation');
+  return parsed.data;
 }
 
 function latestUserContent(messages: readonly ModelMessage[]): string {
@@ -207,8 +172,23 @@ const chatByIdRoutes = new Hono<AppContext>()
     if (params.threadId !== chatId) throw new ValidationError('Thread id does not match chat id');
 
     const operation = params.resume
-      ? ({ kind: 'resume' } satisfies AgentOperation)
+      ? ({ kind: 'resume' } satisfies ChatsAgentOperation)
       : parseAgentOperation(body);
+    const existingRun = await getOwnedChatRun(userId, params.runId);
+    if (existingRun && existingRun.threadId !== chatId) {
+      throw new ValidationError('Run id does not belong to this chat');
+    }
+    if (existingRun && operation.kind !== 'resume') {
+      const replayUrl = new URL(c.req.url);
+      replayUrl.searchParams.set('offset', '0');
+      return resumeHttpResponse({
+        adapter: createChatStreamDurability(
+          new Request(replayUrl, c.req.raw),
+          params.runId,
+          userId,
+        ),
+      });
+    }
     await assertUnderMonthlyUsageLimit(userId);
     let messages = params.messages as ModelMessage[];
     let inputFiles: ChatMessageFileRecord[] = [];
@@ -224,11 +204,6 @@ const chatByIdRoutes = new Hono<AppContext>()
       inputFiles = files;
       const storedContent = toStoredUserMessageContent(message, files);
       if (!storedContent) throw new ValidationError('Message or fileIds is required');
-      const existingRun = await db
-        .selectFrom('app.aiChatRuns')
-        .select('runId')
-        .where('runId', '=', params.runId)
-        .executeTakeFirst();
       if (!existingRun) {
         await runInTransaction(async (trx) => {
           await ChatRepository.insertMessage(trx, {
@@ -272,6 +247,8 @@ const chatByIdRoutes = new Hono<AppContext>()
       responseLength = operation.responseLength;
     }
 
+    await ensureChatRun({ ownerUserId: userId, threadId: params.threadId, runId: params.runId });
+
     const stream = await createTanStackChatStream({
       userId,
       model: CHAT_MODEL,
@@ -288,7 +265,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     });
 
     return toHttpResponse(stream, {
-      durability: { adapter: createChatStreamDurability(c.req.raw, params.runId) },
+      durability: { adapter: createChatStreamDurability(c.req.raw, params.runId, userId) },
     });
   })
   .post('/agent/runs/:runId/cancel', async (c) => {
@@ -309,7 +286,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     const requestedRunId = url.searchParams.get('runId');
     if (requestedRunId && url.searchParams.has('offset')) {
       return resumeHttpResponse({
-        adapter: createChatStreamDurability(c.req.raw, requestedRunId),
+        adapter: createChatStreamDurability(c.req.raw, requestedRunId, userId),
       });
     }
     url.searchParams.set('threadId', chatId);

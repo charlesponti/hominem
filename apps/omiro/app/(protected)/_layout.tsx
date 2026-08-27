@@ -1,10 +1,11 @@
+import { useTheme } from '@shopify/restyle';
 import { Stack } from 'expo-router';
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { APP_NAME } from '~/constants';
 import { useAppLock } from '~/hooks/use-app-lock';
@@ -22,10 +23,7 @@ const springAnimationConfig = {
 };
 
 function ProtectedShell() {
-  const [background, textPrimary] = useThemeColor([
-    '--color-background',
-    '--color-foreground',
-  ]) as string[];
+  const { background, foreground: textPrimary } = useTheme().colors;
   const { isPending, isSignedIn } = useAuth();
   const { isUnlocked, authenticate } = useAppLock();
   const prefersReducedMotion = useReducedMotion();
@@ -131,11 +129,11 @@ function ProtectedShell() {
 
 export default ProtectedShell;
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   bootstrapContainer: { flex: 1 },
   lockScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
   appTitle: { ...theme.typography.title1, color: theme.colors.foreground },
   lockMessage: { ...theme.typography.body, color: theme.colors.mutedForeground },
   unlockButtonContainer: { minWidth: 160 },
   container: { flex: 1 },
-}));
+});

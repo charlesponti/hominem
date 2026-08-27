@@ -1,7 +1,7 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -46,7 +46,7 @@ export function InlineErrorBanner({ action, message, onDismiss }: InlineErrorBan
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   banner: {
     backgroundColor: theme.colors.card,
     borderWidth: 1,
@@ -63,4 +63,4 @@ const styles = makeStyles((theme) => ({
   content: { flex: 1, gap: 8 },
   message: { ...theme.typography.footnote, color: theme.colors.destructive },
   actionButton: { alignSelf: 'flex-start' },
-}));
+});

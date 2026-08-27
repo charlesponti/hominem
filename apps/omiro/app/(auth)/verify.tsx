@@ -1,12 +1,13 @@
 import { maskEmail } from '@ponti-studios/auth/shared/mask-email';
+import { useTheme } from '@shopify/restyle';
 import type { RelativePathString } from 'expo-router';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary/FeatureErrorBoundary';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { AnimatedCanvasButton } from '~/components/ui/animated-canvas-button';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -137,13 +138,13 @@ function VerifyScreen() {
     return () => clearTimeout(id);
   }, [verifySucceeded, router]);
 
-  const [primary, destructive, warning, textSecondary, success] = useThemeColor([
-    '--color-primary',
-    '--color-destructive',
-    '--color-warning',
-    '--color-muted-foreground',
-    '--color-success',
-  ]) as string[];
+  const {
+    primary,
+    destructive,
+    warning,
+    mutedForeground: textSecondary,
+    success,
+  } = useTheme().colors;
 
   const verifyButtonStyle = useAnimatedStyle(
     () => ({
@@ -357,7 +358,7 @@ const VerifyWithErrorBoundary = () => (
 
 export default VerifyWithErrorBoundary;
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   ...authSharedStyles(theme),
   successContainer: {
     flex: 1,
@@ -398,4 +399,4 @@ const styles = makeStyles((theme) => ({
   },
   resendText: { ...theme.typography.caption1, fontWeight: '600' },
   busy: { opacity: 0.6 },
-}));
+});

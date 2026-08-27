@@ -1,6 +1,7 @@
-import { Text, View } from 'react-native';
+import { useTheme } from '@shopify/restyle';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 
@@ -23,7 +24,7 @@ export function ErrorFallback({
   onAction,
   buttonVariant = 'primary',
 }: ErrorFallbackProps) {
-  const [destructive] = useThemeColor(['--color-destructive']) as string[];
+  const { destructive } = useTheme().colors;
 
   return (
     <View style={styles.container}>
@@ -42,7 +43,7 @@ export function ErrorFallback({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
   message: { lineHeight: 22, textAlign: 'center', color: theme.colors.mutedForeground },
@@ -56,4 +57,4 @@ const styles = makeStyles((theme) => ({
   title: { fontWeight: '700', textAlign: 'center', color: theme.colors.foreground },
   title1: theme.typography.title1,
   title2: theme.typography.title2,
-}));
+});

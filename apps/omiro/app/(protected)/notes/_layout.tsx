@@ -1,10 +1,10 @@
+import { useTheme } from '@shopify/restyle';
 import { Stack } from 'expo-router';
 
 import { createInboxDetailScreenOptions } from '~/components/inbox/inbox-detail-screen-options';
-import { useThemeColor } from '~/components/theme';
 
 export default function NotesStackLayout() {
-  const [background] = useThemeColor(['--color-background']) as string[];
+  const { background } = useTheme().colors;
 
   return (
     <Stack screenOptions={{ headerShown: false, headerStyle: { backgroundColor: background } }}>

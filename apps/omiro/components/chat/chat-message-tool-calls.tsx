@@ -1,9 +1,10 @@
 import type { ChatMessageItem } from '@hominem/chat';
+import { useTheme } from '@shopify/restyle';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 import AppIcon from '../ui/icon';
 
@@ -42,12 +43,7 @@ function ToolCallStatusIcon({ status, colors }: { status: ToolCallStatus; colors
 function ToolCallAccordion({ toolCall }: { toolCall: ToolCall }) {
   const status = toolCall.status ?? 'completed';
   const [isOpen, setIsOpen] = useState(status === 'pending');
-  const [mutedForeground, warning, success, destructive] = useThemeColor([
-    '--color-muted-foreground',
-    '--color-warning',
-    '--color-success',
-    '--color-destructive',
-  ]) as string[];
+  const { mutedForeground, warning, success, destructive } = useTheme().colors;
 
   return (
     <View style={styles.toolCall}>
@@ -106,7 +102,7 @@ export function MessageToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   toolCalls: { width: '100%', gap: 8, marginBottom: 12 },
   toolCall: {
     backgroundColor: theme.colors.muted,
@@ -152,4 +148,4 @@ const styles = makeStyles((theme) => ({
     borderRadius: theme.radius.sm,
     padding: 8,
   },
-}));
+});

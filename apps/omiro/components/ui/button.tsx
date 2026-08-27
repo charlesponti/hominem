@@ -1,3 +1,4 @@
+import { useTheme } from '@shopify/restyle';
 import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -9,7 +10,7 @@ import {
   type PressableStateCallbackType,
 } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 /**
  * shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
@@ -44,15 +45,14 @@ export function Button({
   variant = 'primary',
   testID,
 }: ButtonProps) {
-  const [primary, primaryForeground, muted, destructive, borderDefault, textPrimary] =
-    useThemeColor([
-      '--color-primary',
-      '--color-primary-foreground',
-      '--color-muted',
-      '--color-destructive',
-      '--color-border',
-      '--color-foreground',
-    ]) as string[];
+  const {
+    primary,
+    primaryForeground,
+    muted,
+    destructive,
+    border: borderDefault,
+    foreground: textPrimary,
+  } = useTheme().colors;
 
   const colorTokens = useMemo(
     () => ({
@@ -144,7 +144,7 @@ export function Button({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,4 +155,4 @@ const styles = makeStyles((theme) => ({
   mediumButton: { paddingVertical: 12, paddingHorizontal: 16, height: 44 },
   smallText: { ...theme.typography.footnote, fontWeight: '600' },
   mediumText: { ...theme.typography.body, fontWeight: '600', lineHeight: 20 },
-}));
+});

@@ -1,10 +1,11 @@
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
+import { useTheme } from '@shopify/restyle';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import { DiscreteSlider } from '~/components/ui/discrete-slider';
 import {
@@ -21,12 +22,12 @@ interface ChatSettingsSheetProps {
 
 export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) {
   const insets = useSafeAreaInsets();
-  const [borderDefault, background, textPrimary, textSecondary] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-foreground',
-    '--color-muted-foreground',
-  ]) as [string, string, string, string];
+  const {
+    border: borderDefault,
+    background,
+    foreground: textPrimary,
+    mutedForeground: textSecondary,
+  } = useTheme().colors;
   const modalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['45%'], []);
   const responseLength = useChatResponseLength();
@@ -119,7 +120,7 @@ export function ChatSettingsSheet({ visible, onClose }: ChatSettingsSheetProps) 
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   sheetContent: { gap: 24, paddingHorizontal: 24 },
   sheetTitle: { ...theme.typography.title2, fontWeight: '700' },
   settingGroup: { gap: 8 },
@@ -132,4 +133,4 @@ const styles = makeStyles((theme) => ({
   control: { paddingHorizontal: 8 },
   controlRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8 },
   empty: {},
-}));
+});

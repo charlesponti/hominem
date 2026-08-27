@@ -1,8 +1,9 @@
+import { useTheme } from '@shopify/restyle';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { nativeMotionContracts } from '~/services/motion/native-motion';
 import { useInterruptibleMotion } from '~/services/motion/use-interruptible-motion';
 
@@ -28,7 +29,7 @@ export function ComposerToastFlight({
   onSettled: () => void;
 }) {
   const motion = useInterruptibleMotion();
-  const textPrimary = useThemeColor('--color-foreground') as string;
+  const textPrimary = useTheme().colors.foreground;
 
   useEffect(() => {
     motion.start();
@@ -62,11 +63,11 @@ export function ComposerToastFlight({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   toast: {
     backgroundColor: theme.colors.popover,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 8,
   },
-}));
+});

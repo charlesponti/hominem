@@ -1,8 +1,8 @@
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { TextField } from '~/components/ui/text-field';
 
@@ -102,7 +102,7 @@ export function LocationSearchField({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   field: { gap: 8 },
   searchingState: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
   searchingText: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
@@ -117,4 +117,4 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 10,
   },
   suggestionText: { ...theme.typography.body, flex: 1 },
-}));
+});

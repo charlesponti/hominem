@@ -1,6 +1,7 @@
-import { Text, View } from 'react-native';
+import { useTheme } from '@shopify/restyle';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
@@ -21,11 +22,7 @@ export function MessageEditModal({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const [textPrimary, card, borderDefault] = useThemeColor([
-    '--color-foreground',
-    '--color-card',
-    '--color-border',
-  ]) as string[];
+  const { foreground: textPrimary, card, border: borderDefault } = useTheme().colors;
 
   return (
     <ModalOverlay
@@ -76,7 +73,7 @@ export function MessageEditModal({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   modalContainer: { paddingHorizontal: 20, width: '100%' },
   modalCard: {
     backgroundColor: theme.colors.background,
@@ -91,4 +88,4 @@ const styles = makeStyles((theme) => ({
   modalActions: { flexDirection: 'row', gap: 8 },
   cancelAction: { flex: 1 },
   saveAction: { flex: 1 },
-}));
+});

@@ -11,6 +11,7 @@ const PENDING_CHAT_START_PREFIX = 'workspace-pending-chat-start-v1:';
 export type PendingChatStart = {
   message: string;
   fileIds?: string[];
+  responseLength?: 'short' | 'medium' | 'long';
   responseModality?: 'text' | 'audio';
 };
 

@@ -1,9 +1,10 @@
+import { useTheme } from '@shopify/restyle';
 import { useRouter } from 'expo-router';
 import { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { setActiveEnhanceSession } from '~/services/ai/active-enhance-session';
@@ -74,7 +75,7 @@ function ComposerToolbarComponent({
   const hasContent =
     useComposerMessageStore(messageStore, (value) => value.trim().length > 0) ||
     uploadedAttachmentCount > 0;
-  const [primary] = useThemeColor(['--color-primary']) as string[];
+  const { primary } = useTheme().colors;
 
   const voiceCapabilitiesInput: ComposerCapabilitiesVoiceInput = {
     isBusy: voice.isBusy,
@@ -168,7 +169,7 @@ function ComposerToolbarComponent({
 
 export const ComposerToolbar = memo(ComposerToolbarComponent);
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   trailingActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,4 +183,4 @@ const styles = makeStyles((theme) => ({
     paddingVertical: 4,
   },
   leadingActions: { flexDirection: 'row', alignItems: 'center' },
-}));
+});

@@ -1,15 +1,16 @@
+import { useTheme } from '@shopify/restyle';
 import type { RelativePathString } from 'expo-router';
 import { Stack, useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
 export default function NotFoundScreen() {
   const router = useRouter();
-  const [textSecondary] = useThemeColor(['--color-muted-foreground']) as string[];
+  const { mutedForeground: textSecondary } = useTheme().colors;
 
   return (
     <>
@@ -32,7 +33,7 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   content: { width: '100%', maxWidth: 360, alignItems: 'center', gap: 12 },
   title: { ...theme.typography.title1, textAlign: 'center', color: theme.colors.foreground },
@@ -41,4 +42,4 @@ const styles = makeStyles((theme) => ({
     textAlign: 'center',
     color: theme.colors.mutedForeground,
   },
-}));
+});

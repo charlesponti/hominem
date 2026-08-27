@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import {
+  StyleSheet,
   Text,
   View,
   type StyleProp,
@@ -9,7 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 export function Card({ children, style, ...props }: PropsWithChildren<ViewProps>) {
   const styles = cardStyles;
@@ -73,20 +74,20 @@ export function CardFooter({ children, style, ...props }: PropsWithChildren<View
   );
 }
 
-const cardStyles = makeStyles((currentTheme) => ({
+const cardStyles = StyleSheet.create({
   card: {
-    backgroundColor: currentTheme.colors.card,
+    backgroundColor: theme.colors.card,
     gap: 16,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: currentTheme.colors.border,
+    borderColor: theme.colors.border,
     padding: 16,
   } satisfies ViewStyle,
   header: { gap: 4 } satisfies ViewStyle,
-  title: { color: currentTheme.colors.cardForeground, fontSize: 20 } satisfies TextStyle,
-  description: { color: currentTheme.colors.mutedForeground, fontSize: 12 } satisfies TextStyle,
+  title: { color: theme.colors.cardForeground, fontSize: 20 } satisfies TextStyle,
+  description: { color: theme.colors.mutedForeground, fontSize: 12 } satisfies TextStyle,
   action: { alignSelf: 'flex-start' } satisfies ViewStyle,
   footer: { flexDirection: 'row', alignItems: 'center' } satisfies ViewStyle,
-}));
+});
 
 export type CardStyle = StyleProp<ViewStyle>;

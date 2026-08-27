@@ -1,6 +1,7 @@
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useTheme } from '@shopify/restyle';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -40,12 +41,7 @@ export function ChatApprovalOverlay({
   approve: (id: string, approved: boolean) => Promise<void>;
   interrupts: ReadonlyArray<unknown>;
 }) {
-  const [background, foreground, muted, primary] = useThemeColor([
-    '--color-background',
-    '--color-foreground',
-    '--color-muted-foreground',
-    '--color-primary',
-  ]) as string[];
+  const { background, foreground, mutedForeground: muted, primary } = useTheme().colors;
   const current = interrupts.map(normalize).find((value) => value !== null);
   if (!current) return null;
 
@@ -84,7 +80,7 @@ export function ChatApprovalOverlay({
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   card: { borderRadius: theme.radius.lg, padding: 20, gap: 12 },
   title: { ...theme.typography.title1, fontWeight: '700' },
   description: { ...theme.typography.body },
@@ -97,4 +93,4 @@ const styles = makeStyles((theme) => ({
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
   button: { borderRadius: theme.radius.md, paddingHorizontal: 16, paddingVertical: 10 },
   buttonText: { ...theme.typography.body, fontWeight: '600' },
-}));
+});

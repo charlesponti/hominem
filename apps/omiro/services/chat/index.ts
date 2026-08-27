@@ -1,5 +1,6 @@
 export * from './chat-title';
 export * from './chatMessages';
+export * from './chat-runtime';
 export * from './use-auto-update-chat-title';
 export * from './use-chat-archive';
 export * from './use-chat-messages';

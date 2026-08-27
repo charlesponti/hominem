@@ -1,9 +1,10 @@
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
+import { useTheme } from '@shopify/restyle';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -23,13 +24,13 @@ interface ChatSourcesSheetProps {
 
 export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetProps) {
   const insets = useSafeAreaInsets();
-  const [borderDefault, background, textPrimary, textSecondary, destructive] = useThemeColor([
-    '--color-border',
-    '--color-background',
-    '--color-foreground',
-    '--color-muted-foreground',
-    '--color-destructive',
-  ]) as [string, string, string, string, string];
+  const {
+    border: borderDefault,
+    background,
+    foreground: textPrimary,
+    mutedForeground: textSecondary,
+    destructive,
+  } = useTheme().colors;
   const modalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['70%'], []);
 
@@ -125,11 +126,11 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   sheetContent: { gap: 16, paddingHorizontal: 24 },
   sheetTitle: { ...theme.typography.title2, fontWeight: '700' },
   sheetDescription: { ...theme.typography.footnote },
   section: { gap: 4 },
   sectionLabel: { ...theme.typography.caption1, fontWeight: '600', textTransform: 'uppercase' },
   empty: { ...theme.typography.footnote, paddingVertical: 8 },
-}));
+});

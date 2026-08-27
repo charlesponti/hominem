@@ -1,8 +1,9 @@
+import { runtimeMessageToChatMessage } from '@hominem/chat';
 import type { SessionSource } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import {
   ChatApprovalOverlay,
@@ -15,7 +16,7 @@ import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useChatData } from '~/hooks/use-chat-data';
 import { useChatSearch } from '~/hooks/use-chat-search';
@@ -29,6 +30,7 @@ import {
   useRegenerateMessage,
   useSendMessage,
 } from '~/services/chat';
+import { ChatRuntimeProvider, useChatRuntime } from '~/services/chat/chat-runtime';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import {
@@ -46,7 +48,16 @@ function isNotFoundError(error: unknown): boolean {
 const NEW_SESSION_SOURCE: SessionSource = { kind: 'new' };
 
 export function ChatScreen({ id }: { id: string }) {
+  return (
+    <ChatRuntimeProvider chatId={id}>
+      <ChatScreenContent id={id} />
+    </ChatRuntimeProvider>
+  );
+}
+
+function ChatScreenContent({ id }: { id: string }) {
   const router = useRouter();
+  const runtime = useChatRuntime();
   const queryClient = useQueryClient();
   const { data: activeChat, error: activeChatError } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
@@ -77,6 +88,16 @@ export function ChatScreen({ id }: { id: string }) {
     useChatData({ chatId });
   const isConversationGone = isNotFoundError(activeChatError) || isNotFoundError(messagesError);
   const search = useChatSearch(messages, chatId);
+  const runtimeMessages = useMemo(
+    () =>
+      runtime.messages.flatMap((message) => {
+        const converted = runtimeMessageToChatMessage(message, chatId);
+        return converted ? [converted] : [];
+      }),
+    [chatId, runtime.messages],
+  );
+  const displayMessages =
+    search.showSearch || runtimeMessages.length === 0 ? search.displayMessages : runtimeMessages;
   const extraction = useTaskExtraction({
     chatId,
     source,
@@ -217,7 +238,7 @@ export function ChatScreen({ id }: { id: string }) {
           bottomInset={composerInset}
           composerHeight={composerHeight}
           isMessagesLoading={isMessagesLoading}
-          displayMessages={search.displayMessages}
+          displayMessages={displayMessages}
           showSearch={search.showSearch}
           searchQuery={search.searchQuery}
           showDebug={showDebug}
@@ -271,7 +292,7 @@ export function ChatScreen({ id }: { id: string }) {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1 },
   offlineIndicator: {
     backgroundColor: theme.colors.muted,
@@ -286,4 +307,4 @@ const styles = makeStyles((theme) => ({
     color: theme.colors.mutedForeground,
   },
   overlayContainer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-}));
+});

@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { makeStyles } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { EmptyState } from '~/components/ui';
 import { useLatestChat } from '~/services/chat/use-chats-list';
 import { NEW_CHAT_ROUTE, getContentRoute } from '~/services/navigation/routes';
@@ -47,10 +47,10 @@ export function ChatEntryScreen() {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
   },
-}));
+});

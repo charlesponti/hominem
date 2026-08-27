@@ -1,14 +1,15 @@
 import { FlashList } from '@shopify/flash-list';
+import { useTheme } from '@shopify/restyle';
 import { Image } from 'expo-image';
 import { useCallback } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import {
   useComposerAttachments,
   type ComposerAttachment,
 } from '~/components/composer/ComposerContext';
-import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
+import { theme, transitionDurations } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import t from '~/translations';
@@ -59,7 +60,7 @@ function AttachmentItem({
 export function ComposerAttachmentRow() {
   const { attachments, errors, isUploading, progressByAssetId, onRemove } =
     useComposerAttachments();
-  const [primaryForeground] = useThemeColor(['--color-primary-foreground']) as string[];
+  const { primaryForeground } = useTheme().colors;
   const prefersReducedMotion = useReducedMotion();
   const renderAttachment = useCallback(
     ({ item }: { item: ComposerAttachment }) => (
@@ -99,7 +100,7 @@ export function ComposerAttachmentRow() {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   attachmentContainer: {
     width: 48,
     height: 48,
@@ -135,4 +136,4 @@ const styles = makeStyles((theme) => ({
   },
   progressBarFill: { backgroundColor: theme.colors.primary, height: '100%' },
   errorText: { ...theme.typography.caption1, color: theme.colors.destructive },
-}));
+});

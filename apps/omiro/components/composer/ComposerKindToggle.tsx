@@ -1,6 +1,7 @@
+import { useTheme } from '@shopify/restyle';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 
@@ -40,10 +41,7 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
 // makes switching legible -- see ComposerKindToggle in the /animate skill
 // output for the reasoning.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
-  const [primary, mutedForeground] = useThemeColor([
-    '--color-primary',
-    '--color-muted-foreground',
-  ]) as string[];
+  const { primary, mutedForeground } = useTheme().colors;
   const reducedMotion = useReducedMotion();
   const selectedIndex = options.findIndex((option) => option.kind === selected);
   const progress = useSharedValue(selectedIndex);
@@ -105,12 +103,12 @@ export function ComposerKindToggle({ selected, onSelect }: ComposerKindTogglePro
   );
 }
 
-const styles = makeStyles(() => ({
+const styles = StyleSheet.create({
   control: {
     flexDirection: 'row',
     alignItems: 'center',
-    background: 'red',
+    backgroundColor: 'red',
     paddingHorizontal: 2,
     paddingVertical: 2,
   },
-}));
+});

@@ -1,8 +1,9 @@
+import { useTheme } from '@shopify/restyle';
 import { Stack, useRouter } from 'expo-router';
-import { RefreshControl, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { IconButton, ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { getTaskDetailRoute, getTaskScheduleRoute } from '~/services/navigation/routes';
@@ -16,7 +17,7 @@ function TaskRow({
   item: { id: string; title: string; durationMinutes?: number | null };
 }) {
   const router = useRouter();
-  const successColor = useThemeColor('--color-success') as string;
+  const successColor = useTheme().colors.success;
   return (
     <ListRow
       accessibilityLabel={item.title}
@@ -62,7 +63,7 @@ export function TasksScreen() {
   );
 }
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1 },
   emptyStateText: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
-}));
+});

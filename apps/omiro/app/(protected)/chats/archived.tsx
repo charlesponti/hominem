@@ -1,10 +1,11 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { useTheme } from '@shopify/restyle';
 import type { RelativePathString } from 'expo-router';
 import { Stack, useIsFocused, useRouter } from 'expo-router';
 import { memo, useCallback, useMemo } from 'react';
-import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
-import { makeStyles, useThemeColor } from '~/components/theme';
+import { theme } from '~/components/theme';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
 import { useArchivedChats } from '~/hooks/useArchivedChats';
@@ -111,10 +112,7 @@ const ArchivedChatRow = memo(
     chat: NonNullable<ReturnType<typeof useArchivedChats>['data']>[number];
     onPressChat: (chatId: string) => void;
   }) => {
-    const [textSecondary, tertiary] = useThemeColor([
-      '--color-muted-foreground',
-      '--color-tertiary',
-    ]) as string[];
+    const { mutedForeground: textSecondary, tertiary } = useTheme().colors;
 
     return (
       <View style={styles.rowContainer}>
@@ -138,7 +136,7 @@ const ArchivedChatRow = memo(
 
 ArchivedChatRow.displayName = 'ArchivedChatRow';
 
-const styles = makeStyles((theme) => ({
+const styles = StyleSheet.create({
   headerContainer: { paddingBottom: 8, paddingHorizontal: 16, paddingTop: 8 },
   description: { fontSize: 15, lineHeight: 22, color: theme.colors.mutedForeground },
   emptyContainer: { paddingTop: 32 },
@@ -150,4 +148,4 @@ const styles = makeStyles((theme) => ({
   chatContent: { flex: 1, gap: 2 },
   chatTitle: { fontSize: 15, color: theme.colors.foreground },
   archivedLabel: { color: theme.colors.mutedForeground },
-}));
+});
