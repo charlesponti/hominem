@@ -1,11 +1,10 @@
-import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto } from '@hominem/rpc/types';
+import { fetchHttpStream, useChat } from '@tanstack/ai-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
-import { consumeChatStream } from '../chat/stream-events';
 import type { ResponseLength } from './use-response-length';
 
 export type RegenerationStatus =
@@ -18,105 +17,76 @@ export type RegenerationStatus =
   | 'failed';
 
 export function useRegenerateMessage({ chatId }: { chatId: string }) {
-  const client = useApiClient();
   const queryClient = useQueryClient();
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [status, setStatus] = useState<RegenerationStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const generationIdRef = useRef<string | null>(null);
   const lastRequestRef = useRef<{ messageId: string; responseLength?: ResponseLength } | null>(
     null,
   );
-  const cancelRequestedRef = useRef(false);
-
-  const reconcile = useCallback(
-    () =>
-      Promise.all([
+  const chat = useChat({
+    threadId: chatId,
+    persistence: true,
+    queue: 'drop',
+    connection: fetchHttpStream(
+      `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent`,
+      { credentials: 'include' },
+    ),
+    onFinish: () => {
+      setStatus('committed');
+      setActiveMessageId(null);
+      void Promise.all([
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-      ]),
-    [chatId, queryClient],
-  );
+      ]);
+    },
+    onError: (nextError) => {
+      setError(nextError);
+      setStatus('failed');
+      setActiveMessageId(null);
+    },
+  });
 
   const regenerate = useCallback(
     async (messageId: string, responseLength?: ResponseLength) => {
-      if (activeMessageId) return;
-
-      const generationId = crypto.randomUUID();
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-      generationIdRef.current = generationId;
-      cancelRequestedRef.current = false;
-      lastRequestRef.current = { messageId, ...(responseLength ? { responseLength } : {}) };
+      if (chat.isLoading) return;
       setActiveMessageId(messageId);
       setStatus('preparing');
       setError(null);
+      lastRequestRef.current = { messageId, ...(responseLength ? { responseLength } : {}) };
       try {
-        const response = await client.api.chats[':id'].messages[':messageId'].regenerate.$post(
-          {
-            param: { id: chatId, messageId },
-            json: {
-              generationId,
-              ...(responseLength ? { responseLength } : {}),
-            },
+        await chat.sendMessage('', {
+          body: {
+            operation: { kind: 'regenerate', assistantMessageId: messageId, responseLength },
           },
-          { init: { signal: abortController.signal } },
-        );
-        await consumeChatStream(response, (event: ChatStreamEvent) => {
-          if (event.type === 'error') throw new Error(event.message);
-          if (event.type === 'status') {
-            setStatus(event.status === 'preparing' ? 'preparing' : 'streaming');
-          }
-          if (event.type === 'committed') setStatus('committed');
-          if (event.type === 'cancelled') setStatus('cancelled');
         });
-        await reconcile();
       } catch (caught) {
-        if (
-          cancelRequestedRef.current ||
-          (caught instanceof DOMException && caught.name === 'AbortError')
-        ) {
-          setStatus('cancelled');
-          await reconcile();
-        } else {
-          setStatus('failed');
-          setError(caught instanceof Error ? caught : new Error(String(caught)));
-          await reconcile();
-        }
-      } finally {
-        abortControllerRef.current = null;
-        generationIdRef.current = null;
+        const nextError = caught instanceof Error ? caught : new Error(String(caught));
+        setError(nextError);
+        setStatus('failed');
         setActiveMessageId(null);
       }
     },
-    [activeMessageId, chatId, client, reconcile],
+    [chat],
   );
 
-  const cancel = useCallback(async () => {
-    const generationId = generationIdRef.current;
-    const abortController = abortControllerRef.current;
-    if (!generationId || !abortController) return;
-
-    cancelRequestedRef.current = true;
+  const cancel = useCallback(() => {
     setStatus('stopping');
-    try {
-      await client.api.chats[':id'].generations[':generationId'].cancel.$post({
-        param: { id: chatId, generationId },
-      });
-      abortController.abort();
-    } catch (caught) {
-      cancelRequestedRef.current = false;
-      setStatus('failed');
-      setError(caught instanceof Error ? caught : new Error(String(caught)));
+    if (chat.runId) {
+      void fetch(
+        `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent/runs/${chat.runId}/cancel`,
+        { method: 'POST', credentials: 'include' },
+      );
     }
-  }, [chatId, client]);
+    chat.stop();
+    setStatus('cancelled');
+    setActiveMessageId(null);
+  }, [chat, chatId]);
 
-  const retry = useCallback(async () => {
+  const retry = useCallback(() => {
     const request = lastRequestRef.current;
-    if (!request) return;
-    await regenerate(request.messageId, request.responseLength);
+    if (request) void regenerate(request.messageId, request.responseLength);
   }, [regenerate]);
 
   return {
@@ -128,7 +98,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
     lastMessageId: lastRequestRef.current?.messageId ?? null,
     regenerate,
     retry,
-    status,
+    status: chat.isLoading ? 'streaming' : status,
   };
 }
 

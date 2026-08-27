@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -22,6 +22,17 @@ interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   testID?: string;
+  style?: StyleProp<ViewStyle>;
+  /**
+   * Overrides for the track/label colors. Native header slots (e.g. a
+   * `headerTitle` custom view) can resolve this app's DynamicColorIOS-based
+   * theme colors against the wrong system appearance, so screens that render
+   * this control there should pass explicit colors instead of relying on
+   * useThemeColor.
+   */
+  trackColor?: string;
+  activeColor?: string;
+  inactiveColor?: string;
 }
 
 export function SegmentedControl<T extends string>({
@@ -29,11 +40,17 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   testID,
+  style,
+  trackColor,
+  activeColor,
+  inactiveColor,
 }: SegmentedControlProps<T>) {
-  const [primary, mutedForeground] = useThemeColor([
+  const [themePrimary, themeMutedForeground] = useThemeColor([
     '--color-primary',
     '--color-muted-foreground',
   ]) as string[];
+  const primary = activeColor ?? themePrimary;
+  const mutedForeground = inactiveColor ?? themeMutedForeground;
   const reducedMotion = useReducedMotion();
   const selectedIndex = Math.max(
     0,
@@ -52,7 +69,10 @@ export function SegmentedControl<T extends string>({
   }));
 
   return (
-    <View style={styles.control} testID={testID}>
+    <View
+      style={[styles.control, trackColor ? { backgroundColor: trackColor } : null, style]}
+      testID={testID}
+    >
       <Animated.View
         pointerEvents="none"
         style={[

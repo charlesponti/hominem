@@ -405,7 +405,10 @@ describe('useTimeComposer', () => {
       await result.current.submitDraft();
     });
 
-    expect(onError).toHaveBeenCalledWith('Connect your iOS Calendar before adding an event.');
+    expect(onError).toHaveBeenCalledWith(
+      'Connect your iOS Calendar before adding an event.',
+      'calendar_permission',
+    );
     expect(mockCreateEventMutateAsync).not.toHaveBeenCalled();
   });
 

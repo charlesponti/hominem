@@ -15,10 +15,15 @@ import { useTimeBlockParse } from '~/services/tasks/use-time-block-parse';
 
 import { resolveTimeRequest } from './time-request';
 import { buildCalendarContext } from './time-request-context';
-import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
+import type {
+  EditableTimeBlockField,
+  TimeComposerErrorCode,
+  TimeInteractionState,
+  TimeOpening,
+} from './time-types';
 
 interface UseTimeComposerOptions {
-  onError: (message: string) => void;
+  onError: (message: string, code?: TimeComposerErrorCode) => void;
   onOpenEvent: (event: CalendarEvent) => void;
 }
 
@@ -39,10 +44,14 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
   );
 
   const fail = useCallback(
-    (message: string, submittedPrompt: string) => {
+    (message: string, submittedPrompt: string, code?: TimeComposerErrorCode) => {
       setPrompt(submittedPrompt);
       setInteraction({ kind: 'idle' });
-      onError(message);
+      if (code) {
+        onError(message, code);
+      } else {
+        onError(message);
+      }
     },
     [onError],
   );
@@ -64,7 +73,7 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
     });
 
     if (result.kind === 'error') {
-      fail(result.message, result.submittedPrompt);
+      fail(result.message, result.submittedPrompt, result.code);
       return;
     }
     if (result.kind === 'open-event') {
@@ -151,7 +160,11 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
         block.primary_intent === 'add_recurring_event'
       ) {
         if (permission !== 'authorized') {
-          fail('Connect your iOS Calendar before adding an event.', submittedPrompt);
+          fail(
+            'Connect your iOS Calendar before adding an event.',
+            submittedPrompt,
+            'calendar_permission',
+          );
           return;
         }
         if (!block.start_time || !block.end_time) {

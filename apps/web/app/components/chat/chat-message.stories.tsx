@@ -98,14 +98,7 @@ export const EditSaveFailure: Story = {
 };
 
 export const Assistant: Story = {
-  render: () => (
-    <Harness
-      message={assistantMessage}
-      speechSrc="/speech/assistant-1"
-      onActivateSpeech={() => undefined}
-      onDeactivateSpeech={() => undefined}
-    />
-  ),
+  render: () => <Harness message={assistantMessage} speechSrc="/speech/assistant-1" />,
 };
 
 export const AssistantActions: Story = {
@@ -153,8 +146,6 @@ export const ToolApproval: Story = {
           },
         ],
       }}
-      onApproveTool={() => undefined}
-      onRejectTool={() => undefined}
     />
   ),
 };

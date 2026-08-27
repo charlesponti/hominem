@@ -37,7 +37,11 @@ function buildRows(items: InboxStreamItemData[]): StreamRow[] {
   for (const item of items) {
     const groupKey = inboxDayGroupKey(item.updatedAt);
     if (groupKey !== lastGroupKey) {
-      rows.push({ type: 'header', key: `header-${groupKey}`, label: inboxDayGroupLabel(item.updatedAt) });
+      rows.push({
+        type: 'header',
+        key: `header-${groupKey}`,
+        label: inboxDayGroupLabel(item.updatedAt),
+      });
       lastGroupKey = groupKey;
     }
     rows.push({ type: 'row', key: item.id, item });
@@ -109,7 +113,7 @@ export function StreamScreen({ filter }: StreamScreenProps) {
 }
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: { flex: 1 },
   content: { paddingBottom: 16 },
   dayLabel: {
     ...theme.typography.caption1,

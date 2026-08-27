@@ -22,6 +22,18 @@ interface AccumulatingToolCall {
   arguments: string;
 }
 
+function upsertToolCallRecord(
+  records: ChatMessageToolCallRecord[],
+  record: ChatMessageToolCallRecord,
+) {
+  const index = records.findIndex((current) => current.toolCallId === record.toolCallId);
+  if (index === -1) {
+    records.push(record);
+    return;
+  }
+  records[index] = { ...records[index], ...record };
+}
+
 export type ChatGenerationLiveEvent =
   | { type: 'text-delta'; text: string }
   | { type: 'reasoning-delta'; text: string }
@@ -335,6 +347,13 @@ export async function runCompletionWithTools(
         try {
           parsedArgs = call.arguments ? JSON.parse(call.arguments) : {};
         } catch {
+          upsertToolCallRecord(toolCallRecords, {
+            toolName: call.name,
+            type: 'tool-call',
+            toolCallId: call.id,
+            args: {},
+            status: 'failed',
+          });
           return {
             call,
             parsedArgs,
@@ -345,6 +364,13 @@ export async function runCompletionWithTools(
         }
 
         const definition = toolRuntime.getToolDefinition(call.name);
+        upsertToolCallRecord(toolCallRecords, {
+          toolName: call.name,
+          type: 'tool-call',
+          toolCallId: call.id,
+          args: parsedArgs,
+          status: 'requested',
+        });
         if (input.onEvent)
           await input.onEvent({
             type: 'tool-step',
@@ -359,6 +385,13 @@ export async function runCompletionWithTools(
         let resultPromise = cacheKey ? readOnlyToolResults.get(cacheKey) : undefined;
 
         if (!resultPromise) {
+          upsertToolCallRecord(toolCallRecords, {
+            toolName: call.name,
+            type: 'tool-call',
+            toolCallId: call.id,
+            args: parsedArgs,
+            status: 'running',
+          });
           if (input.onEvent)
             await input.onEvent({
               type: 'tool-step',
@@ -387,6 +420,13 @@ export async function runCompletionWithTools(
 
         try {
           const result = await resultPromise;
+          upsertToolCallRecord(toolCallRecords, {
+            toolName: call.name,
+            type: 'tool-call',
+            toolCallId: call.id,
+            args: parsedArgs,
+            status: 'completed',
+          });
           if (!cached) {
             if (input.onEvent)
               await input.onEvent({
@@ -404,6 +444,13 @@ export async function runCompletionWithTools(
             cached,
           };
         } catch (error) {
+          upsertToolCallRecord(toolCallRecords, {
+            toolName: call.name,
+            type: 'tool-call',
+            toolCallId: call.id,
+            args: parsedArgs,
+            status: 'failed',
+          });
           if (input.onEvent)
             await input.onEvent({
               type: 'tool-step',
@@ -429,14 +476,6 @@ export async function runCompletionWithTools(
         toolCallId: result.call.id,
         content: result.content,
       });
-      if (!result.error && !result.cached) {
-        toolCallRecords.push({
-          toolName: result.call.name,
-          type: 'tool-call',
-          toolCallId: result.call.id,
-          args: result.parsedArgs,
-        });
-      }
     }
   }
 

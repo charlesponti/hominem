@@ -18,7 +18,7 @@ export interface ChatMessageToolCallRecord {
    * (undefined) means the call executed immediately, same as before this
    * field existed.
    */
-  status?: 'completed' | 'pending' | 'rejected';
+  status?: 'requested' | 'running' | 'completed' | 'failed' | 'pending' | 'rejected';
   /**
    * Human-readable description of the specific record a `pending` call
    * would affect (e.g. a skill's name/level), so an approval UI can show
@@ -56,7 +56,13 @@ function isString(value: unknown): boolean {
 
 function isOptionalToolCallStatus(value: unknown): boolean {
   return (
-    value === undefined || value === 'completed' || value === 'pending' || value === 'rejected'
+    value === undefined ||
+    value === 'requested' ||
+    value === 'running' ||
+    value === 'completed' ||
+    value === 'failed' ||
+    value === 'pending' ||
+    value === 'rejected'
   );
 }
 

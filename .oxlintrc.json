@@ -3,6 +3,7 @@
   "plugins": ["unicorn", "typescript", "oxc"],
   "categories": {},
   "rules": {
+    "complexity": "warn",
     "constructor-super": "warn",
     "for-direction": "warn",
     "no-async-promise-executor": "warn",

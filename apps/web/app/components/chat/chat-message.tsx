@@ -1,7 +1,7 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { Check, Clipboard, Pencil, RotateCcw, Share2, Trash2, X } from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import {
   Message,
@@ -33,6 +33,8 @@ import {
 } from '~/components/alert-dialog';
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
+import { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
+import { speechStore } from '~/lib/stores/speech-store';
 import type { ChatMessageView } from '~/lib/types/chat';
 import { cn } from '~/lib/utils';
 
@@ -56,16 +58,10 @@ export interface ChatMessageProps {
   showDebug?: boolean;
   formatTimestamp?: (value: string) => string;
   speechSrc?: string;
-  isSpeechActive?: boolean;
-  isToolResponding?: boolean;
   isRegenerating?: boolean;
   regenerationStatus?: RegenerationStatus;
   isGenerationActive?: boolean;
   regenerationError?: string | null;
-  onActivateSpeech?: (messageId: string) => void;
-  onApproveTool?: (input: { messageId: string; toolCallId: string }) => void;
-  onDeactivateSpeech?: (messageId: string) => void;
-  onRejectTool?: (input: { messageId: string; toolCallId: string }) => void;
   onRegenerate?: (messageId: string) => void;
   onCancelRegenerate?: () => void;
   onRetryRegenerate?: () => void;
@@ -79,30 +75,29 @@ function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
 }
 
 function ToolCall({
+  chatId,
   messageId,
   toolCall,
-  isToolResponding,
-  onApprove,
-  onReject,
 }: {
+  chatId: string;
   messageId: string;
   toolCall: ChatToolCall;
-  isToolResponding: boolean;
-  onApprove?: ChatMessageProps['onApproveTool'];
-  onReject?: ChatMessageProps['onRejectTool'];
 }) {
+  const { isResponding, respond } = useToolCallRespond({ chatId });
   const isPending = toolCall.status === 'pending';
+  const toolState =
+    toolCall.status === 'pending'
+      ? 'approval-requested'
+      : toolCall.status === 'failed'
+        ? 'output-error'
+        : toolCall.status === 'requested' || toolCall.status === 'running'
+          ? 'input-available'
+          : 'output-available';
 
   return (
     <Tool defaultOpen={isPending}>
       <ToolHeader
-        state={
-          isPending
-            ? 'approval-requested'
-            : toolCall.status === 'rejected'
-              ? 'output-denied'
-              : 'output-available'
-        }
+        state={toolCall.status === 'rejected' ? 'output-denied' : toolState}
         toolName={toolCall.toolName}
         type="dynamic-tool"
       />
@@ -112,11 +107,15 @@ function ToolCall({
         ) : (
           <ToolInput input={toolCall.args} />
         )}
-        {isPending && onApprove && onReject ? (
+        {isPending ? (
           <ToolApprovalActions
-            disabled={isToolResponding}
-            onApprove={() => onApprove({ messageId, toolCallId: toolCall.toolCallId })}
-            onReject={() => onReject({ messageId, toolCallId: toolCall.toolCallId })}
+            disabled={isResponding}
+            onApprove={() =>
+              void respond({ messageId, toolCallId: toolCall.toolCallId, approved: true })
+            }
+            onReject={() =>
+              void respond({ messageId, toolCallId: toolCall.toolCallId, approved: false })
+            }
           />
         ) : null}
       </ToolContent>
@@ -124,21 +123,17 @@ function ToolCall({
   );
 }
 
+// react-doctor-disable-next-line no-giant-component -- message rendering intentionally keeps editing, sharing, deletion, and regeneration controls together.
+// react-doctor-disable-next-line no-many-boolean-props -- these flags describe independent message lifecycle states and are kept explicit for readable call sites.
 export const ChatMessage = memo(function ChatMessage({
   message,
   showDebug = false,
   formatTimestamp = formatMessageTimestamp,
   speechSrc,
-  isSpeechActive = false,
-  isToolResponding = false,
   isRegenerating = false,
   regenerationStatus = 'idle',
   isGenerationActive = false,
   regenerationError,
-  onActivateSpeech,
-  onApproveTool,
-  onDeactivateSpeech,
-  onRejectTool,
   onRegenerate,
   onCancelRegenerate,
   onRetryRegenerate,
@@ -146,6 +141,7 @@ export const ChatMessage = memo(function ChatMessage({
   onDelete,
   isDeleting = false,
 }: ChatMessageProps) {
+  const isSpeechActive = speechStore.activeMessageId.value === message.id;
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
   const [editError, setEditError] = useState<string | null>(null);
@@ -232,9 +228,9 @@ export const ChatMessage = memo(function ChatMessage({
     message.role === 'assistant' &&
     message.content.trim().length > 0 &&
     !message.isStreaming &&
-    speechSrc &&
-    onActivateSpeech &&
-    onDeactivateSpeech;
+    speechSrc;
+  const activateSpeech = useCallback(() => speechStore.activate(message.id), [message.id]);
+  const deactivateSpeech = useCallback(() => speechStore.deactivate(message.id), [message.id]);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -266,7 +262,7 @@ export const ChatMessage = memo(function ChatMessage({
               <m.div
                 animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}
                 initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(4px)' }}
-                key={`message-content-${message.id}-${message.updatedAt}`}
+                key={`message-content-${message.id}`}
                 transition={{
                   duration: reduceMotion ? 0.08 : 0.18,
                   ease: [0.23, 1, 0.32, 1],
@@ -280,11 +276,9 @@ export const ChatMessage = memo(function ChatMessage({
                 ) : null}
                 {message.toolCalls?.map((toolCall) => (
                   <ToolCall
+                    chatId={message.chatId}
                     key={toolCall.toolCallId}
-                    isToolResponding={isToolResponding}
                     messageId={message.id}
-                    onApprove={onApproveTool}
-                    onReject={onRejectTool}
                     toolCall={toolCall}
                   />
                 ))}
@@ -332,7 +326,9 @@ export const ChatMessage = memo(function ChatMessage({
                         </Shimmer>
                       </p>
                     ) : null}
-                    <MessageResponse className="font-assistant">{message.content}</MessageResponse>
+                    <MessageResponse className="font-assistant" isAnimating={message.isStreaming}>
+                      {message.content}
+                    </MessageResponse>
                   </>
                 )}
               </m.div>
@@ -386,8 +382,8 @@ export const ChatMessage = memo(function ChatMessage({
                 <SpeechPlayer
                   isActive={isSpeechActive}
                   messageId={message.id}
-                  onActivate={onActivateSpeech}
-                  onDeactivate={onDeactivateSpeech}
+                  onActivate={activateSpeech}
+                  onDeactivate={deactivateSpeech}
                   src={speechSrc}
                 />
               ) : null}
@@ -491,7 +487,6 @@ export const ChatMessage = memo(function ChatMessage({
               {message.role === 'assistant' && onRegenerate ? (
                 <MessageAction
                   disabled={
-                    isToolResponding ||
                     message.isStreaming ||
                     (isGenerationActive && !isRegenerationActive) ||
                     isRegenerationStopping
@@ -518,35 +513,25 @@ export const ChatMessage = memo(function ChatMessage({
                         : 'Regenerate response'
                   }
                 >
-                  <AnimatePresence initial={false} mode="wait">
-                    <m.span
-                      animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
-                      exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
-                      initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
-                      key={
-                        isRegenerationStopping
-                          ? 'stopping'
-                          : isRegenerationActive
-                            ? 'active'
-                            : 'idle'
-                      }
-                      transition={{
-                        duration: reduceMotion ? 0.08 : 0.15,
-                        ease: [0.23, 1, 0.32, 1],
-                      }}
-                    >
-                      {isRegenerationStopping ? (
-                        <span
-                          aria-hidden="true"
-                          className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
-                        />
-                      ) : isRegenerationActive ? (
-                        <X aria-hidden="true" size={14} />
-                      ) : (
-                        <RotateCcw aria-hidden="true" size={14} />
-                      )}
-                    </m.span>
-                  </AnimatePresence>
+                  <m.span
+                    animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'scale(1)' }}
+                    initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.9)' }}
+                    transition={{
+                      duration: reduceMotion ? 0.08 : 0.15,
+                      ease: [0.23, 1, 0.32, 1],
+                    }}
+                  >
+                    {isRegenerationStopping ? (
+                      <span
+                        aria-hidden="true"
+                        className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+                      />
+                    ) : isRegenerationActive ? (
+                      <X aria-hidden="true" size={14} />
+                    ) : (
+                      <RotateCcw aria-hidden="true" size={14} />
+                    )}
+                  </m.span>
                 </MessageAction>
               ) : null}
             </MessageActions>

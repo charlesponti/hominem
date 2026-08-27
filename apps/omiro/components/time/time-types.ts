@@ -34,3 +34,5 @@ export interface TimeOpening {
   end: string;
   start: string;
 }
+
+export type TimeComposerErrorCode = 'calendar_permission';

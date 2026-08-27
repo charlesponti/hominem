@@ -54,7 +54,7 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
       // Stack.Toolbar.Menu action, so wait for its close animation first.
       const timeout = setTimeout(() => {
         modalRef.current?.present();
-      }, 100);
+      }, 350);
       return () => clearTimeout(timeout);
     }
 

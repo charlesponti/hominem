@@ -42,6 +42,7 @@ export function ChatScreen({ id }: { id: string }) {
   const { data: activeChat, error: activeChatError } = useActiveChat(id);
   const chatId = activeChat?.id ?? id;
   const { inset: composerInset, safeAreaBottom } = useComposerDockMetrics();
+  const [composerHeight, setComposerHeight] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
   const { isOnline } = useNetworkStatus();
 
@@ -147,19 +148,19 @@ export function ChatScreen({ id }: { id: string }) {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <ChatActionsMenu
-          chatId={chatId}
-          canTransform={extraction.canTransform}
-          isConversationGone={isConversationGone}
-          messages={messages}
-          onChatArchive={handleChatArchive}
-          onOpenSearch={search.handleOpenSearch}
-          onOpenSettings={() => setShowChatSettings(true)}
-          onOpenSources={() => setShowChatSources(true)}
-          onToggleDebug={handleToggleDebug}
-          onTransform={(type) => void extraction.handleTransform(type)}
-          showDebug={showDebug}
-        />
+        {ChatActionsMenu({
+          chatId,
+          canTransform: extraction.canTransform,
+          isConversationGone,
+          messages,
+          onChatArchive: handleChatArchive,
+          onOpenSearch: search.handleOpenSearch,
+          onOpenSettings: () => setShowChatSettings(true),
+          onOpenSources: () => setShowChatSources(true),
+          onToggleDebug: handleToggleDebug,
+          onTransform: (type) => void extraction.handleTransform(type),
+          showDebug,
+        })}
         <Stack.Toolbar.Button
           accessibilityLabel="New chat"
           icon="square.and.pencil"
@@ -194,6 +195,7 @@ export function ChatScreen({ id }: { id: string }) {
         ) : null}
         <ChatMessageList
           bottomInset={composerInset}
+          composerHeight={composerHeight}
           isMessagesLoading={isMessagesLoading}
           displayMessages={search.displayMessages}
           showSearch={search.showSearch}
@@ -222,7 +224,11 @@ export function ChatScreen({ id }: { id: string }) {
         />
         {!isConversationGone ? (
           <>
-            <ComposerDock safeAreaBottom={safeAreaBottom} testID="chat-composer-dock">
+            <ComposerDock
+              safeAreaBottom={safeAreaBottom}
+              testID="chat-composer-dock"
+              onLayout={(event) => setComposerHeight(event.nativeEvent.layout.height)}
+            >
               <Composer mode="chat" chatId={chatId} chatSend={chatSend} />
             </ComposerDock>
             <View style={styles.overlayContainer} pointerEvents="box-none">

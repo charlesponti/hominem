@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import {
   Conversation,
@@ -11,7 +11,6 @@ import { ChatLinkedNoteContext } from '~/components/chat/chat-linked-note-contex
 import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
 import type { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import type { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
-import type { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
 import type { ChatMessageView as ChatMessage } from '~/lib/types/chat';
 
 const getSpeechUrl = (chatId: string, messageId: string) =>
@@ -26,11 +25,7 @@ interface ChatConversationProps {
   search: { debouncedQuery: string; isSearching: boolean; results: ChatMessage[] };
   seedNote: { title?: string | null; excerpt?: string | null } | null;
   streamMessage: { isStreaming: boolean; status: string };
-  toolCallRespond: ReturnType<typeof useToolCallRespond>;
-  activeSpeechMessageId: string | null;
   visibleMessages: ChatMessage[];
-  onActivateSpeech: (messageId: string) => void;
-  onDeactivateSpeech: (messageId: string) => void;
   onDelete: (messageId: string) => Promise<void>;
   onUpdateMessage: (messageId: string, content: string) => Promise<void>;
   isDeleting: boolean;
@@ -40,15 +35,12 @@ interface ChatConversationProps {
 }
 
 export const ChatConversation = memo(function ChatConversation({
-  activeSpeechMessageId,
   chatId,
   display,
   isDebugOpen,
   isSearchOpen,
   isDeleting,
-  onActivateSpeech,
   onCancelRegenerate,
-  onDeactivateSpeech,
   onDelete,
   onRegenerate,
   onRetryRegenerate,
@@ -57,20 +49,8 @@ export const ChatConversation = memo(function ChatConversation({
   search,
   seedNote,
   streamMessage,
-  toolCallRespond,
   visibleMessages,
 }: ChatConversationProps) {
-  const approveTool = useCallback(
-    ({ messageId, toolCallId }: { messageId: string; toolCallId: string }) =>
-      void toolCallRespond.respond({ messageId, toolCallId, approved: true }),
-    [toolCallRespond.respond],
-  );
-  const rejectTool = useCallback(
-    ({ messageId, toolCallId }: { messageId: string; toolCallId: string }) =>
-      void toolCallRespond.respond({ messageId, toolCallId, approved: false }),
-    [toolCallRespond.respond],
-  );
-
   return (
     <Conversation>
       <ConversationContent
@@ -92,7 +72,6 @@ export const ChatConversation = memo(function ChatConversation({
         {visibleMessages.map((message) => (
           <ChatMessageView
             key={message.id}
-            isSpeechActive={activeSpeechMessageId === message.id}
             isGenerationActive={
               streamMessage.isStreaming ||
               streamMessage.status === 'stopping' ||
@@ -105,14 +84,9 @@ export const ChatConversation = memo(function ChatConversation({
             regenerationError={
               regeneration.lastMessageId === message.id ? regeneration.error?.message : null
             }
-            isToolResponding={toolCallRespond.isResponding}
             message={message}
             showDebug={isDebugOpen}
-            onActivateSpeech={onActivateSpeech}
-            onApproveTool={approveTool}
-            onDeactivateSpeech={onDeactivateSpeech}
             onDelete={onDelete}
-            onRejectTool={rejectTool}
             onRegenerate={onRegenerate}
             onCancelRegenerate={onCancelRegenerate}
             onRetryRegenerate={onRetryRegenerate}

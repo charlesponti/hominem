@@ -63,7 +63,7 @@ describe('runCompletionWithTools', () => {
     });
   });
 
-  it('executes an identical read-only call once and reuses its result', async () => {
+  it('executes an identical read-only call once and records both call lifecycles', async () => {
     mocks.getToolDefinition.mockReturnValue({ readOnly: true });
     mocks.streamChatCompletion
       .mockImplementationOnce(() =>
@@ -82,8 +82,12 @@ describe('runCompletionWithTools', () => {
     });
 
     expect(mocks.callTool).toHaveBeenCalledOnce();
-    expect(result.toolCallRecords).toHaveLength(1);
+    expect(result.toolCallRecords).toHaveLength(2);
     expect(result.toolCallRecords[0]?.toolCallId).toBe('call-1');
+    expect(result.toolCallRecords[1]).toMatchObject({
+      toolCallId: 'call-2',
+      status: 'completed',
+    });
   });
 
   it('does not deduplicate identical write calls', async () => {
@@ -123,7 +127,11 @@ describe('runCompletionWithTools', () => {
     });
 
     expect(mocks.callTool).toHaveBeenCalledOnce();
-    expect(result.toolCallRecords).toHaveLength(1);
+    expect(result.toolCallRecords).toHaveLength(2);
+    expect(result.toolCallRecords[1]).toMatchObject({
+      toolCallId: 'call-2',
+      status: 'completed',
+    });
   });
 
   it('returns a pending confirmation without invoking the tool', async () => {
@@ -203,7 +211,7 @@ describe('runCompletionWithTools', () => {
     expect(mocks.streamChatCompletion).toHaveBeenCalledTimes(2);
   });
 
-  it('continues after a tool failure and records no successful call', async () => {
+  it('continues after a tool failure and records the failed call', async () => {
     mocks.getToolDefinition.mockReturnValue({ readOnly: true });
     mocks.callTool.mockRejectedValueOnce(new Error('Fixture unavailable'));
     mocks.streamChatCompletion
@@ -217,7 +225,12 @@ describe('runCompletionWithTools', () => {
       tools: [],
     });
 
-    expect(result.toolCallRecords).toEqual([]);
+    expect(result.toolCallRecords).toMatchObject([
+      {
+        toolCallId: 'call-1',
+        status: 'failed',
+      },
+    ]);
     expect(result.assistantText).toBe('I could not retrieve that memory.');
   });
 });

@@ -22,6 +22,7 @@ import { ActiveMessageActions } from './chat-message-actions';
 import { MessageContent } from './chat-message-content';
 import { MessageDebug } from './chat-message-debug';
 import { MessageEditModal } from './chat-message-edit-modal';
+import { MessageReasoning } from './chat-message-reasoning';
 import { MessageToolCalls } from './chat-message-tool-calls';
 import { useChatMotionOverlay } from './chat-motion-overlay';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
@@ -153,9 +154,10 @@ export const ChatMessage = memo(function ChatMessage({
         testID={`chat-message-${message.id}`}
       >
         {!isUser && hasReasoning ? (
-          <View style={styles.reasoningPanel}>
-            <Text style={styles.reasoningText}>{message.reasoning}</Text>
-          </View>
+          <MessageReasoning
+            isStreaming={Boolean(isStreaming)}
+            reasoning={message.reasoning ?? ''}
+          />
         ) : null}
         <MessageEditModal
           content={content}
@@ -220,17 +222,6 @@ export const ChatMessage = memo(function ChatMessage({
 
 const styles = makeStyles((theme) => ({
   content: { gap: 8, width: '100%' },
-  reasoningPanel: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    width: '100%',
-  },
-  reasoningText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
   retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
   interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   message: { width: '100%' },
@@ -246,6 +237,7 @@ const styles = makeStyles((theme) => ({
     borderRadius: theme.radius.sm,
     borderBottomLeftRadius: 2,
     paddingHorizontal: 12,
+    width: '100%',
   },
   continuous: { borderCurve: 'continuous' },
 }));

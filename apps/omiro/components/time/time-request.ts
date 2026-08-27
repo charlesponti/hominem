@@ -1,6 +1,6 @@
 import type { CalendarEvent, CalendarPermissionStatus } from '~/modules/on-device-ai';
 
-import type { TimeBlock, TimeOpening } from './time-types';
+import type { TimeBlock, TimeComposerErrorCode, TimeOpening } from './time-types';
 import { findEventCandidates, findOpenings, getAvailabilityRange } from './time-utils';
 
 type RequestResult =
@@ -9,7 +9,12 @@ type RequestResult =
   | { kind: 'draft'; block: TimeBlock; submittedPrompt: string }
   | { kind: 'event-choice'; candidates: CalendarEvent[]; submittedPrompt: string }
   | { kind: 'open-event'; event: CalendarEvent }
-  | { kind: 'error'; message: string; submittedPrompt: string };
+  | {
+      kind: 'error';
+      message: string;
+      submittedPrompt: string;
+      code?: TimeComposerErrorCode;
+    };
 
 interface ResolveTimeRequestOptions {
   calendarContext: string;
@@ -41,6 +46,7 @@ export async function resolveTimeRequest({
     if (block.primary_intent === 'search') {
       if (permission !== 'authorized') {
         return {
+          code: 'calendar_permission',
           kind: 'error',
           message: 'Connect your iOS Calendar to search scheduled events.',
           submittedPrompt,
@@ -53,6 +59,7 @@ export async function resolveTimeRequest({
     if (block.primary_intent === 'schedule_gap_fill') {
       if (permission !== 'authorized') {
         return {
+          code: 'calendar_permission',
           kind: 'error',
           message: 'Connect your iOS Calendar to find available time.',
           submittedPrompt,
@@ -81,6 +88,7 @@ export async function resolveTimeRequest({
     if (block.primary_intent === 'edit_event' || block.primary_intent === 'cancel_event') {
       if (permission !== 'authorized') {
         return {
+          code: 'calendar_permission',
           kind: 'error',
           message: 'Connect your iOS Calendar to review that event.',
           submittedPrompt,

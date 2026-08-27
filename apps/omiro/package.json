@@ -46,6 +46,7 @@
     "@sentry/react-native": "^8.23.0",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",
+    "@tanstack/ai-react": "0.22.1",
     "@tanstack/query-sync-storage-persister": "5.101.4",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-query-persist-client": "5.101.4",

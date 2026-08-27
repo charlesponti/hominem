@@ -3,18 +3,39 @@ import { Text, View } from 'react-native';
 
 import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
+import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
 import t from '~/translations';
 
+interface InlineErrorBannerAction {
+  label: string;
+  loading?: boolean;
+  onPress: () => void;
+}
+
 interface InlineErrorBannerProps {
+  action?: InlineErrorBannerAction;
   message: string;
   onDismiss: () => void;
 }
 
-export function InlineErrorBanner({ message, onDismiss }: InlineErrorBannerProps) {
+export function InlineErrorBanner({ action, message, onDismiss }: InlineErrorBannerProps) {
   return (
     <View style={[styles.banner, { borderCurve: 'continuous', boxShadow: nativeShadows.md }]}>
-      <Text style={styles.message}>{message}</Text>
+      <View style={styles.content}>
+        <Text style={styles.message}>{message}</Text>
+        {action ? (
+          <Button
+            label={action.label}
+            loading={action.loading}
+            onPress={action.onPress}
+            size="sm"
+            style={styles.actionButton}
+            testID="inline-error-banner-action"
+            variant="outline"
+          />
+        ) : null}
+      </View>
       <IconButton
         accessibilityLabel={t.inboxComposer.composer.dismissErrorHint}
         onPress={onDismiss}
@@ -39,5 +60,7 @@ const styles = makeStyles((theme) => ({
     paddingRight: 4,
     paddingVertical: 4,
   },
-  message: { ...theme.typography.footnote, flex: 1, color: theme.colors.destructive },
+  content: { flex: 1, gap: 8 },
+  message: { ...theme.typography.footnote, color: theme.colors.destructive },
+  actionButton: { alignSelf: 'flex-start' },
 }));

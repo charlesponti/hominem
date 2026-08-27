@@ -3,7 +3,7 @@ import type { Theme } from '~/components/theme';
 /** Layout shared by the email-entry and OTP-verify screens. */
 export function authSharedStyles(theme: Theme) {
   return {
-    container: { flex: 1, backgroundColor: theme.colors.background },
+    container: { flex: 1 },
     content: { width: '100%', alignItems: 'center' },
     form: { width: '100%', maxWidth: 420, gap: 18 },
     header: { gap: 8 },

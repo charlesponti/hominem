@@ -50,7 +50,6 @@ export function ChatEntryScreen() {
 const styles = makeStyles((theme) => ({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
     flex: 1,
     justifyContent: 'center',
   },

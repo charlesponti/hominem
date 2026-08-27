@@ -23,10 +23,16 @@ import { Card, IconButton, nativeShadows, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
+import { useConnectCalendar } from '~/services/calendar/calendar-queries';
 import { formatClockTime } from '~/services/date/format-date';
 import t from '~/translations';
 
-import type { EditableTimeBlockField, TimeInteractionState, TimeOpening } from './time-types';
+import type {
+  EditableTimeBlockField,
+  TimeComposerErrorCode,
+  TimeInteractionState,
+  TimeOpening,
+} from './time-types';
 import { formatDraftDetails } from './time-utils';
 import { useTimeComposer } from './use-time-composer';
 
@@ -34,9 +40,18 @@ interface TimeComposerProps {
   onOpenEvent: (event: { id: string }) => void;
 }
 
+interface ComposerError {
+  code?: TimeComposerErrorCode;
+  message: string;
+}
+
 export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
-  const [composerError, setComposerError] = useState<string | null>(null);
-  const controller = useTimeComposer({ onError: setComposerError, onOpenEvent });
+  const [composerError, setComposerError] = useState<ComposerError | null>(null);
+  const connectCalendar = useConnectCalendar();
+  const controller = useTimeComposer({
+    onError: (message, code) => setComposerError({ code, message }),
+    onOpenEvent,
+  });
   const {
     ask,
     cancelResult,
@@ -142,7 +157,22 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
               <>
                 {composerError ? (
                   <InlineErrorBanner
-                    message={composerError}
+                    action={
+                      composerError.code === 'calendar_permission'
+                        ? {
+                            label: 'Connect Calendar',
+                            loading: connectCalendar.isPending,
+                            onPress: () => {
+                              connectCalendar.mutate(undefined, {
+                                onSuccess: (permission) => {
+                                  if (permission === 'authorized') setComposerError(null);
+                                },
+                              });
+                            },
+                          }
+                        : undefined
+                    }
+                    message={composerError.message}
                     onDismiss={() => setComposerError(null)}
                   />
                 ) : null}

@@ -63,6 +63,6 @@ export function TasksScreen() {
 }
 
 const styles = makeStyles((theme) => ({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: { flex: 1 },
   emptyStateText: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
 }));
