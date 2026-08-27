@@ -70,6 +70,10 @@
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]
     },
+    "dev:types": {
+      "cache": false,
+      "persistent": true
+    },
     "format": {
       "outputs": []
     },

@@ -1,45 +1,13 @@
----
-type: task
-id: WEB-CHAT-23
-title: Verify web chat parity and accessibility states
-status: proposed
-priority: high
-team: web
-project: web-chat-parity
-labels:
-  - web
-  - chat
-  - testing
-  - accessibility
-estimate: L
-assignee: unassigned
-depends_on:
-  - WEB-CHAT-03
-  - WEB-CHAT-05
-  - WEB-CHAT-06
-  - WEB-CHAT-07
-  - WEB-CHAT-08
-  - WEB-CHAT-09
-  - WEB-CHAT-10
-  - WEB-CHAT-12
-  - WEB-CHAT-13
-  - WEB-CHAT-14
-  - WEB-CHAT-15
-  - WEB-CHAT-16
-  - WEB-CHAT-17
-  - WEB-CHAT-18
-  - WEB-CHAT-19
-  - WEB-CHAT-20
-  - WEB-CHAT-21
-  - WEB-CHAT-22
-blocks: []
----
+# WEB-CHAT-23 — Verify web chat parity and accessibility states
 
-# Verify web chat parity and accessibility states
+Status: proposed · priority: high · depends on WEB-CHAT-21, WEB-CHAT-22
 
 Build route, hook, component, and browser acceptance coverage for the completed
-web chat parity work. Use the Omiro inventory as the source matrix and verify
-present capabilities as well as newly added gaps.
+web chat parity work. Use [chat.capabilities.md](../chat.capabilities.md) as
+the source matrix and verify present capabilities as well as newly added gaps.
+This also depends on earlier web-chat-parity phases (`WEB-CHAT-00` through
+`WEB-CHAT-20`); those were completed and their task specs removed, so only the
+two still-tracked tasks above remain listed here.
 
 ## Scenarios
 

@@ -29,14 +29,12 @@ Hominem is one product system made up of the API, Omiro, and shared packages.
 - [Architecture](./docs/architecture.md) — data flow, ownership boundaries, and open architecture decisions
 - [Authentication](./docs/authentication.md) — session authority, the shared hosted login/cookie mechanism, how apps talk to the API, MCP OAuth, and production incident investigation
 - Design system: `@ponti-studios/ui/docs/`
-- [Chat motion](./docs/chat-motion.md) — Omiro chat's kinetic-correspondence motion rules
-- [Omiro chat inventory](./docs/omiro-chat-inventory.md) — client feature ownership and verification coverage
-- [Omiro web chat gaps](./docs/omiro-web-chat-gaps.md) — features missing or incomplete in `apps/web`
-- [Web chat parity tasks](./docs/tasks/10-web-chat-parity/README.md) — Linear-style implementation tasks for each gap
+- [Chat design](./docs/chat.design.md) — Omiro chat's motion/UX rules
+- [Chat capabilities](./docs/chat.capabilities.md) — client feature ownership, verification coverage, and `apps/web` parity gaps (remaining tasks tracked in `docs/tasks/`)
 
 ### III. Operations
 
-- [Developer](./docs/developer.md) — commands, development, and deployment rules
+- [Developer](./docs/development.md) — commands, development, and deployment rules
 - [Evidence](./docs/evidence.md) — validation standards before calling a change complete
 
 ### App-specific facts
@@ -127,7 +125,7 @@ Consumers that need authentication should configure an npm token outside the com
 
 ## Commands
 
-See [docs/developer.md](./docs/developer.md) for setup, validation, and command references.
+See [docs/development.md](./docs/development.md) for setup, validation, and command references.
 
 ## CI Model
 

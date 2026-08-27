@@ -83,14 +83,18 @@ Temporary execution belongs to the work tracker; promote these to `docs/tasks/` 
 - **Steps:** add `tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`) + `build:types` scripts; retarget `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, `packages/rpc` to the emitted declarations; add the `*.d.ts`-under-`src/` guard script; verify rpc/omiro/career/finance typechecks resolve declarations exclusively.
 - **Acceptance:** zero `services/api/src` or `packages/rpc/src` files in consumer programs; `AppType` and client inference intact; guard script wired into the gate.
 
-### Task 3 — Editor watch-builds and dev hygiene
+### Task 3 — Editor watch-builds and dev hygiene — COMPLETE (2026-08-27)
 
 - **Objective:** tsserver always sees fresh declarations during development.
+- **Done:** `scripts/watch-types.sh` runs three watchers (root `tsc -b` for the composite graph + `tsc -p tsconfig.emit.json` for `services/api` and `packages/rpc`); exposed as `just types watch` and as the persistent turbo task `dev:types`, wired into `pnpm dev` and the `dev:*` variants so it runs automatically in the background; documented in `docs/development.md` with the tsserver-restart caveat for ripples beyond one hop.
+- **Evidence:** with the watcher running, appending a probe type to `packages/utils/src/text.ts` produced the updated `WatchTypesProbe` export in `packages/utils/build/text.d.ts` within seconds and `services/api` typecheck stayed clean; probe removed afterward and build state verified clean. Runtime (tsx, metro, vite) resolves `default` → src so the declaration rebuilds never touch the running apps.
 - **Steps:** add a `just`/pnpm recipe running turbo watch builds for packages whose types changed; document the tsserver-restart caveat; confirm dev loop (tsx watch, metro) is unaffected by declaration-only changes.
 - **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in `docs/development.md`.
 
-### Task 4 — Remove the residual write-only cruft
+### Task 4 — Remove the residual write-only cruft — COMPLETE (2026-08-27)
 
 - **Objective:** no package writes declarations it doesn't ship.
+- **Done:** audited every `tsc` invocation and tsconfig (package.json scripts, watch mode, orphan configs, CI). All 12 composite packages have `outDir: build`; api/rpc emits target `build`; `deepeval` and api `dev` configs are `noEmit`. Two flat-flagged configs resolve safe via extends (`auth/tsconfig.build.json` → outDir build; `services/api/tsconfig.dev.json` → inherited noEmit). The one true hazard, orphan `packages/services/ts-test-rel/tsconfig.json` (no noEmit/outDir/composite), got `noEmit: true`. CI: `_validate-app.yml` now runs `check:dts` first, builds **before** typechecking (consumer checks resolve api's emitted declarations, unreachable via package.json edges), and includes `@hominem/api` in the build filter.
+- **Evidence:** `find` acceptance — no `.d.ts` outside `build/`/`.cache`/output dirs beyond the six tracked hand-written declarations; full `pnpm run check` green (guard → lint 17 → build 17 → typecheck 33 → test 24).
 - **Steps:** audit for any remaining `tsc` invocation that could emit without an explicit `outDir` (the incident root cause); enforce the guard from Task 2 across all packages.
 - **Acceptance:** `find . -name '*.d.ts' -not -path '*/build/*' -not -path '*/.cache/*'` (excluding the six tracked hand-written files) is empty after a full `pnpm run check`.

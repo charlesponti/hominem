@@ -1,12 +1,3 @@
----
-status: agreed
-slug: notes-as-nodes
-title: Notes as Nodes
-visibility: private
-updated: 2026-08-26T23:00:00.000Z
-type: note
----
-
 # Notes as Nodes
 
 Notes should stop pretending to be markdown files and behave like first-class
@@ -101,8 +92,8 @@ with zero schema change.
 
 ### 3. Content-link semantics — DECIDED (unblocks CROSS-LINK-00)
 
-`app.content_links` as planned in `docs/tasks/02-cross-linking`, with these
-semantics:
+`app.content_links` as planned for the cross-linking project (see the **build**
+note below), with these semantics:
 
 - **Cardinality:** many-to-many. A note can link to many targets; a target can
   be linked from many sources. One link per ordered
