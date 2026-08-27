@@ -8,21 +8,6 @@ The engine will decide what should happen. An interpreter will perform provider 
 
 This targets the chat generation/SSE protocol. The external MCP protocol remains unchanged.
 
-## Current Progress
-
-- [x] Add `@vitest/coverage-v8` to the chat, API, and database packages.
-- [x] Move the provider-independent generation machine and generic interpreter into `@hominem/chat`.
-- [x] Add deterministic reducer coverage for provider chunks, reasoning, tool reconstruction, sequential tool execution, confirmation, retry, cancellation, terminal no-ops, malformed input, and idempotency keys.
-- [x] Add the API OpenRouter provider adapter, API MCP-tool adapter, and stable tool-effect replay support.
-- [x] Thread internal idempotency context through the existing MCP tool registry without changing MCP HTTP behavior.
-- [x] Add database migrations for event idempotency, encrypted snapshots, terminal-event uniqueness, and tool-effect storage.
-- [x] Add the database generation repository for ordered event append/replay, snapshots, and idempotent tool effects.
-- [x] Reach 100% focused statement, branch, function, and line coverage for the generation machine, interpreter, provider adapter, tools adapter, and tool registry.
-- [x] Run local and test database migrations plus database code generation for the new schema.
-- [x] Add transport-independent JSON, message snapshot, turn, retry, checkpoint, and terminal metadata primitives for the durable event contract.
-- [x] Add stable idempotency keys to every semantic persist command emitted by the generation machine.
-- [x] Attach durable metadata variants and a type-safe discriminated envelope to the canonical generation event contract.
-
 ## Architecture Changes
 
 - `@hominem/chat` owns the provider-independent chat logic: generation state,
@@ -179,9 +164,11 @@ The pure machine, generic interpreter, API provider/tool adapters, durable recov
 
 Gate: focused machine, interpreter, provider, tools, registry, and database tests pass; the changed generation components have 100% focused statement/branch/function/line coverage; migrations and code generation pass.
 
-- [x] Add coverage tooling, the pure machine, sequential interpreter, provider/tool adapters, and focused tests.
-- [x] Add recovery migrations, repository operations, the tool-effect ledger, and MCP idempotency context.
-- [x] Run migrations, code generation, focused tests, typechecks, and lint.
+- [x] Add `@vitest/coverage-v8` to the chat, API, and database packages.
+- [x] Move the provider-independent generation machine and generic interpreter into `@hominem/chat`.
+- [x] Add deterministic reducer coverage for provider chunks, reasoning, tool reconstruction, sequential tool execution, confirmation, retry, cancellation, terminal no-ops, malformed input, and idempotency keys.
+- [x] Reach 100% focused statement, branch, function, and line coverage for the machine, interpreter, provider adapter, tools adapter, and registry.
+- [x] Run focused tests, typechecks, lint, and formatting.
 
 ### [~] Phase 1 — Canonical domain and RPC contract
 
@@ -191,6 +178,7 @@ Gate: API, web, Omiro, and database DTO consumers compile against the v1 types w
 
 - [ ] Define the complete `GenerationDomainEvent` payload union with required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
 - [x] Define transport-independent metadata primitives and the discriminated event envelope in `@hominem/chat`.
+- [x] Attach typed durable metadata variants to the canonical event payload contract.
 - [ ] Decide and document the accepted/start-generation message DTO used for optimistic reconciliation and navigation.
 - [ ] Add versioned `GenerationDomainEvent` and `GenerationLiveEvent` types to `packages/rpc` with compile-time payload alignment.
 - [ ] Add RPC fixtures for durable events, live deltas, malformed versions, mismatched payloads, and unknown event types.
@@ -204,6 +192,7 @@ Gate: event history can rebuild the run projection; concurrent append, idempoten
 
 - [x] Add event idempotency, encrypted-snapshot, terminal-uniqueness, and tool-effect schema migrations.
 - [x] Implement ordered event append/replay, snapshot access, and idempotent tool-effect repository operations.
+- [x] Run local and test database migrations plus database code generation for the new schema.
 - [ ] Export the generation repository through the database package boundary without creating a runtime `@hominem/db` dependency in `@hominem/chat`.
 - [ ] Implement encrypted snapshot serialization, key management, minimum resume state, and snapshot version/integrity validation.
 - [ ] Implement event-history-to-run projection rebuilding and prove the run projection is disposable.
@@ -218,6 +207,7 @@ Gate: send, tool execution, confirmation, retry, cancellation, regeneration, fai
 
 - [x] Implement the pure generation machine, sequential interpreter, OpenRouter provider adapter, and MCP tools adapter.
 - [x] Thread stable idempotency keys through semantic persist commands and write-tool execution.
+- [x] Thread internal idempotency context through the existing MCP tool registry without changing MCP HTTP behavior.
 - [ ] Add cancellation checks and injected retry timing before every external effect.
 - [ ] Define crash recovery around provider turns, confirmation waits, snapshots, and replayed write effects.
 - [ ] Replace the production callback-based completion loop with `runGenerationWithPorts`.
