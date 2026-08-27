@@ -156,7 +156,7 @@ export type GenerationInput =
   | { type: 'generation-failed'; message: string };
 
 export type GenerationCommand =
-  | { type: 'persist'; event: GenerationEventPayload }
+  | { type: 'persist'; event: GenerationEventPayload; idempotencyKey: string }
   | { type: 'emit'; event: GenerationLiveEventPayload }
   | { type: 'open-provider-turn'; turnId: string; iteration: number }
   | { type: 'execute-tool'; call: GenerationToolCall; idempotencyKey: string }
@@ -240,9 +240,39 @@ export async function runGeneration(input: RunGenerationInput): Promise<Generati
   return state;
 }
 
-function phaseCommands(phase: GenerationPhase): GenerationCommand[] {
+function eventIdempotencyKey(generationId: string, event: GenerationEventPayload): string {
+  switch (event.type) {
+    case 'generation.started':
+    case 'generation.accepted':
+    case 'generation.phase_changed':
+    case 'generation.cancel_requested':
+    case 'generation.checkpointed':
+    case 'generation.committed':
+    case 'generation.cancelled':
+    case 'generation.failed':
+      return `${generationId}:${event.type}`;
+    case 'tool.requested':
+      return `${generationId}:${event.type}:${event.call.id}`;
+    case 'tool.completed':
+    case 'tool.failed':
+      return `${generationId}:${event.type}:${event.result.callId}`;
+    case 'confirmation.required':
+      return `${generationId}:${event.type}:${event.call.id}`;
+    case 'confirmation.approved':
+    case 'confirmation.rejected':
+      return `${generationId}:${event.type}:${event.callId}`;
+    case 'generation.retry_scheduled':
+      return `${generationId}:${event.type}:${event.attempt}`;
+  }
+}
+
+function persistCommand(generationId: string, event: GenerationEventPayload): GenerationCommand {
+  return { type: 'persist', event, idempotencyKey: eventIdempotencyKey(generationId, event) };
+}
+
+function phaseCommands(generationId: string, phase: GenerationPhase): GenerationCommand[] {
   return [
-    { type: 'persist', event: { type: 'generation.phase_changed', phase } },
+    persistCommand(generationId, { type: 'generation.phase_changed', phase }),
     { type: 'emit', event: { type: 'phase-changed', phase } },
   ];
 }
@@ -299,7 +329,7 @@ function executeNextTool(state: GenerationState, call: GenerationToolCall): Gene
       pendingToolCalls: state.pendingToolCalls.slice(1),
     },
     commands: [
-      { type: 'persist', event: { type: 'tool.requested', call } },
+      persistCommand(state.generationId, { type: 'tool.requested', call }),
       {
         type: 'emit',
         event: { type: 'tool-step', toolCallId: call.id, toolName: call.name, status: 'requested' },
@@ -331,7 +361,7 @@ function finishTool(state: GenerationState, result: ToolResult): GenerationStep 
     return {
       state: next.state,
       commands: [
-        { type: 'persist', event: resultEvent },
+        persistCommand(state.generationId, resultEvent),
         { type: 'emit', event: liveEvent },
         ...next.commands,
       ],
@@ -348,9 +378,9 @@ function finishTool(state: GenerationState, result: ToolResult): GenerationStep 
       requestedToolCalls: [],
     },
     commands: [
-      { type: 'persist', event: resultEvent },
+      persistCommand(state.generationId, resultEvent),
       { type: 'emit', event: liveEvent },
-      ...phaseCommands('running'),
+      ...phaseCommands(state.generationId, 'running'),
       { type: 'open-provider-turn', turnId, iteration: state.iteration + 1 },
     ],
   };
@@ -366,11 +396,11 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
       return {
         state: { ...state, phase: 'running', turnId: input.turnId },
         commands: [
-          {
-            type: 'persist',
-            event: { type: 'generation.started', generationId: state.generationId },
-          },
-          ...phaseCommands('running'),
+          persistCommand(state.generationId, {
+            type: 'generation.started',
+            generationId: state.generationId,
+          }),
+          ...phaseCommands(state.generationId, 'running'),
           { type: 'open-provider-turn', turnId: input.turnId, iteration: 0 },
         ],
       };
@@ -381,14 +411,11 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         return {
           state,
           commands: [
-            {
-              type: 'persist',
-              event: {
-                type: 'generation.retry_scheduled',
-                attempt: input.attempt + 1,
-                maxAttempts: input.maxAttempts,
-              },
-            },
+            persistCommand(state.generationId, {
+              type: 'generation.retry_scheduled',
+              attempt: input.attempt + 1,
+              maxAttempts: input.maxAttempts,
+            }),
             { type: 'retry-provider', attempt: input.attempt + 1 },
           ],
         };
@@ -405,20 +432,17 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
               lastError: 'The model did not perform the required lookup',
             },
             commands: [
-              {
-                type: 'persist',
-                event: {
-                  type: 'generation.failed',
-                  message: 'The model did not perform the required lookup',
-                },
-              },
-              ...phaseCommands('failed'),
+              persistCommand(state.generationId, {
+                type: 'generation.failed',
+                message: 'The model did not perform the required lookup',
+              }),
+              ...phaseCommands(state.generationId, 'failed'),
             ],
           };
         }
         return {
           state: { ...state, phase: 'saving', requestedToolCalls: [] },
-          commands: [...phaseCommands('saving'), { type: 'save-generation' }],
+          commands: [...phaseCommands(state.generationId, 'saving'), { type: 'save-generation' }],
         };
       }
 
@@ -434,8 +458,8 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
             pendingConfirmation: first,
           },
           commands: [
-            { type: 'persist', event: { type: 'confirmation.required', call: first } },
-            ...phaseCommands('awaiting_confirmation'),
+            persistCommand(state.generationId, { type: 'confirmation.required', call: first }),
+            ...phaseCommands(state.generationId, 'awaiting_confirmation'),
             { type: 'preview-tool', call: first, idempotencyKey: idempotencyKey(state, first) },
           ],
         };
@@ -462,7 +486,10 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         return {
           state: approved.state,
           commands: [
-            { type: 'persist', event: { type: 'confirmation.approved', callId: input.callId } },
+            persistCommand(state.generationId, {
+              type: 'confirmation.approved',
+              callId: input.callId,
+            }),
             ...approved.commands,
           ],
         };
@@ -481,10 +508,11 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
       return {
         state: rejected.state,
         commands: [
-          {
-            type: 'persist',
-            event: { type: 'confirmation.rejected', callId: input.callId, reason: input.reason },
-          },
+          persistCommand(state.generationId, {
+            type: 'confirmation.rejected',
+            callId: input.callId,
+            reason: input.reason,
+          }),
           ...rejected.commands,
         ],
       };
@@ -493,37 +521,40 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         return {
           state: { ...state, phase: 'cancelled' },
           commands: [
-            { type: 'persist', event: { type: 'generation.cancelled' } },
-            ...phaseCommands('cancelled'),
+            persistCommand(state.generationId, { type: 'generation.cancelled' }),
+            ...phaseCommands(state.generationId, 'cancelled'),
           ],
         };
       }
       return {
         state: { ...state, phase: 'cancel_requested' },
-        commands: [...phaseCommands('cancel_requested'), { type: 'stop-effects' }],
+        commands: [
+          ...phaseCommands(state.generationId, 'cancel_requested'),
+          { type: 'stop-effects' },
+        ],
       };
     case 'effect-stopped':
       return {
         state: { ...state, phase: 'cancelled' },
         commands: [
-          { type: 'persist', event: { type: 'generation.cancelled' } },
-          ...phaseCommands('cancelled'),
+          persistCommand(state.generationId, { type: 'generation.cancelled' }),
+          ...phaseCommands(state.generationId, 'cancelled'),
         ],
       };
     case 'generation-saved':
       return {
         state: { ...state, phase: 'committed' },
         commands: [
-          { type: 'persist', event: { type: 'generation.committed' } },
-          ...phaseCommands('committed'),
+          persistCommand(state.generationId, { type: 'generation.committed' }),
+          ...phaseCommands(state.generationId, 'committed'),
         ],
       };
     case 'generation-failed':
       return {
         state: { ...state, phase: 'failed', lastError: input.message },
         commands: [
-          { type: 'persist', event: { type: 'generation.failed', message: input.message } },
-          ...phaseCommands('failed'),
+          persistCommand(state.generationId, { type: 'generation.failed', message: input.message }),
+          ...phaseCommands(state.generationId, 'failed'),
         ],
       };
   }

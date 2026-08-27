@@ -138,6 +138,7 @@ describe('generation machine', () => {
     expect(failed.commands).toContainEqual({
       type: 'persist',
       event: { type: 'generation.failed', message: 'rate limited' },
+      idempotencyKey: 'generation-1:generation.failed',
     });
   });
 
@@ -200,6 +201,7 @@ describe('generation machine', () => {
     expect(step.commands).toContainEqual({
       type: 'persist',
       event: { type: 'generation.failed', message: 'invalid request' },
+      idempotencyKey: 'generation-1:generation.failed',
     });
   });
 
@@ -261,6 +263,7 @@ describe('generation machine', () => {
     expect(step.commands[0]).toEqual({
       type: 'persist',
       event: { type: 'confirmation.approved', callId: 'call-1' },
+      idempotencyKey: 'generation-1:confirmation.approved:call-1',
     });
     expect(step.commands.at(-1)).toMatchObject({ type: 'execute-tool' });
   });
@@ -282,6 +285,7 @@ describe('generation machine', () => {
     expect(step.commands).toContainEqual({
       type: 'persist',
       event: { type: 'confirmation.rejected', callId: 'call-1', reason: 'not now' },
+      idempotencyKey: 'generation-1:confirmation.rejected:call-1',
     });
   });
 

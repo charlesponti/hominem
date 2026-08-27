@@ -20,6 +20,7 @@ This targets the chat generation/SSE protocol. The external MCP protocol remains
 - [x] Reach 100% focused statement, branch, function, and line coverage for the generation machine, interpreter, provider adapter, tools adapter, and tool registry.
 - [x] Run local and test database migrations plus database code generation for the new schema.
 - [x] Add transport-independent JSON, message snapshot, turn, retry, checkpoint, and terminal metadata primitives for the durable event contract.
+- [x] Add stable idempotency keys to every semantic persist command emitted by the generation machine.
 
 ## Architecture Changes
 
@@ -177,7 +178,7 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 ### Domain and persistence
 
 - [ ] Define the complete typed `GenerationDomainEvent` payload union, including required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
-- [ ] Add explicit idempotency keys to every semantic persist command and verify repeated commands return the original durable event.
+- [x] Add explicit idempotency keys to every semantic persist command and verify repeated commands return the original durable event.
 - [ ] Add encrypted snapshot serialization, key management, minimum resume state, and snapshot integrity/version validation.
 - [ ] Finish exporting the generation repository through the database package boundary without introducing a runtime `@hominem/db` dependency into `@hominem/chat`.
 - [ ] Add event-history-to-run projection rebuilding and verify `chat_generation_runs` can be reconstructed from authoritative events.
