@@ -4,38 +4,38 @@
   "description": "utilities",
   "type": "module",
   "sideEffects": false,
-  "types": "./src/index.ts",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
     "./dates": {
-      "types": "./src/dates.ts",
+      "types": "./build/dates.d.ts",
       "default": "./src/dates.ts"
     },
     "./http": {
-      "types": "./src/http.ts",
+      "types": "./build/http.d.ts",
       "default": "./src/http.ts"
     },
     "./time": {
-      "types": "./src/time.ts",
+      "types": "./build/time.d.ts",
       "default": "./src/time.ts"
     },
     "./text": {
-      "types": "./src/text.ts",
+      "types": "./build/text.d.ts",
       "default": "./src/text.ts"
     },
     "./files": {
-      "types": "./src/files.ts",
+      "types": "./build/files.d.ts",
       "default": "./src/files.ts"
     },
     "./numbers": {
-      "types": "./src/numbers.ts",
+      "types": "./build/numbers.d.ts",
       "default": "./src/numbers.ts"
     },
     "./coerce": {
-      "types": "./src/coerce.ts",
+      "types": "./build/coerce.d.ts",
       "default": "./src/coerce.ts"
     }
   },

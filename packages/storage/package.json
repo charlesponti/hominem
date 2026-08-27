@@ -4,14 +4,14 @@
   "description": "Storage services and upload policy",
   "type": "module",
   "sideEffects": false,
-  "types": "./src/index.ts",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
     "./constants": {
-      "types": "./src/upload-policy.ts",
+      "types": "./build/upload-policy.d.ts",
       "default": "./src/upload-policy.ts"
     }
   },

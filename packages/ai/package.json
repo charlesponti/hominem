@@ -4,10 +4,10 @@
   "description": "AI and language model integration",
   "type": "module",
   "sideEffects": false,
-  "types": "./src/index.ts",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
     "./package.json": "./package.json"

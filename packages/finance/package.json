@@ -5,8 +5,14 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "types": "./build/*.d.ts",
+      "default": "./src/*.ts"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

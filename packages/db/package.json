@@ -3,22 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
     "./types/*": {
-      "types": "./src/types/*.ts",
+      "types": "./build/types/*.d.ts",
       "default": "./src/types/*.ts"
     },
     "./services/*": {
-      "types": "./src/services/*.ts",
+      "types": "./build/services/*.d.ts",
       "default": "./src/services/*.ts"
     },
     "./test/*": {
-      "types": "./src/test/*.ts",
+      "types": "./build/test/*.d.ts",
       "default": "./src/test/*.ts"
     },
     "./package.json": "./package.json"

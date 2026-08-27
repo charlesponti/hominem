@@ -67,9 +67,11 @@ A scratch `emitDeclarationOnly` build of `services/api` produced 176 self-contai
 
 Temporary execution belongs to the work tracker; promote these to `docs/tasks/` tickets when picked up. Each lands with `pnpm run check` green as evidence.
 
-### Task 1 — Composite packages flip `exports.types` to `build/`
+### Task 1 — Composite packages flip `exports.types` to `build/` — COMPLETE (2026-08-27)
 
 - **Objective:** composite packages serve declarations, not source.
+- **Done:** all 11 composite packages flipped (`db`, `env`, `telemetry`, `utils` then `ai`, `chat`, `queues`, `storage`, `career`, `finance`, `services`; `auth` was already flipped). `career`/`finance` string-shorthand exports were converted to structured `types`/`default` form.
+- **Evidence:** `--traceResolution` shows composite (`packages/ai`), source (`services/api`), and app (`apps/career`) consumers resolving `build/*.d.ts` (incl. subpaths `env/base`, `env/api`, `env/brand`, `telemetry/node`); runtime smoke test from `services/api` confirms `default` still loads `src`; full `pnpm run check` green (lint 17, typecheck 32, build 16, test 23). One transient gate failure was a load-induced 15s timeout in `auth.e2e-login.test.ts`; isolated rerun passed 220/220 and the final gate run exited 0.
 - **Steps:** flip `exports` `types` conditions (`"."` and subpath patterns) to `./build/*.d.ts` for the core packages first (`db`, `env`, `telemetry`, `utils`), run the full gate, then the remaining composite packages, gate again.
 - **Acceptance:** consumers resolve `packages/*/build/*.d.ts` (verify via `--traceResolution` on one composite and one app consumer); no runtime behavior change; `pnpm run check` green after each batch.
 

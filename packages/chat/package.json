@@ -4,26 +4,26 @@
   "description": "Chat and messaging services",
   "type": "module",
   "sideEffects": false,
-  "types": "./src/public.ts",
+  "types": "./build/public.d.ts",
   "exports": {
     ".": {
-      "types": "./src/public.ts",
+      "types": "./build/public.d.ts",
       "default": "./src/public.ts"
     },
     "./types": {
-      "types": "./src/types-only.ts",
+      "types": "./build/types-only.d.ts",
       "default": "./src/types-only.ts"
     },
     "./ui": {
-      "types": "./src/session-artifacts.ts",
+      "types": "./build/session-artifacts.d.ts",
       "default": "./src/session-artifacts.ts"
     },
     "./react": {
-      "types": "./src/use-chat-lifecycle.ts",
+      "types": "./build/use-chat-lifecycle.d.ts",
       "default": "./src/use-chat-lifecycle.ts"
     },
     "./constants": {
-      "types": "./src/constants.ts",
+      "types": "./build/constants.d.ts",
       "default": "./src/constants.ts"
     }
   },
