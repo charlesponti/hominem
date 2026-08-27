@@ -1,8 +1,8 @@
-import { useTheme } from '@shopify/restyle';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View, type ModalProps } from 'react-native';
+import type { ModalProps } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 type ModalOverlayPosition = 'top' | 'center' | 'bottom';
 
@@ -27,7 +27,7 @@ export function ModalOverlay({
   animationType = 'fade',
   statusBarTranslucent = false,
 }: ModalOverlayProps) {
-  const scrimColor = useTheme().colors.overlayScrim;
+  const scrimColor = useThemeColor(`--color-${backdropToken}`) as string;
   const styles = modalOverlayStyles;
 
   return (
@@ -54,9 +54,9 @@ export function ModalOverlay({
   );
 }
 
-const modalOverlayStyles = StyleSheet.create({
+const modalOverlayStyles = makeStyles(() => ({
   backdrop: { flex: 1 },
   top: { justifyContent: 'flex-start' },
   center: { justifyContent: 'center' },
   bottom: { justifyContent: 'flex-end' },
-});
+}));

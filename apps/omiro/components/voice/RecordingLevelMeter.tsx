@@ -1,10 +1,9 @@
-import { useTheme } from '@shopify/restyle';
 import React, { useEffect, useSyncExternalStore } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { getRecordingSnapshot, subscribeRecording } from '~/components/media/audio.service';
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 const BAR_COUNT = 24;
 const BAR_MAX_HEIGHT = 20;
@@ -46,7 +45,7 @@ function LevelBar({ db, tintColor }: LevelBarProps) {
 }
 
 export function RecordingLevelMeter() {
-  const primaryColor = useTheme().colors.primary;
+  const primaryColor = useThemeColor('--color-primary') as string;
   const meterings = useSyncExternalStore(
     subscribeRecording,
     () => getRecordingSnapshot().meterings,
@@ -67,7 +66,7 @@ export function RecordingLevelMeter() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   bar: { flex: 1, borderRadius: 2 },
   meter: {
     flexDirection: 'row',
@@ -76,4 +75,4 @@ const styles = StyleSheet.create({
     gap: 2,
     width: '100%',
   },
-});
+}));

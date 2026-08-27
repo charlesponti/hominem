@@ -1,11 +1,9 @@
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import type { ArtifactType } from '@hominem/rpc/types';
-import { useTheme } from '@shopify/restyle';
 import { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 import { ClassificationReview } from './classification-review';
 
@@ -31,7 +29,10 @@ export function ChatReviewOverlay({
   onReject,
 }: ChatReviewOverlayProps) {
   const insets = useSafeAreaInsets();
-  const { border: borderDefault, background } = useTheme().colors;
+  const [borderDefault, background] = useThemeColor([
+    '--color-border',
+    '--color-background',
+  ]) as [string, string];
   const modalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
@@ -68,6 +69,6 @@ export function ChatReviewOverlay({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   sheetContent: { paddingHorizontal: 24, paddingTop: 8 },
-});
+}));

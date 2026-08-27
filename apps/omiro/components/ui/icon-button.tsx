@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 interface IconButtonProps {
   accessibilityLabel?: string;
@@ -43,7 +43,7 @@ export function IconButton({
   );
 }
 
-const iconButtonStyles = StyleSheet.create({
+const iconButtonStyles = makeStyles((currentTheme) => ({
   button: {
     width: 32,
     height: 32,
@@ -51,8 +51,8 @@ const iconButtonStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   } satisfies ViewStyle,
-  bordered: { borderWidth: 1, borderColor: theme.colors.border } satisfies ViewStyle,
+  bordered: { borderWidth: 1, borderColor: currentTheme.colors.border } satisfies ViewStyle,
   plain: { borderWidth: 0, borderColor: 'transparent' } satisfies ViewStyle,
   pressed: { opacity: 0.7 } satisfies ViewStyle,
   disabled: { opacity: 0.4 } satisfies ViewStyle,
-});
+}));

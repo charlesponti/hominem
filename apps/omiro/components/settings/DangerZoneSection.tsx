@@ -1,6 +1,7 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, View } from 'react-native';
 
 import { SettingsRow } from '~/components/settings/SettingsRow';
+import { makeStyles } from '~/components/theme';
 import t from '~/translations';
 
 function showDeleteAccountAlert() {
@@ -27,6 +28,6 @@ export function DangerZoneSection({ onLogoutPress }: { onLogoutPress: () => void
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   dangerSection: { gap: 8 },
-});
+}));

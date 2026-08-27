@@ -1,9 +1,8 @@
-import { useTheme } from '@shopify/restyle';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import t from '~/translations';
 
 import AppIcon from '../ui/icon';
@@ -18,7 +17,7 @@ export function MessageReasoning({
   reasoning: string;
   isStreaming: boolean;
 }) {
-  const { mutedForeground } = useTheme().colors;
+  const [mutedForeground] = useThemeColor(['--color-muted-foreground']) as string[];
   const [isOpen, setIsOpen] = useState(isStreaming);
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const hasEverStreamedRef = useRef(isStreaming);
@@ -93,7 +92,7 @@ export function MessageReasoning({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { width: '100%', marginBottom: 4 },
   trigger: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
   label: { ...theme.typography.footnote, color: theme.colors.mutedForeground, flexShrink: 1 },
@@ -110,4 +109,4 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   reasoningText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-});
+}));

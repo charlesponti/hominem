@@ -1,7 +1,7 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 export function MessageDebug({
   message,
@@ -21,7 +21,7 @@ export function MessageDebug({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   debugPanel: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
@@ -33,4 +33,4 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   debugText: { ...theme.typography.mono, color: theme.colors.foreground, opacity: 0.8 },
-});
+}));

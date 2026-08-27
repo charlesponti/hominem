@@ -6,22 +6,20 @@
   "type": "module",
   "exports": {
     "./types": {
-      "types": "./build/types/rpc/app.d.ts",
+      "types": "./src/rpc/app.ts",
       "default": "./src/rpc/app.ts"
     },
     "./finance": {
-      "types": "./build/types/rpc/routes/finance.d.ts",
+      "types": "./src/rpc/routes/finance.ts",
       "default": "./src/rpc/routes/finance.ts"
     },
     "./career": {
-      "types": "./build/types/rpc/routes/career.d.ts",
+      "types": "./src/rpc/routes/career.ts",
       "default": "./src/rpc/routes/career.ts"
     }
   },
   "scripts": {
     "build": "node build.mjs",
-    "build:types": "tsc -p tsconfig.types.json",
-    "build:types:watch": "tsc -p tsconfig.types.json --watch",
     "build:worker": "node build.mjs worker",
     "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
     "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",

@@ -1,4 +1,3 @@
-import { useTheme } from '@shopify/restyle';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 
@@ -9,13 +8,16 @@ import {
 } from '~/components/inbox/StreamScreen';
 import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
 import { RootSceneGesture } from '~/components/navigation/RootSceneGesture';
-import { palette, useColorMode, withAlpha } from '~/components/theme';
+import { useThemeColor, withAlpha } from '~/components/theme';
 import { SegmentedControl } from '~/components/ui';
 
 export default function StreamRoute() {
   const [filter, setFilter] = useState<StreamFilter>('all');
-  const { primary, mutedForeground, foreground } = useTheme().colors;
-  const colorMode = useColorMode();
+  const [primary, mutedForeground, foreground] = useThemeColor([
+    '--color-primary',
+    '--color-muted-foreground',
+    '--color-foreground',
+  ]) as string[];
 
   return (
     <>
@@ -37,7 +39,7 @@ export default function StreamRoute() {
               options={streamFilterOptions}
               style={{ maxWidth: 280 }}
               testID="stream-filter"
-              trackColor={withAlpha(palette[colorMode].foreground, 0.12)}
+              trackColor={withAlpha(foreground, 0.12)}
               value={filter}
             />
           ),

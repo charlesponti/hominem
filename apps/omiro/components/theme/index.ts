@@ -1,4 +1,3 @@
-import { createTheme } from '@shopify/restyle';
 import {
   DynamicColorIOS,
   StyleSheet,
@@ -17,78 +16,94 @@ export const fontFamilies = {
   pixel: 'Geist Pixel Square',
 } as const;
 
-/**
- * Full shadcn (zinc) color theme, converted from the canonical oklch values
- * to hex (React Native does not parse oklch). `accent` is neutral per shadcn;
- * the extra tokens omiro needs (success/warning/tertiary/destructiveText/
- * overlayScrim) keep the same zinc family.
- */
-export const palette = {
-  light: {
-    background: '#FFFFFF',
-    card: '#FFFFFF',
-    cardForeground: '#0A0A0A',
-    popover: '#FFFFFF',
-    popoverForeground: '#0A0A0A',
-    muted: '#F5F5F5',
-    foreground: '#0A0A0A',
-    mutedForeground: '#737373',
-    tertiary: '#A1A1A1',
-    primary: '#171717',
-    secondary: '#F5F5F5',
-    secondaryForeground: '#171717',
-    accent: '#F5F5F5',
-    accentForeground: '#171717',
-    destructive: '#E7000B',
-    success: '#10B981',
-    warning: '#F59E0B',
-    primaryForeground: '#FAFAFA',
-    destructiveForeground: '#FAFAFA',
-    destructiveText: '#DC2626',
-    border: '#E5E5E5',
-    input: '#E5E5E5',
-    ring: '#A1A1A1',
-    overlayScrim: '#000000',
-    chart1: '#F54900',
-    chart2: '#009689',
-    chart3: '#104E64',
-    chart4: '#FFB900',
-    chart5: '#FE9A00',
-  },
-  dark: {
-    background: '#0A0A0A',
-    card: '#171717',
-    cardForeground: '#FAFAFA',
-    popover: '#262626',
-    popoverForeground: '#FAFAFA',
-    muted: '#262626',
-    foreground: '#FAFAFA',
-    mutedForeground: '#A1A1A1',
-    tertiary: '#898989',
-    primary: '#E5E5E5',
-    secondary: '#262626',
-    secondaryForeground: '#FAFAFA',
-    accent: '#262626',
-    accentForeground: '#FAFAFA',
-    destructive: '#FF6467',
-    success: '#34D399',
-    warning: '#FBBF24',
-    primaryForeground: '#171717',
-    destructiveForeground: '#171717',
-    destructiveText: '#F87171',
-    border: '#FFFFFF1A',
-    input: '#FFFFFF26',
-    ring: '#737373',
-    overlayScrim: '#000000',
-    chart1: '#1447E6',
-    chart2: '#00BC7D',
-    chart3: '#FE9A00',
-    chart4: '#AD46FF',
-    chart5: '#FF2056',
-  },
+export type Theme = {
+  mode: ColorMode;
+  colors: {
+    background: ColorValue;
+    card: ColorValue;
+    cardForeground: ColorValue;
+    popover: ColorValue;
+    popoverForeground: ColorValue;
+    muted: ColorValue;
+    foreground: ColorValue;
+    mutedForeground: ColorValue;
+    tertiary: ColorValue;
+    primary: ColorValue;
+    secondary: ColorValue;
+    secondaryForeground: ColorValue;
+    accent: ColorValue;
+    accentForeground: ColorValue;
+    destructive: ColorValue;
+    success: ColorValue;
+    warning: ColorValue;
+    primaryForeground: ColorValue;
+    destructiveForeground: ColorValue;
+    destructiveText: ColorValue;
+    border: ColorValue;
+    input: ColorValue;
+    ring: ColorValue;
+    overlayScrim: ColorValue;
+    chart: readonly [ColorValue, ColorValue, ColorValue, ColorValue, ColorValue];
+  };
+  typography: Typography;
+  radius: { sm: number; md: number; lg: number; xl: number };
+};
+
+const lightColors = {
+  background: '#fcfcfd',
+  card: '#f9f9fb',
+  cardForeground: '#1c2024',
+  popover: '#f0f0f3',
+  popoverForeground: '#1c2024',
+  muted: '#f9f9fb',
+  foreground: '#1c2024',
+  mutedForeground: '#60646c',
+  tertiary: '#80838d',
+  primary: '#3e63dd',
+  secondary: '#f9f9fb',
+  secondaryForeground: '#1c2024',
+  accent: '#3e63dd',
+  accentForeground: '#ffffff',
+  destructive: '#ce2c31',
+  success: '#30a46c',
+  warning: '#ffc53d',
+  primaryForeground: '#ffffff',
+  destructiveForeground: '#ffffff',
+  destructiveText: '#c82c31',
+  border: '#cdced6',
+  input: '#cdced6',
+  ring: '#3e63dd',
+  overlayScrim: '#000000',
+  chart: ['#3e63dd', '#6e56cf', '#12a594', '#f76b15', '#8b8d98'],
 } as const;
 
-export type ColorName = keyof typeof palette.light;
+const darkColors = {
+  background: '#111113',
+  card: '#18191b',
+  cardForeground: '#edeef0',
+  popover: '#212225',
+  popoverForeground: '#edeef0',
+  muted: '#18191b',
+  foreground: '#edeef0',
+  mutedForeground: '#b0b4ba',
+  tertiary: '#777b84',
+  primary: '#3e63dd',
+  secondary: '#18191b',
+  secondaryForeground: '#edeef0',
+  accent: '#3e63dd',
+  accentForeground: '#ffffff',
+  destructive: '#ce2c31',
+  success: '#30a46c',
+  warning: '#ffc53d',
+  primaryForeground: '#ffffff',
+  destructiveForeground: '#ffffff',
+  destructiveText: '#ff9592',
+  border: '#43484e',
+  input: '#43484e',
+  ring: '#3e63dd',
+  overlayScrim: '#000000',
+  chart: ['#3e63dd', '#6e56cf', '#12a594', '#f76b15', '#696e77'],
+} as const;
 
 const typography = {
   display: {
@@ -187,74 +202,121 @@ const typography = {
 export type Typography = typeof typography;
 export type TypographyKey = keyof Typography;
 
-// Appearance-aware color values: iOS resolves these natively so static styles
-// switch light/dark without re-rendering. Use `palette[useColorMode()]` when a
-// hex string is required (color math such as interpolateColor).
-const appearanceColors = Object.fromEntries(
-  (Object.keys(palette.light) as ColorName[]).map((name) => [
-    name,
-    DynamicColorIOS({ light: palette.light[name], dark: palette.dark[name] }),
-  ]),
-) as Record<ColorName, ColorValue>;
-
-const themeObject = {
-  colors: appearanceColors,
-  spacing: {
-    0.5: 2,
-    1: 4,
-    2: 8,
-    3: 12,
-    4: 16,
-    5: 20,
-    6: 24,
-    8: 32,
-    12: 48,
-    16: 64,
+export const theme = {
+  light: {
+    mode: 'light',
+    colors: lightColors,
+    typography,
+    radius: { sm: 6, md: 8, lg: 12, xl: 16 },
   },
-  radius: { sm: 6, md: 8, lg: 12, xl: 16, full: 9999 },
-  breakpoints: { phone: 0, tablet: 768 },
-  textVariants: typography,
-  typography,
-};
-
-export const theme = createTheme(themeObject as never) as typeof themeObject;
-
-export type Theme = typeof theme;
+  dark: { mode: 'dark', colors: darkColors, typography, radius: { sm: 6, md: 8, lg: 12, xl: 16 } },
+} satisfies Record<ColorMode, Theme>;
 
 export function useColorMode(): ColorMode {
   return useColorScheme() === 'dark' ? 'dark' : 'light';
 }
 
-export function useThemeColor(name: string): ColorValue;
-export function useThemeColor(names: readonly string[]): ColorValue[];
-export function useThemeColor(input: string | readonly string[]): ColorValue | ColorValue[] {
-  const colors = palette[useColorMode()];
-  const resolve = (name: string) => {
-    const token = name
-      .replace(/^--color-/, '')
-      .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    return colors[token as ColorName] ?? colors.foreground;
-  };
-  return typeof input === 'string' ? resolve(input) : input.map(resolve);
+export function useTheme(): Theme {
+  return theme[useColorMode()];
 }
 
-type NamedStyles = Record<string, ViewStyle | TextStyle | ImageStyle>;
+const colorVariableMap = {
+  '--color-background': 'background',
+  '--color-card': 'card',
+  '--color-card-foreground': 'cardForeground',
+  '--color-popover': 'popover',
+  '--color-popover-foreground': 'popoverForeground',
+  '--color-muted': 'muted',
+  '--color-foreground': 'foreground',
+  '--color-muted-foreground': 'mutedForeground',
+  '--color-tertiary': 'tertiary',
+  '--color-primary': 'primary',
+  '--color-secondary': 'secondary',
+  '--color-secondary-foreground': 'secondaryForeground',
+  '--color-accent': 'accent',
+  '--color-accent-foreground': 'accentForeground',
+  '--color-destructive': 'destructive',
+  '--color-success': 'success',
+  '--color-warning': 'warning',
+  '--color-primary-foreground': 'primaryForeground',
+  '--color-destructive-foreground': 'destructiveForeground',
+  '--color-destructive-text': 'destructiveText',
+  '--color-border': 'border',
+  '--color-input': 'input',
+  '--color-ring': 'ring',
+  '--color-chart-1': 'chart.0',
+  '--color-chart-2': 'chart.1',
+  '--color-chart-3': 'chart.2',
+  '--color-chart-4': 'chart.3',
+  '--color-chart-5': 'chart.4',
+  '--color-overlay-scrim': 'overlayScrim',
+} as const;
 
-export function makeStyles<T extends NamedStyles>(factory: (value: Theme) => T): T {
-  return StyleSheet.create(factory(theme)) as T;
+function resolveColorVariable(currentTheme: Theme, name: string): string {
+  const key = colorVariableMap[name as keyof typeof colorVariableMap];
+  if (!key) {
+    return currentTheme.colors.foreground as string;
+  }
+
+  if (key.startsWith('chart.')) {
+    return currentTheme.colors.chart[Number(key.slice(6))] as string;
+  }
+
+  return currentTheme.colors[key as keyof Omit<Theme['colors'], 'chart'>] as string;
 }
 
-/** Append an alpha hex to an opaque hexadecimal color. */
-export function withAlpha(color: string, alpha: number): string {
+export function useThemeColor(name: string): string;
+export function useThemeColor(names: readonly string[]): string[];
+export function useThemeColor(input: string | readonly string[]): string | string[] {
+  const currentTheme = useTheme();
+  return typeof input === 'string'
+    ? resolveColorVariable(currentTheme, input)
+    : input.map((name) => resolveColorVariable(currentTheme, name));
+}
+
+export function withAlpha(color: ColorValue, alpha: number): string {
+  if (typeof color !== 'string') return String(color);
   return `${color}${Math.round(alpha * 255)
     .toString(16)
     .padStart(2, '0')}`;
 }
+
+type NamedStyles = Record<string, ViewStyle | TextStyle | ImageStyle>;
+
+export function makeStyles<T extends NamedStyles>(factory: (theme: Theme) => T) {
+  return StyleSheet.create(factory(nativeTheme)) as T;
+}
+
+const nativeTheme = {
+  mode: 'light',
+  colors: Object.fromEntries(
+    Object.keys(lightColors).map((key) => [
+      key,
+      Array.isArray(lightColors[key as keyof typeof lightColors])
+        ? (lightColors[key as keyof typeof lightColors] as readonly string[]).map((light, index) =>
+            dynamicColor(
+              light,
+              (darkColors[key as keyof typeof darkColors] as readonly string[])[index],
+            ),
+          )
+        : dynamicColor(
+            lightColors[key as keyof typeof lightColors] as string,
+            darkColors[key as keyof typeof darkColors] as string,
+          ),
+    ]),
+  ) as unknown as Theme['colors'],
+  typography,
+  radius: { sm: 6, md: 8, lg: 12, xl: 16 },
+} satisfies Theme;
+
+function dynamicColor(light: string, dark: string): ColorValue {
+  return typeof DynamicColorIOS === 'function' ? DynamicColorIOS({ light, dark }) : light;
+}
+
+export { nativeShadows } from './shadows';
 
 export const transitionDurations = {
   100: 100,
   150: 150,
   350: 350,
 } as const;
-
-export { nativeShadows } from './shadows';

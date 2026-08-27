@@ -1,10 +1,9 @@
-import { useTheme } from '@shopify/restyle';
 import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton, TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -43,7 +42,12 @@ export function InlineEnhanceTray({
   isEnhancing = false,
   error = null,
 }: InlineEnhanceTrayProps) {
-  const { primary, mutedForeground, popover, foreground: textPrimary } = useTheme().colors;
+  const [primary, mutedForeground, popover, textPrimary] = useThemeColor([
+    '--color-primary',
+    '--color-muted-foreground',
+    '--color-popover',
+    '--color-foreground',
+  ]) as string[];
   const customInputRef = useRef<TextInput>(null);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
@@ -142,9 +146,9 @@ export function InlineEnhanceTray({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { gap: 8, marginVertical: 16 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   errorText: { color: theme.colors.destructive, lineHeight: 16 },
   suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-});
+}));

@@ -1,7 +1,6 @@
-import { useTheme } from '@shopify/restyle';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { Card, IconButton } from '~/components/ui';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 import t from '~/translations';
@@ -25,7 +24,7 @@ export function ChatActivityTimeline({
   onCancel: () => void;
   onRetry?: () => void;
 }) {
-  const primary = useTheme().colors.primary;
+  const primary = useThemeColor('--color-primary') as string;
   const isActive = generation.stage === 'preparing' || generation.stage === 'saving';
   const isStopping = generation.stage === 'stopping';
 
@@ -74,7 +73,7 @@ export function ChatActivityTimeline({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   timeline: {
     backgroundColor: theme.colors.muted,
     borderWidth: 0,
@@ -91,4 +90,4 @@ const styles = StyleSheet.create({
   timelineDescription: { ...theme.typography.footnote, color: theme.colors.mutedForeground },
   timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
   timelineActionText: { ...theme.typography.footnote, color: theme.colors.primary },
-});
+}));

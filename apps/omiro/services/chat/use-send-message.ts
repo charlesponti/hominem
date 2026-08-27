@@ -1,4 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
+import { xhrHttpStream, useChat } from '@tanstack/ai-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import * as Haptics from 'expo-haptics';
@@ -11,7 +12,6 @@ import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
-import { useChatRuntime } from './chat-runtime';
 import { createOptimisticMessage, type MessageOutput } from './chatMessages';
 import { useChatGeneration } from './use-chat-generation';
 
@@ -22,7 +22,6 @@ function triggerAssistantCompletionHaptic() {
 export interface SendInput {
   message: string;
   fileIds?: string[];
-  responseLength?: 'short' | 'medium' | 'long';
   responseModality?: 'text' | 'audio';
   messageId?: string;
 }
@@ -37,7 +36,21 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const { generation, generationRef, setGeneration } = useChatGeneration({
     chatId,
   });
-  const chat = useChatRuntime();
+  const chat = useChat({
+    threadId: chatId,
+    persistence: true,
+    queue: 'drop',
+    connection: xhrHttpStream(`${API_BASE_URL}/api/chats/${chatId}/agent`, async () => ({
+      headers: await getAuthHeaders(),
+      withCredentials: true,
+    })),
+    onFinish: () => {
+      setGeneration(null);
+      triggerAssistantCompletionHaptic();
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
+      void invalidateChatQueries(queryClient, chatId);
+    },
+  });
 
   const mutation = useMutation<void, Error, MutationInput, SendContext>({
     mutationKey: ['chat-generation', chatId],
@@ -52,7 +65,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
       setGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
       return { userMessageId };
     },
-    mutationFn: async ({ message, fileIds, responseLength, responseModality }) => {
+    mutationFn: async ({ message, fileIds, responseModality }) => {
       const net = await NetInfo.fetch();
       if (net.isConnected === false) throw new Error(OFFLINE_UNAVAILABLE_ERROR);
       await chat.sendMessage(message.trim(), {
@@ -61,16 +74,10 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             kind: 'send',
             fileIds,
             responseModality,
-            responseLength: responseLength ?? getChatResponseLength(),
+            responseLength: getChatResponseLength(),
           },
         },
       });
-    },
-    onSuccess: () => {
-      setGeneration(null);
-      triggerAssistantCompletionHaptic();
-      void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
-      void invalidateChatQueries(queryClient, chatId);
     },
     onError: (error, _input, context) => {
       if (generationRef.current?.stage === 'stopping' || error.name === 'AbortError') return;

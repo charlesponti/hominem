@@ -1,9 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import {
   clearNewChatDraft,
   readNewChatDraft,
@@ -34,6 +34,6 @@ export function NewChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1 },
-});
+}));

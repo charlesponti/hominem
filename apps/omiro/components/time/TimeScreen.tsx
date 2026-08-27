@@ -2,10 +2,10 @@ import { MenuView, type MenuAction, type NativeActionEvent } from '@expo/ui/comm
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { IconButton, nativeShadows } from '~/components/ui';
 import { getTimeBlockRoute, UNSCHEDULED_ROUTE } from '~/services/navigation/routes';
 
@@ -132,7 +132,7 @@ function TimePreviewMenuButton() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1 },
   errorToast: {
     flexDirection: 'row',
@@ -145,4 +145,4 @@ const styles = StyleSheet.create({
   },
   errorContent: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
   errorText: { ...theme.typography.footnote, color: theme.colors.destructive, flex: 1 },
-});
+}));

@@ -13,7 +13,7 @@
     // dependency — see services/api/src/rpc/app.ts for the actual export.
     // Keep this path in sync with services/api/package.json's "./types" export.
     "paths": {
-      "@hominem/api/types": ["../../services/api/build/types/rpc/app.d.ts"]
+      "@hominem/api/types": ["../../services/api/src/rpc/app.ts"]
     }
   },
   "include": ["src/**/*"],

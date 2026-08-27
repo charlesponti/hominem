@@ -24,7 +24,7 @@ export interface McpToolDefinition<
   invoked?: string;
   /**
    * Gates in-app chat execution behind an explicit user approve/reject step
-   * (see the TanStack chat agent adapter). Independent of `destructive`, which is a
+   * (see chat-completion-loop.ts). Independent of `destructive`, which is a
    * display annotation for the external MCP-over-HTTP surface.
    */
   requiresConfirmation?: boolean;

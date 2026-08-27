@@ -1,15 +1,8 @@
-import { useTheme } from '@shopify/restyle';
 import { forwardRef, useState } from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  type TextInputProps,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import { TextInput, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-import { fontFamilies, theme } from '~/components/theme';
+import { fontFamilies, makeStyles, useTheme } from '~/components/theme';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -22,7 +15,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   { style, focusBorder = true, hasError = false, onFocus, onBlur, ...props },
   ref,
 ) {
-  const styles = textFieldStyles;
+  const styles = useStyles;
   const [focused, setFocused] = useState(false);
   const { colors } = useTheme();
 
@@ -55,7 +48,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   );
 });
 
-const textFieldStyles = StyleSheet.create({
+const useStyles = makeStyles((theme) => ({
   input: {
     minHeight: 50,
     paddingHorizontal: 16,
@@ -65,4 +58,4 @@ const textFieldStyles = StyleSheet.create({
     fontSize: 18,
     color: theme.colors.foreground,
   } satisfies TextStyle & ViewStyle,
-});
+}));

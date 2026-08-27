@@ -1,12 +1,11 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
-import { useTheme } from '@shopify/restyle';
 import { Stack } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { LocationSearchField } from '~/components/time/LocationSearchField';
 import type {
   ActiveField,
@@ -102,13 +101,13 @@ export function TimeBlockDetail({
     title,
     toggleTask,
   } = useTimeBlockEditorState({ id, initialActiveField, onClose, source });
-  const {
-    chart1: chartBlue,
-    chart2: chartPurple,
-    chart3: chartTeal,
-    chart4: chartOrange,
-    chart5: chartGray,
-  } = useTheme().colors;
+  const [chartBlue, chartPurple, chartTeal, chartOrange, chartGray] = useThemeColor([
+    '--color-chart-1',
+    '--color-chart-2',
+    '--color-chart-3',
+    '--color-chart-4',
+    '--color-chart-5',
+  ]) as string[];
 
   if (isLoading) {
     return (
@@ -353,7 +352,7 @@ export function TimeBlockDetail({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   fieldCard: {
     flexDirection: 'row',
     gap: 12,
@@ -407,4 +406,4 @@ const styles = StyleSheet.create({
   footerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   foreground: { color: theme.colors.foreground },
   mutedForeground: { color: theme.colors.mutedForeground },
-});
+}));

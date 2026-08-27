@@ -1,7 +1,6 @@
 import type { ChatMessageItem } from '@hominem/chat';
-import { useTheme } from '@shopify/restyle';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -13,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
@@ -57,7 +56,12 @@ export const ChatMessage = memo(function ChatMessage({
   onActivate,
   formatTimestamp,
 }: ChatMessageProps) {
-  const { foreground: textPrimary, primaryForeground, destructive, tertiary } = useTheme().colors;
+  const [textPrimary, primaryForeground, destructive, tertiary] = useThemeColor([
+    '--color-foreground',
+    '--color-primary-foreground',
+    '--color-destructive',
+    '--color-tertiary',
+  ]) as string[];
 
   const { role, message: content, isStreaming, failed } = message;
   const isUser = role.toLowerCase() === 'user';
@@ -216,7 +220,7 @@ export const ChatMessage = memo(function ChatMessage({
   );
 });
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   content: { gap: 8, width: '100%' },
   retryRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
   interruptedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -236,4 +240,4 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   continuous: { borderCurve: 'continuous' },
-});
+}));

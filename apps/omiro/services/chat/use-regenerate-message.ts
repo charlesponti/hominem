@@ -1,3 +1,4 @@
+import { xhrHttpStream, useChat } from '@tanstack/ai-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
@@ -8,7 +9,6 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
-import { useChatRuntime } from './chat-runtime';
 import { useChatGeneration } from './use-chat-generation';
 
 export function useRegenerateMessage(chatId: string) {
@@ -18,7 +18,24 @@ export function useRegenerateMessage(chatId: string) {
   const { generation, generationRef, setGeneration } = useChatGeneration({
     chatId,
   });
-  const chat = useChatRuntime();
+  const chat = useChat({
+    threadId: chatId,
+    persistence: true,
+    queue: 'drop',
+    connection: xhrHttpStream(`${API_BASE_URL}/api/chats/${chatId}/agent`, async () => ({
+      headers: await getAuthHeaders(),
+      withCredentials: true,
+    })),
+    onFinish: () => {
+      setGeneration(null);
+      void queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
+      void invalidateChatQueries(queryClient, chatId);
+    },
+    onError: (error) => {
+      const current = generationRef.current;
+      if (current) setGeneration({ ...current, stage: 'failed', error: error.message });
+    },
+  });
 
   const regenerateMessage = useCallback(
     (messageId: string) => {
@@ -35,22 +52,9 @@ export function useRegenerateMessage(chatId: string) {
             },
           },
         })
-        .then(() => {
-          setGeneration(null);
-          void queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
-          void invalidateChatQueries(queryClient, chatId);
-        })
-        .catch((error: unknown) => {
-          const current = generationRef.current;
-          if (current)
-            setGeneration({
-              ...current,
-              stage: 'failed',
-              error: error instanceof Error ? error.message : 'Regeneration failed',
-            });
-        });
+        .catch(() => undefined);
     },
-    [chat, chatId, generationRef, queryClient, setGeneration],
+    [chat, chatId, setGeneration],
   );
 
   const cancelGeneration = useCallback(async () => {

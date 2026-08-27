@@ -1,7 +1,6 @@
-import { useTheme } from '@shopify/restyle';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import t from '~/translations';
@@ -33,7 +32,10 @@ export function AccountIdentitySection({
   saveError: string | null;
   saveStatus: 'idle' | 'saving' | 'saved';
 }) {
-  const { popover: popoverColor, foreground: textPrimaryColor } = useTheme().colors;
+  const [popoverColor, textPrimaryColor] = useThemeColor([
+    '--color-popover',
+    '--color-foreground',
+  ]) as string[];
 
   return (
     <>
@@ -80,7 +82,7 @@ export function AccountIdentitySection({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
   avatar: {
     alignItems: 'center',
@@ -96,4 +98,4 @@ const styles = StyleSheet.create({
   saveRow: { alignItems: 'flex-start', paddingHorizontal: 16 },
   savedMessage: { fontSize: 13, color: theme.colors.mutedForeground, paddingHorizontal: 16 },
   saveError: { fontSize: 13, color: theme.colors.destructive, paddingHorizontal: 16 },
-});
+}));

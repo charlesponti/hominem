@@ -1,7 +1,6 @@
 import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
 import { logger } from '@hominem/telemetry';
 import * as Sentry from '@sentry/react-native';
-import { ThemeProvider as RestyleThemeProvider } from '@shopify/restyle';
 import { useIsRestoring } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import {
@@ -16,14 +15,14 @@ import {
 } from 'expo-router';
 import { PostHogProvider, type PostHog } from 'posthog-react-native';
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { logError } from '~/components/error-boundary/log-error';
 import { RootErrorBoundary } from '~/components/error-boundary/RootErrorBoundary';
-import { palette, theme, useColorMode } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { E2E_TESTING } from '~/constants';
 import { useScreenCapture } from '~/hooks/use-screen-capture';
 import { AuthProvider, useAuth } from '~/services/auth/auth-provider';
@@ -160,19 +159,26 @@ function InnerRootLayout() {
 
 function RootLayout() {
   useScreenCapture();
-  const colorMode = useColorMode();
-  const colors = palette[colorMode];
+
+  const [background, border, card, notification, primary, text] = useThemeColor([
+    '--color-background',
+    '--color-border',
+    '--color-card',
+    '--color-primary',
+    '--color-primary',
+    '--color-foreground',
+  ]) as string[];
 
   const navigationTheme = {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: colors.background,
-      border: colors.border,
-      card: colors.card,
-      notification: colors.primary,
-      primary: colors.primary,
-      text: colors.foreground,
+      background,
+      border,
+      card,
+      notification,
+      primary,
+      text,
     },
   };
 
@@ -188,23 +194,21 @@ function RootLayout() {
   }, []);
 
   const content = (
-    <RestyleThemeProvider theme={theme as never}>
-      <ThemeProvider value={navigationTheme}>
-        <PersistQueryClientProvider client={queryClient} persistOptions={mobilePersistOptions}>
-          <SafeAreaProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <KeyboardProvider>
-                <AuthProvider>
-                  <BottomSheetModalProvider>
-                    <InnerRootLayout />
-                  </BottomSheetModalProvider>
-                </AuthProvider>
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
-        </PersistQueryClientProvider>
-      </ThemeProvider>
-    </RestyleThemeProvider>
+    <ThemeProvider value={navigationTheme}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={mobilePersistOptions}>
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <KeyboardProvider>
+              <AuthProvider>
+                <BottomSheetModalProvider>
+                  <InnerRootLayout />
+                </BottomSheetModalProvider>
+              </AuthProvider>
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </PersistQueryClientProvider>
+    </ThemeProvider>
   );
 
   return POSTHOG_ENABLED ? (
@@ -216,9 +220,9 @@ function RootLayout() {
 
 export default isSentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1 },
   e2eIndicator: { position: 'absolute', top: 8, left: 8, width: 2, height: 2, opacity: 0.02 },
   e2eAction: { position: 'absolute', top: 8, right: 8, width: 16, height: 16, opacity: 0.02 },
   e2eActionAlt: { position: 'absolute', top: 24, right: 8, width: 16, height: 16, opacity: 0.02 },
-});
+}));

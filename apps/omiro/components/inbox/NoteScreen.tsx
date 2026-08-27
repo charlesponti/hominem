@@ -1,17 +1,14 @@
 import { parseInboxTimestamp } from '@hominem/chat';
 import type { Note } from '@hominem/rpc/types';
-import { useTheme } from '@shopify/restyle';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  DynamicColorIOS,
   Keyboard,
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -21,7 +18,7 @@ import Markdown from 'react-native-markdown-display';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
 import { NOTE_TOOLBAR_ID, NoteToolbar } from '~/components/notes/NoteToolbar';
-import { palette, theme, withAlpha } from '~/components/theme';
+import { makeStyles, useThemeColor, withAlpha } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { EmptyState } from '~/components/ui/EmptyState';
 import AppIcon from '~/components/ui/icon';
@@ -210,14 +207,15 @@ function NoteEditorBody({
   const { startChat, isStartingChat } = useStartChat();
   const { mutateAsync: addChatSource } = useAddChatSource();
 
-  const {
-    tertiary,
-    primary: primaryColor,
-    foreground: textPrimary,
-    mutedForeground: textSecondary,
-    border: borderDefault,
-    popover,
-  } = useTheme().colors;
+  const [tertiary, primaryColor, textPrimary, textSecondary, borderDefault, popover] =
+    useThemeColor([
+      '--color-tertiary',
+      '--color-primary',
+      '--color-foreground',
+      '--color-muted-foreground',
+      '--color-border',
+      '--color-popover',
+    ]) as string[];
 
   const mdColors: Record<string, string> = {
     primary: primaryColor,
@@ -533,12 +531,7 @@ function markdownStyles(mdColors: Record<string, string>) {
   };
 }
 
-const scratchpadBorderColor = DynamicColorIOS({
-  light: withAlpha(palette.light.mutedForeground, 0.1),
-  dark: withAlpha(palette.dark.mutedForeground, 0.1),
-});
-
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   scrollContainer: { flex: 1 },
   placeholderTitle: {
     alignSelf: 'stretch',
@@ -587,9 +580,9 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderColor: scratchpadBorderColor,
+    borderColor: withAlpha(theme.colors.mutedForeground, 0.1),
   },
   placeholderLine: { backgroundColor: theme.colors.border, borderRadius: 2, height: 16 },
   placeholderShort: { width: '58%' },
   placeholderFull: { width: '100%' },
-});
+}));

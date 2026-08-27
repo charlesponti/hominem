@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import {
   Pressable,
-  StyleSheet,
   Text,
   View,
   type StyleProp,
@@ -9,7 +8,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 
 interface ListRowProps {
   accessibilityLabel: string;
@@ -62,27 +61,27 @@ export function ListRow({
   );
 }
 
-const listRowStyles = StyleSheet.create({
+const listRowStyles = makeStyles((currentTheme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     minHeight: 56,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: currentTheme.colors.border,
     paddingHorizontal: 2,
     paddingVertical: 8,
   } satisfies ViewStyle,
-  pressed: { backgroundColor: theme.colors.muted } satisfies ViewStyle,
+  pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
   leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
   content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
   title: {
-    ...theme.typography.body,
-    color: theme.colors.foreground,
+    ...currentTheme.typography.body,
+    color: currentTheme.colors.foreground,
   } satisfies TextStyle,
   subtitle: {
-    ...theme.typography.caption1,
-    color: theme.colors.mutedForeground,
+    ...currentTheme.typography.caption1,
+    color: currentTheme.colors.mutedForeground,
   } satisfies TextStyle,
   trailing: { alignItems: 'center', justifyContent: 'center' } satisfies ViewStyle,
-});
+}));

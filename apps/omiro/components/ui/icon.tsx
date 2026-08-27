@@ -1,8 +1,8 @@
-import { useTheme } from '@shopify/restyle';
 import type { SFSymbol, SymbolViewProps } from 'expo-symbols';
 import { SymbolView } from 'expo-symbols';
 import type { ColorValue } from 'react-native';
-import { StyleSheet } from 'react-native';
+
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 type IconProps = Omit<SymbolViewProps, 'name' | 'size' | 'tintColor'> & {
   name: SFSymbol;
@@ -11,7 +11,7 @@ type IconProps = Omit<SymbolViewProps, 'name' | 'size' | 'tintColor'> & {
 };
 
 const AppIcon = ({ name, size = 24, style, tintColor, ...rest }: IconProps) => {
-  const { mutedForeground: muted } = useTheme().colors;
+  const [muted] = useThemeColor(['--color-muted-foreground']) as string[];
   return (
     <SymbolView
       name={name}
@@ -25,6 +25,6 @@ const AppIcon = ({ name, size = 24, style, tintColor, ...rest }: IconProps) => {
 
 export default AppIcon;
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   container: { alignItems: 'center', justifyContent: 'center' },
-});
+}));

@@ -1,8 +1,9 @@
-import { useTheme } from '@shopify/restyle';
 import type { SFSymbol } from 'expo-symbols';
 import React from 'react';
 import type { ColorValue } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
+
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 import AppIcon from './icon';
 
@@ -15,7 +16,7 @@ interface IconChipProps {
 }
 
 export function IconChip({ icon, size = 36, radius = 10, iconSize, tintColor }: IconChipProps) {
-  const { card: cardColor } = useTheme().colors;
+  const [cardColor] = useThemeColor(['--color-card']) as string[];
 
   return (
     <View
@@ -34,6 +35,6 @@ export function IconChip({ icon, size = 36, radius = 10, iconSize, tintColor }: 
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   container: { alignItems: 'center', justifyContent: 'center' },
-});
+}));

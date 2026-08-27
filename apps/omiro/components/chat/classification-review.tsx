@@ -1,7 +1,7 @@
 import type { ArtifactType } from '@hominem/rpc/types';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import t from '~/translations';
 
@@ -80,7 +80,7 @@ export function ClassificationReview({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { gap: 24 },
   header: { gap: 8 },
   typeLabel: {
@@ -107,4 +107,4 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 12 },
   acceptAction: { flex: 1 },
   rejectAction: { flex: 1 },
-});
+}));

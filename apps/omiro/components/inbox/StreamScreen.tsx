@@ -1,10 +1,10 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useCallback, useMemo } from 'react';
-import { RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
 import { ComposerDock, useComposerDockMetrics } from '~/components/composer/ComposerDock';
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import { clearAllDraft, readAllDraft, writeAllDraft } from '~/services/navigation/launch-state';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
@@ -112,7 +112,7 @@ export function StreamScreen({ filter }: StreamScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1 },
   content: { paddingBottom: 16 },
   dayLabel: {
@@ -126,4 +126,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   emptyText: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
-});
+}));

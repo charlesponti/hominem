@@ -30,7 +30,6 @@ import { useInitialAgentSend } from '~/lib/hooks/use-initial-agent-send';
 import { useOnlineStatus } from '~/lib/hooks/use-online-status';
 import { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import { useResponseLength } from '~/lib/hooks/use-response-length';
-import { useRuntimeChatMessages } from '~/lib/hooks/use-runtime-chat-messages';
 import { useStreamMessage } from '~/lib/hooks/use-stream-message';
 
 import type { Route } from './+types/chat.$chatId';
@@ -111,11 +110,6 @@ export default function ChatPage({
   const streamMessage = useStreamMessage({ chatId, runtime });
   const regeneration = useRegenerateMessage({ chatId, runtime });
   const display = useChatDisplayMessages({ messages });
-  const runtimeMessages = useRuntimeChatMessages({
-    chatId,
-    runtime,
-    productMessages: display.displayMessages,
-  });
   const search = useChatMessageSearch(chatId, isSearchOpen);
   const { data: chats = [] } = useChatsList();
   const { responseLength, setResponseLength } = useResponseLength();
@@ -131,11 +125,7 @@ export default function ChatPage({
     transcript.length > 0 && !streamMessage.isStreaming && !regeneration.isRegenerating;
   const taskExtraction = useChatTaskExtraction(transcript);
   const visibleMessages =
-    isSearchOpen && search.debouncedQuery
-      ? search.results
-      : runtimeMessages.length > 0
-        ? runtimeMessages
-        : display.displayMessages;
+    isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
   const regenerateMessage = useCallback(
     (messageId: string) => void regeneration.regenerate(messageId, responseLength),
     [regeneration.regenerate, responseLength],

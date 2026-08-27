@@ -1,14 +1,14 @@
 import { MenuView, type NativeActionEvent } from '@expo/ui/community/menu';
-import { useTheme } from '@shopify/restyle';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, type TextInput, View } from 'react-native';
+import type { TextInput } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { PRESET_INSTRUCTIONS } from '~/components/chat/build-note-draft';
 import { ComposerSendButton } from '~/components/composer/ComposerSendButton';
 import { NoteDraftPreview } from '~/components/notes/NoteDraftPreview';
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import { Button } from '~/components/ui/button';
 import AppIcon from '~/components/ui/icon';
@@ -47,7 +47,7 @@ export default function ChatToNoteSheetScreen() {
   const [instruction, setInstruction] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const customInputRef = useRef<TextInput>(null);
-  const { mutedForeground } = useTheme().colors;
+  const [mutedForeground] = useThemeColor(['--color-muted-foreground']) as string[];
 
   const isLoading = phase.kind === 'loading';
 
@@ -199,7 +199,7 @@ export default function ChatToNoteSheetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 36, paddingBottom: 24, gap: 24 },
   title: {
     ...theme.typography.headline,
@@ -235,4 +235,4 @@ const styles = StyleSheet.create({
   error: { ...theme.typography.footnote, color: theme.colors.destructive },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   submitButton: { flex: 1 },
-});
+}));

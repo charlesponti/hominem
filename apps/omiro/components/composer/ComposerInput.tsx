@@ -1,8 +1,7 @@
-import { useTheme } from '@shopify/restyle';
 import { memo, useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { TextField } from '~/components/ui';
 import t from '~/translations';
 
@@ -49,7 +48,10 @@ function ComposerInputComponent({
   const inferredEntryKind = useComposerMessageStore(messageStore, inferComposerEntryKind);
   const selectedEntryKind =
     manualEntryKind ?? (entryMode === 'mixed' ? inferredEntryKind : entryMode);
-  const { destructive, tertiary } = useTheme().colors;
+  const [destructive, tertiary] = useThemeColor([
+    '--color-destructive',
+    '--color-tertiary',
+  ]) as string[];
   const handleChangeMessage = useCallback(
     (text: string) =>
       onChangeMessage(text.length > MAX_MESSAGE_LENGTH ? text.slice(0, MAX_MESSAGE_LENGTH) : text),
@@ -96,6 +98,6 @@ function ComposerInputComponent({
 
 export const ComposerInput = memo(ComposerInputComponent);
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   container: { gap: 16 },
-});
+}));

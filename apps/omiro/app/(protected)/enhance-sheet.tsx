@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { InlineEnhanceTray } from '~/components/ai/InlineEnhanceTray';
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { consumeActiveEnhanceSession } from '~/services/ai/active-enhance-session';
 import { useTextEnhance } from '~/services/ai/use-text-enhance';
 import t from '~/translations';
@@ -56,7 +56,7 @@ export default function EnhanceSheetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 24 },
   title: { ...theme.typography.headline, color: theme.colors.foreground },
-});
+}));

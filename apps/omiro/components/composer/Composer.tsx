@@ -1,6 +1,4 @@
-import { useTheme } from '@shopify/restyle';
 import { useCallback, useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -9,7 +7,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 
-import { theme, transitionDurations } from '~/components/theme';
+import { makeStyles, transitionDurations, useThemeColor } from '~/components/theme';
 import { Card, nativeShadows } from '~/components/ui';
 import { InlineErrorBanner } from '~/components/ui/InlineErrorBanner';
 import { VoiceRecordingPanel } from '~/components/voice/VoiceRecordingPanel';
@@ -119,7 +117,11 @@ function ComposerContent(props: ComposerProps) {
     [controller.voice],
   );
 
-  const { primary, destructive, border: borderDefault } = useTheme().colors;
+  const [primary, destructive, borderDefault] = useThemeColor([
+    '--color-primary',
+    '--color-destructive',
+    '--color-border',
+  ]) as string[];
   const prefersReducedMotion = useReducedMotion();
 
   const isRecording = controller.voice.isRecording;
@@ -231,7 +233,7 @@ function ComposerContent(props: ComposerProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   composer: { width: '100%', gap: 12 },
   fields: { gap: 8 },
-});
+}));

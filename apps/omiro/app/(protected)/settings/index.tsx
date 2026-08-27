@@ -1,7 +1,6 @@
-import { useTheme } from '@shopify/restyle';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 
 import { ProtectedRouteFallback } from '~/components/protected/protected-route-fallback';
 import { AccountIdentitySection } from '~/components/settings/AccountIdentitySection';
@@ -9,7 +8,7 @@ import { DangerZoneSection } from '~/components/settings/DangerZoneSection';
 import { PrivacySection } from '~/components/settings/PrivacySection';
 import { SectionLabel, SettingsRow } from '~/components/settings/SettingsRow';
 import { UsageSection } from '~/components/settings/UsageSection';
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import AppIcon from '~/components/ui/icon';
 import { getAppLockEnabled, setAppLockEnabled } from '~/hooks/use-app-lock';
 import { getPreventScreenshots, setPreventScreenshots } from '~/hooks/use-screen-capture';
@@ -28,7 +27,7 @@ function Settings() {
   const [appLock, setAppLockState] = useState(getAppLockEnabled());
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { tertiary: tertiaryColor } = useTheme().colors;
+  const [tertiaryColor] = useThemeColor(['--color-tertiary']) as string[];
 
   const normalizedName = name.trim();
   const initialNormalizedName = initialName.trim();
@@ -138,6 +137,6 @@ function Settings() {
 
 export default Settings;
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   chatsSection: { gap: 8 },
-});
+}));

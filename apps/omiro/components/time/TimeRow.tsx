@@ -1,8 +1,7 @@
-import { useTheme } from '@shopify/restyle';
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { IconButton } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 
@@ -22,15 +21,15 @@ export const TimeRow = memo(function TimeRow({
   onToggleTask,
   showDayLabel,
 }: TimeRowProps) {
-  const {
-    chart1,
-    chart2,
-    chart3,
-    chart4,
-    chart5,
-    success: successColor,
-    muted,
-  } = useTheme().colors;
+  const [chart1, chart2, chart3, chart4, chart5, successColor, muted] = useThemeColor([
+    '--color-chart-1',
+    '--color-chart-2',
+    '--color-chart-3',
+    '--color-chart-4',
+    '--color-chart-5',
+    '--color-success',
+    '--color-muted',
+  ]) as string[];
   const isTask = item.kind === 'task';
   const completed = isTask && item.value.status === 'completed';
   const supportingText = isTask
@@ -107,7 +106,7 @@ export const TimeRow = memo(function TimeRow({
   );
 });
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   dayHeader: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -155,4 +154,4 @@ const styles = StyleSheet.create({
   itemContent: { minWidth: 0, flex: 1, gap: 2, paddingTop: 2 },
   itemTitle: { ...theme.typography.body, color: theme.colors.foreground },
   itemSupportingText: { ...theme.typography.caption2, color: theme.colors.mutedForeground },
-});
+}));

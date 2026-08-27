@@ -1,17 +1,10 @@
-import { useTheme } from '@shopify/restyle';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  LayoutChangeEvent,
-  Pressable,
-  StyleSheet,
-  View,
-  type AccessibilityActionEvent,
-} from 'react-native';
+import { LayoutChangeEvent, Pressable, View, type AccessibilityActionEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 
 const THUMB_SIZE = 24;
 const TRACK_HEIGHT = 4;
@@ -37,7 +30,10 @@ export function DiscreteSlider({
   onValueChange,
   accessibilityLabel,
 }: DiscreteSliderProps) {
-  const { border: borderDefault, foreground: textPrimary } = useTheme().colors;
+  const [borderDefault, textPrimary] = useThemeColor(['--color-border', '--color-foreground']) as [
+    string,
+    string,
+  ];
   const trackWidth = useSharedValue(0);
   const [measuredTrackWidth, setMeasuredTrackWidth] = useState(0);
   const position = useSharedValue(steps > 1 ? value / (steps - 1) : 0);
@@ -139,9 +135,9 @@ export function DiscreteSlider({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   slider: { height: 24, justifyContent: 'center' },
   track: { position: 'absolute', left: 12, right: 12, height: 4, borderRadius: 999 },
   fill: { position: 'absolute', left: 12, height: 4, borderRadius: 999 },
   thumb: { height: 24, width: 24, borderRadius: 999 },
-});
+}));

@@ -1,9 +1,9 @@
 import { useIsFocused } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import { RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 
 import { StreamList } from '~/components/stream/StreamList';
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
 import {
   useCalendarEvents,
@@ -168,7 +168,7 @@ export const TimeStream = memo(function TimeStream({
   );
 });
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   stream: { flex: 1 },
   permissionNotice: {
     borderWidth: 1,
@@ -184,4 +184,4 @@ const styles = StyleSheet.create({
   emptyState: { color: theme.colors.mutedForeground, paddingHorizontal: 16, paddingTop: 24 },
   loadingState: { gap: 8, padding: 16 },
   skeletonBlock: { backgroundColor: theme.colors.muted, borderRadius: 8, height: 56 },
-});
+}));

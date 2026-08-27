@@ -1,4 +1,4 @@
-import { StyleSheet, Switch, View } from 'react-native';
+import { Switch, View } from 'react-native';
 
 import { SectionLabel, SettingsRow } from '~/components/settings/SettingsRow';
 import { makeStyles } from '~/components/theme';
@@ -32,6 +32,6 @@ export function PrivacySection({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles(() => ({
   privacySection: { gap: 8 },
-});
+}));

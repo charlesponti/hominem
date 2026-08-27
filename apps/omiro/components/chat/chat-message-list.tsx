@@ -2,16 +2,9 @@ import type { ChatMessageItem } from '@hominem/chat';
 import { FlashList, type FlashListRef, type ListRenderItem } from '@shopify/flash-list';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Pressable,
-  StyleSheet,
-  type RefreshControlProps,
-  Text,
-  View,
-} from 'react-native';
+import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles } from '~/components/theme';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 
 import { ChatActivityTimeline } from './chat-activity-timeline';
@@ -274,7 +267,7 @@ export function ChatMessageList({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   emptySearch: { alignItems: 'center', paddingTop: 28 },
   emptySearchText: { fontFamily: 'Menlo', color: theme.colors.tertiary },
   loadingState: { flex: 1, paddingTop: 12 },
@@ -282,4 +275,4 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   bottomSentinel: { flexGrow: 1, minHeight: 32 },
   itemSeparator: { height: 20 },
-});
+}));

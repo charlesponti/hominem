@@ -1,8 +1,7 @@
-import { useTheme } from '@shopify/restyle';
 import type React from 'react';
-import { Pressable, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { Pressable, Text, View, type TextInput } from 'react-native';
 
-import { theme } from '~/components/theme';
+import { makeStyles, useThemeColor } from '~/components/theme';
 import { nativeShadows, TextField } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { ModalOverlay } from '~/components/ui/modal-overlay';
@@ -25,7 +24,11 @@ export function ChatSearchModal({
   onClose,
   onChangeSearchQuery,
 }: ChatSearchModalProps) {
-  const { card, foreground: textPrimary, mutedForeground: textSecondary } = useTheme().colors;
+  const [card, textPrimary, textSecondary] = useThemeColor([
+    '--color-card',
+    '--color-foreground',
+    '--color-muted-foreground',
+  ]) as string[];
 
   return (
     <ModalOverlay visible={visible} onClose={onClose} position="top">
@@ -72,7 +75,7 @@ export function ChatSearchModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = makeStyles((theme) => ({
   modalContent: { paddingHorizontal: 16, paddingTop: 28 },
   searchCard: {
     backgroundColor: theme.colors.card,
@@ -87,4 +90,4 @@ const styles = StyleSheet.create({
   titleText: { ...theme.typography.headline, color: theme.colors.foreground, flex: 1 },
   closeButton: { alignItems: 'center', justifyContent: 'center', height: 32, width: 32 },
   captionText: { ...theme.typography.caption1, color: theme.colors.mutedForeground },
-});
+}));
