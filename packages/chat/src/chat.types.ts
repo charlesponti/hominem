@@ -8,7 +8,6 @@ export interface ChatMessageToolCall {
   type: 'tool-call';
   toolCallId: string;
   args: Record<string, unknown>;
-  output?: unknown;
   status?: 'requested' | 'running' | 'completed' | 'failed' | 'pending' | 'rejected';
   preview?: Record<string, unknown> | null;
 }

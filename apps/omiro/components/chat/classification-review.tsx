@@ -1,8 +1,11 @@
 import type { ArtifactType } from '@hominem/rpc/types';
 import { ScrollView, Text, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { makeStyles } from '~/components/theme';
 import { Button } from '~/components/ui/button';
+import { ModalOverlay } from '~/components/ui/modal-overlay';
 import t from '~/translations';
 
 interface ClassificationReviewProps {
@@ -24,6 +27,7 @@ export function ClassificationReview({
   onAccept,
   onReject,
 }: ClassificationReviewProps) {
+  const insets = useSafeAreaInsets();
   const isEmptyExtraction = items !== undefined && items.length === 0;
   const acceptLabel =
     items !== undefined
@@ -31,57 +35,85 @@ export function ClassificationReview({
       : t.chat.classification.saveLabel[proposedType];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.typeLabel}>
-          {t.chat.classification.saveAsPrefix} {t.chat.classification.typeLabel[proposedType]}
-        </Text>
-        <Text style={styles.title}>{proposedTitle}</Text>
-      </View>
-
-      {proposedChanges.length > 0 ? (
-        <View style={styles.changesList}>
-          {proposedChanges.map((change) => (
-            <View key={change} style={styles.changeItem}>
-              <Text style={styles.changeBullet}>-</Text>
-              <Text style={styles.changeText}>{change}</Text>
-            </View>
-          ))}
+    <ModalOverlay
+      visible
+      onClose={onReject}
+      dismissOnBackdropPress={false}
+      backdropToken="overlay-scrim"
+      position="bottom"
+      animationType="none"
+      statusBarTranslucent
+    >
+      <Animated.View
+        entering={FadeInUp.duration(150)}
+        style={[{ paddingBottom: insets.bottom + 16 }, styles.container]}
+      >
+        <View style={styles.handleBar} />
+        <View style={styles.header}>
+          <Text style={styles.typeLabel}>
+            {t.chat.classification.saveAsPrefix} {t.chat.classification.typeLabel[proposedType]}
+          </Text>
+          <Text style={styles.title}>{proposedTitle}</Text>
         </View>
-      ) : null}
 
-      {items === undefined ? (
-        <ScrollView nestedScrollEnabled style={styles.previewScrollArea}>
-          <Text style={styles.previewText}>{previewContent}</Text>
-        </ScrollView>
-      ) : null}
+        {proposedChanges.length > 0 ? (
+          <View style={styles.changesList}>
+            {proposedChanges.map((change) => (
+              <View key={change} style={styles.changeItem}>
+                <Text style={styles.changeBullet}>-</Text>
+                <Text style={styles.changeText}>{change}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-      <View style={styles.actions}>
-        {isEmptyExtraction ? null : (
-          <View style={styles.acceptAction}>
+        {items === undefined ? (
+          <ScrollView nestedScrollEnabled style={styles.previewScrollArea}>
+            <Text style={styles.previewText}>{previewContent}</Text>
+          </ScrollView>
+        ) : null}
+
+        <View style={styles.actions}>
+          {isEmptyExtraction ? null : (
+            <View style={styles.acceptAction}>
+              <Button
+                testID="classification-review-accept"
+                label={acceptLabel}
+                onPress={onAccept}
+                variant="primary"
+              />
+            </View>
+          )}
+          <View style={styles.rejectAction}>
             <Button
-              testID="classification-review-accept"
-              label={acceptLabel}
-              onPress={onAccept}
-              variant="primary"
+              testID="classification-review-reject"
+              label={t.chat.classification.discard}
+              onPress={onReject}
+              variant="secondary"
             />
           </View>
-        )}
-        <View style={styles.rejectAction}>
-          <Button
-            testID="classification-review-reject"
-            label={t.chat.classification.discard}
-            onPress={onReject}
-            variant="secondary"
-          />
         </View>
-      </View>
-    </View>
+      </Animated.View>
+    </ModalOverlay>
   );
 }
 
 const styles = makeStyles((theme) => ({
-  container: { gap: 24 },
+  container: {
+    backgroundColor: theme.colors.background,
+    borderTopWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 24,
+    padding: 32,
+  },
+  handleBar: {
+    alignSelf: 'center',
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    height: 4,
+    marginBottom: 8,
+    width: 36,
+  },
   header: { gap: 8 },
   typeLabel: {
     ...theme.typography.caption1,

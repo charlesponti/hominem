@@ -34,6 +34,7 @@
     "@better-auth/expo": "1.7.1",
     "@expo/metro-runtime": "~57.0.12",
     "@expo/ui": "~57.0.13",
+    "@gorhom/bottom-sheet": "^5.2.14",
     "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/rpc": "workspace:*",

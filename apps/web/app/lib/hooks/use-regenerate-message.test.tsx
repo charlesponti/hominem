@@ -6,18 +6,23 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockTanstack = vi.hoisted(() => ({
+  finish: undefined as (() => void) | undefined,
   sendMessage: vi.fn(),
   stop: vi.fn(),
 }));
 
-const runtime = vi.hoisted(() => ({
-  isLoading: false,
-  runId: 'run-1',
-  sendMessage: mockTanstack.sendMessage,
-  stop: mockTanstack.stop,
+vi.mock('@tanstack/ai-react', () => ({
+  fetchHttpStream: vi.fn(() => ({})),
+  useChat: (options: { onFinish?: () => void }) => {
+    mockTanstack.finish = options.onFinish;
+    return {
+      isLoading: false,
+      runId: 'run-1',
+      sendMessage: mockTanstack.sendMessage,
+      stop: mockTanstack.stop,
+    };
+  },
 }));
-
-vi.mock('./use-chat-runtime', () => ({ useChatRuntime: () => runtime }));
 
 import { useRegenerateMessage } from './use-regenerate-message';
 
@@ -29,11 +34,8 @@ describe('useRegenerateMessage', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('sends the canonical regenerate operation', async () => {
-    mockTanstack.sendMessage.mockResolvedValueOnce(undefined);
-    const { result } = renderHook(
-      () => useRegenerateMessage({ chatId: 'chat-1', runtime: runtime as never }),
-      { wrapper },
-    );
+    mockTanstack.sendMessage.mockImplementationOnce(async () => mockTanstack.finish?.());
+    const { result } = renderHook(() => useRegenerateMessage({ chatId: 'chat-1' }), { wrapper });
     await result.current.regenerate('message-1', 'long');
 
     expect(mockTanstack.sendMessage).toHaveBeenCalledWith('', {
@@ -46,10 +48,7 @@ describe('useRegenerateMessage', () => {
 
   it('keeps the target request for retry', async () => {
     mockTanstack.sendMessage.mockRejectedValueOnce(new Error('failed'));
-    const { result } = renderHook(
-      () => useRegenerateMessage({ chatId: 'chat-1', runtime: runtime as never }),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useRegenerateMessage({ chatId: 'chat-1' }), { wrapper });
     await result.current.regenerate('message-1', 'long');
 
     await waitFor(() => expect(result.current.error?.message).toBe('failed'));

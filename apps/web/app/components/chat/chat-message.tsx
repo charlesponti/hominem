@@ -14,6 +14,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/ai-e
 import { Shimmer } from '~/components/ai-elements/shimmer';
 import {
   Tool,
+  ToolApprovalActions,
   ToolContent,
   ToolHeader,
   ToolInput,
@@ -32,6 +33,7 @@ import {
 } from '~/components/alert-dialog';
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
+import { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
 import { speechStore } from '~/lib/stores/speech-store';
 import type { ChatMessageView } from '~/lib/types/chat';
 import { cn } from '~/lib/utils';
@@ -72,7 +74,16 @@ function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
   return role === 'user' ? 'user' : 'assistant';
 }
 
-function ToolCall({ toolCall }: { toolCall: ChatToolCall }) {
+function ToolCall({
+  chatId,
+  messageId,
+  toolCall,
+}: {
+  chatId: string;
+  messageId: string;
+  toolCall: ChatToolCall;
+}) {
+  const { isResponding, respond } = useToolCallRespond({ chatId });
   const isPending = toolCall.status === 'pending';
   const toolState =
     toolCall.status === 'pending'
@@ -96,6 +107,17 @@ function ToolCall({ toolCall }: { toolCall: ChatToolCall }) {
         ) : (
           <ToolInput input={toolCall.args} />
         )}
+        {isPending ? (
+          <ToolApprovalActions
+            disabled={isResponding}
+            onApprove={() =>
+              void respond({ messageId, toolCallId: toolCall.toolCallId, approved: true })
+            }
+            onReject={() =>
+              void respond({ messageId, toolCallId: toolCall.toolCallId, approved: false })
+            }
+          />
+        ) : null}
       </ToolContent>
     </Tool>
   );
@@ -253,7 +275,12 @@ export const ChatMessage = memo(function ChatMessage({
                   </Reasoning>
                 ) : null}
                 {message.toolCalls?.map((toolCall) => (
-                  <ToolCall key={toolCall.toolCallId} toolCall={toolCall} />
+                  <ToolCall
+                    chatId={message.chatId}
+                    key={toolCall.toolCallId}
+                    messageId={message.id}
+                    toolCall={toolCall}
+                  />
                 ))}
                 {isEditing ? (
                   <div className="flex min-w-72 flex-col gap-2">

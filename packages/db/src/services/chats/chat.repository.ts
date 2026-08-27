@@ -8,12 +8,18 @@ import {
   type ChatMessageToolCallRecord,
 } from '../../guards';
 import type { DbHandle } from '../../transaction';
-import type { AppChatMessages, AppChatSources, AppChats } from '../../types/database';
+import type {
+  AppChatGenerationRuns,
+  AppChatMessages,
+  AppChatSources,
+  AppChats,
+} from '../../types/database';
 
 export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '../../guards';
 
 type ChatRow = Selectable<AppChats>;
 type ChatMessageRow = Selectable<AppChatMessages>;
+type ChatGenerationRunRow = Selectable<AppChatGenerationRuns>;
 type ChatSourceRow = Selectable<AppChatSources>;
 
 export interface ChatRecord {
@@ -71,6 +77,32 @@ export interface InsertChatMessageInput {
   reasoning?: string | null;
   toolCalls?: unknown[] | null;
   parentMessageId?: string | null;
+}
+
+export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
+export type ChatGenerationStatus = 'preparing' | 'saving' | 'committed' | 'cancelled' | 'failed';
+
+export interface ChatGenerationRunRecord {
+  id: string;
+  chatId: string;
+  ownerUserId: string;
+  kind: ChatGenerationKind;
+  status: ChatGenerationStatus;
+  userMessageId: string | null;
+  targetAssistantMessageId: string | null;
+  assistantMessageId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChatGenerationRunInput {
+  id: string;
+  chatId: string;
+  ownerUserId: string;
+  kind: ChatGenerationKind;
+  userMessageId?: string | null;
+  targetAssistantMessageId?: string | null;
 }
 
 function toChatRecord(row: ChatRow): ChatRecord {
@@ -141,11 +173,127 @@ function toChatSourceRecord(
   };
 }
 
+function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRunRecord {
+  return {
+    id: row.id,
+    chatId: row.chatId,
+    ownerUserId: row.ownerUserId,
+    kind: row.kind as ChatGenerationKind,
+    status: row.status as ChatGenerationStatus,
+    userMessageId: row.userMessageId,
+    targetAssistantMessageId: row.targetAssistantMessageId,
+    assistantMessageId: row.assistantMessageId,
+    errorMessage: row.errorMessage,
+    createdAt: new Date(row.createdAt).toISOString(),
+    updatedAt: new Date(row.updatedAt).toISOString(),
+  };
+}
+
 function toJsonColumnValue(value: unknown[] | null | undefined): string | null {
   return value ? JSON.stringify(value) : null;
 }
 
 export const ChatRepository = {
+  async getGenerationRun(
+    handle: DbHandle,
+    chatId: string,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('id', '=', generationId)
+      .where('chatId', '=', chatId)
+      .where('ownerUserId', '=', ownerUserId)
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  /**
+   * Look up a generation run by id alone (no chatId) — `id` is the table's
+   * primary key, globally unique. Used by `/start-stream`, which has no
+   * chatId yet at the point it needs to detect a retried `generationId`.
+   */
+  async getGenerationRunById(
+    handle: DbHandle,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('id', '=', generationId)
+      .where('ownerUserId', '=', ownerUserId)
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async createGenerationRun(
+    handle: DbHandle,
+    input: CreateChatGenerationRunInput,
+  ): Promise<ChatGenerationRunRecord> {
+    const row = (await handle
+      .insertInto('app.chatGenerationRuns')
+      .values({
+        id: input.id,
+        chatId: input.chatId,
+        ownerUserId: input.ownerUserId,
+        kind: input.kind,
+        status: 'preparing',
+        userMessageId: input.userMessageId ?? null,
+        targetAssistantMessageId: input.targetAssistantMessageId ?? null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()) as ChatGenerationRunRow;
+
+    return toChatGenerationRunRecord(row);
+  },
+
+  async updateGenerationRun(
+    handle: DbHandle,
+    input: {
+      id: string;
+      ownerUserId: string;
+      status: ChatGenerationStatus;
+      assistantMessageId?: string | null;
+      errorMessage?: string | null;
+    },
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .updateTable('app.chatGenerationRuns')
+      .set({
+        status: input.status,
+        assistantMessageId: input.assistantMessageId,
+        errorMessage: input.errorMessage,
+      })
+      .where('id', '=', input.id)
+      .where('ownerUserId', '=', input.ownerUserId)
+      .returningAll()
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async cancelGenerationRun(
+    handle: DbHandle,
+    generationId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = (await handle
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'cancelled' })
+      .where('id', '=', generationId)
+      .where('ownerUserId', '=', ownerUserId)
+      .where('status', 'in', ['preparing', 'saving'])
+      .returningAll()
+      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
   /**
    * Get a chat by ID with ownership enforcement. Throws if not found.
    */
@@ -339,6 +487,18 @@ export const ChatRepository = {
 
     if (deletedMessageIds.length > 0) {
       await handle
+        .deleteFrom('app.chatGenerationRuns')
+        .where('chatId', '=', chatId)
+        .where((expressionBuilder) =>
+          expressionBuilder.or([
+            expressionBuilder('userMessageId', 'in', deletedMessageIds),
+            expressionBuilder('targetAssistantMessageId', 'in', deletedMessageIds),
+            expressionBuilder('assistantMessageId', 'in', deletedMessageIds),
+          ]),
+        )
+        .execute();
+
+      await handle
         .deleteFrom('app.chatMessages')
         .where('chatId', '=', chatId)
         .where('id', 'in', deletedMessageIds)
@@ -445,17 +605,13 @@ export const ChatRepository = {
     chatId: string,
     messageId: string,
     content: string,
-    options?: {
-      files?: ChatMessageFileRecord[] | null;
-      reasoning?: string | null;
-      toolCalls?: ChatMessageToolCallRecord[] | null;
-    },
+    options?: { reasoning?: string | null; toolCalls?: ChatMessageToolCallRecord[] | null },
   ): Promise<ChatMessageRecord> {
     const updated = (await handle
       .updateTable('app.chatMessages')
       .set({
         content,
-        files: toJsonColumnValue(options?.files ?? null),
+        files: null,
         reasoning: options?.reasoning ?? null,
         toolCalls: toJsonColumnValue(options?.toolCalls ?? null),
         updatedat: new Date().toISOString(),

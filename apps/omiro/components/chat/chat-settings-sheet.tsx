@@ -1,4 +1,4 @@
-import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';

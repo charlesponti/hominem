@@ -13,7 +13,6 @@ export interface ChatMessageToolCallRecord {
   type: 'tool-call';
   toolCallId: string;
   args: Record<string, unknown>;
-  output?: unknown;
   /**
    * Confirmation lifecycle for tools flagged `requiresConfirmation`. Absent
    * (undefined) means the call executed immediately, same as before this

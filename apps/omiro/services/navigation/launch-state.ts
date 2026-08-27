@@ -6,20 +6,9 @@ const ALL_DRAFT_KEY = 'workspace-feed-draft-v1';
 const NEW_CHAT_DRAFT_KEY = 'workspace-new-chat-draft-v1';
 const CHAT_DRAFT_PREFIX = 'workspace-chat-draft-v1:';
 const RESUME_TARGET_KEY = 'workspace-resume-artifact-v1';
-const PENDING_CHAT_START_PREFIX = 'workspace-pending-chat-start-v1:';
-
-export type PendingChatStart = {
-  message: string;
-  fileIds?: string[];
-  responseModality?: 'text' | 'audio';
-};
 
 function getChatDraftKey(chatId: string) {
   return `${CHAT_DRAFT_PREFIX}${chatId}`;
-}
-
-function getPendingChatStartKey(chatId: string) {
-  return `${PENDING_CHAT_START_PREFIX}${chatId}`;
 }
 
 function readJSONValue<T>(key: string): T | null {
@@ -124,15 +113,4 @@ export function consumeRestoreAttempt(): boolean {
 
   hasAttemptedRestore = true;
   return true;
-}
-
-export function writePendingChatStart(chatId: string, value: PendingChatStart) {
-  writeJSONValue(getPendingChatStartKey(chatId), value);
-}
-
-export function consumePendingChatStart(chatId: string): PendingChatStart | null {
-  const key = getPendingChatStartKey(chatId);
-  const value = readJSONValue<PendingChatStart>(key);
-  storage.remove(key);
-  return value;
 }

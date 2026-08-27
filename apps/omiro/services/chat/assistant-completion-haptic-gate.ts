@@ -6,7 +6,7 @@
  *   cache and fires the haptic itself when it finds the server already has
  *   the reply.
  * - The mutation's own onSuccess/onError, which still resolves on its own
- *   schedule while a chat run is being reconciled and would
+ *   schedule (streamSSE isn't cancelled by the reconcile) and would
  *   otherwise fire the haptic again for the same message.
  *
  * markCompletedViaBackgroundReconcile records which message the reconcile

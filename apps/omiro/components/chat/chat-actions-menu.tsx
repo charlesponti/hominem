@@ -47,6 +47,7 @@ export function ChatActionsMenu({
   onOpenSources,
   onTransform,
 }: ChatActionsMenuProps) {
+  const router = useRouter();
   const { handleArchiveChat, isArchiving } = useChatArchiveAction({ chatId, onChatArchive });
   const conversationActions = buildConversationActionsModel({
     canTransform,
@@ -108,14 +109,41 @@ export function ChatActionsMenu({
           }
 
           if (item.kind === 'transform' && item.type) {
-            return TransformMenuAction({
-              chatId,
-              kind: item.kind,
-              type: item.type,
-              label: item.label,
-              messages,
-              onTransform,
-            });
+            return (
+              <Stack.Toolbar.MenuAction
+                key={`${item.kind}:${item.type}`}
+                icon={getConversationActionIcon(item.kind, item.type)}
+                onPress={() => {
+                  const transformType = item.type;
+                  if (!transformType) {
+                    return;
+                  }
+
+                  if (transformType === 'note') {
+                    const draft = buildNoteDraft(messages);
+                    if (draft.transcript.trim().length === 0) {
+                      Alert.alert(t.chat.noteDraft.emptyChat);
+                      return;
+                    }
+
+                    router.push({
+                      pathname: '/chat-to-note-sheet',
+                      params: {
+                        transcript: draft.transcript,
+                        title: draft.title,
+                        isTruncated: draft.isTruncated.toString(),
+                        chatId,
+                      },
+                    });
+                    return;
+                  }
+
+                  onTransform(transformType);
+                }}
+              >
+                {item.label}
+              </Stack.Toolbar.MenuAction>
+            );
           }
 
           return (
@@ -130,59 +158,5 @@ export function ChatActionsMenu({
         }),
       )}
     </Stack.Toolbar.Menu>
-  );
-}
-
-function TransformMenuAction({
-  chatId,
-  kind,
-  type,
-  label,
-  messages,
-  onTransform,
-}: {
-  chatId: string;
-  type: ArtifactType;
-  label: string;
-  kind: 'transform';
-  messages: ChatMessageItem[];
-  onTransform: (type: ArtifactType) => void;
-}) {
-  const router = useRouter();
-
-  return (
-    <Stack.Toolbar.MenuAction
-      key={`${kind}:${type}`}
-      icon={getConversationActionIcon(kind, type)}
-      onPress={() => {
-        const transformType = type;
-        if (!transformType) {
-          return;
-        }
-
-        if (transformType === 'note') {
-          const draft = buildNoteDraft(messages);
-          if (draft.transcript.trim().length === 0) {
-            Alert.alert(t.chat.noteDraft.emptyChat);
-            return;
-          }
-
-          router.push({
-            pathname: '/chat-to-note-sheet',
-            params: {
-              transcript: draft.transcript,
-              title: draft.title,
-              isTruncated: draft.isTruncated.toString(),
-              chatId,
-            },
-          });
-          return;
-        }
-
-        onTransform(transformType);
-      }}
-    >
-      {label}
-    </Stack.Toolbar.MenuAction>
   );
 }

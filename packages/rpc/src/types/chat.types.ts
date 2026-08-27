@@ -41,6 +41,84 @@ export type ChatsCreateInput = InferRequestType<_ChatsCreateEndpoint>['json'];
 export type ChatsCreateOutput = InferResponseType<_ChatsCreateEndpoint, 201>;
 
 // ============================================================================
+// START STREAM
+// ============================================================================
+
+type _ChatsStartStreamEndpoint = HonoClient['api']['chats']['start-stream']['$post'];
+export type ChatsStartStreamInput = InferRequestType<_ChatsStartStreamEndpoint>['json'];
+export interface ChatStreamErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export interface ChatGenerationStatusEvent {
+  type: 'status';
+  generationId: string;
+  status: 'preparing' | 'saving';
+}
+
+export interface ChatGenerationAcceptedEvent {
+  type: 'accepted';
+  generationId: string;
+  chatId: string;
+  chat: Chat;
+  userMessage: ChatMessageDto | null;
+}
+
+export interface ChatGenerationCommittedEvent {
+  type: 'committed';
+  generationId: string;
+  message: ChatMessageDto;
+}
+
+export interface ChatGenerationCancelledEvent {
+  type: 'cancelled';
+  generationId: string;
+}
+
+export interface ChatToolConfirmationRequiredEvent {
+  type: 'tool-confirmation-required';
+  generationId: string;
+  messageId: string;
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  preview: Record<string, unknown> | null;
+}
+
+export interface ChatGenerationDeltaEvent {
+  type: 'text-delta' | 'reasoning-delta';
+  generationId: string;
+  text: string;
+}
+
+export interface ChatGenerationToolStepEvent {
+  type: 'tool-step';
+  generationId: string;
+  toolCallId: string;
+  toolName: string;
+  status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
+}
+
+export interface ChatGenerationPhaseEvent {
+  type: 'phase';
+  generationId: string;
+  phase: 'generating';
+}
+
+export type ChatStreamEvent =
+  | ChatGenerationStatusEvent
+  | ChatGenerationAcceptedEvent
+  | ChatGenerationCommittedEvent
+  | ChatGenerationCancelledEvent
+  | ChatToolConfirmationRequiredEvent
+  | ChatGenerationDeltaEvent
+  | ChatGenerationToolStepEvent
+  | ChatGenerationPhaseEvent
+  | ChatStreamErrorEvent;
+export type ChatsStartStreamEvent = ChatStreamEvent;
+
+// ============================================================================
 // GET (with messages)
 // ============================================================================
 

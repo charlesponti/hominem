@@ -1,10 +1,10 @@
 import type { ChatMessageDto } from '@hominem/rpc/types';
+import { fetchHttpStream, useChat } from '@tanstack/ai-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
-import type { ChatRuntime } from './use-chat-runtime';
 import type { ResponseLength } from './use-response-length';
 
 export type StreamStatus =
@@ -16,7 +16,7 @@ export type StreamStatus =
   | 'committed'
   | 'failed';
 
-export interface StreamInput {
+interface StreamInput {
   message: string;
   fileIds?: string[];
   responseLength?: ResponseLength;
@@ -93,12 +93,39 @@ function messageDto(chatId: string, role: 'user' | 'assistant', content: string)
   };
 }
 
-export function useStreamMessage({ chatId, runtime }: { chatId: string; runtime: ChatRuntime }) {
+export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<StreamInput | null>(null);
   const [status, setStatus] = useState<StreamStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
-  const chat = runtime;
+  const chat = useChat({
+    threadId: chatId,
+    persistence: true,
+    queue: 'drop',
+    connection: fetchHttpStream(
+      `${import.meta.env.VITE_PUBLIC_API_URL}/api/chats/${chatId}/agent`,
+      {
+        credentials: 'include',
+      },
+    ),
+    onFinish: (message) => {
+      const parts = partsOf(message);
+      const committed = messageDto(chatId, 'assistant', textFromParts(parts, 'text'));
+      committed.reasoning = textFromParts(parts, 'reasoning') || null;
+      setStatus('committed');
+      inputRef.current?.onCommitted?.(committed);
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
+      ]);
+    },
+    onError: (nextError) => {
+      setError(nextError);
+      setStatus('failed');
+      inputRef.current?.onFailed?.(nextError);
+    },
+  });
 
   const assistantParts = useMemo(() => {
     const message = [...chat.messages]
@@ -123,19 +150,6 @@ export function useStreamMessage({ chatId, runtime }: { chatId: string; runtime:
             },
           },
         });
-        const message = [...chat.messages]
-          .reverse()
-          .find((candidate) => candidate.role === 'assistant');
-        const parts = partsOf(message);
-        const committed = messageDto(chatId, 'assistant', textFromParts(parts, 'text'));
-        committed.reasoning = textFromParts(parts, 'reasoning') || null;
-        setStatus('committed');
-        input.onCommitted?.(committed);
-        void Promise.all([
-          queryClient.invalidateQueries({ queryKey: chatQueryKeys.get(chatId) }),
-          queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) }),
-          queryClient.invalidateQueries({ queryKey: chatQueryKeys.list }),
-        ]);
       } catch (caught) {
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
@@ -143,7 +157,7 @@ export function useStreamMessage({ chatId, runtime }: { chatId: string; runtime:
         input.onFailed?.(nextError);
       }
     },
-    [chat, chatId, queryClient],
+    [chat, chatId],
   );
 
   const cancel = useCallback(() => {

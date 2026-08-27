@@ -1,4 +1,4 @@
-import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { logger } from '@hominem/telemetry';
 import * as Sentry from '@sentry/react-native';
 import { useIsRestoring } from '@tanstack/react-query';
