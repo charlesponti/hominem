@@ -8,6 +8,7 @@ export interface ConsumeSseXhrOptions<TEvent> {
   onEvent: (event: TEvent) => void;
   onDone?: () => void;
   signal?: AbortSignal;
+  parseEvent?: (input: unknown) => TEvent;
 }
 
 function getAbortError() {
@@ -25,6 +26,7 @@ export async function consumeSseXhr<TEvent>({
   onEvent,
   onDone,
   signal,
+  parseEvent = (input) => input as TEvent,
 }: ConsumeSseXhrOptions<TEvent>): Promise<void> {
   if (signal?.aborted) throw getAbortError();
 
@@ -84,7 +86,7 @@ export async function consumeSseXhr<TEvent>({
           rejectOnce(new Error(event.message ?? event.error));
           return;
         }
-        onEvent(output.event);
+        onEvent(parseEvent(output.event));
       }
     };
 

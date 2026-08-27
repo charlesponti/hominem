@@ -40,12 +40,20 @@ describe('ChatGenerationRepository', () => {
       })
       .execute();
 
-    return { userId, generationId };
+    return { userId, chatId, generationId };
   }
 
   it('appends ordered events idempotently and updates the projection atomically', async () => {
-    const { userId, generationId } = await createGeneration();
-    const event = { type: 'generation.started' as const, generationId };
+    const { userId, chatId, generationId } = await createGeneration();
+    const event = {
+      type: 'generation.started' as const,
+      context: {
+        chatId,
+        kind: 'send' as const,
+        userMessageId: null,
+        requestContext: {},
+      },
+    };
 
     const first = await runInTransaction((trx) =>
       ChatGenerationRepository.appendEvent(trx, {
@@ -119,12 +127,15 @@ describe('ChatGenerationRepository', () => {
   });
 
   it('allocates the next sequence without an idempotency key and enforces ownership', async () => {
-    const { userId, generationId } = await createGeneration();
+    const { userId, chatId, generationId } = await createGeneration();
     const first = await runInTransaction((trx) =>
       ChatGenerationRepository.appendEvent(trx, {
         generationId,
         ownerUserId: userId,
-        event: { type: 'generation.started', generationId },
+        event: {
+          type: 'generation.started',
+          context: { chatId, kind: 'send', userMessageId: null, requestContext: {} },
+        },
       }),
     );
     const second = await runInTransaction((trx) =>

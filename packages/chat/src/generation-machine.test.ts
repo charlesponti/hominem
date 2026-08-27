@@ -7,6 +7,13 @@ import {
   type GenerationState,
 } from './generation-machine';
 
+const startContext = {
+  chatId: 'chat-1',
+  kind: 'send' as const,
+  userMessageId: 'message-1',
+  requestContext: {},
+};
+
 const call = (overrides: Partial<GenerationState['requestedToolCalls'][number]> = {}) => ({
   id: 'call-1',
   name: 'search_memories',
@@ -19,7 +26,11 @@ const call = (overrides: Partial<GenerationState['requestedToolCalls'][number]> 
 describe('generation machine', () => {
   it('reduces provider text and fragmented tool calls without side effects', () => {
     let state = createGenerationState('generation-1');
-    state = reduceGeneration(state, { type: 'start', turnId: 'turn-1' }).state;
+    state = reduceGeneration(state, {
+      type: 'start',
+      turnId: 'turn-1',
+      context: startContext,
+    }).state;
     state = reduceGeneration(state, {
       type: 'provider-chunk',
       chunk: {
@@ -54,7 +65,11 @@ describe('generation machine', () => {
 
   it('executes tools in order and opens the next provider turn after results', () => {
     let state = createGenerationState('generation-1');
-    state = reduceGeneration(state, { type: 'start', turnId: 'turn-1' }).state;
+    state = reduceGeneration(state, {
+      type: 'start',
+      turnId: 'turn-1',
+      context: startContext,
+    }).state;
     state = reduceGeneration(state, {
       type: 'provider-chunk',
       chunk: {
@@ -88,7 +103,11 @@ describe('generation machine', () => {
 
   it('stops at confirmation and only executes after approval', () => {
     let state = createGenerationState('generation-1');
-    state = reduceGeneration(state, { type: 'start', turnId: 'turn-1' }).state;
+    state = reduceGeneration(state, {
+      type: 'start',
+      turnId: 'turn-1',
+      context: startContext,
+    }).state;
     state = reduceGeneration(state, {
       type: 'provider-chunk',
       chunk: {
@@ -146,6 +165,7 @@ describe('generation machine', () => {
     const commands: string[] = [];
     const finalState = await runGeneration({
       generationId: 'generation-1',
+      startContext,
       effects: {
         execute: async (command) => {
           commands.push(command.type);
@@ -362,6 +382,7 @@ describe('generation machine', () => {
 
     const finalState = await runGeneration({
       generationId: 'generation-1',
+      startContext,
       effects: {
         execute: async (command) => {
           if (command.type === 'open-provider-turn') return providerInputs();

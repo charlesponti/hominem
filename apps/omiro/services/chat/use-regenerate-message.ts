@@ -1,4 +1,5 @@
-import type { ChatStreamEvent } from '@hominem/rpc/types';
+import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
@@ -28,20 +29,25 @@ export function useRegenerateMessage(chatId: string) {
     mutationFn: async ({ messageId, generationId }) => {
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await consumeSseXhr<ChatStreamEvent>({
+      await consumeSseXhr<GenerationStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
         payload: { generationId, responseLength: getChatResponseLength() },
         getHeaders: getAuthHeaders,
         signal: controller.signal,
+        parseEvent: parseGenerationStreamEvent,
         onEvent: (event) => {
           const current = generationRef.current;
-          if (!current || (event.type !== 'error' && event.generationId !== current.id)) return;
-          if (event.type === 'status') {
-            setGeneration({ ...current, stage: event.status });
+          if (!current || event.generationId !== current.id) return;
+          if ('payload' in event && event.type === 'generation.phase_changed') {
+            if (event.payload.phase === 'preparing' || event.payload.phase === 'saving')
+              setGeneration({ ...current, stage: event.payload.phase });
             return;
           }
-          if (event.type === 'committed') {
-            const message = toMessageOutput(event.message);
+          if ('event' in event && event.event.type === 'error') {
+            throw new Error(event.event.message);
+          }
+          if ('payload' in event && event.type === 'generation.committed') {
+            const message = toMessageOutput(event.payload.message);
             if (message) {
               queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
@@ -53,7 +59,7 @@ export function useRegenerateMessage(chatId: string) {
             void invalidateChatQueries(queryClient, chatId);
             return;
           }
-          if (event.type === 'cancelled') {
+          if ('payload' in event && event.type === 'generation.cancelled') {
             setGeneration({ ...current, stage: 'cancelled' });
           }
         },

@@ -277,18 +277,113 @@ function getMessageId(c: { req: { param: (name: string) => string | undefined } 
   return messageId;
 }
 
-function writeGenerationEvent(
-  stream: { writeSSE: (input: { data: string }) => Promise<void> },
-  event: Record<string, unknown>,
-) {
-  return stream.writeSSE({ data: JSON.stringify(event) });
+type GenerationStream = {
+  writeSSE: (input: { data: string; id?: string }) => Promise<void>;
+};
+
+type GenerationStreamState = { generationId: string | null; sequence: number };
+const generationStreamStates = new WeakMap<object, GenerationStreamState>();
+
+function getGenerationStreamState(stream: GenerationStream): GenerationStreamState {
+  const existing = generationStreamStates.get(stream);
+  if (existing) return existing;
+  const state = { generationId: null, sequence: 0 };
+  generationStreamStates.set(stream, state);
+  return state;
 }
 
-function writeErrorEvent(
-  stream: { writeSSE: (input: { data: string }) => Promise<void> },
-  message: string,
-) {
-  return stream.writeSSE({ data: JSON.stringify({ type: 'error', message }) });
+function toV1GenerationEvent(
+  state: GenerationStreamState,
+  event: Record<string, unknown>,
+):
+  | { durable: Record<string, unknown>; live: false }
+  | { durable: false; live: Record<string, unknown> } {
+  const generationId =
+    typeof event.generationId === 'string' ? event.generationId : state.generationId;
+  if (!generationId) throw new Error('Generation event is missing generationId');
+  state.generationId = generationId;
+
+  const type = event.type;
+  let payload: Record<string, unknown> | null = null;
+  if (type === 'accepted') {
+    payload = {
+      type: 'generation.accepted',
+      chatId: event.chatId,
+      chat: event.chat,
+      userMessage: event.userMessage,
+    };
+  } else if (type === 'status') {
+    payload = {
+      type: 'generation.phase_changed',
+      phase: event.status === 'saving' ? 'saving' : 'preparing',
+    };
+  } else if (type === 'committed') {
+    payload = { type: 'generation.committed', message: event.message };
+  } else if (type === 'cancelled') {
+    payload = { type: 'generation.cancelled' };
+  } else if (type === 'tool-confirmation-required') {
+    payload = {
+      type: 'confirmation.required',
+      turnId: generationId,
+      iteration: 0,
+      messageId: event.messageId,
+      toolCallId: event.toolCallId,
+      toolName: event.toolName,
+      args: event.args,
+      preview: event.preview,
+    };
+  }
+
+  if (payload) {
+    state.sequence += 1;
+    return {
+      durable: {
+        version: 1,
+        generationId,
+        sequence: state.sequence,
+        type: payload.type,
+        payload,
+      },
+      live: false,
+    };
+  }
+
+  const liveEvent =
+    type === 'phase'
+      ? { type: 'phase-changed' as const, phase: 'running' as const }
+      : type === 'tool-step'
+        ? {
+            type: 'tool-step' as const,
+            toolCallId: event.toolCallId as string,
+            toolName: event.toolName as string,
+            status: event.status as 'requested' | 'running' | 'completed' | 'failed' | 'reused',
+          }
+        : type === 'text-delta' || type === 'reasoning-delta'
+          ? { type, text: event.text as string }
+          : null;
+  if (!liveEvent) throw new Error(`Unsupported generation event: ${String(type)}`);
+  return {
+    durable: false,
+    live: { version: 1, generationId, event: liveEvent },
+  };
+}
+
+function writeGenerationEvent(stream: GenerationStream, event: Record<string, unknown>) {
+  const state = getGenerationStreamState(stream);
+  const converted = toV1GenerationEvent(state, event);
+  return converted.durable
+    ? stream.writeSSE({
+        data: JSON.stringify(converted.durable),
+        id: String(converted.durable.sequence),
+      })
+    : stream.writeSSE({ data: JSON.stringify(converted.live) });
+}
+
+function writeErrorEvent(stream: GenerationStream, message: string) {
+  const state = getGenerationStreamState(stream);
+  if (!state.generationId) throw new Error('Generation error is missing generationId');
+  const event = { version: 1, generationId: state.generationId, event: { type: 'error', message } };
+  return stream.writeSSE({ data: JSON.stringify(event) });
 }
 
 const chatByIdRoutes = new Hono<AppContext>()

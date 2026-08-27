@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -35,8 +36,14 @@ describe('useStartChatSubmission', () => {
     const clearComposer = vi.fn();
     const onComplete = vi.fn();
     mockStartChat.mockImplementation(
-      async ({ onAccepted }: { onAccepted?: (event: { chatId: string }) => void }) => {
-        onAccepted?.({ chatId: 'chat-1' });
+      async ({
+        onAccepted,
+      }: {
+        onAccepted?: (
+          event: Extract<GenerationStreamEvent, { type: 'generation.accepted' }>,
+        ) => void;
+      }) => {
+        onAccepted?.({ payload: { chatId: 'chat-1' } } as never);
       },
     );
 

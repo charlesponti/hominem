@@ -40,7 +40,9 @@ describe('useRegenerateMessage', () => {
         new ReadableStream({
           start(controller) {
             controller.enqueue(
-              encoder.encode('data: {"type":"status","generationId":"g","status":"preparing"}\n\n'),
+              encoder.encode(
+                'data: {"version":1,"generationId":"g","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',
+              ),
             );
             closeStream = () => controller.close();
           },
@@ -94,7 +96,11 @@ describe('useRegenerateMessage', () => {
         new Response(
           new ReadableStream({
             start(controller) {
-              controller.enqueue(encoder.encode('data: {"type":"error","message":"failed"}\n\n'));
+              controller.enqueue(
+                encoder.encode(
+                  'data: {"version":1,"generationId":"g","event":{"type":"error","message":"failed"}}\n\n',
+                ),
+              );
               controller.close();
             },
           }),

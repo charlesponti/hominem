@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
@@ -53,13 +53,14 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
           },
           { init: { signal: abortController.signal } },
         );
-        await consumeSseResponse(response, (event: ChatStreamEvent) => {
-          if (event.type === 'error') throw new Error(event.message);
-          if (event.type === 'status') {
-            setStatus(event.status === 'preparing' ? 'preparing' : 'streaming');
+        await consumeSseResponse(response, (event: GenerationStreamEvent) => {
+          if ('event' in event && event.event.type === 'error')
+            throw new Error(event.event.message);
+          if ('payload' in event && event.type === 'generation.phase_changed') {
+            setStatus(event.payload.phase === 'preparing' ? 'preparing' : 'streaming');
           }
-          if (event.type === 'committed') setStatus('committed');
-          if (event.type === 'cancelled') setStatus('cancelled');
+          if ('payload' in event && event.type === 'generation.committed') setStatus('committed');
+          if ('payload' in event && event.type === 'generation.cancelled') setStatus('cancelled');
         });
         await invalidateChatQueries(queryClient, chatId);
       } catch (caught) {

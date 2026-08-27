@@ -6,6 +6,13 @@ import {
 } from './generation-interpreter';
 import { createGenerationState, type GenerationState } from './generation-machine';
 
+const startContext = {
+  chatId: 'chat-1',
+  kind: 'send' as const,
+  userMessageId: 'message-1',
+  requestContext: {},
+};
+
 describe('generation interpreter', () => {
   it('routes every command to its injected port', async () => {
     const state: GenerationState = createGenerationState('generation-1');
@@ -55,7 +62,7 @@ describe('generation interpreter', () => {
     await interpreter.execute(
       {
         type: 'persist',
-        event: { type: 'generation.started', generationId: state.generationId },
+        event: { type: 'generation.started', context: startContext },
         idempotencyKey: 'generation-1:generation.started',
       },
       state,
@@ -112,7 +119,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithPorts({ generationId: 'generation-1', ports }),
+      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
     ).resolves.toMatchObject({ phase: 'committed', assistantText: 'done' });
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.generation.save).toHaveBeenCalledOnce();

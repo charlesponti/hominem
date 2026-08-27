@@ -116,6 +116,9 @@ export type ChatStreamEvent =
   | ChatGenerationToolStepEvent
   | ChatGenerationPhaseEvent
   | ChatStreamErrorEvent;
+/** @deprecated Use the versioned generation event contract. */
+export type LegacyChatStreamEvent = ChatStreamEvent;
+/** @deprecated Use the versioned generation event contract. */
 export type ChatsStartStreamEvent = ChatStreamEvent;
 
 // ============================================================================

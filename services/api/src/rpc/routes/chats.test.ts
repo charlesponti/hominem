@@ -658,7 +658,8 @@ describe('chat stream walkie-talkie audio leg', () => {
 
     expect(response.status).toBe(200);
     const body = await response.text();
-    expect(body).toContain('"type":"committed"');
+    expect(body).toContain('"type":"generation.committed"');
+    expect(body).toContain('id: 4');
     expect(body).not.toContain('"type":"audio"');
 
     expect(mocks.synthesizeChatReplySpeech).toHaveBeenCalledWith('Hi there');

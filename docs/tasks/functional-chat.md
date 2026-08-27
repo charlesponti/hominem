@@ -151,6 +151,9 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 - Provider streams are untrusted inputs: chunks may omit choices, deltas, IDs, names, arguments, or error objects. Normalization belongs in the API provider adapter; reconstruction and transition decisions belong in the pure machine.
 - Token and reasoning deltas are live-only, while semantic events are durable. Coverage of the reducer does not prove replay correctness; the next testing priority is the event-store/SSE handoff and crash boundary.
 - Removing unreachable guards improved both clarity and coverage. The registry handles `null` output before result-cap enforcement, so the cap helper only needs to handle records.
+- Phase 1 keeps internal recovery snapshots and external full message DTOs separate: the RPC contract carries the existing full chat/message response shapes, while `@hominem/chat` remains infrastructure-independent.
+- Runtime event validation belongs at the RPC boundary. The shared Zod schemas reject unsupported versions, mismatched discriminants, unknown event types, and unsafe sequence cursors before reducers receive data.
+- Legacy streaming remains safe during the hard cutover by naming its types explicitly as `LegacyChatStreamEvent`; this lets clients migrate their imports without changing stream behavior prematurely.
 
 ## Migration Plan — Sequential Phases
 
@@ -176,13 +179,14 @@ Define the complete versioned event contract before changing any route or client
 
 Gate: API, web, Omiro, and database DTO consumers compile against the v1 types while the existing stream route still operates unchanged.
 
-- [ ] Define the complete `GenerationDomainEvent` payload union with required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
+- [x] Define the complete `GenerationDomainEvent` payload union with required chat/message, turn, confirmation, retry, checkpoint, and terminal metadata.
 - [x] Define transport-independent metadata primitives and the discriminated event envelope in `@hominem/chat`.
 - [x] Attach typed durable metadata variants to the canonical event payload contract.
-- [ ] Decide and document the accepted/start-generation message DTO used for optimistic reconciliation and navigation.
-- [ ] Add versioned `GenerationDomainEvent` and `GenerationLiveEvent` types to `packages/rpc` with compile-time payload alignment.
-- [ ] Add RPC fixtures for durable events, live deltas, malformed versions, mismatched payloads, and unknown event types.
-- [ ] Make API, database DTOs, web, and Omiro consume v1 types without changing runtime streaming yet.
+- [x] Decide and document the accepted/start-generation message DTO: use the existing full `Chat` and `ChatMessageDto` response shapes.
+- [x] Add versioned `GenerationDomainEvent` and `GenerationLiveEvent` types to `packages/rpc` with compile-time payload alignment.
+- [x] Add shared Zod parsers and fixtures for durable events, live deltas, malformed versions, mismatched payloads, unsafe sequences, and unknown event types.
+- [x] Establish the explicit legacy boundary and migrate current Omiro consumers to `LegacyChatStreamEvent` without changing runtime streaming.
+- [x] Migrate API, database DTO, web, and Omiro runtime reducers to v1 events during the coordinated cutover.
 
 ### [~] Phase 2 — Durable repository correctness
 
@@ -221,7 +225,7 @@ Introduce the single v1 SSE adapter and close the replay/live subscription race 
 Gate: durable events receive sequence IDs, live deltas receive no IDs, cursors are validated, and reconnect tests prove no durable event is lost or duplicated.
 
 - [ ] Implement the API event-store/live-delivery adapter and publish durable events only after transactional append succeeds.
-- [ ] Implement the v1 SSE adapter with IDs only on durable events.
+- [x] Implement the v1 SSE adapter with IDs only on durable events.
 - [ ] Validate `Last-Event-ID` and `afterSequence`, including malformed, negative, and unsafe-integer cursors.
 - [ ] Register subscribers before replay, buffer concurrent publications, flush after replay, and deduplicate by `(generationId, sequence)`.
 - [ ] Define terminal completion and awaiting-confirmation stream lifetime behavior.
@@ -233,7 +237,7 @@ Move web and Omiro to v1 event reducers and reconnect behavior in one coordinate
 
 Gate: both clients converge on equivalent committed, failed, cancelled, and awaiting-confirmation state after replay and forced reconnect.
 
-- [ ] Replace `ChatStreamEvent` imports and fixtures with the v1 domain/live contract.
+- [x] Replace `ChatStreamEvent` imports and fixtures with the v1 domain/live contract.
 - [ ] Add equivalent web and Omiro reducers with durable sequence tracking and duplicate no-op behavior.
 - [ ] Update web reconnect logic to use `Last-Event-ID` without token replay.
 - [ ] Update Omiro reconnect logic to use validated `afterSequence` with Apple-only transport behavior.

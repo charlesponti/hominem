@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
@@ -72,39 +72,38 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           { init: { signal: abortController.signal } },
         );
 
-        await consumeSseResponse(streamRes, (event: ChatStreamEvent) => {
-          if (event.type === 'error') {
-            throw new Error(event.message);
-          }
+        await consumeSseResponse(streamRes, (event: GenerationStreamEvent) => {
+          const liveEvent = 'event' in event ? event.event : null;
+          if (liveEvent?.type === 'error') throw new Error(liveEvent.message);
 
-          if (event.type === 'accepted') {
-            input.onAccepted?.(event.userMessage);
+          if ('payload' in event && event.type === 'generation.accepted') {
+            input.onAccepted?.(event.payload.userMessage);
             return;
           }
 
-          if (event.type === 'status') {
-            terminalStatus = event.status === 'preparing' ? 'preparing' : 'streaming';
+          if ('payload' in event && event.type === 'generation.phase_changed') {
+            terminalStatus = event.payload.phase === 'preparing' ? 'preparing' : 'streaming';
             setStatus(terminalStatus);
             return;
           }
 
-          if (event.type === 'text-delta') {
-            setText((current) => current + event.text);
+          if (liveEvent?.type === 'text-delta') {
+            setText((current) => current + liveEvent.text);
             return;
           }
 
-          if (event.type === 'reasoning-delta') {
-            setReasoning((current) => current + event.text);
+          if (liveEvent?.type === 'reasoning-delta') {
+            setReasoning((current) => current + liveEvent.text);
             return;
           }
 
-          if (event.type === 'tool-step') {
+          if (liveEvent?.type === 'tool-step') {
             setToolSteps((current) => {
-              const index = current.findIndex((step) => step.toolCallId === event.toolCallId);
+              const index = current.findIndex((step) => step.toolCallId === liveEvent.toolCallId);
               const next = {
-                toolCallId: event.toolCallId,
-                toolName: event.toolName,
-                status: event.status,
+                toolCallId: liveEvent.toolCallId,
+                toolName: liveEvent.toolName,
+                status: liveEvent.status,
               };
               if (index === -1) return [...current, next];
               return current.map((step, stepIndex) => (stepIndex === index ? next : step));
@@ -112,18 +111,18 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
             return;
           }
 
-          if (event.type === 'cancelled') {
+          if ('payload' in event && event.type === 'generation.cancelled') {
             terminalStatus = 'cancelled';
             setStatus('cancelled');
             input.onCancelled?.();
             return;
           }
 
-          if (event.type === 'committed') {
+          if ('payload' in event && event.type === 'generation.committed') {
             terminalStatus = 'committed';
-            setText(event.message.content);
+            setText(event.payload.message.content);
             setStatus('committed');
-            input.onCommitted?.(event.message);
+            input.onCommitted?.(event.payload.message);
           }
         });
 

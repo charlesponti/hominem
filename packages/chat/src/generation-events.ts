@@ -12,6 +12,14 @@ export type GenerationRequestContext = {
   readonly [key: string]: GenerationJsonValue;
 };
 
+/** Minimum durable context required to start or resume a generation. */
+export type GenerationStartContext = {
+  chatId: string;
+  kind: 'send' | 'start' | 'regenerate';
+  userMessageId: string | null;
+  requestContext: GenerationRequestContext;
+};
+
 /** Minimal message DTO needed to reconcile optimistic and persisted messages. */
 export type GenerationMessageSnapshot = {
   id: string;

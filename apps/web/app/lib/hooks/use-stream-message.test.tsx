@@ -42,11 +42,34 @@ describe('useStreamMessage', () => {
   it('passes the abort signal and records a committed response', async () => {
     mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
       streamResponse([
-        JSON.stringify({ type: 'status', generationId: 'g1', status: 'preparing' }),
         JSON.stringify({
-          type: 'committed',
+          version: 1,
           generationId: 'g1',
-          message: { id: 'm1', chatId: 'chat-1', content: 'Done' },
+          sequence: 1,
+          type: 'generation.phase_changed',
+          payload: { type: 'generation.phase_changed', phase: 'preparing' },
+        }),
+        JSON.stringify({
+          version: 1,
+          type: 'generation.committed',
+          generationId: 'g1',
+          sequence: 2,
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'm1',
+              chatId: 'chat-1',
+              userId: 'u1',
+              role: 'assistant',
+              content: 'Done',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01',
+              updatedAt: '2026-01-01',
+            },
+          },
         }),
       ]),
     );

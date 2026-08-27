@@ -8,8 +8,8 @@
 import type {
   GenerationCheckpoint,
   GenerationMessageSnapshot,
-  GenerationRequestContext,
   GenerationRetryMetadata,
+  GenerationStartContext,
   GenerationTerminalMetadata,
 } from './generation-events';
 
@@ -71,13 +71,7 @@ export type GenerationState = {
 export type GenerationEventPayload =
   | {
       type: 'generation.started';
-      generationId: string;
-      context?: {
-        chatId: string;
-        kind: ChatGenerationKind;
-        userMessageId: string | null;
-        requestContext: GenerationRequestContext;
-      };
+      context: GenerationStartContext;
     }
   | {
       type: 'generation.accepted';
@@ -133,7 +127,7 @@ export type GenerationLiveEvent = {
 };
 
 export type GenerationInput =
-  | { type: 'start'; turnId: string }
+  | { type: 'start'; turnId: string; context: GenerationStartContext }
   | { type: 'provider-chunk'; chunk: ProviderChunk }
   | {
       type: 'provider-turn-completed';
@@ -180,6 +174,7 @@ export type GenerationEffectInterpreter = {
 export type RunGenerationInput = {
   generationId: string;
   effects: GenerationEffectInterpreter;
+  startContext: GenerationStartContext;
   initialInput?: GenerationInput;
 };
 
@@ -221,7 +216,11 @@ async function* asInputs(result: GenerationEffectResult): AsyncIterable<Generati
 export async function runGeneration(input: RunGenerationInput): Promise<GenerationState> {
   let state = createGenerationState(input.generationId);
   const inputs: GenerationInput[] = [
-    input.initialInput ?? { type: 'start', turnId: `${input.generationId}:0` },
+    input.initialInput ?? {
+      type: 'start',
+      turnId: `${input.generationId}:0`,
+      context: input.startContext,
+    },
   ];
 
   let inputIndex = 0;
@@ -398,7 +397,7 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         commands: [
           persistCommand(state.generationId, {
             type: 'generation.started',
-            generationId: state.generationId,
+            context: input.context,
           }),
           ...phaseCommands(state.generationId, 'running'),
           { type: 'open-provider-turn', turnId: input.turnId, iteration: 0 },
