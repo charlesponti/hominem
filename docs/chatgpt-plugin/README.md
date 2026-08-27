@@ -23,26 +23,9 @@ it is not the mobile delivery mechanism. Mobile availability must be verified
 after OpenAI approves and publishes the Hominem app, because availability can
 vary by app and surface.
 
-Before connecting, set the production API secret `OPENAI_APPS_CHALLENGE` to
-the exact challenge value supplied by the OpenAI Apps submission/developer
-portal. Then redeploy the API and verify:
-
-```bash
-curl -fsS https://api.ponti.io/.well-known/openai-apps-challenge
-curl -fsS https://api.ponti.io/.well-known/oauth-protected-resource/api/mcp
-```
-
-The first command must return the challenge as plain text. The second must
-return the Hominem MCP resource metadata. Never commit the challenge value.
-
-For private web testing, enable Developer mode in ChatGPT, create a custom app,
-and use this MCP URL:
-
-`https://api.ponti.io/api/mcp`
-
-Review the discovered tools and complete the Hominem email-OTP login/consent
-flow. After directory approval, test Hominem on ChatGPT web, iOS, and Android
-from the Plugin Directory. Do not claim mobile support before that test passes.
+The pre-connection verification steps, publisher requirements checklist, and
+post-approval mobile test are runbook content — see the
+`chatgpt-plugin-submission` skill (`.agents/skills/chatgpt-plugin-submission/`).
 
 This is a tool-only integration, so results appear as normal ChatGPT messages;
 there is no custom widget to install.
@@ -68,15 +51,6 @@ there is no custom widget to install.
 
 These pages are operational drafts created for the Hominem ChatGPT connection.
 Review them with qualified counsel before public launch.
-
-## Publisher requirements
-
-- Verify the Hominem developer or business identity in the OpenAI Platform.
-- Ensure the submitting organization has Apps Management write access.
-- Configure `OPENAI_APPS_CHALLENGE` in the production API environment with the
-  token supplied by the submission portal.
-- Confirm `https://api.ponti.io/.well-known/openai-apps-challenge` returns the
-  exact token as plain text.
 
 ## Authentication
 

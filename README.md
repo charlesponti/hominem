@@ -27,8 +27,7 @@ Hominem is one product system made up of the API, Omiro, and shared packages.
 ### II. System
 
 - [Architecture](./docs/architecture.md) — data flow, ownership boundaries, and open architecture decisions
-- [Authentication](./docs/auth.md) — session authority, MCP OAuth, and production incident investigation
-- [Production web authentication](./docs/auth-production.md) — public browser auth and private server-side session checks
+- [Authentication](./docs/authentication.md) — session authority, the shared hosted login/cookie mechanism, how apps talk to the API, MCP OAuth, and production incident investigation
 - Design system: `@ponti-studios/ui/docs/`
 - [Chat motion](./docs/chat-motion.md) — Omiro chat's kinetic-correspondence motion rules
 - [Omiro chat inventory](./docs/omiro-chat-inventory.md) — client feature ownership and verification coverage

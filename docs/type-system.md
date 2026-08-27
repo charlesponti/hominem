@@ -1,0 +1,92 @@
+# Type System
+
+The monorepo resolves TypeScript types through **compiled declaration contracts**, not source files. This document records why the system moved to contracts, the verified diagnosis of the failure class it replaces, the target model, the decisions that govern it, the Phase 0 evidence, and the remaining tasks.
+
+## Why this exists
+
+Two incidents in August 2026 exposed the cost of source-resolved typing:
+
+1. **The phantom `NoteKind` error.** Adding a named export to `packages/db`'s barrel kept failing `tsc` in `services/api` with "no exported member" — the cause was a stale `tsconfig.tsbuildinfo` incremental cache serving pre-change dependency state. Three caches had to be deleted by hand to unstick a real type change. That failure class is architectural, not a one-off.
+2. **Declarations in the source tree.** A scratch declaration-emit run materialized 167 `.d.ts` files inside `services/api/src/`, and a cleanup glob briefly deleted the tracked, hand-written `services/api/src/types/hono.d.ts`. Generated declarations have no business in `src/`.
+
+Both failures trace to one root cause: **the repo resolves dependency *source*, never dependency *declarations***.
+
+## Current state (verified audit)
+
+- Every `@hominem/*` `package.json` `exports` map points `types` at `./src/*.ts`. Verified: `packages/ai` (composite, `references: [db]`) resolves `@hominem/db` to `packages/db/src/index.ts` — source — not its compiled `.d.ts`.
+- Consumers therefore recompile full dependency source trees into their own programs. `services/api`'s typecheck compiles all of `db`, `ai`, `telemetry`… source; `apps/finance` pulls `services/api` source in via path alias *and* every package behind it. Cold typechecks are O(whole source graph).
+- The composite `references` graph builds declaration outputs into `packages/*/build/`, but nobody consumes them — the machinery is decorative for resolution.
+- `incremental: true` + `noEmit` + source-resolved deps = the stale-`tsbuildinfo` failure class. `skipLibCheck` and `assumeChangesOnlyAffectDirectDependencies` paper over but do not fix it.
+- `services/api` and `packages/rpc` are deliberately **non-composite** boundary projects (see below), and apps alias `@hominem/api/*` to api *source* files through tsconfig `paths`.
+
+## Target model: compiled type contracts
+
+Consumers should resolve small, deterministic `.d.ts` outputs — never another package's source — so their programs are their own source plus declarations, caches fingerprint reliably, and a type change ripples only across declaration boundaries.
+
+Three moves:
+
+1. **Composite packages: `exports.types` → `./build/index.d.ts`** (subpath patterns likewise → `build/*.d.ts`). The runtime `default` condition stays `./src/index.ts` — bundlers/tsx/rolldown are untouched; this is a types-only change.
+2. **`services/api` and `packages/rpc`: declaration-emitting but non-composite.** Each gets a dedicated emit project (`tsconfig.emit.json`) running `emitDeclarationOnly` with a **hardcoded `outDir: build`**. Emitting without `composite` sidesteps the TS2883 portable-type limitation, so Hono's `typeof app` RPC pattern survives with no annotation ceremony.
+3. **Retarget the `paths` aliases** (`apps/omiro`, `apps/career`, `apps/finance`, `packages/rpc`) from api source files to the emitted `.d.ts`. Their programs stop compiling api source entirely.
+
+Turbo's existing `typecheck`/`test` → `^build` ordering already guarantees declarations are fresh before consumers typecheck; CI and dev-turbo get correct invalidation for free.
+
+## Decisions
+
+- **D1 — Types come from `build/`, runtime from `src/`.** `exports` `types` conditions move to compiled declarations; `default` never changes. A package whose runtime is bundle-built (`services/api` via rolldown, apps via vite/expo) keeps deploying from source or bundle — declaration emit must never alter runtime paths.
+- **D2 — `services/api` + `packages/rpc` emit declarations without being composite.** TS2883 only constrains composite `references`; non-composite `emitDeclarationOnly` produces self-contained `.d.ts` (proven: `AppType = typeof rpcApp` inlines the entire Hono graph, one relative import total). This preserves the RPC type-inference pattern the codebase depends on.
+- **D3 — Path aliases target declarations.** The type-only alias pattern (`@hominem/api/types` → `app.d.ts`) stays; it points at built output instead of source.
+- **D4 — Generated declarations live only in ignored output dirs; hand-written `.d.ts` stay versioned.** No blanket `*.d.ts` gitignore — six hand-written declaration files (`env.d.ts` × 3, `hono.d.ts`, `packages/db/typed/index.d.ts`, `services/ori/types/runtime.d.ts`) are source and must be tracked. The existing ignores (`build`, `dist`, `.cache`) already cover all compiler output.
+- **D5 — Editors need rebuilt declarations.** The honest tradeoff of declarations-based resolution: a dependent's editor sees a dependency's change only after the dependency rebuilds. A watch-build recipe (`turbo watch build` scoped to changed packages) ships with the exports flip, not after.
+
+## Constraints (why not a simpler setup)
+
+- **TS2883** forbids inferring exported types (Hono's `typeof app` `AppType`) across composite project boundaries without explicit annotations that defeat the RPC pattern. Hence `services/api` and `packages/rpc` stay out of the composite graph — but they can still emit declarations.
+- **Runtime is source/bundle based.** Dev runs `tsx watch` from `src`; production bundles with rolldown. Declaration emit is a types-only artifact, never a runtime dependency.
+- **`assumeChangesOnlyAffectDirectDependencies` stays** (editor-only responsiveness flag), and the standard caveat — restart tsserver when a change ripples beyond one hop — continues to apply.
+
+## Evidence (Phase 0 spike)
+
+A scratch `emitDeclarationOnly` build of `services/api` produced 176 self-contained `.d.ts`. Consumers pointed at the emitted declarations, cold-cached:
+
+| Consumer | Alias target | Typecheck | Program content |
+| --- | --- | --- | --- |
+| `packages/rpc` | emitted `app.d.ts` | ✅ exit 0 | Hono client-inference chain (`client.api.notes[':id'].$get`) survives declaration emit |
+| `apps/omiro` | emitted `app.d.ts` | ✅ exit 0 | **0 `services/api/src` files in program**; cold 9.1s (source) → 6.4s (declarations) |
+| `apps/career` | emitted `routes/career.d.ts` | ✅ exit 0 | per-route alias pattern works too |
+
+`apps/finance` uses the same `app.ts` alias as rpc/omiro and is covered by that proof.
+
+## Guards
+
+- A dedicated `services/api/tsconfig.emit.json` with a **hardcoded `outDir: build`** — declaration emit is never configured via CLI flags or a `rootDir` dance.
+- A guard script (modeled on `just db lint`) that **fails if any `*.d.ts` appears under a package's `src/`** — the stray-declarations incident becomes a loud CI error, not a quiet git-status surprise.
+- `pnpm run check` (or the per-package typecheck gates) is the evidence standard for every phase below.
+
+## Tasks
+
+Temporary execution belongs to the work tracker; promote these to `docs/tasks/` tickets when picked up. Each lands with `pnpm run check` green as evidence.
+
+### Task 1 — Composite packages flip `exports.types` to `build/`
+
+- **Objective:** composite packages serve declarations, not source.
+- **Steps:** flip `exports` `types` conditions (`"."` and subpath patterns) to `./build/*.d.ts` for the core packages first (`db`, `env`, `telemetry`, `utils`), run the full gate, then the remaining composite packages, gate again.
+- **Acceptance:** consumers resolve `packages/*/build/*.d.ts` (verify via `--traceResolution` on one composite and one app consumer); no runtime behavior change; `pnpm run check` green after each batch.
+
+### Task 2 — `services/api` + `packages/rpc` emit declarations; aliases retarget
+
+- **Objective:** api/rpc expose compiled contracts; consumers stop compiling api source.
+- **Steps:** add `tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`) + `build:types` scripts; retarget `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, `packages/rpc` to the emitted declarations; add the `*.d.ts`-under-`src/` guard script; verify rpc/omiro/career/finance typechecks resolve declarations exclusively.
+- **Acceptance:** zero `services/api/src` or `packages/rpc/src` files in consumer programs; `AppType` and client inference intact; guard script wired into the gate.
+
+### Task 3 — Editor watch-builds and dev hygiene
+
+- **Objective:** tsserver always sees fresh declarations during development.
+- **Steps:** add a `just`/pnpm recipe running turbo watch builds for packages whose types changed; document the tsserver-restart caveat; confirm dev loop (tsx watch, metro) is unaffected by declaration-only changes.
+- **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in `docs/development.md`.
+
+### Task 4 — Remove the residual write-only cruft
+
+- **Objective:** no package writes declarations it doesn't ship.
+- **Steps:** audit for any remaining `tsc` invocation that could emit without an explicit `outDir` (the incident root cause); enforce the guard from Task 2 across all packages.
+- **Acceptance:** `find . -name '*.d.ts' -not -path '*/build/*' -not -path '*/.cache/*'` (excluding the six tracked hand-written files) is empty after a full `pnpm run check`.
