@@ -31,6 +31,7 @@
     "start": "node dist/index.mjs",
     "start:worker": "node dist/worker.mjs",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "e2e:setup": "tsx scripts/e2e-setup.ts",
     "export-calendar": "tsx scripts/export-calendar.ts",
@@ -45,6 +46,7 @@
     "@better-auth/mcp": "1.7.1",
     "@better-auth/oauth-provider": "1.7.1",
     "@hominem/ai": "workspace:*",
+    "@hominem/chat": "workspace:*",
     "@hominem/career-services": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
@@ -71,6 +73,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",
+    "@vitest/coverage-v8": "4.1.0",
     "@types/node": "catalog:",
     "@types/ws": "^8.18.1",
     "rolldown": "^1.0.0",

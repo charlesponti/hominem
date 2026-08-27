@@ -41,7 +41,11 @@ export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
 
 type RegisteredTool = {
   definition: CapabilityDefinition;
-  invoke: (ownerUserId: string, input: unknown) => Promise<unknown>;
+  invoke: (
+    ownerUserId: string,
+    input: unknown,
+    context?: { idempotencyKey?: string },
+  ) => Promise<unknown>;
 };
 
 function toolResult(structuredContent: Record<string, unknown> | null): McpToolResult {
@@ -60,8 +64,6 @@ function enforceResultCap(
   toolName: string,
   resultCap: number,
 ) {
-  if (!result) return;
-
   for (const [field, value] of Object.entries(result)) {
     if (Array.isArray(value) && value.length > resultCap) {
       throw new ValidationError(
@@ -95,7 +97,11 @@ export function getToolDefinition(name: string): CapabilityDefinition | undefine
 
 export function registerTool<TInputSchema extends z.ZodType, TOutputSchema extends z.ZodType>(
   definition: CapabilityDefinition<string, TInputSchema, TOutputSchema>,
-  invoke: (ownerUserId: string, input: z.output<TInputSchema>) => Promise<z.output<TOutputSchema>>,
+  invoke: (
+    ownerUserId: string,
+    input: z.output<TInputSchema>,
+    context?: { idempotencyKey?: string },
+  ) => Promise<z.output<TOutputSchema>>,
 ): void {
   if (tools.has(definition.name)) {
     throw new ValidationError(`MCP tool is already registered: ${definition.name}`);
@@ -103,7 +109,8 @@ export function registerTool<TInputSchema extends z.ZodType, TOutputSchema exten
 
   tools.set(definition.name, {
     definition,
-    invoke: (ownerUserId, input) => invoke(ownerUserId, definition.inputSchema.parse(input)),
+    invoke: (ownerUserId, input, context) =>
+      invoke(ownerUserId, definition.inputSchema.parse(input), context),
   });
   toolDefinitionsSnapshot = null;
 }
@@ -112,13 +119,14 @@ export async function callTool(
   ownerUserId: string,
   name: string,
   input: unknown,
+  context?: { idempotencyKey?: string },
 ): Promise<McpToolResult> {
   const implementation = tools.get(name);
   if (!implementation) {
     throw new ValidationError(`Unknown MCP tool: ${name}`);
   }
 
-  const structuredContent = await implementation.invoke(ownerUserId, input);
+  const structuredContent = await implementation.invoke(ownerUserId, input, context);
   const parsedOutput = implementation.definition.outputSchema.parse(structuredContent);
 
   if (parsedOutput === null) {
