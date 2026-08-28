@@ -1,8 +1,6 @@
 import { db, sql } from '@hominem/db';
 
-function toCents(amount: number | string | null | undefined): number {
-  return Math.round(Number(amount ?? 0) * 100);
-}
+import { toCents } from './money.utils';
 
 function fallbackDate(daysAgo: number, now: Date): string {
   return new Date(now.getTime() - daysAgo * 86_400_000).toISOString().slice(0, 10);
@@ -67,8 +65,8 @@ export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boo
         .where('userId', '=', ownerUserId)
         .where('pending', '=', false);
 
-      if (latestStatement) {
-        ledgerQuery = ledgerQuery.where('postedOn', '>', latestStatement.periodEndOn as string);
+      if (latestStatement && latestStatement.periodEndOn) {
+        ledgerQuery = ledgerQuery.where('postedOn', '>', latestStatement.periodEndOn);
       }
 
       const ledgerDelta = (await ledgerQuery.executeTakeFirst()) as
