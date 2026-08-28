@@ -28,7 +28,14 @@ function baseState(overrides: Partial<GenerationState> = {}): GenerationState {
 }
 
 function call(overrides: Partial<GenerationToolCall> = {}): GenerationToolCall {
-  return { id: 'call-1', name: 'search_memories', arguments: '{}', iteration: 0, turnId: 'turn-1', ...overrides };
+  return {
+    id: 'call-1',
+    name: 'search_memories',
+    arguments: '{}',
+    iteration: 0,
+    turnId: 'turn-1',
+    ...overrides,
+  };
 }
 
 describe('reduceProviderTurnCompleted', () => {
@@ -165,8 +172,9 @@ describe('reduceConfirmationRejected', () => {
 
   it('does not respond to a rejection for another tool call', () => {
     const state = baseState({ phase: 'awaiting_confirmation', pendingConfirmation: call() });
-    expect(
-      reduceConfirmationRejected(state, { callId: 'other-call', reason: 'not now' }),
-    ).toEqual({ state, commands: [] });
+    expect(reduceConfirmationRejected(state, { callId: 'other-call', reason: 'not now' })).toEqual({
+      state,
+      commands: [],
+    });
   });
 });
