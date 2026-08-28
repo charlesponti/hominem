@@ -31,6 +31,9 @@ export const apiSchema = baseSchema.extend({
   // No default — a missing secret must fail loudly at boot, not silently run
   // with a hardcoded, publicly-known value.
   BETTER_AUTH_SECRET: z.string().min(32),
+  CHAT_GENERATION_SNAPSHOT_KEY: z
+    .string()
+    .regex(/^[A-Za-z0-9+/]{43}=$/, 'must be a base64-encoded 32-byte key'),
   AUTH_COOKIE_DOMAIN: z.string().default(''),
   // z.coerce.boolean() is `Boolean(value)` under the hood, so Boolean("false")
   // is `true` — any non-empty string is truthy. z.stringbool() parses the

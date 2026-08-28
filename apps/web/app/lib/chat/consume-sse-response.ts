@@ -1,9 +1,10 @@
 import { createSseDecoder, finishSse, pushSseChunk } from '@hominem/chat/sse';
-import type { ChatStreamEvent } from '@hominem/rpc/types';
+import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 
 export async function consumeSseResponse(
   response: Response,
-  onEvent: (event: ChatStreamEvent) => void,
+  onEvent: (event: GenerationStreamEvent) => void,
   onDone?: () => void,
 ): Promise<void> {
   const body = response.body;
@@ -15,7 +16,9 @@ export async function consumeSseResponse(
   const decoder = new TextDecoder();
   let state = createSseDecoder();
 
-  const processOutputs = (outputs: ReturnType<typeof pushSseChunk<ChatStreamEvent>>['outputs']) => {
+  const processOutputs = (
+    outputs: ReturnType<typeof pushSseChunk<GenerationStreamEvent>>['outputs'],
+  ) => {
     outputs.forEach((output) => {
       if (output.kind === 'event') onEvent(output.event);
       if (output.kind === 'done') onDone?.();
@@ -27,16 +30,15 @@ export async function consumeSseResponse(
     if (done) break;
 
     const decoded = decoder.decode(value, { stream: true });
-    const result = pushSseChunk<ChatStreamEvent>(state, decoded);
+    const result = pushSseChunk<GenerationStreamEvent>(state, decoded);
     state = result.state;
     processOutputs(result.outputs);
   }
 
   const trailingText = decoder.decode();
-  const trailing = pushSseChunk<ChatStreamEvent>(state, trailingText);
-  const result = finishSse<ChatStreamEvent>(
-    trailing.state,
-    (data) => JSON.parse(data) as ChatStreamEvent,
+  const trailing = pushSseChunk<GenerationStreamEvent>(state, trailingText);
+  const result = finishSse<GenerationStreamEvent>(trailing.state, (data) =>
+    parseGenerationStreamEvent(JSON.parse(data)),
   );
   processOutputs(trailing.outputs);
   processOutputs(result.outputs);

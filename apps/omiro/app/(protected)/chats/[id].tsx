@@ -18,11 +18,19 @@ export default function ChatDetailRoute() {
       <Stack.Screen options={{ title: '' }} />
       {canGoBack ? (
         <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button icon="chevron.left" onPress={() => router.back()} />
+          <Stack.Toolbar.Button
+            accessibilityLabel="BackButton"
+            icon="chevron.left"
+            onPress={() => router.back()}
+          />
         </Stack.Toolbar>
       ) : (
         <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button icon="xmark" onPress={() => router.dismissTo(STREAM_ROUTE)} />
+          <Stack.Toolbar.Button
+            accessibilityLabel="BackButton"
+            icon="xmark"
+            onPress={() => router.dismissTo(STREAM_ROUTE)}
+          />
         </Stack.Toolbar>
       )}
       <ChatScreen id={id} />

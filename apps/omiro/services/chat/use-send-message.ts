@@ -1,4 +1,5 @@
-import type { ChatStreamEvent } from '@hominem/rpc/types';
+import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -83,7 +84,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await consumeSseXhr<ChatStreamEvent>({
+      await consumeSseXhr<GenerationStreamEvent>({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
         payload: {
           generationId,
@@ -94,9 +95,17 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         },
         getHeaders: getAuthHeaders,
         signal: controller.signal,
+        parseEvent: parseGenerationStreamEvent,
         onEvent: (event) => {
-          if (event.type === 'accepted' && event.userMessage) {
-            const userMessage = toMessageOutput(event.userMessage);
+          if ('event' in event && event.event.type === 'error') {
+            throw new Error(event.event.message);
+          }
+          if (
+            'payload' in event &&
+            event.type === 'generation.accepted' &&
+            event.payload.userMessage
+          ) {
+            const userMessage = toMessageOutput(event.payload.userMessage);
             if (userMessage) {
               queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
@@ -108,15 +117,18 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             }
             return;
           }
-          if (event.type === 'status') {
+          if ('payload' in event && event.type === 'generation.phase_changed') {
             const current = generationRef.current;
-            if (current?.id === event.generationId) {
-              setGeneration({ ...current, stage: event.status });
+            if (
+              current?.id === event.generationId &&
+              (event.payload.phase === 'preparing' || event.payload.phase === 'saving')
+            ) {
+              setGeneration({ ...current, stage: event.payload.phase });
             }
             return;
           }
-          if (event.type === 'committed') {
-            const committed = toMessageOutput(event.message);
+          if ('payload' in event && event.type === 'generation.committed') {
+            const committed = toMessageOutput(event.payload.message);
             if (committed) {
               queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(chatId),
@@ -133,7 +145,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             void invalidateChatQueries(queryClient, chatId);
             return;
           }
-          if (event.type === 'cancelled') {
+          if ('payload' in event && event.type === 'generation.cancelled') {
             const current = generationRef.current;
             if (current?.id === event.generationId) {
               setGeneration({ ...current, stage: 'cancelled' });

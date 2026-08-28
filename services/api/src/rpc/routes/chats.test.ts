@@ -19,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   touchLastMessage: vi.fn(),
   replaceAssistantMessageContent: vi.fn(),
   createGenerationRun: vi.fn(),
+  appendGenerationEvent: vi.fn(),
+  getToolEffect: vi.fn(),
+  saveToolEffect: vi.fn(),
+  listGenerationEvents: vi.fn(),
   getGenerationRun: vi.fn(),
   getGenerationRunById: vi.fn(),
   updateGenerationRun: vi.fn(),
@@ -87,6 +91,12 @@ vi.mock('@hominem/db', async () => {
       cancelGenerationRun: mocks.cancelGenerationRun,
       getChatSourceContext: mocks.getChatSourceContext,
       resolveChatFiles: mocks.resolveChatFiles,
+    },
+    ChatGenerationRepository: {
+      appendEvent: mocks.appendGenerationEvent,
+      getToolEffect: mocks.getToolEffect,
+      saveToolEffect: mocks.saveToolEffect,
+      listEvents: mocks.listGenerationEvents,
     },
     ChatSpeechRunRepository: {
       create: mocks.createSpeechRun,
@@ -203,6 +213,34 @@ describe('chat stream accounting', () => {
     mocks.getMessages.mockResolvedValue([]);
     mocks.insertMessage.mockResolvedValue({ id: 'message-id' });
     mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.appendGenerationEvent.mockImplementation(
+      async (
+        _trx: unknown,
+        input: {
+          generationId: string;
+          event: { type: string };
+          idempotencyKey?: string;
+        },
+      ) => ({
+        id: `event-${input.event.type}`,
+        generationId: input.generationId,
+        sequence: mocks.appendGenerationEvent.mock.calls.length,
+        type: input.event.type,
+        payload: input.event,
+        idempotencyKey: input.idempotencyKey ?? null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }),
+    );
+    mocks.getToolEffect.mockResolvedValue(null);
+    mocks.listGenerationEvents.mockResolvedValue([]);
+    mocks.saveToolEffect.mockImplementation(async (input: { result: unknown }) => ({
+      id: 'effect-1',
+      generationId: 'generation-1',
+      idempotencyKey: 'effect-1',
+      toolName: 'tool',
+      result: input.result,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    }));
     mocks.getGenerationRun.mockResolvedValue(null);
     mocks.getGenerationRunById.mockResolvedValue(null);
     mocks.updateGenerationRun.mockResolvedValue(undefined);
@@ -355,6 +393,35 @@ describe('chat stream accounting', () => {
     expect(body).toContain('Already generated reply');
     expect(mocks.createChat).not.toHaveBeenCalled();
     expect(mocks.createGenerationRun).not.toHaveBeenCalled();
+  });
+
+  it('replays durable generation events from Last-Event-ID', async () => {
+    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'committed' });
+    mocks.listGenerationEvents.mockResolvedValue([
+      {
+        id: 'event-2',
+        generationId: 'generation-1',
+        sequence: 2,
+        type: 'generation.phase_changed',
+        payload: { type: 'generation.phase_changed', phase: 'running' },
+        idempotencyKey: 'phase-2',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/generations/generation-1/stream',
+      {
+        headers: { 'Last-Event-ID': '1' },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(mocks.listGenerationEvents).toHaveBeenCalledWith({}, 'generation-1', testUser.id, 1);
+    expect(body).toContain('id: 2');
+    expect(body).toContain('generation.phase_changed');
+    expect(body).toContain('[DONE]');
   });
 });
 
@@ -658,7 +725,8 @@ describe('chat stream walkie-talkie audio leg', () => {
 
     expect(response.status).toBe(200);
     const body = await response.text();
-    expect(body).toContain('"type":"committed"');
+    expect(body).toContain('"type":"generation.committed"');
+    expect(body).toMatch(/id: \d+\n/);
     expect(body).not.toContain('"type":"audio"');
 
     expect(mocks.synthesizeChatReplySpeech).toHaveBeenCalledWith('Hi there');

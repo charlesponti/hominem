@@ -34,6 +34,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
@@ -43,6 +44,7 @@
     "date-fns": "^3.6.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "4.1.0",
     "react": "catalog:"
   },
   "peerDependencies": {

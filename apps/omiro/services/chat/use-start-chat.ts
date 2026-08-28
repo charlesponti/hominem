@@ -1,4 +1,5 @@
-import type { ChatsStartStreamEvent } from '@hominem/rpc/types';
+import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
+import type { GenerationDomainEvent, GenerationStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -17,7 +18,7 @@ import { chatKeys } from '~/services/notes/query-keys';
 import { invalidateChatQueries } from './chat-cache';
 
 interface StartChatOptions {
-  onAccepted?: (event: Extract<ChatsStartStreamEvent, { type: 'accepted' }>) => void;
+  onAccepted?: (event: Extract<GenerationDomainEvent, { type: 'generation.accepted' }>) => void;
 }
 
 type StartChatInput = {
@@ -51,7 +52,7 @@ export function useStartChat() {
       const generationId = randomUUID();
 
       try {
-        await consumeSseXhr<ChatsStartStreamEvent>({
+        await consumeSseXhr<GenerationStreamEvent>({
           url: `${API_BASE_URL}/api/chats/start-stream`,
           payload: {
             ...input,
@@ -59,23 +60,32 @@ export function useStartChat() {
             responseLength: getChatResponseLength(),
           },
           getHeaders: getAuthHeaders,
+          parseEvent: parseGenerationStreamEvent,
           onEvent: (event) => {
-            if (event.type === 'accepted') {
-              startedChatIdRef.current = event.chatId;
-              const userMessage = event.userMessage ? toMessageOutput(event.userMessage) : null;
-              queryClient.setQueryData(chatKeys.activeChat(event.chatId), event.chat);
+            if ('event' in event && event.event.type === 'error') {
+              throw new Error(event.event.message);
+            }
+            if ('payload' in event && event.type === 'generation.accepted') {
+              startedChatIdRef.current = event.payload.chatId;
+              const userMessage = event.payload.userMessage
+                ? toMessageOutput(event.payload.userMessage)
+                : null;
+              queryClient.setQueryData(
+                chatKeys.activeChat(event.payload.chatId),
+                event.payload.chat,
+              );
               queryClient.setQueryData<ChatMessageItem[]>(
-                chatKeys.messages(event.chatId),
+                chatKeys.messages(event.payload.chatId),
                 userMessage ? [userMessage] : [],
               );
 
-              void reconcileStartedChat(event.chatId);
+              void reconcileStartedChat(event.payload.chatId);
               onAccepted?.(event);
               return;
             }
 
-            if (event.type === 'committed') {
-              const assistantMessage = toMessageOutput(event.message);
+            if ('payload' in event && event.type === 'generation.committed') {
+              const assistantMessage = toMessageOutput(event.payload.message);
               if (!assistantMessage || !startedChatIdRef.current) return;
               queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(startedChatIdRef.current),

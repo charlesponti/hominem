@@ -28,12 +28,14 @@
     "dev": "tsc --watch --preserveWatchOutput",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
+    "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/utils": "workspace:*",
     "kysely": "catalog:",
@@ -41,6 +43,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "4.1.0",
     "dotenv": "catalog:",
     "kysely-codegen": "^0.20.0",
     "vitest": "catalog:"

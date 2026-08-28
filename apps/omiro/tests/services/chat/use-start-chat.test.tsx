@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ChatsStartStreamEvent } from '@hominem/rpc/types';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,13 +40,18 @@ describe('useStartChat', () => {
   beforeEach(() => {
     mockRandomUUID.mockReturnValue('generation-1');
     mockConsumeSseXhr.mockImplementation(
-      ({ onEvent }: { onEvent: (event: ChatsStartStreamEvent) => void }) => {
+      ({ onEvent }: { onEvent: (event: GenerationStreamEvent) => void }) => {
         onEvent({
-          type: 'accepted',
+          version: 1,
+          type: 'generation.accepted',
           generationId: 'generation-1',
-          chatId: 'chat-1',
-          chat: { id: 'chat-1' } as never,
-          userMessage: { id: 'user-1', role: 'user', content: 'Hello' } as never,
+          sequence: 1,
+          payload: {
+            type: 'generation.accepted',
+            chatId: 'chat-1',
+            chat: { id: 'chat-1' } as never,
+            userMessage: { id: 'user-1', role: 'user', content: 'Hello' } as never,
+          },
         });
         return Promise.resolve();
       },
@@ -64,7 +69,9 @@ describe('useStartChat', () => {
     });
 
     await waitFor(() => expect(onAccepted).toHaveBeenCalledOnce());
-    expect(onAccepted).toHaveBeenCalledWith(expect.objectContaining({ chatId: 'chat-1' }));
+    expect(onAccepted).toHaveBeenCalledWith(
+      expect.objectContaining({ payload: expect.objectContaining({ chatId: 'chat-1' }) }),
+    );
     expect(queryClient.getQueryData(chatKeys.messages('chat-1'))).toEqual([
       expect.objectContaining({ id: 'user-1', message: 'Hello' }),
     ]);

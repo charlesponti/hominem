@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ChatStreamEvent } from '@hominem/rpc/types';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -51,7 +51,7 @@ const { useSendMessage } = await import('~/services/chat/use-send-message');
 const CHAT_ID = 'chat-1';
 
 type PendingStream = {
-  onEvent: (event: ChatStreamEvent) => void;
+  onEvent: (event: GenerationStreamEvent) => void;
   resolve: () => void;
 };
 
@@ -62,7 +62,7 @@ describe('useSendMessage', () => {
     let count = 0;
     mockRandomUUID.mockImplementation(() => `uuid-${++count}`);
     mockConsumeSseXhr.mockImplementation(
-      ({ onEvent }: { onEvent: (event: ChatStreamEvent) => void }) =>
+      ({ onEvent }: { onEvent: (event: GenerationStreamEvent) => void }) =>
         new Promise<void>((resolve) => {
           pending = { onEvent, resolve };
         }),
@@ -90,15 +90,26 @@ describe('useSendMessage', () => {
     expect(result.current.generation).toMatchObject({ stage: 'preparing' });
 
     act(() => {
-      pending?.onEvent({ type: 'status', generationId: 'uuid-1', status: 'saving' });
+      pending?.onEvent({
+        version: 1,
+        generationId: 'uuid-1',
+        sequence: 1,
+        type: 'generation.phase_changed',
+        payload: { type: 'generation.phase_changed', phase: 'saving' },
+      });
     });
     expect(result.current.generation).toMatchObject({ stage: 'saving' });
 
     act(() => {
       pending?.onEvent({
-        type: 'committed',
+        version: 1,
+        type: 'generation.committed',
         generationId: 'uuid-1',
-        message: { id: 'assistant-1', role: 'assistant', content: 'A durable reply.' } as never,
+        sequence: 2,
+        payload: {
+          type: 'generation.committed',
+          message: { id: 'assistant-1', role: 'assistant', content: 'A durable reply.' } as never,
+        },
       });
       pending?.resolve();
     });

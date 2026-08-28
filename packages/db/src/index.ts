@@ -45,6 +45,12 @@ export type {
 } from './services/notes/note.repository';
 
 export { ChatRepository } from './services/chats/chat.repository';
+export { ChatGenerationRepository } from './services/chats/chat-generation.repository';
+export type {
+  AppendChatGenerationEventInput,
+  ChatGenerationEventRecord,
+  ChatGenerationToolEffectRecord,
+} from './services/chats/chat-generation.repository';
 export { ChatSpeechRunRepository } from './services/chats/chat-speech-run.repository';
 export type {
   ChatSpeechReconciliationStatus,

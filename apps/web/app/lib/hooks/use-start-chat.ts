@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, ChatStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationDomainEvent } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 
@@ -12,8 +12,8 @@ interface StartChatInput {
   message: string;
   fileIds?: string[];
   responseLength?: 'short' | 'medium' | 'long';
-  onAccepted?: (event: Extract<ChatStreamEvent, { type: 'accepted' }>) => void;
-  onCommitted?: (event: Extract<ChatStreamEvent, { type: 'committed' }>) => void;
+  onAccepted?: (event: Extract<GenerationDomainEvent, { type: 'generation.accepted' }>) => void;
+  onCommitted?: (event: Extract<GenerationDomainEvent, { type: 'generation.committed' }>) => void;
 }
 
 export function useStartChat() {
@@ -38,19 +38,19 @@ export function useStartChat() {
         );
 
         await consumeSseResponse(response, (event) => {
-          if (event.type === 'accepted') {
-            client.setQueryData(chatQueryKeys.get(event.chatId), event.chat);
+          if ('payload' in event && event.type === 'generation.accepted') {
+            client.setQueryData(chatQueryKeys.get(event.payload.chatId), event.payload.chat);
             client.setQueryData(
-              chatQueryKeys.messages(event.chatId),
-              event.userMessage ? [event.userMessage] : [],
+              chatQueryKeys.messages(event.payload.chatId),
+              event.payload.userMessage ? [event.payload.userMessage] : [],
             );
             onAccepted?.(event);
           }
 
-          if (event.type === 'committed') {
+          if ('payload' in event && event.type === 'generation.committed') {
             client.setQueryData<ChatMessageDto[]>(
-              chatQueryKeys.messages(event.message.chatId),
-              (messages = []) => [...messages, event.message],
+              chatQueryKeys.messages(event.payload.message.chatId),
+              (messages = []) => [...messages, event.payload.message],
             );
             onCommitted?.(event);
           }

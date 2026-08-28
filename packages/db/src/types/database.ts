@@ -373,6 +373,7 @@ export interface AppChatGenerationEvents {
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
   generationId: string;
   id: Generated<string>;
+  idempotencyKey: string | null;
   payload: Json;
   sequence: Int8;
   type: string;
@@ -383,6 +384,7 @@ export interface AppChatGenerationRuns {
   assistantMessageId: string | null;
   chatId: string;
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  encryptedSnapshot: string | null;
   errorMessage: string | null;
   id: string;
   kind: string;
@@ -392,6 +394,15 @@ export interface AppChatGenerationRuns {
   targetAssistantMessageId: string | null;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
   userMessageId: string | null;
+}
+
+export interface AppChatGenerationToolEffects {
+  createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
+  generationId: string;
+  id: Generated<string>;
+  idempotencyKey: string;
+  result: Json;
+  toolName: string;
 }
 
 export interface AppChatMessages {
@@ -1437,6 +1448,7 @@ export interface DB {
   'app.careerTestimonials': AppCareerTestimonials;
   'app.chatGenerationEvents': AppChatGenerationEvents;
   'app.chatGenerationRuns': AppChatGenerationRuns;
+  'app.chatGenerationToolEffects': AppChatGenerationToolEffects;
   'app.chatMessages': AppChatMessages;
   'app.chats': AppChats;
   'app.chatSources': AppChatSources;

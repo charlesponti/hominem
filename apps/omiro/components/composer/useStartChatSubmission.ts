@@ -37,10 +37,10 @@ export function useStartChatSubmission() {
             clearComposer();
             onComplete?.();
             if (onStartChatAccepted) {
-              onStartChatAccepted(event.chatId);
+              onStartChatAccepted(event.payload.chatId);
               return;
             }
-            router.push(getContentRoute('chat', event.chatId));
+            router.push(getContentRoute('chat', event.payload.chatId));
           },
         });
       } catch (error) {
