@@ -1,3 +1,4 @@
+import { getGenerationFailureMessage } from '@hominem/rpc/generation-events';
 import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
@@ -54,8 +55,8 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
           { init: { signal: abortController.signal } },
         );
         await consumeSseResponse(response, (event) => {
-          if ('event' in event && event.event.type === 'error')
-            throw new Error(event.event.message);
+          const failureMessage = getGenerationFailureMessage(event);
+          if (failureMessage) throw new Error(failureMessage);
           if ('payload' in event && event.type === 'generation.phase_changed') {
             setStatus(event.payload.phase === 'preparing' ? 'preparing' : 'streaming');
           }

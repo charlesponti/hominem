@@ -1,5 +1,8 @@
-import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
-import type { GenerationDomainEvent, GenerationStreamEvent } from '@hominem/rpc/types';
+import {
+  getGenerationFailureMessage,
+  parseGenerationStreamEvent,
+} from '@hominem/rpc/generation-events';
+import type { GenerationDomainEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -10,7 +13,7 @@ import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { OFFLINE_UNAVAILABLE_ERROR } from '~/services/chat/chat-errors';
-import { consumeSseXhr } from '~/services/chat/consume-sse-xhr';
+import { consumeGenerationSseXhr } from '~/services/chat/consume-sse-xhr';
 import { toMessageOutput } from '~/services/chat/use-chat-messages';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { chatKeys } from '~/services/notes/query-keys';
@@ -50,21 +53,21 @@ export function useStartChat() {
 
       startedChatIdRef.current = null;
       const generationId = randomUUID();
+      const responseLength = getChatResponseLength();
+      const payload = { ...input, generationId, responseLength };
 
       try {
-        await consumeSseXhr<GenerationStreamEvent>({
+        await consumeGenerationSseXhr({
           url: `${API_BASE_URL}/api/chats/start-stream`,
-          payload: {
-            ...input,
-            generationId,
-            responseLength: getChatResponseLength(),
-          },
+          payload,
+          replayUrl: () => `${API_BASE_URL}/api/chats/start-stream`,
+          replayMethod: 'POST',
+          replayPayload: payload,
           getHeaders: getAuthHeaders,
           parseEvent: parseGenerationStreamEvent,
           onEvent: (event) => {
-            if ('event' in event && event.event.type === 'error') {
-              throw new Error(event.event.message);
-            }
+            const failureMessage = getGenerationFailureMessage(event);
+            if (failureMessage) throw new Error(failureMessage);
             if ('payload' in event && event.type === 'generation.accepted') {
               startedChatIdRef.current = event.payload.chatId;
               const userMessage = event.payload.userMessage
@@ -116,12 +119,12 @@ export function useStartChat() {
   });
 
   const startChat = useCallback(
-    async (input: StartChatInput & StartChatOptions) => mutation.mutateAsync(input),
+    (input: StartChatInput & StartChatOptions): Promise<string> => mutation.mutateAsync(input),
     [mutation],
   );
 
   return {
     isStartingChat: mutation.isPending,
-    startChat: startChat as (input: StartChatInput & StartChatOptions) => Promise<string>,
+    startChat,
   };
 }

@@ -1,11 +1,15 @@
 appId: com.pontistudios.hakumi.dev
 ---
 - runFlow: ../subflows/open-dev-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 3000
 - assertVisible:
-    id: 'new-chat-screen'
+    id: 'new-chat-composer-input'
 - tapOn:
     id: 'new-chat-composer-input'
 - inputText: 'Start a new chat from the chat-first home'
+- pressKey: BACK
 - assertVisible:
     id: 'new-chat-submit'
 - tapOn:

@@ -7,7 +7,19 @@ import { describe, expect, it } from 'vitest';
 import { useChatDisplayMessages } from './use-chat-display-messages';
 
 function message(id: string): ChatMessageDto {
-  return { id, chatId: 'chat-1', role: 'assistant', content: id } as ChatMessageDto;
+  return {
+    id,
+    chatId: 'chat-1',
+    userId: 'user-1',
+    role: 'assistant',
+    content: id,
+    files: null,
+    toolCalls: null,
+    reasoning: null,
+    parentMessageId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 describe('useChatDisplayMessages', () => {

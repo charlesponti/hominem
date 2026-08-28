@@ -6,7 +6,7 @@ const STORAGE_KEY = 'hominem:response-length';
 const VALUES: ResponseLength[] = ['short', 'medium', 'long'];
 
 function isResponseLength(value: string | null): value is ResponseLength {
-  return value !== null && VALUES.includes(value as ResponseLength);
+  return value !== null && VALUES.some((candidate) => candidate === value);
 }
 
 export function useResponseLength() {

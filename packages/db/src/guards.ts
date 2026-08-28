@@ -14,11 +14,11 @@ export interface ChatMessageToolCallRecord {
   toolCallId: string;
   args: Record<string, unknown>;
   /**
-   * Confirmation lifecycle for tools flagged `requiresConfirmation`. Absent
-   * (undefined) means the call executed immediately, same as before this
-   * field existed.
+   * Tool-call lifecycle. `pending` and `rejected` describe confirmation;
+   * `completed` and `failed` describe execution. Absent (undefined) means
+   * the call predates lifecycle tracking.
    */
-  status?: 'completed' | 'pending' | 'rejected';
+  status?: 'completed' | 'pending' | 'rejected' | 'failed';
   /**
    * Human-readable description of the specific record a `pending` call
    * would affect (e.g. a skill's name/level), so an approval UI can show
@@ -56,7 +56,11 @@ function isString(value: unknown): boolean {
 
 function isOptionalToolCallStatus(value: unknown): boolean {
   return (
-    value === undefined || value === 'completed' || value === 'pending' || value === 'rejected'
+    value === undefined ||
+    value === 'completed' ||
+    value === 'pending' ||
+    value === 'rejected' ||
+    value === 'failed'
   );
 }
 
@@ -72,7 +76,7 @@ function hasValidFields(record: UnknownRecord, fields: readonly FieldValidator[]
   return fields.every(([key, isValid]) => isValid(record[key]));
 }
 
-const CHAT_MESSAGE_FILE_FIELDS = [
+const CHAT_MESSAGE_FILE_FIELDS: FieldValidator[] = [
   ['type', isChatMessageFileType],
   ['fileId', isOptionalString],
   ['url', isOptionalString],
@@ -80,16 +84,16 @@ const CHAT_MESSAGE_FILE_FIELDS = [
   ['mimeType', isOptionalString],
   ['size', isOptionalNumber],
   ['metadata', isOptionalRecord],
-] as const satisfies readonly FieldValidator[];
+];
 
-const CHAT_MESSAGE_TOOL_CALL_FIELDS = [
+const CHAT_MESSAGE_TOOL_CALL_FIELDS: FieldValidator[] = [
   ['toolName', isString],
   ['type', isToolCallType],
   ['toolCallId', isString],
   ['args', isRecord],
   ['status', isOptionalToolCallStatus],
   ['preview', isOptionalNullableRecord],
-] as const satisfies readonly FieldValidator[];
+];
 
 function isChatMessageFileRecord(value: unknown): value is ChatMessageFileRecord {
   if (!isRecord(value)) return false;
@@ -107,8 +111,7 @@ export function parseChatMessageFiles(value: unknown): ChatMessageFileRecord[] |
     if (!isChatMessageFileRecord(item)) return null;
     return item;
   });
-  if (parsed.some((item) => item === null)) return null;
-  return parsed as ChatMessageFileRecord[];
+  return parsed.every((item): item is ChatMessageFileRecord => item !== null) ? parsed : null;
 }
 
 export function parseChatMessageToolCalls(value: unknown): ChatMessageToolCallRecord[] | null {
@@ -117,6 +120,5 @@ export function parseChatMessageToolCalls(value: unknown): ChatMessageToolCallRe
     if (!isChatMessageToolCallRecord(item)) return null;
     return item;
   });
-  if (parsed.some((item) => item === null)) return null;
-  return parsed as ChatMessageToolCallRecord[];
+  return parsed.every((item): item is ChatMessageToolCallRecord => item !== null) ? parsed : null;
 }

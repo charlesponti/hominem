@@ -1,3 +1,4 @@
+import { getGenerationFailureMessage } from '@hominem/rpc/generation-events';
 import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto, GenerationDomainEvent } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -38,6 +39,8 @@ export function useStartChat() {
         );
 
         await consumeSseResponse(response, (event) => {
+          const failureMessage = getGenerationFailureMessage(event);
+          if (failureMessage) throw new Error(failureMessage);
           if ('payload' in event && event.type === 'generation.accepted') {
             client.setQueryData(chatQueryKeys.get(event.payload.chatId), event.payload.chat);
             client.setQueryData(

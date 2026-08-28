@@ -1,9 +1,6 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-
-import type { ChatMessageView } from '~/lib/types/chat';
 
 export function useChatMessageSearch(chatId: string, enabled: boolean) {
   const client = useApiClient();
@@ -37,7 +34,7 @@ export function useChatMessageSearch(chatId: string, enabled: boolean) {
     query,
     setQuery,
     debouncedQuery,
-    results: (searchQuery.data ?? []) as ChatMessageView[] | ChatMessageDto[],
+    results: searchQuery.data ?? [],
     isSearching: searchQuery.isFetching,
     error: searchQuery.error,
     close,

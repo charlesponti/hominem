@@ -84,9 +84,6 @@ function applyEvent(
     case 'confirmation.rejected':
       return projection;
     case 'generation.committed':
-      if (!('message' in event) || !event.message) {
-        throw new GenerationProjectionError('generation.committed is missing its message');
-      }
       return {
         ...projection,
         status: 'committed',

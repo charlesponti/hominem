@@ -4,7 +4,9 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "incremental": true,
+    // App typechecking consumes emitted package declarations. Do not let a
+    // stale local tsbuildinfo file hide changed exports in CI.
+    "incremental": false,
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     // tsserver-only (ignored by `tsc --noEmit`): doesn't inherit from
     // tsconfig.base.json since this extends Expo's base config instead — see

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -29,6 +29,7 @@ vi.mock('~/components/media/audio-playback.service', () => ({ playAudioReply: vi
 vi.mock('@react-native-community/netinfo', () => ({ default: { fetch: mockNetInfoFetch } }));
 vi.mock('~/services/chat/consume-sse-xhr', () => ({
   consumeSseXhr: mockConsumeSseXhr,
+  consumeGenerationSseXhr: mockConsumeSseXhr,
 }));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: { id: string; role: 'user' | 'assistant'; content: string }) => ({
@@ -50,9 +51,24 @@ const { useSendMessage } = await import('~/services/chat/use-send-message');
 
 const CHAT_ID = 'chat-1';
 
+const committedMessage = {
+  id: 'assistant-1',
+  chatId: CHAT_ID,
+  userId: 'user-1',
+  role: 'assistant',
+  content: 'A durable reply.',
+  files: null,
+  toolCalls: null,
+  reasoning: null,
+  parentMessageId: null,
+  createdAt: '2026-01-01',
+  updatedAt: '2026-01-01',
+} satisfies ChatMessageDto;
+
 type PendingStream = {
   onEvent: (event: GenerationStreamEvent) => void;
   resolve: () => void;
+  reject: (error: Error) => void;
 };
 
 let pending: PendingStream | null = null;
@@ -62,9 +78,16 @@ describe('useSendMessage', () => {
     let count = 0;
     mockRandomUUID.mockImplementation(() => `uuid-${++count}`);
     mockConsumeSseXhr.mockImplementation(
-      ({ onEvent }: { onEvent: (event: GenerationStreamEvent) => void }) =>
-        new Promise<void>((resolve) => {
-          pending = { onEvent, resolve };
+      ({
+        onEvent,
+        replayUrl,
+      }: {
+        onEvent: (event: GenerationStreamEvent) => void;
+        replayUrl?: (afterSequence: number) => string;
+      }) =>
+        new Promise<void>((resolve, reject) => {
+          replayUrl?.(0);
+          pending = { onEvent, resolve, reject };
         }),
     );
   });
@@ -108,7 +131,7 @@ describe('useSendMessage', () => {
         sequence: 2,
         payload: {
           type: 'generation.committed',
-          message: { id: 'assistant-1', role: 'assistant', content: 'A durable reply.' } as never,
+          message: committedMessage,
         },
       });
       pending?.resolve();
@@ -140,5 +163,70 @@ describe('useSendMessage', () => {
       error: 'generation failed',
     });
     expect(mockImpactAsync).not.toHaveBeenCalled();
+  });
+
+  it('turns a durable generation failure into the failed generation state', async () => {
+    const { result } = renderHookWithQueryClient(() => useSendMessage({ chatId: CHAT_ID }));
+    let sendPromise: Promise<void> | undefined;
+
+    act(() => {
+      sendPromise = result.current.sendChatMessage({ message: 'Hello there' });
+    });
+    await waitFor(() => expect(mockConsumeSseXhr).toHaveBeenCalledOnce());
+
+    await act(async () => {
+      try {
+        pending?.onEvent({
+          version: 1,
+          generationId: 'uuid-1',
+          sequence: 1,
+          type: 'generation.failed',
+          payload: { type: 'generation.failed', message: 'durable failure' },
+        });
+        pending?.resolve();
+      } catch (error) {
+        pending?.reject(error instanceof Error ? error : new Error(String(error)));
+      }
+      await sendPromise?.catch(() => undefined);
+    });
+
+    await waitFor(() => expect(result.current.generation?.stage).toBe('failed'));
+    expect(result.current.generation?.error).toBe('durable failure');
+  });
+
+  it('reduces phase and cancellation events through the shared client reducer', async () => {
+    const { result } = renderHookWithQueryClient(() => useSendMessage({ chatId: CHAT_ID }));
+
+    act(() => {
+      void result.current.sendChatMessage({ message: 'Stop this reply' });
+    });
+    await waitFor(() => expect(mockConsumeSseXhr).toHaveBeenCalledOnce());
+
+    act(() => {
+      pending?.onEvent({
+        version: 1,
+        generationId: 'uuid-1',
+        sequence: 1,
+        type: 'generation.phase_changed',
+        payload: { type: 'generation.phase_changed', phase: 'preparing' },
+      });
+      pending?.onEvent({
+        version: 1,
+        generationId: 'uuid-1',
+        sequence: 2,
+        type: 'generation.phase_changed',
+        payload: { type: 'generation.phase_changed', phase: 'cancel_requested' },
+      });
+      pending?.onEvent({
+        version: 1,
+        generationId: 'uuid-1',
+        sequence: 3,
+        type: 'generation.cancelled',
+        payload: { type: 'generation.cancelled' },
+      });
+      pending?.resolve();
+    });
+
+    await waitFor(() => expect(result.current.generation).toMatchObject({ stage: 'cancelled' }));
   });
 });

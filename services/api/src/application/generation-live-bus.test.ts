@@ -1,13 +1,14 @@
+import type { ChatGenerationEventRecord } from '@hominem/db';
 import { describe, expect, it } from 'vitest';
 
 import { publishGenerationEvent, subscribeToGenerationEvents } from './generation-live-bus';
 
-const event = (sequence: number) => ({
+const event = (sequence: number): ChatGenerationEventRecord => ({
   id: `event-${sequence}`,
   generationId: 'generation-1',
   sequence,
-  type: 'generation.phase_changed' as const,
-  payload: { type: 'generation.phase_changed' as const, phase: 'running' as const },
+  type: 'generation.phase_changed',
+  payload: { type: 'generation.phase_changed', phase: 'running' },
   idempotencyKey: `phase-${sequence}`,
   createdAt: '2026-01-01T00:00:00.000Z',
 });
@@ -35,5 +36,22 @@ describe('generation live bus', () => {
     const pending = iterator.next();
     subscription.close();
     await expect(pending).resolves.toMatchObject({ done: true });
+  });
+
+  it('queues multiple events and closes through iterator return', async () => {
+    const subscription = subscribeToGenerationEvents('generation-1');
+    const iterator = subscription[Symbol.asyncIterator]();
+    const pending = iterator.next();
+
+    publishGenerationEvent(event(1));
+    await expect(pending).resolves.toMatchObject({ done: false, value: event(1) });
+
+    publishGenerationEvent(event(2));
+    publishGenerationEvent(event(3));
+    await expect(iterator.next()).resolves.toMatchObject({ done: false, value: event(2) });
+    await expect(iterator.next()).resolves.toMatchObject({ done: false, value: event(3) });
+    await expect(iterator.return?.()).resolves.toMatchObject({ done: true });
+    await expect(iterator.next()).resolves.toMatchObject({ done: true });
+    subscription.close();
   });
 });

@@ -1,6 +1,10 @@
+import {
+  createGenerationEventDeduplicator,
+  parseGenerationStreamEvent,
+} from '@hominem/rpc/generation-events';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { consumeSseXhr } from '~/services/chat/consume-sse-xhr';
+import { consumeGenerationSseXhr, consumeSseXhr } from '~/services/chat/consume-sse-xhr';
 
 class FakeXMLHttpRequest {
   static current: FakeXMLHttpRequest | null = null;
@@ -11,6 +15,9 @@ class FakeXMLHttpRequest {
   responseText = '';
   status = 200;
   headers: Record<string, string> = {};
+  method = '';
+  url = '';
+  body: string | null = null;
 
   constructor() {
     FakeXMLHttpRequest.current = this;
@@ -18,9 +25,14 @@ class FakeXMLHttpRequest {
 
   abort() {}
 
-  open() {}
+  open(method: string, url: string) {
+    this.method = method;
+    this.url = url;
+  }
 
-  send() {}
+  send(body: string | null) {
+    this.body = body;
+  }
 
   setRequestHeader(key: string, value: string) {
     this.headers[key] = value;
@@ -45,7 +57,16 @@ class FakeXMLHttpRequest {
   }
 }
 
-async function startStream(onEvent = vi.fn(), onDone = vi.fn(), signal?: AbortSignal) {
+async function startStream<TEvent = unknown>(
+  onEvent: (event: TEvent) => void = vi.fn(),
+  onDone = vi.fn(),
+  signal?: AbortSignal,
+  options?: {
+    deduplicateEvent?: (event: TEvent) => TEvent | null;
+    parseEvent?: (input: unknown) => TEvent;
+    onDurableSequence?: (sequence: number) => void;
+  },
+) {
   const promise = consumeSseXhr({
     url: 'https://example.test/stream',
     payload: { message: 'hello' },
@@ -53,6 +74,9 @@ async function startStream(onEvent = vi.fn(), onDone = vi.fn(), signal?: AbortSi
     onEvent,
     onDone,
     signal,
+    deduplicateEvent: options?.deduplicateEvent,
+    parseEvent: options?.parseEvent,
+    onDurableSequence: options?.onDurableSequence,
   });
   await Promise.resolve();
   const xhr = FakeXMLHttpRequest.current;
@@ -69,7 +93,7 @@ describe('consumeSseXhr', () => {
   });
 
   it('parses complete SSE chunks', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { onDone, onEvent, promise, xhr } = await startStream();
 
     xhr.finish(200, 'data: {"type":"chunk","chunk":"hello"}\n\ndata: [DONE]\n\n');
@@ -80,7 +104,7 @@ describe('consumeSseXhr', () => {
   });
 
   it('preserves split SSE frames until they are complete', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { onEvent, promise, xhr } = await startStream();
 
     xhr.push('data: {"type":"chu');
@@ -93,8 +117,27 @@ describe('consumeSseXhr', () => {
     expect(onEvent).toHaveBeenCalledWith({ type: 'chunk', chunk: 'hello' });
   });
 
+  it('drops duplicate durable events while preserving the first occurrence', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const deduplicateEvent = createGenerationEventDeduplicator();
+    let lastSequence = 0;
+    const { onEvent, promise, xhr } = await startStream(vi.fn(), vi.fn(), undefined, {
+      parseEvent: parseGenerationStreamEvent,
+      deduplicateEvent,
+      onDurableSequence: (sequence) => (lastSequence = sequence),
+    });
+
+    const frame =
+      'data: {"version":1,"generationId":"g1","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n';
+    xhr.finish(200, frame + frame);
+    await promise;
+
+    expect(onEvent).toHaveBeenCalledOnce();
+    expect(lastSequence).toBe(1);
+  });
+
   it('rejects when the server sends an error frame', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { promise, xhr } = await startStream();
 
     xhr.finish(200, 'data: {"type":"error","message":"stream failed"}\n\n');
@@ -102,8 +145,40 @@ describe('consumeSseXhr', () => {
     await expect(promise).rejects.toThrow('stream failed');
   });
 
+  it('rejects when an event handler reports a domain failure', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const { promise, xhr } = await startStream(() => {
+      throw new Error('durable generation failed');
+    });
+
+    xhr.finish(200, 'data: {"type":"generation.failed"}\n\n');
+
+    await expect(promise).rejects.toThrow('durable generation failed');
+  });
+
+  it('ignores non-object event payloads', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const { onEvent, promise, xhr } = await startStream();
+
+    xhr.finish(200, 'data: null\n\ndata: 1\n\ndata: [DONE]\n\n');
+    await promise;
+
+    expect(onEvent).toHaveBeenCalledWith(1);
+  });
+
+  it('normalizes non-Error event handler failures', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const { promise, xhr } = await startStream(() => {
+      throw 'handler failed';
+    });
+
+    xhr.finish(200, 'data: {"type":"chunk"}\n\n');
+
+    await expect(promise).rejects.toThrow('handler failed');
+  });
+
   it('uses the error field when an error frame has no message', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { promise, xhr } = await startStream();
 
     xhr.finish(200, 'data: {"error":"fallback error"}\n\n');
@@ -112,7 +187,7 @@ describe('consumeSseXhr', () => {
   });
 
   it('rejects failed HTTP responses', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { promise, xhr } = await startStream();
 
     xhr.finish(500);
@@ -154,7 +229,7 @@ describe('consumeSseXhr', () => {
   });
 
   it('handles network errors, malformed frames, comments, and partial final frames', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const onEvent = vi.fn();
     const { promise, xhr } = await startStream(onEvent);
 
@@ -173,7 +248,7 @@ describe('consumeSseXhr', () => {
   });
 
   it('rejects a partial final error frame', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { promise, xhr } = await startStream();
 
     xhr.finish(200, 'data: {"type":"error","message":"partial failure"}');
@@ -182,12 +257,91 @@ describe('consumeSseXhr', () => {
   });
 
   it('aborts the XHR and rejects when the signal is cancelled', async () => {
-    globalThis.XMLHttpRequest = FakeXMLHttpRequest as never;
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const controller = new AbortController();
     const { promise, xhr } = await startStream(vi.fn(), vi.fn(), controller.signal);
 
     controller.abort();
     xhr.notifyReadyState(3);
     await expect(promise).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('resumes once from the last durable sequence after a transport failure', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const onEvent = vi.fn();
+    const promise = consumeGenerationSseXhr({
+      url: 'https://example.test/generations/g1/stream',
+      payload: { generationId: 'g1' },
+      replayUrl: (afterSequence) =>
+        `https://example.test/generations/g1/stream?afterSequence=${afterSequence}`,
+      getHeaders: async () => ({}),
+      parseEvent: parseGenerationStreamEvent,
+      onEvent,
+    });
+
+    await Promise.resolve();
+    const first = FakeXMLHttpRequest.current;
+    if (!first) throw new Error('Expected initial XHR');
+    first.push(
+      'data: {"version":1,"generationId":"g1","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',
+    );
+    first.onerror?.();
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const replay = FakeXMLHttpRequest.current;
+    if (!replay || replay === first) throw new Error('Expected replay XHR');
+    replay.finish(
+      200,
+      'data: {"version":1,"generationId":"g1","sequence":2,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"saving"}}\n\n',
+    );
+    await promise;
+
+    expect(first.method).toBe('POST');
+    expect(replay.method).toBe('GET');
+    expect(replay.url).toContain('afterSequence=1');
+    expect(onEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not resume when the domain event handler fails', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    const promise = consumeGenerationSseXhr({
+      url: 'https://example.test/generations/g1/stream',
+      payload: { generationId: 'g1' },
+      replayUrl: (afterSequence) => `https://example.test/replay?afterSequence=${afterSequence}`,
+      getHeaders: async () => ({}),
+      parseEvent: parseGenerationStreamEvent,
+      onEvent: () => {
+        throw new Error('domain failure');
+      },
+    });
+
+    await Promise.resolve();
+    const first = FakeXMLHttpRequest.current;
+    if (!first) throw new Error('Expected initial XHR');
+    first.finish(
+      200,
+      'data: {"version":1,"generationId":"g1","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',
+    );
+
+    await expect(promise).rejects.toThrow('domain failure');
+    expect(FakeXMLHttpRequest.current).toBe(first);
+  });
+
+  it('does not resume an abort error from request setup', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+
+    await expect(
+      consumeGenerationSseXhr({
+        url: 'https://example.test/generations/g1/stream',
+        payload: { generationId: 'g1' },
+        replayUrl: (afterSequence) => `https://example.test/replay?afterSequence=${afterSequence}`,
+        getHeaders: async () => {
+          throw new DOMException('Aborted', 'AbortError');
+        },
+        onEvent: vi.fn(),
+      }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+
+    expect(FakeXMLHttpRequest.current).toBeNull();
   });
 });

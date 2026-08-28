@@ -1,6 +1,8 @@
+import type { ChatGenerationEventRecord } from '@hominem/db';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { publishGenerationEvent } from '../../application/generation-live-bus';
 import type { AppContext, RpcUser } from '../middleware/auth';
 import { requestIdMiddleware } from '../middleware/auth';
 import { apiErrorHandler } from '../middleware/error';
@@ -204,6 +206,30 @@ function createApp() {
   });
 
   return app.route('/api/chats', chatsRoutes);
+}
+
+function phaseEvent(sequence: number): ChatGenerationEventRecord {
+  return {
+    id: `event-${sequence}`,
+    generationId: 'generation-1',
+    sequence,
+    type: 'generation.phase_changed',
+    payload: { type: 'generation.phase_changed', phase: 'running' },
+    idempotencyKey: `phase-${sequence}`,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+}
+
+function cancelledEvent(sequence: number): ChatGenerationEventRecord {
+  return {
+    id: `event-${sequence}`,
+    generationId: 'generation-1',
+    sequence,
+    type: 'generation.cancelled',
+    payload: { type: 'generation.cancelled' },
+    idempotencyKey: 'cancelled',
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
 }
 
 describe('chat stream accounting', () => {
@@ -422,6 +448,39 @@ describe('chat stream accounting', () => {
     expect(body).toContain('id: 2');
     expect(body).toContain('generation.phase_changed');
     expect(body).toContain('[DONE]');
+  });
+
+  it('does not lose events published while replay is loading', async () => {
+    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'running' });
+    mocks.listGenerationEvents.mockImplementation(async () => {
+      publishGenerationEvent(phaseEvent(2));
+      publishGenerationEvent(cancelledEvent(3));
+      return [phaseEvent(1)];
+    });
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/generations/generation-1/stream?afterSequence=0',
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body.match(/id: [123]/g)).toHaveLength(3);
+    expect(body).toContain('id: 1');
+    expect(body).toContain('id: 2');
+    expect(body).toContain('id: 3');
+    expect(body).toContain('[DONE]');
+  });
+
+  it('rejects malformed replay cursors before reading events', async () => {
+    mocks.listGenerationEvents.mockClear();
+    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'committed' });
+
+    const response = await createApp().request(
+      '/api/chats/chat-id/generations/generation-1/stream?afterSequence=1.5',
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.listGenerationEvents).not.toHaveBeenCalled();
   });
 });
 

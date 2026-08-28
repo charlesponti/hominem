@@ -1,20 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChatClient, type ChatOptions } from './chat-sdk';
+import type { GenerationInput, GenerationMessageSnapshot, GenerationStartContext } from './index';
 
 const context = {
   chatId: 'chat-1',
-  kind: 'send' as const,
+  kind: 'send',
   userMessageId: 'message-1',
   targetAssistantMessageId: null,
   requestContext: {},
-};
+} satisfies GenerationStartContext;
 
 function options(): ChatOptions {
-  async function* modelTurn() {
-    yield { type: 'provider-chunk' as const, chunk: { content: 'hello' } };
+  async function* modelTurn(): AsyncGenerator<GenerationInput> {
+    yield { type: 'provider-chunk', chunk: { content: 'hello' } };
     yield {
-      type: 'provider-turn-completed' as const,
+      type: 'provider-turn-completed',
       requiredToolCall: false,
       confirmationCallIds: [],
     };
@@ -33,12 +34,15 @@ function options(): ChatOptions {
     lifecycle: {
       events: { persist: vi.fn(), emit: vi.fn() },
       generation: {
-        save: vi.fn(async (state) => ({
-          id: 'assistant-1',
-          chatId: state.generationId,
-          role: 'assistant' as const,
-          content: state.assistantText,
-        })),
+        save: vi.fn(
+          async (state) =>
+            ({
+              id: 'assistant-1',
+              chatId: state.generationId,
+              role: 'assistant',
+              content: state.assistantText,
+            }) satisfies GenerationMessageSnapshot,
+        ),
         stop: vi.fn(),
       },
     },
@@ -77,5 +81,21 @@ describe('Chat generations resource', () => {
     expect(first).toBe(second);
     await Promise.all([first, second]);
     expect(configured.model.open).toHaveBeenCalledOnce();
+  });
+
+  it('stops an active generation through the configured lifecycle port', async () => {
+    const configured = options();
+    const generation = new ChatClient(configured).generations.create({
+      id: 'generation-1',
+      context,
+    });
+
+    async function* cancelTurn(): AsyncGenerator<GenerationInput> {
+      yield { type: 'cancel-requested' };
+    }
+    configured.model.open = vi.fn(() => cancelTurn());
+
+    await expect(generation.run()).resolves.toMatchObject({ phase: 'cancelled' });
+    expect(configured.lifecycle.generation.stop).toHaveBeenCalledOnce();
   });
 });

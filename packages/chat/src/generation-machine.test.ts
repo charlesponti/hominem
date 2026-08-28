@@ -1,19 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
+import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationState,
+  generationEventIdempotencyKey,
   reduceGeneration,
   runGeneration,
   type GenerationState,
+  type GenerationInput,
 } from './generation-machine';
 
 const startContext = {
   chatId: 'chat-1',
-  kind: 'send' as const,
+  kind: 'send',
   userMessageId: 'message-1',
   targetAssistantMessageId: null,
   requestContext: {},
-};
+} satisfies GenerationStartContext;
 
 const call = (overrides: Partial<GenerationState['requestedToolCalls'][number]> = {}) => ({
   id: 'call-1',
@@ -25,6 +28,37 @@ const call = (overrides: Partial<GenerationState['requestedToolCalls'][number]> 
 });
 
 describe('generation machine', () => {
+  it('creates stable keys for accepted events', () => {
+    expect(
+      generationEventIdempotencyKey('generation-1', {
+        type: 'generation.accepted',
+        chatId: 'chat-1',
+        userMessage: { id: 'message-1', chatId: 'chat-1', role: 'user', content: 'Hello' },
+      }),
+    ).toBe('generation-1:generation.accepted');
+  });
+
+  it('creates stable keys for lifecycle events that are emitted by adapters', () => {
+    expect(
+      generationEventIdempotencyKey('generation-1', {
+        type: 'generation.cancel_requested',
+        requestedAt: '2026-08-28T00:00:00.000Z',
+        requestedBy: 'user-1',
+      }),
+    ).toBe('generation-1:generation.cancel_requested');
+    expect(
+      generationEventIdempotencyKey('generation-1', {
+        type: 'generation.checkpointed',
+        checkpoint: {
+          turnId: 'turn-1',
+          iteration: 0,
+          assistantMessage: { id: 'assistant-1', chatId: 'chat-1', role: 'assistant', content: '' },
+          pendingToolCallIds: [],
+        },
+      }),
+    ).toBe('generation-1:generation.checkpointed');
+  });
+
   it('reduces provider text and fragmented tool calls without side effects', () => {
     let state = createGenerationState('generation-1');
     state = reduceGeneration(state, {
@@ -52,7 +86,10 @@ describe('generation machine', () => {
   });
 
   it('emits reasoning deltas and preserves empty chunks', () => {
-    const state = { ...createGenerationState('generation-1'), phase: 'running' as const };
+    const state = {
+      ...createGenerationState('generation-1'),
+      phase: 'running',
+    } satisfies GenerationState;
     const step = reduceGeneration(state, {
       type: 'provider-chunk',
       chunk: { content: '', reasoning: 'thinking' },
@@ -235,9 +272,9 @@ describe('generation machine', () => {
   });
 
   it('does not respond to an approval for another tool call', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'awaiting_confirmation' as const,
+      phase: 'awaiting_confirmation',
       pendingConfirmation: call(),
     };
 
@@ -247,9 +284,9 @@ describe('generation machine', () => {
   });
 
   it('does not respond to a rejection for another tool call', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'awaiting_confirmation' as const,
+      phase: 'awaiting_confirmation',
       pendingConfirmation: call(),
     };
 
@@ -263,9 +300,9 @@ describe('generation machine', () => {
   });
 
   it('fills missing tool-call fields while reconstructing a turn without a turn id', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'running' as const,
+      phase: 'running',
       turnId: null,
     };
     const step = reduceGeneration(state, {
@@ -281,9 +318,9 @@ describe('generation machine', () => {
   });
 
   it('records approval before executing the confirmed tool', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'awaiting_confirmation' as const,
+      phase: 'awaiting_confirmation',
       turnId: 'turn-1',
       pendingConfirmation: call(),
     };
@@ -298,9 +335,9 @@ describe('generation machine', () => {
   });
 
   it('converts rejection into a failed tool result and continues the turn', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'awaiting_confirmation' as const,
+      phase: 'awaiting_confirmation',
       turnId: 'turn-1',
       pendingConfirmation: call(),
     };
@@ -321,7 +358,7 @@ describe('generation machine', () => {
   it('executes multiple tool calls sequentially', () => {
     let state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'running' as const,
+      phase: 'running',
       turnId: 'turn-1',
     };
     state = reduceGeneration(state, {
@@ -348,9 +385,9 @@ describe('generation machine', () => {
   });
 
   it('cancels confirmation without invoking stop effects', () => {
-    const state = {
+    const state: GenerationState = {
       ...createGenerationState('generation-1'),
-      phase: 'awaiting_confirmation' as const,
+      phase: 'awaiting_confirmation',
       pendingConfirmation: call(),
     };
     const step = reduceGeneration(state, { type: 'cancel-requested' });
@@ -360,7 +397,10 @@ describe('generation machine', () => {
   });
 
   it('requests cancellation for an active effect and finalizes after it stops', () => {
-    const running = { ...createGenerationState('generation-1'), phase: 'running' as const };
+    const running = {
+      ...createGenerationState('generation-1'),
+      phase: 'running',
+    } satisfies GenerationState;
     const requested = reduceGeneration(running, { type: 'cancel-requested' });
 
     expect(requested.state.phase).toBe('cancel_requested');
@@ -371,7 +411,10 @@ describe('generation machine', () => {
   });
 
   it('ignores inputs after a terminal state', () => {
-    const state = { ...createGenerationState('generation-1'), phase: 'committed' as const };
+    const state = {
+      ...createGenerationState('generation-1'),
+      phase: 'committed',
+    } satisfies GenerationState;
 
     expect(reduceGeneration(state, { type: 'cancel-requested' })).toEqual({
       state,
@@ -380,10 +423,10 @@ describe('generation machine', () => {
   });
 
   it('accepts a single input and an async iterable from effects', async () => {
-    async function* providerInputs() {
-      yield { type: 'provider-chunk' as const, chunk: { content: 'Done.' } };
+    async function* providerInputs(): AsyncGenerator<GenerationInput> {
+      yield { type: 'provider-chunk', chunk: { content: 'Done.' } };
       yield {
-        type: 'provider-turn-completed' as const,
+        type: 'provider-turn-completed',
         requiredToolCall: false,
         confirmationCallIds: [],
       };
@@ -413,5 +456,45 @@ describe('generation machine', () => {
     });
 
     expect(finalState.phase).toBe('committed');
+  });
+
+  it('accepts a single generation input returned by an effect', async () => {
+    const finalState = await runGeneration({
+      generationId: 'generation-1',
+      startContext,
+      effects: {
+        execute: async (command) => {
+          if (command.type === 'open-provider-turn') {
+            return {
+              type: 'provider-turn-failed',
+              message: 'bad gateway',
+              transient: false,
+              attempt: 0,
+              maxAttempts: 1,
+            };
+          }
+          return undefined;
+        },
+      },
+    });
+
+    expect(finalState.phase).toBe('failed');
+    expect(finalState.lastError).toBe('bad gateway');
+  });
+
+  it('schedules a retry event with its attempt metadata', () => {
+    const step = reduceGeneration(createGenerationState('generation-1'), {
+      type: 'provider-turn-failed',
+      message: 'temporary outage',
+      transient: true,
+      attempt: 0,
+      maxAttempts: 2,
+    });
+
+    expect(step.commands).toContainEqual({
+      type: 'persist',
+      event: { type: 'generation.retry_scheduled', attempt: 1, maxAttempts: 2 },
+      idempotencyKey: 'generation-1:generation.retry_scheduled:1',
+    });
   });
 });

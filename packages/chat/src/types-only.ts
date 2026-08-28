@@ -6,6 +6,7 @@
 export * from './chat.types';
 export * from './capture-types';
 export * from './generation-machine';
+export * from './generation-client';
 export * from './generation-interpreter';
 export * from './generation-events';
 export * from './generation-projection';

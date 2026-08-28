@@ -6,9 +6,9 @@ import type {
 } from '@hominem/chat';
 import * as z from 'zod';
 
-import type { Chat, ChatMessageDto, LegacyChatStreamEvent } from './chat.types';
+import type { Chat, LegacyChatStreamEvent } from './chat.types';
 
-export const GENERATION_EVENT_VERSION = 1 as const;
+export const GENERATION_EVENT_VERSION = 1;
 
 const jsonObjectSchema = z.record(z.string(), z.json());
 const turnSchema = z.object({
@@ -42,7 +42,7 @@ const messageToolCallSchema = z.object({
   type: z.literal('tool-call'),
   toolCallId: z.string(),
   args: jsonObjectSchema,
-  status: z.enum(['completed', 'pending', 'rejected']).optional(),
+  status: z.enum(['completed', 'pending', 'rejected', 'failed']).optional(),
   preview: jsonObjectSchema.nullable().optional(),
 });
 const messageSchema = z.object({
@@ -57,7 +57,7 @@ const messageSchema = z.object({
   parentMessageId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-}) satisfies z.ZodType<ChatMessageDto>;
+});
 const chatSchema = z.object({
   id: z.string().min(1),
   userId: z.string().min(1),
@@ -154,9 +154,9 @@ const durablePayloadSchemas = {
     message: z.string(),
     metadata: terminalMetadataSchema.optional(),
   }),
-} as const;
+};
 
-const durableEnvelope = <T extends z.ZodType>(type: string, payload: T) =>
+const durableEnvelope = <TType extends string, T extends z.ZodType>(type: TType, payload: T) =>
   z.object({
     version: z.literal(GENERATION_EVENT_VERSION),
     generationId: z.string().min(1),
@@ -244,7 +244,7 @@ export const GenerationStreamEventSchema = z.union([
 ]);
 
 export function parseGenerationDomainEvent(input: unknown): GenerationDomainEvent {
-  return GenerationDomainEventSchema.parse(input) as GenerationDomainEvent;
+  return GenerationDomainEventSchema.parse(input);
 }
 
 export function parseGenerationLiveEvent(input: unknown): GenerationLiveEvent {
@@ -252,32 +252,67 @@ export function parseGenerationLiveEvent(input: unknown): GenerationLiveEvent {
 }
 
 export function parseGenerationStreamEvent(input: unknown): GenerationStreamEvent {
-  return GenerationStreamEventSchema.parse(input) as GenerationStreamEvent;
+  return GenerationStreamEventSchema.parse(input);
+}
+
+/**
+ * Keep replay/live handoff idempotent at the client boundary. Live events do
+ * not carry sequences and must remain independently deliverable.
+ */
+export function createGenerationEventDeduplicator(): (
+  event: GenerationStreamEvent,
+) => GenerationStreamEvent | null {
+  const seenDurableEvents = new Set<string>();
+  return (event) => {
+    if ('sequence' in event) {
+      const key = `${event.generationId}:${event.sequence}`;
+      if (seenDurableEvents.has(key)) return null;
+      seenDurableEvents.add(key);
+    }
+    return event;
+  };
+}
+
+export function getGenerationFailureMessage(event: GenerationStreamEvent): string | null {
+  if ('payload' in event && event.type === 'generation.failed') return event.payload.message;
+  if ('event' in event && event.event.type === 'error') return event.event.message;
+  return null;
 }
 
 export function legacyEventToLiveEvent(event: LegacyChatStreamEvent): GenerationLiveEvent | null {
-  if (
-    event.type !== 'text-delta' &&
-    event.type !== 'reasoning-delta' &&
-    event.type !== 'tool-step' &&
-    event.type !== 'phase'
-  ) {
-    return null;
+  switch (event.type) {
+    case 'phase':
+      return {
+        version: GENERATION_EVENT_VERSION,
+        generationId: event.generationId,
+        event: { type: 'phase-changed', phase: 'running' },
+      };
+    case 'tool-step':
+      return {
+        version: GENERATION_EVENT_VERSION,
+        generationId: event.generationId,
+        event: {
+          type: 'tool-step',
+          toolCallId: event.toolCallId,
+          toolName: event.toolName,
+          status: event.status,
+        },
+      };
+    case 'text-delta':
+      return {
+        version: GENERATION_EVENT_VERSION,
+        generationId: event.generationId,
+        event: { type: 'text-delta', text: event.text },
+      };
+    case 'reasoning-delta':
+      return {
+        version: GENERATION_EVENT_VERSION,
+        generationId: event.generationId,
+        event: { type: 'reasoning-delta', text: event.text },
+      };
+    default:
+      return null;
   }
-
-  const liveEvent =
-    event.type === 'phase'
-      ? { type: 'phase-changed' as const, phase: 'running' as const }
-      : event.type === 'tool-step'
-        ? {
-            type: 'tool-step' as const,
-            toolCallId: event.toolCallId,
-            toolName: event.toolName,
-            status: event.status,
-          }
-        : { type: event.type, text: event.text };
-
-  return { version: GENERATION_EVENT_VERSION, generationId: event.generationId, event: liveEvent };
 }
 
 export type { ChatGenerationKind, GenerationPhase, GenerationToolCall, ToolResult };

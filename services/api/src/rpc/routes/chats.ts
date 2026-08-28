@@ -7,7 +7,13 @@ import {
   getChatCompletionUsage,
   getSpeechUsageEstimate,
 } from '@hominem/ai';
-import type { GenerationStartContext } from '@hominem/chat';
+import type {
+  GenerationEventPayload,
+  GenerationJsonValue,
+  GenerationMessageSnapshot,
+  GenerationRequestContext,
+  GenerationStartContext,
+} from '@hominem/chat';
 import type {
   ChatGenerationEventRecord,
   ChatMessageFileRecord,
@@ -36,6 +42,7 @@ import {
 } from '../../application/ai-usage.service';
 import { runChatGeneration } from '../../application/chat-generation-service';
 import type { ChatGenerationEffectStore } from '../../application/chat-generation-tools';
+import type { ChatGenerationLiveEvent } from '../../application/chat-generation-types';
 import {
   publishGenerationEvent,
   subscribeToGenerationEvents,
@@ -200,11 +207,11 @@ async function synthesizeReplyAudioFile(
 // Rough chars/words-per-token headroom for each target: short caps at ~500-600
 // characters, medium at a 3-5 minute read (~600-1000 words), long at a full
 // essay (~1500-3000 words) with room for the model's outline-then-write pass.
-const RESPONSE_LENGTH_MAX_TOKENS = {
+const RESPONSE_LENGTH_MAX_TOKENS: Record<'short' | 'medium' | 'long', number> = {
   short: 250,
   medium: 1600,
   long: 6000,
-} as const satisfies Record<'short' | 'medium' | 'long', number>;
+};
 
 // `chat_messages.content` has a not-blank check constraint; a turn that ends
 // in a pending tool-call confirmation can have no text of its own, so this
@@ -220,14 +227,14 @@ function resolveAssistantContent(
   return assistantText;
 }
 
-function getReasoningConfig(_responseLength?: 'short' | 'medium' | 'long') {
-  return { effort: 'none' as const };
+function getReasoningConfig(_responseLength?: 'short' | 'medium' | 'long'): { effort: 'none' } {
+  return { effort: 'none' };
 }
 
 async function enqueueChatEmbedding(userId: string, chatId: string) {
   await embeddingQueue.add(
     'generate-embedding',
-    { jobId: `chat-${chatId}`, userId, entityType: 'chat' as const, entityId: chatId },
+    { jobId: `chat-${chatId}`, userId, entityType: 'chat', entityId: chatId },
     { jobId: `chat-${chatId}`, removeOnComplete: true, removeOnFail: false },
   );
 }
@@ -319,15 +326,170 @@ type GenerationStream = {
 
 type GenerationStreamState = {
   generationId: string | null;
+  ownerUserId: string | null;
   sequence: number;
-  persist?: (event: Record<string, unknown>) => Promise<ChatGenerationEventRecord>;
+  persist?: (event: GenerationEventPayload) => Promise<ChatGenerationEventRecord>;
 };
 const generationStreamStates = new WeakMap<object, GenerationStreamState>();
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function toGenerationJsonValue(value: unknown): GenerationJsonValue | undefined {
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const entries = value.map(toGenerationJsonValue);
+    return entries.every((entry) => entry !== undefined) ? entries : undefined;
+  }
+  if (!isRecord(value)) return undefined;
+  const object: { [key: string]: GenerationJsonValue } = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const converted = toGenerationJsonValue(entry);
+    if (converted === undefined) return undefined;
+    object[key] = converted;
+  }
+  return object;
+}
+
+function toGenerationRequestContext(value: unknown): GenerationRequestContext | null {
+  if (!isRecord(value)) return null;
+  const context: { [key: string]: GenerationJsonValue } = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const converted = toGenerationJsonValue(entry);
+    if (converted === undefined) return null;
+    context[key] = converted;
+  }
+  return context;
+}
+
+function parseJsonObject(value: string): GenerationRequestContext | null {
+  try {
+    return toGenerationRequestContext(JSON.parse(value));
+  } catch {
+    return null;
+  }
+}
+
+function toMessageSnapshot(value: unknown): GenerationMessageSnapshot | null {
+  if (!isRecord(value)) return null;
+  if (
+    typeof value.id !== 'string' ||
+    typeof value.chatId !== 'string' ||
+    (value.role !== 'user' && value.role !== 'assistant') ||
+    typeof value.content !== 'string'
+  ) {
+    return null;
+  }
+  const reasoning =
+    value.reasoning === undefined || value.reasoning === null || typeof value.reasoning === 'string'
+      ? value.reasoning
+      : null;
+  return {
+    id: value.id,
+    chatId: value.chatId,
+    role: value.role,
+    content: value.content,
+    reasoning,
+  };
+}
+
+function toPersistedGenerationEvent(value: Record<string, unknown>): GenerationEventPayload | null {
+  switch (value.type) {
+    case 'generation.accepted': {
+      if (!isString(value.chatId)) return null;
+      if (value.userMessage === null) {
+        return { type: 'generation.accepted', chatId: value.chatId, userMessage: null };
+      }
+      const userMessage = toMessageSnapshot(value.userMessage);
+      if (!userMessage) return null;
+      return { type: 'generation.accepted', chatId: value.chatId, userMessage };
+    }
+    case 'generation.phase_changed':
+      if (
+        value.phase === 'preparing' ||
+        value.phase === 'running' ||
+        value.phase === 'awaiting_confirmation' ||
+        value.phase === 'saving' ||
+        value.phase === 'cancel_requested'
+      ) {
+        return { type: 'generation.phase_changed', phase: value.phase };
+      }
+      return null;
+    case 'generation.cancelled':
+      return { type: 'generation.cancelled' };
+    case 'generation.checkpointed': {
+      if (!isRecord(value.checkpoint)) return null;
+      const assistantMessage = toMessageSnapshot(value.checkpoint.assistantMessage);
+      if (
+        !assistantMessage ||
+        !isString(value.checkpoint.turnId) ||
+        !isNumber(value.checkpoint.iteration) ||
+        !Array.isArray(value.checkpoint.pendingToolCallIds) ||
+        !value.checkpoint.pendingToolCallIds.every(isString)
+      ) {
+        return null;
+      }
+      return {
+        type: 'generation.checkpointed',
+        checkpoint: {
+          turnId: value.checkpoint.turnId,
+          iteration: value.checkpoint.iteration,
+          assistantMessage,
+          pendingToolCallIds: value.checkpoint.pendingToolCallIds,
+        },
+      };
+    }
+    case 'confirmation.required': {
+      const preview = value.preview === null ? null : toGenerationRequestContext(value.preview);
+      if (
+        !isString(value.turnId) ||
+        !isNumber(value.iteration) ||
+        !isString(value.messageId) ||
+        !isString(value.toolCallId) ||
+        !isString(value.toolName) ||
+        !isRecord(value.args) ||
+        (preview === null && value.preview !== null)
+      ) {
+        return null;
+      }
+      return {
+        type: 'confirmation.required',
+        call: {
+          id: value.toolCallId,
+          name: value.toolName,
+          arguments: JSON.stringify(value.args),
+          iteration: value.iteration,
+          turnId: value.turnId,
+          messageId: value.messageId,
+          preview,
+        },
+      };
+    }
+    case 'generation.committed': {
+      const message = toMessageSnapshot(value.message);
+      return message ? { type: 'generation.committed', message } : null;
+    }
+    default:
+      return null;
+  }
+}
 
 function getGenerationStreamState(stream: GenerationStream): GenerationStreamState {
   const existing = generationStreamStates.get(stream);
   if (existing) return existing;
-  const state = { generationId: null, sequence: 0 };
+  const state = { generationId: null, ownerUserId: null, sequence: 0 };
   generationStreamStates.set(stream, state);
   return state;
 }
@@ -341,12 +503,13 @@ function configureGenerationStream(
 ): void {
   const state = getGenerationStreamState(stream);
   state.generationId = input.generationId;
+  state.ownerUserId = input.ownerUserId;
   state.persist = async (event) =>
     runInTransaction(async (trx) => {
       const record = await ChatGenerationRepository.appendEvent(trx, {
         generationId: input.generationId,
         ownerUserId: input.ownerUserId,
-        event: event as never,
+        event,
         idempotencyKey: `${input.generationId}:${String(event.type)}:${state.sequence}`,
       });
       publishGenerationEvent(record);
@@ -354,17 +517,83 @@ function configureGenerationStream(
     });
 }
 
-function writePersistedGenerationEvent(
+async function toRpcGenerationPayload(
+  record: ChatGenerationEventRecord,
+  ownerUserId: string,
+): Promise<Record<string, unknown>> {
+  const payload = record.payload;
+  switch (payload.type) {
+    case 'generation.accepted': {
+      const chat = await ChatRepository.getOwnedOrThrow(db, payload.chatId, ownerUserId);
+      const userMessage = payload.userMessage
+        ? await ChatRepository.getMessageById(db, payload.chatId, payload.userMessage.id)
+        : null;
+      if (payload.userMessage && !userMessage) {
+        throw new Error('Accepted generation user message could not be loaded');
+      }
+      return {
+        type: payload.type,
+        chatId: payload.chatId,
+        chat: toChatDto(chat),
+        userMessage: userMessage ? toChatMessageDto(userMessage) : null,
+      };
+    }
+    case 'generation.committed': {
+      const message = await ChatRepository.getMessageById(
+        db,
+        payload.message.chatId,
+        payload.message.id,
+      );
+      if (!message) throw new Error('Committed generation message could not be loaded');
+      return { ...payload, message: toChatMessageDto(message) };
+    }
+    case 'generation.checkpointed': {
+      const message = await ChatRepository.getMessageById(
+        db,
+        payload.checkpoint.assistantMessage.chatId,
+        payload.checkpoint.assistantMessage.id,
+      );
+      if (!message) throw new Error('Checkpoint generation message could not be loaded');
+      return {
+        ...payload,
+        checkpoint: { ...payload.checkpoint, assistantMessage: toChatMessageDto(message) },
+      };
+    }
+    case 'confirmation.required': {
+      const args = parseJsonObject(payload.call.arguments);
+      if (!args) throw new Error('Confirmation arguments are not a JSON object');
+      const run = await ChatRepository.getGenerationRunById(db, record.generationId, ownerUserId);
+      const messageId = payload.call.messageId ?? run?.assistantMessageId;
+      if (!messageId) throw new Error('Confirmation message id is missing');
+      return {
+        type: payload.type,
+        turnId: payload.call.turnId,
+        iteration: payload.call.iteration,
+        messageId,
+        toolCallId: payload.call.id,
+        toolName: payload.call.name,
+        args,
+        preview: payload.call.preview ?? null,
+      };
+    }
+    default:
+      return payload;
+  }
+}
+
+async function writePersistedGenerationEvent(
   stream: GenerationStream,
   record: ChatGenerationEventRecord,
+  ownerUserId: string,
 ): Promise<void> {
+  const payload = await toRpcGenerationPayload(record, ownerUserId);
   return stream.writeSSE({
     data: JSON.stringify({
       version: 1,
       generationId: record.generationId,
       sequence: record.sequence,
       type: record.type,
-      payload: record.payload,
+      payload,
     }),
     id: String(record.sequence),
   });
@@ -385,7 +614,7 @@ async function persistGenerationStarted(
     }),
   );
   publishGenerationEvent(record);
-  await writePersistedGenerationEvent(stream, record);
+  await writePersistedGenerationEvent(stream, record, ownerUserId);
 }
 
 function toV1GenerationEvent(
@@ -411,8 +640,15 @@ function toV1GenerationEvent(
   } else if (type === 'status') {
     payload = {
       type: 'generation.phase_changed',
-      phase: event.status === 'saving' ? 'saving' : 'preparing',
+      phase:
+        event.status === 'saving'
+          ? 'saving'
+          : event.status === 'awaiting_confirmation'
+            ? 'awaiting_confirmation'
+            : 'preparing',
     };
+  } else if (type === 'checkpointed') {
+    payload = { type: 'generation.checkpointed', checkpoint: event.checkpoint };
   } else if (type === 'committed') {
     payload = { type: 'generation.committed', message: event.message };
   } else if (type === 'cancelled') {
@@ -444,18 +680,25 @@ function toV1GenerationEvent(
     };
   }
 
-  const liveEvent =
+  const liveEvent: ChatGenerationLiveEvent | null =
     type === 'phase'
-      ? { type: 'phase-changed' as const, phase: 'running' as const }
-      : type === 'tool-step'
+      ? { type: 'phase', phase: 'generating' }
+      : type === 'tool-step' &&
+          typeof event.toolCallId === 'string' &&
+          typeof event.toolName === 'string' &&
+          (event.status === 'requested' ||
+            event.status === 'running' ||
+            event.status === 'completed' ||
+            event.status === 'failed' ||
+            event.status === 'reused')
         ? {
-            type: 'tool-step' as const,
-            toolCallId: event.toolCallId as string,
-            toolName: event.toolName as string,
-            status: event.status as 'requested' | 'running' | 'completed' | 'failed' | 'reused',
+            type: 'tool-step',
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+            status: event.status,
           }
-        : type === 'text-delta' || type === 'reasoning-delta'
-          ? { type, text: event.text as string }
+        : (type === 'text-delta' || type === 'reasoning-delta') && typeof event.text === 'string'
+          ? { type, text: event.text }
           : null;
   if (!liveEvent) throw new Error(`Unsupported generation event: ${String(type)}`);
   return {
@@ -469,9 +712,16 @@ function writeGenerationEvent(stream: GenerationStream, event: Record<string, un
   const converted = toV1GenerationEvent(state, event);
   if (converted.durable) {
     if (state.persist) {
-      return state
-        .persist(converted.durable.payload as Record<string, unknown>)
-        .then((record) => writePersistedGenerationEvent(stream, record));
+      if (isRecord(converted.durable.payload)) {
+        const event = toPersistedGenerationEvent(converted.durable.payload);
+        if (event) {
+          return state
+            .persist(event)
+            .then((record) =>
+              writePersistedGenerationEvent(stream, record, state.ownerUserId ?? ''),
+            );
+        }
+      }
     }
     return stream.writeSSE({
       data: JSON.stringify(converted.durable),
@@ -487,7 +737,7 @@ function writeErrorEvent(stream: GenerationStream, message: string) {
   if (state.persist) {
     return state
       .persist({ type: 'generation.failed', message })
-      .then((record) => writePersistedGenerationEvent(stream, record));
+      .then((record) => writePersistedGenerationEvent(stream, record, state.ownerUserId ?? ''));
   }
   const event = { version: 1, generationId: state.generationId, event: { type: 'error', message } };
   return stream.writeSSE({ data: JSON.stringify(event) });
@@ -849,7 +1099,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         );
         for (const event of events) {
           if (event.sequence <= cursor) continue;
-          await writePersistedGenerationEvent(stream, event);
+          await writePersistedGenerationEvent(stream, event, userId);
           cursor = event.sequence;
         }
 
@@ -860,7 +1110,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
         for await (const event of subscriber) {
           if (event.sequence <= cursor) continue;
-          await writePersistedGenerationEvent(stream, event);
+          await writePersistedGenerationEvent(stream, event, userId);
           cursor = event.sequence;
           if (
             ['generation.committed', 'generation.cancelled', 'generation.failed'].includes(
@@ -1041,6 +1291,9 @@ const chatByIdRoutes = new Hono<AppContext>()
             userId,
             generationId,
             chatId,
+            isCancelled: async () =>
+              (await ChatRepository.getGenerationRunById(db, generationId, userId))?.status ===
+              'cancelled',
             effectStore: createGenerationEffectStore(userId),
             persistStarted: false,
             persistTerminal: false,
@@ -1055,7 +1308,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               ),
             onDurableEvent: async (record) => {
               publishGenerationEvent(record);
-              await writePersistedGenerationEvent(stream, record);
+              await writePersistedGenerationEvent(stream, record, userId);
             },
             model: CHAT_MODEL,
             messages: chatMessages,
@@ -1139,19 +1392,24 @@ const chatByIdRoutes = new Hono<AppContext>()
             await ChatRepository.updateGenerationRun(trx, {
               id: generationId,
               ownerUserId: userId,
-              status: 'committed',
+              status: pendingToolCall ? 'awaiting_confirmation' : 'committed',
               assistantMessageId: updated.id,
             });
             return updated;
           });
           await enqueueChatEmbedding(userId, chatId);
 
-          await writeGenerationEvent(stream, {
-            type: 'committed',
-            generationId,
-            message: toChatMessageDto(committed),
-          });
           if (pendingToolCall) {
+            await writeGenerationEvent(stream, {
+              type: 'checkpointed',
+              generationId,
+              checkpoint: {
+                turnId: generationId,
+                iteration: 0,
+                assistantMessage: toChatMessageDto(committed),
+                pendingToolCallIds: [pendingToolCall.toolCallId],
+              },
+            });
             await writeGenerationEvent(stream, {
               type: 'tool-confirmation-required',
               generationId,
@@ -1160,6 +1418,12 @@ const chatByIdRoutes = new Hono<AppContext>()
               toolName: pendingToolCall.toolName,
               args: pendingToolCall.args,
               preview: pendingToolCall.preview,
+            });
+          } else {
+            await writeGenerationEvent(stream, {
+              type: 'committed',
+              generationId,
+              message: toChatMessageDto(committed),
             });
           }
           await stream.writeSSE({ data: '[DONE]' });
@@ -1330,6 +1594,9 @@ const chatByIdRoutes = new Hono<AppContext>()
             userId,
             generationId,
             chatId,
+            isCancelled: async () =>
+              (await ChatRepository.getGenerationRunById(db, generationId, userId))?.status ===
+              'cancelled',
             effectStore: createGenerationEffectStore(userId),
             persistStarted: false,
             persistTerminal: false,
@@ -1344,7 +1611,7 @@ const chatByIdRoutes = new Hono<AppContext>()
               ),
             onDurableEvent: async (record) => {
               publishGenerationEvent(record);
-              await writePersistedGenerationEvent(stream, record);
+              await writePersistedGenerationEvent(stream, record, userId);
             },
             model: CHAT_MODEL,
             messages: chatMessages,
@@ -1427,7 +1694,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             await ChatRepository.updateGenerationRun(trx, {
               id: generationId,
               ownerUserId: userId,
-              status: 'committed',
+              status: pendingToolCall ? 'awaiting_confirmation' : 'committed',
               assistantMessageId: assistantMessage.id,
             });
             return ChatRepository.getMessageById(trx, chatId, assistantMessage.id);
@@ -1435,12 +1702,17 @@ const chatByIdRoutes = new Hono<AppContext>()
           await enqueueChatEmbedding(userId, chatId);
 
           if (!committed) throw new Error('Saved reply could not be loaded');
-          await writeGenerationEvent(stream, {
-            type: 'committed',
-            generationId,
-            message: toChatMessageDto(committed),
-          });
           if (pendingToolCall) {
+            await writeGenerationEvent(stream, {
+              type: 'checkpointed',
+              generationId,
+              checkpoint: {
+                turnId: generationId,
+                iteration: 0,
+                assistantMessage: toChatMessageDto(committed),
+                pendingToolCallIds: [pendingToolCall.toolCallId],
+              },
+            });
             await writeGenerationEvent(stream, {
               type: 'tool-confirmation-required',
               generationId,
@@ -1449,6 +1721,12 @@ const chatByIdRoutes = new Hono<AppContext>()
               toolName: pendingToolCall.toolName,
               args: pendingToolCall.args,
               preview: pendingToolCall.preview,
+            });
+          } else {
+            await writeGenerationEvent(stream, {
+              type: 'committed',
+              generationId,
+              message: toChatMessageDto(committed),
             });
           }
           await stream.writeSSE({ data: '[DONE]' });
@@ -1583,6 +1861,9 @@ const chatByIdRoutes = new Hono<AppContext>()
           userId,
           generationId,
           chatId,
+          isCancelled: async () =>
+            (await ChatRepository.getGenerationRunById(db, generationId, userId))?.status ===
+            'cancelled',
           effectStore: createGenerationEffectStore(userId),
           persistStarted: false,
           persistTerminal: false,
@@ -1597,7 +1878,7 @@ const chatByIdRoutes = new Hono<AppContext>()
             ),
           onDurableEvent: async (record) => {
             publishGenerationEvent(record);
-            await writePersistedGenerationEvent(stream, record);
+            await writePersistedGenerationEvent(stream, record, userId);
           },
           model: CHAT_MODEL,
           messages: chatMessages,
@@ -1690,7 +1971,7 @@ const chatByIdRoutes = new Hono<AppContext>()
           await ChatRepository.updateGenerationRun(trx, {
             id: generationId,
             ownerUserId: userId,
-            status: 'committed',
+            status: pendingToolCall ? 'awaiting_confirmation' : 'committed',
             assistantMessageId: assistantMessage.id,
           });
           return ChatRepository.getMessageById(trx, chatId, assistantMessage.id);
@@ -1727,12 +2008,17 @@ const chatByIdRoutes = new Hono<AppContext>()
         await enqueueChatEmbedding(userId, chatId);
 
         if (!committed) throw new Error('Saved reply could not be loaded');
-        await writeGenerationEvent(stream, {
-          type: 'committed',
-          generationId,
-          message: toChatMessageDto(committed),
-        });
         if (pendingToolCall) {
+          await writeGenerationEvent(stream, {
+            type: 'checkpointed',
+            generationId,
+            checkpoint: {
+              turnId: generationId,
+              iteration: 0,
+              assistantMessage: toChatMessageDto(committed),
+              pendingToolCallIds: [pendingToolCall.toolCallId],
+            },
+          });
           await writeGenerationEvent(stream, {
             type: 'tool-confirmation-required',
             generationId,
@@ -1741,6 +2027,12 @@ const chatByIdRoutes = new Hono<AppContext>()
             toolName: pendingToolCall.toolName,
             args: pendingToolCall.args,
             preview: pendingToolCall.preview,
+          });
+        } else {
+          await writeGenerationEvent(stream, {
+            type: 'committed',
+            generationId,
+            message: toChatMessageDto(committed),
           });
         }
         await stream.writeSSE({ data: '[DONE]' });
@@ -1888,6 +2180,9 @@ export const chatsRoutes = new Hono<AppContext>()
           userId,
           generationId,
           chatId: chat.id,
+          isCancelled: async () =>
+            (await ChatRepository.getGenerationRunById(db, generationId, userId))?.status ===
+            'cancelled',
           effectStore: createGenerationEffectStore(userId),
           persistStarted: false,
           persistTerminal: false,
@@ -1902,7 +2197,7 @@ export const chatsRoutes = new Hono<AppContext>()
             ),
           onDurableEvent: async (record) => {
             publishGenerationEvent(record);
-            await writePersistedGenerationEvent(stream, record);
+            await writePersistedGenerationEvent(stream, record, userId);
           },
           model: CHAT_MODEL,
           messages: chatMessages,
@@ -1984,7 +2279,7 @@ export const chatsRoutes = new Hono<AppContext>()
           await ChatRepository.updateGenerationRun(trx, {
             id: generationId,
             ownerUserId: userId,
-            status: 'committed',
+            status: pendingToolCall ? 'awaiting_confirmation' : 'committed',
             assistantMessageId: assistantMessage.id,
           });
           return ChatRepository.getMessageById(trx, chat.id, assistantMessage.id);
@@ -1992,12 +2287,17 @@ export const chatsRoutes = new Hono<AppContext>()
         await enqueueChatEmbedding(userId, chat.id);
 
         if (!committed) throw new Error('Saved reply could not be loaded');
-        await writeGenerationEvent(stream, {
-          type: 'committed',
-          generationId,
-          message: toChatMessageDto(committed),
-        });
         if (pendingToolCall) {
+          await writeGenerationEvent(stream, {
+            type: 'checkpointed',
+            generationId,
+            checkpoint: {
+              turnId: generationId,
+              iteration: 0,
+              assistantMessage: toChatMessageDto(committed),
+              pendingToolCallIds: [pendingToolCall.toolCallId],
+            },
+          });
           await writeGenerationEvent(stream, {
             type: 'tool-confirmation-required',
             generationId,
@@ -2006,6 +2306,12 @@ export const chatsRoutes = new Hono<AppContext>()
             toolName: pendingToolCall.toolName,
             args: pendingToolCall.args,
             preview: pendingToolCall.preview,
+          });
+        } else {
+          await writeGenerationEvent(stream, {
+            type: 'committed',
+            generationId,
+            message: toChatMessageDto(committed),
           });
         }
         await stream.writeSSE({ data: '[DONE]' });

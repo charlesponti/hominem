@@ -1,3 +1,9 @@
+import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
+import {
+  createGenerationEventDeduplicator,
+  getGenerationFailureMessage,
+  toGenerationClientEvents,
+} from '@hominem/rpc/generation-events';
 import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
@@ -52,11 +58,77 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       generationIdRef.current = generationId;
       cancelRequestedRef.current = false;
       let terminalStatus: StreamStatus | null = null;
+      let lastDurableSequence = 0;
+      let shouldReconnect = true;
+      const deduplicateEvent = createGenerationEventDeduplicator();
+      let clientState = createGenerationClientState(generationId);
       setText('');
       setReasoning('');
       setToolSteps([]);
       setStatus('preparing');
       setError(null);
+
+      const handleEvent = (event: GenerationStreamEvent) => {
+        for (const clientEvent of toGenerationClientEvents(event)) {
+          clientState = reduceGenerationClientEvent(clientState, clientEvent);
+          setText(clientState.text);
+          setReasoning(clientState.reasoning);
+          setToolSteps([...clientState.toolSteps]);
+          if (clientState.phase === 'preparing') setStatus('preparing');
+          if (clientState.phase === 'running' || clientState.phase === 'saving') {
+            setStatus('streaming');
+          }
+          if (clientState.phase === 'cancel_requested') setStatus('stopping');
+          if (clientState.phase === 'cancelled') setStatus('cancelled');
+          if (clientState.phase === 'committed') setStatus('committed');
+        }
+        const failureMessage = getGenerationFailureMessage(event);
+        if (failureMessage) {
+          shouldReconnect = false;
+          throw new Error(failureMessage);
+        }
+        const liveEvent = 'event' in event ? event.event : null;
+
+        if ('payload' in event && event.type === 'generation.accepted') {
+          input.onAccepted?.(event.payload.userMessage);
+          return;
+        }
+
+        if ('payload' in event && event.type === 'generation.phase_changed') {
+          terminalStatus = clientState.phase === 'preparing' ? 'preparing' : 'streaming';
+          return;
+        }
+
+        if (liveEvent?.type === 'text-delta') {
+          return;
+        }
+
+        if (liveEvent?.type === 'reasoning-delta') {
+          return;
+        }
+
+        if (liveEvent?.type === 'tool-step') {
+          return;
+        }
+
+        if ('payload' in event && event.type === 'generation.cancelled') {
+          terminalStatus = 'cancelled';
+          input.onCancelled?.();
+          return;
+        }
+
+        if ('payload' in event && event.type === 'generation.committed') {
+          terminalStatus = 'committed';
+          input.onCommitted?.(event.payload.message);
+        }
+      };
+      const consume = (response: Response) =>
+        consumeSseResponse(response, handleEvent, undefined, {
+          deduplicateEvent,
+          onDurableSequence: (sequence) => {
+            lastDurableSequence = Math.max(lastDurableSequence, sequence);
+          },
+        });
 
       try {
         const streamRes = await client.api.chats[':id'].stream.$post(
@@ -72,59 +144,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           { init: { signal: abortController.signal } },
         );
 
-        await consumeSseResponse(streamRes, (event: GenerationStreamEvent) => {
-          const liveEvent = 'event' in event ? event.event : null;
-          if (liveEvent?.type === 'error') throw new Error(liveEvent.message);
-
-          if ('payload' in event && event.type === 'generation.accepted') {
-            input.onAccepted?.(event.payload.userMessage);
-            return;
-          }
-
-          if ('payload' in event && event.type === 'generation.phase_changed') {
-            terminalStatus = event.payload.phase === 'preparing' ? 'preparing' : 'streaming';
-            setStatus(terminalStatus);
-            return;
-          }
-
-          if (liveEvent?.type === 'text-delta') {
-            setText((current) => current + liveEvent.text);
-            return;
-          }
-
-          if (liveEvent?.type === 'reasoning-delta') {
-            setReasoning((current) => current + liveEvent.text);
-            return;
-          }
-
-          if (liveEvent?.type === 'tool-step') {
-            setToolSteps((current) => {
-              const index = current.findIndex((step) => step.toolCallId === liveEvent.toolCallId);
-              const next = {
-                toolCallId: liveEvent.toolCallId,
-                toolName: liveEvent.toolName,
-                status: liveEvent.status,
-              };
-              if (index === -1) return [...current, next];
-              return current.map((step, stepIndex) => (stepIndex === index ? next : step));
-            });
-            return;
-          }
-
-          if ('payload' in event && event.type === 'generation.cancelled') {
-            terminalStatus = 'cancelled';
-            setStatus('cancelled');
-            input.onCancelled?.();
-            return;
-          }
-
-          if ('payload' in event && event.type === 'generation.committed') {
-            terminalStatus = 'committed';
-            setText(event.payload.message.content);
-            setStatus('committed');
-            input.onCommitted?.(event.payload.message);
-          }
-        });
+        await consume(streamRes);
 
         if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
           await invalidateChatQueries(queryClient, chatId);
@@ -139,7 +159,34 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           return;
         }
 
-        const nextError = caught instanceof Error ? caught : new Error(String(caught));
+        let streamError: unknown = caught;
+        if (shouldReconnect) {
+          try {
+            const replayResponse = await client.api.chats[':id'].generations[
+              ':generationId'
+            ].stream.$get(
+              {
+                param: { id: chatId, generationId },
+              },
+              {
+                init: {
+                  signal: abortController.signal,
+                  headers: { 'Last-Event-ID': String(lastDurableSequence) },
+                },
+              },
+            );
+            await consume(replayResponse);
+            if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
+              await invalidateChatQueries(queryClient, chatId);
+            }
+            return;
+          } catch (replayError) {
+            streamError = replayError;
+          }
+        }
+
+        const nextError =
+          streamError instanceof Error ? streamError : new Error(String(streamError));
         setError(nextError);
         setStatus('failed');
         input.onFailed?.(nextError);

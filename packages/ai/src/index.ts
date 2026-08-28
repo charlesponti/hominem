@@ -12,8 +12,10 @@ export { convertSchemaToJsonSchema } from '@tanstack/ai';
 
 export type {
   ChatFunctionTool,
+  ChatToolCall,
   ChatMessages,
   ChatRequest,
+  ChatStreamChunk,
   ChatStreamToolCall,
 } from '@openrouter/sdk/models';
 

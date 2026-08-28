@@ -20,6 +20,12 @@ export interface UseChatMessagesReturn {
   updateMessage: (messageId: string, content: string) => Promise<void>;
 }
 
+function getErrorStatus(error: Error | null): number | undefined {
+  if (!error || typeof error !== 'object' || !('status' in error)) return undefined;
+  const status = error.status;
+  return typeof status === 'number' ? status : undefined;
+}
+
 export function useChatMessages({
   chatId,
   initialData,
@@ -114,15 +120,15 @@ export function useChatMessages({
     },
   });
 
-  const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
+  const messages: ChatMessageView[] = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
   const isLoading = messagesQuery.isLoading;
   const error = messagesQuery.error;
 
   return {
-    messages: messages as ChatMessageView[],
+    messages,
     isLoading,
     error,
-    isNotFound: (error as (Error & { status?: number }) | null)?.status === 404,
+    isNotFound: getErrorStatus(error) === 404,
     retry: messagesQuery.refetch,
     deleteMessage: async (messageId) => {
       if (deleteMessageMutation.isPending) return;

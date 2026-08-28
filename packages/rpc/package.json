@@ -35,6 +35,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.emit.json",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "typecheck": "tsc --noEmit"
@@ -46,6 +47,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "4.1.0",
     "react": "catalog:"
   },
   "peerDependencies": {

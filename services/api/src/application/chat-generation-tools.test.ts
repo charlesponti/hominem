@@ -1,6 +1,9 @@
+import { createGenerationState } from '@hominem/chat';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as z from 'zod';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
+import type { CapabilityDefinition } from './capability';
 import { createChatGenerationTools } from './chat-generation-tools';
 
 vi.mock('../mcp/tool-registry', () => ({
@@ -17,6 +20,23 @@ const call = {
   iteration: 0,
   turnId: 'turn-1',
 };
+const state = createGenerationState('generation-1');
+
+function previewDefinition(
+  preview: NonNullable<CapabilityDefinition['preview']>,
+): CapabilityDefinition {
+  return {
+    name: 'write_memory',
+    title: 'Write memory',
+    description: 'Writes a memory.',
+    inputSchema: z.record(z.string(), z.unknown()),
+    outputSchema: z.record(z.string(), z.unknown()),
+    readOnly: false,
+    scopes: ['memory:write'],
+    resultCap: 10,
+    preview,
+  };
+}
 
 describe('chat generation tools', () => {
   beforeEach(() => {
@@ -31,9 +51,7 @@ describe('chat generation tools', () => {
     });
     const tools = createChatGenerationTools({ userId: 'user-1', generationId: 'generation-1' });
 
-    await expect(
-      tools.execute({ call, idempotencyKey: 'key-1', state: {} as never }),
-    ).resolves.toEqual({
+    await expect(tools.execute({ call, idempotencyKey: 'key-1', state })).resolves.toEqual({
       callId: 'call-1',
       toolName: 'write_memory',
       content: '{"id":"memory-1"}',
@@ -53,16 +71,14 @@ describe('chat generation tools', () => {
     const tools = createChatGenerationTools({ userId: 'user-1', generationId: 'generation-1' });
     const malformed = { ...call, arguments: 'not-json' };
     await expect(
-      tools.execute({ call: malformed, idempotencyKey: 'key-1', state: {} as never }),
+      tools.execute({ call: malformed, idempotencyKey: 'key-1', state }),
     ).resolves.toMatchObject({
       error: true,
       content: expect.stringContaining('not-json'),
     });
 
     mockedCallTool.mockRejectedValue(new Error('registry rejected call'));
-    await expect(
-      tools.execute({ call, idempotencyKey: 'key-2', state: {} as never }),
-    ).resolves.toMatchObject({
+    await expect(tools.execute({ call, idempotencyKey: 'key-2', state })).resolves.toMatchObject({
       error: true,
       content: '{"error":"registry rejected call"}',
     });
@@ -71,7 +87,7 @@ describe('chat generation tools', () => {
       tools.execute({
         call: { ...call, arguments: '[]' },
         idempotencyKey: 'key-3',
-        state: {} as never,
+        state,
       }),
     ).resolves.toMatchObject({
       error: true,
@@ -79,9 +95,7 @@ describe('chat generation tools', () => {
     });
 
     mockedCallTool.mockRejectedValue('registry rejected without an Error');
-    await expect(
-      tools.execute({ call, idempotencyKey: 'key-4', state: {} as never }),
-    ).resolves.toMatchObject({
+    await expect(tools.execute({ call, idempotencyKey: 'key-4', state })).resolves.toMatchObject({
       error: true,
       content: '{"error":"Tool call failed"}',
     });
@@ -101,9 +115,7 @@ describe('chat generation tools', () => {
       effectStore: store,
     });
 
-    await expect(
-      tools.execute({ call, idempotencyKey: 'key-1', state: {} as never }),
-    ).resolves.toEqual(stored);
+    await expect(tools.execute({ call, idempotencyKey: 'key-1', state })).resolves.toEqual(stored);
     expect(mockedCallTool).not.toHaveBeenCalled();
     expect(store.save).not.toHaveBeenCalled();
   });
@@ -123,9 +135,9 @@ describe('chat generation tools', () => {
       effectStore: store,
     });
 
-    await expect(
-      tools.execute({ call, idempotencyKey: 'key-1', state: {} as never }),
-    ).resolves.toMatchObject({ content: 'saved' });
+    await expect(tools.execute({ call, idempotencyKey: 'key-1', state })).resolves.toMatchObject({
+      content: 'saved',
+    });
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({ generationId: 'generation-1', idempotencyKey: 'key-1' }),
     );
@@ -135,50 +147,44 @@ describe('chat generation tools', () => {
       tools.execute({
         call: { ...call, arguments: '' },
         idempotencyKey: 'key-2',
-        state: {} as never,
+        state,
       }),
     ).resolves.toMatchObject({ content: 'null', error: false });
   });
 
   it('previews confirmation tools, supports tools without previews, and normalizes preview errors', async () => {
-    mockedGetToolDefinition.mockReturnValue({
-      preview: vi.fn().mockResolvedValue({ warning: 'irreversible' }),
-    } as never);
+    mockedGetToolDefinition.mockReturnValue(
+      previewDefinition(vi.fn().mockResolvedValue({ warning: 'irreversible' })),
+    );
     const tools = createChatGenerationTools({ userId: 'user-1', generationId: 'generation-1' });
 
-    await expect(
-      tools.preview({ call, idempotencyKey: 'key-1', state: {} as never }),
-    ).resolves.toMatchObject({
+    await expect(tools.preview({ call, idempotencyKey: 'key-1', state })).resolves.toMatchObject({
       content: '{"warning":"irreversible"}',
       error: false,
     });
 
     mockedGetToolDefinition.mockReturnValue(undefined);
-    await expect(
-      tools.preview({ call, idempotencyKey: 'key-2', state: {} as never }),
-    ).resolves.toMatchObject({
+    await expect(tools.preview({ call, idempotencyKey: 'key-2', state })).resolves.toMatchObject({
       content: 'null',
       error: false,
     });
 
-    mockedGetToolDefinition.mockReturnValue({
-      preview: vi.fn().mockRejectedValue(new Error('preview unavailable')),
-    } as never);
-    await expect(
-      tools.preview({ call, idempotencyKey: 'key-3', state: {} as never }),
-    ).resolves.toMatchObject({
+    mockedGetToolDefinition.mockReturnValue(
+      previewDefinition(vi.fn().mockRejectedValue(new Error('preview unavailable'))),
+    );
+    await expect(tools.preview({ call, idempotencyKey: 'key-3', state })).resolves.toMatchObject({
       content: '{"error":"preview unavailable"}',
       error: true,
     });
 
-    mockedGetToolDefinition.mockReturnValue({
-      preview: vi.fn().mockRejectedValue('preview unavailable without an Error'),
-    } as never);
+    mockedGetToolDefinition.mockReturnValue(
+      previewDefinition(vi.fn().mockRejectedValue('preview unavailable without an Error')),
+    );
     await expect(
       tools.preview({
         call,
         idempotencyKey: 'key-4',
-        state: {} as never,
+        state,
       }),
     ).resolves.toMatchObject({
       content: '{"error":"Preview failed"}',
@@ -189,7 +195,7 @@ describe('chat generation tools', () => {
       tools.preview({
         call: { ...call, arguments: 'null' },
         idempotencyKey: 'key-5',
-        state: {} as never,
+        state,
       }),
     ).resolves.toMatchObject({
       content: '{"error":"Invalid tool arguments for write_memory"}',

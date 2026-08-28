@@ -1,37 +1,45 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
 import {
   createGenerationInterpreter as createPortsInterpreter,
   runGenerationWithPorts,
 } from './generation-interpreter';
-import { createGenerationState, type GenerationState } from './generation-machine';
+import {
+  createGenerationState,
+  type GenerationInput,
+  type GenerationState,
+} from './generation-machine';
 
 const savedMessage = {
   id: 'assistant-1',
   chatId: 'chat-1',
-  role: 'assistant' as const,
+  role: 'assistant',
   content: 'done',
-};
+} satisfies GenerationMessageSnapshot;
 
 const startContext = {
   chatId: 'chat-1',
-  kind: 'send' as const,
+  kind: 'send',
   userMessageId: 'message-1',
   targetAssistantMessageId: null,
   requestContext: {},
-};
+} satisfies GenerationStartContext;
 
 describe('generation interpreter', () => {
   it('routes every command to its injected port', async () => {
     const state: GenerationState = createGenerationState('generation-1');
     const calls: string[] = [];
-    async function* providerInputs() {
-      yield { type: 'effect-stopped' as const };
+    async function* providerInputs(): AsyncGenerator<GenerationInput> {
+      yield { type: 'effect-stopped' };
+    }
+    async function stopped(): Promise<GenerationInput> {
+      return { type: 'effect-stopped' };
     }
     const ports = {
       provider: {
         open: vi.fn(async () => providerInputs()),
-        retry: vi.fn(async () => ({ type: 'effect-stopped' as const })),
+        retry: vi.fn(stopped),
         appendToolResult: vi.fn(),
       },
       tools: {
@@ -89,10 +97,10 @@ describe('generation interpreter', () => {
     );
     await interpreter.execute({ type: 'preview-tool', call, idempotencyKey: 'key' }, state);
     await interpreter.execute({ type: 'save-generation' }, state);
-    const stopped = await interpreter.execute({ type: 'stop-effects' }, state);
+    const stoppedResult = await interpreter.execute({ type: 'stop-effects' }, state);
 
     expect(toolInput).toMatchObject({ type: 'tool-result' });
-    expect(stopped).toEqual({ type: 'effect-stopped' });
+    expect(stoppedResult).toEqual({ type: 'effect-stopped' });
     expect(calls).toEqual(['persist', 'emit', 'save', 'stop']);
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.provider.retry).toHaveBeenCalledOnce();
@@ -106,18 +114,21 @@ describe('generation interpreter', () => {
   });
 
   it('runs a generation through the port interpreter', async () => {
-    async function* completion() {
-      yield { type: 'provider-chunk' as const, chunk: { content: 'done' } };
+    async function* completion(): AsyncGenerator<GenerationInput> {
+      yield { type: 'provider-chunk', chunk: { content: 'done' } };
       yield {
-        type: 'provider-turn-completed' as const,
+        type: 'provider-turn-completed',
         requiredToolCall: false,
         confirmationCallIds: [],
       };
     }
+    async function stopped(): Promise<GenerationInput> {
+      return { type: 'effect-stopped' };
+    }
     const ports = {
       provider: {
         open: vi.fn(async () => completion()),
-        retry: vi.fn(async () => ({ type: 'effect-stopped' as const })),
+        retry: vi.fn(stopped),
       },
       tools: {
         execute: vi.fn(),
@@ -138,5 +149,181 @@ describe('generation interpreter', () => {
     ).resolves.toMatchObject({ phase: 'committed', assistantText: 'done' });
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.generation.save).toHaveBeenCalledOnce();
+  });
+
+  it('checks cancellation between provider inputs and stops cleanly', async () => {
+    let checks = 0;
+    async function* completion(): AsyncGenerator<GenerationInput> {
+      yield { type: 'provider-chunk', chunk: { content: 'partial' } };
+      yield {
+        type: 'provider-turn-completed',
+        requiredToolCall: false,
+        confirmationCallIds: [],
+      };
+    }
+    const ports = {
+      control: {
+        isCancelled: vi.fn(() => {
+          checks += 1;
+          return checks > 1;
+        }),
+      },
+      provider: {
+        open: vi.fn(async () => completion()),
+        retry: vi.fn(),
+      },
+      tools: {
+        execute: vi.fn(),
+        preview: vi.fn(),
+      },
+      events: {
+        persist: vi.fn(),
+        emit: vi.fn(),
+      },
+      generation: {
+        save: vi.fn(async () => savedMessage),
+        stop: vi.fn(),
+      },
+    };
+
+    await expect(
+      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+    ).resolves.toMatchObject({ phase: 'cancelled', assistantText: 'partial' });
+    expect(ports.generation.stop).toHaveBeenCalledOnce();
+    expect(ports.generation.save).not.toHaveBeenCalled();
+  });
+
+  it('waits through the injected retry port before reopening the provider', async () => {
+    async function* failedCompletion(): AsyncGenerator<GenerationInput> {
+      yield {
+        type: 'provider-turn-failed',
+        message: 'temporary failure',
+        transient: true,
+        attempt: 1,
+        maxAttempts: 2,
+      };
+    }
+    const waitBeforeRetry = vi.fn();
+    const ports = {
+      control: { waitBeforeRetry },
+      provider: {
+        open: vi.fn(async () => failedCompletion()),
+        retry: vi.fn(
+          (): GenerationInput => ({
+            type: 'provider-turn-completed',
+            requiredToolCall: false,
+            confirmationCallIds: [],
+          }),
+        ),
+      },
+      tools: {
+        execute: vi.fn(),
+        preview: vi.fn(),
+      },
+      events: {
+        persist: vi.fn(),
+        emit: vi.fn(),
+      },
+      generation: {
+        save: vi.fn(async () => savedMessage),
+        stop: vi.fn(),
+      },
+    };
+
+    await expect(
+      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+    ).resolves.toMatchObject({ phase: 'committed' });
+    expect(waitBeforeRetry).toHaveBeenCalledWith(
+      expect.objectContaining({ attempt: 2, state: expect.any(Object) }),
+    );
+    expect(ports.provider.retry).toHaveBeenCalledOnce();
+  });
+
+  it('turns a cancelled synchronous retry result into a terminal cancellation', async () => {
+    async function* failedCompletion(): AsyncGenerator<GenerationInput> {
+      yield {
+        type: 'provider-turn-failed',
+        message: 'temporary failure',
+        transient: true,
+        attempt: 1,
+        maxAttempts: 2,
+      };
+    }
+    let checks = 0;
+    const ports = {
+      control: {
+        isCancelled: vi.fn(() => {
+          checks += 1;
+          return checks > 1;
+        }),
+      },
+      provider: {
+        open: vi.fn(async () => failedCompletion()),
+        retry: vi.fn(
+          (): GenerationInput => ({
+            type: 'provider-turn-completed',
+            requiredToolCall: false,
+            confirmationCallIds: [],
+          }),
+        ),
+      },
+      tools: {
+        execute: vi.fn(),
+        preview: vi.fn(),
+      },
+      events: {
+        persist: vi.fn(),
+        emit: vi.fn(),
+      },
+      generation: {
+        save: vi.fn(async () => savedMessage),
+        stop: vi.fn(),
+      },
+    };
+
+    await expect(
+      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+    ).resolves.toMatchObject({ phase: 'cancelled' });
+    expect(ports.provider.retry).toHaveBeenCalledOnce();
+    expect(ports.generation.stop).toHaveBeenCalledOnce();
+  });
+
+  it('does not start tool or save effects after cancellation is observed', async () => {
+    const ports = {
+      control: { isCancelled: vi.fn(() => true) },
+      provider: {
+        open: vi.fn(),
+        retry: vi.fn(),
+        appendToolResult: vi.fn(),
+      },
+      tools: {
+        execute: vi.fn(),
+        preview: vi.fn(),
+      },
+      events: {
+        persist: vi.fn(),
+        emit: vi.fn(),
+      },
+      generation: {
+        save: vi.fn(async () => savedMessage),
+        stop: vi.fn(),
+      },
+    };
+    const interpreter = createPortsInterpreter(ports);
+    const state = createGenerationState('generation-1');
+    const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
+
+    await expect(
+      interpreter.execute({ type: 'execute-tool', call, idempotencyKey: 'key' }, state),
+    ).resolves.toEqual({ type: 'cancel-requested' });
+    await expect(
+      interpreter.execute({ type: 'preview-tool', call, idempotencyKey: 'key' }, state),
+    ).resolves.toEqual({ type: 'cancel-requested' });
+    await expect(interpreter.execute({ type: 'save-generation' }, state)).resolves.toEqual({
+      type: 'cancel-requested',
+    });
+    expect(ports.tools.execute).not.toHaveBeenCalled();
+    expect(ports.tools.preview).not.toHaveBeenCalled();
+    expect(ports.generation.save).not.toHaveBeenCalled();
   });
 });
