@@ -35,6 +35,7 @@
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
+    "@hominem/chat": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/utils": "workspace:*",
     "kysely": "catalog:",

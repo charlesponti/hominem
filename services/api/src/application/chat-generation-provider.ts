@@ -1,17 +1,20 @@
 import {
+  type AIUsageMetrics,
   type ChatFunctionTool,
   type ChatMessages,
   type ChatRequest,
+  getChatCompletionUsage,
   streamChatCompletion,
 } from '@hominem/ai';
 import {
+  type ChatModel,
   type GenerationInput,
   type GenerationState,
   type ProviderChunk,
   type ProviderToolCallDelta,
 } from '@hominem/chat';
 
-export type OpenRouterGenerationProviderOptions = {
+export type OpenRouterChatModelOptions = {
   model: string;
   messages: ChatMessages[];
   tools: ChatFunctionTool[];
@@ -20,6 +23,7 @@ export type OpenRouterGenerationProviderOptions = {
   requiresToolCall?: boolean;
   requiresConfirmation?: (toolName: string) => boolean;
   maxAttempts?: number;
+  onUsage?: (usage: AIUsageMetrics | null) => void;
 };
 
 function toProviderChunk(chunk: {
@@ -63,32 +67,37 @@ function isTransient(error: unknown): boolean {
   );
 }
 
-export function createOpenRouterGenerationProvider(options: OpenRouterGenerationProviderOptions) {
-  const messages = [...options.messages];
-  let attempt = 0;
-  let firstTurn = true;
+export class OpenRouterChatModel implements ChatModel {
+  private readonly messages: ChatMessages[];
+  private attempt = 0;
+  private firstTurn = true;
 
-  async function* open(state: GenerationState): AsyncIterable<GenerationInput> {
+  constructor(private readonly options: OpenRouterChatModelOptions) {
+    this.messages = [...options.messages];
+  }
+
+  private async *streamTurn(state: GenerationState): AsyncIterable<GenerationInput> {
     const calls = new Map<number, ProviderToolCallDelta>();
     const generationIteration = state.iteration;
     try {
       const completion = streamChatCompletion({
-        model: options.model,
-        messages,
-        tools: options.tools.length > 0 ? options.tools : undefined,
+        model: this.options.model,
+        messages: this.messages,
+        tools: this.options.tools.length > 0 ? this.options.tools : undefined,
         toolChoice:
-          options.tools.length > 0
-            ? firstTurn && options.requiresToolCall
+          this.options.tools.length > 0
+            ? this.firstTurn && this.options.requiresToolCall
               ? 'required'
               : 'auto'
             : undefined,
         parallelToolCalls: false,
-        maxTokens: options.maxTokens,
-        reasoning: options.reasoning,
+        maxTokens: this.options.maxTokens,
+        reasoning: this.options.reasoning,
       });
 
       for await (const chunk of completion) {
         if (chunk.error) throw new Error(chunk.error.message);
+        this.options.onUsage?.(getChatCompletionUsage(chunk));
         const providerChunk = toProviderChunk(chunk);
         for (const call of providerChunk.toolCalls ?? []) calls.set(call.index, call);
         yield { type: 'provider-chunk', chunk: providerChunk };
@@ -96,14 +105,15 @@ export function createOpenRouterGenerationProvider(options: OpenRouterGeneration
 
       const toolCalls = reconstructedCalls(calls);
       if (toolCalls.length > 0) {
-        messages.push({ role: 'assistant', content: null, toolCalls });
+        this.messages.push({ role: 'assistant', content: null, toolCalls });
       }
-      const confirmationCallIds = toolCalls
-        .filter((call) => options.requiresConfirmation?.(call.function.name) ?? false)
-        .map((call) => call.id);
-      const requiredToolCall = firstTurn && Boolean(options.requiresToolCall);
-      firstTurn = false;
-      attempt = 0;
+      const confirmationCallIds = toolCalls.reduce<string[]>((ids, call) => {
+        if (this.options.requiresConfirmation?.(call.function.name) ?? false) ids.push(call.id);
+        return ids;
+      }, []);
+      const requiredToolCall = this.firstTurn && Boolean(this.options.requiresToolCall);
+      this.firstTurn = false;
+      this.attempt = 0;
       yield {
         type: 'provider-turn-completed',
         requiredToolCall,
@@ -114,20 +124,22 @@ export function createOpenRouterGenerationProvider(options: OpenRouterGeneration
         type: 'provider-turn-failed',
         message: error instanceof Error ? error.message : 'Provider request failed',
         transient: isTransient(error),
-        attempt: Math.max(attempt, generationIteration),
-        maxAttempts: options.maxAttempts ?? 2,
+        attempt: Math.max(this.attempt, generationIteration),
+        maxAttempts: this.options.maxAttempts ?? 2,
       };
     }
   }
 
-  return {
-    open: ({ state }: { turnId: string; iteration: number; state: GenerationState }) => open(state),
-    appendToolResult: (callId: string, content: string) => {
-      messages.push({ role: 'tool', toolCallId: callId, content });
-    },
-    retry: ({ state }: { attempt: number; state: GenerationState }) => {
-      attempt = state.iteration;
-      return open(state);
-    },
-  };
+  open({ state }: { turnId: string; iteration: number; state: GenerationState }) {
+    return this.streamTurn(state);
+  }
+
+  appendToolResult({ call, result }: { call: { id: string }; result: { content: string } }) {
+    this.messages.push({ role: 'tool', toolCallId: call.id, content: result.content });
+  }
+
+  retry({ attempt, state }: { attempt: number; state: GenerationState }) {
+    this.attempt = attempt;
+    return this.streamTurn(state);
+  }
 }

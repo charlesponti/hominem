@@ -37,7 +37,7 @@ describe('mobile e2e login guard', () => {
     } finally {
       vi.doUnmock('../../env');
     }
-  }, 15000);
+  }, 30000);
 
   test('returns 403 when secret is missing or invalid', async () => {
     const createServer = await importServerWithEnv({

@@ -1,3 +1,4 @@
+import type { GenerationMessageSnapshot } from './generation-events';
 import {
   runGeneration,
   type GenerationCommand,
@@ -21,6 +22,11 @@ export type GenerationPorts = {
       attempt: number;
       state: GenerationState;
     }) => GenerationInput | AsyncIterable<GenerationInput> | Promise<GenerationInput>;
+    appendToolResult?: (input: {
+      call: GenerationToolCall;
+      result: ToolResult;
+      state: GenerationState;
+    }) => void | Promise<void>;
   };
   tools: {
     execute: (input: {
@@ -42,7 +48,9 @@ export type GenerationPorts = {
     emit: (event: GenerationLiveEventPayload, state: GenerationState) => void | Promise<void>;
   };
   generation: {
-    save: (state: GenerationState) => void | Promise<void>;
+    save: (
+      state: GenerationState,
+    ) => GenerationMessageSnapshot | Promise<GenerationMessageSnapshot>;
     stop: (state: GenerationState) => void | Promise<void>;
   };
 };
@@ -65,15 +73,15 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           });
         case 'retry-provider':
           return ports.provider.retry({ attempt: command.attempt, state });
-        case 'execute-tool':
-          return {
-            type: 'tool-result',
-            result: await ports.tools.execute({
-              call: command.call,
-              idempotencyKey: command.idempotencyKey,
-              state,
-            }),
-          };
+        case 'execute-tool': {
+          const result = await ports.tools.execute({
+            call: command.call,
+            idempotencyKey: command.idempotencyKey,
+            state,
+          });
+          await ports.provider.appendToolResult?.({ call: command.call, result, state });
+          return { type: 'tool-result', result };
+        }
         case 'preview-tool':
           await ports.tools.preview({
             call: command.call,
@@ -82,8 +90,7 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           });
           return;
         case 'save-generation':
-          await ports.generation.save(state);
-          return { type: 'generation-saved' };
+          return { type: 'generation-saved', message: await ports.generation.save(state) };
         case 'stop-effects':
           await ports.generation.stop(state);
           return { type: 'effect-stopped' };
@@ -97,6 +104,7 @@ export function runGenerationWithPorts(
 ): Promise<GenerationState> {
   return runGeneration({
     generationId: input.generationId,
+    startContext: input.startContext,
     initialInput: input.initialInput,
     effects: createGenerationInterpreter(input.ports),
   });

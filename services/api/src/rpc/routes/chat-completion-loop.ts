@@ -10,7 +10,19 @@ import {
 } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
+import type {
+  ChatToolRuntime,
+  RunCompletionWithToolsInput,
+  RunCompletionWithToolsResult,
+} from '../../application/chat-generation-types';
 import { callTool, getToolDefinition, type McpToolResult } from '../../mcp/tool-registry';
+
+export type {
+  ChatGenerationLiveEvent,
+  ChatToolRuntime,
+  RunCompletionWithToolsInput,
+  RunCompletionWithToolsResult,
+} from '../../application/chat-generation-types';
 
 const DEFAULT_MAX_ITERATIONS = 4;
 const MAX_PROVIDER_RETRIES = 2;
@@ -21,22 +33,6 @@ interface AccumulatingToolCall {
   name: string;
   arguments: string;
 }
-
-export type ChatGenerationLiveEvent =
-  | { type: 'text-delta'; text: string }
-  | { type: 'reasoning-delta'; text: string }
-  | {
-      type: 'tool-step';
-      toolCallId: string;
-      toolName: string;
-      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-    }
-  | { type: 'phase'; phase: 'generating' };
-
-export type ChatToolRuntime = {
-  callTool: typeof callTool;
-  getToolDefinition: typeof getToolDefinition;
-};
 
 const productionToolRuntime: ChatToolRuntime = { callTool, getToolDefinition };
 
@@ -61,18 +57,19 @@ function mergeToolCallDeltas(
   deltas: ChatStreamToolCall[],
 ) {
   for (const delta of deltas) {
+    const functionDelta = delta.function;
     const existing = accumulated.get(delta.index);
     if (!existing) {
       accumulated.set(delta.index, {
         id: delta.id ?? '',
-        name: delta.function?.name ?? '',
-        arguments: delta.function?.arguments ?? '',
+        name: functionDelta?.name ?? '',
+        arguments: functionDelta?.arguments ?? '',
       });
       continue;
     }
     if (delta.id) existing.id = delta.id;
-    if (delta.function?.name) existing.name = delta.function.name;
-    if (delta.function?.arguments) existing.arguments += delta.function.arguments;
+    if (functionDelta?.name) existing.name = functionDelta.name;
+    if (functionDelta?.arguments) existing.arguments += functionDelta.arguments;
   }
 }
 
@@ -92,39 +89,6 @@ function sumUsage(
         ? (totals.costUsd ?? 0) + (next.costUsd ?? 0)
         : null,
   };
-}
-
-export interface RunCompletionWithToolsInput {
-  userId: string;
-  model: string;
-  messages: ChatMessages[];
-  tools: ChatFunctionTool[];
-  maxTokens?: number;
-  reasoning?: ChatRequest['reasoning'];
-  maxIterations?: number;
-  requiresToolCall?: boolean;
-  /** Allows hermetic route tests to exercise the production loop with fixture tools. */
-  toolRuntime?: ChatToolRuntime;
-  onEvent?: (event: ChatGenerationLiveEvent) => Promise<void> | void;
-}
-
-export interface RunCompletionWithToolsResult {
-  assistantText: string;
-  reasoningText: string | null;
-  toolCallRecords: ChatMessageToolCallRecord[];
-  usage: AIUsageMetrics | null;
-  /**
-   * Set when the model requested a tool call flagged `requiresConfirmation`.
-   * The loop stops immediately without executing it — the caller must commit
-   * the partial reply, surface a confirmation prompt to the user, and only
-   * then invoke the tool via a separate approve/reject flow.
-   */
-  pendingToolCall: {
-    toolCallId: string;
-    toolName: string;
-    args: Record<string, unknown>;
-    preview: Record<string, unknown> | null;
-  } | null;
 }
 
 interface StreamOnceResult {

@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationDomainEvent } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 
@@ -12,8 +12,8 @@ interface StartChatInput {
   message: string;
   fileIds?: string[];
   responseLength?: 'short' | 'medium' | 'long';
-  onAccepted?: (event: Extract<GenerationStreamEvent, { type: 'generation.accepted' }>) => void;
-  onCommitted?: (event: Extract<GenerationStreamEvent, { type: 'generation.committed' }>) => void;
+  onAccepted?: (event: Extract<GenerationDomainEvent, { type: 'generation.accepted' }>) => void;
+  onCommitted?: (event: Extract<GenerationDomainEvent, { type: 'generation.committed' }>) => void;
 }
 
 export function useStartChat() {

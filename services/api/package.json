@@ -46,8 +46,8 @@
     "@better-auth/mcp": "1.7.1",
     "@better-auth/oauth-provider": "1.7.1",
     "@hominem/ai": "workspace:*",
-    "@hominem/chat": "workspace:*",
     "@hominem/career-services": "workspace:*",
+    "@hominem/chat": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/finance-services": "workspace:*",
@@ -56,9 +56,9 @@
     "@hominem/storage": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hono/node-server": "^2.0.10",
-    "@opentelemetry/api": "1.8.0",
     "@hono/zod-validator": "^0.7.6",
     "@modelcontextprotocol/server": "2.0.0",
+    "@opentelemetry/api": "1.8.0",
     "@ponti-studios/auth": "workspace:*",
     "@scalar/hono-api-reference": "^0.11.11",
     "@sentry/node": "^10.70.0",
@@ -73,9 +73,9 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",
-    "@vitest/coverage-v8": "4.1.0",
     "@types/node": "catalog:",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "4.1.0",
     "rolldown": "^1.0.0",
     "tsx": "^4.10.0"
   }

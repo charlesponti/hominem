@@ -23,6 +23,13 @@ export type GenerationPhase =
   | 'cancelled'
   | 'failed';
 
+export type GenerationActivePhase =
+  | 'preparing'
+  | 'running'
+  | 'awaiting_confirmation'
+  | 'saving'
+  | 'cancel_requested';
+
 export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
 export type ChatGenerationStatus = GenerationPhase | 'queued';
 
@@ -61,6 +68,7 @@ export type GenerationState = {
   assistantText: string;
   reasoningText: string;
   requestedToolCalls: readonly GenerationToolCall[];
+  toolCalls: readonly GenerationToolCall[];
   pendingToolCalls: readonly GenerationToolCall[];
   completedToolResults: readonly ToolResult[];
   activeToolCall: GenerationToolCall | null;
@@ -78,7 +86,7 @@ export type GenerationEventPayload =
       chatId: string;
       userMessage: GenerationMessageSnapshot;
     }
-  | { type: 'generation.phase_changed'; phase: GenerationPhase }
+  | { type: 'generation.phase_changed'; phase: GenerationActivePhase }
   | { type: 'generation.cancel_requested'; requestedAt: string; requestedBy: string }
   | { type: 'generation.checkpointed'; checkpoint: GenerationCheckpoint }
   | { type: 'tool.requested'; call: GenerationToolCall }
@@ -93,7 +101,11 @@ export type GenerationEventPayload =
       maxAttempts: number;
       metadata?: GenerationRetryMetadata;
     }
-  | { type: 'generation.committed'; metadata?: GenerationTerminalMetadata }
+  | {
+      type: 'generation.committed';
+      message: GenerationMessageSnapshot;
+      metadata?: GenerationTerminalMetadata;
+    }
   | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
   | { type: 'generation.failed'; message: string; metadata?: GenerationTerminalMetadata };
 
@@ -146,7 +158,7 @@ export type GenerationInput =
   | { type: 'confirmation-rejected'; callId: string; reason: string }
   | { type: 'cancel-requested' }
   | { type: 'effect-stopped' }
-  | { type: 'generation-saved' }
+  | { type: 'generation-saved'; message: GenerationMessageSnapshot }
   | { type: 'generation-failed'; message: string };
 
 export type GenerationCommand =
@@ -187,6 +199,7 @@ export function createGenerationState(generationId: string): GenerationState {
     assistantText: '',
     reasoningText: '',
     requestedToolCalls: [],
+    toolCalls: [],
     pendingToolCalls: [],
     completedToolResults: [],
     activeToolCall: null,
@@ -243,7 +256,9 @@ function eventIdempotencyKey(generationId: string, event: GenerationEventPayload
   switch (event.type) {
     case 'generation.started':
     case 'generation.accepted':
+      return `${generationId}:${event.type}`;
     case 'generation.phase_changed':
+      return `${generationId}:${event.type}:${event.phase}`;
     case 'generation.cancel_requested':
     case 'generation.checkpointed':
     case 'generation.committed':
@@ -269,7 +284,7 @@ function persistCommand(generationId: string, event: GenerationEventPayload): Ge
   return { type: 'persist', event, idempotencyKey: eventIdempotencyKey(generationId, event) };
 }
 
-function phaseCommands(generationId: string, phase: GenerationPhase): GenerationCommand[] {
+function phaseCommands(generationId: string, phase: GenerationActivePhase): GenerationCommand[] {
   return [
     persistCommand(generationId, { type: 'generation.phase_changed', phase }),
     { type: 'emit', event: { type: 'phase-changed', phase } },
@@ -435,7 +450,6 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
                 type: 'generation.failed',
                 message: 'The model did not perform the required lookup',
               }),
-              ...phaseCommands(state.generationId, 'failed'),
             ],
           };
         }
@@ -453,6 +467,7 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
             ...state,
             phase: 'awaiting_confirmation',
             requestedToolCalls: calls,
+            toolCalls: [...state.toolCalls, ...calls],
             pendingToolCalls: remaining,
             pendingConfirmation: first,
           },
@@ -464,7 +479,12 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         };
       }
       return executeNextTool(
-        { ...state, requestedToolCalls: calls, pendingToolCalls: calls },
+        {
+          ...state,
+          requestedToolCalls: calls,
+          toolCalls: [...state.toolCalls, ...calls],
+          pendingToolCalls: calls,
+        },
         first,
       );
     }
@@ -519,10 +539,7 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
       if (state.phase === 'awaiting_confirmation') {
         return {
           state: { ...state, phase: 'cancelled' },
-          commands: [
-            persistCommand(state.generationId, { type: 'generation.cancelled' }),
-            ...phaseCommands(state.generationId, 'cancelled'),
-          ],
+          commands: [persistCommand(state.generationId, { type: 'generation.cancelled' })],
         };
       }
       return {
@@ -535,17 +552,16 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
     case 'effect-stopped':
       return {
         state: { ...state, phase: 'cancelled' },
-        commands: [
-          persistCommand(state.generationId, { type: 'generation.cancelled' }),
-          ...phaseCommands(state.generationId, 'cancelled'),
-        ],
+        commands: [persistCommand(state.generationId, { type: 'generation.cancelled' })],
       };
     case 'generation-saved':
       return {
         state: { ...state, phase: 'committed' },
         commands: [
-          persistCommand(state.generationId, { type: 'generation.committed' }),
-          ...phaseCommands(state.generationId, 'committed'),
+          persistCommand(state.generationId, {
+            type: 'generation.committed',
+            message: input.message,
+          }),
         ],
       };
     case 'generation-failed':
@@ -553,7 +569,6 @@ export function reduceGeneration(state: GenerationState, input: GenerationInput)
         state: { ...state, phase: 'failed', lastError: input.message },
         commands: [
           persistCommand(state.generationId, { type: 'generation.failed', message: input.message }),
-          ...phaseCommands(state.generationId, 'failed'),
         ],
       };
   }

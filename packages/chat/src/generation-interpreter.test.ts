@@ -6,10 +6,18 @@ import {
 } from './generation-interpreter';
 import { createGenerationState, type GenerationState } from './generation-machine';
 
+const savedMessage = {
+  id: 'assistant-1',
+  chatId: 'chat-1',
+  role: 'assistant' as const,
+  content: 'done',
+};
+
 const startContext = {
   chatId: 'chat-1',
   kind: 'send' as const,
   userMessageId: 'message-1',
+  targetAssistantMessageId: null,
   requestContext: {},
 };
 
@@ -24,6 +32,7 @@ describe('generation interpreter', () => {
       provider: {
         open: vi.fn(async () => providerInputs()),
         retry: vi.fn(async () => ({ type: 'effect-stopped' as const })),
+        appendToolResult: vi.fn(),
       },
       tools: {
         execute: vi.fn(async () => ({
@@ -50,6 +59,7 @@ describe('generation interpreter', () => {
       generation: {
         save: vi.fn(async () => {
           calls.push('save');
+          return savedMessage;
         }),
         stop: vi.fn(async () => {
           calls.push('stop');
@@ -87,6 +97,11 @@ describe('generation interpreter', () => {
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.provider.retry).toHaveBeenCalledOnce();
     expect(ports.tools.execute).toHaveBeenCalledWith({ call, idempotencyKey: 'key', state });
+    expect(ports.provider.appendToolResult).toHaveBeenCalledWith({
+      call,
+      result: { callId: 'call-1', toolName: 'search', content: '{}', error: false },
+      state,
+    });
     expect(ports.tools.preview).toHaveBeenCalledOnce();
   });
 
@@ -113,7 +128,7 @@ describe('generation interpreter', () => {
         emit: vi.fn(),
       },
       generation: {
-        save: vi.fn(async () => undefined),
+        save: vi.fn(async () => savedMessage),
         stop: vi.fn(),
       },
     };

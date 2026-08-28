@@ -1,5 +1,5 @@
 import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { GenerationDomainEvent, GenerationStreamEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -18,7 +18,7 @@ import { chatKeys } from '~/services/notes/query-keys';
 import { invalidateChatQueries } from './chat-cache';
 
 interface StartChatOptions {
-  onAccepted?: (event: Extract<GenerationStreamEvent, { type: 'generation.accepted' }>) => void;
+  onAccepted?: (event: Extract<GenerationDomainEvent, { type: 'generation.accepted' }>) => void;
 }
 
 type StartChatInput = {

@@ -7,8 +7,20 @@ import {
   getChatCompletionUsage,
   getSpeechUsageEstimate,
 } from '@hominem/ai';
-import type { ChatMessageFileRecord, ChatMessageRecord, NoteContext } from '@hominem/db';
-import { ChatRepository, ChatSpeechRunRepository, db, runInTransaction } from '@hominem/db';
+import type { GenerationStartContext } from '@hominem/chat';
+import type {
+  ChatGenerationEventRecord,
+  ChatMessageFileRecord,
+  ChatMessageRecord,
+  NoteContext,
+} from '@hominem/db';
+import {
+  ChatGenerationRepository,
+  ChatRepository,
+  ChatSpeechRunRepository,
+  db,
+  runInTransaction,
+} from '@hominem/db';
 import { chatFileCleanupQueue, embeddingQueue } from '@hominem/queues';
 import { fileStorageService } from '@hominem/storage';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
@@ -22,6 +34,12 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
+import { runChatGeneration } from '../../application/chat-generation-service';
+import type { ChatGenerationEffectStore } from '../../application/chat-generation-tools';
+import {
+  publishGenerationEvent,
+  subscribeToGenerationEvents,
+} from '../../application/generation-live-bus';
 import { planChatTools } from '../../mcp/chat-tool-adapter';
 import { callTool } from '../../mcp/tool-registry';
 import {
@@ -41,7 +59,6 @@ import { NotFoundError, UnavailableError, ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { buildChatSystemPrompt } from '../prompts';
-import { runCompletionWithTools } from './chat-completion-loop';
 import { streamChatReplySpeech, synthesizeChatReplySpeech } from './chat-speech.service';
 import {
   toChatDto,
@@ -59,6 +76,25 @@ type SynthesizedReplyAudio = {
 };
 
 const speechTracer = getTelemetryTracer('hominem.chat');
+
+function createGenerationEffectStore(ownerUserId: string): ChatGenerationEffectStore {
+  return {
+    get: ({ generationId, idempotencyKey }) =>
+      ChatGenerationRepository.getToolEffect(db, {
+        generationId,
+        ownerUserId,
+        idempotencyKey,
+      }).then((effect) => effect?.result ?? null),
+    save: ({ generationId, idempotencyKey, toolName, result }) =>
+      ChatGenerationRepository.saveToolEffect(db, {
+        generationId,
+        ownerUserId,
+        idempotencyKey,
+        toolName,
+        result,
+      }).then((effect) => effect.result),
+  };
+}
 
 async function synthesizeReplyAudioFile(
   userId: string,
@@ -281,7 +317,11 @@ type GenerationStream = {
   writeSSE: (input: { data: string; id?: string }) => Promise<void>;
 };
 
-type GenerationStreamState = { generationId: string | null; sequence: number };
+type GenerationStreamState = {
+  generationId: string | null;
+  sequence: number;
+  persist?: (event: Record<string, unknown>) => Promise<ChatGenerationEventRecord>;
+};
 const generationStreamStates = new WeakMap<object, GenerationStreamState>();
 
 function getGenerationStreamState(stream: GenerationStream): GenerationStreamState {
@@ -290,6 +330,62 @@ function getGenerationStreamState(stream: GenerationStream): GenerationStreamSta
   const state = { generationId: null, sequence: 0 };
   generationStreamStates.set(stream, state);
   return state;
+}
+
+function configureGenerationStream(
+  stream: GenerationStream,
+  input: {
+    generationId: string;
+    ownerUserId: string;
+  },
+): void {
+  const state = getGenerationStreamState(stream);
+  state.generationId = input.generationId;
+  state.persist = async (event) =>
+    runInTransaction(async (trx) => {
+      const record = await ChatGenerationRepository.appendEvent(trx, {
+        generationId: input.generationId,
+        ownerUserId: input.ownerUserId,
+        event: event as never,
+        idempotencyKey: `${input.generationId}:${String(event.type)}:${state.sequence}`,
+      });
+      publishGenerationEvent(record);
+      return record;
+    });
+}
+
+function writePersistedGenerationEvent(
+  stream: GenerationStream,
+  record: ChatGenerationEventRecord,
+): Promise<void> {
+  return stream.writeSSE({
+    data: JSON.stringify({
+      version: 1,
+      generationId: record.generationId,
+      sequence: record.sequence,
+      type: record.type,
+      payload: record.payload,
+    }),
+    id: String(record.sequence),
+  });
+}
+
+async function persistGenerationStarted(
+  stream: GenerationStream,
+  ownerUserId: string,
+  generationId: string,
+  context: GenerationStartContext,
+): Promise<void> {
+  const record = await runInTransaction((trx) =>
+    ChatGenerationRepository.appendEvent(trx, {
+      generationId,
+      ownerUserId,
+      event: { type: 'generation.started', context },
+      idempotencyKey: `${generationId}:generation.started`,
+    }),
+  );
+  publishGenerationEvent(record);
+  await writePersistedGenerationEvent(stream, record);
 }
 
 function toV1GenerationEvent(
@@ -371,19 +467,45 @@ function toV1GenerationEvent(
 function writeGenerationEvent(stream: GenerationStream, event: Record<string, unknown>) {
   const state = getGenerationStreamState(stream);
   const converted = toV1GenerationEvent(state, event);
-  return converted.durable
-    ? stream.writeSSE({
-        data: JSON.stringify(converted.durable),
-        id: String(converted.durable.sequence),
-      })
-    : stream.writeSSE({ data: JSON.stringify(converted.live) });
+  if (converted.durable) {
+    if (state.persist) {
+      return state
+        .persist(converted.durable.payload as Record<string, unknown>)
+        .then((record) => writePersistedGenerationEvent(stream, record));
+    }
+    return stream.writeSSE({
+      data: JSON.stringify(converted.durable),
+      id: String(converted.durable.sequence),
+    });
+  }
+  return stream.writeSSE({ data: JSON.stringify(converted.live) });
 }
 
 function writeErrorEvent(stream: GenerationStream, message: string) {
   const state = getGenerationStreamState(stream);
   if (!state.generationId) throw new Error('Generation error is missing generationId');
+  if (state.persist) {
+    return state
+      .persist({ type: 'generation.failed', message })
+      .then((record) => writePersistedGenerationEvent(stream, record));
+  }
   const event = { version: 1, generationId: state.generationId, event: { type: 'error', message } };
   return stream.writeSSE({ data: JSON.stringify(event) });
+}
+
+function getGenerationReplayCursor(c: {
+  req: {
+    header: (name: string) => string | undefined;
+    query: (name: string) => string | undefined;
+  };
+}): number {
+  const value = c.req.header('Last-Event-ID') ?? c.req.query('afterSequence') ?? '0';
+  if (!/^\d+$/.test(value)) throw new ValidationError('Invalid generation event cursor');
+  const cursor = Number(value);
+  if (!Number.isSafeInteger(cursor) || cursor < 0) {
+    throw new ValidationError('Invalid generation event cursor');
+  }
+  return cursor;
 }
 
 const chatByIdRoutes = new Hono<AppContext>()
@@ -704,6 +826,56 @@ const chatByIdRoutes = new Hono<AppContext>()
     if (!run) throw new ValidationError('Generation run not found');
     return c.json(run);
   })
+  .get('/generations/:generationId/stream', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const generationId = c.req.param('generationId');
+    if (!generationId) throw new ValidationError('Generation id is required');
+
+    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    const run = await ChatRepository.getGenerationRun(db, chatId, generationId, userId);
+    if (!run) throw new ValidationError('Generation run not found');
+    const afterSequence = getGenerationReplayCursor(c);
+    const subscriber = subscribeToGenerationEvents(generationId);
+
+    return streamSSE(c, async (stream) => {
+      let cursor = afterSequence;
+      try {
+        const events = await ChatGenerationRepository.listEvents(
+          db,
+          generationId,
+          userId,
+          afterSequence,
+        );
+        for (const event of events) {
+          if (event.sequence <= cursor) continue;
+          await writePersistedGenerationEvent(stream, event);
+          cursor = event.sequence;
+        }
+
+        if (['committed', 'cancelled', 'failed'].includes(run.status)) {
+          await stream.writeSSE({ data: '[DONE]' });
+          return;
+        }
+
+        for await (const event of subscriber) {
+          if (event.sequence <= cursor) continue;
+          await writePersistedGenerationEvent(stream, event);
+          cursor = event.sequence;
+          if (
+            ['generation.committed', 'generation.cancelled', 'generation.failed'].includes(
+              event.type,
+            )
+          ) {
+            break;
+          }
+        }
+        await stream.writeSSE({ data: '[DONE]' });
+      } finally {
+        subscriber.close();
+      }
+    });
+  })
   .post('/generations/:generationId/cancel', async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
@@ -839,15 +1011,22 @@ const chatByIdRoutes = new Hono<AppContext>()
       const getDurationMs = startAIUsageTimer();
 
       return streamSSE(c, async (stream) => {
+        configureGenerationStream(stream, { generationId, ownerUserId: userId });
         let assistantText = '';
         let reasoningText: string | null = null;
-        let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
-          [];
-        let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+        let toolCallRecords: Awaited<ReturnType<typeof runChatGeneration>>['toolCallRecords'] = [];
+        let pendingToolCall: Awaited<ReturnType<typeof runChatGeneration>>['pendingToolCall'] =
           null;
         let usage: ReturnType<typeof getChatCompletionUsage> = null;
         let streamError: unknown = null;
 
+        await persistGenerationStarted(stream, userId, generationId, {
+          chatId,
+          kind: 'regenerate',
+          userMessageId: null,
+          targetAssistantMessageId: messageId,
+          requestContext: {},
+        });
         await writeGenerationEvent(stream, {
           type: 'accepted',
           generationId,
@@ -858,8 +1037,26 @@ const chatByIdRoutes = new Hono<AppContext>()
         await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
         try {
-          const result = await runCompletionWithTools({
+          const result = await runChatGeneration({
             userId,
+            generationId,
+            chatId,
+            effectStore: createGenerationEffectStore(userId),
+            persistStarted: false,
+            persistTerminal: false,
+            persistEvent: ({ event, idempotencyKey }) =>
+              runInTransaction((trx) =>
+                ChatGenerationRepository.appendEvent(trx, {
+                  generationId,
+                  ownerUserId: userId,
+                  event,
+                  idempotencyKey,
+                }),
+              ),
+            onDurableEvent: async (record) => {
+              publishGenerationEvent(record);
+              await writePersistedGenerationEvent(stream, record);
+            },
             model: CHAT_MODEL,
             messages: chatMessages,
             tools: chatToolPlan.tools,
@@ -1103,15 +1300,22 @@ const chatByIdRoutes = new Hono<AppContext>()
       const getDurationMs = startAIUsageTimer();
 
       return streamSSE(c, async (stream) => {
+        configureGenerationStream(stream, { generationId, ownerUserId: userId });
         let assistantText = '';
         let reasoningText: string | null = null;
-        let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
-          [];
-        let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
+        let toolCallRecords: Awaited<ReturnType<typeof runChatGeneration>>['toolCallRecords'] = [];
+        let pendingToolCall: Awaited<ReturnType<typeof runChatGeneration>>['pendingToolCall'] =
           null;
         let usage: ReturnType<typeof getChatCompletionUsage> = null;
         let streamError: unknown = null;
 
+        await persistGenerationStarted(stream, userId, generationId, {
+          chatId,
+          kind: 'send',
+          userMessageId: null,
+          targetAssistantMessageId: null,
+          requestContext: {},
+        });
         await writeGenerationEvent(stream, {
           type: 'accepted',
           generationId,
@@ -1122,8 +1326,26 @@ const chatByIdRoutes = new Hono<AppContext>()
         await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
         try {
-          const result = await runCompletionWithTools({
+          const result = await runChatGeneration({
             userId,
+            generationId,
+            chatId,
+            effectStore: createGenerationEffectStore(userId),
+            persistStarted: false,
+            persistTerminal: false,
+            persistEvent: ({ event, idempotencyKey }) =>
+              runInTransaction((trx) =>
+                ChatGenerationRepository.appendEvent(trx, {
+                  generationId,
+                  ownerUserId: userId,
+                  event,
+                  idempotencyKey,
+                }),
+              ),
+            onDurableEvent: async (record) => {
+              publishGenerationEvent(record);
+              await writePersistedGenerationEvent(stream, record);
+            },
             model: CHAT_MODEL,
             messages: chatMessages,
             tools: chatToolPlan.tools,
@@ -1332,15 +1554,21 @@ const chatByIdRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
 
     return streamSSE(c, async (stream) => {
+      configureGenerationStream(stream, { generationId, ownerUserId: userId });
       let assistantText = '';
       let reasoningText: string | null = null;
-      let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
-        [];
-      let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
-        null;
+      let toolCallRecords: Awaited<ReturnType<typeof runChatGeneration>>['toolCallRecords'] = [];
+      let pendingToolCall: Awaited<ReturnType<typeof runChatGeneration>>['pendingToolCall'] = null;
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
+      await persistGenerationStarted(stream, userId, generationId, {
+        chatId,
+        kind: 'send',
+        userMessageId: userMessageId,
+        targetAssistantMessageId: null,
+        requestContext: {},
+      });
       await writeGenerationEvent(stream, {
         type: 'accepted',
         generationId,
@@ -1351,8 +1579,26 @@ const chatByIdRoutes = new Hono<AppContext>()
       await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
       try {
-        const result = await runCompletionWithTools({
+        const result = await runChatGeneration({
           userId,
+          generationId,
+          chatId,
+          effectStore: createGenerationEffectStore(userId),
+          persistStarted: false,
+          persistTerminal: false,
+          persistEvent: ({ event, idempotencyKey }) =>
+            runInTransaction((trx) =>
+              ChatGenerationRepository.appendEvent(trx, {
+                generationId,
+                ownerUserId: userId,
+                event,
+                idempotencyKey,
+              }),
+            ),
+          onDurableEvent: async (record) => {
+            publishGenerationEvent(record);
+            await writePersistedGenerationEvent(stream, record);
+          },
           model: CHAT_MODEL,
           messages: chatMessages,
           tools: chatToolPlan.tools,
@@ -1613,15 +1859,21 @@ export const chatsRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
 
     return streamSSE(c, async (stream) => {
+      configureGenerationStream(stream, { generationId, ownerUserId: userId });
       let assistantText = '';
       let reasoningText: string | null = null;
-      let toolCallRecords: Awaited<ReturnType<typeof runCompletionWithTools>>['toolCallRecords'] =
-        [];
-      let pendingToolCall: Awaited<ReturnType<typeof runCompletionWithTools>>['pendingToolCall'] =
-        null;
+      let toolCallRecords: Awaited<ReturnType<typeof runChatGeneration>>['toolCallRecords'] = [];
+      let pendingToolCall: Awaited<ReturnType<typeof runChatGeneration>>['pendingToolCall'] = null;
       let usage: ReturnType<typeof getChatCompletionUsage> = null;
       let streamError: unknown = null;
 
+      await persistGenerationStarted(stream, userId, generationId, {
+        chatId: chat.id,
+        kind: 'start',
+        userMessageId: chatWithUserMessage.userMessageId,
+        targetAssistantMessageId: null,
+        requestContext: {},
+      });
       await writeGenerationEvent(stream, {
         type: 'accepted',
         generationId,
@@ -1632,8 +1884,26 @@ export const chatsRoutes = new Hono<AppContext>()
       await writeGenerationEvent(stream, { type: 'status', generationId, status: 'preparing' });
 
       try {
-        const result = await runCompletionWithTools({
+        const result = await runChatGeneration({
           userId,
+          generationId,
+          chatId: chat.id,
+          effectStore: createGenerationEffectStore(userId),
+          persistStarted: false,
+          persistTerminal: false,
+          persistEvent: ({ event, idempotencyKey }) =>
+            runInTransaction((trx) =>
+              ChatGenerationRepository.appendEvent(trx, {
+                generationId,
+                ownerUserId: userId,
+                event,
+                idempotencyKey,
+              }),
+            ),
+          onDurableEvent: async (record) => {
+            publishGenerationEvent(record);
+            await writePersistedGenerationEvent(stream, record);
+          },
           model: CHAT_MODEL,
           messages: chatMessages,
           tools: chatToolPlan.tools,

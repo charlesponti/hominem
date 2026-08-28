@@ -17,6 +17,7 @@ export type GenerationStartContext = {
   chatId: string;
   kind: 'send' | 'start' | 'regenerate';
   userMessageId: string | null;
+  targetAssistantMessageId: string | null;
   requestContext: GenerationRequestContext;
 };
 

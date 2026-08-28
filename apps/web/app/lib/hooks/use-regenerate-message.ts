@@ -1,5 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
@@ -53,7 +53,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
           },
           { init: { signal: abortController.signal } },
         );
-        await consumeSseResponse(response, (event: GenerationStreamEvent) => {
+        await consumeSseResponse(response, (event) => {
           if ('event' in event && event.event.type === 'error')
             throw new Error(event.event.message);
           if ('payload' in event && event.type === 'generation.phase_changed') {

@@ -11,6 +11,7 @@ const startContext = {
   chatId: 'chat-1',
   kind: 'send' as const,
   userMessageId: 'message-1',
+  targetAssistantMessageId: null,
   requestContext: {},
 };
 
@@ -175,7 +176,17 @@ describe('generation machine', () => {
               { type: 'provider-turn-completed', requiredToolCall: false, confirmationCallIds: [] },
             ];
           }
-          if (command.type === 'save-generation') return { type: 'generation-saved' };
+          if (command.type === 'save-generation') {
+            return {
+              type: 'generation-saved',
+              message: {
+                id: 'assistant-1',
+                chatId: 'chat-1',
+                role: 'assistant',
+                content: 'Done.',
+              },
+            };
+          }
           return undefined;
         },
       },
@@ -192,8 +203,6 @@ describe('generation machine', () => {
       'emit',
       'save-generation',
       'persist',
-      'persist',
-      'emit',
     ]);
   });
 
@@ -386,7 +395,17 @@ describe('generation machine', () => {
       effects: {
         execute: async (command) => {
           if (command.type === 'open-provider-turn') return providerInputs();
-          if (command.type === 'save-generation') return { type: 'generation-saved' };
+          if (command.type === 'save-generation') {
+            return {
+              type: 'generation-saved',
+              message: {
+                id: 'assistant-1',
+                chatId: 'chat-1',
+                role: 'assistant',
+                content: 'Done.',
+              },
+            };
+          }
           if (command.type === 'retry-provider') return { type: 'effect-stopped' };
           return undefined;
         },

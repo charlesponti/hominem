@@ -2,7 +2,7 @@ import { streamChatCompletion } from '@hominem/ai';
 import { createGenerationState } from '@hominem/chat';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createOpenRouterGenerationProvider } from './chat-generation-provider';
+import { OpenRouterChatModel } from './chat-generation-provider';
 
 vi.mock('@hominem/ai', () => ({
   streamChatCompletion: vi.fn(),
@@ -64,7 +64,7 @@ describe('OpenRouter generation provider', () => {
         },
       ]),
     );
-    const provider = createOpenRouterGenerationProvider({
+    const provider = new OpenRouterChatModel({
       model: 'test-model',
       messages: [],
       tools: [
@@ -126,7 +126,7 @@ describe('OpenRouter generation provider', () => {
       .mockReturnValueOnce(
         chunks([{ choices: [{ index: 0, finishReason: null, delta: { content: 'second' } }] }]),
       );
-    const provider = createOpenRouterGenerationProvider({
+    const provider = new OpenRouterChatModel({
       model: 'test-model',
       messages: [],
       tools: [
@@ -137,7 +137,10 @@ describe('OpenRouter generation provider', () => {
     const state = createGenerationState('generation-1');
 
     await collect(provider.open({ turnId: 'turn-1', iteration: 0, state }));
-    provider.appendToolResult('call-1', 'result');
+    provider.appendToolResult({
+      call: { id: 'call-1' },
+      result: { content: 'result' },
+    });
     await collect(
       provider.open({ turnId: 'turn-2', iteration: 1, state: { ...state, iteration: 1 } }),
     );
@@ -160,7 +163,7 @@ describe('OpenRouter generation provider', () => {
     mockedStream.mockImplementationOnce(() => {
       throw error;
     });
-    const provider = createOpenRouterGenerationProvider({
+    const provider = new OpenRouterChatModel({
       model: 'test-model',
       messages: [],
       tools: [],
@@ -216,7 +219,7 @@ describe('OpenRouter generation provider', () => {
         { error: { message: 'provider returned an error' } },
       ]),
     );
-    const provider = createOpenRouterGenerationProvider({
+    const provider = new OpenRouterChatModel({
       model: 'test-model',
       messages: [],
       tools: [],

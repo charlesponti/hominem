@@ -10,6 +10,7 @@ export default defineConfig({
     env: {
       AUTH_E2E_SECRET: 'otp-secret',
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
+      CHAT_GENERATION_SNAPSHOT_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       DATABASE_URL: TEST_DATABASE_URL,
       NODE_ENV: 'test',
       OPENROUTER_API_KEY: 'some-random-key',

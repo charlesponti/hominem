@@ -46,7 +46,13 @@ describe('generation RPC event contract', () => {
     const payloads: GenerationDomainEvent['payload'][] = [
       {
         type: 'generation.started',
-        context: { chatId: 'chat-1', kind: 'start', userMessageId: null, requestContext: {} },
+        context: {
+          chatId: 'chat-1',
+          kind: 'start',
+          userMessageId: null,
+          targetAssistantMessageId: null,
+          requestContext: {},
+        },
       },
       { type: 'generation.accepted', chatId: 'chat-1', chat, userMessage: message },
       { type: 'generation.phase_changed', phase: 'running' },

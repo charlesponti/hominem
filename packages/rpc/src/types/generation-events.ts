@@ -70,6 +70,7 @@ const startContextSchema = z.object({
   chatId: z.string().min(1),
   kind: z.enum(['send', 'start', 'regenerate']),
   userMessageId: z.string().min(1).nullable(),
+  targetAssistantMessageId: z.string().min(1).nullable(),
   requestContext: jsonObjectSchema,
 });
 const checkpointSchema = turnSchema.extend({
@@ -96,16 +97,7 @@ const durablePayloadSchemas = {
   }),
   'generation.phase_changed': z.object({
     type: z.literal('generation.phase_changed'),
-    phase: z.enum([
-      'preparing',
-      'running',
-      'awaiting_confirmation',
-      'saving',
-      'cancel_requested',
-      'committed',
-      'cancelled',
-      'failed',
-    ]),
+    phase: z.enum(['preparing', 'running', 'awaiting_confirmation', 'saving', 'cancel_requested']),
   }),
   'generation.cancel_requested': z.object({
     type: z.literal('generation.cancel_requested'),

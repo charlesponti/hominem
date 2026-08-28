@@ -154,6 +154,9 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 - Phase 1 keeps internal recovery snapshots and external full message DTOs separate: the RPC contract carries the existing full chat/message response shapes, while `@hominem/chat` remains infrastructure-independent.
 - Runtime event validation belongs at the RPC boundary. The shared Zod schemas reject unsupported versions, mismatched discriminants, unknown event types, and unsafe sequence cursors before reducers receive data.
 - Legacy streaming remains safe during the hard cutover by naming its types explicitly as `LegacyChatStreamEvent`; this lets clients migrate their imports without changing stream behavior prematurely.
+- The generation run row remains the stable ownership and foreign-key anchor; rebuilding means recomputing its mutable projection fields from event history without deleting the anchor.
+- Active resume snapshots use an API-managed 32-byte key and AES-256-GCM with generation/owner-bound associated data; terminal events clear the ciphertext in the same transaction.
+- Terminal events are mutually exclusive at both layers: the database has one partial unique index per generation, and the pure projector rejects post-terminal events before persistence.
 
 ## Migration Plan — Sequential Phases
 
@@ -173,7 +176,7 @@ Gate: focused machine, interpreter, provider, tools, registry, and database test
 - [x] Reach 100% focused statement, branch, function, and line coverage for the machine, interpreter, provider adapter, tools adapter, and registry.
 - [x] Run focused tests, typechecks, lint, and formatting.
 
-### [~] Phase 1 — Canonical domain and RPC contract
+### [x] Phase 1 — Canonical domain and RPC contract
 
 Define the complete versioned event contract before changing any route or client.
 
@@ -197,10 +200,10 @@ Gate: event history can rebuild the run projection; concurrent append, idempoten
 - [x] Add event idempotency, encrypted-snapshot, terminal-uniqueness, and tool-effect schema migrations.
 - [x] Implement ordered event append/replay, snapshot access, and idempotent tool-effect repository operations.
 - [x] Run local and test database migrations plus database code generation for the new schema.
-- [ ] Export the generation repository through the database package boundary without creating a runtime `@hominem/db` dependency in `@hominem/chat`.
-- [ ] Implement encrypted snapshot serialization, key management, minimum resume state, and snapshot version/integrity validation.
-- [ ] Implement event-history-to-run projection rebuilding and prove the run projection is disposable.
-- [ ] Enforce legal transitions, terminal-event exclusivity, safe-integer sequence conversion, and atomic rollback.
+- [x] Export the generation repository through the database package boundary without creating a runtime `@hominem/db` dependency in `@hominem/chat`.
+- [x] Implement encrypted snapshot serialization, API environment key management, minimum resume state, and snapshot version/integrity validation.
+- [x] Implement event-history-to-run projection rebuilding and prove the run projection is disposable while retaining its identity anchor.
+- [~] Enforce legal transitions, terminal-event exclusivity, safe-integer sequence conversion, and atomic rollback.
 - [ ] Add concurrent database tests for allocation, ownership, idempotency, projection atomicity, terminal uniqueness, snapshots, and tool effects.
 
 ### [~] Phase 3 — Interpreter-backed API generation

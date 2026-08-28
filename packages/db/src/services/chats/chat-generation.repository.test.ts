@@ -43,6 +43,25 @@ describe('ChatGenerationRepository', () => {
     return { userId, chatId, generationId };
   }
 
+  async function createAssistantMessage(chatId: string, userId: string) {
+    const id = randomUUID();
+    await db
+      .insertInto('app.chatMessages')
+      .values({
+        id,
+        chatId,
+        authorUserid: userId,
+        role: 'assistant',
+        content: 'Done',
+        files: null,
+        reasoning: null,
+        toolCalls: null,
+        parentMessageId: null,
+      })
+      .execute();
+    return id;
+  }
+
   it('appends ordered events idempotently and updates the projection atomically', async () => {
     const { userId, chatId, generationId } = await createGeneration();
     const event = {
@@ -51,27 +70,22 @@ describe('ChatGenerationRepository', () => {
         chatId,
         kind: 'send' as const,
         userMessageId: null,
+        targetAssistantMessageId: null,
         requestContext: {},
       },
     };
 
-    const first = await runInTransaction((trx) =>
-      ChatGenerationRepository.appendEvent(trx, {
-        generationId,
-        ownerUserId: userId,
-        event,
-        idempotencyKey: 'start-effect',
-        projection: { status: 'running' },
-      }),
-    );
-    const replay = await runInTransaction((trx) =>
-      ChatGenerationRepository.appendEvent(trx, {
-        generationId,
-        ownerUserId: userId,
-        event,
-        idempotencyKey: 'start-effect',
-        projection: { status: 'running' },
-      }),
+    const [first, replay] = await Promise.all(
+      [1, 2].map(() =>
+        runInTransaction((trx) =>
+          ChatGenerationRepository.appendEvent(trx, {
+            generationId,
+            ownerUserId: userId,
+            event,
+            idempotencyKey: 'start-effect',
+          }),
+        ),
+      ),
     );
 
     expect(first.sequence).toBe(1);
@@ -134,7 +148,13 @@ describe('ChatGenerationRepository', () => {
         ownerUserId: userId,
         event: {
           type: 'generation.started',
-          context: { chatId, kind: 'send', userMessageId: null, requestContext: {} },
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
         },
       }),
     );
@@ -165,5 +185,154 @@ describe('ChatGenerationRepository', () => {
         idempotencyKey: 'missing-effect',
       }),
     ).resolves.toBeNull();
+  });
+
+  it('rebuilds the current projection from the authoritative event history', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const assistantId = await createAssistantMessage(chatId, userId);
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.committed',
+          message: {
+            id: assistantId,
+            chatId,
+            role: 'assistant',
+            content: 'Done',
+          },
+        },
+      }),
+    );
+
+    await db
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'failed', assistantMessageId: null, errorMessage: 'drift' })
+      .where('id', '=', generationId)
+      .execute();
+
+    const rebuilt = await runInTransaction((trx) =>
+      ChatGenerationRepository.rebuildProjection(trx, generationId, userId),
+    );
+    expect(rebuilt).toMatchObject({
+      status: 'committed',
+      assistantMessageId: assistantId,
+      errorMessage: null,
+    });
+  });
+
+  it('clears the private snapshot when a terminal event is appended', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const assistantId = await createAssistantMessage(chatId, userId);
+    await ChatGenerationRepository.saveSnapshot(db, generationId, userId, 'encrypted');
+
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.committed',
+          message: {
+            id: assistantId,
+            chatId,
+            role: 'assistant',
+            content: 'Done',
+          },
+        },
+      }),
+    );
+
+    expect(await ChatGenerationRepository.getSnapshot(db, generationId, userId)).toBeNull();
+  });
+
+  it('serializes concurrent appends and rejects a second terminal outcome', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+
+    await Promise.all(
+      ['running', 'saving'].map((phase) =>
+        runInTransaction((trx) =>
+          ChatGenerationRepository.appendEvent(trx, {
+            generationId,
+            ownerUserId: userId,
+            idempotencyKey: `phase-${phase}`,
+            event: { type: 'generation.phase_changed', phase: phase as 'running' | 'saving' },
+          }),
+        ),
+      ),
+    );
+
+    const events = await ChatGenerationRepository.listEvents(db, generationId, userId);
+    expect(events.map((event) => event.sequence)).toEqual([1, 2, 3]);
+
+    const assistantId = await createAssistantMessage(chatId, userId);
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.committed',
+          message: { id: assistantId, chatId, role: 'assistant', content: 'Done' },
+        },
+      }),
+    );
+    await expect(
+      runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event: { type: 'generation.failed', message: 'too late' },
+        }),
+      ),
+    ).rejects.toThrow('followed a terminal event');
+    expect(await ChatGenerationRepository.listEvents(db, generationId, userId)).toHaveLength(4);
   });
 });
