@@ -41,8 +41,8 @@ function assertStartContext(
   }
 }
 
-function messageId(message: GenerationMessageSnapshot | undefined): string | null {
-  return message?.id ?? null;
+function messageId(message: GenerationMessageSnapshot): string {
+  return message.id;
 }
 
 function applyEvent(
