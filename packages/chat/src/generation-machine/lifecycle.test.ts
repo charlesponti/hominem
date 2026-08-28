@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { GenerationMessageSnapshot, GenerationStartContext } from '../generation-events';
 import {
   reduceCancelRequested,
   reduceEffectStopped,
@@ -7,7 +8,6 @@ import {
   reduceGenerationSaved,
   reduceStart,
 } from './lifecycle';
-import type { GenerationMessageSnapshot, GenerationStartContext } from '../generation-events';
 import type { GenerationState } from './types';
 
 function baseState(overrides: Partial<GenerationState> = {}): GenerationState {

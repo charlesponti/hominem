@@ -62,9 +62,6 @@ export function phaseCommands(
   ];
 }
 
-export function toolCallIdempotencyKey(
-  generationId: string,
-  call: GenerationToolCall,
-): string {
+export function toolCallIdempotencyKey(generationId: string, call: GenerationToolCall): string {
   return `${generationId}:${call.turnId}:${call.id}`;
 }
