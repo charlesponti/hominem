@@ -180,6 +180,8 @@ function createConfig({ config }) {
       'expo-dev-client',
       {
         launchMode: 'most-recent',
+        skipOnboarding: true,
+        showMenuAtLaunch: false,
       },
     ]);
   }
