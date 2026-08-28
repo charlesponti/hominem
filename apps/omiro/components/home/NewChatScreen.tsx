@@ -18,10 +18,12 @@ export function NewChatScreen() {
   const initialMessage = seed?.trim() || readNewChatDraft();
   const styles = useStyles((theme) => ({
     container: { backgroundColor: theme.colors.background, flex: 1 },
+    content: { flex: 1 },
   }));
 
   return (
     <View style={styles.container} testID="new-chat-screen">
+      <View style={styles.content} />
       <ComposerDock safeAreaBottom={safeAreaBottom} testID="new-chat-composer-dock">
         <Composer
           entryMode="chat"

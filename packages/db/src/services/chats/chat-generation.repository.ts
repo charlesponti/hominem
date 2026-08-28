@@ -2,6 +2,7 @@ import {
   rebuildGenerationProjection,
   reduceGenerationProjection,
   type GenerationEventPayload,
+  type GenerationMessageSnapshot,
   type GenerationRunIdentity,
   type GenerationRunProjection,
   type ToolResult,
@@ -14,10 +15,130 @@ import type {
   AppChatGenerationToolEffects,
   Json,
 } from '../../types/database';
-import type { ChatGenerationStatus } from './chat.repository';
-
 type GenerationEventRow = Selectable<AppChatGenerationEvents>;
 type ToolEffectRow = Selectable<AppChatGenerationToolEffects>;
+type GenerationRunRow = {
+  id: string;
+  chatId: string;
+  ownerUserId: string;
+  kind: string;
+  userMessageId: string | null;
+  targetAssistantMessageId: string | null;
+};
+
+type JsonObject = Record<string, unknown>;
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isMessageSnapshot(value: unknown): value is GenerationMessageSnapshot {
+  if (!value || !isJsonObject(value)) return false;
+  return (
+    isString(value.id) &&
+    isString(value.chatId) &&
+    (value.role === 'user' || value.role === 'assistant') &&
+    isString(value.content)
+  );
+}
+
+function isToolCall(value: unknown): boolean {
+  if (!value || !isJsonObject(value)) return false;
+  return (
+    isString(value.id) &&
+    isString(value.name) &&
+    isString(value.arguments) &&
+    isNumber(value.iteration) &&
+    isString(value.turnId)
+  );
+}
+
+function isToolResult(value: unknown): value is ToolResult {
+  if (!value || !isJsonObject(value)) return false;
+  return (
+    isString(value.callId) &&
+    isString(value.toolName) &&
+    isString(value.content) &&
+    typeof value.error === 'boolean'
+  );
+}
+
+function isGenerationEventPayload(value: unknown): value is GenerationEventPayload {
+  if (!isJsonObject(value) || !isString(value.type)) return false;
+  switch (value.type) {
+    case 'generation.started':
+      return isJsonObject(value.context) && isString(value.context.chatId);
+    case 'generation.accepted':
+      return (
+        isString(value.chatId) &&
+        (value.userMessage === null || isMessageSnapshot(value.userMessage))
+      );
+    case 'generation.phase_changed':
+      return isString(value.phase);
+    case 'generation.cancel_requested':
+      return isString(value.requestedAt) && isString(value.requestedBy);
+    case 'generation.checkpointed':
+      return isJsonObject(value.checkpoint);
+    case 'tool.requested':
+    case 'confirmation.required':
+      return isToolCall(value.call);
+    case 'tool.completed':
+    case 'tool.failed':
+      return isToolResult(value.result);
+    case 'confirmation.approved':
+      return isString(value.callId);
+    case 'confirmation.rejected':
+      return isString(value.callId) && isString(value.reason);
+    case 'generation.retry_scheduled':
+      return isNumber(value.attempt) && isNumber(value.maxAttempts);
+    case 'generation.committed':
+      return isMessageSnapshot(value.message);
+    case 'generation.cancelled':
+      return true;
+    case 'generation.failed':
+      return isString(value.message);
+  }
+  return false;
+}
+
+export function parseGenerationEventPayload(value: unknown): GenerationEventPayload {
+  if (!isGenerationEventPayload(value)) {
+    throw new Error('Invalid chat generation event payload');
+  }
+  return value;
+}
+
+export function parseToolResult(value: unknown): ToolResult {
+  if (!isToolResult(value)) throw new Error('Invalid chat generation tool result');
+  return value;
+}
+
+export function parseGenerationKind(value: string): GenerationRunIdentity['kind'] {
+  if (value === 'send' || value === 'start' || value === 'regenerate') return value;
+  throw new Error('Invalid chat generation kind');
+}
+
+export function toJsonValue(value: unknown): Json {
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(toJsonValue);
+  if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, toJsonValue(entry)]),
+    );
+  }
+  throw new Error('Value is not JSON serializable');
+}
 
 export interface ChatGenerationEventRecord {
   id: string;
@@ -50,30 +171,24 @@ function toEventRecord(row: GenerationEventRow): ChatGenerationEventRecord {
   if (!Number.isSafeInteger(sequence) || sequence < 1) {
     throw new Error('Chat generation event sequence is outside the safe integer range');
   }
+  const payload = parseGenerationEventPayload(row.payload);
   return {
     id: row.id,
     generationId: row.generationId,
     sequence,
-    type: row.type as GenerationEventPayload['type'],
-    payload: row.payload as GenerationEventPayload,
+    type: payload.type,
+    payload,
     idempotencyKey: row.idempotencyKey,
     createdAt: new Date(row.createdAt).toISOString(),
   };
 }
 
-function toGenerationIdentity(row: {
-  id: string;
-  chatId: string;
-  ownerUserId: string;
-  kind: string;
-  userMessageId: string | null;
-  targetAssistantMessageId: string | null;
-}): GenerationRunIdentity {
+function toGenerationIdentity(row: GenerationRunRow): GenerationRunIdentity {
   return {
     generationId: row.id,
     chatId: row.chatId,
     ownerUserId: row.ownerUserId,
-    kind: row.kind as GenerationRunIdentity['kind'],
+    kind: parseGenerationKind(row.kind),
     userMessageId: row.userMessageId,
     targetAssistantMessageId: row.targetAssistantMessageId,
   };
@@ -81,7 +196,7 @@ function toGenerationIdentity(row: {
 
 function projectionUpdate(projection: GenerationRunProjection) {
   return {
-    status: projection.status as ChatGenerationStatus,
+    status: projection.status,
     assistantMessageId: projection.assistantMessageId,
     errorMessage: projection.errorMessage,
   };
@@ -99,9 +214,24 @@ function toToolEffectRecord(row: ToolEffectRow): ChatGenerationToolEffectRecord 
     generationId: row.generationId,
     idempotencyKey: row.idempotencyKey,
     toolName: row.toolName,
-    result: row.result as ToolResult,
+    result: parseToolResult(row.result),
     createdAt: new Date(row.createdAt).toISOString(),
   };
+}
+
+namespace ChatGenerationEvents {
+  export function getByIdempotencyKey(
+    handle: DbHandle,
+    generationId: string,
+    idempotencyKey: string,
+  ): Promise<GenerationEventRow | undefined> {
+    return handle
+      .selectFrom('app.chatGenerationEvents')
+      .selectAll()
+      .where('generationId', '=', generationId)
+      .where('idempotencyKey', '=', idempotencyKey)
+      .executeTakeFirst();
+  }
 }
 
 export const ChatGenerationRepository = {
@@ -109,31 +239,23 @@ export const ChatGenerationRepository = {
     handle: DbHandle,
     input: AppendChatGenerationEventInput,
   ): Promise<ChatGenerationEventRecord> {
-    const run = (await handle
+    const run = await handle
       .selectFrom('app.chatGenerationRuns')
       .select(['id', 'chatId', 'ownerUserId', 'kind', 'userMessageId', 'targetAssistantMessageId'])
       .where('id', '=', input.generationId)
       .where('ownerUserId', '=', input.ownerUserId)
       .forUpdate()
-      .executeTakeFirstOrThrow()) as {
-      id: string;
-      chatId: string;
-      ownerUserId: string;
-      kind: string;
-      userMessageId: string | null;
-      targetAssistantMessageId: string | null;
-    };
+      .executeTakeFirstOrThrow();
 
     const existing = input.idempotencyKey
-      ? await handle
-          .selectFrom('app.chatGenerationEvents')
-          .selectAll()
-          .where('generationId', '=', input.generationId)
-          .where('idempotencyKey', '=', input.idempotencyKey)
-          .executeTakeFirst()
+      ? await ChatGenerationEvents.getByIdempotencyKey(
+          handle,
+          input.generationId,
+          input.idempotencyKey,
+        )
       : undefined;
 
-    if (existing) return toEventRecord(existing as GenerationEventRow);
+    if (existing) return toEventRecord(existing);
 
     const priorRows = await handle
       .selectFrom('app.chatGenerationEvents')
@@ -141,12 +263,15 @@ export const ChatGenerationRepository = {
       .where('generationId', '=', input.generationId)
       .orderBy('sequence', 'asc')
       .execute();
-    const events = priorRows.map((row) => toEventRecord(row as GenerationEventRow));
+    const events = priorRows.map(toEventRecord);
     const prior = events.length > 0 ? events.map((event) => event.payload) : [];
     const identity = toGenerationIdentity(run);
     const current = prior.length > 0 ? rebuildGenerationProjection(identity, prior) : null;
     const next = reduceGenerationProjection(current, identity, input.event);
     const previousSequence = events.length > 0 ? BigInt(priorRows.at(-1)!.sequence) : 0n;
+    if (previousSequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error('Chat generation event sequence is outside the safe integer range');
+    }
     const sequence = Number(previousSequence + 1n);
 
     const inserted = await handle
@@ -155,7 +280,7 @@ export const ChatGenerationRepository = {
         generationId: input.generationId,
         sequence,
         type: input.event.type,
-        payload: input.event as unknown as Json,
+        payload: toJsonValue(input.event),
         idempotencyKey: input.idempotencyKey ?? null,
       })
       .returningAll()
@@ -173,7 +298,7 @@ export const ChatGenerationRepository = {
       .where('ownerUserId', '=', input.ownerUserId)
       .executeTakeFirstOrThrow();
 
-    return toEventRecord(inserted as GenerationEventRow);
+    return toEventRecord(inserted);
   },
 
   async listEvents(
@@ -202,7 +327,7 @@ export const ChatGenerationRepository = {
       .orderBy('event.sequence', 'asc')
       .execute();
 
-    return rows.map((row) => toEventRecord(row as GenerationEventRow));
+    return rows.map(toEventRecord);
   },
 
   async saveSnapshot(
@@ -242,20 +367,13 @@ export const ChatGenerationRepository = {
     generationId: string,
     ownerUserId: string,
   ): Promise<GenerationRunProjection> {
-    const run = (await handle
+    const run = await handle
       .selectFrom('app.chatGenerationRuns')
       .select(['id', 'chatId', 'ownerUserId', 'kind', 'userMessageId', 'targetAssistantMessageId'])
       .where('id', '=', generationId)
       .where('ownerUserId', '=', ownerUserId)
       .forUpdate()
-      .executeTakeFirstOrThrow()) as {
-      id: string;
-      chatId: string;
-      ownerUserId: string;
-      kind: string;
-      userMessageId: string | null;
-      targetAssistantMessageId: string | null;
-    };
+      .executeTakeFirstOrThrow();
     const rows = await handle
       .selectFrom('app.chatGenerationEvents')
       .selectAll()
@@ -265,7 +383,7 @@ export const ChatGenerationRepository = {
     const identity = toGenerationIdentity(run);
     const projection = rebuildGenerationProjection(
       identity,
-      rows.map((row) => row.payload as unknown as GenerationEventPayload),
+      rows.map((row) => parseGenerationEventPayload(row.payload)),
     );
     await handle
       .updateTable('app.chatGenerationRuns')
@@ -301,7 +419,7 @@ export const ChatGenerationRepository = {
       .where('effect.idempotencyKey', '=', input.idempotencyKey)
       .executeTakeFirst();
 
-    return row ? toToolEffectRecord(row as ToolEffectRow) : null;
+    return row ? toToolEffectRecord(row) : null;
   },
 
   async saveToolEffect(
@@ -328,7 +446,7 @@ export const ChatGenerationRepository = {
         generationId: input.generationId,
         idempotencyKey: input.idempotencyKey,
         toolName: input.toolName,
-        result: input.result as unknown as Json,
+        result: toJsonValue(input.result),
       })
       .onConflict((conflict) => conflict.columns(['generationId', 'idempotencyKey']).doNothing())
       .execute();

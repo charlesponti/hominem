@@ -101,7 +101,7 @@ describe('useStartChat', () => {
     expect(onAccepted.mock.invocationCallOrder[0]).toBeLessThan(
       onCommitted.mock.invocationCallOrder[0]!,
     );
-    expect(result.current.isStarting).toBe(false);
+    await waitFor(() => expect(result.current.isStarting).toBe(false));
   });
 
   it('passes the first message and generation ID through the typed start route', async () => {
@@ -127,5 +127,44 @@ describe('useStartChat', () => {
         init: expect.objectContaining({ signal: expect.any(AbortSignal) }),
       }),
     );
+  });
+
+  it('surfaces a durable generation failure to the mutation', async () => {
+    mockClient.api.chats['start-stream'].$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 1,
+          type: 'generation.failed',
+          payload: { type: 'generation.failed', message: 'Unable to start chat' },
+        }),
+      ]),
+    );
+
+    const { result } = renderHook(() => useStartChat(), { wrapper });
+    await expect(result.current.start({ title: 'Hello', message: 'Hello' })).rejects.toThrow(
+      'Unable to start chat',
+    );
+    await waitFor(() => expect(result.current.error?.message).toBe('Unable to start chat'));
+  });
+
+  it('cancels the active start request', async () => {
+    let resolveResponse: (response: Response) => void = () => undefined;
+    mockClient.api.chats['start-stream'].$post.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveResponse = resolve;
+        }),
+    );
+
+    const { result } = renderHook(() => useStartChat(), { wrapper });
+    const startPromise = result.current.start({ title: 'Hello', message: 'Hello' });
+    await waitFor(() => expect(result.current.isStarting).toBe(true));
+    result.current.cancel();
+    resolveResponse(streamResponse([]));
+    await startPromise;
+
+    await waitFor(() => expect(result.current.isStarting).toBe(false));
   });
 });

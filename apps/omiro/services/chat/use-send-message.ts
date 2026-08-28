@@ -1,5 +1,9 @@
-import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
+import {
+  getGenerationFailureMessage,
+  parseGenerationStreamEvent,
+  toGenerationClientEvents,
+} from '@hominem/rpc/generation-events';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -15,7 +19,7 @@ import { chatKeys, inboxKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
 import { OFFLINE_UNAVAILABLE_ERROR } from './chat-errors';
-import { consumeSseXhr } from './consume-sse-xhr';
+import { consumeGenerationSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -84,7 +88,8 @@ export function useSendMessage({ chatId }: { chatId: string }) {
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await consumeSseXhr<GenerationStreamEvent>({
+      let clientState = createGenerationClientState(generationId);
+      await consumeGenerationSseXhr({
         url: `${API_BASE_URL}/api/chats/${chatId}/stream`,
         payload: {
           generationId,
@@ -93,13 +98,28 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           responseModality,
           responseLength: getChatResponseLength(),
         },
+        replayUrl: (afterSequence) =>
+          `${API_BASE_URL}/api/chats/${chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
         getHeaders: getAuthHeaders,
         signal: controller.signal,
         parseEvent: parseGenerationStreamEvent,
         onEvent: (event) => {
-          if ('event' in event && event.event.type === 'error') {
-            throw new Error(event.event.message);
+          for (const clientEvent of toGenerationClientEvents(event)) {
+            clientState = reduceGenerationClientEvent(clientState, clientEvent);
+            const current = generationRef.current;
+            if (!current || current.id !== generationId) continue;
+            if (clientState.phase === 'preparing' || clientState.phase === 'saving') {
+              setGeneration({ ...current, stage: clientState.phase });
+            }
+            if (clientState.phase === 'cancel_requested') {
+              setGeneration({ ...current, stage: 'stopping' });
+            }
+            if (clientState.phase === 'cancelled') {
+              setGeneration({ ...current, stage: 'cancelled' });
+            }
           }
+          const failureMessage = getGenerationFailureMessage(event);
+          if (failureMessage) throw new Error(failureMessage);
           if (
             'payload' in event &&
             event.type === 'generation.accepted' &&
@@ -118,13 +138,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             return;
           }
           if ('payload' in event && event.type === 'generation.phase_changed') {
-            const current = generationRef.current;
-            if (
-              current?.id === event.generationId &&
-              (event.payload.phase === 'preparing' || event.payload.phase === 'saving')
-            ) {
-              setGeneration({ ...current, stage: event.payload.phase });
-            }
             return;
           }
           if ('payload' in event && event.type === 'generation.committed') {
@@ -146,10 +159,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             return;
           }
           if ('payload' in event && event.type === 'generation.cancelled') {
-            const current = generationRef.current;
-            if (current?.id === event.generationId) {
-              setGeneration({ ...current, stage: 'cancelled' });
-            }
+            return;
           }
         },
       });

@@ -12,7 +12,7 @@ export type SseOutput<TEvent> =
 
 type ParseSseEvent<TEvent> = (data: string) => TEvent;
 
-const parseJson = <TEvent>(data: string) => JSON.parse(data) as TEvent;
+const parseJson = <TEvent>(data: string): TEvent => JSON.parse(data);
 
 export function createSseDecoder(): SseDecoderState {
   return { buffer: '' };

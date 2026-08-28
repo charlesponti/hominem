@@ -1,4 +1,5 @@
 import { streamChatCompletion } from '@hominem/ai';
+import type { ChatStreamChunk } from '@hominem/ai';
 import { createGenerationState } from '@hominem/chat';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,8 +13,22 @@ const mockedStream = vi.mocked(streamChatCompletion);
 type StreamChunk =
   Awaited<ReturnType<typeof streamChatCompletion>> extends AsyncIterable<infer T> ? T : never;
 
-async function* chunks(values: readonly unknown[]): AsyncGenerator<StreamChunk> {
-  yield* values as readonly StreamChunk[];
+function chunk(
+  choices: ChatStreamChunk['choices'],
+  error?: ChatStreamChunk['error'],
+): ChatStreamChunk {
+  return {
+    choices,
+    created: 0,
+    id: 'chunk-1',
+    model: 'test-model',
+    object: 'chat.completion.chunk',
+    ...(error ? { error } : {}),
+  };
+}
+
+async function* chunks(values: readonly StreamChunk[]): AsyncGenerator<StreamChunk> {
+  yield* values;
 }
 
 async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
@@ -30,38 +45,30 @@ describe('OpenRouter generation provider', () => {
   it('translates text, reasoning, and fragmented tool calls into machine inputs', async () => {
     mockedStream.mockReturnValueOnce(
       chunks([
-        {
-          choices: [
-            { index: 0, finishReason: null, delta: { content: 'Hello', reasoning: 'plan ' } },
-          ],
-        },
-        {
-          choices: [
-            {
-              index: 0,
-              finishReason: null,
-              delta: {
-                toolCalls: [
-                  { index: 1, id: 'second', function: { name: 'second', arguments: '{}' } },
-                  { index: 0, id: 'first', function: { name: 'first', arguments: '{"q' } },
-                ],
-              },
+        chunk([{ index: 0, finishReason: null, delta: { content: 'Hello', reasoning: 'plan ' } }]),
+        chunk([
+          {
+            index: 0,
+            finishReason: null,
+            delta: {
+              toolCalls: [
+                { index: 1, id: 'second', function: { name: 'second', arguments: '{}' } },
+                { index: 0, id: 'first', function: { name: 'first', arguments: '{"q' } },
+              ],
             },
-          ],
-        },
-        {
-          choices: [
-            {
-              index: 0,
-              finishReason: null,
-              delta: {
-                content: ' world',
-                reasoning: 'execute',
-                toolCalls: [{ index: 0, function: { arguments: '":"x"}' } }],
-              },
+          },
+        ]),
+        chunk([
+          {
+            index: 0,
+            finishReason: null,
+            delta: {
+              content: ' world',
+              reasoning: 'execute',
+              toolCalls: [{ index: 0, function: { arguments: '":"x"}' } }],
             },
-          ],
-        },
+          },
+        ]),
       ]),
     );
     const provider = new OpenRouterChatModel({
@@ -121,10 +128,10 @@ describe('OpenRouter generation provider', () => {
   it('only requires a tool on the first turn and preserves tool-result transcript order', async () => {
     mockedStream
       .mockReturnValueOnce(
-        chunks([{ choices: [{ index: 0, finishReason: null, delta: { content: 'first' } }] }]),
+        chunks([chunk([{ index: 0, finishReason: null, delta: { content: 'first' } }])]),
       )
       .mockReturnValueOnce(
-        chunks([{ choices: [{ index: 0, finishReason: null, delta: { content: 'second' } }] }]),
+        chunks([chunk([{ index: 0, finishReason: null, delta: { content: 'second' } }])]),
       );
     const provider = new OpenRouterChatModel({
       model: 'test-model',
@@ -205,18 +212,22 @@ describe('OpenRouter generation provider', () => {
   it('normalizes sparse chunks and provider errors without assuming Error instances', async () => {
     mockedStream.mockReturnValueOnce(
       chunks([
-        { choices: undefined },
-        { choices: [{ delta: { content: null, reasoning: null, toolCalls: [] } }] },
-        {
-          choices: [
-            {
-              delta: {
-                toolCalls: [{ index: 0, id: null, function: { name: null, arguments: null } }],
-              },
-            },
-          ],
-        },
-        { error: { message: 'provider returned an error' } },
+        chunk([]),
+        chunk([
+          {
+            index: 0,
+            finishReason: null,
+            delta: { content: null, reasoning: null, toolCalls: [] },
+          },
+        ]),
+        chunk([
+          {
+            index: 0,
+            finishReason: null,
+            delta: { toolCalls: [{ index: 0, function: {} }] },
+          },
+        ]),
+        chunk([], { code: 500, message: 'provider returned an error' }),
       ]),
     );
     const provider = new OpenRouterChatModel({
@@ -235,7 +246,10 @@ describe('OpenRouter generation provider', () => {
         }),
       ),
     ).resolves.toEqual([
-      { type: 'provider-chunk', chunk: {} },
+      {
+        type: 'provider-chunk',
+        chunk: { content: undefined, reasoning: undefined, toolCalls: undefined },
+      },
       {
         type: 'provider-chunk',
         chunk: { content: null, reasoning: null, toolCalls: [] },
@@ -245,7 +259,7 @@ describe('OpenRouter generation provider', () => {
         chunk: {
           content: undefined,
           reasoning: undefined,
-          toolCalls: [{ index: 0, id: null, function: { name: null, arguments: null } }],
+          toolCalls: [{ index: 0, function: {} }],
         },
       },
       {
@@ -277,17 +291,7 @@ describe('OpenRouter generation provider', () => {
     });
 
     mockedStream.mockReturnValueOnce(
-      chunks([
-        {
-          choices: [
-            {
-              delta: {
-                toolCalls: [{ index: 0, id: undefined, function: undefined }],
-              },
-            },
-          ],
-        },
-      ]),
+      chunks([chunk([{ index: 0, finishReason: null, delta: { toolCalls: [{ index: 0 }] } }])]),
     );
     await expect(
       collect(

@@ -8,6 +8,9 @@
     // enforcement only gets in the way of the @hominem/api/types path
     // alias below, which points outside this project's own file set.
     "composite": false,
+    // App typechecking consumes emitted package declarations. Do not let a
+    // stale local tsbuildinfo file hide changed exports in CI.
+    "incremental": false,
     // @hominem/api/types is type-only (see packages/rpc/src/core/api-client.ts)
     // — not a real runtime dependency, so it isn't listed in package.json.
     // Keep this path in sync with services/api/package.json's "./types" export.

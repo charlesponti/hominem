@@ -12,6 +12,10 @@ import {
 } from './generation-machine';
 
 export type GenerationPorts = {
+  control?: {
+    isCancelled?: (state: GenerationState) => boolean | Promise<boolean>;
+    waitBeforeRetry?: (input: { attempt: number; state: GenerationState }) => void | Promise<void>;
+  };
   provider: {
     open: (input: {
       turnId: string;
@@ -55,6 +59,37 @@ export type GenerationPorts = {
   };
 };
 
+async function isCancelled(ports: GenerationPorts, state: GenerationState): Promise<boolean> {
+  return (await ports.control?.isCancelled?.(state)) ?? false;
+}
+
+async function* monitorProviderInputs(
+  inputs: GenerationInput | AsyncIterable<GenerationInput>,
+  ports: GenerationPorts,
+  state: GenerationState,
+): AsyncIterable<GenerationInput> {
+  if (isAsyncIterable(inputs)) {
+    for await (const input of inputs) {
+      if (await isCancelled(ports, state)) {
+        yield { type: 'cancel-requested' };
+        return;
+      }
+      yield input;
+    }
+    return;
+  }
+
+  if (await isCancelled(ports, state)) {
+    yield { type: 'cancel-requested' };
+    return;
+  }
+  yield inputs;
+}
+
+function isAsyncIterable(value: object): value is AsyncIterable<GenerationInput> {
+  return Symbol.asyncIterator in value && typeof value[Symbol.asyncIterator] === 'function';
+}
+
 export function createGenerationInterpreter(ports: GenerationPorts): GenerationEffectInterpreter {
   return {
     async execute(command, state) {
@@ -66,14 +101,24 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           await ports.events.emit(command.event, state);
           return;
         case 'open-provider-turn':
-          return ports.provider.open({
-            turnId: command.turnId,
-            iteration: command.iteration,
+          return monitorProviderInputs(
+            await ports.provider.open({
+              turnId: command.turnId,
+              iteration: command.iteration,
+              state,
+            }),
+            ports,
             state,
-          });
+          );
         case 'retry-provider':
-          return ports.provider.retry({ attempt: command.attempt, state });
+          await ports.control?.waitBeforeRetry?.({ attempt: command.attempt, state });
+          return monitorProviderInputs(
+            await ports.provider.retry({ attempt: command.attempt, state }),
+            ports,
+            state,
+          );
         case 'execute-tool': {
+          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
           const result = await ports.tools.execute({
             call: command.call,
             idempotencyKey: command.idempotencyKey,
@@ -83,6 +128,7 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           return { type: 'tool-result', result };
         }
         case 'preview-tool':
+          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
           await ports.tools.preview({
             call: command.call,
             idempotencyKey: command.idempotencyKey,
@@ -90,6 +136,7 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           });
           return;
         case 'save-generation':
+          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
           return { type: 'generation-saved', message: await ports.generation.save(state) };
         case 'stop-effects':
           await ports.generation.stop(state);

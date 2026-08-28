@@ -3,8 +3,8 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import type { GenerationStartContext, GenerationState } from '@hominem/chat';
 import * as z from 'zod';
 
-const SNAPSHOT_VERSION = 1 as const;
-const ALGORITHM = 'aes-256-gcm' as const;
+const SNAPSHOT_VERSION = 1;
+const ALGORITHM = 'aes-256-gcm';
 
 const toolCallSchema = z.object({
   id: z.string().min(1),

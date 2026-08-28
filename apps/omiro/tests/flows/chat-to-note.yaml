@@ -9,7 +9,10 @@ appId: com.pontistudios.hakumi.dev
 # inbox start-chat path, so this flow starts from an existing conversation.
 
 # Write the test-mode flag to MMKV and land on the inbox.
-- openLink: 'hakumi-dev://enable-test-mode'
+- openLink: 'hakumi-dev:///enable-test-mode'
+- waitForAnimationToEnd:
+    timeout: 3000
+- openLink: 'hakumi-dev:///stream'
 - waitForAnimationToEnd:
     timeout: 3000
 - runFlow: ../subflows/ensure-authenticated.yaml
@@ -60,9 +63,12 @@ appId: com.pontistudios.hakumi.dev
 - takeScreenshot: /tmp/omiro_flow_7_accepted
 
 # Return to the inbox via the enable-test-mode deep link (redirects to '/').
-- openLink: 'hakumi-dev://enable-test-mode'
+- openLink: 'hakumi-dev:///enable-test-mode'
 - waitForAnimationToEnd:
     timeout: 4000
+- openLink: 'hakumi-dev:///stream'
+- waitForAnimationToEnd:
+    timeout: 3000
 - assertVisible:
     id: 'inbox-composer-input'
 - takeScreenshot: /tmp/omiro_flow_8_inbox

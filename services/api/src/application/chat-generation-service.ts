@@ -19,10 +19,14 @@ import type {
 function parseArguments(call: GenerationToolCall): Record<string, unknown> {
   if (!call.arguments) return {};
   const value: unknown = JSON.parse(call.arguments);
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new Error(`Invalid tool arguments for ${call.name}`);
   }
-  return value as Record<string, unknown>;
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessageToolCallRecord {
@@ -39,7 +43,7 @@ function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessag
     toolCallId: call.id,
     args,
     status: result ? (result.error ? 'failed' : 'completed') : 'pending',
-  } as ChatMessageToolCallRecord;
+  };
 }
 
 function addUsage(
@@ -78,6 +82,7 @@ export async function runChatGeneration(
     persistStarted?: boolean;
     persistTerminal?: boolean;
     onDurableEvent?: (event: ChatGenerationEventRecord) => Promise<void> | void;
+    isCancelled?: () => boolean | Promise<boolean>;
   },
 ): Promise<RunCompletionWithToolsResult> {
   let usage: AIUsageMetrics | null = null;
@@ -113,9 +118,9 @@ export async function runChatGeneration(
           return stored;
         }
         try {
-          const value = await (
-            runtime?.callTool ?? (() => Promise.reject(new Error('Tool runtime is not configured')))
-          )(input.userId, call.name, parseArguments(call), { idempotencyKey });
+          const value = await runtime.callTool(input.userId, call.name, parseArguments(call), {
+            idempotencyKey,
+          });
           const result: ToolResult = {
             callId: call.id,
             toolName: call.name,
@@ -154,7 +159,7 @@ export async function runChatGeneration(
       preview: async ({ call }) => {
         calls.set(call.id, call);
         try {
-          const definition = runtime?.getToolDefinition(call.name);
+          const definition = runtime.getToolDefinition(call.name);
           const value = definition?.preview
             ? await definition.preview(input.userId, parseArguments(call))
             : null;
@@ -213,11 +218,14 @@ export async function runChatGeneration(
         save: async (state) => ({
           id: `${input.generationId}:assistant`,
           chatId: input.chatId,
-          role: 'assistant' as const,
+          role: 'assistant',
           content: state.assistantText,
           reasoning: state.reasoningText || null,
         }),
         stop: async () => undefined,
+      },
+      control: {
+        isCancelled: input.isCancelled,
       },
     },
   });

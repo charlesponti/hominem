@@ -32,10 +32,14 @@ export type ChatGenerationEffectStore = {
 function parseArguments(call: GenerationToolCall): Record<string, unknown> {
   if (!call.arguments) return {};
   const parsed: unknown = JSON.parse(call.arguments);
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (!isRecord(parsed)) {
     throw new Error(`Invalid tool arguments for ${call.name}`);
   }
-  return parsed as Record<string, unknown>;
+  return parsed;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function result(call: GenerationToolCall, content: string, error: boolean): ToolResult {

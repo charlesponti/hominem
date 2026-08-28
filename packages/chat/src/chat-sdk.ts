@@ -21,6 +21,7 @@ export type ChatTools = GenerationPorts['tools'];
 export type ChatGenerationLifecycle = {
   events: GenerationPorts['events'];
   generation: GenerationPorts['generation'];
+  control?: GenerationPorts['control'];
 };
 
 export type ChatOptions = {
@@ -71,6 +72,7 @@ class GenerationResource implements Generation {
             provider: this.options.model,
             tools: this.options.tools,
             events: this.options.lifecycle.events,
+            control: this.options.lifecycle.control,
             generation: {
               save: async (state) => this.options.lifecycle.generation.save(state),
               stop: async (state) => this.options.lifecycle.generation.stop(state),

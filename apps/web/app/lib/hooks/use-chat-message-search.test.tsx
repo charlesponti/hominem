@@ -17,6 +17,16 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
 }
 
+function noRetryWrapper({ children }: { children: ReactNode }) {
+  return (
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      {children}
+    </QueryClientProvider>
+  );
+}
+
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
@@ -25,7 +35,9 @@ afterEach(() => {
 describe('useChatMessageSearch', () => {
   it('does not query for blank or whitespace-only input', async () => {
     vi.useFakeTimers();
-    const { result } = renderHook(() => useChatMessageSearch('chat-1', true), { wrapper });
+    const { result } = renderHook(() => useChatMessageSearch('chat-1', true), {
+      wrapper: noRetryWrapper,
+    });
 
     act(() => result.current.setQuery('   '));
     await act(async () => vi.advanceTimersByTimeAsync(250));
@@ -52,5 +64,23 @@ describe('useChatMessageSearch', () => {
     act(() => result.current.close());
     expect(result.current.query).toBe('');
     expect(result.current.debouncedQuery).toBe('');
+  });
+
+  it('surfaces a failed search response', async () => {
+    mockClient.api.chats[':id'].messages.search.$get.mockResolvedValueOnce(
+      new Response(null, { status: 500 }),
+    );
+    const { result } = renderHook(() => useChatMessageSearch('chat-1', true), {
+      wrapper: noRetryWrapper,
+    });
+
+    act(() => result.current.setQuery('release'));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await waitFor(() =>
+      expect(mockClient.api.chats[':id'].messages.search.$get).toHaveBeenCalled(),
+    );
+    await waitFor(() =>
+      expect(result.current.error?.message).toBe('Unable to search this conversation.'),
+    );
   });
 });

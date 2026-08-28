@@ -37,30 +37,36 @@ const CHAT_ID = 'chat-1';
 
 type RpcChatMessageFixture = Parameters<typeof toMessageOutput>[0];
 
+function messageFixture(overrides: Partial<RpcChatMessageFixture> = {}): RpcChatMessageFixture {
+  return {
+    id: 'message-1',
+    chatId: CHAT_ID,
+    userId: 'user-1',
+    role: 'assistant',
+    content: '',
+    files: null,
+    toolCalls: null,
+    reasoning: null,
+    parentMessageId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
 describe('toMessageOutput', () => {
   it('returns null for tool messages', () => {
-    expect(
-      toMessageOutput({
-        id: 'm1',
-        role: 'tool',
-        content: '',
-        createdAt: new Date().toISOString(),
-        chatId: CHAT_ID,
-      } as RpcChatMessageFixture),
-    ).toBeNull();
+    expect(toMessageOutput(messageFixture({ id: 'm1', role: 'tool' }))).toBeNull();
   });
 
   it('maps the audio file when present', () => {
-    const output = toMessageOutput({
-      id: 'm1',
-      role: 'assistant',
-      content: 'hi',
-      createdAt: new Date().toISOString(),
-      chatId: CHAT_ID,
-      reasoning: null,
-      toolCalls: null,
-      files: [{ type: 'audio', url: 'https://example.com/a.mp3', mimeType: 'audio/mpeg' }],
-    } as RpcChatMessageFixture);
+    const output = toMessageOutput(
+      messageFixture({
+        id: 'm1',
+        content: 'hi',
+        files: [{ type: 'audio', url: 'https://example.com/a.mp3', mimeType: 'audio/mpeg' }],
+      }),
+    );
 
     expect(output?.audio).toEqual({ url: 'https://example.com/a.mp3', mimeType: 'audio/mpeg' });
   });
@@ -74,20 +80,8 @@ describe('useChatMessages', () => {
   it('fetches, converts, and drops tool messages', async () => {
     mockChatMessagesGet.mockResolvedValueOnce({
       json: async () => [
-        {
-          id: 'm1',
-          role: 'user',
-          content: 'hi',
-          createdAt: new Date().toISOString(),
-          chatId: CHAT_ID,
-        },
-        {
-          id: 'm2',
-          role: 'tool',
-          content: 'tool output',
-          createdAt: new Date().toISOString(),
-          chatId: CHAT_ID,
-        },
+        messageFixture({ id: 'm1', role: 'user', content: 'hi' }),
+        messageFixture({ id: 'm2', role: 'tool', content: 'tool output' }),
       ],
     });
 
@@ -115,13 +109,7 @@ describe('useChatMessages', () => {
       toolCalls: null,
       isStreaming: false,
     };
-    const next = toMessageOutput({
-      id: 'server-assistant',
-      role: 'assistant',
-      content: 'hi',
-      createdAt: new Date().toISOString(),
-      chatId: CHAT_ID,
-    } as RpcChatMessageFixture);
+    const next = toMessageOutput(messageFixture({ id: 'server-assistant', content: 'hi' }));
     if (!next) throw new Error('Expected assistant message output');
 
     expect(preserveRenderKeys([next], [previous])).toMatchObject([

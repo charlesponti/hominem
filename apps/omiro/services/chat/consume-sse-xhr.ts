@@ -1,4 +1,6 @@
 import { createSseDecoder, finishSse, pushSseChunk, type SseOutput } from '@hominem/chat/sse';
+import { createGenerationEventDeduplicator } from '@hominem/rpc/generation-events';
+import type { GenerationStreamEvent } from '@hominem/rpc/types';
 import { logger } from '@hominem/telemetry';
 
 export interface ConsumeSseXhrOptions<TEvent> {
@@ -8,11 +10,24 @@ export interface ConsumeSseXhrOptions<TEvent> {
   onEvent: (event: TEvent) => void;
   onDone?: () => void;
   signal?: AbortSignal;
+  method?: 'GET' | 'POST';
   parseEvent?: (input: unknown) => TEvent;
+  deduplicateEvent?: (event: TEvent) => TEvent | null;
+  onDurableSequence?: (sequence: number) => void;
 }
 
 function getAbortError() {
   return new DOMException('Aborted', 'AbortError');
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getDurableSequence(value: unknown): number | undefined {
+  if (!isRecord(value)) return undefined;
+  const sequence = value.sequence;
+  return typeof sequence === 'number' && Number.isSafeInteger(sequence) ? sequence : undefined;
 }
 
 // XHR-based SSE client for React Native / Hermes.
@@ -26,7 +41,10 @@ export async function consumeSseXhr<TEvent>({
   onEvent,
   onDone,
   signal,
-  parseEvent = (input) => input as TEvent,
+  method = 'POST',
+  parseEvent,
+  deduplicateEvent,
+  onDurableSequence,
 }: ConsumeSseXhrOptions<TEvent>): Promise<void> {
   if (signal?.aborted) throw getAbortError();
 
@@ -39,7 +57,7 @@ export async function consumeSseXhr<TEvent>({
     let settled = false;
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
+    xhr.open(method, url);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('Accept', 'text/event-stream');
 
@@ -74,19 +92,31 @@ export async function consumeSseXhr<TEvent>({
         }
         if (output.kind !== 'event') continue;
 
-        const event = output.event as TEvent & {
-          type?: string;
-          message?: string;
-          error?: string;
-        };
+        const event = isRecord(output.event) ? output.event : null;
+        const eventType = typeof event?.type === 'string' ? event.type : undefined;
+        const eventMessage = typeof event?.message === 'string' ? event.message : undefined;
+        const eventError = typeof event?.error === 'string' ? event.error : undefined;
         if (
-          (event.type === 'error' || event.error) &&
-          typeof (event.message ?? event.error) === 'string'
+          (eventType === 'error' || eventError !== undefined) &&
+          (eventMessage ?? eventError) !== undefined
         ) {
-          rejectOnce(new Error(event.message ?? event.error));
+          rejectOnce(new Error(eventMessage ?? eventError));
           return;
         }
-        onEvent(parseEvent(output.event));
+        try {
+          const parsedEvent = parseEvent ? parseEvent(output.event) : output.event;
+          const nextEvent = deduplicateEvent ? deduplicateEvent(parsedEvent) : parsedEvent;
+          if (nextEvent) {
+            const sequence = getDurableSequence(nextEvent);
+            if (sequence !== undefined) {
+              onDurableSequence?.(sequence);
+            }
+            onEvent(nextEvent);
+          }
+        } catch (error) {
+          rejectOnce(error instanceof Error ? error : new Error(String(error)));
+          return;
+        }
       }
     };
 
@@ -126,6 +156,72 @@ export async function consumeSseXhr<TEvent>({
       rejectOnce(new Error('SSE network error'));
     };
 
-    xhr.send(JSON.stringify(payload));
+    xhr.send(method === 'GET' ? null : JSON.stringify(payload));
   });
+}
+
+export interface ConsumeGenerationSseXhrOptions {
+  url: string;
+  payload: unknown;
+  replayUrl: (afterSequence: number) => string;
+  replayMethod?: 'GET' | 'POST';
+  replayPayload?: unknown;
+  getHeaders: () => Promise<Record<string, string>>;
+  onEvent: (event: GenerationStreamEvent) => void;
+  onDone?: () => void;
+  signal?: AbortSignal;
+  parseEvent?: (input: unknown) => GenerationStreamEvent;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
+/** Consume a generation stream and resume its semantic event log once after a transport failure. */
+export async function consumeGenerationSseXhr({
+  url,
+  payload,
+  replayUrl,
+  replayMethod = 'GET',
+  replayPayload = null,
+  getHeaders,
+  onEvent,
+  onDone,
+  signal,
+  parseEvent,
+}: ConsumeGenerationSseXhrOptions): Promise<void> {
+  const deduplicateEvent = createGenerationEventDeduplicator();
+  let lastDurableSequence = 0;
+  let callbackFailed = false;
+  const consume = (input: { method: 'GET' | 'POST'; url: string; payload: unknown }) =>
+    consumeSseXhr({
+      ...input,
+      getHeaders,
+      onDone,
+      onEvent: (event: GenerationStreamEvent) => {
+        try {
+          onEvent(event);
+        } catch (error) {
+          callbackFailed = true;
+          throw error;
+        }
+      },
+      signal,
+      parseEvent,
+      deduplicateEvent,
+      onDurableSequence: (sequence) => {
+        lastDurableSequence = Math.max(lastDurableSequence, sequence);
+      },
+    });
+
+  try {
+    await consume({ method: 'POST', url, payload });
+  } catch (error) {
+    if (callbackFailed || signal?.aborted || isAbortError(error)) throw error;
+    await consume({
+      method: replayMethod,
+      url: replayUrl(lastDurableSequence),
+      payload: replayPayload,
+    });
+  }
 }

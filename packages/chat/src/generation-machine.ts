@@ -8,6 +8,7 @@
 import type {
   GenerationCheckpoint,
   GenerationMessageSnapshot,
+  GenerationRequestContext,
   GenerationRetryMetadata,
   GenerationStartContext,
   GenerationTerminalMetadata,
@@ -39,6 +40,8 @@ export type GenerationToolCall = {
   arguments: string;
   iteration: number;
   turnId: string;
+  messageId?: string;
+  preview?: GenerationRequestContext | null;
 };
 
 export type ProviderToolCallDelta = {
@@ -84,7 +87,7 @@ export type GenerationEventPayload =
   | {
       type: 'generation.accepted';
       chatId: string;
-      userMessage: GenerationMessageSnapshot;
+      userMessage: GenerationMessageSnapshot | null;
     }
   | { type: 'generation.phase_changed'; phase: GenerationActivePhase }
   | { type: 'generation.cancel_requested'; requestedAt: string; requestedBy: string }
@@ -176,7 +179,7 @@ export type GenerationStep = { state: GenerationState; commands: readonly Genera
 export type GenerationEffectResult =
   | GenerationInput
   | AsyncIterable<GenerationInput>
-  | readonly GenerationInput[]
+  | GenerationInput[]
   | undefined;
 
 export type GenerationEffectInterpreter = {
@@ -214,11 +217,15 @@ async function* asInputs(result: GenerationEffectResult): AsyncIterable<Generati
     yield* result;
     return;
   }
-  if (typeof result === 'object' && Symbol.asyncIterator in result) {
-    yield* result as AsyncIterable<GenerationInput>;
+  if (isAsyncInputs(result)) {
+    yield* result;
     return;
   }
-  yield result as GenerationInput;
+  yield result;
+}
+
+function isAsyncInputs(value: object): value is AsyncIterable<GenerationInput> {
+  return Symbol.asyncIterator in value && typeof value[Symbol.asyncIterator] === 'function';
 }
 
 /**
@@ -252,7 +259,10 @@ export async function runGeneration(input: RunGenerationInput): Promise<Generati
   return state;
 }
 
-function eventIdempotencyKey(generationId: string, event: GenerationEventPayload): string {
+export function generationEventIdempotencyKey(
+  generationId: string,
+  event: GenerationEventPayload,
+): string {
   switch (event.type) {
     case 'generation.started':
     case 'generation.accepted':
@@ -281,7 +291,11 @@ function eventIdempotencyKey(generationId: string, event: GenerationEventPayload
 }
 
 function persistCommand(generationId: string, event: GenerationEventPayload): GenerationCommand {
-  return { type: 'persist', event, idempotencyKey: eventIdempotencyKey(generationId, event) };
+  return {
+    type: 'persist',
+    event,
+    idempotencyKey: generationEventIdempotencyKey(generationId, event),
+  };
 }
 
 function phaseCommands(generationId: string, phase: GenerationActivePhase): GenerationCommand[] {

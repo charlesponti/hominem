@@ -2,6 +2,7 @@ import {
   type AIUsageMetrics,
   type ChatFunctionTool,
   type ChatMessages,
+  type ChatToolCall,
   type ChatRequest,
   getChatCompletionUsage,
   streamChatCompletion,
@@ -43,16 +44,16 @@ function toProviderChunk(chunk: {
   return {
     content: delta?.content,
     reasoning: delta?.reasoning,
-    toolCalls: delta?.toolCalls as readonly ProviderToolCallDelta[] | undefined,
+    toolCalls: delta?.toolCalls,
   };
 }
 
-function reconstructedCalls(calls: Map<number, ProviderToolCallDelta>) {
+function reconstructedCalls(calls: Map<number, ProviderToolCallDelta>): ChatToolCall[] {
   return [...calls.entries()]
     .sort(([left], [right]) => left - right)
     .map(([, call]) => ({
       id: call.id ?? '',
-      type: 'function' as const,
+      type: 'function',
       function: {
         name: call.function?.name ?? '',
         arguments: call.function?.arguments ?? '',

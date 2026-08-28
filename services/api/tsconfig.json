@@ -2,6 +2,9 @@
   "extends": "../../tsconfig.profiles/service.json",
   "compilerOptions": {
     "composite": false,
+    // This package consumes inferred declarations across the chat/RPC
+    // boundary; stale tsbuildinfo can hide dependency type changes.
+    "incremental": false,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "lib": ["ESNext", "DOM"],

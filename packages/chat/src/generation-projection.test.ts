@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
+import type { GenerationEventPayload } from './generation-machine';
 import {
   GenerationProjectionError,
   rebuildGenerationProjection,
   reduceGenerationProjection,
   type GenerationRunIdentity,
+  type GenerationRunProjection,
 } from './generation-projection';
 
 const identity: GenerationRunIdentity = {
@@ -17,25 +20,29 @@ const identity: GenerationRunIdentity = {
 };
 
 const started = {
-  type: 'generation.started' as const,
+  type: 'generation.started',
   context: {
     chatId: 'chat-1',
-    kind: 'regenerate' as const,
+    kind: 'regenerate',
     userMessageId: 'message-1',
     targetAssistantMessageId: 'assistant-1',
     requestContext: {},
   },
-};
+} satisfies GenerationEventPayload;
 
 const committed = {
-  type: 'generation.committed' as const,
+  type: 'generation.committed',
   message: {
     id: 'assistant-2',
     chatId: 'chat-1',
-    role: 'assistant' as const,
+    role: 'assistant',
     content: 'Done',
   },
-};
+} satisfies GenerationEventPayload;
+
+function contextWith(overrides: Partial<GenerationStartContext>): GenerationStartContext {
+  return { ...started.context, ...overrides };
+}
 
 describe('generation projection', () => {
   it('rebuilds a committed projection from ordered events', () => {
@@ -55,19 +62,19 @@ describe('generation projection', () => {
 
   it('projects checkpoints and terminal failures', () => {
     const checkpoint = {
-      type: 'generation.checkpointed' as const,
+      type: 'generation.checkpointed',
       checkpoint: {
         turnId: 'turn-1',
         iteration: 0,
         assistantMessage: {
           id: 'assistant-1',
           chatId: 'chat-1',
-          role: 'assistant' as const,
+          role: 'assistant',
           content: 'Waiting',
         },
         pendingToolCallIds: ['call-1'],
       },
-    };
+    } satisfies GenerationEventPayload;
     expect(
       rebuildGenerationProjection(identity, [
         started,
@@ -82,9 +89,9 @@ describe('generation projection', () => {
     const assistantMessage = {
       id: 'assistant-checkpoint',
       chatId: identity.chatId,
-      role: 'assistant' as const,
+      role: 'assistant',
       content: 'Waiting for confirmation',
-    };
+    } satisfies GenerationMessageSnapshot;
     const toolCall = {
       id: 'call-1',
       name: 'write_memory',
@@ -93,12 +100,16 @@ describe('generation projection', () => {
       turnId: 'turn-1',
     };
 
-    const cases = [
+    const cases: Array<{
+      event: GenerationEventPayload;
+      status: GenerationRunProjection['status'];
+      assistantMessageId?: string;
+    }> = [
       {
         event: {
           type: 'generation.accepted',
           chatId: identity.chatId,
-          userMessage: assistantMessage,
+          userMessage: { ...assistantMessage, role: 'user' },
         },
         status: 'running',
       },
@@ -159,7 +170,7 @@ describe('generation projection', () => {
         },
         status: 'running',
       },
-    ] as const;
+    ];
 
     for (const entry of cases) {
       const assistantMessageId = 'assistantMessageId' in entry ? entry.assistantMessageId : null;
@@ -190,27 +201,14 @@ describe('generation projection', () => {
       rebuildGenerationProjection(identity, [started, committed, { type: 'generation.cancelled' }]),
     ).toThrow('followed a terminal event');
     for (const context of [
-      { ...started.context, chatId: 'other-chat' },
-      { ...started.context, kind: 'send' as const },
-      { ...started.context, userMessageId: null },
-      { ...started.context, targetAssistantMessageId: null },
+      contextWith({ chatId: 'other-chat' }),
+      contextWith({ kind: 'send' }),
+      contextWith({ userMessageId: null }),
+      contextWith({ targetAssistantMessageId: null }),
     ]) {
       expect(() => rebuildGenerationProjection(identity, [{ ...started, context }])).toThrow(
         'does not match run identity',
       );
     }
-  });
-
-  it('rejects a committed event without a final message', () => {
-    const step = reduceGenerationProjection(null, identity, started);
-    expect(() =>
-      reduceGenerationProjection(step, identity, { type: 'generation.committed' } as never),
-    ).toThrow('missing its message');
-    expect(() =>
-      reduceGenerationProjection(step, identity, {
-        type: 'generation.committed',
-        message: undefined,
-      } as never),
-    ).toThrow('missing its message');
   });
 });

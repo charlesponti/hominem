@@ -23,13 +23,18 @@ interface SpeechRecognitionLike extends EventTarget {
 
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
-function getSpeechRecognitionConstructor(): SpeechRecognitionConstructor | null {
-  if (typeof window === 'undefined') return null;
-  const withSpeech = window as unknown as {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  };
-  return withSpeech.SpeechRecognition ?? withSpeech.webkitSpeechRecognition ?? null;
+function isSpeechRecognitionConstructor(value: unknown): value is SpeechRecognitionConstructor {
+  return typeof value === 'function';
+}
+
+export function getSpeechRecognitionConstructor(
+  scope: object | null,
+): SpeechRecognitionConstructor | null {
+  if (!scope) return null;
+  const speechRecognition = Reflect.get(scope, 'SpeechRecognition');
+  if (isSpeechRecognitionConstructor(speechRecognition)) return speechRecognition;
+  const webkitSpeechRecognition = Reflect.get(scope, 'webkitSpeechRecognition');
+  return isSpeechRecognitionConstructor(webkitSpeechRecognition) ? webkitSpeechRecognition : null;
 }
 
 interface UseSpeechToTextOptions {
@@ -47,7 +52,7 @@ export function useSpeechToText({ onTranscript }: UseSpeechToTextOptions) {
   const finalTextRef = useRef('');
 
   useEffect(() => {
-    setIsSupported(getSpeechRecognitionConstructor() !== null);
+    setIsSupported(getSpeechRecognitionConstructor(window) !== null);
     return () => {
       recognitionRef.current?.stop();
     };
@@ -60,7 +65,7 @@ export function useSpeechToText({ onTranscript }: UseSpeechToTextOptions) {
 
   const start = useCallback(
     (seed = '') => {
-      const Recognition = getSpeechRecognitionConstructor();
+      const Recognition = getSpeechRecognitionConstructor(window);
       if (!Recognition) return;
 
       seedRef.current = seed;

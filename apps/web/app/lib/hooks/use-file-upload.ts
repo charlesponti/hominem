@@ -61,28 +61,26 @@ interface ApiErrorResponse {
   details?: Record<string, unknown>;
 }
 
-function isTestMode(): boolean {
-  return process.env.NODE_ENV === 'test';
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function parseApiErrorResponse(value: unknown): ApiErrorResponse | null {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
+export function parseApiErrorResponse(value: unknown): ApiErrorResponse | null {
+  if (!isRecord(value)) return null;
 
-  const candidate = value as Partial<ApiErrorResponse>;
   if (
-    typeof candidate.error === 'string' &&
-    typeof candidate.code === 'string' &&
-    typeof candidate.message === 'string'
+    'error' in value &&
+    typeof value.error === 'string' &&
+    'code' in value &&
+    typeof value.code === 'string' &&
+    'message' in value &&
+    typeof value.message === 'string'
   ) {
     return {
-      error: candidate.error,
-      code: candidate.code,
-      message: candidate.message,
-      ...(candidate.details && typeof candidate.details === 'object'
-        ? { details: candidate.details }
-        : {}),
+      error: value.error,
+      code: value.code,
+      message: value.message,
+      ...('details' in value && isRecord(value.details) ? { details: value.details } : {}),
     };
   }
 
@@ -102,7 +100,7 @@ function parseUploadError(xhr: XMLHttpRequest): Error {
   return new Error(xhr.statusText || `Upload failed with status ${xhr.status}`);
 }
 
-function getUploadErrorMessage(value: unknown): string {
+export function getUploadErrorMessage(value: unknown): string {
   if (value instanceof Error) {
     return value.message;
   }
@@ -112,7 +110,7 @@ function getUploadErrorMessage(value: unknown): string {
   }
 
   if (value && typeof value === 'object' && 'message' in value) {
-    const message = (value as { message?: unknown }).message;
+    const message = value.message;
     if (typeof message === 'string') {
       return message;
     }
@@ -141,15 +139,10 @@ export function useFileUpload(): UseFileUploadReturn {
   const uppyRef = useRef<InstanceType<Awaited<ReturnType<typeof loadUppyModules>>['Uppy']> | null>(
     null,
   );
-  const uppyPromiseRef = useRef<ReturnType<typeof loadUppyModules> | null>(null);
+  const uppyPromiseRef = useRef<Promise<
+    InstanceType<Awaited<ReturnType<typeof loadUppyModules>>['Uppy']>
+  > | null>(null);
   const uppyCleanupRef = useRef<(() => void) | null>(null);
-
-  // Pre-load Uppy modules in test mode for deterministic behavior
-  useEffect(() => {
-    if (isTestMode() && !uppyPromiseRef.current) {
-      uppyPromiseRef.current = loadUppyModules();
-    }
-  }, []);
 
   useEffect(
     () => () => {
@@ -166,74 +159,76 @@ export function useFileUpload(): UseFileUploadReturn {
     }
 
     if (!uppyPromiseRef.current) {
-      uppyPromiseRef.current = loadUppyModules();
+      uppyPromiseRef.current = (async () => {
+        const { Uppy, XHRUpload } = await loadUppyModules();
+
+        const uppy = new Uppy<Meta, Body>({
+          autoProceed: false,
+          allowMultipleUploadBatches: true,
+          restrictions: {
+            allowedFileTypes: [...UPLOAD_ALLOWED_MIME_TYPES],
+            maxFileSize: UPLOAD_MAX_FILE_SIZE_BYTES,
+            maxNumberOfFiles: UPLOAD_MAX_FILE_COUNT,
+          },
+        });
+
+        uppy.use(XHRUpload, {
+          endpoint: `${import.meta.env.VITE_PUBLIC_API_URL}/api/files`,
+          method: 'POST',
+          formData: true,
+          fieldName: 'file',
+          withCredentials: true,
+          headers: () => ({
+            Accept: 'application/json',
+          }),
+          allowedMetaFields: ['originalName', 'mimetype'],
+          onAfterResponse(xhr: XMLHttpRequest) {
+            if (xhr.status >= 400) {
+              throw parseUploadError(xhr);
+            }
+          },
+          getResponseData(xhr: XMLHttpRequest) {
+            return UploadResponseSchema.parse(JSON.parse(xhr.responseText));
+          },
+        });
+
+        const handleFileAdded = (file: UppyFile<Meta, Body>) => {
+          uppy.setFileMeta(file.id, {
+            originalName: file.name ?? 'file',
+            mimetype: file.type || 'application/octet-stream',
+          });
+        };
+
+        const handleProgress = (progress: number) => {
+          setUploadState((prev) => ({
+            ...prev,
+            progress,
+          }));
+        };
+
+        const handleRestrictionFailed = (file: UppyFile<Meta, Body> | undefined, error: Error) => {
+          const message = file ? `${file.name}: ${error.message}` : error.message;
+          setUploadState((prev) => ({
+            ...prev,
+            errors: [...prev.errors, message],
+          }));
+        };
+
+        uppy.on('file-added', handleFileAdded);
+        uppy.on('progress', handleProgress);
+        uppy.on('restriction-failed', handleRestrictionFailed);
+        uppyCleanupRef.current = () => {
+          uppy.off('file-added', handleFileAdded);
+          uppy.off('progress', handleProgress);
+          uppy.off('restriction-failed', handleRestrictionFailed);
+        };
+
+        uppyRef.current = uppy;
+        return uppy;
+      })();
     }
 
-    const { Uppy, XHRUpload } = await uppyPromiseRef.current;
-
-    const uppy = new Uppy<Meta, Body>({
-      autoProceed: false,
-      allowMultipleUploadBatches: true,
-      restrictions: {
-        allowedFileTypes: [...UPLOAD_ALLOWED_MIME_TYPES],
-        maxFileSize: UPLOAD_MAX_FILE_SIZE_BYTES,
-        maxNumberOfFiles: UPLOAD_MAX_FILE_COUNT,
-      },
-    });
-
-    uppy.use(XHRUpload, {
-      endpoint: `${import.meta.env.VITE_PUBLIC_API_URL}/api/files`,
-      method: 'POST',
-      formData: true,
-      fieldName: 'file',
-      withCredentials: true,
-      headers: () => ({
-        Accept: 'application/json',
-      }),
-      allowedMetaFields: ['originalName', 'mimetype'],
-      onAfterResponse(xhr: XMLHttpRequest) {
-        if (xhr.status >= 400) {
-          throw parseUploadError(xhr);
-        }
-      },
-      getResponseData(xhr: XMLHttpRequest) {
-        return UploadResponseSchema.parse(JSON.parse(xhr.responseText));
-      },
-    });
-
-    const handleFileAdded = (file: UppyFile<Meta, Body>) => {
-      uppy.setFileMeta(file.id, {
-        originalName: file.name ?? 'file',
-        mimetype: file.type || 'application/octet-stream',
-      });
-    };
-
-    const handleProgress = (progress: number) => {
-      setUploadState((prev) => ({
-        ...prev,
-        progress,
-      }));
-    };
-
-    const handleRestrictionFailed = (file: UppyFile<Meta, Body> | undefined, error: Error) => {
-      const message = file ? `${file.name}: ${error.message}` : error.message;
-      setUploadState((prev) => ({
-        ...prev,
-        errors: [...prev.errors, message],
-      }));
-    };
-
-    uppy.on('file-added', handleFileAdded);
-    uppy.on('progress', handleProgress);
-    uppy.on('restriction-failed', handleRestrictionFailed);
-    uppyCleanupRef.current = () => {
-      uppy.off('file-added', handleFileAdded);
-      uppy.off('progress', handleProgress);
-      uppy.off('restriction-failed', handleRestrictionFailed);
-    };
-
-    uppyRef.current = uppy;
-    return uppy;
+    return uppyPromiseRef.current;
   }, []);
 
   const uploadFiles = useCallback(

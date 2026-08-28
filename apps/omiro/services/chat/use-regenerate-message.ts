@@ -1,5 +1,9 @@
-import { parseGenerationStreamEvent } from '@hominem/rpc/generation-events';
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
+import {
+  getGenerationFailureMessage,
+  parseGenerationStreamEvent,
+  toGenerationClientEvents,
+} from '@hominem/rpc/generation-events';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
@@ -11,7 +15,7 @@ import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
-import { consumeSseXhr } from './consume-sse-xhr';
+import { consumeGenerationSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -29,22 +33,34 @@ export function useRegenerateMessage(chatId: string) {
     mutationFn: async ({ messageId, generationId }) => {
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      await consumeSseXhr<GenerationStreamEvent>({
+      let clientState = createGenerationClientState(generationId);
+      await consumeGenerationSseXhr({
         url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
         payload: { generationId, responseLength: getChatResponseLength() },
+        replayUrl: (afterSequence) =>
+          `${API_BASE_URL}/api/chats/${chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
         getHeaders: getAuthHeaders,
         signal: controller.signal,
         parseEvent: parseGenerationStreamEvent,
         onEvent: (event) => {
           const current = generationRef.current;
           if (!current || event.generationId !== current.id) return;
-          if ('payload' in event && event.type === 'generation.phase_changed') {
-            if (event.payload.phase === 'preparing' || event.payload.phase === 'saving')
-              setGeneration({ ...current, stage: event.payload.phase });
-            return;
+          for (const clientEvent of toGenerationClientEvents(event)) {
+            clientState = reduceGenerationClientEvent(clientState, clientEvent);
+            if (clientState.phase === 'preparing' || clientState.phase === 'saving') {
+              setGeneration({ ...current, stage: clientState.phase });
+            }
+            if (clientState.phase === 'cancel_requested') {
+              setGeneration({ ...current, stage: 'stopping' });
+            }
+            if (clientState.phase === 'cancelled') {
+              setGeneration({ ...current, stage: 'cancelled' });
+            }
           }
-          if ('event' in event && event.event.type === 'error') {
-            throw new Error(event.event.message);
+          const failureMessage = getGenerationFailureMessage(event);
+          if (failureMessage) throw new Error(failureMessage);
+          if ('payload' in event && event.type === 'generation.phase_changed') {
+            return;
           }
           if ('payload' in event && event.type === 'generation.committed') {
             const message = toMessageOutput(event.payload.message);
@@ -60,7 +76,7 @@ export function useRegenerateMessage(chatId: string) {
             return;
           }
           if ('payload' in event && event.type === 'generation.cancelled') {
-            setGeneration({ ...current, stage: 'cancelled' });
+            return;
           }
         },
       });

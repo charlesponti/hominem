@@ -63,7 +63,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
         param: { id: chatId },
         query: { limit: String(CHAT_MESSAGES_LIMIT) },
       });
-      const messages = (await res.json()) as RpcChatMessage[];
+      const messages = await res.json();
 
       const nextMessages = messages.flatMap((message: RpcChatMessage) => {
         const output = toMessageOutput(message);
@@ -82,10 +82,11 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
 
 export const useActiveChat = (chatId?: string | null) => {
   const client = useApiClient();
+  const activeChatId = chatId ?? '';
   return useQuery<Chat | null>({
-    queryKey: chatKeys.activeChat(chatId ?? null),
+    queryKey: chatKeys.activeChat(activeChatId || null),
     queryFn: async () => {
-      const res = await client.api.chats[':id'].$get({ param: { id: chatId as string } });
+      const res = await client.api.chats[':id'].$get({ param: { id: activeChatId } });
       const chat = await res.json();
       const { messages: _messages, ...chatRecord } = chat;
       return chatRecord;

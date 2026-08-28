@@ -116,7 +116,12 @@ describe('useChatComposerState', () => {
     ]);
     const { result } = renderHook(() => useChatComposerState({ chatId: 'chat-1', seedNote: null }));
     const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' });
-    const fileList = { 0: file, length: 1, item: () => file } as unknown as FileList;
+    const fileList: FileList = {
+      0: file,
+      length: 1,
+      item: (index) => (index === 0 ? file : null),
+      [Symbol.iterator]: [file][Symbol.iterator],
+    };
 
     await result.current.attachFiles(fileList);
 

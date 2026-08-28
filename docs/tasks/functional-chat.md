@@ -9,9 +9,10 @@ The engine will decide what should happen. An interpreter will perform provider 
 This targets the chat generation/SSE protocol. The external MCP protocol remains unchanged.
 
 Current status: the resource-oriented generation runtime, v1 event contract, API
-integration, durable repository/recovery primitives, and client-facing v1
-imports shipped in PR #274. Remaining work is replay-safe transport, full
-client reducer cutover, and removal of legacy paths.
+integration, durable repository/recovery primitives, replay-safe web/Omiro
+transport, and shared client reducer integrations are implemented. Remaining
+work is persisted cursor ownership, full replay-convergence evidence, and
+removal of legacy paths.
 
 ## Architecture Changes
 
@@ -166,10 +167,7 @@ export type ChatModel = {
     iteration: number;
   }): AsyncIterable<GenerationInput>;
 
-  retry(input: {
-    state: GenerationState;
-    attempt: number;
-  }): AsyncIterable<GenerationInput>;
+  retry(input: { state: GenerationState; attempt: number }): AsyncIterable<GenerationInput>;
 
   appendToolResult(input: {
     state: GenerationState;
@@ -192,15 +190,9 @@ performing a write.
 
 ```ts
 export type ChatTools = {
-  preview(input: {
-    call: GenerationToolCall;
-    idempotencyKey: string;
-  }): Promise<ToolResult>;
+  preview(input: { call: GenerationToolCall; idempotencyKey: string }): Promise<ToolResult>;
 
-  execute(input: {
-    call: GenerationToolCall;
-    idempotencyKey: string;
-  }): Promise<ToolResult>;
+  execute(input: { call: GenerationToolCall; idempotencyKey: string }): Promise<ToolResult>;
 };
 ```
 
@@ -375,6 +367,259 @@ installed simulator.
 - The generation run row remains the stable ownership and foreign-key anchor; rebuilding means recomputing its mutable projection fields from event history without deleting the anchor.
 - Active resume snapshots use an API-managed 32-byte key and AES-256-GCM with generation/owner-bound associated data; terminal events clear the ciphertext in the same transaction.
 - Terminal events are mutually exclusive at both layers: the database has one partial unique index per generation, and the pure projector rejects post-terminal events before persistence.
+- Coverage evidence must scope to changed source files: package-wide reports include unrelated legacy code and can hide whether the generation boundary itself is covered. Web, Omiro, RPC, and chat now expose package-level V8 coverage commands for focused gates.
+- Removing repository casts requires a checked JSON-to-domain mapper. The mapper must validate persisted event/tool discriminants before projection rebuilds; otherwise Kysely's generic JSON type merely moves the unsafety downstream.
+- TypeScript declaration output has two independent cache layers here: Turbo's task cache and each app's `tsbuildinfo`. A dependency edge alone is insufficient when app typechecking can reuse stale incremental state; app validation must disable incremental reuse or explicitly clean it.
+- The changed generation TypeScript surface now has no value assertions after
+  excluding namespace imports and mapped-type key remapping. This is a scoped
+  audit result, not evidence that unrelated repository code is assertion-free.
+- The web chat message/search/response-length hooks now use inferred RPC data,
+  explicit status narrowing, and literal-value validation without assertions;
+  their focused V8 matrix is 100% statements, branches, functions, and lines.
+- Web file-upload and speech-recognition browser boundaries now use checked
+  object/property inspection instead of assertions. They compile and pass the
+  changed-file assertion gate. File-upload error parsing and the speech
+  recognition lifecycle now have dedicated focused tests. The Uppy lifecycle
+  matrix covers lazy initialization, concurrent callers, uploads, progress,
+  restrictions, malformed responses, failed responses, cleanup, and reset at
+  100% across statements, branches, functions, and lines. The speech-
+  recognition file covers its SSR, browser, fallback, transcript, toggle, and
+  cleanup paths at 100% across all four metrics.
+- The Uppy lifecycle audit found a real concurrency defect: caching only the
+  module-load promise still allowed concurrent callers to construct separate
+  instances. The cache now represents the complete instance initialization,
+  and a concurrent-upload regression test proves both callers share it. This
+  is why the earlier implementation missed the issue: sequential happy-path
+  tests validated behavior after initialization but never exercised the
+  initialization race.
+- The generation stream route already registers its live subscriber before
+  reading durable history and filters replay/live events through one cursor.
+  A route-level race test now publishes a phase event and a terminal event
+  while replay is loading and proves all three ordered durable events reach
+  the client exactly once. The remaining gap is a real transport/client
+  reconnect flow, not the basic handoff ordering.
+- Durable replay/live overlap is now deduplicated once at the shared RPC
+  boundary and applied by both web fetch streams and Omiro XHR streams. The
+  focused transport tests prove repeated durable sequences are dropped while
+  repeated live deltas remain deliverable; this avoids duplicating dedupe logic
+  inside each client reducer.
+- The first shared client reducer now lives in `@hominem/chat`: it owns text,
+  reasoning, tool-step, phase, terminal-error, and durable-cursor transitions
+  without RPC, React, or transport dependencies. Web and Omiro send/regenerate
+  hooks now consume the same reducer through the exhaustive RPC adapter; the
+  remaining client work is persisted cursor ownership and replay convergence
+  coverage.
+- `@hominem/rpc` now owns the single exhaustive wire-to-domain adapter for the
+  shared reducer. It preserves durable sequences, normalizes DTO messages into
+  provider-independent snapshots, converts confirmation arguments, and drops
+  invalid message roles without assertions. Its full durable/live matrix is
+  covered at 100%.
+- Web now reduces every validated stream event through the shared reducer while
+  retaining web-specific message reconciliation and lifecycle callbacks. This
+  makes replay and live delivery use the same semantic state path; Omiro’s
+  thinner hook state still needs the equivalent integration.
+- Both stream transports now report the latest accepted durable sequence to
+  their caller. Cursor observation is covered independently from deduplication,
+  leaving automatic reconnect policy and persisted cursor restoration as the
+  remaining client work.
+- Web streaming now performs one automatic resume after a transport
+  interruption, using `Last-Event-ID` from the durable cursor and the same
+  deduplicator for replay. Committed and cancelled replay tests cover terminal
+  convergence. Omiro now uses an XHR-specific resume adapter with validated
+  generation events, `afterSequence`, one-shot replay, and the same durable
+  deduplicator; its transport matrix covers network interruption, replay,
+  domain-handler failure, and abort setup at 100%.
+- The API v1 bridge now routes accepted, checkpoint, confirmation, terminal,
+  and machine-emitted semantic events through the durable event store. Internal
+  message snapshots are enriched into full RPC DTOs only at the API delivery
+  boundary. Pending confirmations remain `awaiting_confirmation`; they no
+  longer follow a terminal committed event.
+- Cancellation and retry timing belong to interpreter ports, not provider or
+  route code. The interpreter now checks cancellation between provider inputs
+  and before tool, preview, and save effects, and delegates retry waiting to
+  an injected clock. Tests cover streamed cancellation, synchronous retry
+  cancellation, retry ordering, and skipped effects; API generation routes
+  now inject an owner-scoped cancellation probe.
+- The web chat fixture audit also removed the `FileList`, message-DTO, and
+  composer fixture assertions; focused chat-message and search tests now cover
+  every branch of their changed production hooks.
+- The TypeScript AST inventory found 995 real assertions in the repository's
+  selected source files: 532 under apps, 256 under services, and 207 under
+  packages. The diff-only checker gates newly changed TypeScript files while
+  the legacy inventory is migrated in stages.
+- The local API is reachable at `/api/status` with a connected database, and
+  Maestro is available at `~/.maestro/bin/maestro`. The booted simulator can
+  launch Omiro, but the current interactive flows expose acceptance failures:
+  the New Chat toolbar disappears after typing, and the stream route renders
+  blank. Interactive iOS evidence remains open.
+- Shipping validation on 2026-08-28 passed the full `pnpm run check`, focused
+  V8 tests for chat/RPC/database/API/web, all 472 Omiro tests, and the iOS
+  release bundle export. Career Playwright ran with server reuse but had four
+  unrelated editor-flow failures. Maestro ran on the booted iPhone but the
+  chat flows failed at the mobile UI acceptance boundary; artifacts are under
+  `~/.maestro/tests/2026-08-28_053821` and `~/.maestro/tests/2026-08-28_053616`.
+
+## Remediation Plan — Assertion-Free Boundaries and Review Gaps
+
+This plan records the work required after reviewing PRs #274 and #275. The
+misses were not only absent test cases: unchecked trust boundaries, duplicated
+client lifecycle handling, and stale declaration-cache results made defects
+easy to hide. Each phase closes one class of ambiguity before expanding the
+next test surface.
+
+### Assertion policy
+
+- A TypeScript assertion means `value as Type`, `value as const`, or
+  `value as never`; all must be removed from tracked TypeScript source and
+  tests.
+- SQL aliases and prose containing the word `as` are not TypeScript assertions
+  and remain out of scope.
+- Replace assertions with runtime decoders/type guards at external
+  boundaries, typed constructors/builders for fixtures, explicit return types,
+  discriminated unions, and `satisfies` where compile-time checking is enough.
+  `satisfies` must not bypass runtime validation.
+- Do not replace assertions with `any`, `never`, a wider cast, or an
+  unvalidated generic JSON parser. Every replacement must preserve the narrow
+  type and define the failure path.
+- Generated files and third-party declarations are excluded from the inventory;
+  the exclusion command must be recorded as evidence.
+
+### Phase A — Lock down generation trust boundaries `[~]`
+
+- [x] Use checked JSON-to-domain mappers in the generation repository and
+      verify the exact safe-integer sequence boundary.
+- [x] Validate decoded v1 generation events before web and Omiro reducers;
+      centralize durable/live failure classification.
+- [~] Align the RPC full message DTO schema with the widened execution-status
+  union without an assertion; add type-level fixtures for every message
+  variant, including failed tool execution.
+- [ ] Make provider, tool, snapshot, and SSE parsers return typed success/error
+      results instead of trusting generic `JSON.parse<T>` calls.
+- [~] Add an uncached validation command (`TURBO_FORCE=true pnpm run check` now
+  proves the current declarations; CI wiring still needs to be made explicit).
+
+### Phase B — Finish the changed generation path with zero assertions `[~]`
+
+- [x] Remove assertions from generation machine, projection, repository,
+      provider, tool adapter, snapshot codec, and live-delivery production paths.
+- [x] Replace remaining generation test assertions with typed fixture builders
+      for provider chunks, tool definitions/results, RPC envelopes, DTOs, Omiro
+      XHR responses, and API tool contexts in the changed generation surface.
+- [x] Add the Omiro regenerate test through a supported Expo/Vitest import
+      boundary; cover committed, cancelled, failed, retry, and idle-cancel
+      outcomes.
+- [~] Complete API/web/Omiro matrices for failed, cancelled, approval, retry,
+  tool-step, reconnect, and terminal replay behavior.
+- [~] Report statement, branch, function, and line coverage per changed file;
+  an aggregate package percentage is not proof for legacy code. The focused
+  web transport, generation, message, search, response-length, file-upload,
+  and speech boundaries now pass 100% across all four metrics; API adapters,
+  Omiro hooks, and replay/e2e paths still need their scoped matrices.
+
+### Phase C — Remove assertions from shared infrastructure `[ ]`
+
+- [ ] Replace row casts in remaining DB repositories with typed selected-row
+      helpers and checked enum/JSON mappers: chat, vector, finance, notes, tasks,
+      files, career, then AI.
+- [ ] Replace RPC/client response casts with shared response decoders or Hono
+      inferred response types, including auth, loaders, query keys, and voice.
+- [ ] Replace API/MCP casts with typed auth guards, MCP adapter helpers,
+      JSON-schema conversion results, and typed tool-result readers. MCP HTTP
+      behavior and `tool-registry.ts` remain unchanged.
+- [ ] Replace Omiro native-module/audio/media casts with platform return types
+      and narrow error helpers while preserving Apple-only behavior.
+- [ ] Remove `as const` from application/test fixtures with literal typed
+      constants or `satisfies` declarations where appropriate.
+
+### Phase D — Repository-wide enforcement `[ ]`
+
+- [x] Add a deterministic TypeScript AST inventory that excludes generated
+      output and fails on any remaining TypeScript assertion in its selected
+      scope. The full inventory remains a migration report; the diff-only
+      inventory is the enforcement boundary.
+- [x] Add a CI check preventing new assertions in changed TypeScript files via
+      `check:assertions:changed`. Any temporary compiler interop exception needs
+      an owner, issue, and expiry; the generation path has no allowlist.
+- [ ] Run production and test inventories separately so fixture shortcuts
+      cannot conceal production boundary problems.
+- [ ] Add regression tests for malformed external JSON, unsupported enums,
+      missing fields, unexpected provider chunks, and callback exceptions.
+- [ ] Update this plan with file-level evidence after each phase; no `[~]` item
+      becomes `[x]` without its focused test result.
+
+### Phase E — Validation and shipping evidence `[ ]`
+
+- [~] Run focused V8 coverage for chat, RPC, DB generation repository, API
+      generation, web chat transport/hooks, and Omiro chat transport/hooks.
+      Chat is 100% across statements, branches, functions, and lines; the
+      package lanes all pass, while Omiro's aggregate report is 88.86% / 76.86%
+      because it includes unrelated app code.
+- [x] Run formatting, `git diff --check`, package typechecks/builds, and an
+      uncached full `pnpm run check` with the required test environment. The
+      forced gate passed all 34 typecheck, 17 lint, 17 build, and 26 test tasks;
+      focused changed-file coverage remains a separate gate.
+- [ ] Run browser and iOS simulator/Maestro flows for send, approval,
+      cancellation, failure/retry, regeneration, forced reconnect, and terminal
+      replay without starting services inside the agent.
+- [ ] Capture command/flow, environment, observed result, artifacts, and
+      explicitly unverified conditions using the Hominem evidence checklist.
+
+## Review Remediation Plan
+
+The merged implementation exposed a set of boundary failures: durable terminal
+failures were not handled consistently by every client stream, the XHR adapter
+did not reject callback exceptions, sequence allocation missed the exact safe
+integer boundary, and type assertions hid invalid domain values. This plan
+closes those seams before the next runtime cutover.
+
+Status: `[x]` complete · `[~]` in progress · `[ ]` not started.
+
+### [~] Phase A — Shared failure boundary
+
+Make durable and live failures follow one client-facing rule on web and Omiro.
+
+- [x] Add one RPC-level failure classifier for durable `generation.failed` and live `error` events.
+- [x] Apply it to web send, start, and regenerate streams.
+- [x] Apply it to Omiro send and start streams.
+- [x] Make the Omiro XHR adapter convert callback exceptions into rejected stream promises.
+- [x] Add the Omiro regenerate service test and verify committed, cancelled,
+      failed, retry, and idle-cancel behavior through the Expo/Vitest import
+      boundary.
+- [ ] Add replay/live convergence tests for every client stream entry point.
+
+### [~] Phase B — Domain and repository correctness
+
+Ensure invalid values cannot cross the generation or persistence boundaries.
+
+- [x] Reject appends when the previous sequence is already `Number.MAX_SAFE_INTEGER`.
+- [x] Add an exact maximum-safe-sequence repository test.
+- [x] Remove the generation RPC parser assertions by preserving literal event discriminants in the schema builder.
+- [x] Correct the accepted-event fixture to use a user-role message.
+- [x] Represent failed tool execution in the persisted tool-call status contract instead of hiding it with a cast.
+- [ ] Decide whether confirmation and execution status should become separate fields, preserving existing persisted data.
+- [ ] Add failed-tool persistence and RPC round-trip fixtures.
+
+### [ ] Phase C — Unsafe assertion elimination
+
+Remove runtime casts rather than merely making them compile.
+
+- [~] Remove `as never`, `as unknown as`, JSON parsing casts, response-body casts, and database-row casts from the generation path; production generation paths are clean, but fixture assertions remain.
+- [x] Replace external JSON casts with typed boundary decoders in the generation SSE and RPC paths.
+- [x] Replace database-row casts with checked mappers and narrow type guards in the generation repository.
+- [~] Replace test fixture casts with typed builders and `satisfies`; new boundary tests avoid casts, while older generation fixtures still contain them.
+- [ ] Audit the remaining repository-wide assertions and document only unavoidable non-runtime TypeScript syntax.
+- [ ] Add CI enforcement for unsafe assertion patterns in changed runtime code.
+
+### [ ] Phase D — Cross-boundary coverage and shipping evidence
+
+Prove the fixes across the machine, repository, transports, and applications.
+
+- [ ] Add event-matrix coverage for every durable event across machine, RPC, repository, web, and Omiro.
+- [ ] Add replayed failure, terminal, confirmation, cancellation, and reconnect tests.
+- [~] Run focused coverage with 100% statements, branches, functions, and lines for changed generation code; chat source, RPC event contract, DB generation repository, web transport/hooks, and Omiro regeneration now have focused evidence. API adapters, remaining Omiro hooks, and replay/e2e paths still have uncovered branches.
+- [ ] Run database migrations/codegen, formatting, typechecks, `git diff --check`, and `pnpm run check`.
+- [ ] Run browser and iOS Maestro flows for send, failure/retry, approval, cancellation, regeneration, and forced reconnect.
+- [ ] Complete the evidence checklist before merging or shipping.
 
 ## Migration Plan — Sequential Phases
 
@@ -434,7 +679,9 @@ Gate: send, tool execution, confirmation, retry, cancellation, regeneration, fai
 - [x] Implement the pure generation machine, sequential interpreter, OpenRouter provider adapter, and MCP tools adapter.
 - [x] Thread stable idempotency keys through semantic persist commands and write-tool execution.
 - [x] Thread internal idempotency context through the existing MCP tool registry without changing MCP HTTP behavior.
-- [ ] Add cancellation checks and injected retry timing before every external effect.
+- [x] Add cancellation checks and injected retry timing before every external
+      effect through the interpreter control port; API generation routes inject
+      the owner-scoped cancellation probe.
 - [ ] Define crash recovery around provider turns, confirmation waits, snapshots, and replayed write effects.
 - [x] Replace the production callback-based completion loop with `runGenerationWithPorts` through the resource-oriented chat runtime.
 - [~] Adapt transcript/message persistence to machine turn and checkpoint semantics; the current adapter persists assistant output, but full checkpoint/resume semantics remain.
@@ -446,12 +693,12 @@ Introduce the single v1 SSE adapter and close the replay/live subscription race 
 
 Gate: durable events receive sequence IDs, live deltas receive no IDs, cursors are validated, and reconnect tests prove no durable event is lost or duplicated.
 
-- [ ] Implement the API event-store/live-delivery adapter and publish durable events only after transactional append succeeds.
+- [~] Implement the API event-store/live-delivery adapter and publish durable events only after transactional append succeeds. Accepted, checkpoint, confirmation, terminal, and machine-emitted semantic events now use the durable path; the final crash-boundary integration evidence remains.
 - [x] Implement the v1 SSE adapter with IDs only on durable events.
 - [ ] Validate `Last-Event-ID` and `afterSequence`, including malformed, negative, and unsafe-integer cursors.
-- [ ] Register subscribers before replay, buffer concurrent publications, flush after replay, and deduplicate by `(generationId, sequence)`.
-- [ ] Define terminal completion and awaiting-confirmation stream lifetime behavior.
-- [ ] Add SSE replay, handoff-race, duplicate-delivery, terminal, confirmation, and authorization tests.
+- [x] Register subscribers before replay, buffer concurrent publications, flush after replay, and deduplicate by `(generationId, sequence)`.
+- [~] Define terminal completion and awaiting-confirmation stream lifetime behavior. Terminal replay and checkpoint ordering are covered; a full awaiting-confirmation reconnect flow remains.
+- [~] Add SSE replay, handoff-race, duplicate-delivery, terminal, confirmation, and authorization tests. Replay handoff, cursor validation, terminal, and client-side duplicate coverage exist; confirmation authorization and crash-boundary coverage remain.
 
 ### [ ] Phase 5 — Coordinated client cutover
 
@@ -460,11 +707,26 @@ Move web and Omiro to v1 event reducers and reconnect behavior in one coordinate
 Gate: both clients converge on equivalent committed, failed, cancelled, and awaiting-confirmation state after replay and forced reconnect.
 
 - [x] Replace `ChatStreamEvent` imports and fixtures with the v1 domain/live contract.
-- [ ] Add equivalent web and Omiro reducers with durable sequence tracking and duplicate no-op behavior.
-- [ ] Update web reconnect logic to use `Last-Event-ID` without token replay.
-- [ ] Update Omiro reconnect logic to use validated `afterSequence` with Apple-only transport behavior.
-- [ ] Verify committed, failed, cancelled, and awaiting-confirmation replay convergence.
-- [ ] Add web and Omiro reducer, replay, reconnect, and forced-disconnect tests.
+- [x] Deduplicate durable replay/live overlap at the shared RPC transport
+      boundary in both web and Omiro while preserving repeated live deltas.
+- [~] Extract and wire one equivalent client reducer for web and Omiro with
+  durable sequence tracking and duplicate no-op behavior. The pure reducer,
+  exhaustive RPC wire-to-domain adapter, and both platform hook integrations
+  are complete; persisted cursor ownership and convergence coverage remain.
+- [~] Update web reconnect logic to use `Last-Event-ID` without token replay;
+  one-shot resume and terminal replay coverage are complete, while persisted
+  cursor ownership and full convergence coverage remain.
+- [~] Update Omiro reconnect logic to use validated `afterSequence` with
+  Apple-only transport behavior; one-shot XHR resume and transport coverage
+  are complete, while persisted cursor ownership and full convergence coverage
+  remain.
+- [~] Verify committed, failed, cancelled, and awaiting-confirmation replay convergence.
+      Committed, failed, cancelled, and forced reconnect paths have focused
+      coverage; awaiting-confirmation convergence and fresh-launch recovery
+      remain.
+- [~] Add web and Omiro reducer, replay, reconnect, and forced-disconnect tests.
+      The shared reducer and both client integrations are covered, including
+      Omiro phase/cancellation transitions; end-to-end client flows remain.
 
 ### [ ] Phase 6 — Remove legacy paths and release evidence
 

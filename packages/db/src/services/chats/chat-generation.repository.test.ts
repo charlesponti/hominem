@@ -1,10 +1,17 @@
 import { randomUUID } from 'node:crypto';
 
+import type { GenerationEventPayload } from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authDb, db } from '../../db';
 import { runInTransaction } from '../../transaction';
-import { ChatGenerationRepository } from './chat-generation.repository';
+import {
+  ChatGenerationRepository,
+  parseGenerationEventPayload,
+  parseGenerationKind,
+  parseToolResult,
+  toJsonValue,
+} from './chat-generation.repository';
 
 describe('ChatGenerationRepository', () => {
   const userIds: string[] = [];
@@ -62,18 +69,71 @@ describe('ChatGenerationRepository', () => {
     return id;
   }
 
+  it('checks every persisted event and tool-result shape before mapping it', () => {
+    const message = { id: 'message-1', chatId: 'chat-1', role: 'assistant', content: 'Done' };
+    const call = { id: 'call-1', name: 'lookup', arguments: '{}', iteration: 0, turnId: 'turn-1' };
+    const result = { callId: 'call-1', toolName: 'lookup', content: '{}', error: false };
+    const events = [
+      { type: 'generation.started', context: { chatId: 'chat-1' } },
+      { type: 'generation.accepted', chatId: 'chat-1', userMessage: { ...message, role: 'user' } },
+      { type: 'generation.phase_changed', phase: 'running' },
+      { type: 'generation.cancel_requested', requestedAt: 'now', requestedBy: 'user-1' },
+      { type: 'generation.checkpointed', checkpoint: {} },
+      { type: 'tool.requested', call },
+      { type: 'tool.completed', result },
+      { type: 'tool.failed', result: { ...result, error: true } },
+      { type: 'confirmation.required', call },
+      { type: 'confirmation.approved', callId: 'call-1' },
+      { type: 'confirmation.rejected', callId: 'call-1', reason: 'no' },
+      { type: 'generation.retry_scheduled', attempt: 1, maxAttempts: 2 },
+      { type: 'generation.committed', message },
+      { type: 'generation.cancelled' },
+      { type: 'generation.failed', message: 'failed' },
+    ];
+
+    for (const event of events) expect(parseGenerationEventPayload(event).type).toBe(event.type);
+    expect(parseToolResult(result)).toEqual(result);
+    expect(parseGenerationKind('send')).toBe('send');
+    expect(parseGenerationKind('start')).toBe('start');
+    expect(parseGenerationKind('regenerate')).toBe('regenerate');
+  });
+
+  it('rejects malformed persisted JSON and unsupported generation kinds', () => {
+    expect(() => parseGenerationEventPayload(null)).toThrow(
+      'Invalid chat generation event payload',
+    );
+    expect(() => parseGenerationEventPayload([])).toThrow('Invalid chat generation event payload');
+    expect(() => parseGenerationEventPayload({ type: 'unknown' })).toThrow(
+      'Invalid chat generation event payload',
+    );
+    expect(() =>
+      parseGenerationEventPayload({ type: 'generation.started', context: {} }),
+    ).toThrow();
+    expect(() =>
+      parseGenerationEventPayload({ type: 'generation.accepted', chatId: 'chat-1' }),
+    ).toThrow();
+    expect(() =>
+      parseGenerationEventPayload({ type: 'generation.committed', message: {} }),
+    ).toThrow();
+    expect(() => parseGenerationEventPayload({ type: 'tool.requested', call: null })).toThrow();
+    expect(() => parseToolResult({})).toThrow('Invalid chat generation tool result');
+    expect(() => parseToolResult(null)).toThrow('Invalid chat generation tool result');
+    expect(() => parseGenerationKind('unknown')).toThrow('Invalid chat generation kind');
+    expect(() => toJsonValue(Symbol('not-json'))).toThrow('Value is not JSON serializable');
+  });
+
   it('appends ordered events idempotently and updates the projection atomically', async () => {
     const { userId, chatId, generationId } = await createGeneration();
     const event = {
-      type: 'generation.started' as const,
+      type: 'generation.started',
       context: {
         chatId,
-        kind: 'send' as const,
+        kind: 'send',
         userMessageId: null,
         targetAssistantMessageId: null,
-        requestContext: {},
+        requestContext: { values: ['x'] },
       },
-    };
+    } satisfies GenerationEventPayload;
 
     const [first, replay] = await Promise.all(
       [1, 2].map(() =>
@@ -372,13 +432,13 @@ describe('ChatGenerationRepository', () => {
     );
 
     await Promise.all(
-      ['running', 'saving'].map((phase) =>
+      (['running', 'saving'] satisfies Array<'running' | 'saving'>).map((phase) =>
         runInTransaction((trx) =>
           ChatGenerationRepository.appendEvent(trx, {
             generationId,
             ownerUserId: userId,
             idempotencyKey: `phase-${phase}`,
-            event: { type: 'generation.phase_changed', phase: phase as 'running' | 'saving' },
+            event: { type: 'generation.phase_changed', phase },
           }),
         ),
       ),
@@ -500,6 +560,45 @@ describe('ChatGenerationRepository', () => {
       await db
         .selectFrom('app.chatGenerationEvents')
         .select('id')
+        .where('generationId', '=', generationId)
+        .execute(),
+    ).toHaveLength(1);
+  });
+
+  it('rejects appending after the largest safe sequence', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    await db
+      .insertInto('app.chatGenerationEvents')
+      .values({
+        generationId,
+        sequence: String(Number.MAX_SAFE_INTEGER),
+        type: 'generation.started',
+        payload: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      })
+      .execute();
+
+    await expect(
+      runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event: { type: 'generation.phase_changed', phase: 'running' },
+        }),
+      ),
+    ).rejects.toThrow('safe integer range');
+    expect(
+      await db
+        .selectFrom('app.chatGenerationEvents')
+        .select('sequence')
         .where('generationId', '=', generationId)
         .execute(),
     ).toHaveLength(1);
