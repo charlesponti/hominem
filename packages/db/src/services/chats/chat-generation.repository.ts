@@ -147,9 +147,6 @@ export const ChatGenerationRepository = {
     const current = prior.length > 0 ? rebuildGenerationProjection(identity, prior) : null;
     const next = reduceGenerationProjection(current, identity, input.event);
     const previousSequence = events.length > 0 ? BigInt(priorRows.at(-1)!.sequence) : 0n;
-    if (previousSequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new Error('Chat generation event sequence is outside the safe integer range');
-    }
     const sequence = Number(previousSequence + 1n);
 
     const inserted = await handle
@@ -220,6 +217,7 @@ export const ChatGenerationRepository = {
       .where('id', '=', generationId)
       .where('ownerUserId', '=', ownerUserId)
       .where('status', 'not in', ['committed', 'cancelled', 'failed'])
+      .returning('id')
       .executeTakeFirstOrThrow();
   },
 

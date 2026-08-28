@@ -124,8 +124,7 @@ export function createGenerationSnapshotCodec(keyValue: string) {
           decipher.final(),
         ]);
         return snapshotSchema.parse(JSON.parse(plaintext.toString('utf8')));
-      } catch (error) {
-        if (error instanceof GenerationSnapshotIntegrityError) throw error;
+      } catch {
         throw new GenerationSnapshotIntegrityError(
           'Generation snapshot failed integrity validation',
         );

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authDb, db } from '../../db';
 import { runInTransaction } from '../../transaction';
@@ -140,6 +140,42 @@ describe('ChatGenerationRepository', () => {
     ).toMatchObject({ result: toolResult });
   });
 
+  it('rejects snapshot writes for another owner and terminal generations', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+
+    await expect(
+      ChatGenerationRepository.saveSnapshot(db, generationId, randomUUID(), 'encrypted-snapshot'),
+    ).rejects.toThrow();
+
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: { type: 'generation.cancelled' },
+      }),
+    );
+
+    await expect(
+      ChatGenerationRepository.saveSnapshot(db, generationId, userId, 'encrypted-snapshot'),
+    ).rejects.toThrow();
+  });
+
   it('allocates the next sequence without an idempotency key and enforces ownership', async () => {
     const { userId, chatId, generationId } = await createGeneration();
     const first = await runInTransaction((trx) =>
@@ -238,6 +274,44 @@ describe('ChatGenerationRepository', () => {
     });
   });
 
+  it('rebuilds an active projection without clearing its private snapshot', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    await ChatGenerationRepository.saveSnapshot(db, generationId, userId, 'encrypted');
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+
+    await db
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'failed', errorMessage: 'drift' })
+      .where('id', '=', generationId)
+      .execute();
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.rebuildProjection(trx, generationId, userId),
+    );
+
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select(['status', 'encryptedSnapshot'])
+        .where('id', '=', generationId)
+        .executeTakeFirstOrThrow(),
+    ).resolves.toEqual({ status: 'running', encryptedSnapshot: 'encrypted' });
+  });
+
   it('clears the private snapshot when a terminal event is appended', async () => {
     const { userId, chatId, generationId } = await createGeneration();
     const assistantId = await createAssistantMessage(chatId, userId);
@@ -334,5 +408,217 @@ describe('ChatGenerationRepository', () => {
       ),
     ).rejects.toThrow('followed a terminal event');
     expect(await ChatGenerationRepository.listEvents(db, generationId, userId)).toHaveLength(4);
+  });
+
+  it('rolls back an inserted event when its projection update fails', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    await runInTransaction((trx) =>
+      ChatGenerationRepository.appendEvent(trx, {
+        generationId,
+        ownerUserId: userId,
+        event: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      }),
+    );
+
+    await expect(
+      runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event: {
+            type: 'generation.committed',
+            message: {
+              id: randomUUID(),
+              chatId,
+              role: 'assistant',
+              content: 'This message was never saved',
+            },
+          },
+        }),
+      ),
+    ).rejects.toThrow();
+
+    expect(await ChatGenerationRepository.listEvents(db, generationId, userId)).toHaveLength(1);
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select(['status', 'assistantMessageId', 'errorMessage'])
+        .where('id', '=', generationId)
+        .executeTakeFirstOrThrow(),
+    ).resolves.toEqual({ status: 'running', assistantMessageId: null, errorMessage: null });
+  });
+
+  it('rejects unsafe stored sequences without appending another event', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    await db
+      .insertInto('app.chatGenerationEvents')
+      .values({
+        generationId,
+        sequence: String(Number.MAX_SAFE_INTEGER + 1),
+        type: 'generation.started',
+        payload: {
+          type: 'generation.started',
+          context: {
+            chatId,
+            kind: 'send',
+            userMessageId: null,
+            targetAssistantMessageId: null,
+            requestContext: {},
+          },
+        },
+      })
+      .execute();
+
+    await expect(
+      runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event: { type: 'generation.phase_changed', phase: 'running' },
+        }),
+      ),
+    ).rejects.toThrow('safe integer range');
+    await expect(ChatGenerationRepository.listEvents(db, generationId, userId, -1)).rejects.toThrow(
+      'safe integer range',
+    );
+    await expect(
+      ChatGenerationRepository.listEvents(db, generationId, userId, 0.5),
+    ).rejects.toThrow('safe integer range');
+    await expect(
+      ChatGenerationRepository.listEvents(db, generationId, userId, Number.MAX_SAFE_INTEGER + 1),
+    ).rejects.toThrow('safe integer range');
+    expect(
+      await db
+        .selectFrom('app.chatGenerationEvents')
+        .select('id')
+        .where('generationId', '=', generationId)
+        .execute(),
+    ).toHaveLength(1);
+  });
+
+  it('enforces mutually exclusive terminal events in the database', async () => {
+    const { chatId, generationId } = await createGeneration();
+    await db
+      .insertInto('app.chatGenerationEvents')
+      .values({
+        generationId,
+        sequence: 1,
+        type: 'generation.committed',
+        payload: {
+          type: 'generation.committed',
+          message: { id: randomUUID(), chatId, role: 'assistant', content: 'Done' },
+        },
+      })
+      .execute();
+
+    await expect(
+      db
+        .insertInto('app.chatGenerationEvents')
+        .values({
+          generationId,
+          sequence: 2,
+          type: 'generation.cancelled',
+          payload: { type: 'generation.cancelled' },
+        })
+        .execute(),
+    ).rejects.toThrow();
+  });
+
+  it('rolls back repository writes when the enclosing transaction fails', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const toolResult = {
+      callId: 'call-rollback',
+      toolName: 'write_memory',
+      content: '{"id":"memory-rollback"}',
+      error: false,
+    };
+
+    await expect(
+      runInTransaction(async (trx) => {
+        await ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event: {
+            type: 'generation.started',
+            context: {
+              chatId,
+              kind: 'send',
+              userMessageId: null,
+              targetAssistantMessageId: null,
+              requestContext: {},
+            },
+          },
+        });
+        await ChatGenerationRepository.saveToolEffect(trx, {
+          generationId,
+          ownerUserId: userId,
+          idempotencyKey: 'rollback-effect',
+          toolName: toolResult.toolName,
+          result: toolResult,
+        });
+        throw new Error('force rollback');
+      }),
+    ).rejects.toThrow('force rollback');
+
+    expect(await ChatGenerationRepository.listEvents(db, generationId, userId)).toEqual([]);
+    await expect(
+      ChatGenerationRepository.getToolEffect(db, {
+        generationId,
+        ownerUserId: userId,
+        idempotencyKey: 'rollback-effect',
+      }),
+    ).resolves.toBeNull();
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select('status')
+        .where('id', '=', generationId)
+        .executeTakeFirstOrThrow(),
+    ).resolves.toEqual({ status: 'preparing' });
+  });
+
+  it('rolls back a tool effect when its post-insert read fails', async () => {
+    const { userId, generationId } = await createGeneration();
+    const getToolEffect = vi
+      .spyOn(ChatGenerationRepository, 'getToolEffect')
+      .mockResolvedValueOnce(null);
+
+    try {
+      await expect(
+        runInTransaction((trx) =>
+          ChatGenerationRepository.saveToolEffect(trx, {
+            generationId,
+            ownerUserId: userId,
+            idempotencyKey: 'unreadable-effect',
+            toolName: 'write_memory',
+            result: {
+              callId: 'call-unreadable',
+              toolName: 'write_memory',
+              content: '{}',
+              error: false,
+            },
+          }),
+        ),
+      ).rejects.toThrow('Unable to persist chat generation tool effect');
+    } finally {
+      getToolEffect.mockRestore();
+    }
+
+    await expect(
+      ChatGenerationRepository.getToolEffect(db, {
+        generationId,
+        ownerUserId: userId,
+        idempotencyKey: 'unreadable-effect',
+      }),
+    ).resolves.toBeNull();
   });
 });
