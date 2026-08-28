@@ -8,6 +8,11 @@ The engine will decide what should happen. An interpreter will perform provider 
 
 This targets the chat generation/SSE protocol. The external MCP protocol remains unchanged.
 
+Current status: the resource-oriented generation runtime, v1 event contract, API
+integration, durable repository/recovery primitives, and client-facing v1
+imports shipped in PR #274. Remaining work is replay-safe transport, full
+client reducer cutover, and removal of legacy paths.
+
 ## Architecture Changes
 
 - `@hominem/chat` owns the provider-independent chat logic: generation state,
@@ -40,6 +45,16 @@ This targets the chat generation/SSE protocol. The external MCP protocol remains
   - `RetryProvider`
 - Keep tool execution sequential and deterministic in the first implementation. Read-only parallelism remains a future optimization.
 
+The public chat package now exposes a resource-oriented entry point:
+`ChatClient.generations.create(...).run()`. API code configures the model,
+tools, persistence, and delivery ports; consumers do not construct the machine
+or provider loop directly.
+
+The target public facade is a factory, not a constructor. New integrations must
+use `createChat(...)`; `ChatClient` is the current transitional implementation
+name and may remain as the returned client type if that is useful for typing.
+Do not add new application call sites that instantiate `new ChatClient(...)`.
+
 ### Boundaries and ownership
 
 - The machine accepts a prior immutable state plus one input and returns the next state plus ordered commands. It performs no I/O and does not depend on Hono, Kysely, OpenRouter, the tool registry, clocks, timers, or logging.
@@ -48,6 +63,194 @@ This targets the chat generation/SSE protocol. The external MCP protocol remains
 - The production `tools` port wraps the existing `services/api/src/mcp/tool-registry.ts`. The MCP server continues to use that registry directly; the registry API and MCP HTTP protocol are not changed.
 - Implement `appendEvent`, `readEventsAfter`, and run lookup/update in the chat database repository. Repository methods return hand-written JSON-serializable DTOs and keep Kysely row types private.
 - Keep the existing `chat-completion-loop` behavior as the migration reference, then delete it only after its behavior is covered by the machine and interpreter tests. Do not retain a second production orchestration loop.
+
+### Target SDK usage and adapter composition
+
+These examples are the implementation contract for the resource-oriented SDK.
+They show ownership, not necessarily the final internal file names. API, web,
+and Omiro layers should use resource methods; they should not create a machine,
+interpreter, provider turn, idempotency key, or persistence callback.
+
+#### Composition root
+
+The API constructs one configured chat client from infrastructure adapters. The
+client is configured at process startup and reused by route handlers.
+
+```ts
+const chat = createChat({
+  model: openrouter({
+    apiKey: env.OPENROUTER_API_KEY,
+    model: 'anthropic/claude-sonnet-4',
+  }),
+  tools: mcp({
+    registry: toolRegistry,
+    effects: postgresToolEffects(db),
+  }),
+  generations: postgresGenerations(db),
+  delivery: generationLiveBus(),
+});
+```
+
+`openrouter`, `mcp`, `postgresGenerations`, `postgresToolEffects`, and
+`generationLiveBus` are adapters. They may depend on OpenRouter, MCP, Kysely,
+and the API runtime. `@hominem/chat` must not depend on those implementations.
+
+#### Start and stream a generation
+
+Route code performs authentication, authorization, and request mapping. The
+generation resource owns execution and streaming.
+
+```ts
+const generation = await chat.generations.create({
+  userId: user.id,
+  chatId,
+  message: {
+    role: 'user',
+    content: input.content,
+  },
+  request: {
+    kind: 'send',
+  },
+});
+
+return generation.stream({
+  signal: request.raw.signal,
+});
+```
+
+The route must not call `runGenerationWithPorts`, `runChatGeneration`,
+`OpenRouterChatModel`, `callTool`, or `persistEvent` directly. Those are
+composition or adapter concerns during the migration and must disappear from
+route-level orchestration.
+
+#### Resource actions
+
+Long-running generations are addressable resources. Commands target the
+resource and are safe to retry through repository idempotency.
+
+```ts
+const generation = await chat.generations.retrieve({
+  userId: user.id,
+  generationId,
+});
+
+await generation.confirmTool({ toolCallId });
+await generation.cancel();
+```
+
+Replay is also a resource operation and never replays token or reasoning
+deltas:
+
+```ts
+return generation.events({
+  afterSequence,
+  signal: request.raw.signal,
+});
+```
+
+`stream()` is the initial live execution path. `events()` is the replay/live
+attachment path for an existing resource. Both return versioned generation
+events; transport adapters decide whether those events become SSE, fetch
+streams, or XHR callbacks.
+
+#### Model adapter
+
+The provider adapter translates OpenRouter mechanics into provider-independent
+machine inputs. It does not decide lifecycle transitions or persist events.
+
+```ts
+export type ChatModel = {
+  open(input: {
+    state: GenerationState;
+    turnId: string;
+    iteration: number;
+  }): AsyncIterable<GenerationInput>;
+
+  retry(input: {
+    state: GenerationState;
+    attempt: number;
+  }): AsyncIterable<GenerationInput>;
+
+  appendToolResult(input: {
+    state: GenerationState;
+    call: GenerationToolCall;
+    result: ToolResult;
+  }): Promise<void>;
+};
+```
+
+Provider chunk normalization, fragmented tool-call reconstruction, usage
+mapping, and transient-error classification belong inside this adapter. The
+machine receives normalized inputs only.
+
+#### Tool adapter
+
+The MCP adapter translates a machine tool call into the existing registry
+without changing MCP HTTP behavior. The idempotency key is mandatory for both
+preview and execution, and execution must consult the effect store before
+performing a write.
+
+```ts
+export type ChatTools = {
+  preview(input: {
+    call: GenerationToolCall;
+    idempotencyKey: string;
+  }): Promise<ToolResult>;
+
+  execute(input: {
+    call: GenerationToolCall;
+    idempotencyKey: string;
+  }): Promise<ToolResult>;
+};
+```
+
+The adapter may call `tool-registry.ts`, but the machine and route must not
+know that it does. A replayed write returns the previously persisted result
+instead of invoking the underlying tool again.
+
+#### Generation store and delivery adapters
+
+Persistence exposes generation operations, not database rows or generic event
+callbacks:
+
+```ts
+export type GenerationStore = {
+  create(input: CreateGenerationInput): Promise<GenerationIdentity>;
+  retrieve(input: RetrieveGenerationInput): Promise<GenerationSnapshot>;
+  appendEvent(input: AppendGenerationEvent): Promise<GenerationEvent>;
+  readEvents(input: ReadGenerationEvents): Promise<GenerationEvent[]>;
+  saveSnapshot(input: SaveGenerationSnapshot): Promise<void>;
+  saveMessage(input: SaveGenerationMessage): Promise<ChatMessageDto>;
+};
+
+export type GenerationDelivery = {
+  publish(event: GenerationEvent): Promise<void>;
+  subscribe(generationId: string): AsyncIterable<GenerationEvent>;
+};
+```
+
+The store owns transactions, ownership checks, sequence allocation, projection
+updates, snapshot encryption boundaries, and effect idempotency. Delivery is
+called only after a durable append succeeds. Neither adapter decides whether an
+event is legal; that remains the machine/projector's responsibility.
+
+#### Machine/interpreter ownership
+
+The intended call graph is:
+
+```text
+route command
+  -> Chat resource
+    -> generation machine
+      -> ordered interpreter command
+        -> model/tools/store/delivery adapter
+          -> normalized effect result
+            -> generation machine
+```
+
+There must be one production orchestration path. `runChatGeneration` may remain
+as a temporary API composition adapter, but it must shrink to construction of
+configured resources and disappear before the legacy cleanup phase ends.
 
 ## Durable Protocol
 
@@ -116,7 +319,7 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 
 ### Event version and rollout
 
-- This is a coordinated hard cutover: the API, web app, and Omiro ship the same `version: 1` contract. Do not support the old `ChatStreamEvent` shape in production after the migration.
+- This is a coordinated hard cutover: the API, web app, and Omiro ship the same `version: 1` contract. The v1 path is wired and shipped in PR #274; the old `ChatStreamEvent` type/file remains only until the final cleanup phase removes it.
 - Replace transport-specific public types with `GenerationDomainEvent` and `GenerationLiveEvent` in `packages/rpc`. Both include `version: 1`, `generationId`, and a discriminant. Durable events additionally include `sequence`.
 - The API owns a single SSE adapter that serializes these types into the wire format. It sets SSE `id` to the durable event sequence and never assigns an SSE ID to live-only deltas.
 - Remove `ChatStreamEvent` only after web, Omiro, API routes, and their fixtures compile against the new contract. The external MCP protocol stays unchanged.
@@ -137,6 +340,21 @@ Every event that belongs to a provider/tool turn carries a stable `turnId` and `
 - Update web and Omiro consumers to use one local generation reducer each, reducing durable and live events in sequence. Preserve their platform-specific SSE transports: fetch/readable-stream on web and XHR on Omiro.
 - Emit live-only token/reasoning events only to currently connected subscribers. Persist and deliver semantic events through the event store path first, then publish them live.
 - Keep confirmation approval as a separate command/event cycle.
+
+## Shipped implementation slice
+
+- [x] Added the resource-oriented `ChatClient`/`generations` API and wired API generation routes through `runChatGeneration` and the port-based interpreter.
+- [x] Replaced the API's production generation path with the machine-backed runtime while retaining the old loop only as an explicitly removable legacy file.
+- [x] Added the OpenRouter model adapter, MCP tool adapter, stable effect idempotency keys, and persisted tool-effect reuse.
+- [x] Added the v1 domain/live event contract, runtime parsers, v1 SSE serialization, and web/Omiro v1 imports.
+- [x] Added generation projection rebuilding, encrypted active-generation snapshots, terminal-event exclusivity, and repository-level ordered/idempotent append behavior.
+- [x] Added focused machine, interpreter, provider, tool, repository, snapshot, live-bus, RPC, web, and Omiro tests.
+- [x] Merged the implementation in PR #274; CI passed and the branch was left clean after merge.
+
+The Expo development-client onboarding workaround and Maestro launch URL are
+release/test infrastructure, not part of the generation protocol. A rebuilt
+development client is required before the onboarding configuration affects an
+installed simulator.
 
 ## Learnings
 
@@ -166,7 +384,7 @@ Status: `[x]` complete · `[~]` in progress · `[ ]` not started.
 
 ### [x] Phase 0 — Foundation
 
-The pure machine, generic interpreter, API provider/tool adapters, durable recovery schema, repository, idempotency plumbing, and focused tests are in the draft PR.
+The pure machine, generic interpreter, API provider/tool adapters, durable recovery schema, repository, idempotency plumbing, and focused tests shipped in PR #274.
 
 Gate: focused machine, interpreter, provider, tools, registry, and database tests pass; the changed generation components have 100% focused statement/branch/function/line coverage; migrations and code generation pass.
 
@@ -174,7 +392,7 @@ Gate: focused machine, interpreter, provider, tools, registry, and database test
 - [x] Move the provider-independent generation machine and generic interpreter into `@hominem/chat`.
 - [x] Add deterministic reducer coverage for provider chunks, reasoning, tool reconstruction, sequential tool execution, confirmation, retry, cancellation, terminal no-ops, malformed input, and idempotency keys.
 - [x] Reach 100% focused statement, branch, function, and line coverage for the machine, interpreter, provider adapter, tools adapter, and registry.
-- [x] Run focused tests, typechecks, lint, and formatting.
+- [x] Run focused tests, typechecks, lint, formatting, and the repository CI gate for the shipped change.
 
 ### [x] Phase 1 — Canonical domain and RPC contract
 
@@ -188,10 +406,10 @@ Gate: API, web, Omiro, and database DTO consumers compile against the v1 types w
 - [x] Decide and document the accepted/start-generation message DTO: use the existing full `Chat` and `ChatMessageDto` response shapes.
 - [x] Add versioned `GenerationDomainEvent` and `GenerationLiveEvent` types to `packages/rpc` with compile-time payload alignment.
 - [x] Add shared Zod parsers and fixtures for durable events, live deltas, malformed versions, mismatched payloads, unsafe sequences, and unknown event types.
-- [x] Establish the explicit legacy boundary and migrate current Omiro consumers to `LegacyChatStreamEvent` without changing runtime streaming.
-- [x] Migrate API, database DTO, web, and Omiro runtime reducers to v1 events during the coordinated cutover.
+- [x] Establish the explicit legacy boundary and keep the legacy alias isolated to compatibility fixtures/adapters.
+- [x] Migrate API, database DTO, web, and Omiro runtime stream consumers to v1 events during the coordinated cutover.
 
-### [~] Phase 2 — Durable repository correctness
+### [x] Phase 2 — Durable repository correctness
 
 Complete repository invariants and recovery primitives before production orchestration depends on them.
 
@@ -203,8 +421,9 @@ Gate: event history can rebuild the run projection; concurrent append, idempoten
 - [x] Export the generation repository through the database package boundary without creating a runtime `@hominem/db` dependency in `@hominem/chat`.
 - [x] Implement encrypted snapshot serialization, API environment key management, minimum resume state, and snapshot version/integrity validation.
 - [x] Implement event-history-to-run projection rebuilding and prove the run projection is disposable while retaining its identity anchor.
-- [~] Enforce legal transitions, terminal-event exclusivity, safe-integer sequence conversion, and atomic rollback.
-- [ ] Add concurrent database tests for allocation, ownership, idempotency, projection atomicity, terminal uniqueness, snapshots, and tool effects.
+- [x] Enforce legal transitions, terminal-event exclusivity, safe-integer sequence conversion, and atomic append/projection transactions.
+- [x] Add repository tests for ordered/idempotent append, ownership, projection rebuild, snapshots, tool effects, concurrent appends, and terminal uniqueness.
+- [x] Add failure-injection and rollback tests for every repository transaction boundary, including unsafe sequence values and concurrent duplicate idempotency requests.
 
 ### [~] Phase 3 — Interpreter-backed API generation
 
@@ -217,9 +436,9 @@ Gate: send, tool execution, confirmation, retry, cancellation, regeneration, fai
 - [x] Thread internal idempotency context through the existing MCP tool registry without changing MCP HTTP behavior.
 - [ ] Add cancellation checks and injected retry timing before every external effect.
 - [ ] Define crash recovery around provider turns, confirmation waits, snapshots, and replayed write effects.
-- [ ] Replace the production callback-based completion loop with `runGenerationWithPorts`.
-- [ ] Adapt transcript/message persistence to machine turn and checkpoint semantics.
-- [ ] Add API commands and integration tests for start, approval, rejection, cancellation, retry, regeneration, failure, and crash recovery.
+- [x] Replace the production callback-based completion loop with `runGenerationWithPorts` through the resource-oriented chat runtime.
+- [~] Adapt transcript/message persistence to machine turn and checkpoint semantics; the current adapter persists assistant output, but full checkpoint/resume semantics remain.
+- [~] Add API commands and integration tests for start, approval, rejection, cancellation, retry, regeneration, failure, and crash recovery; the main route paths are covered, while crash-boundary coverage remains.
 
 ### [ ] Phase 4 — Replay-safe SSE transport
 
@@ -251,7 +470,7 @@ Gate: both clients converge on equivalent committed, failed, cancelled, and awai
 
 Delete the callback loop and `ChatStreamEvent`, remove duplicate types, enforce coverage thresholds, and complete end-to-end evidence.
 
-Gate: full `pnpm run check`, migration/codegen checks, browser flows, Omiro simulator flows, and the evidence checklist pass; the draft PR is ready for review.
+Gate: full `pnpm run check`, migration/codegen checks, browser flows, Omiro simulator flows, and the evidence checklist pass before the remaining legacy cleanup is released.
 
 - [ ] Remove the callback loop after the v1 route is proven in integration tests.
 - [ ] Delete `ChatStreamEvent` after all clients and fixtures compile on v1.
