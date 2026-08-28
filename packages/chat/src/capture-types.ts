@@ -48,10 +48,6 @@ export interface ReviewItem extends ClassificationProposal {
   createdAt: string;
 }
 
-export interface ClassificationResponse extends ClassificationProposal {
-  reviewItemId: string;
-}
-
 /** Props contract for the CaptureBar component (web and mobile). */
 export interface CaptureBarProps {
   state: CaptureLifecycleState;

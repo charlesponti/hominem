@@ -5,13 +5,6 @@ export interface SessionArtifactMessage {
   content: string;
 }
 
-export interface NoteProposal {
-  proposedType: Extract<ArtifactType, 'note'>;
-  proposedTitle: string;
-  proposedChanges: string[];
-  previewContent: string;
-}
-
 export interface ArtifactProposal {
   proposedType: ArtifactType;
   proposedTitle: string;
@@ -113,27 +106,6 @@ function toTranscript(messages: SessionArtifactMessage[]): string {
       return `${label}: ${message.content.trim()}`;
     })
     .join('\n\n');
-}
-
-export function buildNoteProposal(messages: SessionArtifactMessage[]): NoteProposal {
-  const previewContent = toTranscript(messages);
-  const capturePreview = getCapturePreview(messages);
-  const relevantMessageCount = messages.filter(
-    (message) => normalizeContent(message.content).length > 0,
-  ).length;
-  const includesAssistant = messages.some(
-    (message) => message.role === 'assistant' && normalizeContent(message.content).length > 0,
-  );
-
-  return {
-    proposedType: 'note',
-    proposedTitle: capturePreview ? truncate(capturePreview, MAX_TITLE_LENGTH) : 'Untitled note',
-    proposedChanges: [
-      `Captured ${relevantMessageCount} message${relevantMessageCount === 1 ? '' : 's'} into this note`,
-      ...(includesAssistant ? ['Includes assistant output'] : []),
-    ],
-    previewContent,
-  };
 }
 
 export function buildArtifactProposal(
