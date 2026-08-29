@@ -1,6 +1,5 @@
-import { createGenerationCoordinator } from './generation-coordinator';
 import type { GenerationStartContext } from './generation-events';
-import type { GenerationPorts } from './generation-interpreter';
+import { runGenerationWithPorts, type GenerationPorts } from './generation-interpreter';
 import type {
   GenerationInput,
   GenerationState,
@@ -63,26 +62,24 @@ class GenerationResource implements Generation {
 
   run(): Promise<GenerationState> {
     if (!this.runPromise) {
-      this.runPromise = createGenerationCoordinator()
-        .run({
-          generationId: this.input.id,
-          context: this.input.context,
-          initialInput: this.input.initialInput,
-          ports: {
-            provider: this.options.model,
-            tools: this.options.tools,
-            events: this.options.lifecycle.events,
-            control: this.options.lifecycle.control,
-            generation: {
-              save: async (state) => this.options.lifecycle.generation.save(state),
-              stop: async (state) => this.options.lifecycle.generation.stop(state),
-            },
+      this.runPromise = runGenerationWithPorts({
+        generationId: this.input.id,
+        startContext: this.input.context,
+        initialInput: this.input.initialInput,
+        ports: {
+          provider: this.options.model,
+          tools: this.options.tools,
+          events: this.options.lifecycle.events,
+          control: this.options.lifecycle.control,
+          generation: {
+            save: async (state) => this.options.lifecycle.generation.save(state),
+            stop: async (state) => this.options.lifecycle.generation.stop(state),
           },
-        })
-        .then((state) => {
-          this.currentState = state;
-          return state;
-        });
+        },
+      }).then((state) => {
+        this.currentState = state;
+        return state;
+      });
     }
     return this.runPromise;
   }
