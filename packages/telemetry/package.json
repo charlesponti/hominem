@@ -23,6 +23,7 @@
     "format:check": "oxfmt src --check"
   },
   "dependencies": {
+    "@hominem/utils": "workspace:*",
     "@opentelemetry/api": "1.8.0",
     "@opentelemetry/api-logs": "^0.203.0",
     "@opentelemetry/core": "^2.10.0",

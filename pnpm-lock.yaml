@@ -1106,6 +1106,9 @@ importers:
 
   packages/telemetry:
     dependencies:
+      '@hominem/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@opentelemetry/api':
         specifier: 1.8.0
         version: 1.8.0
@@ -1183,6 +1186,9 @@ importers:
       '@hominem/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@hominem/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@hono/node-server':
         specifier: ^2.0.10
         version: 2.0.11(hono@4.12.34)
@@ -14458,6 +14464,7 @@ snapshots:
 
   '@hominem/telemetry@file:packages/telemetry':
     dependencies:
+      '@hominem/utils': file:packages/utils
       '@opentelemetry/api': 1.8.0
       '@opentelemetry/api-logs': 0.203.0
       '@opentelemetry/core': 2.10.0(@opentelemetry/api@1.8.0)

@@ -7,5 +7,6 @@
     "lib": ["ESNext"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "build", "dist", ".turbo", ".cache", "coverage", "*.tsbuildinfo"]
+  "exclude": ["node_modules", "build", "dist", ".turbo", ".cache", "coverage", "*.tsbuildinfo"],
+  "references": [{ "path": "../utils" }]
 }
