@@ -55,20 +55,6 @@ export const ALLOWED_TRANSITIONS: CaptureLifecycleTransition[] = [
 ];
 
 /**
- * Returns true if transitioning from `from` to `to` is permitted by the state machine.
- */
-export function isValidTransition(from: CaptureLifecycleState, to: CaptureLifecycleState): boolean {
-  return ALLOWED_TRANSITIONS.some(([f, t]) => f === from && t === to);
-}
-
-/**
- * Returns all states reachable from `from` in a single step.
- */
-export function reachableFrom(from: CaptureLifecycleState): CaptureLifecycleState[] {
-  return ALLOWED_TRANSITIONS.filter(([f]) => f === from).map(([, t]) => t);
-}
-
-/**
  * Returns true if the state represents an in-flight operation where the UI
  * should prevent new user input.
  */
