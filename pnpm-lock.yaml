@@ -1190,8 +1190,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@hono/node-server':
-        specifier: ^2.0.10
-        version: 2.0.11(hono@4.12.34)
+        specifier: ^2.1.1
+        version: 2.1.1(hono@4.12.34)
       '@hono/zod-validator':
         specifier: 0.7.6
         version: 0.7.6(hono@4.12.34)(zod@4.4.3)
@@ -2756,8 +2756,8 @@ packages:
   '@hominem/utils@file:packages/utils':
     resolution: {directory: packages/utils, type: directory}
 
-  '@hono/node-server@2.0.11':
-    resolution: {integrity: sha512-bjD221KPLoJTWUwso1J6fGKiTXEUFedG/s0visavY4zakFPkeGURMRNly+FhBHs7T8Dz4qHaZIMX9ZoJHSJtKA==}
+  '@hono/node-server@2.1.1':
+    resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
@@ -14477,7 +14477,7 @@ snapshots:
 
   '@hominem/utils@file:packages/utils': {}
 
-  '@hono/node-server@2.0.11(hono@4.12.34)':
+  '@hono/node-server@2.1.1(hono@4.12.34)':
     dependencies:
       hono: 4.12.34
 

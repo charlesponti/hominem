@@ -56,7 +56,7 @@
     "@hominem/storage": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "@hono/node-server": "^2.0.10",
+    "@hono/node-server": "^2.1.1",
     "@hono/zod-validator": "^0.7.6",
     "@modelcontextprotocol/server": "2.0.0",
     "@opentelemetry/api": "1.8.0",
