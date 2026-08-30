@@ -1,3 +1,4 @@
+import type { UploadedFile } from '@hominem/rpc/types';
 import {
   UPLOAD_ALLOWED_MIME_TYPES,
   UPLOAD_MAX_FILE_COUNT,
@@ -8,7 +9,6 @@ import type { Body, Meta, UppyFile } from '@uppy/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { UploadResponseSchema } from '~/lib/schemas/files.schema';
-import type { UploadedFile } from '~/lib/types/upload';
 
 /**
  * Upload state machine states.

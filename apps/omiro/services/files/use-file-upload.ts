@@ -1,4 +1,4 @@
-import type { UploadResponse, UploadedFileDto } from '@hominem/rpc/types';
+import type { UploadedFile, UploadResponse, UploadedFileDto } from '@hominem/rpc/types';
 import {
   UPLOAD_MAX_FILE_COUNT,
   UPLOAD_MAX_FILE_SIZE_BYTES,
@@ -10,7 +10,6 @@ import { useCallback, useState } from 'react';
 import { API_BASE_URL } from '~/constants';
 import { parseApiError } from '~/services/api/parse-api-error';
 import { useAuth } from '~/services/auth/auth-provider';
-import type { UploadedFile } from '~/types/upload';
 interface UploadClient {
   upload(formData: FormData): Promise<unknown>;
 }
