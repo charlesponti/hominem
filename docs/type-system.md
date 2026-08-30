@@ -2,6 +2,8 @@
 
 The monorepo resolves TypeScript types through **compiled declaration contracts**, not source files. This document records why the system moved to contracts, the verified diagnosis of the failure class it replaces, the target model, the decisions that govern it, the Phase 0 evidence, and the remaining tasks.
 
+For everything about _how fast_ type-checking is within this model — the live project-reference redirect, the `pnpm` injected-package staleness trap, which speed fixes actually measured out and which didn't, `services/api`'s zero-`references` invariant — see [`docs/type-performance.md`](type-performance.md). This document is the "why declarations, not source" record; that one is the "we tried N things, here's what was real" record.
+
 ## Why this exists
 
 Two incidents in August 2026 exposed the cost of source-resolved typing:
@@ -9,15 +11,15 @@ Two incidents in August 2026 exposed the cost of source-resolved typing:
 1. **The phantom `NoteKind` error.** Adding a named export to `packages/db`'s barrel kept failing `tsc` in `services/api` with "no exported member" — the cause was a stale `tsconfig.tsbuildinfo` incremental cache serving pre-change dependency state. Three caches had to be deleted by hand to unstick a real type change. That failure class is architectural, not a one-off.
 2. **Declarations in the source tree.** A scratch declaration-emit run materialized 167 `.d.ts` files inside `services/api/src/`, and a cleanup glob briefly deleted the tracked, hand-written `services/api/src/types/hono.d.ts`. Generated declarations have no business in `src/`.
 
-Both failures trace to one root cause: **the repo resolves dependency *source*, never dependency *declarations***.
+Both failures trace to one root cause: **the repo resolves dependency _source_, never dependency _declarations_**.
 
 ## Current state (verified audit)
 
 - Every `@hominem/*` `package.json` `exports` map points `types` at `./src/*.ts`. Verified: `packages/ai` (composite, `references: [db]`) resolves `@hominem/db` to `packages/db/src/index.ts` — source — not its compiled `.d.ts`.
-- Consumers therefore recompile full dependency source trees into their own programs. `services/api`'s typecheck compiles all of `db`, `ai`, `telemetry`… source; `apps/finance` pulls `services/api` source in via path alias *and* every package behind it. Cold typechecks are O(whole source graph).
+- Consumers therefore recompile full dependency source trees into their own programs. `services/api`'s typecheck compiles all of `db`, `ai`, `telemetry`… source; `apps/finance` pulls `services/api` source in via path alias _and_ every package behind it. Cold typechecks are O(whole source graph).
 - The composite `references` graph builds declaration outputs into `packages/*/build/`, but nobody consumes them — the machinery is decorative for resolution.
 - `incremental: true` + `noEmit` + source-resolved deps = the stale-`tsbuildinfo` failure class. `skipLibCheck` and `assumeChangesOnlyAffectDirectDependencies` paper over but do not fix it.
-- `services/api` and `packages/rpc` are deliberately **non-composite** boundary projects (see below), and apps alias `@hominem/api/*` to api *source* files through tsconfig `paths`.
+- `services/api` and `packages/rpc` are deliberately **non-composite** boundary projects (see below), and apps alias `@hominem/api/*` to api _source_ files through tsconfig `paths`.
 
 ## Target model: compiled type contracts
 
@@ -49,11 +51,11 @@ Turbo's existing `typecheck`/`test` → `^build` ordering already guarantees dec
 
 A scratch `emitDeclarationOnly` build of `services/api` produced 176 self-contained `.d.ts`. Consumers pointed at the emitted declarations, cold-cached:
 
-| Consumer | Alias target | Typecheck | Program content |
-| --- | --- | --- | --- |
-| `packages/rpc` | emitted `app.d.ts` | ✅ exit 0 | Hono client-inference chain (`client.api.notes[':id'].$get`) survives declaration emit |
-| `apps/omiro` | emitted `app.d.ts` | ✅ exit 0 | **0 `services/api/src` files in program**; cold 9.1s (source) → 6.4s (declarations) |
-| `apps/career` | emitted `routes/career.d.ts` | ✅ exit 0 | per-route alias pattern works too |
+| Consumer       | Alias target                 | Typecheck | Program content                                                                        |
+| -------------- | ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
+| `packages/rpc` | emitted `app.d.ts`           | ✅ exit 0 | Hono client-inference chain (`client.api.notes[':id'].$get`) survives declaration emit |
+| `apps/omiro`   | emitted `app.d.ts`           | ✅ exit 0 | **0 `services/api/src` files in program**; cold 9.1s (source) → 6.4s (declarations)    |
+| `apps/career`  | emitted `routes/career.d.ts` | ✅ exit 0 | per-route alias pattern works too                                                      |
 
 `apps/finance` uses the same `app.ts` alias as rpc/omiro and is covered by that proof.
 
@@ -90,6 +92,7 @@ Temporary execution belongs to the work tracker; promote these to `docs/tasks/` 
 - **Evidence:** with the watcher running, appending a probe type to `packages/utils/src/text.ts` produced the updated `WatchTypesProbe` export in `packages/utils/build/text.d.ts` within seconds and `services/api` typecheck stayed clean; probe removed afterward and build state verified clean. Runtime (tsx, metro, vite) resolves `default` → src so the declaration rebuilds never touch the running apps.
 - **Steps:** add a `just`/pnpm recipe running turbo watch builds for packages whose types changed; document the tsserver-restart caveat; confirm dev loop (tsx watch, metro) is unaffected by declaration-only changes.
 - **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in `docs/development.md`.
+- **Note (2026-08-30):** the root `tsc -b --watch` leg was briefly removed on the theory that every consumer gets tsserver's live redirect and doesn't need it — true for consumers _with_ a `references` entry (`packages/db`, `packages/rpc`, `apps/web`, `apps/omiro`), false for `services/api`, which by design has none and resolves `packages/chat` and 8 other composite packages purely via `paths` to `build/*.d.ts`. Restored. See `docs/type-performance.md` for the full investigation.
 
 ### Task 4 — Remove the residual write-only cruft — COMPLETE (2026-08-27)
 
