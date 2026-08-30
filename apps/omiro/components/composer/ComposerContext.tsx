@@ -1,4 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
+import type { UploadedFile } from '@hominem/rpc/types';
 import { UPLOAD_MAX_FILE_COUNT } from '@hominem/storage/constants';
 import { logger } from '@hominem/telemetry';
 import {
@@ -20,7 +21,6 @@ import React, {
 import { Alert } from 'react-native';
 
 import { useFileUpload } from '~/services/files/use-file-upload';
-import type { UploadedFile } from '~/types/upload';
 
 export interface ComposerAttachment {
   id: string;

@@ -16,7 +16,34 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "rootDir": "src",
-    "outDir": "build"
+    "outDir": "build",
+    // pnpm-workspace.yaml sets injectWorkspacePackages: true, which
+    // hard-copies (not symlinks) these packages into a peer-isolated
+    // .pnpm virtual-store variant wherever a react-peer-dependent package
+    // (career-services, ai, ...) requires one. That copy is frozen at
+    // `pnpm install` time, before `pnpm build` has produced build/*.d.ts,
+    // so its own package.json "types" condition 404s and TS falls through
+    // to the "default" condition -- real src/*.ts. That forces a full
+    // structural check of Drizzle/Kysely repository source (expensive)
+    // instead of a cheap prebuilt .d.ts, for every package these
+    // internally import from each other. Scoped to *this* type-check-only
+    // config (not the base tsconfig.json, which rolldown's build.mjs also
+    // reads for real bundling -- pinning it there broke that build: TS
+    // is fine resolving a bare `paths` target straight to a .d.ts, but
+    // rolldown needs the exports-map "default"/runtime condition, not a
+    // types-only file). Verified: same 0-error result, ~13% faster
+    // `tsc -p tsconfig.emit.json` (11.6s -> 10.1s avg, A/B'd).
+    "paths": {
+      "@/*": ["./*"],
+      "@hominem/db": ["../../packages/db/build/index.d.ts"],
+      "@hominem/ai": ["../../packages/ai/build/index.d.ts"],
+      "@hominem/career-services": ["../../packages/career/build/index.d.ts"],
+      "@hominem/queues": ["../../packages/queues/build/index.d.ts"],
+      "@hominem/services": ["../../packages/services/build/index.d.ts"],
+      "@hominem/telemetry": ["../../packages/telemetry/build/index.d.ts"],
+      "@hominem/utils": ["../../packages/utils/build/index.d.ts"],
+      "@hominem/env": ["../../packages/env/build/index.d.ts"]
+    }
   },
   "exclude": [
     "node_modules",

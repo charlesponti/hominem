@@ -1,12 +1,19 @@
 import { getUserJobs, redis, type BaseJob } from '@hominem/queues';
-import { upgradeWebSocket } from '@hono/node-server';
+import { upgradeWebSocket, type WebSocketLike } from '@hono/node-server';
 import { Hono } from 'hono';
+import type { WSEvents } from 'hono/ws';
 
 import type { AppContext } from '../middleware/auth';
 
 export const importWebSocketRoutes = new Hono<AppContext>().get(
   '/ws',
-  upgradeWebSocket((c) => {
+  // Explicit return type: without it, TS infers this callback's return shape
+  // bottom-up (including every onOpen/onMessage/onClose closure) before
+  // comparing it against upgradeWebSocket's overloads -- one of the most
+  // expensive single checkExpression spans in the whole services/api
+  // typecheck (~780ms). Annotating gives each handler a contextual type
+  // upfront instead.
+  upgradeWebSocket((c): WSEvents<WebSocketLike> => {
     const userId = c.get('auth')?.userId;
     let subscriber: ReturnType<typeof redis.duplicate> | null = null;
 

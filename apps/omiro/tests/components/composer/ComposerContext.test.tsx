@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
+import type { UploadedFile } from '@hominem/rpc/types';
 import { renderHook } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { UploadedFile } from '~/types/upload';
 
 const mockDeleteFile = vi.fn().mockResolvedValue(undefined);
 const mockAlert = vi.fn();

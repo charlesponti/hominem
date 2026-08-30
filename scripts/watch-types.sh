@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
-# Watches the monorepo's declaration graph so editors and terminal checks
-# always see fresh types during development:
-#   - composite packages rebuild via `tsc -b` (db, env, ... -> build/*.d.ts)
-#   - services/api and packages/rpc re-emit their self-contained
-#     declarations (tsconfig.emit.json, outDir build)
-# Consumers' tsservers read the emitted build/*.d.ts and pick up a change
-# within the rebuild time. Runtime (tsx, metro, vite) always runs from
-# source and is unaffected by these declaration-only rebuilds.
+# Keeps the monorepo's declaration graph fresh for development.
+#
+# Consumers WITH a `references` entry to a composite package (packages/db,
+# packages/rpc, apps/web, apps/omiro, ...) get tsserver's live
+# project-reference source redirect for free, with zero dependency on that
+# package's build/*.d.ts being fresh — verified empirically, including from
+# a completely fresh clone with no prior build output anywhere (see
+# scripts/check-live-types.mjs and scripts/bench-tsserver.mjs).
+#
+# services/api is the one consumer that can't do that: it's the Hono
+# `typeof rpcApp` RPC type-inference boundary, and AGENTS.md documents that
+# such a package must resolve ALL its dependencies via plain paths straight
+# to build/*.d.ts, never a `references` entry — even to packages/chat alone,
+# which an earlier version of this PR argued was safe (empirically true
+# today: full `tsc --noEmit` clean). AGENTS.md's invariant is meant to hold
+# as the AppType contract evolves, not just for today's shape, so
+# services/api keeps zero `references` entries and depends entirely on this
+# watcher for every composite package it consumes, packages/chat included.
+#
+# `pnpm build` still does a real composite `tsc -b` for CI/deployment;
+# that's unrelated to this script.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

@@ -9,17 +9,29 @@
     "jsxImportSource": "hono/jsx",
     "lib": ["ESNext", "DOM"],
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
+    // NOTE: rolldown's build.mjs reads *this* file directly
+    // (`tsconfig: './tsconfig.json'`) for its own runtime bundling, so
+    // `paths` here must only ever redirect to real, bundleable modules.
+    // See tsconfig.emit.json for the type-check-only `paths` override --
+    // it does not extend into rolldown's build.
     "paths": {
       "@/*": ["./*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "build", ".turbo", ".cache", "coverage", "*.tsbuildinfo"]
-  // Deliberately NOT wired into the composite project-reference graph:
-  // rpc/app.ts's `typeof rpcApp` inference re-exports types from these
-  // packages (AIUsageFeature, AffordabilityVerdict, ...), and once those
-  // packages are real composite projects, TS's "portable type" check
-  // (TS2883) refuses to infer AppType without an explicit annotation —
-  // which would defeat Hono's RPC type-inference pattern. This package
-  // keeps resolving its dependencies via plain source, same as before.
+  // Deliberately NOT itself composite, and deliberately NO `references`
+  // entries at all (see AGENTS.md's "Package that infers types across other
+  // packages" section): rpc/app.ts's `typeof rpcApp` inference re-exports
+  // types from these packages (AIUsageFeature, AffordabilityVerdict, ...),
+  // and TS's "portable type" check (TS2883) can refuse to infer AppType
+  // across a real composite project boundary without an explicit
+  // annotation, defeating Hono's RPC type-inference pattern. A bare
+  // `references` entry to a single package (e.g. packages/chat alone) does
+  // pass a full `tsc --noEmit` today -- verified empirically -- but
+  // AGENTS.md's zero-references invariant exists to hold as the AppType
+  // contract evolves, not just for today's shape. Every dependency here
+  // (packages/chat included) resolves via plain source/paths to build/*.d.ts
+  // instead; scripts/watch-types.sh's composite watcher is what keeps that
+  // fresh during development.
 }

@@ -16,7 +16,11 @@ interface UpdateNoteParams {
 
 export class NoteService {
   async createNote(userId: string, input: CreateNoteParams): Promise<NoteRecord> {
-    return runInTransaction(async (trx) => {
+    // Explicit return type: without it, TS infers runInTransaction's `T`
+    // from this whole callback body (every awaited repository call) before
+    // checking it -- one of the most expensive single checkExpression spans
+    // in the services/api typecheck (~765ms). Annotating short-circuits that.
+    return runInTransaction(async (trx): Promise<NoteRecord> => {
       const content = input.content.trim();
       // Title is only set when explicitly provided — never auto-derived from content
       const title = input.title?.trim() || null;
@@ -40,7 +44,7 @@ export class NoteService {
   }
 
   async updateNote(noteId: string, userId: string, input: UpdateNoteParams): Promise<NoteRecord> {
-    return runInTransaction(async (trx) => {
+    return runInTransaction(async (trx): Promise<NoteRecord> => {
       const existing = await NoteRepository.getOwnedOrThrow(trx, noteId, userId);
       const nextContent = input.content !== undefined ? input.content.trim() : existing.content;
       // Only update title when explicitly sent; never re-derive from content on updates
