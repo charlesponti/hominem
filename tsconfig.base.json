@@ -6,13 +6,7 @@
     "skipDefaultLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-    // tsserver-only (ignored by plain `tsc`/CI runs): limits re-checking on
-    // edit to a file's direct dependents instead of the full transitive
-    // closure. Standard tradeoff for editor responsiveness in large project-
-    // reference graphs; occasionally needs a tsserver restart to see a
-    // change that ripples further than one hop.
-    "assumeChangesOnlyAffectDirectDependencies": true
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "tmp"]
 }

@@ -63,7 +63,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
-      "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*", ".cache/**"]
+      "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*"]
     },
     "@hominem/web#typecheck": {
       "dependsOn": ["^build", "@hominem/rpc#build"],
@@ -78,7 +78,7 @@
     "@hominem/rpc#build": {
       "dependsOn": ["^build", "@hominem/api#build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
-      "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*", ".cache/**"]
+      "outputs": ["dist/**", "build/**", ".react-router/**", "app/routes/+types/**/*"]
     },
     "dev": {
       "cache": false,
