@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { GenerationEventPayload } from '@hominem/chat';
+import type { GenerationHistoryEventPayload } from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authDb, db } from '../../db';
@@ -74,11 +74,28 @@ describe('ChatGenerationRepository', () => {
     const call = { id: 'call-1', name: 'lookup', arguments: '{}', iteration: 0, turnId: 'turn-1' };
     const result = { callId: 'call-1', toolName: 'lookup', content: '{}', error: false };
     const events = [
-      { type: 'generation.started', context: { chatId: 'chat-1' } },
+      {
+        type: 'generation.started',
+        context: {
+          chatId: 'chat-1',
+          kind: 'send',
+          userMessageId: null,
+          targetAssistantMessageId: null,
+          requestContext: {},
+        },
+      },
       { type: 'generation.accepted', chatId: 'chat-1', userMessage: { ...message, role: 'user' } },
       { type: 'generation.phase_changed', phase: 'running' },
       { type: 'generation.cancel_requested', requestedAt: 'now', requestedBy: 'user-1' },
-      { type: 'generation.checkpointed', checkpoint: {} },
+      {
+        type: 'generation.checkpointed',
+        checkpoint: {
+          turnId: 'turn-1',
+          iteration: 0,
+          assistantMessage: message,
+          pendingToolCallIds: ['call-1'],
+        },
+      },
       { type: 'tool.requested', call },
       { type: 'tool.completed', result },
       { type: 'tool.failed', result: { ...result, error: true } },
@@ -133,7 +150,7 @@ describe('ChatGenerationRepository', () => {
         targetAssistantMessageId: null,
         requestContext: { values: ['x'] },
       },
-    } satisfies GenerationEventPayload;
+    } satisfies GenerationHistoryEventPayload;
 
     const [first, replay] = await Promise.all(
       [1, 2].map(() =>

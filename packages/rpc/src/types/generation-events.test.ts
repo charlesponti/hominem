@@ -10,7 +10,7 @@ import {
   legacyEventToLiveEvent,
   parseGenerationDomainEvent,
   parseGenerationLiveEvent,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
   type GenerationDomainEvent,
 } from './generation-events';
 
@@ -303,7 +303,7 @@ describe('generation RPC event contract', () => {
       }).event.type,
     ).toBe('tool-step');
     expect(
-      parseGenerationStreamEvent({
+      parseGenerationWireEvent({
         version: 1,
         generationId: 'generation-1',
         event: { type: 'reasoning-delta', text: 'Thinking' },

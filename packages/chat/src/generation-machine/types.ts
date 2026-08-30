@@ -79,7 +79,7 @@ export type GenerationState = {
   lastError: string | null;
 };
 
-export type GenerationEventPayload =
+export type GenerationHistoryEventPayload =
   | {
       type: 'generation.started';
       context: GenerationStartContext;
@@ -112,19 +112,19 @@ export type GenerationEventPayload =
   | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
   | { type: 'generation.failed'; message: string; metadata?: GenerationTerminalMetadata };
 
-export type GenerationEventType = GenerationEventPayload['type'];
+export type GenerationHistoryEventType = GenerationHistoryEventPayload['type'];
 
-export type GenerationDomainEvent = {
-  [Payload in GenerationEventPayload as Payload['type']]: {
+export type GenerationHistoryEvent = {
+  [Payload in GenerationHistoryEventPayload as Payload['type']]: {
     version: 1;
     generationId: string;
     sequence: number;
     type: Payload['type'];
     payload: Payload;
   };
-}[GenerationEventType];
+}[GenerationHistoryEventType];
 
-export type GenerationLiveEventPayload =
+export type GenerationStreamEventPayload =
   | { type: 'text-delta'; text: string }
   | { type: 'reasoning-delta'; text: string }
   | {
@@ -133,12 +133,13 @@ export type GenerationLiveEventPayload =
       toolName: string;
       status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
     }
-  | { type: 'phase-changed'; phase: GenerationPhase };
+  | { type: 'phase-changed'; phase: GenerationPhase }
+  | { type: 'error'; message: string };
 
-export type GenerationLiveEvent = {
+export type GenerationStreamEvent = {
   version: 1;
   generationId: string;
-  event: GenerationLiveEventPayload;
+  event: GenerationStreamEventPayload;
 };
 
 export type GenerationInput =
@@ -165,8 +166,8 @@ export type GenerationInput =
   | { type: 'generation-failed'; message: string };
 
 export type GenerationCommand =
-  | { type: 'persist'; event: GenerationEventPayload; idempotencyKey: string }
-  | { type: 'emit'; event: GenerationLiveEventPayload }
+  | { type: 'persist'; event: GenerationHistoryEventPayload; idempotencyKey: string }
+  | { type: 'emit'; event: GenerationStreamEventPayload }
   | { type: 'open-provider-turn'; turnId: string; iteration: number }
   | { type: 'execute-tool'; call: GenerationToolCall; idempotencyKey: string }
   | { type: 'preview-tool'; call: GenerationToolCall; idempotencyKey: string }

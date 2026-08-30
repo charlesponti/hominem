@@ -1,15 +1,15 @@
 import type {
   GenerationClientErrorEvent,
   GenerationClientInputEvent,
-  GenerationDomainEvent as ChatGenerationDomainEvent,
-  GenerationLiveEvent as ChatGenerationLiveEvent,
+  GenerationHistoryEvent as ChatGenerationHistoryEvent,
   GenerationMessageSnapshot,
+  GenerationStreamEvent as ChatGenerationStreamEvent,
   GenerationTerminalMetadata,
   GenerationToolCall,
 } from '@hominem/chat';
 
 import type { ChatMessageDto } from './types/chat.types';
-import type { GenerationDomainEvent, GenerationStreamEvent } from './types/generation-events';
+import type { GenerationDomainEvent, GenerationWireEvent } from './types/generation-events';
 
 function toMessageSnapshot(message: ChatMessageDto): GenerationMessageSnapshot | null {
   if (message.role !== 'user' && message.role !== 'assistant') return null;
@@ -70,8 +70,8 @@ function toTerminalMetadata(
 
 function durableEvent(
   event: GenerationDomainEvent,
-  payload: Exclude<ChatGenerationDomainEvent['payload'], { type: 'generation.accepted' }>,
-): ChatGenerationDomainEvent {
+  payload: Exclude<ChatGenerationHistoryEvent['payload'], { type: 'generation.accepted' }>,
+): ChatGenerationHistoryEvent {
   const envelope: { version: 1; generationId: string; sequence: number } = {
     version: 1,
     generationId: event.generationId,
@@ -230,7 +230,7 @@ function mapDurableEvent(event: GenerationDomainEvent): GenerationClientInputEve
 }
 
 export function toGenerationClientEvents(
-  event: GenerationStreamEvent,
+  event: GenerationWireEvent,
 ): GenerationClientInputEvent[] {
   if ('event' in event) {
     if (event.event.type === 'error') {
@@ -241,7 +241,7 @@ export function toGenerationClientEvents(
       };
       return [errorEvent];
     }
-    const liveEvent: ChatGenerationLiveEvent = {
+    const liveEvent: ChatGenerationStreamEvent = {
       version: 1,
       generationId: event.generationId,
       event: event.event,

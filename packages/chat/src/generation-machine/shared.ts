@@ -6,13 +6,13 @@
 import type {
   GenerationActivePhase,
   GenerationCommand,
-  GenerationEventPayload,
+  GenerationHistoryEventPayload,
   GenerationToolCall,
 } from './types';
 
 export function generationEventIdempotencyKey(
   generationId: string,
-  event: GenerationEventPayload,
+  event: GenerationHistoryEventPayload,
 ): string {
   switch (event.type) {
     case 'generation.started':
@@ -43,7 +43,7 @@ export function generationEventIdempotencyKey(
 
 export function persistCommand(
   generationId: string,
-  event: GenerationEventPayload,
+  event: GenerationHistoryEventPayload,
 ): GenerationCommand {
   return {
     type: 'persist',

@@ -4,8 +4,8 @@ import {
   type GenerationCommand,
   type GenerationEffectInterpreter,
   type GenerationInput,
-  type GenerationLiveEventPayload,
   type GenerationState,
+  type GenerationStreamEventPayload,
   type GenerationToolCall,
   type RunGenerationInput,
   type ToolResult,
@@ -49,7 +49,7 @@ export type GenerationPorts = {
       command: Extract<GenerationCommand, { type: 'persist' }>,
       state: GenerationState,
     ) => void | Promise<void>;
-    emit: (event: GenerationLiveEventPayload, state: GenerationState) => void | Promise<void>;
+    emit: (event: GenerationStreamEventPayload, state: GenerationState) => void | Promise<void>;
   };
   generation: {
     save: (

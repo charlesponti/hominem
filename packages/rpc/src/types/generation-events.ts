@@ -236,9 +236,11 @@ export const GenerationLiveEventSchema = z.object({
 
 export type GenerationLiveEvent = z.infer<typeof GenerationLiveEventSchema>;
 export type GenerationLiveEventPayload = GenerationLiveEvent['event'];
-export type GenerationStreamEvent = GenerationDomainEvent | GenerationLiveEvent;
 
-export const GenerationStreamEventSchema = z.union([
+/** Everything that can arrive over the generation SSE wire: durable replay plus the live broadcast. */
+export type GenerationWireEvent = GenerationDomainEvent | GenerationLiveEvent;
+
+export const GenerationWireEventSchema = z.union([
   GenerationDomainEventSchema,
   GenerationLiveEventSchema,
 ]);
@@ -251,8 +253,8 @@ export function parseGenerationLiveEvent(input: unknown): GenerationLiveEvent {
   return GenerationLiveEventSchema.parse(input);
 }
 
-export function parseGenerationStreamEvent(input: unknown): GenerationStreamEvent {
-  return GenerationStreamEventSchema.parse(input);
+export function parseGenerationWireEvent(input: unknown): GenerationWireEvent {
+  return GenerationWireEventSchema.parse(input);
 }
 
 /**
@@ -260,8 +262,8 @@ export function parseGenerationStreamEvent(input: unknown): GenerationStreamEven
  * not carry sequences and must remain independently deliverable.
  */
 export function createGenerationEventDeduplicator(): (
-  event: GenerationStreamEvent,
-) => GenerationStreamEvent | null {
+  event: GenerationWireEvent,
+) => GenerationWireEvent | null {
   const seenDurableEvents = new Set<string>();
   return (event) => {
     if ('sequence' in event) {
@@ -273,7 +275,7 @@ export function createGenerationEventDeduplicator(): (
   };
 }
 
-export function getGenerationFailureMessage(event: GenerationStreamEvent): string | null {
+export function getGenerationFailureMessage(event: GenerationWireEvent): string | null {
   if ('payload' in event && event.type === 'generation.failed') return event.payload.message;
   if ('event' in event && event.event.type === 'error') return event.event.message;
   return null;

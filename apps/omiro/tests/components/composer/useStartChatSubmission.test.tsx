@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/rpc/types';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,7 +40,7 @@ describe('useStartChatSubmission', () => {
         onAccepted,
       }: {
         onAccepted?: (
-          event: Extract<GenerationStreamEvent, { type: 'generation.accepted' }>,
+          event: Extract<GenerationWireEvent, { type: 'generation.accepted' }>,
         ) => void;
       }) => {
         onAccepted?.({ payload: { chatId: 'chat-1' } } as never);

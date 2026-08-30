@@ -12,11 +12,11 @@
 import { reduceGenerationFailed } from './lifecycle';
 import { persistCommand, phaseCommands, toolCallIdempotencyKey } from './shared';
 import type {
-  GenerationEventPayload,
+  GenerationHistoryEventPayload,
   GenerationInput,
-  GenerationLiveEventPayload,
   GenerationState,
   GenerationStep,
+  GenerationStreamEventPayload,
   GenerationToolCall,
   ToolResult,
 } from './types';
@@ -95,10 +95,10 @@ export function reduceProviderTurnCompleted(
 
 export function reduceToolResult(state: GenerationState, result: ToolResult): GenerationStep {
   const nextCall = state.pendingToolCalls[0];
-  const resultEvent: GenerationEventPayload = result.error
+  const resultEvent: GenerationHistoryEventPayload = result.error
     ? { type: 'tool.failed', result }
     : { type: 'tool.completed', result };
-  const liveEvent: GenerationLiveEventPayload = {
+  const liveEvent: GenerationStreamEventPayload = {
     type: 'tool-step',
     toolCallId: result.callId,
     toolName: result.toolName,

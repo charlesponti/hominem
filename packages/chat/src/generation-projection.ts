@@ -2,7 +2,7 @@ import type { GenerationMessageSnapshot, GenerationStartContext } from './genera
 import type {
   ChatGenerationKind,
   ChatGenerationStatus,
-  GenerationEventPayload,
+  GenerationHistoryEventPayload,
 } from './generation-machine';
 
 export type GenerationRunIdentity = {
@@ -48,7 +48,7 @@ function messageId(message: GenerationMessageSnapshot): string {
 function applyEvent(
   projection: GenerationRunProjection | null,
   identity: GenerationRunIdentity,
-  event: GenerationEventPayload,
+  event: GenerationHistoryEventPayload,
 ): GenerationRunProjection {
   if (event.type === 'generation.started') {
     if (projection) throw new GenerationProjectionError('generation.started was duplicated');
@@ -100,14 +100,14 @@ function applyEvent(
 export function reduceGenerationProjection(
   projection: GenerationRunProjection | null,
   identity: GenerationRunIdentity,
-  event: GenerationEventPayload,
+  event: GenerationHistoryEventPayload,
 ): GenerationRunProjection {
   return applyEvent(projection, identity, event);
 }
 
 export function rebuildGenerationProjection(
   identity: GenerationRunIdentity,
-  events: readonly GenerationEventPayload[],
+  events: readonly GenerationHistoryEventPayload[],
 ): GenerationRunProjection {
   return (
     events.reduce<GenerationRunProjection | null>(

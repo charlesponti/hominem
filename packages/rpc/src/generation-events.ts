@@ -2,13 +2,13 @@ export {
   GENERATION_EVENT_VERSION,
   GenerationDomainEventSchema,
   GenerationLiveEventSchema,
-  GenerationStreamEventSchema,
+  GenerationWireEventSchema,
   createGenerationEventDeduplicator,
   getGenerationFailureMessage,
   legacyEventToLiveEvent,
   parseGenerationDomainEvent,
   parseGenerationLiveEvent,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
 } from './types/generation-events';
 export { toGenerationClientEvents } from './generation-client-events';
 export type {
@@ -16,5 +16,5 @@ export type {
   GenerationDomainEventPayload,
   GenerationLiveEvent,
   GenerationLiveEventPayload,
-  GenerationStreamEvent,
+  GenerationWireEvent,
 } from './types/generation-events';

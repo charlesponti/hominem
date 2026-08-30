@@ -1,4 +1,4 @@
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/rpc/types';
 import { describe, expect, it, vi } from 'vitest';
 
 import { consumeSseResponse } from './consume-sse-response';
@@ -17,7 +17,7 @@ function responseFor(chunks: string[]) {
 
 describe('consumeSseResponse', () => {
   it('parses events split across chunks and ignores malformed lines', async () => {
-    const onEvent = vi.fn<(event: GenerationStreamEvent) => void>();
+    const onEvent = vi.fn<(event: GenerationWireEvent) => void>();
     let lastSequence = 0;
 
     await consumeSseResponse(
@@ -43,7 +43,7 @@ describe('consumeSseResponse', () => {
   });
 
   it('flushes a final event without a trailing newline', async () => {
-    const onEvent = vi.fn<(event: GenerationStreamEvent) => void>();
+    const onEvent = vi.fn<(event: GenerationWireEvent) => void>();
 
     await consumeSseResponse(
       responseFor([

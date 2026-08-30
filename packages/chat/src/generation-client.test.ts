@@ -7,7 +7,7 @@ import {
   type GenerationClientErrorEvent,
 } from './generation-client';
 import type { GenerationMessageSnapshot } from './generation-events';
-import type { GenerationDomainEvent } from './generation-machine';
+import type { GenerationHistoryEvent } from './generation-machine';
 
 const call = {
   id: 'call-1',
@@ -27,7 +27,7 @@ const message: GenerationMessageSnapshot = {
 
 function durable(
   sequence: number,
-  payload: GenerationDomainEvent['payload'],
+  payload: GenerationHistoryEvent['payload'],
 ): GenerationClientEvent {
   const envelope: { version: 1; generationId: string; sequence: number } = {
     version: 1,

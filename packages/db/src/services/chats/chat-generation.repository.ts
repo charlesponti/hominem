@@ -1,12 +1,12 @@
 import {
   rebuildGenerationProjection,
   reduceGenerationProjection,
-  type GenerationEventPayload,
-  type GenerationMessageSnapshot,
+  type GenerationHistoryEventPayload,
   type GenerationRunIdentity,
   type GenerationRunProjection,
   type ToolResult,
 } from '@hominem/chat';
+import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
 import type { Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
@@ -36,31 +36,6 @@ function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
-function isNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isMessageSnapshot(value: unknown): value is GenerationMessageSnapshot {
-  if (!value || !isJsonObject(value)) return false;
-  return (
-    isString(value.id) &&
-    isString(value.chatId) &&
-    (value.role === 'user' || value.role === 'assistant') &&
-    isString(value.content)
-  );
-}
-
-function isToolCall(value: unknown): boolean {
-  if (!value || !isJsonObject(value)) return false;
-  return (
-    isString(value.id) &&
-    isString(value.name) &&
-    isString(value.arguments) &&
-    isNumber(value.iteration) &&
-    isString(value.turnId)
-  );
-}
-
 function isToolResult(value: unknown): value is ToolResult {
   if (!value || !isJsonObject(value)) return false;
   return (
@@ -71,49 +46,12 @@ function isToolResult(value: unknown): value is ToolResult {
   );
 }
 
-function isGenerationEventPayload(value: unknown): value is GenerationEventPayload {
-  if (!isJsonObject(value) || !isString(value.type)) return false;
-  switch (value.type) {
-    case 'generation.started':
-      return isJsonObject(value.context) && isString(value.context.chatId);
-    case 'generation.accepted':
-      return (
-        isString(value.chatId) &&
-        (value.userMessage === null || isMessageSnapshot(value.userMessage))
-      );
-    case 'generation.phase_changed':
-      return isString(value.phase);
-    case 'generation.cancel_requested':
-      return isString(value.requestedAt) && isString(value.requestedBy);
-    case 'generation.checkpointed':
-      return isJsonObject(value.checkpoint);
-    case 'tool.requested':
-    case 'confirmation.required':
-      return isToolCall(value.call);
-    case 'tool.completed':
-    case 'tool.failed':
-      return isToolResult(value.result);
-    case 'confirmation.approved':
-      return isString(value.callId);
-    case 'confirmation.rejected':
-      return isString(value.callId) && isString(value.reason);
-    case 'generation.retry_scheduled':
-      return isNumber(value.attempt) && isNumber(value.maxAttempts);
-    case 'generation.committed':
-      return isMessageSnapshot(value.message);
-    case 'generation.cancelled':
-      return true;
-    case 'generation.failed':
-      return isString(value.message);
-  }
-  return false;
-}
-
-export function parseGenerationEventPayload(value: unknown): GenerationEventPayload {
-  if (!isGenerationEventPayload(value)) {
+export function parseGenerationEventPayload(value: unknown): GenerationHistoryEventPayload {
+  const result = GenerationHistoryEventPayloadSchema.safeParse(value);
+  if (!result.success) {
     throw new Error('Invalid chat generation event payload');
   }
-  return value;
+  return result.data;
 }
 
 export function parseToolResult(value: unknown): ToolResult {
@@ -144,8 +82,8 @@ export interface ChatGenerationEventRecord {
   id: string;
   generationId: string;
   sequence: number;
-  type: GenerationEventPayload['type'];
-  payload: GenerationEventPayload;
+  type: GenerationHistoryEventPayload['type'];
+  payload: GenerationHistoryEventPayload;
   idempotencyKey: string | null;
   createdAt: string;
 }
@@ -153,7 +91,7 @@ export interface ChatGenerationEventRecord {
 export interface AppendChatGenerationEventInput {
   generationId: string;
   ownerUserId: string;
-  event: GenerationEventPayload;
+  event: GenerationHistoryEventPayload;
   idempotencyKey?: string;
 }
 

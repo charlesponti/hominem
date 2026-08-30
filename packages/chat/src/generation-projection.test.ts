@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
-import type { GenerationEventPayload } from './generation-machine';
+import type { GenerationHistoryEventPayload } from './generation-machine';
 import {
   GenerationProjectionError,
   rebuildGenerationProjection,
@@ -28,7 +28,7 @@ const started = {
     targetAssistantMessageId: 'assistant-1',
     requestContext: {},
   },
-} satisfies GenerationEventPayload;
+} satisfies GenerationHistoryEventPayload;
 
 const committed = {
   type: 'generation.committed',
@@ -38,7 +38,7 @@ const committed = {
     role: 'assistant',
     content: 'Done',
   },
-} satisfies GenerationEventPayload;
+} satisfies GenerationHistoryEventPayload;
 
 function contextWith(overrides: Partial<GenerationStartContext>): GenerationStartContext {
   return { ...started.context, ...overrides };
@@ -74,7 +74,7 @@ describe('generation projection', () => {
         },
         pendingToolCallIds: ['call-1'],
       },
-    } satisfies GenerationEventPayload;
+    } satisfies GenerationHistoryEventPayload;
     expect(
       rebuildGenerationProjection(identity, [
         started,
@@ -101,7 +101,7 @@ describe('generation projection', () => {
     };
 
     const cases: Array<{
-      event: GenerationEventPayload;
+      event: GenerationHistoryEventPayload;
       status: GenerationRunProjection['status'];
       assistantMessageId?: string;
     }> = [

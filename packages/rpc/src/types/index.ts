@@ -7,7 +7,7 @@ export type {
   GenerationDomainEventPayload,
   GenerationLiveEvent,
   GenerationLiveEventPayload,
-  GenerationStreamEvent,
+  GenerationWireEvent,
 } from './generation-events';
 export * from './inbox.types';
 export * from './memory.types';

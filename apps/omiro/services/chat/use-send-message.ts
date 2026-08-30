@@ -1,7 +1,7 @@
 import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
 import {
   getGenerationFailureMessage,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
   toGenerationClientEvents,
 } from '@hominem/rpc/generation-events';
 import NetInfo from '@react-native-community/netinfo';
@@ -102,7 +102,7 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           `${API_BASE_URL}/api/chats/${chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
         getHeaders: getAuthHeaders,
         signal: controller.signal,
-        parseEvent: parseGenerationStreamEvent,
+        parseEvent: parseGenerationWireEvent,
         onEvent: (event) => {
           for (const clientEvent of toGenerationClientEvents(event)) {
             clientState = reduceGenerationClientEvent(clientState, clientEvent);

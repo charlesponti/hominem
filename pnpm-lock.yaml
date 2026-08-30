@@ -936,6 +936,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 4.1.0
@@ -14415,6 +14418,7 @@ snapshots:
     dependencies:
       date-fns: 3.6.0
       react: 19.2.3
+      zod: 4.4.3
 
   '@hominem/db@file:packages/db(react@19.2.3)':
     dependencies:

@@ -5,7 +5,7 @@ import {
   toGenerationClientEvents,
 } from '@hominem/rpc/generation-events';
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
@@ -68,7 +68,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       setStatus('preparing');
       setError(null);
 
-      const handleEvent = (event: GenerationStreamEvent) => {
+      const handleEvent = (event: GenerationWireEvent) => {
         for (const clientEvent of toGenerationClientEvents(event)) {
           clientState = reduceGenerationClientEvent(clientState, clientEvent);
           setText(clientState.text);
