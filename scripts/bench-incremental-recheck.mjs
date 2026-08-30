@@ -37,7 +37,9 @@ async function runOnce() {
     // Warm up: open + first diagnostics pass.
     await client.open(DOWNSTREAM_FILE, { timeoutMs: 45000 });
     let seq = client.send('geterr', { files: [DOWNSTREAM_FILE], delay: 0 });
-    await client.waitForEvent('requestCompleted', 45000);
+    await client.waitForEvent('requestCompleted', 45000).then((msg) => {
+      if (msg.body?.request_seq !== seq) throw new Error('warm-up geterr seq mismatch');
+    });
 
     // Also open the upstream file so tsserver tracks edits to it directly
     // (matches how an editor would have it open while you type).
