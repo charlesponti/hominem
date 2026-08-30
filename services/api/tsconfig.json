@@ -9,8 +9,30 @@
     "jsxImportSource": "hono/jsx",
     "lib": ["ESNext", "DOM"],
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
+    // pnpm-workspace.yaml sets injectWorkspacePackages: true, which
+    // hard-copies (not symlinks) these packages into a peer-isolated
+    // .pnpm virtual-store variant wherever a react-peer-dependent package
+    // (career-services, ai, ...) requires one. That copy is frozen at
+    // `pnpm install` time, before `pnpm build` has produced build/*.d.ts,
+    // so its own package.json "types" condition 404s and TS falls through
+    // to the "default" condition -- real src/*.ts. That forces a full
+    // structural check of Drizzle/Kysely repository source (expensive)
+    // instead of a cheap prebuilt .d.ts, for every package these
+    // internally import from each other. These `paths` entries pin
+    // resolution to the real build output regardless of which node_modules
+    // copy a given import started from. Verified: same 0-error result,
+    // ~13% faster `tsc -p tsconfig.emit.json` (measured via
+    // scripts/bench-tsserver.mjs-style A/B, not tsserver-specific).
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@hominem/db": ["../../packages/db/build/index.d.ts"],
+      "@hominem/ai": ["../../packages/ai/build/index.d.ts"],
+      "@hominem/career-services": ["../../packages/career/build/index.d.ts"],
+      "@hominem/queues": ["../../packages/queues/build/index.d.ts"],
+      "@hominem/services": ["../../packages/services/build/index.d.ts"],
+      "@hominem/telemetry": ["../../packages/telemetry/build/index.d.ts"],
+      "@hominem/utils": ["../../packages/utils/build/index.d.ts"],
+      "@hominem/env": ["../../packages/env/build/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
