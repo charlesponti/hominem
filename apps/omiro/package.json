@@ -101,7 +101,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.0",
+    "@vitest/coverage-v8": "4.1.11",
     "@expo/plist": "^0.8.1",
     "@sentry/cli": "3.6.1",
     "@testing-library/react": "^16.3.0",
