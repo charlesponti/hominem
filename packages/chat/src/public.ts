@@ -7,5 +7,4 @@ export * from './generation-client';
 export * from './generation-interpreter';
 export * from './generation-events';
 export * from './generation-projection';
-export * from './generation-coordinator';
 export * from './chat-sdk';

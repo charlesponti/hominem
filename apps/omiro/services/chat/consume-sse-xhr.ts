@@ -1,6 +1,6 @@
 import { createSseDecoder, finishSse, pushSseChunk, type SseOutput } from '@hominem/chat/sse';
 import { createGenerationEventDeduplicator } from '@hominem/rpc/generation-events';
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/rpc/types';
 import { logger } from '@hominem/telemetry';
 
 export interface ConsumeSseXhrOptions<TEvent> {
@@ -167,10 +167,10 @@ export interface ConsumeGenerationSseXhrOptions {
   replayMethod?: 'GET' | 'POST';
   replayPayload?: unknown;
   getHeaders: () => Promise<Record<string, string>>;
-  onEvent: (event: GenerationStreamEvent) => void;
+  onEvent: (event: GenerationWireEvent) => void;
   onDone?: () => void;
   signal?: AbortSignal;
-  parseEvent?: (input: unknown) => GenerationStreamEvent;
+  parseEvent?: (input: unknown) => GenerationWireEvent;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -198,7 +198,7 @@ export async function consumeGenerationSseXhr({
       ...input,
       getHeaders,
       onDone,
-      onEvent: (event: GenerationStreamEvent) => {
+      onEvent: (event: GenerationWireEvent) => {
         try {
           onEvent(event);
         } catch (error) {

@@ -1,7 +1,7 @@
 import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
 import {
   getGenerationFailureMessage,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
   toGenerationClientEvents,
 } from '@hominem/rpc/generation-events';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -41,7 +41,7 @@ export function useRegenerateMessage(chatId: string) {
           `${API_BASE_URL}/api/chats/${chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
         getHeaders: getAuthHeaders,
         signal: controller.signal,
-        parseEvent: parseGenerationStreamEvent,
+        parseEvent: parseGenerationWireEvent,
         onEvent: (event) => {
           const current = generationRef.current;
           if (!current || event.generationId !== current.id) return;

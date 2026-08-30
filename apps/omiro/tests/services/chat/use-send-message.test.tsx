@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -66,7 +66,7 @@ const committedMessage = {
 } satisfies ChatMessageDto;
 
 type PendingStream = {
-  onEvent: (event: GenerationStreamEvent) => void;
+  onEvent: (event: GenerationWireEvent) => void;
   resolve: () => void;
   reject: (error: Error) => void;
 };
@@ -82,7 +82,7 @@ describe('useSendMessage', () => {
         onEvent,
         replayUrl,
       }: {
-        onEvent: (event: GenerationStreamEvent) => void;
+        onEvent: (event: GenerationWireEvent) => void;
         replayUrl?: (afterSequence: number) => string;
       }) =>
         new Promise<void>((resolve, reject) => {

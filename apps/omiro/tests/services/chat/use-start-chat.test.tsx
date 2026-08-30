@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { Chat, ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { Chat, ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -64,7 +64,7 @@ describe('useStartChat', () => {
   beforeEach(() => {
     mockRandomUUID.mockReturnValue('generation-1');
     mockConsumeSseXhr.mockImplementation(
-      ({ onEvent }: { onEvent: (event: GenerationStreamEvent) => void }) => {
+      ({ onEvent }: { onEvent: (event: GenerationWireEvent) => void }) => {
         onEvent({
           version: 1,
           type: 'generation.accepted',
@@ -103,7 +103,7 @@ describe('useStartChat', () => {
 
   it('surfaces a durable generation failure from the stream', async () => {
     mockConsumeSseXhr.mockImplementationOnce(
-      ({ onEvent }: { onEvent: (event: GenerationStreamEvent) => void }) => {
+      ({ onEvent }: { onEvent: (event: GenerationWireEvent) => void }) => {
         onEvent({
           version: 1,
           generationId: 'generation-1',

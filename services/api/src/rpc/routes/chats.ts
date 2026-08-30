@@ -8,7 +8,7 @@ import {
   getSpeechUsageEstimate,
 } from '@hominem/ai';
 import type {
-  GenerationEventPayload,
+  GenerationHistoryEventPayload,
   GenerationJsonValue,
   GenerationMessageSnapshot,
   GenerationRequestContext,
@@ -328,7 +328,7 @@ type GenerationStreamState = {
   generationId: string | null;
   ownerUserId: string | null;
   sequence: number;
-  persist?: (event: GenerationEventPayload) => Promise<ChatGenerationEventRecord>;
+  persist?: (event: GenerationHistoryEventPayload) => Promise<ChatGenerationEventRecord>;
 };
 const generationStreamStates = new WeakMap<object, GenerationStreamState>();
 
@@ -405,7 +405,9 @@ function toMessageSnapshot(value: unknown): GenerationMessageSnapshot | null {
   };
 }
 
-function toPersistedGenerationEvent(value: Record<string, unknown>): GenerationEventPayload | null {
+function toPersistedGenerationEvent(
+  value: Record<string, unknown>,
+): GenerationHistoryEventPayload | null {
   switch (value.type) {
     case 'generation.accepted': {
       if (!isString(value.chatId)) return null;

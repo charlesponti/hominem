@@ -1,6 +1,6 @@
 import {
   getGenerationFailureMessage,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
 } from '@hominem/rpc/generation-events';
 import type { GenerationDomainEvent } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
@@ -64,7 +64,7 @@ export function useStartChat() {
           replayMethod: 'POST',
           replayPayload: payload,
           getHeaders: getAuthHeaders,
-          parseEvent: parseGenerationStreamEvent,
+          parseEvent: parseGenerationWireEvent,
           onEvent: (event) => {
             const failureMessage = getGenerationFailureMessage(event);
             if (failureMessage) throw new Error(failureMessage);

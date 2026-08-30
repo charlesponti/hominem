@@ -1,16 +1,16 @@
 import { createSseDecoder, finishSse, pushSseChunk } from '@hominem/chat/sse';
 import {
   createGenerationEventDeduplicator,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
 } from '@hominem/rpc/generation-events';
-import type { GenerationStreamEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/rpc/types';
 
 export async function consumeSseResponse(
   response: Response,
-  onEvent: (event: GenerationStreamEvent) => void,
+  onEvent: (event: GenerationWireEvent) => void,
   onDone?: () => void,
   options?: {
-    deduplicateEvent?: (event: GenerationStreamEvent) => GenerationStreamEvent | null;
+    deduplicateEvent?: (event: GenerationWireEvent) => GenerationWireEvent | null;
     onDurableSequence?: (sequence: number) => void;
   },
 ): Promise<void> {
@@ -23,10 +23,10 @@ export async function consumeSseResponse(
   const decoder = new TextDecoder();
   const deduplicate = options?.deduplicateEvent ?? createGenerationEventDeduplicator();
   let state = createSseDecoder();
-  const parseEvent = (data: string) => parseGenerationStreamEvent(JSON.parse(data));
+  const parseEvent = (data: string) => parseGenerationWireEvent(JSON.parse(data));
 
   const processOutputs = (
-    outputs: ReturnType<typeof pushSseChunk<GenerationStreamEvent>>['outputs'],
+    outputs: ReturnType<typeof pushSseChunk<GenerationWireEvent>>['outputs'],
   ) => {
     outputs.forEach((output) => {
       if (output.kind === 'event') {
@@ -45,14 +45,14 @@ export async function consumeSseResponse(
     if (done) break;
 
     const decoded = decoder.decode(value, { stream: true });
-    const result = pushSseChunk<GenerationStreamEvent>(state, decoded, parseEvent);
+    const result = pushSseChunk<GenerationWireEvent>(state, decoded, parseEvent);
     state = result.state;
     processOutputs(result.outputs);
   }
 
   const trailingText = decoder.decode();
-  const trailing = pushSseChunk<GenerationStreamEvent>(state, trailingText, parseEvent);
-  const result = finishSse<GenerationStreamEvent>(trailing.state, parseEvent);
+  const trailing = pushSseChunk<GenerationWireEvent>(state, trailingText, parseEvent);
+  const result = finishSse<GenerationWireEvent>(trailing.state, parseEvent);
   processOutputs(trailing.outputs);
   processOutputs(result.outputs);
 }

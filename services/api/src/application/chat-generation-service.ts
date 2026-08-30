@@ -1,7 +1,7 @@
 import { type AIUsageMetrics } from '@hominem/ai';
 import {
   ChatClient,
-  type GenerationEventPayload,
+  type GenerationHistoryEventPayload,
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
@@ -76,7 +76,7 @@ export async function runChatGeneration(
     chatId: string;
     effectStore?: ChatGenerationEffectStore;
     persistEvent?: (input: {
-      event: GenerationEventPayload;
+      event: GenerationHistoryEventPayload;
       idempotencyKey: string;
     }) => Promise<ChatGenerationEventRecord | null>;
     persistStarted?: boolean;

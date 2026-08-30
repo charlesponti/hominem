@@ -1,7 +1,7 @@
 import type {
-  GenerationDomainEvent,
-  GenerationLiveEvent,
+  GenerationHistoryEvent,
   GenerationPhase,
+  GenerationStreamEvent,
 } from './generation-machine';
 
 export type GenerationClientToolStep = {
@@ -20,7 +20,7 @@ export type GenerationClientState = {
   error: string | null;
 };
 
-export type GenerationClientEvent = GenerationDomainEvent | GenerationLiveEvent;
+export type GenerationClientEvent = GenerationHistoryEvent | GenerationStreamEvent;
 
 export type GenerationClientErrorEvent = {
   version: 1;
@@ -53,7 +53,7 @@ function updateToolStep(
 
 function isDuplicateDurableEvent(
   state: GenerationClientState,
-  event: GenerationDomainEvent,
+  event: GenerationHistoryEvent,
 ): boolean {
   return event.sequence <= state.lastDurableSequence;
 }

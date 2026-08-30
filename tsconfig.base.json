@@ -7,11 +7,11 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    // tsserver-only (ignored by plain `tsc`/CI runs): limits re-checking on
-    // edit to a file's direct dependents instead of the full transitive
-    // closure. Standard tradeoff for editor responsiveness in large project-
-    // reference graphs; occasionally needs a tsserver restart to see a
-    // change that ripples further than one hop.
+    // tsserver-only (see AGENTS.md "Build / CI" — ignored by plain tsc/CI
+    // runs, confirmed this session): trades full transitive re-checking
+    // for editor responsiveness in this project-reference graph. Anything
+    // outside the tsconfig.profiles/* chain (e.g. apps/omiro) must set this
+    // explicitly in its own tsconfig.json.
     "assumeChangesOnlyAffectDirectDependencies": true
   },
   "exclude": ["node_modules", "tmp"]

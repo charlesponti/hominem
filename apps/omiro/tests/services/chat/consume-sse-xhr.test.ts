@@ -1,6 +1,6 @@
 import {
   createGenerationEventDeduplicator,
-  parseGenerationStreamEvent,
+  parseGenerationWireEvent,
 } from '@hominem/rpc/generation-events';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -122,7 +122,7 @@ describe('consumeSseXhr', () => {
     const deduplicateEvent = createGenerationEventDeduplicator();
     let lastSequence = 0;
     const { onEvent, promise, xhr } = await startStream(vi.fn(), vi.fn(), undefined, {
-      parseEvent: parseGenerationStreamEvent,
+      parseEvent: parseGenerationWireEvent,
       deduplicateEvent,
       onDurableSequence: (sequence) => (lastSequence = sequence),
     });
@@ -275,7 +275,7 @@ describe('consumeSseXhr', () => {
       replayUrl: (afterSequence) =>
         `https://example.test/generations/g1/stream?afterSequence=${afterSequence}`,
       getHeaders: async () => ({}),
-      parseEvent: parseGenerationStreamEvent,
+      parseEvent: parseGenerationWireEvent,
       onEvent,
     });
 
@@ -309,7 +309,7 @@ describe('consumeSseXhr', () => {
       payload: { generationId: 'g1' },
       replayUrl: (afterSequence) => `https://example.test/replay?afterSequence=${afterSequence}`,
       getHeaders: async () => ({}),
-      parseEvent: parseGenerationStreamEvent,
+      parseEvent: parseGenerationWireEvent,
       onEvent: () => {
         throw new Error('domain failure');
       },

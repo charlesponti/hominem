@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ChatMessageDto, GenerationStreamEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -75,13 +75,13 @@ const committedMessage = {
 
 const { useRegenerateMessage } = await import('~/services/chat/use-regenerate-message');
 
-function eventStream(events: GenerationStreamEvent[]) {
+function eventStream(events: GenerationWireEvent[]) {
   mockConsumeSseXhr.mockImplementationOnce(
     ({
       onEvent,
       replayUrl,
     }: {
-      onEvent: (event: GenerationStreamEvent) => void;
+      onEvent: (event: GenerationWireEvent) => void;
       replayUrl?: (afterSequence: number) => string;
     }) => {
       replayUrl?.(0);

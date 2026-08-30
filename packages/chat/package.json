@@ -29,6 +29,10 @@
     "./sse": {
       "types": "./build/sse.d.ts",
       "default": "./src/sse.ts"
+    },
+    "./schemas": {
+      "types": "./build/generation-schemas.d.ts",
+      "default": "./src/generation-schemas.ts"
     }
   },
   "scripts": {
@@ -41,7 +45,8 @@
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
-    "date-fns": "^3.6.0"
+    "date-fns": "^3.6.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "4.1.0",
