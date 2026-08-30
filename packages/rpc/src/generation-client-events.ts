@@ -229,9 +229,7 @@ function mapDurableEvent(event: GenerationDomainEvent): GenerationClientInputEve
   }
 }
 
-export function toGenerationClientEvents(
-  event: GenerationWireEvent,
-): GenerationClientInputEvent[] {
+export function toGenerationClientEvents(event: GenerationWireEvent): GenerationClientInputEvent[] {
   if ('event' in event) {
     if (event.event.type === 'error') {
       const errorEvent: GenerationClientErrorEvent = {

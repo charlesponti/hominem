@@ -39,9 +39,7 @@ describe('useStartChatSubmission', () => {
       async ({
         onAccepted,
       }: {
-        onAccepted?: (
-          event: Extract<GenerationWireEvent, { type: 'generation.accepted' }>,
-        ) => void;
+        onAccepted?: (event: Extract<GenerationWireEvent, { type: 'generation.accepted' }>) => void;
       }) => {
         onAccepted?.({ payload: { chatId: 'chat-1' } } as never);
       },

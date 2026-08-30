@@ -405,7 +405,9 @@ function toMessageSnapshot(value: unknown): GenerationMessageSnapshot | null {
   };
 }
 
-function toPersistedGenerationEvent(value: Record<string, unknown>): GenerationHistoryEventPayload | null {
+function toPersistedGenerationEvent(
+  value: Record<string, unknown>,
+): GenerationHistoryEventPayload | null {
   switch (value.type) {
     case 'generation.accepted': {
       if (!isString(value.chatId)) return null;
