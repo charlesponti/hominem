@@ -1,10 +1,6 @@
-/**
- * Single source of truth for product brand identity.
- *
- * All platform-specific brand objects (web, mobile, desktop, API) MUST derive
- * their core identity values from this constant. Never hardcode the app name
- * or tagline elsewhere — import from here.
- */
+// Single source of truth for the brand identity. Every platform-specific
+// brand object (web, mobile, desktop, API) should pull its name/tagline from
+// here instead of hardcoding it elsewhere.
 export const BRAND = {
   appName: 'Omiro',
   financeClientName: 'Omiro Finance',

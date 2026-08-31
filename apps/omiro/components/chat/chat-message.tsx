@@ -32,12 +32,10 @@ type ChatMessageProps = {
   isActive?: boolean;
   onActivate?: (messageId: string) => void;
   formatTimestamp: (value: string) => string;
-  /**
-   * True only for a row that was just added to the list this session (a
-   * freshly sent user message), as opposed to a historical row present when
-   * the screen or a page of history first loaded. Gates the row's entrance
-   * animation so opening a chat doesn't replay it for every existing message.
-   */
+  // True only for a row just added this session (a freshly sent user
+  // message), not a historical row that was already there when the screen
+  // or a page of history loaded. Gates the entrance animation so opening a
+  // chat doesn't replay it for every existing message.
   isNewMessage?: boolean;
 };
 
@@ -95,26 +93,25 @@ export const ChatMessage = memo(function ChatMessage({
   const isUser = role.toLowerCase() === 'user';
   const handleActivate = useCallback(() => onActivate?.(message.id), [onActivate, message.id]);
   const reducedMotion = useReducedMotion();
-  // A just-sent user message lifts and fades in from its own list position;
-  // historical rows (chat open, pagination) mount with no entrance.
+  // A just-sent user message lifts and fades in; historical rows (chat open,
+  // pagination) just mount with no entrance animation.
   const rowEntering =
     isUser && isNewMessage
       ? reducedMotion
         ? FadeIn.duration(nativeMotionContracts.duration.quick)
         : FadeInDown.duration(nativeMotionContracts.duration.quick)
       : undefined;
-  // The row settles its own height when the printer indicator is removed,
-  // Markdown reflows in, or a failure/retry banner appears or clears,
-  // instead of jumping. A no-op for rows whose height never changes.
+  // Lets the row's height settle smoothly when the typing indicator goes
+  // away, Markdown reflows, or a failure/retry banner shows or clears --
+  // no-op for rows whose height never changes.
   const rowLayout = reducedMotion
     ? undefined
     : LinearTransition.duration(nativeMotionContracts.duration.quick);
-  // A message that's already failed the moment this row first mounts is
-  // historical (loaded on chat open, or a background/foreground reconcile),
-  // not a failure the user just watched happen -- it must appear static,
-  // never animate in. Flips to false after the first commit, so a *later*
-  // failure (this row's own stream interrupting, or a retry failing again)
-  // still animates normally.
+  // If a message is already failed the moment this row mounts, that's
+  // historical (loaded on chat open, or a foreground/background reconcile),
+  // not something the user just watched happen -- so it shows up static,
+  // no animation. Flips to false after the first commit, so a *later*
+  // failure (stream interrupted, retry fails again) still animates in.
   const skipInitialBannerEntranceRef = useRef(failed);
   useEffect(() => {
     skipInitialBannerEntranceRef.current = false;

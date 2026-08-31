@@ -28,9 +28,8 @@ function getMentionQuery(value: string) {
 }
 
 /**
- * Notes attached to a chat are a persistent, chat-level relationship
- * (chat_sources) rather than something staged per-message -- selecting a
- * note or seeding from `seedNote` attaches it immediately.
+ * Notes attached to a chat live at the chat level (chat_sources), not staged
+ * per-message — picking a note or seeding from `seedNote` attaches it right away.
  */
 export function useChatComposerState({
   chatId,

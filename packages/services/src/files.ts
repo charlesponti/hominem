@@ -16,13 +16,9 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>;
 }
 
-/**
- * Generic, non-AI file access and extraction: type detection, raw text
- * extraction from documents, and size/support helpers. Domain-specific
- * analysis of that content (e.g. generating an image description or a
- * document summary via an LLM) belongs to whichever feature consumes it,
- * not here.
- */
+// handles the boring stuff only: detecting file type, pulling raw text out of
+// documents, size/support checks. actual AI analysis of the content (image
+// descriptions, summaries, etc.) lives with whatever feature needs it, not here
 export class FileProcessorService {
   static async processFile(
     buffer: ArrayBuffer,

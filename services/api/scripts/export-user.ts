@@ -1,21 +1,17 @@
 /**
- * export-user.ts
- *
  * Exports every row belonging to a user across all `app.*` tables (plus their
- * own `user` row) to `.exports/<userId>/<table>.csv`.
+ * `user` row) to `.exports/<userId>/<table>.csv`.
  *
- * Usage:
- *   pnpm export-user --userId <id> [--env development|production] [--yes]
+ * Usage: pnpm export-user --userId <id> [--env development|production] [--yes]
  *
- * Discovery is generic: it introspects information_schema for every `app.*`
- * table with a user/owner column -- `user_id`, `userid`, `owner_userid`, or
- * `owner_userId` all normalize to the same match, since both naming
- * conventions (and both quoted/unquoted casings) are live in this schema.
- * New tables need no changes here as long as they follow one of those.
+ * Table discovery is generic - it just looks through information_schema for
+ * any `app.*` table with a user/owner column. `user_id`, `userid`,
+ * `owner_userid`, `owner_userId`, whatever casing, they all normalize to the
+ * same match, so new tables work automatically as long as they follow one of
+ * those naming conventions.
  *
- * `--env production` requires PRODUCTION_DATABASE_URL to be set (never
- * hardcoded) and requires `--yes` to proceed, since it reads real user data
- * onto local disk.
+ * `--env production` needs PRODUCTION_DATABASE_URL set (never hardcode it)
+ * plus `--yes`, since this pulls real user data onto your local disk.
  */
 import 'dotenv/config';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -89,10 +85,9 @@ async function main() {
   }
 
   const databaseUrl = resolveDatabaseUrl(env);
-  // @hominem/db reads DATABASE_URL from the environment at import time (it opens
-  // a connection pool as a top-level side effect), so this must be set before
-  // the dynamic import below, not before a static one -- static imports are
-  // hoisted and would run first regardless of source order.
+  // @hominem/db reads DATABASE_URL at import time (opens a connection pool as
+  // a side effect), so it has to be set before the dynamic import below - a
+  // static import wouldn't work since those get hoisted and run first.
   process.env.DATABASE_URL = databaseUrl;
 
   const { pool } = await import('@hominem/db');
@@ -122,9 +117,9 @@ async function main() {
     `,
   );
 
-  // A table could theoretically expose both a userid and an owner_userid column;
-  // keep the first one seen (owner_userid sorts before userid alphabetically, which
-  // is also the more specific/intentional of the two conventions in this schema).
+  // A table could have both a userid and an owner_userid column - just keep
+  // whichever comes first alphabetically (owner_userid), since that's also
+  // the more intentional of the two conventions here.
   const tableColumn = new Map<string, string>();
   for (const row of ownerColumns.rows) {
     if (!tableColumn.has(row.table_name)) {

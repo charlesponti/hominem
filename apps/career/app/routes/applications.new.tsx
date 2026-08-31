@@ -323,7 +323,6 @@ export default function CreateJobApplication() {
 
   const handlePasteDescription = () => {
     if (pastedDescription.trim()) {
-      // Create a basic JobPosting object from pasted text
       const basicJobPosting: JobPosting = {
         job_title: '',
         companyName: '',
@@ -360,10 +359,9 @@ export default function CreateJobApplication() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Input Method */}
       <Card>
         <CardContent>
-          {/* URL input — default / primary path */}
+          {/* URL is the default way in */}
           {inputMethod === 'url' && (
             <>
               <div className="flex items-center gap-2">
@@ -462,7 +460,6 @@ export default function CreateJobApplication() {
             </div>
           )}
 
-          {/* Paste Description */}
           {inputMethod === 'paste' && (
             <div className="space-y-2">
               <textarea
@@ -495,11 +492,10 @@ export default function CreateJobApplication() {
         </CardContent>
       </Card>
 
-      {/* Manual Form — shown after URL scrape or when entering manually */}
+      {/* shows once you've scraped a posting or picked manual entry */}
       {(inputMethod === 'manual' || scrapedData) && (
         <Card>
           <CardContent>
-            {/* Scraped Data Preview */}
             {scrapedData && (
               <div className="mb-6 rounded-lg border border-border bg-muted/40 p-4">
                 <h3 className="heading-3 text-foreground mb-4">Extracted Job Information</h3>
@@ -639,7 +635,7 @@ export default function CreateJobApplication() {
                   className="w-full resize-none rounded-lg border border-border px-3 py-2"
                   defaultValue={scrapedData ? scrapedData.jobDescription : ''}
                 />
-                {/* Hidden scrape metadata is normalized into dedicated columns by the action. */}
+                {/* the action pulls the scraped fields into their own columns */}
                 {scrapedData && (
                   <input type="hidden" name="jobPostingData" value={JSON.stringify(scrapedData)} />
                 )}
@@ -656,7 +652,6 @@ export default function CreateJobApplication() {
                 />
               </div>
 
-              {/* Recruiter Information */}
               <div className="pt-4 border-t border-border">
                 <h3 className="heading-3 text-foreground mb-4">Recruiter Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

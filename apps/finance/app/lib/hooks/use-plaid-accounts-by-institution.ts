@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 
 import { authClient } from '~/lib/auth-client';
 
-// Define query keys
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = (institutionId: string) => [
   'plaid',
   'accounts',
@@ -24,9 +23,6 @@ interface PlaidAccountByInstitution {
   institutionLogo: string | null;
 }
 
-/**
- * Hook for fetching Plaid accounts for a specific institution
- */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
   const { data: sessionData } = authClient.useSession();
   const userId = sessionData?.user?.id ?? null;
@@ -34,7 +30,7 @@ export function usePlaidAccountsByInstitution(institutionId: string | null, opti
 
   const defaultOptions = {
     enabled: !!userId && !!institutionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   };
 
   const query = useQuery<{ accounts: PlaidAccountByInstitution[] }>({
@@ -46,7 +42,7 @@ export function usePlaidAccountsByInstitution(institutionId: string | null, opti
         throw new Error('Institution ID is required');
       }
 
-      // Use the unified endpoint and filter for Plaid accounts by institution
+      // no per-institution endpoint, so pull all accounts and filter down here
       const response = await apiClient.get<
         null,
         {

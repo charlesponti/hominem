@@ -34,8 +34,8 @@ export function useSignOut(currentEmail: string | null | undefined) {
     }
 
     // Always clear local state, even if the server-side sign-out request
-    // failed (e.g. API downtime) -- otherwise a stale, possibly
-    // wrong-account cache survives and gets shown after the next sign-in.
+    // failed (e.g. API downtime) -- otherwise a stale, possibly wrong-account
+    // cache sticks around and shows up after the next sign-in.
     await clearLocalSessionState(queryClient);
 
     if (signOutError) {

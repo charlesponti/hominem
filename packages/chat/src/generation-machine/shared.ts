@@ -1,7 +1,5 @@
-/**
- * Leaf utilities shared by every reducer module. Imports only from `types.ts`
- * so it can never be the source of a cross-module cycle.
- */
+// Leaf utilities shared by every reducer module. Only imports from
+// `types.ts` so it can't ever cause a cross-module import cycle.
 
 import type {
   GenerationActivePhase,

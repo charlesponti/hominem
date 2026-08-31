@@ -45,8 +45,8 @@ function setResponseHeaders(
     cacheStatus?: 'hit' | 'miss';
   },
 ) {
-  // This public proxy is intentionally fetchable from any origin so browsers can load
-  // proxied Google-hosted images without inheriting the app-level API CORS allowlist.
+  // Wide open on purpose — this proxy needs to work from any origin, so it doesn't
+  // use the app-level API CORS allowlist. Host allowlisting below covers security instead.
   c.header('Access-Control-Allow-Origin', '*');
   c.header('Access-Control-Allow-Methods', 'GET');
   c.header('Content-Type', options.contentType);
@@ -62,16 +62,9 @@ function setResponseHeaders(
   }
 }
 
-/**
- * Proxy endpoint for external images to avoid CORB/CORS issues
- * Usage: /api/images/proxy?url=<encoded-image-url>
- *
- * This route intentionally serves public image bytes with wildcard CORS and stays restricted
- * by host allowlisting instead of the server-level origin allowlist.
- *
- * Note: This endpoint returns binary image data on success, not ApiResult.
- * Errors use ApiResult format for consistency.
- */
+// Proxies external images (/api/images/proxy?url=...) to dodge CORB/CORS issues.
+// Returns raw binary image data on success, not the usual ApiResult shape —
+// errors still go through ApiResult though, for consistency.
 imagesRoutes.get('/proxy', async (c) => {
   const imageUrl = c.req.query('url');
 
@@ -80,10 +73,8 @@ imagesRoutes.get('/proxy', async (c) => {
   }
 
   try {
-    // Decode the URL if it's encoded
     const decodedUrl = decodeURIComponent(imageUrl);
 
-    // Only allow Google hosts for security
     if (!isValidGoogleHost(decodedUrl)) {
       throw new ForbiddenError('Domain not allowed');
     }
@@ -146,7 +137,6 @@ imagesRoutes.get('/proxy', async (c) => {
       }
     }
 
-    // Fetch the image
     const response = await fetch(decodedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; ImageProxy/1.0)',

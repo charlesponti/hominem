@@ -13,8 +13,8 @@ import {
 } from '~/components/media/audio.service';
 import VoiceTranscriberModule from '~/modules/voice-transcriber';
 
-// Expo Modules attaches a stable `code` string to errors thrown from a
-// native Exception (see VoiceTranscriberModule.swift's VoiceTranscriberException).
+// Expo Modules attaches a stable `code` string to errors thrown from a native
+// Exception (see VoiceTranscriberModule.swift's VoiceTranscriberException).
 export function getNativeErrorCode(error: unknown): string | undefined {
   if (error && typeof error === 'object' && 'code' in error) {
     const code = (error as { code?: unknown }).code;
@@ -44,10 +44,10 @@ export function useVoiceRecorder<TError>({
   onError,
 }: UseVoiceRecorderOptions<TError>) {
   const ownerId = useId();
-  // Uses the meterings-excluding "core" snapshot — this hook doesn't need
+  // Uses the "core" snapshot (no meterings) -- this hook doesn't need
   // per-poll metering data, and subscribing to the full snapshot would
-  // re-render every consumer (and everything that calls it) at the 10Hz
-  // metering-poll rate for the whole recording duration.
+  // re-render every consumer at the 10Hz metering-poll rate for the whole
+  // recording.
   const recordingSnapshot = useSyncExternalStore(
     subscribeRecording,
     getRecordingCoreSnapshot,
@@ -97,9 +97,9 @@ export function useVoiceRecorder<TError>({
       }
 
       const result = await startRecording(ownerId);
-      // A concurrent duplicate tap racing this async permission check is not a
-      // real failure — the recorder singleton correctly rejected the second
-      // caller, so there's nothing to surface to the user.
+      // A duplicate tap racing this async permission check isn't a real
+      // failure -- the recorder singleton correctly rejected the second
+      // caller, nothing to surface to the user.
       if (result.ok || result.reason === 'busy') return;
 
       reportError(
@@ -118,10 +118,10 @@ export function useVoiceRecorder<TError>({
     reportError,
   ]);
 
-  // `onRecordingStopped` is provided by the caller as a closure over its own
-  // per-render state (e.g. draft text, mutation functions), so it's expected
-  // to change every render — read it via ref to avoid recreating
-  // `stopAndProcessRecording`/`handleMicPress` on every render.
+  // `onRecordingStopped` is a closure over the caller's own per-render state
+  // (draft text, mutation functions, etc.), so it changes every render --
+  // read it via ref to avoid recreating `stopAndProcessRecording`/
+  // `handleMicPress` every time.
   const onRecordingStoppedRef = useRef(onRecordingStopped);
   useEffect(() => {
     onRecordingStoppedRef.current = onRecordingStopped;
@@ -164,8 +164,8 @@ export function useVoiceRecorder<TError>({
   ]);
 
   // Discard (never transcribe) an owned recording left behind when the
-  // consumer disappears — an unmount or navigation-away is abandonment, not
-  // user intent to submit.
+  // consumer disappears -- an unmount or navigating away means abandonment,
+  // not intent to submit.
   useEffect(() => {
     return () => {
       discardIfOwned(ownerId, 'unmounted');

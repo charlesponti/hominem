@@ -5,17 +5,11 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { isServiceError, type ErrorCode, type ServiceError } from '../errors';
 import type { AppContext } from './auth';
 
-/**
- * Standard REST API error response format
- *
- * Used for all HTTP error responses (4xx, 5xx)
- * HTTP status code is the definitive success/failure indicator
- */
 export interface ApiErrorResponse {
-  error: string; // Lowercase error code (e.g., 'not_found', 'validation_error')
-  code: ErrorCode; // Original error code for client-side error handling
-  message: string; // Human-readable error message
-  details?: Record<string, unknown> | undefined; // Additional error context
+  error: string;
+  code: ErrorCode;
+  message: string;
+  details?: Record<string, unknown> | undefined;
 }
 
 function findServiceError(value: unknown, depth = 0): ServiceError | null {

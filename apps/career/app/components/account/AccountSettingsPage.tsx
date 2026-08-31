@@ -41,7 +41,7 @@ export function AccountSettingsPage({ loaderData }: { loaderData: AccountSetting
       await authClient.signOut();
       navigate('/');
     } catch {
-      // Keep the user on the account page if sign-out fails.
+      // sign-out failed, just stay put on the account page
     } finally {
       setIsSigningOut(false);
     }

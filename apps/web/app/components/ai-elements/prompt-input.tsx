@@ -70,7 +70,7 @@ const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
     const response = await fetch(url);
     if (!response.ok) return null;
     const blob = await response.blob();
-    // FileReader uses callback-based API, wrapping in Promise is necessary
+    // FileReader is callback-based, so we wrap it in a promise
     // oxlint-disable-next-line eslint-plugin-promise(avoid-new)
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -103,7 +103,7 @@ const captureScreenshot = async (): Promise<File | null> => {
 
     video.srcObject = stream;
 
-    // Video element uses callback-based API, wrapping in Promise is necessary
+    // video element events are callback-based, so we wrap this in a promise
     // oxlint-disable-next-line eslint-plugin-promise(avoid-new)
     await new Promise<void>((resolve, reject) => {
       // oxlint-disable-next-line eslint-plugin-unicorn(prefer-add-event-listener)
@@ -129,7 +129,7 @@ const captureScreenshot = async (): Promise<File | null> => {
     }
 
     context.drawImage(video, 0, 0, width, height);
-    // canvas.toBlob uses callback-based API, wrapping in Promise is necessary
+    // canvas.toBlob is callback-based, so we wrap it in a promise
     // oxlint-disable-next-line eslint-plugin-promise(avoid-new)
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, 'image/png');
@@ -181,7 +181,7 @@ export interface TextInputContext {
 export interface PromptInputControllerProps {
   textInput: TextInputContext;
   attachments: AttachmentsContext;
-  /** INTERNAL: Allows PromptInput to register its file textInput + "open" callback */
+  /** internal: lets PromptInput hand up its file input ref + "open" callback */
   __registerFileInput: (ref: RefObject<HTMLInputElement | null>, open: () => void) => void;
 }
 
@@ -198,7 +198,7 @@ export const usePromptInputController = () => {
   return ctx;
 };
 
-// Optional variants (do NOT throw). Useful for dual-mode components.
+// optional versions that don't throw, for components that work with or without a provider
 const useOptionalPromptInputController = () => useContext(PromptInputController);
 
 export const useProviderAttachments = () => {
@@ -218,8 +218,8 @@ export type PromptInputProviderProps = PropsWithChildren<{
 }>;
 
 /**
- * Optional global provider that lifts PromptInput state outside of PromptInput.
- * If you don't use it, PromptInput stays fully self-managed.
+ * Optional provider that lifts PromptInput's state out of the component.
+ * Skip it and PromptInput just manages its own state.
  */
 export const PromptInputProvider = ({
   initialInput: initialTextInput = '',
@@ -274,14 +274,14 @@ export const PromptInputProvider = ({
     });
   }, []);
 
-  // Keep a ref to attachments for cleanup on unmount (avoids stale closure)
+  // ref stays fresh so the unmount cleanup below isn't stuck with a stale closure
   const attachmentsRef = useRef(attachmentFiles);
 
   useEffect(() => {
     attachmentsRef.current = attachmentFiles;
   }, [attachmentFiles]);
 
-  // Cleanup blob URLs on unmount to prevent memory leaks
+  // revoke blob URLs on unmount so we don't leak memory
   useEffect(
     () => () => {
       for (const f of attachmentsRef.current) {
@@ -346,7 +346,7 @@ export const PromptInputProvider = ({
 const LocalAttachmentsContext = createContext<AttachmentsContext | null>(null);
 
 export const usePromptInputAttachments = () => {
-  // Prefer local context (inside PromptInput) as it has validation, fall back to provider
+  // local context (inside PromptInput) has validation, so prefer it over the provider
   const provider = useOptionalProviderAttachments();
   const local = useContext(LocalAttachmentsContext);
   const context = local ?? provider;
@@ -459,11 +459,11 @@ export type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, 'onSubmit' 
   // e.g., "image/*" or leave undefined for any
   accept?: string;
   multiple?: boolean;
-  // When true, accepts drops anywhere on document. Default false (opt-in).
+  // when true, accepts drops anywhere on the document instead of just the form
   globalDrop?: boolean;
-  // Render a hidden input with given name and keep it in sync for native form posts. Default false.
+  // clears the hidden file input once attachments are empty; can't fully sync
+  // it otherwise since browsers won't let you set a file input's value
   syncHiddenInput?: boolean;
-  // Minimal constraints
   maxFiles?: number;
   // bytes
   maxFileSize?: number;
@@ -487,24 +487,22 @@ export const PromptInput = ({
   children,
   ...props
 }: PromptInputProps) => {
-  // Try to use a provider controller if present
   const controller = useOptionalPromptInputController();
   const usingProvider = !!controller;
 
-  // Refs
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  // ----- Local attachments (only used when no provider)
+  // local attachments state, only used when there's no provider
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([]);
   const files = usingProvider ? controller.attachments.files : items;
 
-  // ----- Local referenced sources (always local to PromptInput)
+  // referenced sources are always local to PromptInput, provider or not
   const [referencedSources, setReferencedSources] = useState<
     (SourceDocumentUIPart & { id: string })[]
   >([]);
 
-  // Keep a ref to files for cleanup on unmount (avoids stale closure)
+  // ref stays fresh so the unmount cleanup below isn't stuck with a stale closure
   const filesRef = useRef(files);
 
   useEffect(() => {
@@ -528,7 +526,7 @@ export const PromptInput = ({
 
       return patterns.some((pattern) => {
         if (pattern.endsWith('/*')) {
-          // e.g: image/* -> image/
+          // strips the trailing * so "image/*" becomes the "image/" prefix we match against
           const prefix = pattern.slice(0, -1);
           return f.type.startsWith(prefix);
         }
@@ -597,7 +595,7 @@ export const PromptInput = ({
     [],
   );
 
-  // Wrapper that validates files before calling provider's add
+  // validates files before handing them off to the provider's add
   const addWithProviderValidation = useCallback(
     (fileList: File[] | FileList) => {
       const incoming = [...fileList];
@@ -665,7 +663,7 @@ export const PromptInput = ({
     clearReferencedSources();
   }, [clearAttachments, clearReferencedSources]);
 
-  // Let provider know about our hidden file input so external menus can call openFileDialog()
+  // tells the provider about our hidden file input so external menus can trigger openFileDialog()
   useEffect(() => {
     if (!usingProvider) {
       return;
@@ -673,22 +671,22 @@ export const PromptInput = ({
     controller.__registerFileInput(inputRef, () => inputRef.current?.click());
   }, [usingProvider, controller]);
 
-  // Note: File input cannot be programmatically set for security reasons
-  // The syncHiddenInput prop is no longer functional
+  // browsers won't let us set a file input's value, so all we can do is clear
+  // it once attachments are gone
   useEffect(() => {
     if (syncHiddenInput && inputRef.current && files.length === 0) {
       inputRef.current.value = '';
     }
   }, [files, syncHiddenInput]);
 
-  // Attach drop handlers on nearest form and document (opt-in)
+  // drop handlers for the form itself; skipped when globalDrop is on
   useEffect(() => {
     const form = formRef.current;
     if (!form) {
       return;
     }
     if (globalDrop) {
-      // when global drop is on, let the document-level handler own drops
+      // let the document-level handler own drops instead
       return;
     }
 
@@ -757,7 +755,7 @@ export const PromptInput = ({
       if (event.currentTarget.files) {
         add(event.currentTarget.files);
       }
-      // Reset input value to allow selecting files that were previously removed
+      // clear so picking the same file again (after removing it) still fires onChange
       event.currentTarget.value = '';
     },
     [add],
@@ -802,19 +800,18 @@ export const PromptInput = ({
             return (formData.get('message') as string) || '';
           })();
 
-      // Reset form immediately after capturing text to avoid race condition
-      // where user input during async blob conversion would be lost
+      // reset the form now, before the async blob conversion below, so we
+      // don't clobber whatever the user types while that's in flight
       if (!usingProvider) {
         form.reset();
       }
 
       try {
-        // Convert blob URLs to data URLs asynchronously
         const convertedFiles: FileUIPart[] = await Promise.all(
           files.map(async ({ id: _id, ...item }) => {
             if (item.url?.startsWith('blob:')) {
               const dataUrl = await convertBlobUrlToDataUrl(item.url);
-              // If conversion failed, keep the original blob URL
+              // fall back to the blob URL if conversion failed
               return {
                 ...item,
                 url: dataUrl ?? item.url,
@@ -826,7 +823,7 @@ export const PromptInput = ({
 
         const result = onSubmit({ files: convertedFiles, text }, event);
 
-        // Handle both sync and async onSubmit
+        // onSubmit can be sync or async, handle both
         if (result instanceof Promise) {
           try {
             await result;
@@ -835,23 +832,21 @@ export const PromptInput = ({
               controller.textInput.clear();
             }
           } catch {
-            // Don't clear on error - user may want to retry
+            // leave the input alone so the user can retry
           }
         } else {
-          // Sync function completed without throwing, clear inputs
           clear();
           if (usingProvider) {
             controller.textInput.clear();
           }
         }
       } catch {
-        // Don't clear on error - user may want to retry
+        // leave the input alone so the user can retry
       }
     },
     [usingProvider, controller, files, onSubmit, clear],
   );
 
-  // Render with or without local provider
   const inner = (
     <>
       <input
@@ -878,7 +873,7 @@ export const PromptInput = ({
     </LocalReferencedSourcesContext.Provider>
   );
 
-  // Always provide LocalAttachmentsContext so children get validated add function
+  // always provide LocalAttachmentsContext so children get the validated add function
   return (
     <LazyMotion features={domAnimation}>
       <LocalAttachmentsContext.Provider value={attachmentsCtx}>
@@ -909,10 +904,8 @@ export const PromptInputTextarea = ({
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
-      // Call the external onKeyDown handler first
       onKeyDown?.(e);
 
-      // If the external handler prevented default, don't run internal logic
       if (e.defaultPrevented) {
         return;
       }
@@ -926,7 +919,6 @@ export const PromptInputTextarea = ({
         }
         e.preventDefault();
 
-        // Check if the submit button is disabled before submitting
         const { form } = e.currentTarget;
         const submitButton = form?.querySelector(
           'button[type="submit"]',
@@ -938,7 +930,6 @@ export const PromptInputTextarea = ({
         form?.requestSubmit();
       }
 
-      // Remove last attachment when Backspace is pressed and textarea is empty
       if (e.key === 'Backspace' && e.currentTarget.value === '' && attachments.files.length > 0) {
         e.preventDefault();
         const lastAttachment = attachments.files.at(-1);
@@ -1116,9 +1107,6 @@ export const PromptInputActionMenuItem = ({
   ...props
 }: PromptInputActionMenuItemProps) => <DropdownMenuItem className={cn(className)} {...props} />;
 
-// Note: Actions that perform side-effects (like opening a file dialog)
-// are provided in opt-in modules (e.g., prompt-input-attachments).
-
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   status?: ChatStatus;
   onStop?: () => void;
@@ -1265,7 +1253,7 @@ export const PromptInputTab = ({ className, ...props }: PromptInputTabProps) => 
 export type PromptInputTabLabelProps = HTMLAttributes<HTMLHeadingElement>;
 
 export const PromptInputTabLabel = ({ className, ...props }: PromptInputTabLabelProps) => (
-  // Content provided via children in props
+  // heading content comes through children, lint just can't see that
   // oxlint-disable-next-line eslint-plugin-jsx-a11y(heading-has-content)
   <h3 className={cn('mb-2 px-3 font-medium text-muted-foreground text-xs', className)} {...props} />
 );

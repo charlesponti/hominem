@@ -51,11 +51,9 @@ interface ChatMessageListProps {
   formatTimestamp: (value: string) => string;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
-  /**
-   * Extra bottom space to reserve while the keyboard is open and the
-   * composer lifts above its normal column position. Zero at rest, since
-   * the composer occupies real layout space there.
-   */
+  // Extra bottom space to reserve while the keyboard is open and the composer
+  // lifts above its normal spot. Stays 0 at rest since the composer already
+  // takes up real layout space there.
   bottomInset?: number;
   generation?: ChatGenerationState | null;
   onCancelGeneration?: () => void;
@@ -130,10 +128,10 @@ export function ChatMessageList({
     }
   }, [displayMessages.length, isMessagesLoading, renderedMessages]);
 
-  // Force-scroll to the bottom when the user sends a new message, even if they'd
-  // scrolled up. Auto-follow while already near the bottom (including while a
-  // reply streams in) is handled natively by FlashList's maintainVisibleContentPosition
-  // below, which avoids the flash-then-jump of an imperative scrollToEnd.
+  // Force-scroll to the bottom when the user sends a new message, even if
+  // they'd scrolled up. Staying near the bottom otherwise (including while a
+  // reply streams in) is handled by FlashList's maintainVisibleContentPosition
+  // below, which avoids the flash-then-jump you'd get from imperative scrollToEnd.
   useEffect(() => {
     const lastMessage = renderedMessages.at(-1) ?? null;
     const countChanged = renderedMessages.length !== prevCountRef.current;
@@ -174,10 +172,10 @@ export function ChatMessageList({
 
   const renderItem = useCallback<ListRenderItem<ChatMessageItem>>(
     ({ item }) => {
-      // A row is "new" only once its id hasn't been seen by the announcement
-      // bookkeeping above -- which is itself seeded from the first
-      // non-loading render, so historical rows (chat open, pagination) never
-      // qualify, only a message added after that initial population.
+      // A row only counts as "new" if the announcement tracking above hasn't
+      // seen its id -- that tracking gets seeded on the first non-loading
+      // render, so historical rows (chat open, pagination) never qualify,
+      // only messages added after that.
       const isNewMessage =
         didInitializeAnnouncementsRef.current && !announcedMessagesRef.current.has(item.id);
       return (
@@ -257,10 +255,9 @@ export function ChatMessageList({
       }
       contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 8 }}
       ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-      // The composer sits in normal column flow at rest, so bottomInset is 0
-      // and this reserves nothing extra. While the keyboard is open the
-      // composer lifts by translating above its resting position instead of
-      // resizing, so bottomInset carries just that transient overlap amount.
+      // Composer sits in normal flow at rest (bottomInset 0, nothing extra
+      // reserved). When the keyboard's open it lifts by translating instead
+      // of resizing, so bottomInset just covers that transient overlap.
       contentInset={{ bottom: bottomInset }}
       scrollIndicatorInsets={{ bottom: bottomInset }}
       data={renderedMessages}

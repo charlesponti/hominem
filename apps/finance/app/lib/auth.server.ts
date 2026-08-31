@@ -16,7 +16,7 @@ export const getServerAuth = (request: Request) => {
   return auth;
 };
 
-// Convenience wrappers - clients can use getServerAuth directly and destructure what they need
+// just a shortcut - you could call getServerAuth directly and destructure this yourself
 export const getServerSession = async (request: Request) => {
   const { user, headers } = await getServerAuth(request);
   return { user, headers };

@@ -1,19 +1,15 @@
 /**
- * e2e-setup.ts
+ * Sets up the persistent E2E test account and prints a session cookie ready
+ * to export for iOS XCUITest runs.
  *
- * Provisions the persistent E2E test account and prints a ready-to-export
- * session cookie for use in iOS XCUITest runs.
+ * Usage: pnpm e2e:setup
  *
- * Usage:
- *   pnpm e2e:setup
+ * Sends an OTP to e2e@test.hakumi.io (creating the user if needed), signs in
+ * with the fixed test OTP, then prints export statements for
+ * E2E_SESSION_COOKIE, E2E_USER_ID, and E2E_USER_EMAIL.
  *
- * What it does:
- *   1. Sends an OTP to e2e@test.hakumi.io  (creates the user if absent)
- *   2. Signs in via POST /api/auth/sign-in/email-otp using the fixed test OTP
- *   3. Prints export statements for E2E_SESSION_COOKIE, E2E_USER_ID, E2E_USER_EMAIL
- *
- * Prerequisites on the server:
- *   NODE_ENV != production  (so the fixed test OTP is used instead of a random one)
+ * Needs NODE_ENV != production on the server, since that's what makes it use
+ * the fixed test OTP instead of a random one.
  */
 
 import 'dotenv/config';

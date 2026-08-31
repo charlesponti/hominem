@@ -2,13 +2,11 @@ import type { TaskListItem } from '@hominem/rpc/types';
 
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
-/**
- * Dev-only fixture scenarios for previewing the Time stream's design across
- * states that are awkward to reproduce with a real calendar/task backend
- * (four weeks of overlapping events, tasks, and all-day entries, plus an
- * empty state). Picked from the header's dev menu (__DEV__ builds only) via
- * `useTimePreview()`. The store avoids constructing these fixtures in production.
- */
+// Dev-only fixture scenarios for previewing the Time stream's design in
+// states that are a pain to reproduce with a real calendar/task backend
+// (four weeks of overlapping events, tasks, all-day entries, plus an empty
+// state). Picked from the header's dev menu (__DEV__ builds only) via
+// `useTimePreview()`. The store skips constructing these fixtures in production.
 
 const NOW = () => Date.now();
 const HOUR = 3_600_000;

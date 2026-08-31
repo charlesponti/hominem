@@ -43,7 +43,6 @@ export function AccountHeader({
 
   return (
     <>
-      {/* Header */}
       <div className="flex items-center justify-end">
         <Button variant="outline" onClick={onRefresh} disabled={isLoading}>
           <RefreshCcw className="size-4 mr-2" />
@@ -51,7 +50,6 @@ export function AccountHeader({
         </Button>
       </div>
 
-      {/* Account Summary Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -71,7 +69,6 @@ export function AccountHeader({
         </CardHeader>
 
         <CardContent>
-          {/* Balance for Plaid accounts */}
           {isPlaidAccount && account.currentBalance && (
             <div className="flex items-center justify-between p-4 bg-muted/50 ">
               <div className="flex items-center space-x-2">
@@ -86,7 +83,6 @@ export function AccountHeader({
             </div>
           )}
 
-          {/* Connection Management Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Connection Management</h3>
@@ -100,7 +96,6 @@ export function AccountHeader({
               />
             </div>
 
-            {/* Connection Status */}
             <AccountStatusDisplay account={account} onRefresh={onRefresh} />
           </div>
         </CardContent>

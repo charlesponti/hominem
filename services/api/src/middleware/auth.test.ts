@@ -32,10 +32,9 @@ const user = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-// The auth middleware reads env fields once at import time (validated,
-// process-wide config), so vi.stubEnv after import has no effect. Re-mock
-// the ../env module and re-import fresh per test to exercise different
-// NODE_ENV / AUTH_E2E_* combinations.
+// The auth middleware reads env vars once at import time, so vi.stubEnv after
+// import does nothing. Instead we mock ../env and re-import fresh each time
+// to test different NODE_ENV / AUTH_E2E_* combos.
 async function createApp(envOverrides: Record<string, string | boolean> = {}) {
   vi.resetModules();
   vi.doMock('../env', async () => {

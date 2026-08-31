@@ -97,10 +97,7 @@ export const VectorDocumentRepository = {
       .execute();
   },
 
-  /**
-   * Cosine similarity search, ordered by ascending distance (not descending
-   * similarity) so the HNSW index can be used.
-   */
+  // Orders by ascending distance rather than descending similarity so the HNSW index can be used
   async search(
     handle: DbHandle,
     input: SearchVectorDocumentsInput,

@@ -34,18 +34,12 @@ export interface ResumePortfolio {
   }>;
 }
 
-/**
- * Every signed-in career user has one career profile.
- * If none exists, return null (profile is created via data migration, not on-the-fly like the old portfolio).
- */
+// profiles come from a data migration now, not created on-the-fly like the old portfolio did
 export async function ensureUserHasProfile(request: Request): Promise<boolean> {
   const profile = await fetchCareerProfile(request);
   return profile !== null;
 }
 
-/**
- * Full profile context — profile + positions + education — for AI prompts and public display.
- */
 export async function getFullCareerContext(ownerUserId: string) {
   const [profile, positions, education] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
@@ -60,9 +54,6 @@ export async function getFullCareerContext(ownerUserId: string) {
   };
 }
 
-/**
- * Public career profile for sharing.
- */
 export async function getPublicCareerProfile(ownerUserId: string) {
   const [profile, positions] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
@@ -72,9 +63,6 @@ export async function getPublicCareerProfile(ownerUserId: string) {
   return { profile, positions };
 }
 
-/**
- * Resume portfolio context for AI prompts — profile + positions + skills + projects.
- */
 export async function getResumePortfolioContext(
   ownerUserId: string,
 ): Promise<ResumePortfolio | null> {

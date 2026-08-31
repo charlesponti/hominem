@@ -52,7 +52,7 @@ export function AccountSelect(props: AccountSelectProps) {
     showLabel = false,
   } = props;
 
-  // Use external data if provided, otherwise fetch internally
+  // accounts always come from this hook; only isLoading can be overridden by the caller
   const { data: internalAccounts, isLoading: internalLoading } = useFinanceAccounts();
   const accounts = Array.isArray(internalAccounts) ? internalAccounts : [];
   const isLoading = externalLoading !== undefined ? externalLoading : internalLoading;

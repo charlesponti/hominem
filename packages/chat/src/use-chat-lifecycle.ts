@@ -1,11 +1,7 @@
-/**
- * Shared chat lifecycle hook.
- *
- * Manages the CaptureLifecycleState machine, pendingReview, and resolvedSource
- * for both mobile (chat) and web chat sessions. Platform-specific async
- * operations (classification strategy, persist mechanism) are injected via
- * callbacks so each surface stays free of the other's dependencies.
- */
+// Shared chat lifecycle hook — drives the CaptureLifecycleState machine,
+// pendingReview, and resolvedSource for both mobile and web chat sessions.
+// Platform-specific async work (classification, persisting) gets injected as
+// callbacks so neither surface has to know about the other's dependencies.
 
 import { useCallback, useMemo, useReducer } from 'react';
 
@@ -13,16 +9,11 @@ import type { ArtifactType, ClassificationProposal, SessionSource } from './capt
 import { isBlockingState, type CaptureLifecycleState } from './lifecycle-state';
 import { deriveSessionSource, type SessionArtifactMessage } from './session-artifacts';
 
-/**
- * A review proposal awaiting user confirmation.
- *
- * `reviewItemId` is present only in the server-side classification flow (web).
- * Client-side proposals (mobile) omit it.
- *
- * `items` is present only for multi-task extraction proposals — when set,
- * the review UI should list each item instead of relying solely on
- * `proposedTitle`/`proposedChanges`, and accepting creates one artifact per item.
- */
+// A review proposal waiting on user confirmation. `reviewItemId` only shows
+// up in the server-side (web) flow — mobile's client-side proposals skip it.
+// `items` only shows up for multi-task extraction: when it's set, list each
+// item in the review UI instead of just proposedTitle/proposedChanges, and
+// accepting creates one artifact per item.
 export interface PendingReview extends ClassificationProposal {
   reviewItemId?: string;
   items?: { title: string; description?: string }[];
@@ -58,32 +49,22 @@ function lifecycleReducer<TReview extends PendingReview>(
 }
 
 export interface UseChatLifecycleInput<TReview extends PendingReview = PendingReview> {
-  /**
-   * Normalized messages for source derivation and proposal building.
-   * Map your platform's message type to `{ role, content }` before passing.
-   */
+  // Normalized messages for source derivation and proposal building — map
+  // your platform's message type to `{ role, content }` before passing it in
   messages: SessionArtifactMessage[];
-  /**
-   * The session's initial source (e.g. an artifact anchor or 'new').
-   * Overridden by `persistedSource` once the user saves a note.
-   */
+  // The session's initial source (e.g. an artifact anchor or 'new'), gets
+  // overridden by `persistedSource` once the user saves a note
   source: SessionSource;
-  /**
-   * Platform-specific classification: either calls the server (web) or builds
-   * a proposal client-side (mobile). Must resolve to a `PendingReview`.
-   */
+  // Platform-specific classification — either hits the server (web) or
+  // builds a proposal client-side (mobile), must resolve to a PendingReview
   onTransform: (type: ArtifactType) => Promise<TReview>;
-  /**
-   * Platform-specific persistence: creates the note and returns the new
-   * SessionSource that the header should display.
-   */
+  // Platform-specific persistence — creates the note and returns the new
+  // SessionSource for the header to show
   onAcceptReview: (review: TReview) => Promise<SessionSource>;
-  /**
-   * Platform-specific rejection: calls the server to discard the ReviewItem
-   * (web) or is a no-op (mobile). State is always reset by the hook.
-   */
+  // Platform-specific rejection — discards the ReviewItem on the server
+  // (web) or does nothing (mobile); the hook resets state either way
   onRejectReview: (review: TReview) => Promise<void>;
-  /** Called when any lifecycle phase throws. Use to show toasts / alerts. */
+  // Called when any lifecycle phase throws, e.g. to show a toast
   onError: (phase: 'transform' | 'accept' | 'reject', error: unknown) => void;
 }
 

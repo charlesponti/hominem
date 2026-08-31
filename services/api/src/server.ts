@@ -43,9 +43,9 @@ function createAllowedOrigins() {
   ]);
 }
 
-// OAuth discovery/registration endpoints (RFC 8414/9728/7591) are meant to be
-// called by any MCP client's own origin (e.g. claude.ai) — they don't rely on
-// cookies, so reflecting the caller's origin here doesn't expose session data.
+// OAuth discovery/registration endpoints (RFC 8414/9728/7591) get hit by any
+// MCP client's own origin (e.g. claude.ai). They don't use cookies, so
+// reflecting back whatever origin called us is safe here.
 function isPublicMcpAuthPath(path: string) {
   return (
     path.startsWith('/.well-known/') ||
@@ -95,15 +95,15 @@ function registerApiRoutes(app: Hono<AppEnv>) {
   const authHandler = createAuthHandler();
 
   app.route('/', rpcApp);
-  // Keep MCP outside the client-facing RPC contract. MCP is server-only and
-  // its Redis-backed implementation must not enter mobile typechecking.
+  // MCP stays outside the client-facing RPC contract - it's server-only and
+  // its Redis-backed code shouldn't leak into mobile typechecking.
   app.route('/api/mcp', mcpRoutes);
-  // OAuth discovery for MCP clients — must be at root per RFC 8414 / RFC 9728
+  // Has to be mounted at root - RFC 8414 / RFC 9728 require it there.
   app.route('/', oauthDiscoveryRoutes);
   app.route('/', loginRoutes);
   app.route('/', legalRoutes);
-  // Custom auth extras first (session/logout reshape for apps/finance, e2e helpers).
-  // Unmatched /api/auth/* falls through to the Better Auth catch-all handler.
+  // Our own auth extras go first (session/logout reshape for apps/finance, e2e helpers).
+  // Anything under /api/auth/* that doesn't match falls through to Better Auth's catch-all.
   app.route('/api/auth', authRoutes);
   app.use('/api/auth/*', authRateLimitMiddleware());
   app.route('/api/status', statusRoutes);

@@ -1,13 +1,7 @@
-/**
- * Mobile app auth routing configuration.
- *
- * Defines canonical post-auth destinations and allowed redirect paths for the mobile app.
- */
-
+// Canonical post-auth destination and allowed redirect paths for the mobile app.
 type AppAuthConfig = {
-  /** Platform-specific canonical post-auth destination path. */
   defaultPostAuthDestination: string;
-  /** Allowed redirect prefixes for safe redirect validation. */
+  // Allowed redirect prefixes, for validating a redirect is safe to follow.
   allowedDestinations: string[];
 };
 

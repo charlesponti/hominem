@@ -178,6 +178,9 @@ importers:
       '@hominem/queues':
         specifier: workspace:*
         version: link:../../packages/queues
+      '@hominem/rpc':
+        specifier: workspace:*
+        version: link:../../packages/rpc
       '@hominem/services':
         specifier: workspace:*
         version: link:../../packages/services

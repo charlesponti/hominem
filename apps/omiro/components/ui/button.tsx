@@ -11,12 +11,10 @@ import {
 
 import { useAppTheme, useStyles } from '~/components/theme';
 
-/**
- * shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
- * translated to the design constitution's tokens. `outline` is the one
- * variant with a border — the constitution's documented exception for a
- * control that needs to read as tappable without a solid fill.
- */
+// shadcn's variant taxonomy (default/secondary/destructive/outline/ghost),
+// mapped to the design constitution's tokens. `outline` is the one variant
+// with a border -- the documented exception for a control that needs to
+// read as tappable without a solid fill.
 type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
 
 interface ButtonProps {

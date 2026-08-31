@@ -1,6 +1,6 @@
 import { BRAND } from '@hominem/env/brand';
 
-/** Single source of truth for the API service brand strings. */
+// All the API's brand strings live here - don't hardcode them elsewhere.
 export const API_BRAND = {
   appName: BRAND.appName,
   financeClientName: BRAND.financeClientName,

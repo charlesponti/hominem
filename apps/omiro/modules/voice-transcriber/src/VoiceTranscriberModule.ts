@@ -1,8 +1,8 @@
 import { requireNativeModule } from 'expo';
 
 // Must stay in sync with the `code` values thrown by VoiceTranscriberException
-// in VoiceTranscriberModule.swift — that's the only place these strings are
-// otherwise defined, so a typo on either side would silently break routing.
+// in VoiceTranscriberModule.swift -- that's the only other place these
+// strings are defined, so a typo on either side would silently break routing.
 export const VoiceTranscriberErrorCode = {
   INVALID_AUDIO_URL: 'INVALID_AUDIO_URL',
   RECOGNIZER_UNAVAILABLE: 'RECOGNIZER_UNAVAILABLE',

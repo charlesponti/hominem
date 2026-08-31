@@ -27,9 +27,7 @@ export function FinanceHonoProvider({ children, baseUrl }: FinanceHonoProviderPr
       }),
   );
 
-  // RPC calls are same-origin and authenticate via the Better Auth session
-  // cookie (the client already sends credentials: 'include') - no
-  // Authorization header is needed or valid here.
+  // same-origin RPC, auth rides on the Better Auth session cookie - no Authorization header needed
   const [client] = useState(() =>
     createFinanceApiClient({ baseUrl, onError: (e) => console.error('Hono RPC Error:', e) }),
   );

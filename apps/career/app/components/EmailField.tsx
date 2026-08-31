@@ -8,7 +8,6 @@ interface EmailFieldProps extends Omit<ComponentProps<typeof Input>, 'type'> {
   label?: string;
 }
 
-/** A single-row email input: icon | field. */
 export function EmailField({
   id = 'email',
   label = 'Email',

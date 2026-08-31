@@ -27,13 +27,12 @@ export default function handleRequest(
     let shellRendered = false;
     let userAgent = request.headers.get('user-agent');
 
-    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+    // bots and SPA Mode need to wait for everything before we respond
     // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
     let readyOption =
       (userAgent && isbot(userAgent)) || routerContext.isSpaMode ? 'onAllReady' : 'onShellReady';
 
-    // Abort the rendering stream after the `streamTimeout` so it has time to
-    // flush down the rejected boundaries
+    // abort after streamTimeout, giving it a moment to flush rejected boundaries first
     let timeoutId = setTimeout(() => abort(), streamTimeout + 1000);
 
     const { pipe, abort } = renderToPipeableStream(
@@ -43,7 +42,7 @@ export default function handleRequest(
           shellRendered = true;
           const body = new PassThrough({
             final(callback) {
-              // Clear the timeout to prevent retaining the closure and memory leak
+              // clear it so we're not holding onto the closure after we're done
               clearTimeout(timeoutId);
               timeoutId = undefined;
               callback();
@@ -67,9 +66,8 @@ export default function handleRequest(
         },
         onError(error) {
           responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
+          // only log errors that happen after the shell rendered — errors during
+          // the initial shell render reject the promise and get logged elsewhere
           if (shellRendered) {
             console.error(error);
           }

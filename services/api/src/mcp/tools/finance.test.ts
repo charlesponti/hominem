@@ -86,10 +86,9 @@ const transportId = 'f1000002-0000-4000-8000-000000000102';
 const statementId = 'f1000006-0000-4000-8000-000000000001';
 
 beforeAll(async () => {
-  // finance_statement_periods.account_id -> finance_accounts.id has no ON DELETE
-  // CASCADE, so a plain `DELETE FROM "user"` fails mid-cascade. Delete the finance
-  // tables explicitly (children first) before the user row, so each run starts
-  // from a clean slate regardless of what a previous run left behind.
+  // finance_statement_periods.account_id has no ON DELETE CASCADE to finance_accounts,
+  // so a plain `DELETE FROM "user"` fails mid-cascade. Delete the finance tables
+  // ourselves (children first) before the user row so each run starts clean.
   await pool.query(`DELETE FROM app.finance_transactions WHERE user_id = $1`, [userId]);
   await pool.query(`DELETE FROM app.finance_statement_periods WHERE user_id = $1`, [userId]);
   await pool.query(`DELETE FROM app.finance_accounts WHERE user_id = $1`, [userId]);

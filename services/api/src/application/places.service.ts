@@ -50,9 +50,9 @@ export type FindOrCreatePlaceInput =
   | { name: string; address?: string; latitude?: number; longitude?: number };
 
 /**
- * Resolves an `app.places` row for the caller, reusing an existing row (by id,
- * or by matching address/coordinates) instead of creating a duplicate place
- * every time the same location is referenced.
+ * Resolves an app.places row for the caller — reuses an existing one (by id, or by
+ * matching address/coordinates) instead of making a new place every time the same
+ * location comes up.
  */
 export async function findOrCreatePlace(
   ownerUserId: string,
@@ -69,8 +69,8 @@ export async function findOrCreatePlace(
     return row.id;
   }
 
-  // Only reuse an existing row when we have a real identifying signal to
-  // match on — an empty filter here would match an arbitrary unrelated place.
+  // only reuse a row when we've got a real signal to match on — an empty filter
+  // here would just match whatever unrelated place happens to come back first
   const existing = await db
     .selectFrom('app.places')
     .select('id')

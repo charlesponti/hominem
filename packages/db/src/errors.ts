@@ -1,9 +1,5 @@
-/**
- * Error classes for database services
- *
- * These are internal to @hominem/db - used by services that need to throw
- * errors which get caught by the API layer.
- */
+// Error classes for database services. Internal to @hominem/db - used by
+// services that need to throw errors the API layer can catch.
 
 export type ErrorCode =
   | 'VALIDATION_ERROR'

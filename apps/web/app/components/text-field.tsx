@@ -9,12 +9,8 @@ interface TextFieldProps extends Omit<React.ComponentProps<'input'>, 'type'>, Te
 }
 
 /**
- * TextField — compound input with label, helper text, and error state.
- * Replaces raw `<input>` + `<label>` + error span patterns in feature code.
- *
- * @example
- * <TextField label="Email" type="email" error={errors.email?.message} />
- * <TextField label="Search" type="search" helpText="Press Enter to search" />
+ * Input bundled with label, helper text, and error state — swap in for a
+ * raw `<input>` + `<label>` + error span combo.
  */
 function TextField({
   id,

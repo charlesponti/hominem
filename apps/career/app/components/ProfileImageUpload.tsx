@@ -101,7 +101,6 @@ export function ProfileImageUpload({
 
   return (
     <div className="space-y-1">
-      {/* Current Profile Image */}
       <div className={compact ? 'flex items-center' : 'mb-4 flex items-center'}>
         <Button
           type="button"

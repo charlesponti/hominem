@@ -18,12 +18,10 @@ interface InboxItemIdentity {
   entityId: string;
 }
 
-/**
- * Optimistically removes an item from every cached inbox page, then marks the
- * inbox query stale without forcing an immediate refetch. Reconciling via
- * invalidate+refetch alone re-fetches every already-loaded page before the
- * item visually disappears, which reads as the list flashing on delete/archive.
- */
+// Optimistically removes an item from every cached inbox page, then marks
+// the inbox query stale without forcing an immediate refetch. Just doing
+// invalidate+refetch re-fetches every already-loaded page before the item
+// visually disappears, which reads as the list flashing on delete/archive.
 export function removeInboxStreamItem(queryClient: QueryClient, identity: InboxItemIdentity) {
   removeInboxEntity(queryClient, identity);
 

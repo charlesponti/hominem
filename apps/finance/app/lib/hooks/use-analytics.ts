@@ -27,9 +27,6 @@ interface TagBreakdownParams {
   limit?: number | undefined;
 }
 
-/**
- * Hook for fetching tag breakdown analytics
- */
 export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakdownParams) {
   return useHonoQuery<TagBreakdownOutput>(
     [
@@ -56,14 +53,11 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
         })
         .then((r) => r.json()),
     {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
   );
 }
 
-/**
- * Hook for fetching list of finance tags
- */
 export function useFinanceTags() {
   return useHonoQuery<FinanceTagsOutput>(
     ['finance', 'tags', 'list'],

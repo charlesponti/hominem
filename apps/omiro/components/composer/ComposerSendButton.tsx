@@ -12,11 +12,10 @@ interface ComposerSendButtonProps {
   testID?: string;
 }
 
-// A filled circular primary action -- distinct from the plain/bordered
-// IconButton so it reads as the primary, terminal action (send, or the
-// enhance sheet's accept checkmark) rather than one of several
-// equal-weight controls. Generic over its icon, so it's reused wherever a
-// screen needs exactly this shape.
+// Filled circular primary action -- distinct from the plain/bordered
+// IconButton so it reads as *the* primary action (send, or the enhance
+// sheet's accept checkmark), not just another control among equals. Icon is
+// a prop so it's reusable anywhere that needs this shape.
 export function ComposerSendButton({
   accessibilityLabel,
   disabled = false,

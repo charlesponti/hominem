@@ -8,14 +8,8 @@ interface FieldProps extends FieldBaseProps {
 }
 
 /**
- * Field — standalone label + control + helper/error slot.
- * Wires label ↔ control association automatically via a generated id.
- * Does NOT require react-hook-form — works with any controlled or uncontrolled input.
- *
- * @example
- * <Field label="Email" error={errors.email}>
- *   <Input type="email" />
- * </Field>
+ * Label + control + helper/error text, wired together with a generated id.
+ * Works with any controlled or uncontrolled input, no react-hook-form needed.
  */
 function Field({ label, helpText, error, required, children, id: externalId }: FieldProps) {
   const generatedId = React.useId();

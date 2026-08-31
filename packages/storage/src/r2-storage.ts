@@ -744,10 +744,8 @@ export class R2StorageService {
     return this.preparedUploadKeys.get(fileId);
   }
 
-  /**
-   * Stores a private, content-addressed import object. Re-importing identical
-   * bytes returns the same key and never overwrites a distinct artifact.
-   */
+  // content-addressed storage for import objects - importing the same bytes twice
+  // just returns the existing key instead of writing a duplicate
   async storeImmutableObject(userId: string, contentHash: string, buffer: Buffer): Promise<string> {
     if (!/^[a-f0-9]{64}$/i.test(contentHash)) {
       throw new Error('contentHash must be a SHA-256 hex digest');

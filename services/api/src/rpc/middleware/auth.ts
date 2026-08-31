@@ -6,12 +6,7 @@ export type RpcUser = AuthUser & { isAdmin: boolean };
 
 import { UnauthorizedError } from '../errors';
 
-/**
- * Application Context
- *
- * This defines the context available to all route handlers.
- * Much simpler than the previous context system.
- */
+// The Hono context shape available to every route handler.
 export interface AppContext {
   Variables: {
     auth?: AuthContext;
@@ -28,13 +23,8 @@ export interface AppContext {
   Bindings: Record<string, unknown>;
 }
 
-/**
- * Authentication Middleware
- *
- * Protects routes that require authentication.
- * Throws UnauthorizedError if user is not authenticated.
- * Global error middleware catches and converts to REST response.
- */
+// Guards routes that need a logged-in user; throws if there isn't one, and the
+// global error middleware turns that into the actual HTTP response.
 export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const user = c.get('auth')?.user;
   const userId = c.get('auth')?.userId;
@@ -47,12 +37,7 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   return await next();
 });
 
-/**
- * Request ID Middleware
- *
- * Generates and propagates a unique request ID for tracing.
- * Useful for correlating logs across the request lifecycle.
- */
+// Tags each request with a short id so logs for the same request can be tied together.
 export const requestIdMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const requestId = crypto.randomUUID().slice(0, 8);
   c.set('requestId', requestId);

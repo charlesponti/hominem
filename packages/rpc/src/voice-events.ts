@@ -45,11 +45,8 @@ export interface VoiceEventPayload {
   reason?: VoiceDiscardReason;
 }
 
-/**
- * PostHog analytics integration for voice events.
- * NOTE: This couples the RPC client to PostHog. Consider moving to a dedicated
- * @hominem/analytics package if other domains need event emission.
- */
+// this ties the RPC client to PostHog directly - if other domains need event
+// emission too, probably worth pulling this into its own analytics package
 interface PostHogClientLike {
   capture: (
     event: string,

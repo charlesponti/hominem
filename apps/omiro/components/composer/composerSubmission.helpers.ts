@@ -11,9 +11,9 @@ export interface ComposerPresentation {
 }
 
 // Pure presentation mapping from mode/entryMode to copy, test IDs, and which
-// submit action is primary vs. secondary. Kept separate from the actual submit
-// logic in useComposerSubmission.ts so the two "submission" concerns — what the
-// button says versus what it does — can change independently.
+// submit action is primary. Kept separate from the actual submit logic in
+// useComposerSubmission.ts so "what the button says" and "what it does" can
+// change independently.
 export function getComposerSubmissionConfig(
   props: ComposerProps,
   selectedEntryKind?: 'chat' | 'note',

@@ -204,18 +204,18 @@ async function synthesizeReplyAudioFile(
   }
 }
 
-// Rough chars/words-per-token headroom for each target: short caps at ~500-600
-// characters, medium at a 3-5 minute read (~600-1000 words), long at a full
-// essay (~1500-3000 words) with room for the model's outline-then-write pass.
+// Rough token budgets per length: short is ~500-600 chars, medium is a
+// 3-5 minute read (~600-1000 words), long is a full essay (~1500-3000 words)
+// with extra room for the model to outline before it writes.
 const RESPONSE_LENGTH_MAX_TOKENS: Record<'short' | 'medium' | 'long', number> = {
   short: 250,
   medium: 1600,
   long: 6000,
 };
 
-// `chat_messages.content` has a not-blank check constraint; a turn that ends
-// in a pending tool-call confirmation can have no text of its own, so this
-// gives it a placeholder rather than failing the insert.
+// `chat_messages.content` can't be blank in the DB, but a turn that ends
+// waiting on tool-call confirmation has no text of its own -- so we stick
+// in a placeholder instead of letting the insert fail.
 function resolveAssistantContent(
   assistantText: string,
   pendingToolCall: { toolName: string } | null,
@@ -1952,9 +1952,9 @@ const chatByIdRoutes = new Hono<AppContext>()
         let audioFile: ChatMessageFileRecord | null = null;
         let audioRun: SynthesizedReplyAudio | null = null;
         if (responseModality === 'audio' && assistantText.trim().length > 0) {
-          // Best-effort: the text reply already succeeded, so a speech
-          // synthesis failure shouldn't fail the whole request — just skip
-          // attaching audio and let the client fall back to text.
+          // best effort -- the text reply already went through, so if speech
+          // synthesis fails we just skip the audio and let the client fall
+          // back to text
           audioRun = await synthesizeReplyAudioFile(userId, assistantText).catch(() => null);
           audioFile = audioRun?.file ?? null;
         }
@@ -2078,9 +2078,9 @@ export const chatsRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const { generationId, title, message, fileIds = [], responseLength } = c.req.valid('json');
 
-    // `/start-stream` has no chatId yet, so a retried generationId can't be
-    // looked up the way `/stream`/`/regenerate` do — fall back to a
-    // chat-agnostic lookup by the run's own (globally unique) id.
+    // there's no chatId yet on `/start-stream`, so we can't look up a retried
+    // generationId the way `/stream`/`/regenerate` do -- look it up by the
+    // run's own globally-unique id instead
     const existingRun = await ChatRepository.getGenerationRunById(db, generationId, userId);
     if (existingRun) {
       return streamSSE(c, async (stream) => {

@@ -8,9 +8,8 @@ const TRUNCATION_MARKER = '[Earlier messages omitted]\n\n';
 
 type NotePreset = (typeof t.chat.noteDraft.presets)[number];
 
-// Full sentences, not bare labels -- the backend sends this as
-// `Instruction: <text>`, so "Essay" alone is a much weaker steer than a real
-// directive.
+// Full sentences here, not bare labels -- the backend wraps this as
+// `Instruction: <text>`, so just "Essay" would barely steer anything.
 export const PRESET_INSTRUCTIONS: Record<NotePreset, string> = {
   Essay: 'Write this as a flowing long-form essay with clear sections.',
   Summary: 'Write this as a short, tight summary of the key points.',
@@ -23,11 +22,10 @@ export interface NoteDraft {
   isTruncated: boolean;
 }
 
-// Keeps the tail of the transcript (the most recent turns) rather than the
-// head, since those are the ones the user just had in front of them. Trims
-// forward to the next paragraph-block boundary so a turn isn't cut
-// mid-sentence -- falls back to a hard slice only if no boundary exists
-// within the budget (e.g. a single message longer than the whole cap).
+// Keeps the tail of the transcript (the recent turns) instead of the head,
+// since that's what the user actually just saw. Trims forward to the next
+// paragraph break so we don't cut a turn mid-sentence -- only falls back to
+// a hard slice if there's no boundary in the budget (e.g. one giant message).
 function truncateTranscript(transcript: string): string {
   const budget = NOTE_TRANSCRIPT_MAX_CHARS - TRUNCATION_MARKER.length;
   const tail = transcript.slice(-budget);

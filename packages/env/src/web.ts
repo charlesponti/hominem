@@ -5,15 +5,15 @@ import { baseSchema } from './base';
 const blankAsUndefined = (value: unknown) => (value === '' ? undefined : value);
 
 export const webSchema = baseSchema.extend({
-  // Browser-facing public API origin (hosted login redirects, Better Auth
-  // browser client, browser RPC/file calls). See docs/auth-production.md.
+  // Public API origin the browser talks to (hosted login redirects, Better
+  // Auth's browser client, browser RPC/file calls). See docs/authentication.md.
   VITE_PUBLIC_API_URL: z.url(),
-  // Server-only API origin for SSR session resolution and server-side data
-  // calls. Required — never fall back to VITE_PUBLIC_API_URL: a missing
-  // production value must stop the app instead of routing SSR through
+  // Server-only API origin for SSR session checks and server-side data
+  // calls. Required — don't fall back to VITE_PUBLIC_API_URL here, since a
+  // missing prod value should crash the app rather than route SSR through
   // Cloudflare.
   HOMINEM_INTERNAL_API_URL: z.url(),
-  // Explicit public origin of this app, used for hosted-login return URLs.
+  // This app's own public origin, used to build hosted-login return URLs.
   PUBLIC_APP_URL: z.url(),
   VITE_POSTHOG_PUBLIC_KEY: z.preprocess(blankAsUndefined, z.string().optional()),
   VITE_POSTHOG_HOST: z.preprocess(
@@ -39,8 +39,8 @@ export const webSchema = baseSchema.extend({
 
 export type WebEnv = z.infer<typeof webSchema>;
 
-// Browser-safe subset: only VITE_* vars exist in import.meta.env, so client
-// validation must not require the server-only auth URLs above.
+// Browser-safe subset — only VITE_* vars actually exist in import.meta.env,
+// so client validation can't require the server-only auth URLs above.
 export const webClientSchema = webSchema.pick({
   VITE_PUBLIC_API_URL: true,
   VITE_POSTHOG_PUBLIC_KEY: true,

@@ -7,12 +7,10 @@ import type { AppContext } from '../middleware/auth';
 
 export const importWebSocketRoutes = new Hono<AppContext>().get(
   '/ws',
-  // Explicit return type: without it, TS infers this callback's return shape
-  // bottom-up (including every onOpen/onMessage/onClose closure) before
-  // comparing it against upgradeWebSocket's overloads -- one of the most
-  // expensive single checkExpression spans in the whole services/api
-  // typecheck (~780ms). Annotating gives each handler a contextual type
-  // upfront instead.
+  // We annotate the return type here on purpose -- without it, TS has to infer
+  // the shape from every onOpen/onMessage/onClose closure before it can check
+  // it against upgradeWebSocket's overloads, and that's one of the slowest
+  // type checks in the whole services/api build (~780ms). Annotating skips that.
   upgradeWebSocket((c): WSEvents<WebSocketLike> => {
     const userId = c.get('auth')?.userId;
     let subscriber: ReturnType<typeof redis.duplicate> | null = null;
@@ -34,7 +32,7 @@ export const importWebSocketRoutes = new Hono<AppContext>().get(
             const jobs = (parsed.data ?? []).filter((job) => job.userId === userId);
             if (jobs.length > 0) ws.send(JSON.stringify({ type: parsed.type, data: jobs }));
           } catch {
-            // Ignore malformed pub/sub messages; the next snapshot remains authoritative.
+            // ignore bad messages, the next snapshot will fix things up
           }
         });
       },

@@ -89,11 +89,9 @@ async function applySelectedListItems(
   }
 }
 
-/**
- * Applies only the resume-import changes the user explicitly selected. Never
- * trusts client-submitted diff content — only which keys were checked; the
- * actual field values always come from the job record computed by the worker.
- */
+// Only applies the changes the user checked off. We don't trust any diff
+// content sent from the client — just which keys were selected; the actual
+// values always come from the job record the worker computed.
 export async function handleApplyResumeImportAction({
   formData,
   user,

@@ -7,10 +7,10 @@ interface UseComposerDraftOptions {
   onDraftChange?: (message: string) => void;
 }
 
-// The draft lives in an external store (not React state) so that typing
-// doesn't re-render every component holding a `useComposerController` result --
-// only whichever leaf component subscribes to the store re-renders per
-// keystroke. See useComposerMessageStore.ts, ComposerInput.tsx, and ComposerToolbar.tsx.
+// Draft lives in an external store (not React state) so typing doesn't
+// re-render every component holding a `useComposerController` result --
+// only the leaf that subscribes to the store re-renders per keystroke. See
+// useComposerMessageStore.ts, ComposerInput.tsx, and ComposerToolbar.tsx.
 export function useComposerDraft({
   initialMessage = '',
   onDraftChange,

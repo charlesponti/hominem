@@ -10,7 +10,7 @@ import { checkRateLimit } from './rate-limiter';
 import { ensureMcpToolsRegistered } from './register-tools';
 import { handleMcpRequest, type McpHonoEnv } from './server';
 
-// Use top-level await via ESM (services/api is ESM)
+// Top-level await works fine here since services/api is ESM
 await ensureMcpToolsRegistered();
 
 export async function mcpAuthorizationMiddleware(c: Context<McpHonoEnv>, next: Next) {
@@ -63,10 +63,8 @@ export const mcpRoutes = new Hono<McpHonoEnv>()
   .all('/', handleMcpRequest)
   .all('/*', handleMcpRequest);
 
-/**
- * OAuth discovery routes — mounted at the server root so MCP clients
- * can discover the authorization server without auth.
- */
+// OAuth discovery routes, mounted at the server root so MCP clients can
+// find the authorization server without needing to auth first.
 const mcpResource = new URL('/api/mcp', env.API_URL).toString();
 
 const getOAuthProtectedResourceResponse = (c: Context) => {
@@ -80,9 +78,8 @@ const getOAuthProtectedResourceResponse = (c: Context) => {
 
 async function handleOAuthAuthorizationServerMetadata(c: Context) {
   if (c.req.method === 'HEAD') {
-    // ChatGPT probes authorization-server metadata with HEAD before fetching it
-    // with GET. Do not delegate HEAD to Better Auth: its response has no body,
-    // so attempting to parse it produces a 500 and hides valid capabilities.
+    // ChatGPT does a HEAD request before the real GET. Better Auth's HEAD
+    // response has no body, so parsing it would 500 and hide real capabilities.
     return new Response(null, {
       status: 200,
       headers: { 'content-type': 'application/json' },

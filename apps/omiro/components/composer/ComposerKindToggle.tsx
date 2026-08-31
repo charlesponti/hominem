@@ -16,7 +16,7 @@ import type { ComposerEntryKind } from './composer.types';
 
 const SEGMENT_SIZE = 34;
 const TRACK_PADDING = 2;
-// Matches on-screen movement per the app's motion guidelines (--ease-in-out).
+// Matches the app's motion guidelines for on-screen movement (--ease-in-out).
 const MOVE_EASING = Easing.bezier(0.77, 0, 0.175, 1);
 
 interface ComposerKindToggleProps {
@@ -35,11 +35,9 @@ const options: { kind: ComposerEntryKind; label: string; icon: SFSymbol; iconFil
     { kind: 'note', label: 'Document', icon: 'doc.text', iconFilled: 'doc.text.fill' },
   ];
 
-// A single mutually-exclusive control (not two independent buttons) so the
-// chat/note choice reads as one state with two positions, the same way an
-// iOS segmented control does. The thumb sliding between positions is what
-// makes switching legible -- see ComposerKindToggle in the /animate skill
-// output for the reasoning.
+// One mutually-exclusive control, not two separate buttons, so the chat/note
+// choice reads as a single state with two positions -- like an iOS segmented
+// control. The thumb sliding between them is what makes the switch legible.
 export function ComposerKindToggle({ selected, onSelect }: ComposerKindToggleProps) {
   const theme = useAppTheme();
   const { card, foreground, mutedForeground, muted } = theme.colors;

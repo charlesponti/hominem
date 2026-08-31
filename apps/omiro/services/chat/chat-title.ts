@@ -11,12 +11,6 @@ function normalizeWhitespace(value: string) {
   return value.trim().replace(/\s+/g, ' ');
 }
 
-/**
- * Gets the display title for a chat.
- * - If a custom title exists, returns it (normalized + truncated)
- * - Otherwise falls back to source-derived title
- * - Returns default title if nothing else is available
- */
 export function normalizeChatTitle(value: string) {
   return normalizeWhitespace(value).slice(0, CHAT_TITLE_MAX_LENGTH) || DEFAULT_CHAT_TITLE;
 }
@@ -32,7 +26,6 @@ export function getChatTitle(title: string | null | undefined, source: SessionSo
     return normalizeChatTitle(customTitle);
   }
 
-  // Fall back to source-derived title
   if (source.kind === 'artifact') {
     return normalizeChatTitle(source.title) || DEFAULT_CHAT_TITLE;
   }

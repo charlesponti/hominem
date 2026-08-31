@@ -14,11 +14,8 @@ const MAX_IMAGE_ANALYSIS_BYTES = 20 * 1024 * 1024;
 const DOCUMENT_SUMMARY_THRESHOLD = 1000;
 const DOCUMENT_SUMMARY_INPUT_LIMIT = 10_000;
 
-/**
- * Generates an AI description of an image for use as chat context.
- * Returns an empty string (rather than throwing) on failure, so callers can
- * fall back to storing the file without a description.
- */
+// Describes an image for chat context. Returns '' instead of throwing on
+// failure, so callers can just store the file without a description.
 export async function describeImageForChat(
   buffer: ArrayBuffer,
   mimetype: string,
@@ -77,10 +74,8 @@ export async function describeImageForChat(
   }
 }
 
-/**
- * Summarizes extracted document text for use as chat context. Returns an
- * empty string for short documents (not worth summarizing) or on failure.
- */
+// Summarizes extracted document text for chat context. Skips short docs
+// (not worth summarizing) and returns '' on failure too.
 export async function summarizeDocumentForChat(
   textContent: string,
   fileId: string,

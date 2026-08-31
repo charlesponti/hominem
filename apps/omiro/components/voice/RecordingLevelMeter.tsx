@@ -10,9 +10,9 @@ const BAR_MAX_HEIGHT = 20;
 const BAR_MIN_HEIGHT = 3;
 
 // iOS AVAudioRecorder metering is dBFS, roughly -160 (silence) to 0 (max
-// possible). These bounds are a starting perceptual mapping tuned for normal
-// speaking volume — recalibrate against real on-device readings if the meter
-// looks too flat or too twitchy in practice.
+// possible). These bounds are a first-pass mapping tuned for normal speaking
+// volume -- recalibrate against real on-device readings if the meter looks
+// too flat or too twitchy in practice.
 const DB_FLOOR = -50;
 const DB_CEILING = -5;
 

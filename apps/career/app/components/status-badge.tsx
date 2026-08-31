@@ -18,7 +18,6 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-/** Career's application-status presentation. */
 export function StatusBadge({ tone, label, className }: StatusBadgeProps) {
   return (
     <Badge variant="outline" className={cn(toneClassNames[tone], className)}>

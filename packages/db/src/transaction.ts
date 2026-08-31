@@ -3,37 +3,21 @@ import type { Kysely, Transaction } from 'kysely';
 import { db } from './db';
 import type { Database } from './db';
 
-/**
- * A transaction-scoped database handle.
- * Repositories accept this so callers can compose writes atomically.
- */
+// A transaction-scoped handle. Repositories take this so callers can compose writes atomically.
 export type TransactionHandle = Transaction<Database>;
 
-/**
- * A database handle that works with or without a transaction.
- * Repositories use this as their `db` parameter so the same code
- * runs inside or outside a transaction.
- */
+// Works with or without a transaction — repositories use this as their `db`
+// param so the same code runs either way.
 export type DbHandle = Kysely<Database> | TransactionHandle;
 
-/**
- * Run a callback inside a database transaction.
- *
- * The callback receives a `TransactionHandle` that repositories
- * can accept to participate in the transaction.
- *
- * If the callback throws, the transaction is rolled back.
- * If it returns, the transaction is committed.
- *
- * @example
- * ```ts
- * const note = await runInTransaction(async (trx) => {
- *   const created = await noteRepo.create(trx, { ... });
- *   await noteFileRepo.sync(trx, created.id, userId, fileIds);
- *   return created;
- * });
- * ```
- */
+// Runs a callback inside a transaction. The callback gets a TransactionHandle
+// to pass to repositories. Throws roll back, returns commit.
+//
+// const note = await runInTransaction(async (trx) => {
+//   const created = await noteRepo.create(trx, { ... });
+//   await noteFileRepo.sync(trx, created.id, userId, fileIds);
+//   return created;
+// });
 export async function runInTransaction<T>(fn: (trx: TransactionHandle) => Promise<T>): Promise<T> {
   return db.transaction().execute(fn);
 }

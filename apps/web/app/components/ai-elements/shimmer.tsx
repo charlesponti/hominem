@@ -9,7 +9,7 @@ import { cn } from '~/lib/utils';
 
 type MotionHTMLProps = MotionProps & Record<string, unknown>;
 
-// Cache motion components at module level to avoid creating during render
+// cache these at module level so we're not recreating them on every render
 const motionComponentCache = new Map<
   keyof JSX.IntrinsicElements,
   React.ComponentType<MotionHTMLProps>

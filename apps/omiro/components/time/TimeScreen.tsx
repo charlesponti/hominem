@@ -110,9 +110,9 @@ export function TimeHeaderActions() {
   );
 }
 
-// __DEV__-only: lets a dev preview the Time stream's design with fixture data
-// (multiple events per day, overlapping times, empty state, etc.) without a
-// real calendar/task backend. See time-preview-scenarios.ts.
+// __DEV__ only: lets a dev preview the Time stream's design with fixture
+// data (multiple events per day, overlapping times, empty state, etc.)
+// without needing a real calendar/task backend. See time-preview-scenarios.ts.
 function TimePreviewMenuButton() {
   const { scenario, scenarios, setScenarioId } = useTimePreview();
 

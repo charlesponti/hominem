@@ -5,10 +5,9 @@ import type { entityTypeSchema } from '../schemas/tags.schema';
 
 export type EntityType = z.output<typeof entityTypeSchema>;
 
-// Only entity types with a live, migrated table are listed here — this is an
-// allow-list, not a passthrough, since entity_table casts straight to a
-// Postgres regclass and must never be built from unvalidated input. Extend as
-// later migration phases land more taggable domains.
+// Only entity types with a live, migrated table go here — it's an allow-list, not a
+// passthrough, since entity_table casts straight to a Postgres regclass and can never
+// come from unvalidated input. Add more as later migrations bring more domains in.
 export const ENTITY_TABLE_MAP: Record<EntityType, string> = {
   people: 'app.people',
   places: 'app.places',
@@ -52,8 +51,8 @@ async function findOrCreateTag(ownerUserId: string, tagName: string) {
       .returning(['id', 'name'])
       .executeTakeFirstOrThrow();
   } catch {
-    // Lost a race against a concurrent insert of the same name — the unique
-    // (owner, lower(name)) constraint means it exists now; fetch it.
+    // lost the race to a concurrent insert of the same name — the unique (owner, lower(name))
+    // constraint means it's there now, so just go fetch it
     const created = await findTagByName(ownerUserId, tagName);
     if (!created) throw new Error(`Failed to find or create tag "${tagName}"`);
     return created;

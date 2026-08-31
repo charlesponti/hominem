@@ -2,9 +2,9 @@ import * as z from 'zod';
 
 // Shared by every Node server package (services/api, packages/db,
 // packages/storage, packages/services, packages/ai, apps/career's server
-// env, ...). Extend this instead of re-declaring these fields locally —
-// duplicate schemas invite drift — fields end up with different defaults
-// across packages and nobody notices until a production incident.
+// env, ...). Extend this instead of redeclaring these fields — if every
+// package rolls its own copy they drift apart and nobody notices until
+// something breaks in prod.
 export const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.url().optional(),
@@ -22,7 +22,6 @@ export const baseSchema = z.object({
   R2_PUBLIC_URL: z.url().default('http://localhost:9000'),
   REDIS_URL: z.url().default('redis://localhost:6379'),
 
-  // Models
   AUDIO_TTS_MODEL: z.string().default('microsoft/mai-voice-2-flash'),
   AUDIO_TTS_VOICE: z.string().default('en-US-Harper:MAI-Voice-2'),
   CHAT_MODEL: z.string().default('google/gemini-2.5-flash-lite'),

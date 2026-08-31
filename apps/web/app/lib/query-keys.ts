@@ -1,10 +1,6 @@
 import { queryKeys } from '@hominem/rpc/react';
-/**
- * Re-export the shared query key factory from @hominem/rpc.
- *
- * This replaces the local key definitions that were diverging
- * from mobile. Both apps now share a single source of truth.
- */
+// re-exports the shared query key factory from @hominem/rpc so web and
+// mobile stay on the same keys instead of drifting apart
 
 export const chatQueryKeys = {
   list: queryKeys.chats.list,

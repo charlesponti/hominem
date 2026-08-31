@@ -20,8 +20,7 @@ function resultContent(res: McpToolResult): TestResultContent {
 }
 
 beforeAll(async () => {
-  // Cascades to every app.* row owned by this test user, so each run starts from a
-  // clean slate regardless of what a previous run left behind.
+  // Deleting the user cascades to every app.* row it owns, so each run starts clean.
   await pool.query(`DELETE FROM "user" WHERE id = $1`, [userId]);
   await pool.query(
     `INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, $4)`,

@@ -15,11 +15,9 @@ interface InboxRemovalContext {
   previousInboxPages: [readonly unknown[], unknown][];
 }
 
-/**
- * Shares the optimistic-removal skeleton used by every mutation that drops an
- * item out of the inbox stream (archive, delete, ...): snapshot every cached
- * inbox page, remove the item immediately, and roll back on failure.
- */
+// Shared optimistic-removal skeleton for every mutation that drops an item
+// out of the inbox stream (archive, delete, ...): snapshot every cached
+// inbox page, remove the item right away, roll back on failure.
 export function useInboxItemRemoval<TVariables = void>({
   kind,
   entityId,

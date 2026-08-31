@@ -6,11 +6,8 @@ import { PhoneField } from '~/components/PhoneField';
 import { ProfileImageUpload } from '~/components/ProfileImageUpload';
 import type { ProfileDetailsFormValues } from '~/lib/account/types';
 
-/**
- * Basic-info fieldset. Reads and writes through the page-level
- * react-hook-form context so all profile fields share one dirty state and
- * one save action (see ProfilePage's SaveBar).
- */
+// Hooks into the page-level react-hook-form context (not its own form) so
+// this fieldset shares dirty state and the save action with ProfilePage's SaveBar.
 export function BasicInfoForm({
   profile,
   onImageUpload,

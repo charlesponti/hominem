@@ -119,8 +119,8 @@ export function ResumeImportSection({
     };
 
     es.onerror = () => {
-      // The browser retries automatically; the server's first event on
-      // reconnect always re-emits the current snapshot, so no extra state.
+      // no-op: the browser reconnects on its own, and the server always
+      // re-sends the current snapshot as the first event after reconnect
     };
   };
 

@@ -1,8 +1,6 @@
 import { toast as showToast, type ToastOptions } from '~/lib/toast';
 
-/**
- * Hook wrapper around the imperative toast API for call sites that expect useToast().
- */
+// just wraps the imperative toast API for call sites that expect a useToast() hook
 export function useToast() {
   return {
     toast: (message: ToastOptions) => showToast(message),

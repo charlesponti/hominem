@@ -21,12 +21,11 @@ export function useNoteFormatting() {
   );
 
   // The very first tap on a TextInput both focuses it and positions the
-  // cursor, but `onSelectionChange` for that tap can arrive after a fast
-  // follow-up press on a format button (there's no synchronous way to read
-  // native selection). Until the first real selection event lands, assume
-  // the cursor is at the end of the content rather than the `{0,0}` ref
-  // default — inserting at the end is a harmless guess, inserting at the
-  // very start of the note is not.
+  // cursor, but `onSelectionChange` for that tap can land after a fast
+  // follow-up press on a format button (no synchronous way to read native
+  // selection). So until a real selection event shows up, assume the cursor
+  // is at the end of the content rather than the `{0,0}` ref default --
+  // guessing "end" is harmless, guessing "start of the note" is not.
   const onFocus = useCallback((content: string) => {
     if (!hasKnownSelectionRef.current) {
       selectionRef.current = { start: content.length, end: content.length };

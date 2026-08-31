@@ -107,7 +107,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   });
 }
 
-// Add route handle to enable accessing loader data from child routes
+// lets child routes pull this loader's data via useRouteLoaderData('root')
 export const handle = {
   id: 'root',
 };
@@ -146,7 +146,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Instantiate a single QueryClient for the app
 const queryClient = new QueryClient();
 
 export default function App() {

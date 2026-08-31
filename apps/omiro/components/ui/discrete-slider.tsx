@@ -29,7 +29,7 @@ function nearestStep(fraction: number, steps: number): number {
   return Math.round(clamped * (steps - 1));
 }
 
-/** A draggable, snap-to-stop slider for a small set of discrete values. */
+// A draggable slider that snaps to a fixed set of stops.
 export function DiscreteSlider({
   value,
   steps,

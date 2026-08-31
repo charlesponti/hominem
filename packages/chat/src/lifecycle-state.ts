@@ -1,29 +1,21 @@
-/**
- * Canonical capture lifecycle state machine.
- *
- * Both mobile (chat/focus) and web (Notes chat) import from this module.
- * No surface may define its own state aliases for these lifecycle states.
- *
- * Types are owned by this domain package as the single source of truth.
- */
+// The one true capture lifecycle state machine. Mobile (chat/focus) and web
+// (Notes chat) both import from here — don't let a surface define its own
+// aliases for these states, this package is the single source of truth.
 
 export type { CaptureLifecycleState, CaptureLifecycleTransition } from './capture-types';
 
 import type { CaptureLifecycleState, CaptureLifecycleTransition } from './capture-types';
 
-/**
- * Every valid state transition. Any transition not listed here is forbidden.
- *
- * Visual map:
- *   idle ──► composing ──► classifying ──► reviewing_changes ──► persisting ──► idle
- *                │                │                │                 │
- *                ▼                ▼                ▼                 ▼
- *            recording      recovering_error    idle           recovering_error
- *                │
- *                ▼
- *           transcribing ──► composing
- *                     └────► classifying
- */
+// Every valid state transition — anything not listed here is not allowed.
+//
+//   idle ──► composing ──► classifying ──► reviewing_changes ──► persisting ──► idle
+//                │                │                │                 │
+//                ▼                ▼                ▼                 ▼
+//            recording      recovering_error    idle           recovering_error
+//                │
+//                ▼
+//           transcribing ──► composing
+//                     └────► classifying
 export const ALLOWED_TRANSITIONS: CaptureLifecycleTransition[] = [
   // Idle ↔ composing
   ['idle', 'composing'],
@@ -54,10 +46,7 @@ export const ALLOWED_TRANSITIONS: CaptureLifecycleTransition[] = [
   ['recovering_error', 'classifying'], // retry
 ];
 
-/**
- * Returns true if the state represents an in-flight operation where the UI
- * should prevent new user input.
- */
+// True when the state is mid-flight and the UI should block new user input
 export function isBlockingState(state: CaptureLifecycleState): boolean {
   return state === 'classifying' || state === 'persisting' || state === 'transcribing';
 }

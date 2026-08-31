@@ -17,7 +17,7 @@ function createEnv() {
       error instanceof Error &&
       error.message.includes('createServerEnv can only be used in Node.js context')
     ) {
-      // Running in browser — server env not available
+      // we're in the browser, so fall back to the client env instead
       return createClientEnv(serverSchema, 'financeServer');
     }
     throw error;
@@ -26,7 +26,7 @@ function createEnv() {
 
 export const serverEnv = createEnv();
 
-// Client-side env — read from import.meta.env directly (no validation at module scope)
+// read straight from import.meta.env - not validated at module scope
 export const clientEnv = {
   VITE_PUBLIC_API_URL: import.meta.env.VITE_PUBLIC_API_URL,
   VITE_R2_DOMAIN: import.meta.env.VITE_R2_DOMAIN,

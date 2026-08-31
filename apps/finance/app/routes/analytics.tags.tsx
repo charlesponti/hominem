@@ -23,13 +23,11 @@ export default function TagsAnalyticsPage() {
   const navigate = useNavigate();
   const { selectedAccount, setSelectedAccount } = useSelectedAccount();
 
-  // Initialize filters with default date range
   const [filters, setFilters] = useState<FilterArgs>({
     dateFrom: subMonths(new Date(), 6),
     dateTo: new Date(),
   });
 
-  // Debounced filters for API calls
   const [debouncedFilters, setDebouncedFilters] = useState<FilterArgs>(filters);
 
   const [searchValue, setSearchValue] = useState('');
@@ -71,7 +69,7 @@ export default function TagsAnalyticsPage() {
 
   const tagRows = breakdown?.breakdown ?? [];
 
-  // Calculate total spending for percentage calculations
+  // fall back to summing rows if the API didn't send a total
   const totalSpending = useMemo(() => {
     if (typeof breakdown?.totalSpending === 'number') {
       return breakdown.totalSpending;
@@ -79,16 +77,13 @@ export default function TagsAnalyticsPage() {
     return tagRows.reduce((sum, item) => sum + item.amount, 0);
   }, [breakdown?.totalSpending, tagRows]);
 
-  // Client-side filtering and sorting
   const filteredAndSortedData = useMemo<TagBreakdownRow[]>(() => {
     let result = [...tagRows];
 
-    // Apply search filter
     if (searchValue.trim()) {
       result = result.filter((item) => item.tag.toLowerCase().includes(searchValue.toLowerCase()));
     }
 
-    // Apply sort
     if (sortOptions.length > 0) {
       const sort = sortOptions[0];
       if (sort) {
@@ -123,47 +118,39 @@ export default function TagsAnalyticsPage() {
     return result;
   }, [tagRows, searchValue, sortOptions]);
 
-  // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterArgs) => {
     setFilters(newFilters);
   }, []);
 
-  // Handle search changes
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
   }, []);
 
-  // Handle refresh
   const handleRefresh = useCallback(() => {
     refetchAccounts();
     refetchBreakdown();
   }, [refetchAccounts, refetchBreakdown]);
 
-  // Handle sort header click
   const handleSortHeaderClick = useCallback(
     (field: 'tag' | 'amount' | 'transactionCount') => {
       const existingSort = sortOptions.find((s) => s.field === field);
       if (existingSort) {
-        // Toggle direction if same field
         updateSortOption(0, {
           ...existingSort,
           direction: existingSort.direction === 'asc' ? 'desc' : 'asc',
         });
       } else {
-        // Add new sort option
         addSortOption({ field, direction: 'desc' });
       }
     },
     [sortOptions, addSortOption, updateSortOption],
   );
 
-  // Get sort direction for header
   const getSortDirection = (field: string) => {
     const sort = sortOptions.find((s) => s.field === field);
     return sort?.direction;
   };
 
-  // Active filters for display
   const activeFilters = useMemo(() => {
     const filterChips: Array<{ id: string; label: string; onRemove: () => void }> = [];
 
@@ -201,7 +188,6 @@ export default function TagsAnalyticsPage() {
     return filterChips;
   }, [debouncedFilters, selectedAccount, accountsMap, handleFiltersChange, setSelectedAccount]);
 
-  // Clear all filters
   const handleClearFilters = useCallback(() => {
     setFilters({
       dateFrom: subMonths(new Date(), 6),
@@ -217,7 +203,6 @@ export default function TagsAnalyticsPage() {
     <div className="container">
       <h1 className="text-2xl font-bold mb-4">Tags Breakdown</h1>
 
-      {/* Transaction Filters */}
       <TransactionFilters
         accountsMap={accountsMap}
         accountsLoading={accountsLoading}
@@ -234,7 +219,6 @@ export default function TagsAnalyticsPage() {
         loading={loading}
       />
 
-      {/* Active Filters Display */}
       {(activeFilters.length > 0 || searchValue.trim()) && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
           {activeFilters.map((filter) => (

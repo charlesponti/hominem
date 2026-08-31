@@ -237,7 +237,7 @@ export const GenerationLiveEventSchema = z.object({
 export type GenerationLiveEvent = z.infer<typeof GenerationLiveEventSchema>;
 export type GenerationLiveEventPayload = GenerationLiveEvent['event'];
 
-/** Everything that can arrive over the generation SSE wire: durable replay plus the live broadcast. */
+// anything that can show up on the generation SSE wire: durable replay events plus live broadcasts
 export type GenerationWireEvent = GenerationDomainEvent | GenerationLiveEvent;
 
 export const GenerationWireEventSchema = z.union([
@@ -257,10 +257,8 @@ export function parseGenerationWireEvent(input: unknown): GenerationWireEvent {
   return GenerationWireEventSchema.parse(input);
 }
 
-/**
- * Keep replay/live handoff idempotent at the client boundary. Live events do
- * not carry sequences and must remain independently deliverable.
- */
+// dedupes durable events by sequence so replay + live doesn't double-fire; live events
+// have no sequence number so they always pass through
 export function createGenerationEventDeduplicator(): (
   event: GenerationWireEvent,
 ) => GenerationWireEvent | null {

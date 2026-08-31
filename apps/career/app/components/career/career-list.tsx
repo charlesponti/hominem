@@ -99,12 +99,8 @@ interface CareerCollectionProps<T> {
   className?: string;
 }
 
-/**
- * The one place a page should reach for to render a collection of career
- * entities (positions, projects, testimonials, applications…). Owns both the
- * populated-list and empty-state rendering so every collection in the app
- * looks the same without every route hand-rolling its own markup.
- */
+// Use this to render any career collection (positions, projects, testimonials,
+// applications...) so the list and empty states look the same everywhere.
 export function CareerCollection<T>({
   items,
   keyFor,

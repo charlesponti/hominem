@@ -20,7 +20,7 @@ export type ModelConfig = {
     enabled?: boolean;
     exclude?: boolean;
   };
-  /** Extra fields merged directly into the request body, for provider-specific options. */
+  /** Extra fields merged straight into the request body, for provider-specific options. */
   extraBody?: Record<string, unknown>;
 };
 
@@ -34,12 +34,12 @@ export const TARGET_REASONING = reasoningEfforts.find(
 );
 
 /**
- * Calls the model under test. Deliberately a plain fetch rather than
- * deepeval's own model classes: `DeepEvalOpenAICompatibleModel.generate()`
- * takes a single prompt string with no per-call tool support, which can't
- * express multi-turn system/user prompts or the tool-calling suite. deepeval's
- * model classes are used elsewhere in this package for the judge model, where
- * that shape fits.
+ * Calls the model under test with a plain fetch instead of deepeval's own
+ * model classes - `DeepEvalOpenAICompatibleModel.generate()` only takes a
+ * single prompt string with no per-call tool support, so it can't handle
+ * multi-turn prompts or the tool-calling suite. deepeval's model classes are
+ * still used elsewhere in this package for the judge model, where that shape
+ * is fine.
  */
 export async function chatComplete(
   messages: ChatMessage[],

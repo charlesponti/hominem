@@ -34,12 +34,11 @@ interface ChatActionsMenuInput {
   onTransform: (type: ArtifactType) => void;
 }
 
-/**
- * `Stack.Toolbar` only recognizes `Stack.Toolbar.Menu`/`.MenuAction` when they are
- * literal JSX children (it inspects the unrendered element tree, not rendered output),
- * so this returns the menu action elements for the caller to place directly inside a
- * `<Stack.Toolbar.Menu>` rather than rendering that wrapper itself.
- */
+// `Stack.Toolbar` only recognizes `Stack.Toolbar.Menu`/`.MenuAction` as literal
+// JSX children -- it reads the unrendered element tree, not what actually
+// renders out. So this just returns the menu action elements for the caller
+// to drop straight into a `<Stack.Toolbar.Menu>` instead of rendering that
+// wrapper itself.
 export function useChatActionsMenu({
   chatId,
   messages,

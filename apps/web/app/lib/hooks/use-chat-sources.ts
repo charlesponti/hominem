@@ -18,9 +18,9 @@ export function useChatSources(chatId: string) {
 }
 
 /**
- * chatId is a mutation-time argument rather than a hook-level one, since a
- * composer may attach a seeded note before the caller has otherwise settled
- * on treating chatId as stable for the hook's lifetime.
+ * chatId is passed per-mutation instead of to the hook itself, since a
+ * composer might attach a seeded note before chatId is stable for the
+ * whole lifetime of the hook.
  */
 export function useAddChatSource() {
   const client = useApiClient();

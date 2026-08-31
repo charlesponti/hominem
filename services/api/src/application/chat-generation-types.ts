@@ -4,7 +4,7 @@ import type { ChatMessageToolCallRecord } from '@hominem/db';
 import type { McpToolResult } from '../mcp/tool-registry';
 import type { CapabilityDefinition } from './capability';
 
-/** Legacy compatibility transport for the current route-owned stream. */
+/** Old-format event shape kept around for the route-owned stream. */
 export type ChatGenerationLiveEvent =
   | { type: 'text-delta'; text: string }
   | { type: 'reasoning-delta'; text: string }

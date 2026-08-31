@@ -1,10 +1,8 @@
 import { vi } from 'vitest';
 
-/**
- * Dynamically imports createServer with the given environment variables mocked.
- * Merges overrides onto the real env so Better Auth still has baseURL, secrets, etc.
- * Returns a factory that produces a fresh app instance per call.
- */
+// Imports createServer with the given env vars mocked in. Overrides get merged
+// onto the real env so Better Auth still has its baseURL, secrets, etc. Returns
+// a factory that makes a fresh app instance each time it's called.
 export async function importServerWithEnv(envOverrides: Record<string, string>) {
   vi.resetModules();
   process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test';

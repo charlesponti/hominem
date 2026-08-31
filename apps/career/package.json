@@ -28,6 +28,7 @@
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/queues": "workspace:*",
+    "@hominem/rpc": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/storage": "workspace:*",
     "@hominem/utils": "workspace:*",

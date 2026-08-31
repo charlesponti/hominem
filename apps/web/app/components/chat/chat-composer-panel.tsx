@@ -57,8 +57,9 @@ export function ChatComposerPanel({
       return;
     }
 
-    // Stable per stream, not per token: nothing reads this timestamp, but a
-    // fresh value on every delta falsely implies a write happens per token.
+    // this timestamp should stay the same for the whole stream, not reset per
+    // token — nothing actually reads it, but a fresh value every delta would
+    // wrongly suggest a write happens on every token
     streamStartedAtRef.current ??= new Date().toISOString();
     const startedAt = streamStartedAtRef.current;
     setPendingAssistantMessage({

@@ -7,10 +7,8 @@ import type { AppEnv } from '../../server';
 
 export const statusRoutes = new Hono<AppEnv>();
 
-// System health check endpoint
 statusRoutes.get('/', async (c) => {
   try {
-    // Simple health check using selectFrom
     await db.selectFrom('user').select('id').limit(1).executeTakeFirst();
 
     return c.json({

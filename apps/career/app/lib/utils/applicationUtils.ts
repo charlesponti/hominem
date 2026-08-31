@@ -2,9 +2,6 @@ import { centsToDollars, formatCurrency } from '@hominem/utils/numbers';
 
 import { StatusTone } from '~/components/patterns';
 
-/**
- * Get a standardized company name from various company data formats
- */
 export function getCompanyName(company: string | { name: string } | null | undefined): string {
   if (!company) return 'Unknown Company';
   if (typeof company === 'string') return company;
@@ -27,18 +24,12 @@ const APPLICATION_STATUS_TONE: Record<string, StatusTone> = {
   WITHDRAWN: 'neutral',
 };
 
-/**
- * Get the shared StatusBadge tone for an application status. Statuses arrive
- * in mixed case from the warehouse ('active', 'APPLIED', 'INTERVIEWING'), so
- * the lookup is case-insensitive.
- */
+// Statuses come in from the warehouse in mixed case ('active', 'APPLIED',
+// 'INTERVIEWING'), so we normalize before looking up the tone.
 export function getApplicationStatusTone(status: string): StatusTone {
   return APPLICATION_STATUS_TONE[status.toUpperCase()] ?? 'neutral';
 }
 
-/**
- * Format a date for display in the application table
- */
 export function formatApplicationDate(date: Date | string | null | undefined): string {
   if (!date) return '—';
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -49,25 +40,16 @@ export function formatApplicationDate(date: Date | string | null | undefined): s
   });
 }
 
-/**
- * Format salary values for display
- */
 export function formatApplicationSalary(salary: number | string | null | undefined): string {
   if (!salary) return '—';
   if (typeof salary === 'string') return salary;
   return formatCurrency(centsToDollars(salary));
 }
 
-/**
- * Extract unique statuses from applications array
- */
 export function getUniqueStatuses(applications: Array<{ status: string }>): string[] {
   return Array.from(new Set(applications.map((app) => app.status))).sort();
 }
 
-/**
- * Extract unique sources from applications array, filtering out null/undefined values
- */
 export function getUniqueSources(
   applications: Array<{ source?: string | null | undefined }>,
 ): string[] {
@@ -78,9 +60,6 @@ export function getUniqueSources(
   ).sort();
 }
 
-/**
- * Check if any filters are currently active
- */
 export function hasActiveFilters(filters: {
   search?: string;
   status?: string;

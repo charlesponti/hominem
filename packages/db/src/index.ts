@@ -1,19 +1,14 @@
-/**
- * @hominem/db - Database access layer for `hominem` services
- *
- * NOT for use in client applications - use @hominem/rpc instead.
- */
+// @hominem/db - database access layer for hominem services.
+// Not for client apps - use @hominem/rpc instead.
 
 export type { Selectable } from 'kysely';
 export { authDb, db, pool, sql } from './db';
 export type { Database } from './db';
 export type { DB, Json, JsonArray, JsonObject, JsonValue } from './types/database';
 
-// Transaction support
 export { runInTransaction } from './transaction';
 export type { DbHandle, TransactionHandle } from './transaction';
 
-// Export database table types
 export type * from './types/database';
 
 export {
@@ -28,7 +23,6 @@ export {
 } from './errors';
 export type { ErrorCode } from './errors';
 
-// Repositories
 export { NoteRepository } from './services/notes/note.repository';
 export type {
   ListNotesInput,

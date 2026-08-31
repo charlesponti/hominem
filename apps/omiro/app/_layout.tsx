@@ -63,9 +63,9 @@ function InnerRootLayout() {
       );
     };
 
-    // Boot resolution decides whether we land on (auth) or (protected); hiding
-    // the splash before that resolves flashes the wrong screen. The timeout is
-    // a safety net in case boot never settles.
+    // Wait for boot to resolve (auth) vs (protected) before hiding the splash,
+    // or we'll flash the wrong screen. Timeout is just a safety net in case
+    // boot never settles.
     if (!isPending && !isRestoring) {
       hide();
       return;

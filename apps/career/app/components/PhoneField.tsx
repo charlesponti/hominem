@@ -8,7 +8,6 @@ interface PhoneFieldProps extends Omit<ComponentProps<typeof Input>, 'type'> {
   label?: string;
 }
 
-/** A single-row phone input: icon | field. */
 export function PhoneField({
   id = 'phone',
   label = 'Phone',

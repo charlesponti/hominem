@@ -90,9 +90,9 @@ export function ChatScreen({ id }: { id: string }) {
     onContentCreated: handleContentCreated,
   });
   const handleToggleDebug = useCallback(() => setShowDebug((value) => !value), []);
-  // Owned here (rather than inside Composer) so the composer's send and the
-  // message list's retry-a-failed-message action share one mutation instead
-  // of racing two independent streams.
+  // Owned here rather than inside Composer, so the composer's send and the
+  // message list's retry action share one mutation instead of racing two
+  // separate streams.
   const {
     cancelGeneration,
     generation,

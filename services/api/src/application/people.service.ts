@@ -52,9 +52,8 @@ async function getPersonTags(personId: string) {
       .selectFrom('app.tagAssignments as assignment')
       .innerJoin('app.tags as tag', 'tag.id', 'assignment.tagId')
       .select('tag.name as name')
-      // `entity_table` is a `regclass` column; comparing it through a bound parameter makes
-      // node-pg send the literal as an oid instead of resolving it via regclass's text input,
-      // so the fixed table-name constant is inlined as raw SQL instead.
+      // entity_table is a regclass column — binding it as a param makes node-pg send an oid
+      // instead of letting regclass parse the text, so we inline the table name as raw SQL.
       .where(sql<boolean>`assignment.entity_table = 'app.people'::regclass`)
       .where('assignment.entityId', '=', personId)
       .where('assignment.removedAt', 'is', null)

@@ -209,10 +209,8 @@ export const TaskRepository = {
     return toTaskRecord(task as TaskRow, input.artifactType);
   },
 
-  /**
-   * Creates a parent `task_list` row plus one child `task` row per item.
-   * Callers should wrap this in `runInTransaction` so the group is atomic.
-   */
+  // Creates a parent task_list row plus one child task row per item. Wrap
+  // this in runInTransaction so the whole group commits atomically.
   async createBatch(handle: DbHandle, input: CreateTaskBatchInput): Promise<TaskBatchRecord> {
     const parent = await TaskRepository.create(handle, {
       userId: input.userId,
@@ -237,10 +235,8 @@ export const TaskRepository = {
     return { parent, tasks };
   },
 
-  /**
-   * Top-level tasks owned by the user (standalone tasks and task-list parents).
-   * A row is treated as a `task_list` when it has at least one child.
-   */
+  // Top-level tasks owned by the user (standalone tasks + task-list
+  // parents). A row counts as a task_list once it has at least one child.
   async list(handle: DbHandle, input: { userId: string }): Promise<TaskListRecord[]> {
     const rows = await handle
       .selectFrom('app.tasks as t')

@@ -3,13 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { cn } from '~/lib/utils';
 
-/**
- * A single, consistently-placed save affordance for forms with many
- * independently-editable fields. Sticks to the bottom of its container while
- * scrolling and stops being sticky once the container's own bottom edge is
- * reached (native `position: sticky`, no scroll listeners). Mounts with a
- * playful jiggle when changes appear and animates out once they're gone.
- */
+// Sticks to the bottom via plain CSS `position: sticky` (no scroll listeners),
+// and animates in/out as `dirty` changes.
 export function SaveBar({
   dirty,
   isSaving,

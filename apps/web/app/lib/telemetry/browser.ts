@@ -3,9 +3,8 @@ export interface BrowserTelemetry {
   forceFlush(): Promise<void>;
 }
 
-// Browser events are sent through the authenticated API proxy. Keeping this
-// initializer as a no-op preserves the existing provider boundary without
-// putting an OTLP or Sentry credential in the Web bundle.
+// browser events go through the authenticated API proxy, so this stays a
+// no-op — that way we don't need an OTLP or Sentry credential in the web bundle
 export function initTelemetry(_config?: unknown): BrowserTelemetry {
   return {
     shutdown: async () => {},

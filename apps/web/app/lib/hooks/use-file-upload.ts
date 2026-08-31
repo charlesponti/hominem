@@ -4,17 +4,13 @@ import {
   UPLOAD_MAX_FILE_COUNT,
   UPLOAD_MAX_FILE_SIZE_BYTES,
 } from '@hominem/storage/constants';
-// Lazy load Uppy types only for type checking
+// type-only import, doesn't pull in the actual Uppy bundle
 import type { Body, Meta, UppyFile } from '@uppy/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { UploadResponseSchema } from '~/lib/schemas/files.schema';
 
-/**
- * Upload state machine states.
- * Transitions: idle → uploading → done
- * Error can transition from any non-terminal state.
- */
+/** idle -> uploading -> done, with error reachable from either non-terminal state */
 export type UploadStateMachine = 'idle' | 'uploading' | 'done' | 'error';
 
 function toUploadedFile(file: ReturnType<typeof UploadResponseSchema.parse>['file']): UploadedFile {
@@ -35,15 +31,12 @@ function toUploadedFile(file: ReturnType<typeof UploadResponseSchema.parse>['fil
 }
 
 interface UploadState {
-  /** Current state in the upload state machine */
   state: UploadStateMachine;
-  /** Whether an upload is currently in progress (state is uploading) */
+  /** true when state is 'uploading' */
   isUploading: boolean;
-  /** Upload progress percentage (0-100) */
+  /** 0-100 */
   progress: number;
-  /** Files that have been successfully uploaded */
   uploadedFiles: UploadedFile[];
-  /** Error messages from failed uploads */
   errors: string[];
 }
 
@@ -94,7 +87,7 @@ function parseUploadError(xhr: XMLHttpRequest): Error {
       return new Error(parsed.message);
     }
   } catch {
-    // Fall back to generic network/xhr details.
+    // couldn't parse a structured error, fall back to the raw xhr status below
   }
 
   return new Error(xhr.statusText || `Upload failed with status ${xhr.status}`);
@@ -119,7 +112,7 @@ export function getUploadErrorMessage(value: unknown): string {
   return String(value ?? 'Upload failed');
 }
 
-// Lazy load Uppy modules to avoid bundling on initial page load
+// loaded on demand so Uppy doesn't bloat the initial page bundle
 async function loadUppyModules() {
   const [{ default: Uppy }, { default: XHRUpload }] = await Promise.all([
     import('@uppy/core'),

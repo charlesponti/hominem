@@ -62,7 +62,7 @@ function logAndThrow(error: unknown, message: string): never {
   if (uploadServiceError) {
     throw uploadServiceError;
   }
-  // Re-throw repository errors (which include NotFoundError from @hominem/db)
+  // Anything else with a `code` (e.g. DB errors) gets re-thrown as-is
   if (error instanceof Error && 'code' in error) {
     throw error;
   }

@@ -29,11 +29,9 @@ export const Text = createText<Theme>();
 
 type NamedStyles = Record<string, ViewStyle | TextStyle | ImageStyle>;
 
-/**
- * Drop-in hook analog to the old static `makeStyles`: builds a `StyleSheet`
- * from the live restyle theme, memoized per theme instance (i.e. recomputed
- * only when color scheme changes, not on every render).
- */
+// Hook version of the old static `makeStyles`: builds a `StyleSheet` from
+// the live restyle theme, memoized per theme instance so it only recomputes
+// when the color scheme changes, not on every render.
 export function useStyles<T extends NamedStyles>(factory: (theme: Theme) => T): T {
   const theme = useAppTheme();
   // biome-ignore lint: StyleSheet.create's return type is intentionally opaque

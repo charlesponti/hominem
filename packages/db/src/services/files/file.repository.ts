@@ -72,9 +72,6 @@ function toFileRecord(row: FileRow): FileRecord {
 }
 
 export const FileRepository = {
-  /**
-   * List all files for a user.
-   */
   async listForUser(handle: DbHandle, userId: string): Promise<FileRecord[]> {
     const files = (await handle
       .selectFrom('app.files')
@@ -86,9 +83,6 @@ export const FileRepository = {
     return files.map(toFileRecord);
   },
 
-  /**
-   * Get a single file with ownership enforcement.
-   */
   async getOwned(handle: DbHandle, fileId: string, userId: string): Promise<FileRecord | null> {
     const file = (await handle
       .selectFrom('app.files')
@@ -100,9 +94,6 @@ export const FileRepository = {
     return file ? toFileRecord(file) : null;
   },
 
-  /**
-   * Get a file or throw NotFoundError.
-   */
   async getOwnedOrThrow(handle: DbHandle, fileId: string, userId: string): Promise<FileRecord> {
     const file = await FileRepository.getOwned(handle, fileId, userId);
     if (!file) {
@@ -111,9 +102,6 @@ export const FileRepository = {
     return file;
   },
 
-  /**
-   * Get the URL for a file with ownership check.
-   */
   async getUrl(handle: DbHandle, fileId: string, userId: string): Promise<string> {
     const file = (await handle
       .selectFrom('app.files')
@@ -129,9 +117,6 @@ export const FileRepository = {
     return file.url;
   },
 
-  /**
-   * Check that a file exists for a given user (for deletion).
-   */
   async existsForUser(handle: DbHandle, fileId: string, userId: string): Promise<boolean> {
     const file = (await handle
       .selectFrom('app.files')
@@ -143,9 +128,7 @@ export const FileRepository = {
     return Boolean(file);
   },
 
-  /**
-   * Insert or update a file record (used after upload completion).
-   */
+  // Called after an upload finishes
   async upsert(handle: DbHandle, input: UpsertFileInput): Promise<FileRecord> {
     const now = new Date().toISOString();
 
@@ -183,9 +166,6 @@ export const FileRepository = {
     return FileRepository.getOwnedOrThrow(handle, input.id, input.userId);
   },
 
-  /**
-   * Delete a file record.
-   */
   async delete(handle: DbHandle, command: DeleteFileCommand): Promise<void> {
     const deleted = await handle
       .deleteFrom('app.files')

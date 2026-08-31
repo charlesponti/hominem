@@ -8,9 +8,9 @@ import { consumeActiveEnhanceSession } from '~/services/ai/active-enhance-sessio
 import { useTextEnhance } from '~/services/ai/use-text-enhance';
 import t from '~/translations';
 
-// The wand button navigates here instead of opening an inline panel -- see
-// active-enhance-session.ts for how this screen gets a handle to the
-// triggering composer's draft without router params or a shared context.
+// The wand button navigates here instead of opening an inline panel -- check
+// active-enhance-session.ts to see how this screen grabs the triggering
+// composer's draft without needing router params or shared context.
 export default function EnhanceSheetScreen() {
   const router = useRouter();
   const [session] = useState(consumeActiveEnhanceSession);

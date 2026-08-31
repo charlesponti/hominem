@@ -26,7 +26,7 @@ import { toast } from '~/lib/toast';
 
 export default function AccountPage() {
   const logout = () => authClient.signOut();
-  useFinanceApiClient(); // Keep for consistency, but use fetch instead
+  useFinanceApiClient(); // unused, but throws if we're not inside FinanceHonoProvider - cheap sanity check
   const queryClient = useQueryClient();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
@@ -37,7 +37,7 @@ export default function AccountPage() {
       return res.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['finance'] }); // Invalidate all finance related queries
+      await queryClient.invalidateQueries({ queryKey: ['finance'] });
       toast({
         title: 'Data Deleted',
         description: 'All your finance data has been successfully deleted.',

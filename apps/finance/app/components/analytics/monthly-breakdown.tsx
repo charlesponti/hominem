@@ -108,7 +108,6 @@ interface MonthItemProps {
 function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
   const navigate = useNavigate();
 
-  // Build the link to monthly analysis filtered by tag
   const monthlyAnalyticsUrl = selectedTag
     ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
     : `/analytics/monthly/${item.date}`;
@@ -158,7 +157,6 @@ function MonthMobileItem({
 }: MonthItemProps) {
   const navigate = useNavigate();
 
-  // Build the link to monthly analysis filtered by tag
   const monthlyAnalyticsUrl = selectedTag
     ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
     : `/analytics/monthly/${item.date}`;
@@ -266,7 +264,6 @@ export function MonthlyBreakdown({
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
-  // Show trends comparison if enabled and we have at least 2 data points
   const showTrends = compareToPrevious && sortedData.length >= 2;
   const prevMonth = showTrends ? sortedData[1] : null;
   const currMonth = showTrends ? sortedData[0] : null;

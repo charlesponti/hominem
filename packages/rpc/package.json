@@ -7,6 +7,10 @@
       "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
+    "./fetch": {
+      "types": "./build/fetch.d.ts",
+      "default": "./src/fetch.ts"
+    },
     "./finance": {
       "types": "./build/finance.d.ts",
       "default": "./src/finance.ts"

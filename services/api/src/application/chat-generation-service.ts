@@ -34,8 +34,8 @@ function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessag
   try {
     args = parseArguments(call);
   } catch {
-    // The malformed argument string remains visible in the model transcript;
-    // the tool result carries the validation error.
+    // swallow it — the bad argument string is still visible in the model transcript,
+    // and the tool result will carry the validation error
   }
   return {
     toolName: call.name,

@@ -13,20 +13,12 @@ import { careerSocialLinksRoutes } from './career.social-links';
 import { careerTestimonialsRoutes } from './career.testimonials';
 import { careerWishlistRoutes } from './career.wishlist';
 
-/**
- * Main Career Router
- *
- * Composes all career sub-routers into a single cohesive API, the same way
- * ./finance.ts does. A single Hono instance chaining 40+ handlers forces TS
- * to re-check the whole accumulated route type on every additional chained
- * call (O(n^2) as the chain grows) -- this used to be one 554-line file with
- * 48 chained methods, the most expensive single file in services/api's
- * typecheck. Splitting into small, independently-typed sub-routers (mirrors
- * packages/db's own split: CareerRepository, CareerImportRepository,
- * ApplicationFilesRepository, ApplicationNotesRepository,
- * CertificationRepository, ProjectRepository, SkillRepository,
- * SocialLinksRepository, TestimonialRepository) avoids that.
- */
+// Stitches together the career sub-routers, same idea as ./finance.ts. This
+// used to be one 554-line file with 48 chained Hono methods, and that was the
+// slowest file in the whole typecheck -- TS has to re-check the entire
+// accumulated route type on every chained call, so it blows up as the chain
+// grows. Splitting into small sub-routers (mirroring packages/db's own repo
+// split) keeps each one cheap to typecheck.
 export const careerRoutes = new Hono<AppContext>()
   .route('/imports', careerImportsRoutes)
   .route('/profile', careerProfileRoutes)

@@ -17,17 +17,17 @@ interface UseComposerControllerOptions {
 }
 
 // Composes the composer's independent concerns -- draft text, attachments,
-// voice input, and focus -- into the derived capabilities and handlers
-// Composer.tsx renders from. Submission itself (what happens on save/send)
-// lives in useComposerSubmission, not here. Enhance is a separate form-sheet
-// route (see active-enhance-session.ts), not part of this controller.
+// voice input, focus -- into the derived capabilities and handlers Composer.tsx
+// renders from. Submission (what happens on save/send) lives in
+// useComposerSubmission, not here. Enhance is its own form-sheet route (see
+// active-enhance-session.ts), not part of this controller.
 //
-// Deliberately does NOT read the draft message reactively: draft.store is an
-// external store (see useComposerMessageStore.ts), and only the leaf
-// component that actually needs per-keystroke text (ComposerInput/ComposerToolbar)
-// subscribes to it. Reading draft.getMessage()'s value here via React state
-// would re-render every consumer of this hook -- the whole composer -- on
-// every keystroke.
+// Deliberately doesn't read the draft message reactively: draft.store is an
+// external store (see useComposerMessageStore.ts), and only the leaf that
+// actually needs per-keystroke text (ComposerInput/ComposerToolbar)
+// subscribes to it. Pulling draft.getMessage() into React state here would
+// re-render every consumer of this hook -- the whole composer -- on every
+// keystroke.
 export function useComposerController({
   initialMessage,
   isSubmitting = false,

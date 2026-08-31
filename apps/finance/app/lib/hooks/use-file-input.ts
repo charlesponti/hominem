@@ -7,7 +7,7 @@ export function useFileInput() {
   const handleFileChange = useCallback((files: File[]) => {
     const newFiles = Array.from(files);
 
-    // Append new files to existing ones, preventing duplicates by name
+    // skip files we already have (matched by name)
     setFiles((prevFiles) => {
       const existingFileNames = new Set(prevFiles.map((f) => f.name));
       const filesToAdd = newFiles.filter((file) => !existingFileNames.has(file.name));
@@ -23,7 +23,6 @@ export function useFileInput() {
     setFiles([]);
   }, []);
 
-  // Drag event handlers
   const handleDragOver = useCallback(() => {
     setDragActive(true);
   }, []);

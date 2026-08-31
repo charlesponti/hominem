@@ -23,7 +23,7 @@ describe('Finance Hooks - Type Safety', () => {
 
   describe('FilterArgs interface', () => {
     it('should be exported', () => {
-      // The interface is exported as a type, so we just check the module exists
+      // it's a type export, so there's nothing to check at runtime besides the module loading
       expect(useFinanceData).toBeDefined();
     });
   });

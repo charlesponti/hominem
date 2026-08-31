@@ -7,8 +7,8 @@ function formatElapsed(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Ticks off a fixed `startedAt` timestamp (not a local counter) so the
-// elapsed time stays correct even if the panel showing it remounts mid-recording.
+// Ticks off a fixed `startedAt` timestamp instead of a local counter, so the
+// elapsed time stays right even if the panel showing it remounts mid-recording.
 export function useElapsedTimer(startedAt: number | null): string {
   const [prevStartedAt, setPrevStartedAt] = useState(startedAt);
   const [elapsedMs, setElapsedMs] = useState(0);
