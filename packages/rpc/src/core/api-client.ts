@@ -7,7 +7,7 @@ export interface ClientConfig {
   onError?: (error: Error) => void;
 }
 
-const customFetch =
+export const customFetch =
   (config: ClientConfig): typeof fetch =>
   async (input, init) => {
     const headers = new Headers(init?.headers);
@@ -20,7 +20,7 @@ const customFetch =
     }
 
     try {
-      const response = await fetch(input as RequestInfo | URL, {
+      const response = await fetch(input, {
         ...init,
         headers,
         credentials: 'include',

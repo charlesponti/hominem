@@ -4,6 +4,7 @@ import native from 'oxlint-config-universe/native';
 export default defineConfig({
   extends: [native],
   rules: {
+    'typescript/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
     'no-restricted-imports': [
       'error',
       {

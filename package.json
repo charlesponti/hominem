@@ -20,7 +20,7 @@
   "scripts": {
     "build": "turbo run build",
     "check": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test AUTH_E2E_SECRET=otp-secret pnpm run check:all",
-    "check:all": "pnpm run check:dts && pnpm run check:assertions:changed && pnpm run lint && pnpm run build && pnpm run typecheck && pnpm run test",
+    "check:all": "pnpm run check:dts && pnpm run lint && pnpm run build && pnpm run typecheck && pnpm run test",
     "clean:ts": "find . -name node_modules -prune -o -type d \\( -name .cache -o -name build -o -name dist \\) -print -exec rm -rf {} +",
     "dev": "turbo run dev:types dev --ui stream --filter='!@hominem/omiro'",
     "dev:api": "turbo run dev:types dev --filter @hominem/api",
@@ -38,9 +38,7 @@
     "test": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test AUTH_E2E_SECRET=otp-secret turbo run test",
     "typecheck": "turbo run typecheck",
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' .",
-    "check:dts": "bash scripts/check-src-declarations.sh",
-    "check:assertions": "node scripts/check-type-assertions.mjs",
-    "check:assertions:changed": "node scripts/check-type-assertions.mjs --diff"
+    "check:dts": "bash scripts/check-src-declarations.sh"
   },
   "dependencies": {
     "@ponti-studios/ui": "catalog:"

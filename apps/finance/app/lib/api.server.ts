@@ -1,4 +1,4 @@
-import type { AppType } from '@hominem/api/types';
+import type { financeRoutes } from '@hominem/api/finance';
 import { hc } from 'hono/client';
 
 import { serverEnv } from '~/lib/env.server';
@@ -17,9 +17,10 @@ const customFetch =
   };
 
 export function createServerHonoClient(request?: Request) {
-  const client = hc<AppType>(serverEnv.HOMINEM_INTERNAL_API_URL, {
-    fetch: customFetch(request),
-  });
+  const finance = hc<typeof financeRoutes>(
+    new URL('/api/finance', serverEnv.HOMINEM_INTERNAL_API_URL).toString(),
+    { fetch: customFetch(request) },
+  );
 
-  return { finance: client.api.finance };
+  return { finance };
 }

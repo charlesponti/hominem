@@ -5,29 +5,31 @@
     "rootDirs": [".", "./.react-router/types"],
     // Not part of the root project-reference graph (this app builds via
     // vite/react-router, not tsc), so composite mode's strict file-list
-    // enforcement only gets in the way of the @hominem/api/types path
+    // enforcement only gets in the way of the @hominem/api/finance path
     // alias below, which points outside this project's own file set.
     "composite": false,
-    // @hominem/api/types is type-only here (see app/lib/api.server.ts,
-    // packages/rpc/src/core/api-client.ts) — not a real dependency, so it
-    // isn't in package.json. Keep in sync with services/api/package.json's
-    // "./types" export.
+    // @hominem/api/finance is type-only here (see app/lib/api.server.ts) —
+    // not a real runtime dependency, so it isn't listed in package.json.
+    // Keep this path in sync with services/api/package.json's "./finance"
+    // export. Both app/lib/api.server.ts (the SSR client) and
+    // app/lib/api/provider.tsx (the browser client, via
+    // @hominem/rpc/finance's createFinanceApiClient) deliberately use this
+    // narrow per-domain AppType (financeRoutes) instead of the root
+    // @hominem/api/types export, so tsserver here never has to include
+    // career/chats/notes/etc.'s type graph (docs/type-performance.md). The
+    // root @hominem/api/types path alias that used to live here is gone —
+    // nothing in this app references it anymore.
     //
-    // @hominem/db, @hominem/career-services, @hominem/ai, and
-    // @hominem/finance-services below aren't this app's own dependencies
-    // either — services/api's build/rpc/app.d.ts (the Hono AppType)
-    // preserves `import("@hominem/career-services").JobImportErrorCode`-
-    // style references literally instead of inlining them, so every
-    // consumer of that .d.ts has to resolve those specifiers itself and
-    // hits the same injectWorkspacePackages trap services/api's own
-    // tsconfig.emit.json already routes around for its own compile
+    // @hominem/finance-services below isn't this app's own dependency
+    // either — services/api's build/rpc/routes/finance.d.ts preserves
+    // `import("@hominem/finance-services")`-style references literally
+    // instead of inlining them, so this consumer has to resolve that
+    // specifier itself, same injectWorkspacePackages trap services/api's
+    // own tsconfig.emit.json already routes around for its own compile
     // (docs/type-performance.md).
     "paths": {
       "~/*": ["./app/*"],
-      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"],
-      "@hominem/db": ["../../packages/db/build/index.d.ts"],
-      "@hominem/career-services": ["../../packages/career/build/index.d.ts"],
-      "@hominem/ai": ["../../packages/ai/build/index.d.ts"],
+      "@hominem/api/finance": ["../../services/api/build/rpc/routes/finance.d.ts"],
       "@hominem/finance-services": ["../../packages/finance/build/index.d.ts"]
     }
   },

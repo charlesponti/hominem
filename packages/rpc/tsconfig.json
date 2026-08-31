@@ -34,6 +34,7 @@
     // already routes around it for services/api's own compile.
     "paths": {
       "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"],
+      "@hominem/api/finance": ["../../services/api/build/rpc/routes/finance.d.ts"],
       "@hominem/chat": ["../chat/build/public.d.ts"],
       "@hominem/chat/types": ["../chat/build/types-only.d.ts"],
       "@hominem/db": ["../db/build/index.d.ts"],

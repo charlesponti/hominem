@@ -44,7 +44,10 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
   let reconnectAttempts = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   const messageQueue: WebSocketMessage<unknown>[] = [];
-  const listeners = new Map<string, Set<WebSocketListener<unknown>>>();
+  // `never` (not `unknown`) so any WebSocketListener<T> can be stored/removed
+  // here without a cast — a listener typed to accept T is always safely
+  // assignable to a slot typed to accept nothing (never).
+  const listeners = new Map<string, Set<WebSocketListener<never>>>();
   let tokenProvider: (() => Promise<string | null>) | undefined;
   let wsBaseUrl = '';
   const options: WebSocketOptions = { ...DEFAULT_OPTIONS };
@@ -172,11 +175,16 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
             // Set last message in store
             set({ lastMessage: message });
 
+            // Listeners are stored type-erased (see `listeners` above), so
+            // dispatch is the one place that has to cross back from `never`
+            // to whatever shape the original subscriber asked for.
+            const erasedMessage = message as WebSocketMessage<never>;
+
             // Notify type-specific listeners
             const typeListeners = listeners.get(message.type);
             if (typeListeners) {
               for (const listener of typeListeners) {
-                listener(message);
+                listener(erasedMessage);
               }
             }
 
@@ -184,7 +192,7 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
             const globalListeners = listeners.get('*');
             if (globalListeners) {
               for (const listener of globalListeners) {
-                listener(message);
+                listener(erasedMessage);
               }
             }
           } catch (error) {
@@ -279,13 +287,13 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
         listeners.set(type, new Set());
       }
 
-      listeners.get(type)?.add(listener as WebSocketListener<unknown>);
+      listeners.get(type)?.add(listener);
 
       // Return unsubscribe function
       return () => {
         const typeListeners = listeners.get(type);
         if (typeListeners) {
-          typeListeners.delete(listener as WebSocketListener<unknown>);
+          typeListeners.delete(listener);
 
           if (typeListeners.size === 0) {
             listeners.delete(type);

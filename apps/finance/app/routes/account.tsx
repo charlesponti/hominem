@@ -1,4 +1,3 @@
-import { useApiClient } from '@hominem/rpc/react';
 import {
   Dialog,
   DialogClose,
@@ -21,12 +20,13 @@ import { useState } from 'react';
 
 import { ExportTransactions } from '~/components/finance/export-transactions';
 import { RouteLink } from '~/components/route-link';
+import { useFinanceApiClient } from '~/lib/api/provider';
 import { authClient } from '~/lib/auth-client';
 import { toast } from '~/lib/toast';
 
 export default function AccountPage() {
   const logout = () => authClient.signOut();
-  useApiClient(); // Keep for consistency, but use fetch instead
+  useFinanceApiClient(); // Keep for consistency, but use fetch instead
   const queryClient = useQueryClient();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 

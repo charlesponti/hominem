@@ -66,5 +66,8 @@ export const indexedDB = {
   })),
 };
 
-// Assign the mock to global
+// This mock intentionally only implements `open()` (the one method the code
+// under test calls), so it doesn't structurally satisfy `IDBFactory` (which
+// also requires `databases`, `deleteDatabase`, `cmp`). The double assertion
+// is the deliberate escape hatch for that gap, not an oversight.
 global.indexedDB = indexedDB as unknown as IDBFactory;
