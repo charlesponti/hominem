@@ -55,7 +55,7 @@ const PROBES = [
     marker: MARKERS[0].marker,
   },
   {
-    label: 'packages/rpc (plain `references`, no override)',
+    label: 'packages/rpc (has an explicit tsconfig `paths` override to build/*.d.ts)',
     file: p('packages/rpc/src/generation-client-events.ts'),
     line: 4,
     offset: 3,

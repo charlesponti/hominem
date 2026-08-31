@@ -12,11 +12,21 @@
     // `import type` for the Hono RPC client), so it isn't a real workspace
     // dependency — see services/api/src/rpc/app.ts for the actual export.
     // Keep this path in sync with services/api/package.json's "./types" export.
+    //
+    // No `references` entry to packages/chat: this package has a peer
+    // dependency on react, so `injectWorkspacePackages` gives it its own
+    // frozen copy of @hominem/chat under .pnpm whose `build/` doesn't exist
+    // yet at that snapshot, and pnpm's `types` condition 404s there and falls
+    // through to real `src/*.ts` — same trap `services/api` hit, see
+    // docs/type-performance.md. AGENTS.md's zero-references invariant also
+    // rules a `references` entry out regardless: this is the previously
+    // undocumented exception, now reconciled.
     "paths": {
-      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"],
+      "@hominem/chat": ["../chat/build/public.d.ts"],
+      "@hominem/chat/types": ["../chat/build/types-only.d.ts"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "*.tsbuildinfo"],
-  "references": [{ "path": "../chat" }]
+  "exclude": ["node_modules", "dist", "*.tsbuildinfo"]
 }
