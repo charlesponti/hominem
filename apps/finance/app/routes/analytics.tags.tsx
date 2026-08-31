@@ -382,7 +382,6 @@ export default function TagsAnalyticsPage() {
                         <div className="text-xs text-muted-foreground">
                           {percentage.toFixed(1)}%
                         </div>
-                        {/* Progress Bar */}
                         <div className="h-1 w-24 border border-border">
                           <div
                             className="h-1 bg-primary"

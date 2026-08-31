@@ -57,7 +57,7 @@ describe('buildNoteDraft', () => {
     expect(draft.transcript.startsWith('[Earlier messages omitted]\n\n')).toBe(true);
     expect(draft.transcript).toContain('The final recent reply');
     expect(draft.transcript).not.toContain('Original opening question');
-    // Title still reflects the first message, even though it fell out of the transcript.
+    // Title still comes from the first message, even though it fell out of the transcript.
     expect(draft.title).toBe('Original opening question');
   });
 

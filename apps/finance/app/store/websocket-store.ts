@@ -16,13 +16,11 @@ type WebSocketOptions = {
 type WebSocketListener<T = unknown> = (message: WebSocketMessage<T>) => void;
 
 type WebSocketStore = {
-  // Connection state
   isConnected: boolean;
   isConnecting: boolean;
   lastError: Error | null;
   lastMessage: WebSocketMessage<unknown> | null;
 
-  // Actions
   connect: (tokenFn?: () => Promise<string | null>) => Promise<void>;
   disconnect: () => void;
   sendMessage: <T>(message: WebSocketMessage<T>) => boolean;
@@ -31,7 +29,6 @@ type WebSocketStore = {
   reset: () => void;
 };
 
-// Options with defaults
 const DEFAULT_OPTIONS: WebSocketOptions = {
   autoReconnect: true,
   reconnectAttempts: 10,
@@ -44,15 +41,12 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
   let reconnectAttempts = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   const messageQueue: WebSocketMessage<unknown>[] = [];
-  // `never` (not `unknown`) so any WebSocketListener<T> can be stored/removed
-  // here without a cast — a listener typed to accept T is always safely
-  // assignable to a slot typed to accept nothing (never).
+  // `never` here (not `unknown`) so any WebSocketListener<T> can go in this map without a cast
   const listeners = new Map<string, Set<WebSocketListener<never>>>();
   let tokenProvider: (() => Promise<string | null>) | undefined;
   let wsBaseUrl = '';
   const options: WebSocketOptions = { ...DEFAULT_OPTIONS };
 
-  // Calculate backoff time for reconnection attempts
   const getBackoffTime = () => {
     const interval = options.reconnectInterval || DEFAULT_OPTIONS.reconnectInterval || 1000;
     const max = options.maxReconnectInterval || DEFAULT_OPTIONS.maxReconnectInterval || 30000;
@@ -60,16 +54,14 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
     return Math.floor(backoff);
   };
 
-  // Clean up connection resources
   const cleanupConnection = () => {
     if (socket) {
-      // Remove all event listeners to prevent memory leaks
+      // null out the handlers so we don't leak listeners on the old socket
       socket.onopen = null;
       socket.onclose = null;
       socket.onerror = null;
       socket.onmessage = null;
 
-      // Only try to close if not already closed
       if (socket.readyState !== WebSocket.CLOSED) {
         try {
           socket.close(1000, 'Closing normally');
@@ -84,7 +76,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
     set({ isConnected: false });
   };
 
-  // Clear any scheduled reconnect
   const clearReconnectTimer = () => {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
@@ -92,31 +83,24 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
     }
   };
 
-  // Create store API
   return {
-    // State
     isConnected: false,
     isConnecting: false,
     lastError: null,
     lastMessage: null,
 
-    // Connect to the WebSocket server
     connect: async (tokenFn) => {
-      // Update token provider if provided
       if (tokenFn) {
         tokenProvider = tokenFn;
       }
 
-      // Don't connect if we're already connected or connecting
       if (socket?.readyState === WebSocket.OPEN || get().isConnecting) {
         return;
       }
 
-      // Set connecting state
       set({ isConnecting: true, lastError: null });
 
       try {
-        // Determine WebSocket URL
         if (!wsBaseUrl) {
           const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
           const apiUrlDomain = import.meta.env.VITE_PUBLIC_API_URL?.split('/')[2] || '';
@@ -128,26 +112,23 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
           wsBaseUrl = `${protocol}//${apiUrlDomain}`;
         }
 
-        // Better Auth authenticates the upgrade with the browser session cookie.
-        // Keep tokenProvider for API compatibility, but never put credentials in the URL.
+        // the browser session cookie handles auth on the upgrade - tokenProvider stays for
+        // API compatibility, but we never put credentials in the URL
         if (tokenProvider) await tokenProvider();
         const wsUrl = `${wsBaseUrl}/api/finance/import/ws`;
 
-        // Create new WebSocket connection
         socket = new WebSocket(wsUrl);
 
-        // Set up event handlers
         socket.onopen = () => {
-          reconnectAttempts = 0; // Reset reconnect counter on successful connection
+          reconnectAttempts = 0;
 
-          // Process any queued messages
           if (messageQueue.length > 0) {
             for (const msg of messageQueue) {
               if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify(msg));
               }
             }
-            messageQueue.length = 0; // Clear queue
+            messageQueue.length = 0;
           }
 
           set({ isConnected: true, isConnecting: false });
@@ -172,15 +153,12 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
               message: typeof parsedData.message === 'string' ? parsedData.message : undefined,
             };
 
-            // Set last message in store
             set({ lastMessage: message });
 
-            // Listeners are stored type-erased (see `listeners` above), so
-            // dispatch is the one place that has to cross back from `never`
-            // to whatever shape the original subscriber asked for.
+            // listeners are stored type-erased, so this is where we cross back to
+            // whatever shape the original subscriber actually asked for
             const erasedMessage = message as WebSocketMessage<never>;
 
-            // Notify type-specific listeners
             const typeListeners = listeners.get(message.type);
             if (typeListeners) {
               for (const listener of typeListeners) {
@@ -188,7 +166,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
               }
             }
 
-            // Notify global listeners
             const globalListeners = listeners.get('*');
             if (globalListeners) {
               for (const listener of globalListeners) {
@@ -211,7 +188,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
               reconnectAttempts < options.reconnectAttempts);
 
           if (shouldReconnect) {
-            // Clear any existing reconnect timer
             clearReconnectTimer();
 
             const backoffTime = getBackoffTime();
@@ -223,7 +199,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
               reconnectAttempts++;
               reconnectTimer = null;
 
-              // Only attempt to reconnect if we haven't reached the max attempts
               if (
                 options.reconnectAttempts === undefined ||
                 reconnectAttempts < options.reconnectAttempts
@@ -257,23 +232,19 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
       }
     },
 
-    // Disconnect from the WebSocket server
     disconnect: () => {
       clearReconnectTimer();
       cleanupConnection();
     },
 
-    // Send a message through the WebSocket
     sendMessage: (message) => {
       if (socket?.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(message));
         return true;
       }
 
-      // Queue message if socket isn't open
       messageQueue.push(message);
 
-      // Try connecting if not already connected or connecting
       if ((!socket || socket.readyState === WebSocket.CLOSED) && !get().isConnecting) {
         get().connect();
       }
@@ -281,7 +252,7 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
       return false;
     },
 
-    // Subscribe to a specific message type or '*' for all messages
+    // pass '*' as the type to listen to every message
     subscribe: (type, listener) => {
       if (!listeners.has(type)) {
         listeners.set(type, new Set());
@@ -289,7 +260,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
 
       listeners.get(type)?.add(listener);
 
-      // Return unsubscribe function
       return () => {
         const typeListeners = listeners.get(type);
         if (typeListeners) {
@@ -302,7 +272,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
       };
     },
 
-    // Force reconnection
     reconnect: () => {
       clearReconnectTimer();
       cleanupConnection();
@@ -310,7 +279,6 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
       get().connect();
     },
 
-    // Reset the WebSocket store to initial state
     reset: () => {
       clearReconnectTimer();
       cleanupConnection();

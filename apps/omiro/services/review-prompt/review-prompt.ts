@@ -1,7 +1,5 @@
-/**
- * This module tracks user activity and prompts for a review after a certain number of active days.
- * It uses Expo's StoreReview API to request a review when the threshold is met.
- */
+// Tracks active days and asks for a store review via Expo's StoreReview API
+// once the user hits the threshold.
 import * as StoreReview from 'expo-store-review';
 
 import { E2E_TESTING } from '~/constants';
@@ -13,7 +11,7 @@ const PROMPTED_KEY = 'review_prompted';
 const THRESHOLD = 7;
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  return new Date().toISOString().slice(0, 10);
 }
 
 export async function recordActiveDay() {

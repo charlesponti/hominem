@@ -168,8 +168,8 @@ describe('useComposerSubmission', () => {
         );
       });
 
-      // clearComposer fires as soon as the send is initiated -- it does not
-      // wait for the send promise to settle.
+      // clearComposer fires as soon as the send kicks off -- it doesn't wait
+      // for the send promise to settle.
       expect(clearComposer).toHaveBeenCalledTimes(1);
       expect(mockAutoUpdateChatTitle).not.toHaveBeenCalled();
 

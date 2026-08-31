@@ -4,8 +4,8 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 // The store's `scenarios` array is built once at module-evaluation time,
 // gated on `__DEV__` (tests/setup.ts sets it to `false` globally). Flip it
-// before importing the module so the real fixture-building branch runs —
-// otherwise `scenarios` is permanently `[]` for this module instance.
+// before importing the module so the real fixture-building branch runs --
+// otherwise `scenarios` stays `[]` for this module instance forever.
 const originalDev = (globalThis as { __DEV__?: boolean }).__DEV__;
 Object.defineProperty(globalThis, '__DEV__', { configurable: true, value: true });
 

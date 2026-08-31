@@ -249,7 +249,7 @@ function parseModelJson(content: string): unknown {
       try {
         return JSON.parse(trimmed.slice(start, end + 1)) as unknown;
       } catch {
-        // Convert all provider/model output into a stable user-facing error below.
+        // fall through to the generic user-facing error below
       }
     }
   }

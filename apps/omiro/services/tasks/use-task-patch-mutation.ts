@@ -16,20 +16,16 @@ interface UseTaskPatchMutationOptions<TVariables> {
   mutationFn: (variables: TVariables) => Promise<Task>;
   getTaskId: (variables: TVariables) => string;
   applyOptimistic: <T extends Task>(task: T, variables: TVariables) => T;
-  /**
-   * update() always refreshes its own detail cache on success, in addition to
-   * the parent's; complete() only refreshes one of the two. Both mutations
-   * share everything else, so this flag preserves that pre-existing split
-   * instead of silently changing either one's behavior.
-   */
+  // update() always refreshes its own detail cache on success, on top of the
+  // parent's; complete() only refreshes one of the two. Both mutations share
+  // everything else, so this flag keeps that existing split instead of
+  // quietly changing either one's behavior.
   alwaysUpdateOwnDetailOnSuccess: boolean;
 }
 
-/**
- * Shares the cancel/snapshot/optimistic-apply/rollback skeleton used by every
- * task mutation that patches a single existing task in place (update,
- * complete).
- */
+// Shared cancel/snapshot/optimistic-apply/rollback skeleton used by every
+// task mutation that patches a single existing task in place (update,
+// complete).
 export function useTaskPatchMutation<TVariables>({
   parentId,
   mutationFn,

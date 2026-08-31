@@ -68,7 +68,7 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
-      {/* Single page frame: all routes inherit this width + padding. Do not re-add container shells in routes. */}
+      {/* this is the one page frame - routes inherit this width/padding, don't wrap your route in another container */}
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6">
         <Suspense
           fallback={
