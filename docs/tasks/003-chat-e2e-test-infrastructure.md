@@ -1,92 +1,117 @@
 ---
-title: 'Build the chat end-to-end test infrastructure'
-status: 'Open'
+title: 'Build the chat integration test SDK'
+status: 'Partial'
 priority: 'urgent'
 labels: [chat, testing, e2e, api, database, web, omiro]
 depends_on: [002-chat-tool-event-round-trip.md]
-blocks: [004-typed-generation-boundaries.md, 005-generation-crash-recovery.md, 006-generation-cursor-recovery.md, 007-client-convergence.md, 008-generation-observability.md, 009-generation-runtime-consolidation.md, 010-remove-generation-compatibility.md, 011-functional-chat-shipping-evidence.md]
+blocks:
+  [
+    004-typed-generation-boundaries.md,
+    005-generation-crash-recovery.md,
+    006-generation-cursor-recovery.md,
+    007-client-convergence.md,
+    008-generation-observability.md,
+    009-generation-runtime-consolidation.md,
+    010-remove-generation-compatibility.md,
+    011-functional-chat-shipping-evidence.md,
+  ]
 estimated_size: 'XL'
 ---
 
 ## Objective
 
-Create one deterministic test harness for the complete Hominem chat path. Tests
-must call real API chat/generation routes and run the real application service,
-generation machine, interpreter, repositories, transactions, durable event
-store, live bus, replay adapter, SSE framing, and client reducers. Only the
-LLM/provider boundary is scripted so tests do not spend tokens or depend on
-OpenRouter timing.
+Build one deterministic, API-local SDK for testing the complete Hominem chat
+path. It must exercise real Hono routes, application services, generation
+runtime, repositories, PostgreSQL, durable events, replay, SSE, and canonical
+client reduction. Only provider behavior and external infrastructure that
+cannot run in-process may be controlled.
 
-## Implementation boundary
+## Current status
 
-Boundary: test request → API route → application runtime → test PostgreSQL →
-SSE/client consumer.
+`Partial`. The first SDK façade exists at
+`services/api/src/testkit/hominem-tests.ts`. It creates an authenticated test
+user, mounts real generation routes with a real `ChatGenerationService`, injects
+a scripted model/planner/tool runtime, parses canonical SSE, reduces events to
+client state, and provides durable database inspection. The route factory and
+service dependency seams preserve production defaults.
 
-Add a scripted provider that emits realistic normalized chunks: text,
-reasoning, fragmented tool calls, multiple calls, usage, provider errors, and
-cancellation timing. Add deterministic in-process test tools or a test MCP
-server for tool execution and confirmation; do not mock repositories,
-application services, the machine, event persistence, or replay. Use the real
-test database and existing auth/test environment. Keep queue, storage, Redis,
-and telemetry doubles narrow and observable only where their external service
-cannot run in the test process.
+The façade currently proves the start-generation text path. It does not yet
+cover the complete operation/scenario matrix or failure-injection contract.
 
-Provide helpers to:
+## SDK contract
 
-- Create and clean owner-scoped users, chats, messages, files, and generation
-  runs in the test database.
-- Call authenticated Hono routes and parse canonical SSE events, including
-  durable IDs and exactly one `[DONE]` marker.
-- Script provider turns and tool outcomes without changing production code.
-- Inspect durable events, projection, snapshots, tool effects, usage, and
-  client reducer state after a route completes or disconnects.
-- Inject failures at provider, tool, append, snapshot, cancellation, replay,
-  and publication seams for later tasks.
+The public test entry point is `HominemTests.create({ provider })` and returns a
+disposable test context. The context must provide:
+
+- `chat.start`, `chat.send`, `chat.regenerate`,
+  `chat.respondToConfirmation`, `chat.replay`, and `chat.cancel`.
+- Typed scripted provider turns for text, reasoning, fragmented/multiple tool
+  calls, usage, retry, permanent failure, and cancellation timing.
+- Typed in-process tools with input/output schemas, confirmation metadata, and
+  observable idempotency keys.
+- Parsed SSE results containing response metadata, canonical events, durable
+  versus live events, durable sequence IDs, `[DONE]` count, and reduced client
+  state.
+- Inspectors for runs, events, projections, snapshots, messages, usage, and
+  tool effects.
+- Named failure injection at provider, tool, append, snapshot, cancellation,
+  replay/publication, queue, and transport-disconnect seams.
+- Deterministic `close()` cleanup for every created user and chat record.
+
+The SDK must not mock repositories, application services, the generation
+machine/interpreter, event persistence, replay, or SSE framing in integration
+tests.
 
 ## Required scenarios
 
-Build reusable route-to-state scenarios for send, start, regenerate,
-confirmation approval/rejection, successful and failed tools, provider retry,
-cancellation before/during persistence, repeated generation IDs, reconnect
-with replay overlap, and terminal replay. Include assertions for request
-authorization, durable ordering, projection state, message/tool records,
-idempotency reuse, SSE framing, and final client state.
+Implement SDK-backed route-to-state tests for:
 
-## Progress
+- Start and send with text, reasoning, usage, and committed projections.
+- Fragmented and multiple tool calls through the real tool boundary.
+- Successful tools, confirmation approval, confirmation rejection, and tool
+  failure.
+- Provider retry, permanent provider failure, and repeated generation IDs.
+- Cancellation before execution and during persistence.
+- Replay overlap, terminal replay, fresh reducer reconstruction, and request
+  disconnect.
+- Regeneration, authorization/owner isolation, idempotency reuse, and usage
+  aggregation.
+- Equivalent Web and Omiro reducer state from the same canonical events.
 
-`services/api/src/rpc/routes/chats.generation.e2e.test.ts` now runs the real
-start-stream route against the test PostgreSQL database. It proves committed
-text generation, durable event sequencing, projection and assistant-message
-persistence, canonical SSE parsing, exactly one `[DONE]`, owner isolation, and
-fragmented provider tool-call reconstruction through the real tool registry and
-the second provider turn. Only the LLM routing/stream calls and external queue
-submission are controlled.
+Every scenario must assert the relevant durable ordering, terminal behavior,
+projection/message/tool records, SSE framing, and final client state.
 
-The harness is not complete yet: reusable setup/parsing/assertion helpers,
-confirmation approval/rejection, tool failure, provider retry, cancellation,
-replay overlap, repeated generation IDs, failure injection, and Web/Omiro
-route-to-client scenarios remain open.
+## Implementation boundary
 
-## Progress
+The API route factory accepts an injected `ChatGenerationService`; the default
+export continues to use the production singleton. The service accepts optional
+provider/model, planner, tool-runtime, and narrow external-infrastructure
+adapters, all defaulting to production implementations. These seams are for
+composition and testing only and must not move domain behavior into the route.
 
-The first route-to-database-to-SSE harness is in
-`services/api/src/rpc/routes/chats.generation.e2e.test.ts`. It currently proves
-real `start-stream` text generation, durable event ordering, committed run and
-assistant-message persistence, canonical SSE parsing, exactly one `[DONE]`, and
-owner isolation. The provider routing and streaming calls are scripted at the
-`@hominem/ai` boundary; repositories, application services, generation runtime,
-and event persistence are not mocked.
+External queue, storage, Redis, and telemetry replacements must be narrow,
+explicit, observable, and isolated from repository/application behavior.
 
 ## Exit gate
 
-Task 003 is complete only when a single documented harness can execute the
-route-to-durable-state-to-SSE path against the test database; provider scripts
-cover text, fragmented tools, confirmation, failure, retry, cancellation, and
-usage; test tools execute through the real tool boundary; and no repository,
-service, machine, event-store, replay, or SSE implementation is mocked in the
-integration suite. The harness must prove owner isolation and clean teardown.
+Task 003 is `Implemented` only when:
 
-Run and record the focused Chat, DB, API, Web, and Omiro tests, API typecheck,
-and the full relevant validation gate. Attach one passing scenario artifact per
-required behavior and one failure-injection demonstration. Do not start Task
-004 until these artifacts and commands are recorded.
+- The SDK façade executes every required operation and scenario against the
+  test database through real routes and runtime components.
+- Provider scripts cover text, reasoning, fragmented/multiple tools,
+  confirmation, tool/provider failure, retry, usage, cancellation, and
+  disconnect timing.
+- Failure-injection tests prove durable terminal behavior and identify whether
+  state was persisted, published, replayed, or intentionally absent.
+- Replay-overlap tests prove lossless, duplicate-safe convergence.
+- Web and Omiro tests reduce equivalent canonical events to equivalent semantic
+  state.
+- Cleanup leaves no test users, chats, messages, runs, events, snapshots, or
+  tool effects.
+- Focused Chat, DB, API, Web, and Omiro tests, API typecheck/build/lint, and
+  `pnpm run check` pass.
+- Browser and iOS simulator flows are recorded when the user-started services
+  are available.
+- Evidence is recorded using the Hominem evidence template.
+
+Do not start Task 004 until every item above has an observable passing artifact.
