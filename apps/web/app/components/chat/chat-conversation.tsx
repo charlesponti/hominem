@@ -4,9 +4,9 @@ import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
-} from '~/components/ai-elements/conversation';
-import { Message, MessageContent } from '~/components/ai-elements/message';
-import { Shimmer } from '~/components/ai-elements/shimmer';
+} from '~/components/chat/conversation';
+import { Message, MessageContent } from '~/components/chat/message';
+import { Shimmer } from '~/components/chat/shimmer';
 import { ChatLinkedNoteContext } from '~/components/chat/chat-linked-note-context';
 import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
 import type { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';

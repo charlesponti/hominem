@@ -28,6 +28,12 @@
         "cd $HOME/Developer/ui && pnpm exec storybook dev -p 6006 --ci"
       ],
       "port": 6006
+    },
+    {
+      "name": "web-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hominem/web", "storybook"],
+      "port": 6006
     }
   ]
 }

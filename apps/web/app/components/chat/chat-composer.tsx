@@ -2,7 +2,7 @@ import { AlertCircle, Mic, Paperclip, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
-import { Persona } from '~/components/ai-elements/persona';
+import { Persona } from '~/components/chat/persona';
 import {
   PromptInput,
   PromptInputBody,
@@ -11,7 +11,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
-} from '~/components/ai-elements/prompt-input';
+} from '~/components/chat/prompt-input';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';

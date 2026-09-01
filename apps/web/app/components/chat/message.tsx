@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIMessage } from 'ai';
+import type { ChatMessageRole } from '@hominem/chat/types';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -14,7 +14,7 @@ import { cn } from '~/lib/utils';
 import { useStreamdownPlugins } from './use-streamdown-plugins';
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage['role'];
+  from: ChatMessageRole;
 };
 
 export const Message = ({ className, from, ...props }: MessageProps) => (

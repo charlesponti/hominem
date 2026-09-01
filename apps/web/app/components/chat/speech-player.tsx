@@ -1,8 +1,8 @@
 import { Headphones, LoaderCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { MessageAction } from '~/components/ai-elements/message';
-import { Persona } from '~/components/ai-elements/persona';
+import { MessageAction } from '~/components/chat/message';
+import { Persona } from '~/components/chat/persona';
 import {
   endSpeechPlaybackTelemetry,
   startSpeechPlaybackTelemetry,

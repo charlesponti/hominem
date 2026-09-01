@@ -43,7 +43,6 @@
     "@tanstack/react-virtual": "^3.13.9",
     "@uppy/core": "^4.5.2",
     "@uppy/xhr-upload": "^4.2.3",
-    "ai": "^7.0.71",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "catalog:",

@@ -3,8 +3,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@ponti-studios/ui/
 import { useCallback, useEffect, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
-import { preloadPersona } from '~/components/ai-elements/persona';
-import { Shimmer } from '~/components/ai-elements/shimmer';
+import { preloadPersona } from '~/components/chat/persona';
+import { Shimmer } from '~/components/chat/shimmer';
 import { ChatComposerPanel } from '~/components/chat/chat-composer-panel';
 import { ChatConversation } from '~/components/chat/chat-conversation';
 import { ChatConversationActions } from '~/components/chat/chat-conversation-actions';

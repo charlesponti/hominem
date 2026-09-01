@@ -9,9 +9,9 @@ import {
   MessageActions,
   MessageContent,
   MessageResponse,
-} from '~/components/ai-elements/message';
-import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/ai-elements/reasoning';
-import { Shimmer } from '~/components/ai-elements/shimmer';
+} from '~/components/chat/message';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat/reasoning';
+import { Shimmer } from '~/components/chat/shimmer';
 import {
   Tool,
   ToolApprovalActions,
@@ -19,7 +19,7 @@ import {
   ToolHeader,
   ToolInput,
   ToolPreview,
-} from '~/components/ai-elements/tool';
+} from '~/components/chat/tool';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,17 +95,7 @@ function ToolCall({
 
   return (
     <Tool defaultOpen={isPending}>
-      <ToolHeader
-        state={
-          isPending
-            ? 'approval-requested'
-            : toolCall.status === 'rejected'
-              ? 'output-denied'
-              : 'output-available'
-        }
-        toolName={toolCall.toolName}
-        type="dynamic-tool"
-      />
+      <ToolHeader status={toolCall.status} toolName={toolCall.toolName} />
       <ToolContent>
         {toolCall.preview ? (
           <ToolPreview preview={toolCall.preview} />

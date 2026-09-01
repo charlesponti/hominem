@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SpeechPlayer, type SpeechPlayerProps } from './speech-player';
 
-vi.mock('~/components/ai-elements/persona', () => ({
+vi.mock('~/components/chat/persona', () => ({
   Persona: ({ state }: { state: string }) => <span data-testid="persona">{state}</span>,
 }));
 

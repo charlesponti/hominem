@@ -1,6 +1,5 @@
 'use client';
 
-import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from 'ai';
 import { CornerDownLeftIcon, ImageIcon, Monitor, PlusIcon, SquareIcon, XIcon } from 'lucide-react';
 import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
 import { nanoid } from 'nanoid';
@@ -162,6 +161,25 @@ const captureScreenshot = async (): Promise<File | null> => {
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
+
+// A file the user has picked but not yet submitted — client-only staging
+// state with no server-side representation until it's actually sent.
+type FileUIPart = {
+  type: 'file';
+  mediaType: string;
+  filename?: string;
+  url: string;
+};
+
+// A note or document the user has referenced into the composer before
+// it's attached to a message — also purely client-side staging state.
+type SourceDocumentUIPart = {
+  type: 'source-document';
+  sourceId: string;
+  mediaType: string;
+  title: string;
+  filename?: string;
+};
 
 export interface AttachmentsContext {
   files: (FileUIPart & { id: string })[];
@@ -1106,6 +1124,10 @@ export const PromptInputActionMenuItem = ({
   className,
   ...props
 }: PromptInputActionMenuItemProps) => <DropdownMenuItem className={cn(className)} {...props} />;
+
+// Whether the submit button should show a spinner/stop icon — purely local
+// UI state, not something any service tracks or returns.
+type ChatStatus = 'submitted' | 'streaming' | 'ready' | 'error';
 
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   status?: ChatStatus;

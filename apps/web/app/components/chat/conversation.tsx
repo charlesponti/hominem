@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIMessage } from 'ai';
+import type { ChatMessageItem } from '@hominem/chat/types';
 import { ArrowDownIcon, DownloadIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { useCallback } from 'react';
@@ -91,23 +91,20 @@ export const ConversationScrollButton = ({
   );
 };
 
-const getMessageText = (message: UIMessage): string =>
-  message.parts.reduce((text, part) => (part.type === 'text' ? text + part.text : text), '');
-
 export type ConversationDownloadProps = Omit<ComponentProps<typeof Button>, 'onClick'> & {
-  messages: UIMessage[];
+  messages: ChatMessageItem[];
   filename?: string;
-  formatMessage?: (message: UIMessage, index: number) => string;
+  formatMessage?: (message: ChatMessageItem, index: number) => string;
 };
 
-const defaultFormatMessage = (message: UIMessage): string => {
+const defaultFormatMessage = (message: ChatMessageItem): string => {
   const roleLabel = message.role.charAt(0).toUpperCase() + message.role.slice(1);
-  return `**${roleLabel}:** ${getMessageText(message)}`;
+  return `**${roleLabel}:** ${message.message}`;
 };
 
 export const messagesToMarkdown = (
-  messages: UIMessage[],
-  formatMessage: (message: UIMessage, index: number) => string = defaultFormatMessage,
+  messages: ChatMessageItem[],
+  formatMessage: (message: ChatMessageItem, index: number) => string = defaultFormatMessage,
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join('\n\n');
 
 export const ConversationDownload = ({

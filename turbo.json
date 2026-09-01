@@ -110,6 +110,15 @@
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]
     },
+    "storybook": {
+      "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]
+    },
+    "build-storybook": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"],
+      "outputs": ["storybook-static/**"]
+    },
     "test": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*", "../../.env", "../../.env.*"]

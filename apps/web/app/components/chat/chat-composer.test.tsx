@@ -5,13 +5,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatComposer } from './chat-composer';
 
-vi.mock('~/components/ai-elements/persona', () => ({
+vi.mock('~/components/chat/persona', () => ({
   Persona: ({ className }: { className?: string }) => (
     <span aria-hidden="true" className={className} data-testid="persona" />
   ),
 }));
 
-vi.mock('~/components/ai-elements/prompt-input', () => ({
+vi.mock('~/components/chat/prompt-input', () => ({
   PromptInput: ({ children, onSubmit }: { children: React.ReactNode; onSubmit: () => void }) => (
     <form
       onSubmit={(event) => {
