@@ -1,14 +1,13 @@
+import type { TaskListItem } from '@hominem/rpc/types';
 import { describe, expect, it } from 'vitest';
 
+import type { TimeBlock } from '~/components/time/time-types';
 import {
   buildTimeStreamRows,
   findEventCandidates,
   findOpenings,
   getAvailabilityRange,
 } from '~/components/time/time-utils';
-import type { TaskListItem } from '@hominem/rpc/types';
-
-import type { TimeBlock } from '~/components/time/time-types';
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({

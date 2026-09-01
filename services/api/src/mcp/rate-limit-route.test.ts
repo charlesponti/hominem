@@ -31,8 +31,8 @@ vi.mock('../middleware/auth', () => ({
 }));
 
 import type { AuthContext } from '../auth/types';
-import type { McpHonoEnv } from './server';
 import { mcpAuthorizationMiddleware } from './routes';
+import type { McpHonoEnv } from './server';
 
 const auth = {
   user: { id: 'user-1' },

@@ -43,7 +43,10 @@ const testProfile = {
   slug: 'profile',
 } satisfies Partial<CareerProfileRecord> as CareerProfileRecord;
 
-function createRequestContext(): { context: SharedMiddlewareArgs['context']; values: Map<unknown, unknown> } {
+function createRequestContext(): {
+  context: SharedMiddlewareArgs['context'];
+  values: Map<unknown, unknown>;
+} {
   const values = new Map<unknown, unknown>();
   return {
     context: {

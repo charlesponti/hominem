@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveTimeRequest } from '~/components/time/time-request';
-import type { CalendarEvent } from '~/modules/on-device-ai';
 import type { TimeBlock } from '~/components/time/time-types';
+import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
   calendarTitle: 'Work',
