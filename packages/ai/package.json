@@ -27,8 +27,6 @@
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@openrouter/sdk": "^0.12.35",
-    "@tanstack/ai": "^0.22.1",
     "zod": "catalog:"
-  },
-  "devDependencies": {}
+  }
 }

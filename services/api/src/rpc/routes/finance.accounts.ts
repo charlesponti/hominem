@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { db } from '@hominem/db';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import * as z from 'zod';
+import { z } from 'zod';
 
 import { NotFoundError } from '../errors';
 import type { AppContext } from '../middleware/auth';

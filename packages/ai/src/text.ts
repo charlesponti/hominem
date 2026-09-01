@@ -1,7 +1,7 @@
 import type { ChatRequest, ChatResult, ChatStreamChunk } from '@openrouter/sdk/models';
-import { convertSchemaToJsonSchema } from '@tanstack/ai';
 import { z } from 'zod';
 
+import { convertSchemaToJsonSchema } from './json-schema';
 import {
   createOpenRouterClient,
   DEFAULT_APP_TITLE,

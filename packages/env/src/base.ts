@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 // Shared by every Node server package (services/api, packages/db,
 // packages/storage, packages/services, packages/ai, apps/career's server

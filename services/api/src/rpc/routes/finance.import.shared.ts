@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
 import { COPILOT_PROVIDER, type ImportPlan } from '@hominem/finance-services/import';
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const PREFLIGHT_TTL_MS = 7 * 24 * 60 * 60 * 1000;

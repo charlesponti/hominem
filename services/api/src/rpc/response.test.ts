@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import * as z from 'zod';
+import { z } from 'zod';
 
 import { dataEnvelopeSchema, parseDataEnvelope, respondWithData } from './response';
 

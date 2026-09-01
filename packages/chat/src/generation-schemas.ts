@@ -4,7 +4,7 @@
 // changes you get a compile error here instead of silent drift. Exported
 // separately via the `./schemas` subpath so consumers can validate the wire
 // contract without pulling in the whole generation engine.
-import * as z from 'zod';
+import { z } from 'zod';
 
 import type {
   GenerationCheckpoint,

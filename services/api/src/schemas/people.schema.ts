@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 const limitSchema = z.number().int().min(1).max(50);
 

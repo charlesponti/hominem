@@ -8,7 +8,7 @@ export {
 
 export type { AIUsageMetrics } from './shared';
 
-export { convertSchemaToJsonSchema } from '@tanstack/ai';
+export { convertSchemaToJsonSchema } from './json-schema';
 
 export type {
   ChatFunctionTool,

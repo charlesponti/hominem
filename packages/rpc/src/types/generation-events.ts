@@ -4,7 +4,7 @@ import type {
   GenerationToolCall,
   ToolResult,
 } from '@hominem/chat';
-import * as z from 'zod';
+import { z } from 'zod';
 
 import type { Chat, LegacyChatStreamEvent } from './chat.types';
 

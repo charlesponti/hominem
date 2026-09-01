@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const CreateNoteInputSchema = z.object({
   title: z.string().optional(),

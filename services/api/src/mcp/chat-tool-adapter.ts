@@ -6,7 +6,7 @@ import {
   convertSchemaToJsonSchema,
 } from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
-import * as z from 'zod';
+import { z } from 'zod';
 
 import type { CapabilityDefinition } from '../application/capability';
 import { ensureMcpToolsRegistered } from './register-tools';

@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 type EnvSource = Record<string, string | undefined>;
 

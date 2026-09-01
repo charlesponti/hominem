@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 function isIsoDate(value: string): boolean {
   const parsed = new Date(`${value}T00:00:00.000Z`);

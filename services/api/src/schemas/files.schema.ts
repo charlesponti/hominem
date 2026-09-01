@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const UploadMetadataSchema = z.object({
   originalName: z.string().min(1),

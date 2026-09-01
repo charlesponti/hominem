@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 export const financeMonthlySummaryQuerySchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
