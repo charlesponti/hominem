@@ -7,6 +7,7 @@
 import { z } from 'zod';
 
 export const chatMessageJsonObjectSchema = z.record(z.string(), z.json());
+export type ChatMessageJsonObject = z.infer<typeof chatMessageJsonObjectSchema>;
 
 export const chatMessageFileSchema = z
   .object({

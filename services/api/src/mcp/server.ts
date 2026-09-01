@@ -4,6 +4,7 @@ import {
   McpServer,
   type AuthInfo,
   type CallToolResult,
+  type ServerContext,
 } from '@modelcontextprotocol/server';
 import type { Context } from 'hono';
 
@@ -44,8 +45,8 @@ function hasRequiredScopes(grantedScopes: Set<string>, requiredScopes: readonly 
 }
 
 function createToolHandler(definition: CapabilityDefinition, fallbackAuthInfo?: AuthInfo) {
-  return async (args: unknown, extra: { authInfo?: AuthInfo }) => {
-    const context = resolveRequestContext(extra.authInfo ?? fallbackAuthInfo);
+  return async (args: unknown, ctx: ServerContext) => {
+    const context = resolveRequestContext(ctx.http?.authInfo ?? fallbackAuthInfo);
     if (!context) {
       return createErrorResult('Authentication required');
     }
@@ -55,7 +56,7 @@ function createToolHandler(definition: CapabilityDefinition, fallbackAuthInfo?: 
     }
 
     try {
-      return (await callTool(context.ownerUserId, definition.name, args)) as CallToolResult;
+      return await callTool(context.ownerUserId, definition.name, args);
     } catch (error) {
       logger.warn('[mcp] tool invocation failed', {
         tool: definition.name,
@@ -83,8 +84,8 @@ function createMcpServer(authInfo?: AuthInfo) {
       {
         title: definition.title,
         description: definition.description,
-        inputSchema: definition.inputSchema as never,
-        outputSchema: definition.outputSchema as never,
+        inputSchema: definition.inputSchema,
+        outputSchema: definition.outputSchema,
         annotations: {
           readOnlyHint: definition.readOnly,
           destructiveHint: destructive,
@@ -96,7 +97,7 @@ function createMcpServer(authInfo?: AuthInfo) {
           'openai/toolInvocation/invoked': definition.invoked ?? `${definition.title} complete.`,
         },
       },
-      createToolHandler(definition, authInfo) as never,
+      createToolHandler(definition, authInfo),
     );
   }
 

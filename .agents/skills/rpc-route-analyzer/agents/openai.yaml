@@ -1,0 +1,4 @@
+interface:
+  display_name: "RPC Route Analyzer"
+  short_description: "Find misplaced RPC route logic"
+  default_prompt: "Use $rpc-route-analyzer to audit this Hominem RPC route, identify every crossed architectural seam, and produce an evidence-backed ownership and extraction plan."

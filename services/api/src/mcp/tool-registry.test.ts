@@ -49,7 +49,7 @@ describe('MCP tool registry', () => {
       inputSchema: z.object({}),
       outputSchema: z.object({ value: z.string() }),
       readOnly: true,
-      scopes: ['career:read', 'career:write', 'unknown:read', 'career:read'],
+      scopes: ['career:read', 'career:write', 'career:read'],
       resultCap: 1,
     } as const;
     registerTool(definition, async () => ({ value: 'scope' }));

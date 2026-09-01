@@ -2,6 +2,7 @@ import { type AIUsageMetrics } from '@hominem/ai';
 import {
   ChatClient,
   chatMessageJsonObjectSchema,
+  type ChatMessageJsonObject,
   type GenerationHistoryEventPayload,
   type GenerationToolCall,
   type ToolResult,
@@ -17,7 +18,7 @@ import type {
   RunCompletionWithToolsResult,
 } from './chat-generation-types';
 
-function parseArguments(call: GenerationToolCall): Record<string, unknown> {
+function parseArguments(call: GenerationToolCall): ChatMessageJsonObject {
   if (!call.arguments) return {};
   const value: unknown = JSON.parse(call.arguments);
   const parsed = chatMessageJsonObjectSchema.safeParse(value);
@@ -28,7 +29,7 @@ function parseArguments(call: GenerationToolCall): Record<string, unknown> {
 }
 
 function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessageToolCallRecord {
-  let args: Record<string, unknown> = {};
+  let args: ChatMessageJsonObject = {};
   try {
     args = parseArguments(call);
   } catch {

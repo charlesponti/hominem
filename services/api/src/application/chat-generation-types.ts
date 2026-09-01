@@ -1,8 +1,7 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
-import type { McpToolResult } from '../mcp/tool-registry';
-import type { CapabilityDefinition } from './capability';
+import type { callTool, getToolDefinition } from '../mcp/tool-registry';
 
 /** Old-format event shape kept around for the route-owned stream. */
 export type ChatGenerationLiveEvent =
@@ -17,13 +16,8 @@ export type ChatGenerationLiveEvent =
   | { type: 'phase'; phase: 'generating' };
 
 export type ChatToolRuntime = {
-  callTool: (
-    ownerUserId: string,
-    name: string,
-    input: Record<string, unknown>,
-    context?: { idempotencyKey?: string },
-  ) => Promise<McpToolResult>;
-  getToolDefinition: (name: string) => CapabilityDefinition | undefined;
+  callTool: typeof callTool;
+  getToolDefinition: typeof getToolDefinition;
 };
 
 export interface RunCompletionWithToolsInput {

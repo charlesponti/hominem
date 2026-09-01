@@ -87,7 +87,7 @@ The `services/api/tsconfig.emit.json` override above only fixes the trap for `se
 
 ## Per-domain route splitting: avoiding the root `AppType` entirely
 
-Everything above is about fixing the `injectWorkspacePackages` trap for consumers that genuinely need the root `@hominem/api/types` — but where it's possible, the cheaper fix is to just not depend on the root type at all. Here's the shape of the problem: `economyRoutes` (`services/api/src/rpc/routes/economy.ts`) mounts 15 different domains — career, chats, collections, enhance, files, finance, inbox, memory, notes, people, personal, tasks, telemetry, usage, voice — into one big Hono chain, and `@hominem/api/types` is `typeof rpcApp` over that entire thing. So a consumer that only ever calls one domain's endpoints still forces tsserver to structurally resolve all 15 domains, just to confirm that the one it cares about exists on the object.
+Everything above is about fixing the `injectWorkspacePackages` trap for consumers that genuinely need the root `@hominem/api/types` — but where it's possible, the cheaper fix is to just not depend on the root type at all. Here's the shape of the problem: `rpcRoutes` (`services/api/src/rpc/app.ts` — this composition used to live in a separate `routes/economy.ts`, since folded directly into `app.ts`) mounts 15 different domains — career, chats, collections, enhance, files, finance, inbox, memory, notes, people, personal, tasks, telemetry, usage, voice — into one big Hono chain, and `@hominem/api/types` is `typeof rpcApp` over that entire thing. So a consumer that only ever calls one domain's endpoints still forces tsserver to structurally resolve all 15 domains, just to confirm that the one it cares about exists on the object.
 
 The good news is `services/api/package.json` already exports each domain's router individually — `./finance` maps to `financeRoutes`, `./career` maps to `careerRoutes`, one export per domain file under `services/api/src/rpc/routes/` — each with its own scoped `AppType`. `apps/career`'s `app/lib/api.server.ts` was already built on the narrow `@hominem/api/career` export, `hc<typeof careerRoutes>`, rather than the root type. `apps/finance` wasn't so lucky: both its SSR client (`app/lib/api.server.ts`) and its browser client (`app/lib/api/client.ts`, via `@hominem/rpc`'s shared `HonoClient`) were built on the root `@hominem/api/types`, even though the app only ever calls `.api.finance`.
 
@@ -106,9 +106,9 @@ The good news is `services/api/package.json` already exports each domain's route
 | `open`→`projectLoad`  | ~2869ms | ~2505ms | -13%   |
 | `geterr`              | ~331ms  | ~177ms  | -46%   |
 
-`geterr` — the diagnostics pass, which scales with how much of the type graph actually needs checking — is the cleaner signal of the two here, and it lines up with what we'd expect: the file's dependency footprint shrank from all 15 `economyRoutes` domains down to just `finance`. We also checked for regressions on `apps/career`, `apps/web`, and `apps/omiro`'s typecheck and found none — unsurprising, since `packages/rpc`'s changes were purely additive and nothing was removed from the shared root-`AppType` path they still rely on.
+`geterr` — the diagnostics pass, which scales with how much of the type graph actually needs checking — is the cleaner signal of the two here, and it lines up with what we'd expect: the file's dependency footprint shrank from all 15 `rpcRoutes` domains down to just `finance`. We also checked for regressions on `apps/career`, `apps/web`, and `apps/omiro`'s typecheck and found none — unsurprising, since `packages/rpc`'s changes were purely additive and nothing was removed from the shared root-`AppType` path they still rely on.
 
-**Worth calling out as unfinished business, not a guess:** `apps/web` and `apps/omiro` don't need the root type's full 15 domains either. `apps/web` only calls `chats`, `collections`, `memory`, `notes`, `tasks`, and `usage` — 6 of 15. `apps/omiro` calls `chats`, `enhance`, `files`, `inbox`, `notes`, `people`, `tasks`, and `voice` — 8 of 15. Neither touches `career` or `finance` at all. We confirmed both of those domain lists by grepping each app's actual `client.api.*` call sites against `economyRoutes`'s full domain list, so this isn't speculation — it's a real, quantified opportunity. It's just a bigger lift than `apps/finance`'s fix was (composing several domain routers into one app-scoped client type, rather than pointing at a single existing narrow export), and we didn't attempt it in this pass. Flagged here as a follow-up.
+**Worth calling out as unfinished business, not a guess:** `apps/web` and `apps/omiro` don't need the root type's full 15 domains either. `apps/web` only calls `chats`, `collections`, `memory`, `notes`, `tasks`, and `usage` — 6 of 15. `apps/omiro` calls `chats`, `enhance`, `files`, `inbox`, `notes`, `people`, `tasks`, and `voice` — 8 of 15. Neither touches `career` or `finance` at all. We confirmed both of those domain lists by grepping each app's actual `client.api.*` call sites against `rpcRoutes`'s full domain list, so this isn't speculation — it's a real, quantified opportunity. It's just a bigger lift than `apps/finance`'s fix was (composing several domain routers into one app-scoped client type, rather than pointing at a single existing narrow export), and we didn't attempt it in this pass. Flagged here as a follow-up.
 
 ## Explicit return types on generic callbacks: when it helps, when it doesn't
 
@@ -137,7 +137,7 @@ But this trick only fixes bottom-up inference of *your own* code — it doesn't 
 | monolithic (48 chained calls, 1 file)       | 12.0s | 11.9s | 11.4s | 11.76s |
 | split (11 sub-routers, `.route()`-composed) | 12.2s | 11.9s | 11.7s | 11.96s |
 
-That's statistically indistinguishable — if anything the split came out marginally slower. We dug into why, and it turns out the `.route()` composition/merge layer (`economy.ts`, which composes all 15 domains, plus `app.ts`, the root) is cheap to begin with — 148ms + 116ms out of roughly 8000ms total, about 3.3% of a full `services/api` typecheck. It was never the bottleneck to begin with, so splitting it couldn't have moved the number much either way. The total type-level work needed to arrive at the same merged `AppType` looks roughly conserved whether it comes from one long chain or several short ones composed together.
+That's statistically indistinguishable — if anything the split came out marginally slower. We dug into why, and it turns out the `.route()` composition/merge layer (`app.ts`, which composes all 15 domains into `rpcRoutes` and then wraps that as the root `rpcApp` — originally split across a separate `routes/economy.ts` plus `app.ts`, since consolidated into one file) is cheap to begin with — 148ms + 116ms out of roughly 8000ms total, about 3.3% of a full `services/api` typecheck. It was never the bottleneck to begin with, so splitting it couldn't have moved the number much either way. The total type-level work needed to arrive at the same merged `AppType` looks roughly conserved whether it comes from one long chain or several short ones composed together.
 
 **We kept the split anyway** (`career.ts` → `career.imports.ts`, `career.profile.ts`, `career.applications.ts`, and so on, mirroring `packages/db`'s own repository split) — just not for a speed reason. It's better for file organization, and it raises the ceiling before things get genuinely bad: the pathological Hono chain-checking blowups reported in the wild show up around 100–300+ routes in one file, well past today's 48, so this split buys headroom against that scenario later. Just don't go into a route-file split expecting a measurable compile-speed win as a general technique — verify with a trace first if that's the goal.
 
@@ -187,6 +187,29 @@ Worth noting for anyone reading this alongside the rest of the doc: `services/ap
 This cost only lands on invocations Turborepo already decided were necessary (its own content-hash task cache still skips the script entirely, at zero cost, when nothing relevant changed), never applies to CI (which always starts cold anyway), and has zero effect on `pnpm dev:types`/tsserver/editor responsiveness — that path is `scripts/watch-types.sh`, a persistent process built on the live-redirect model described above, and it never touches these per-package `.tsbuildinfo` files at all.
 
 We considered a more surgical fix — hash each package's direct workspace dependencies' `build/**/*.d.ts` output and only clear `.cache` when that hash actually changes, preserving `tsc`'s incremental reuse for pure same-package edits — but didn't build it. It's real, nontrivial cache-invalidation logic to get right and maintain, for a win bounded to a handful of `rpc`/`db`-sized packages. Flagged as a possible follow-up if that cost is ever actually felt during normal iteration, rather than just in this one-off benchmark.
+
+## DO / DO NOT, distilled from the references
+
+The findings above feed three other documents — `AGENTS.md`, `docs/type-system.md`, and [ADR 0001](adr/0001-clear-tsbuildinfo-before-typecheck.md) — which state the same conclusions as rules rather than investigation narrative. Collected here so they don't get silently re-litigated in either direction.
+
+**DO**
+
+- Resolve every dependency of a `typeof app`-style inference-boundary package (`services/api`, `packages/rpc`) via plain `paths` to `build/*.d.ts` — never `references`.
+- Put an `injectWorkspacePackages` `paths` override in a type-check-only config (e.g. `tsconfig.emit.json`), never in a `tsconfig.json` a bundler also reads for runtime resolution.
+- Point a new package's `paths` alias at another package's emitted `.d.ts`, never at its source (`docs/type-system.md` D1/D3).
+- Give your own unannotated callback passed to a generic higher-order function an explicit return-type annotation when a trace shows it's expensive.
+- Clear `.cache`/`tsbuildinfo` before `typecheck` on any package using the shared composite profile — `tsc`'s own incremental cache can silently mask a cross-package type error (ADR 0001).
+- Hardcode declaration emit's `outDir` — never assemble it via CLI flags or a `rootDir` dance.
+- Verify a claimed speedup with `--generateTrace` or a real tsserver session before writing it down. Several plausible-sounding fixes in this document measured to zero.
+
+**DO NOT**
+
+- Do not add a `references` entry — not even one, not even to a small, stable package — to a package that infers an exported type across its own module boundary (`services/api`, `packages/rpc`). The zero-references rule exists to hold as the type's shape evolves, not just for its shape today.
+- Do not add a `workspace:*` dependency for a type-only import — pnpm/turbo build the task graph from `package.json` edges with no notion of `import type`, so it drags a whole extra package into every consumer's build/test/lint/typecheck scope.
+- Do not expect splitting a large Hono route chain into `.route()`-composed sub-routers to speed up typechecking — measured statistically indistinguishable at 48-route scale. Split for file-size/organization reasons only.
+- Do not expect an explicit return-type annotation at a call site to fix inference cost baked into a third-party library's own type declaration (`ReturnType<...>`, heavy overloads) — it doesn't reach that cost, and measured marginally *worse* once.
+- Do not assume a `paths` override safe for `tsc` is safe for everything else that reads the same tsconfig — a bundler needing the runtime `exports` condition is a real, previously-hit breakage.
+- Do not assume `assumeChangesOnlyAffectDirectDependencies` measurably speeds up incremental rechecks — a targeted benchmark showed no effect. It's kept as a deliberate, already-documented tradeoff, not because it was reproven.
 
 ## Numbers, for reference
 

@@ -8,6 +8,7 @@ import {
   OpenRouterRequestError,
   streamChatCompletion,
 } from '@hominem/ai';
+import { chatMessageJsonObjectSchema, type ChatMessageJsonObject } from '@hominem/chat';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
 import type {
@@ -48,8 +49,18 @@ function canonicalizeToolArgs(value: unknown): unknown {
   return value;
 }
 
-function getReadOnlyToolCacheKey(toolName: string, args: Record<string, unknown>) {
+function getReadOnlyToolCacheKey(toolName: string, args: ChatMessageJsonObject) {
   return `${toolName}:${JSON.stringify(canonicalizeToolArgs(args))}`;
+}
+
+// `JSON.parse` only guarantees valid JSON, not that the top level is an object — a
+// tool-call payload of `"42"` or `"[1,2]"` would otherwise slip past as `parsedArgs`
+// and violate ChatMessageToolCallRecord.args's JSON-object shape at the DB boundary
+// instead of here, where the caller can fall back to `{}` like any other parse failure.
+function parseToolCallArguments(raw: string | undefined): ChatMessageJsonObject {
+  if (!raw) return {};
+  const parsed = chatMessageJsonObjectSchema.safeParse(JSON.parse(raw));
+  return parsed.success ? parsed.data : {};
 }
 
 function mergeToolCallDeltas(
@@ -248,12 +259,7 @@ export async function runCompletionWithTools(
       (call) => toolRuntime.getToolDefinition(call.name)?.requiresConfirmation,
     );
     if (gatedCall) {
-      let parsedArgs: Record<string, unknown> = {};
-      try {
-        parsedArgs = gatedCall.arguments ? JSON.parse(gatedCall.arguments) : {};
-      } catch {
-        parsedArgs = {};
-      }
+      const parsedArgs = parseToolCallArguments(gatedCall.arguments);
       const definition = toolRuntime.getToolDefinition(gatedCall.name);
       const preview = definition?.preview
         ? await definition.preview(input.userId, parsedArgs).catch(() => null)
@@ -293,9 +299,11 @@ export async function runCompletionWithTools(
 
     const toolResults = await Promise.all(
       requestedToolCalls.map(async (call) => {
-        let parsedArgs: Record<string, unknown> = {};
+        let parsedArgs: ChatMessageJsonObject = {};
         try {
-          parsedArgs = call.arguments ? JSON.parse(call.arguments) : {};
+          const raw = call.arguments ? JSON.parse(call.arguments) : {};
+          const parsed = chatMessageJsonObjectSchema.parse(raw);
+          parsedArgs = parsed;
         } catch {
           return {
             call,
