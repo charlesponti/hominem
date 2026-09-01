@@ -3,7 +3,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Tool, ToolApprovalActions, ToolContent, ToolHeader, ToolInput, ToolPreview } from './tool';
+import {
+  getToolCallStatus,
+  Tool,
+  ToolApprovalActions,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolPreview,
+} from './tool';
 
 afterEach(cleanup);
 
@@ -48,6 +56,20 @@ describe('ToolHeader', () => {
     );
     expect(screen.getByText('Delete a note')).toBeTruthy();
     expect(screen.queryByText('delete_note')).toBeNull();
+  });
+});
+
+describe('getToolCallStatus', () => {
+  it.each(['pending', 'running'] as const)('keeps execution status %s non-terminal', (status) => {
+    expect(
+      getToolCallStatus({
+        args: {},
+        executionStatus: status,
+        toolCallId: 'call-1',
+        toolName: 'search_notes',
+        type: 'tool-call',
+      }),
+    ).toBe('pending');
   });
 });
 

@@ -49,9 +49,14 @@ function toClientPhase(stage: ChatGenerationState['stage']): GenerationClientSta
 interface UseChatGenerationOptions {
   chatId: string;
   getAuthHeaders: () => Promise<Record<string, string>>;
+  onGenerationTerminal?: () => void | Promise<void>;
 }
 
-export function useChatGeneration({ chatId, getAuthHeaders }: UseChatGenerationOptions) {
+export function useChatGeneration({
+  chatId,
+  getAuthHeaders,
+  onGenerationTerminal,
+}: UseChatGenerationOptions) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const generationRef = useRef<ChatGenerationState | null>(restoreGeneration(chatId));
   const [generation, setGenerationState] = useState<ChatGenerationState | null>(
@@ -109,6 +114,11 @@ export function useChatGeneration({ chatId, getAuthHeaders }: UseChatGenerationO
           clientState = reduceGenerationClientEvent(clientState, event);
           const latest = generationRef.current;
           if (!latest || latest.id !== current.id) return;
+          if (['committed', 'cancelled', 'failed'].includes(clientState.phase)) {
+            setGeneration(null);
+            void onGenerationTerminal?.();
+            return;
+          }
           setGeneration({
             ...latest,
             stage: toStageFromPhase(clientState.phase),
@@ -120,7 +130,7 @@ export function useChatGeneration({ chatId, getAuthHeaders }: UseChatGenerationO
       resumingGenerationIds.delete(current.id);
       if (abortControllerRef.current === controller) abortControllerRef.current = null;
     }
-  }, [chatId, getAuthHeaders, setGeneration]);
+  }, [chatId, getAuthHeaders, onGenerationTerminal, setGeneration]);
 
   useEffect(() => {
     if (!generationRef.current) return;

@@ -109,4 +109,50 @@ describe('useChatGeneration', () => {
       lastDurableSequence: 13,
     });
   });
+
+  it('clears a restored checkpoint and refreshes chat data after commit', async () => {
+    const onGenerationTerminal = vi.fn();
+    storage.set(
+      key,
+      JSON.stringify({
+        generationId: 'generation-1',
+        phase: 'saving',
+        lastDurableSequence: 12,
+      }),
+    );
+    consumeGenerationSseXhr.mockImplementationOnce(
+      async ({ onEvent }: { onEvent: (event: unknown) => void }) => {
+        onEvent({
+          version: 1,
+          generationId: 'generation-1',
+          sequence: 13,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'message-1',
+              chatId: 'chat-1',
+              userId: 'user-1',
+              role: 'assistant',
+              content: 'Done',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        });
+      },
+    );
+
+    const { result } = renderHook(() =>
+      useChatGeneration({ chatId: 'chat-1', getAuthHeaders, onGenerationTerminal }),
+    );
+
+    await waitFor(() => expect(result.current.generation).toBeNull());
+    expect(storage.getString(key)).toBeUndefined();
+    expect(onGenerationTerminal).toHaveBeenCalledOnce();
+  });
 });

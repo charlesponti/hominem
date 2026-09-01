@@ -27,6 +27,9 @@ export function getToolCallStatus(toolCall: ChatMessageToolCall): ToolCallStatus
   if (toolCall.confirmationStatus === 'pending') return 'pending';
   if (toolCall.confirmationStatus === 'rejected') return 'rejected';
   if (toolCall.executionStatus === 'failed') return 'failed';
+  if (toolCall.executionStatus === 'pending' || toolCall.executionStatus === 'running') {
+    return 'pending';
+  }
   return 'completed';
 }
 

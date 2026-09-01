@@ -66,8 +66,15 @@ export function useSendMessage({ chatId }: { chatId: string }) {
   const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
   const lastInputRef = useRef<SendInput | null>(null);
+  const handleGenerationTerminal = useCallback(async () => {
+    await invalidateChatQueries(queryClient, chatId);
+  }, [chatId, queryClient]);
   const { abortControllerRef, cancelGeneration, generation, generationRef, setGeneration } =
-    useChatGeneration({ chatId, getAuthHeaders });
+    useChatGeneration({
+      chatId,
+      getAuthHeaders,
+      onGenerationTerminal: handleGenerationTerminal,
+    });
 
   const mutation = useMutation<void, Error, MutationInput, SendContext>({
     mutationKey: ['chat-generation', chatId],
