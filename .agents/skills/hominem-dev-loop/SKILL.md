@@ -13,6 +13,29 @@ Never start long-running services yourself (Expo/Metro, `pnpm dev`, the API,
 workers, databases, Docker) — the user starts them. This skill's commands
 assume the user has already started whatever the task needs.
 
+## First-time setup: portless proxy
+
+`pnpm dev` for `api`/`web`/`career`/`finance` runs through
+[portless](https://github.com/vercel-labs/portless) (see `/portless.json`),
+which gives each service a stable `https://<name>.localhost` URL instead of
+a fixed port — this is what lets the same app run from multiple worktrees
+without a port collision (portless prefixes the worktree's branch name onto
+the hostname automatically).
+
+Before the first `pnpm dev`, start the proxy once on an unprivileged port —
+binding the default port 443 needs `sudo`, which can hang when portless's
+elevation prompt isn't attached to an interactive terminal:
+
+```bash
+pnpm exec portless proxy start --port 4200
+```
+
+This trusts a local CA (one-time, may prompt for your password directly —
+that prompt does work) and starts the HTTPS proxy on port 4200. Portless
+remembers this configuration, so subsequent `pnpm dev` runs auto-attach to
+the running proxy instead of trying to start their own. `.env.example`
+defaults already point at `https://<name>.localhost:4200`.
+
 ## Smallest loop by default
 
 1. `just setup`
