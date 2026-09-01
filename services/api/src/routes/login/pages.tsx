@@ -73,6 +73,7 @@ function AnimatedProgressButton({
       class="progress-button"
       data-complete={String(complete)}
       data-progress-button
+      data-progress-zero={progress <= 0}
       style={`--progress: ${Math.max(0, Math.min(1, progress)) * 100}`}
     >
       <svg

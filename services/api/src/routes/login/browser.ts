@@ -19,6 +19,7 @@ const progressButtonState = (
 ) => {
   button.style.setProperty('--progress', String(Math.max(0, Math.min(100, progress * 100))));
   button.dataset.complete = String(complete);
+  button.toggleAttribute('data-progress-zero', progress <= 0);
   const messageElement = button.querySelector<HTMLElement>('[data-progress-message]');
   if (messageElement) messageElement.textContent = message;
   const arrow = button.querySelector<HTMLElement>('[data-progress-arrow]');

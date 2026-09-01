@@ -198,6 +198,11 @@ input {
   stroke-dasharray: 100;
   stroke-dashoffset: calc(100 - var(--progress, 0));
 }
+/* A round linecap still paints a stray dot for a zero-length dash, so hide
+   the progress stroke outright at zero instead of relying on dash math. */
+.progress-button[data-progress-zero] .progress-button__progress {
+  stroke: none;
+}
 .progress-button__helper {
   position: relative;
   display: inline-flex;
