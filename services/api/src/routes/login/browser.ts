@@ -82,6 +82,26 @@ const fillOtp = (input: HTMLInputElement, value: string) => {
   inputs[Math.min(start + digits.length, inputs.length - 1)]?.focus();
 };
 
+// Backspace/Delete on an already-empty box clears and refocuses the
+// previous one (standard segmented-OTP behavior). Native input handling
+// already clears a box's own value when it has one, so this only needs to
+// step in for the empty case.
+document.addEventListener('keydown', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;
+  if (event.key !== 'Backspace' && event.key !== 'Delete') return;
+  if (input.value) return;
+  const inputs = otpInputs();
+  const previous = inputs[inputs.indexOf(input) - 1];
+  if (!previous) return;
+  event.preventDefault();
+  previous.value = '';
+  previous.focus();
+  syncOtp(input.form);
+  const button = input.form?.querySelector<HTMLElement>('[data-progress-button]');
+  if (button) updateProgressButton(button);
+});
+
 document.addEventListener('paste', (event) => {
   const input = event.target;
   if (!(input instanceof HTMLInputElement) || !input.matches('[data-otp-digit]')) return;

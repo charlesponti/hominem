@@ -51,6 +51,21 @@
 		if (button) updateProgressButton(button);
 		inputs[Math.min(start + digits.length, inputs.length - 1)]?.focus();
 	};
+	document.addEventListener("keydown", (event) => {
+		const input = event.target;
+		if (!(input instanceof HTMLInputElement) || !input.matches("[data-otp-digit]")) return;
+		if (event.key !== "Backspace" && event.key !== "Delete") return;
+		if (input.value) return;
+		const inputs = otpInputs();
+		const previous = inputs[inputs.indexOf(input) - 1];
+		if (!previous) return;
+		event.preventDefault();
+		previous.value = "";
+		previous.focus();
+		syncOtp(input.form);
+		const button = input.form?.querySelector("[data-progress-button]");
+		if (button) updateProgressButton(button);
+	});
 	document.addEventListener("paste", (event) => {
 		const input = event.target;
 		if (!(input instanceof HTMLInputElement) || !input.matches("[data-otp-digit]")) return;
