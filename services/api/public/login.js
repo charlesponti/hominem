@@ -14,7 +14,7 @@
 		const arrow = button.querySelector("[data-progress-arrow]");
 		if (arrow) arrow.hidden = !showArrow;
 	};
-	const emailProgress = (email) => {
+	const emailProgress = (email, isValid) => {
 		if (!email) return [0, "Enter your email"];
 		if (/\s/.test(email)) return [.2, "Remove the spaces"];
 		if (!email.includes("@")) return [.2, "Add the @ symbol"];
@@ -22,14 +22,14 @@
 		if (!domain) return [.4, "Almost there! Add the domain"];
 		if (!domain.includes(".")) return [.6, "Don't forget the domain extension"];
 		if ((domain.split(".")[1] ?? "").length < 2) return [.8, "Complete the domain extension"];
-		return [1, "Ready to go!"];
+		return isValid ? [1, "Ready to go!"] : [.8, "Check the email address"];
 	};
 	const updateProgressButton = (button) => {
 		const form = button.closest("form");
 		const emailInput = form?.querySelector("[name=\"email\"]");
 		const otpInputsForForm = Array.from(form?.querySelectorAll("[data-otp-digit]") ?? []);
 		if (emailInput && otpInputsForForm.length === 0) {
-			const [progress, message] = emailProgress(emailInput.value);
+			const [progress, message] = emailProgress(emailInput.value, emailInput.checkValidity());
 			progressButtonState(button, progress, progress === 1, message, progress > 0);
 			return;
 		}

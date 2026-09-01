@@ -26,7 +26,14 @@ const progressButtonState = (
   if (arrow) arrow.hidden = !showArrow;
 };
 
-const emailProgress = (email: string): [number, string] => {
+// Structural checks give a specific, actionable message while the user is
+// still typing. The final "looks done" gate defers to the browser's own
+// type="email" validator (isValid, from checkValidity()) instead of
+// hand-rolling a regex here — that native check already handles cases this
+// heuristic doesn't reason about (leading/trailing dots, doubled dots,
+// invalid host characters, ...). The server's zod schema stays the actual
+// authority; this only decides when to say "Ready to go!".
+const emailProgress = (email: string, isValid: boolean): [number, string] => {
   if (!email) return [0, 'Enter your email'];
   if (/\s/.test(email)) return [0.2, 'Remove the spaces'];
   if (!email.includes('@')) return [0.2, 'Add the @ symbol'];
@@ -35,7 +42,7 @@ const emailProgress = (email: string): [number, string] => {
   if (!domain.includes('.')) return [0.6, "Don't forget the domain extension"];
   const extension = domain.split('.')[1] ?? '';
   if (extension.length < 2) return [0.8, 'Complete the domain extension'];
-  return [1, 'Ready to go!'];
+  return isValid ? [1, 'Ready to go!'] : [0.8, 'Check the email address'];
 };
 
 const updateProgressButton = (button: HTMLElement) => {
@@ -45,7 +52,7 @@ const updateProgressButton = (button: HTMLElement) => {
     form?.querySelectorAll<HTMLInputElement>('[data-otp-digit]') ?? [],
   );
   if (emailInput && otpInputsForForm.length === 0) {
-    const [progress, message] = emailProgress(emailInput.value);
+    const [progress, message] = emailProgress(emailInput.value, emailInput.checkValidity());
     progressButtonState(button, progress, progress === 1, message, progress > 0);
     return;
   }
