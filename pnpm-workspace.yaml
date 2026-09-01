@@ -22,11 +22,11 @@ catalog:
   lucide-react: 1.28.0
   pdf2json: 4.0.3
   pg: 8.20.0
-  react: 19.2.3
+  react: 19.2.8
   react-dom: 19.2.3
   react-router: 8.3.0
   resend: 6.12.4
-  '@types/react': 19.2.17
+  '@types/react': 19.2.18
   '@types/react-dom': 19.2.4
   '@ponti-studios/ui': 1.7.0
   typescript: 6.0.3
