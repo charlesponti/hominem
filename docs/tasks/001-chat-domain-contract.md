@@ -1,63 +1,36 @@
 ---
-title: 'Define the chat domain contract'
+title: 'Canonical chat domain contract'
 status: 'Implemented'
 priority: 'high'
 labels: [chat, domain, schema]
 depends_on: []
-blocks: [002-chat-tool-event-round-trip.md, 004-generation-crash-recovery.md]
+blocks: []
 estimated_size: 'L'
 ---
 
-## Objective
+## Outcome
 
-Replace the chat tool-call contract so confirmation state and execution outcome
-are represented independently. This greenfield system does not require
-backward-compatible reads or writes for the obsolete shape.
+`@hominem/chat` owns chat snapshots, attachments, tool-call records, lifecycle
+fields, and generation event schemas. The schemas are strict and inferred, and
+are shared by the database, API application, Web, and Omiro.
 
-## Context
+Confirmation status and execution outcome are separate fields. Waiting for
+confirmation is not commitment or execution. Invalid lifecycle combinations,
+unknown legacy `status` fields, non-object JSON values, empty identifiers, and
+invalid file sizes are rejected.
 
-The current `ChatMessageToolCallRecord.status` in
-`packages/db/src/guards.ts` mixes confirmation (`pending`, `rejected`) with
-execution (`completed`, `failed`). The same shape is repeated in
-`packages/rpc/src/types/generation-events.ts`. The machine already emits
-`confirmation.required`, `confirmation.approved`, `confirmation.rejected`,
-`tool.completed`, and `tool.failed`; the DTOs need to express those meanings
-without overloading one field.
+## Exit gate
 
-## Requirements
+Task 001 is complete only when `packages/chat/src/generation-schemas.ts` and
+`packages/chat/src/chat-record-schemas.ts` are the sole shared runtime schema
+owners; Chat schema, generation, DB, RPC, Web, and Omiro contract tests cover
+valid and malformed records; and the exact production search finds no duplicate
+chat lifecycle schema, reducer, or DTO conversion outside the domain owner.
 
-- Add `confirmationStatus` with `pending | approved | rejected` and
-  `executionStatus` with `pending | running | completed | failed`.
-- Replace the overloaded `status` shape in all active DTOs, schemas, mappers,
-  fixtures, and client consumers; do not add a compatibility field or mapper.
-- Update `packages/db/src/guards.ts`, the chat message DTO mapper, and
-  `packages/rpc/src/types/generation-events.ts` and its schemas together.
-- Preserve all v1 generation event names and payloads.
+The gate must also record the focused Chat, DB, RPC, Web, and Omiro validation
+commands and results.
 
-## Implementation Notes
+## Remaining work
 
-- The tool-call data is JSON in `app.chat_messages.tool_calls`; this task does
-  not require a new relational column unless the implementation proves one is
-  necessary.
-- Keep database row types private to `@hominem/db` and expose the normalized
-  DTO from the repository.
-- Do not change MCP HTTP behavior or the generation machine event vocabulary.
-
-## Acceptance Criteria
-
-- [ ] `parseChatMessageToolCalls` returns normalized split fields for the new
-      contract and rejects the obsolete overloaded status shape.
-- [ ] A tool call awaiting confirmation cannot also be reported as completed or
-      failed by the normalized DTO.
-- [ ] RPC validation accepts pending, approved, rejected, completed, and failed
-      lifecycle states without `as` assertions.
-- [ ] The new contract is covered in repository, RPC, Web, and Omiro fixtures;
-      no fixture depends on the obsolete status field.
-
-## Testing
-
-- Extend `packages/db/src/guards.test.ts` or the existing chat repository guard
-  tests with new-contract JSON fixtures and malformed obsolete-shape fixtures.
-- Extend `packages/rpc/src/types/generation-events.test.ts` with all legal split
-  field combinations and malformed combinations.
-- Add compile-time fixtures at the DTO boundary used by Web and Omiro.
+None. New shared chat behavior must be added to `@hominem/chat` with contract
+tests before consumers are changed.

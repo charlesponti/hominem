@@ -71,14 +71,15 @@ Implementation work and release evidence are tracked in the task records:
 
 - [001 — Chat domain contract](tasks/001-chat-domain-contract.md)
 - [002 — Chat tool event round trip](tasks/002-chat-tool-event-round-trip.md)
-- [003 — Typed generation boundaries](tasks/003-typed-generation-boundaries.md)
-- [004 — Generation crash recovery](tasks/004-generation-crash-recovery.md)
-- [005 — Generation cursor recovery](tasks/005-generation-cursor-recovery.md)
-- [006 — Client convergence](tasks/006-client-convergence.md)
-- [007 — Generation observability](tasks/007-generation-observability.md)
-- [008 — Generation runtime consolidation](tasks/008-generation-runtime-consolidation.md)
-- [009 — Remove generation compatibility](tasks/009-remove-generation-compatibility.md)
-- [010 — Functional chat shipping evidence](tasks/010-functional-chat-shipping-evidence.md)
+- [003 — Chat end-to-end test infrastructure](tasks/003-chat-e2e-test-infrastructure.md)
+- [004 — Typed generation boundaries](tasks/004-typed-generation-boundaries.md)
+- [005 — Generation crash recovery](tasks/005-generation-crash-recovery.md)
+- [006 — Generation cursor recovery](tasks/006-generation-cursor-recovery.md)
+- [007 — Client convergence](tasks/007-client-convergence.md)
+- [008 — Generation observability](tasks/008-generation-observability.md)
+- [009 — Generation runtime consolidation](tasks/009-generation-runtime-consolidation.md)
+- [010 — Remove generation compatibility](tasks/010-remove-generation-compatibility.md)
+- [011 — Functional chat shipping evidence](tasks/011-functional-chat-shipping-evidence.md)
 
 User-facing capability status is maintained in
 [`chat.capabilities.md`](chat.capabilities.md).

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { GenerationHistoryEventPayload } from '@hominem/chat';
+import { toolEventRoundTripFixture, type GenerationHistoryEventPayload } from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authDb, db } from '../../db';
@@ -205,6 +205,36 @@ describe('ChatGenerationRepository', () => {
     await expect(
       ChatGenerationRepository.listEvents(db, generationId, randomUUID()),
     ).resolves.toEqual([]);
+  });
+
+  it('round-trips the shared tool event fixture through durable storage and projection rebuild', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const assistantMessageId = await createAssistantMessage(chatId, userId);
+    const fixture = toolEventRoundTripFixture({ chatId, assistantMessageId });
+
+    for (const [index, event] of fixture.entries()) {
+      await runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event,
+          idempotencyKey: `${generationId}:fixture:${index + 1}`,
+        }),
+      );
+    }
+
+    const records = await ChatGenerationRepository.listEvents(db, generationId, userId);
+    expect(records.map((record) => record.payload)).toEqual(fixture);
+
+    const projection = await runInTransaction((trx) =>
+      ChatGenerationRepository.rebuildProjection(trx, generationId, userId),
+    );
+    expect(projection).toMatchObject({
+      generationId,
+      status: 'committed',
+      assistantMessageId,
+      errorMessage: null,
+    });
   });
 
   it('stores private snapshots and reuses a completed tool effect', async () => {

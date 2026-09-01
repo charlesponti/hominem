@@ -9,7 +9,11 @@ import {
   type GenerationClientErrorEvent,
 } from './generation-client';
 import type { GenerationHistoryEvent } from './generation-machine';
-import { chatSnapshot, messageSnapshot } from './generation-test-fixtures';
+import {
+  chatSnapshot,
+  messageSnapshot,
+  toolEventRoundTripFixture,
+} from './generation-test-fixtures';
 
 const call = {
   id: 'call-1',
@@ -208,6 +212,23 @@ describe('generation client reducer', () => {
       toolSteps: [
         { toolCallId: 'call-1', toolName: 'search', status: 'requested' },
         { toolCallId: 'call-2', toolName: 'write', status: 'failed' },
+      ],
+    });
+  });
+
+  it('reduces the shared persistence round-trip fixture to the expected terminal state', () => {
+    let state = createGenerationClientState('generation-1');
+    for (const [index, payload] of toolEventRoundTripFixture().entries()) {
+      state = reduceGenerationClientEvent(state, durable(index + 1, payload));
+    }
+
+    expect(state).toMatchObject({
+      phase: 'committed',
+      lastDurableSequence: 11,
+      text: 'Saved',
+      toolSteps: [
+        { toolCallId: 'call-search', toolName: 'search', status: 'completed' },
+        { toolCallId: 'call-write', toolName: 'write_memory', status: 'failed' },
       ],
     });
   });

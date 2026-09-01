@@ -1,4 +1,8 @@
-import { chatMessageSnapshotSchema } from '@hominem/chat';
+import {
+  chatMessageSnapshotSchema,
+  parseGenerationHistoryEvent,
+  toolEventRoundTripFixture,
+} from '@hominem/chat';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -69,6 +73,41 @@ function source(
 }
 
 describe('replayGenerationEvents', () => {
+  it('replays the shared persisted tool fixture as canonical history through the terminal event', async () => {
+    const history: ReplayEventRecord[] = toolEventRoundTripFixture().map((payload, index) => {
+      const parsed = parseGenerationHistoryEvent({
+        version: 1,
+        generationId: 'generation-1',
+        sequence: index + 1,
+        type: payload.type,
+        payload,
+      });
+      return {
+        generationId: parsed.generationId,
+        sequence: parsed.sequence,
+        type: parsed.type,
+        payload: parsed.payload,
+      };
+    });
+    const replayed: ReplayEventRecord[] = [];
+    const replaySource = source(history, []);
+
+    for await (const event of replayGenerationEvents(replaySource, 0)) {
+      replayed.push({
+        generationId: event.generationId,
+        sequence: event.sequence,
+        type: event.type,
+        payload: event.payload,
+      });
+    }
+
+    expect(replayed).toEqual(history);
+    expect(replayed.at(-1)).toMatchObject({
+      sequence: 11,
+      type: 'generation.committed',
+    });
+  });
+
   it('deduplicates history/live overlap and stops at the first terminal event', async () => {
     const delivered: string[] = [];
     const deduplicated: number[] = [];
