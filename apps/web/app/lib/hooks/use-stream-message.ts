@@ -20,6 +20,7 @@ export type StreamStatus =
   | 'idle'
   | 'preparing'
   | 'streaming'
+  | 'awaiting_confirmation'
   | 'stopping'
   | 'cancelled'
   | 'committed'
@@ -43,6 +44,7 @@ function readGenerationCheckpoint(chatId: string) {
 
 function statusFromPhase(phase: GenerationClientState['phase']): StreamStatus {
   if (phase === 'preparing') return 'preparing';
+  if (phase === 'awaiting_confirmation') return 'awaiting_confirmation';
   if (phase === 'cancel_requested') return 'stopping';
   if (phase === 'cancelled') return 'cancelled';
   if (phase === 'committed') return 'committed';

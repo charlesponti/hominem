@@ -109,8 +109,8 @@ describe('ToolApprovalActions', () => {
     const onReject = vi.fn();
     render(<ToolApprovalActions onApprove={onApprove} onReject={onReject} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Approve tool action' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reject tool action' }));
 
     expect(onApprove).toHaveBeenCalledOnce();
     expect(onReject).toHaveBeenCalledOnce();
@@ -119,11 +119,11 @@ describe('ToolApprovalActions', () => {
   it('disables both buttons when disabled', () => {
     render(<ToolApprovalActions disabled onApprove={vi.fn()} onReject={vi.fn()} />);
 
-    expect((screen.getByRole('button', { name: 'Approve' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
-    expect((screen.getByRole('button', { name: 'Reject' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(
+      (screen.getByRole('button', { name: 'Approve tool action' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Reject tool action' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 });

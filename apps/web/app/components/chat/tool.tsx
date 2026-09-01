@@ -153,11 +153,28 @@ export const ToolApprovalActions = ({
   disabled,
   ...props
 }: ToolApprovalActionsProps) => (
-  <div className={cn('flex items-center gap-2', className)} {...props}>
-    <Button disabled={disabled} onClick={onApprove} size="sm" type="button">
+  <div
+    aria-label="Tool confirmation actions"
+    className={cn('flex items-center gap-2', className)}
+    {...props}
+  >
+    <Button
+      aria-label="Approve tool action"
+      disabled={disabled}
+      onClick={onApprove}
+      size="sm"
+      type="button"
+    >
       Approve
     </Button>
-    <Button disabled={disabled} onClick={onReject} size="sm" type="button" variant="outline">
+    <Button
+      aria-label="Reject tool action"
+      disabled={disabled}
+      onClick={onReject}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
       Reject
     </Button>
   </div>

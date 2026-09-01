@@ -68,7 +68,7 @@ describe('ChatMessage', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Approve tool action' }));
     expect(onApproveTool).toHaveBeenCalledWith({ messageId: 'message-1', toolCallId: 'tool-1' });
     expect(screen.getByText('Draft note')).toBeTruthy();
   });

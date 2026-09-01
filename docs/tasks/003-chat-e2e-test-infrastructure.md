@@ -196,6 +196,20 @@ Artifacts are the Browser DOM snapshots and console-log captures from the
 recorded run. API durable cursor/generation correlation was not available from
 the Browser surface for this run and remains unverified.
 
+### Blocker fixes — 2026-09-01
+
+- Web now preserves `awaiting_confirmation` as an explicit stream status,
+  prevents the transient composer message from being treated as an ordinary
+  streaming response, and marks its pending tool call so approval controls can
+  render. Approval and rejection controls also have explicit accessible names.
+- The `create_collection` capability is now marked confirmation-required so the
+  real tool boundary checkpoints the write before execution.
+- Focused Web coverage passes for the confirmation phase and accessible tool
+  actions. The live Browser rerun remained inconclusive because the already
+  running API process did not reload the capability metadata; it continued to
+  execute the test write immediately. Re-run B-007 after restarting/reloading
+  the API service, then continue the ordered browser matrix.
+
 ## Exit gate
 
 Task 003 is `Implemented` only when:

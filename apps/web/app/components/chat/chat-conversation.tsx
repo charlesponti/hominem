@@ -189,6 +189,7 @@ export const ChatConversation = memo(function ChatConversation({
                   isSpeechActive={activeSpeechMessageId === message.id}
                   isGenerationActive={
                     streamMessage.isStreaming ||
+                    streamMessage.status === 'awaiting_confirmation' ||
                     streamMessage.status === 'stopping' ||
                     regeneration.isRegenerating
                   }

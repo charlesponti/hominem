@@ -1,8 +1,6 @@
-import { z } from 'zod';
-
 import {
-  addCollectionItem,
   acceptMemberInvite,
+  addCollectionItem,
   collectionDetail,
   createCollection,
   inviteMember,
@@ -41,9 +39,9 @@ registerTool(
     readOnly: false,
     scopes: ['collections:write'],
     resultCap: 1,
+    requiresConfirmation: true,
   },
-  async (ownerUserId, input) =>
-    createCollection(ownerUserId, input) as Promise<z.output<typeof createCollectionOutputSchema>>,
+  async (ownerUserId, input) => createCollection(ownerUserId, input),
 );
 
 registerTool(

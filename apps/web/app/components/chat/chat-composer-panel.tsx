@@ -74,6 +74,9 @@ export function ChatComposerPanel({
         type: 'tool-call' as const,
         toolCallId: step.toolCallId,
         args: {},
+        ...(streamMessage.status === 'awaiting_confirmation'
+          ? { confirmationStatus: 'pending' as const, executionStatus: 'pending' as const }
+          : {}),
       })),
       reasoning: streamMessage.reasoning || null,
       parentMessageId: null,

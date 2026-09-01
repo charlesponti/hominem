@@ -268,6 +268,37 @@ describe('useStreamMessage', () => {
     await waitFor(() => expect(result.current.status).toBe('cancelled'));
   });
 
+  it('preserves the awaiting-confirmation phase for the live composer', async () => {
+    mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          event: {
+            type: 'tool-step',
+            toolCallId: 'call-1',
+            toolName: 'create_collection',
+            status: 'requested',
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          event: { type: 'phase-changed', phase: 'awaiting_confirmation' },
+        }),
+      ]),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+    await result.current.stream({ message: 'Create a collection' });
+
+    await waitFor(() => expect(result.current.status).toBe('awaiting_confirmation'));
+    expect(result.current.isStreaming).toBe(false);
+    expect(result.current.toolSteps).toEqual([
+      { toolCallId: 'call-1', toolName: 'create_collection', status: 'requested' },
+    ]);
+  });
+
   it('surfaces a durable generation failure as a terminal stream error', async () => {
     mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
       streamResponse([
