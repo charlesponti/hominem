@@ -76,22 +76,9 @@ function AnimatedProgressButton({
       data-progress-zero={progress <= 0}
       style={`--progress: ${Math.max(0, Math.min(1, progress)) * 100}`}
     >
-      <svg
-        aria-hidden="true"
-        class="progress-button__border"
-        preserveAspectRatio="none"
-        viewBox="0 0 100 44"
-      >
-        <rect class="progress-button__track" height="42" rx="6" width="98" x="1" y="1" />
-        <rect
-          class="progress-button__progress"
-          pathLength="100"
-          height="42"
-          rx="6"
-          width="98"
-          x="1"
-          y="1"
-        />
+      <svg aria-hidden="true" class="progress-button__border">
+        <rect class="progress-button__track" />
+        <rect class="progress-button__progress" pathLength="100" />
       </svg>
       <span class="progress-button__helper">
         <span

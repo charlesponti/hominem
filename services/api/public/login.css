@@ -184,8 +184,16 @@ input {
   height: 100%;
   pointer-events: none;
 }
+/* No viewBox on the <svg>, so 1 user unit = 1px here: geometry set via CSS
+   (not a fixed-size viewBox stretched to the button's real, variable width)
+   keeps the stroke and corner radius uniform regardless of button width. */
 .progress-button__track,
 .progress-button__progress {
+  x: 1px;
+  y: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  rx: 6px;
   fill: none;
   stroke-width: 2;
 }
