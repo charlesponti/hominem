@@ -118,11 +118,11 @@ export function LoginPage({
         <section aria-labelledby="auth-title" class="auth-card">
           <div class="auth-content">
             <div class="auth-heading">
-              <h2 id="auth-title">{isOtpStep ? 'Check your email' : 'Auth'}</h2>
+              <h2 id="auth-title">{isOtpStep ? 'Check your email' : 'Sign in to Hominem'}</h2>
               <p class="card-copy">
                 {isOtpStep
                   ? `We sent a verification code to ${email}.`
-                  : 'Enter your email to receive the one-time code.'}
+                  : "Enter your email and we'll send you a one-time code — no password to remember."}
               </p>
             </div>
             {error ? (
@@ -149,6 +149,7 @@ export function LoginPage({
                         maxLength={1}
                         pattern="[0-9]"
                         required
+                        style={`--i: ${index}`}
                         type="text"
                       />
                     ))}

@@ -1,3 +1,10 @@
+/* Native browser-driven transitions between full page loads in this flow
+   (email step -> OTP step -> consent, etc.). Progressive enhancement only:
+   unsupported browsers just navigate normally, no fallback needed. */
+@view-transition {
+  navigation: auto;
+}
+
 :root {
   color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -48,14 +55,38 @@ input {
   font: inherit;
 }
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 64px 16px;
   background: var(--auth-background);
   color: var(--auth-text);
+  overflow: clip;
+}
+/* A faint, purely monochrome dot grid — texture rather than decoration, so
+   the page reads as designed instead of a bare form even with zero color. */
+.auth-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--auth-border) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at 50% 40%, #000 0%, transparent 70%);
+  opacity: 0;
+  animation: auth-grid-in 1.2s ease-out 0.1s forwards;
+}
+@keyframes auth-grid-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 0.5;
+    transform: scale(1);
+  }
 }
 .auth-layout {
+  position: relative;
   width: min(100%, 512px);
 }
 .auth-card {
@@ -65,6 +96,25 @@ input {
   color: var(--auth-text);
   background: var(--auth-card);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  view-transition-name: auth-card;
+  animation: auth-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Smoother, slightly longer cross-fade than the browser default for the
+   card during a cross-document view transition. */
+::view-transition-old(auth-card),
+::view-transition-new(auth-card) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 .auth-content {
   width: 100%;
@@ -105,6 +155,10 @@ input {
   border-radius: 8px;
   object-fit: cover;
   filter: grayscale(1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brand-lockup:hover .brand-logo {
+  transform: rotate(-6deg) scale(1.06);
 }
 .card-copy {
   margin: 0;
@@ -134,10 +188,16 @@ input {
   outline: none;
   color: var(--auth-text);
   background: var(--auth-panel);
+  box-shadow: 0 0 0 0 var(--auth-border);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .field input:focus {
   border-color: var(--auth-primary);
   background: var(--auth-card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-primary) 12%, transparent);
 }
 .otp-field {
   display: flex;
@@ -153,6 +213,19 @@ input {
   text-align: center;
   font-size: 16px;
   font-weight: 600;
+  opacity: 0;
+  animation: otp-input-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes otp-input-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .primary-button {
   width: 100%;
@@ -164,6 +237,15 @@ input {
   color: var(--auth-primary-text);
   background: var(--auth-primary);
   font-weight: 600;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+.primary-button:hover {
+  opacity: 0.88;
+}
+.primary-button:active {
+  transform: scale(0.98);
 }
 .progress-button {
   position: relative;
@@ -256,6 +338,18 @@ input {
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition:
+    text-decoration-color 0.2s ease,
+    opacity 0.15s ease;
+}
+.secondary-button:hover {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+.secondary-button:active {
+  opacity: 0.7;
 }
 .alert {
   margin: 0;
@@ -266,10 +360,22 @@ input {
   background: var(--auth-danger-background);
   font-size: 13px;
   line-height: 1.45;
+  animation: auth-card-in 0.3s ease-out both;
 }
 .error-card,
 .logout-card {
   text-align: center;
+}
+.card-topline {
+  margin-bottom: 8px;
+}
+.secure-label {
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .error-symbol {
   display: grid;
@@ -282,6 +388,17 @@ input {
   color: var(--auth-danger);
   background: var(--auth-danger-background);
   font-size: 22px;
+  animation: error-symbol-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes error-symbol-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .error-card .card-copy {
   max-width: 320px;
@@ -300,6 +417,16 @@ input {
   *,
   *::before,
   *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .auth-grid {
+    opacity: 0.5;
+    animation: none;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
