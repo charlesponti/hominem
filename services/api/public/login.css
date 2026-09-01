@@ -88,8 +88,29 @@ input {
 .auth-layout {
   position: relative;
   width: min(100%, 512px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--auth-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.brand-lockup:hover {
+  opacity: 0.85;
+}
+.brand-logo {
+  display: block;
+  border-radius: 6px;
 }
 .auth-card {
+  width: 100%;
   padding: 64px 48px;
   border: 1px solid var(--auth-border);
   border-radius: 8px;

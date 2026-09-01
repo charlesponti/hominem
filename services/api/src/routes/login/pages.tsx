@@ -41,7 +41,19 @@ export function PageFrame({ children, title = 'Secure access | Hominem' }: PageF
       <body>
         <div class="auth-page">
           <div aria-hidden="true" class="auth-grid" />
-          {children}
+          <main class="auth-layout">
+            <a aria-label="Hominem" class="brand-lockup" href="https://hominem.app">
+              <img
+                alt=""
+                class="brand-logo"
+                height="28"
+                src="/logo.hominem.500x500.webp"
+                width="28"
+              />
+              <span>Hominem</span>
+            </a>
+            <section class="auth-card">{children}</section>
+          </main>
         </div>
       </body>
     </html>
@@ -105,88 +117,84 @@ export function LoginPage({
 
   return (
     <PageFrame>
-      <main class="auth-layout">
-        <section aria-labelledby="auth-title" class="auth-card">
-          <div class="auth-content">
-            <div class="auth-heading">
-              <h2 id="auth-title">{isOtpStep ? 'Check your email' : 'Sign in to Hominem'}</h2>
-              <p class="card-copy">
-                {isOtpStep
-                  ? `We sent a verification code to ${email}.`
-                  : "Enter your email and we'll send you a one-time code — no password to remember."}
-              </p>
-            </div>
-            {error ? (
-              <p aria-live="polite" class="alert" role="alert">
-                {error}
-              </p>
-            ) : null}
-            <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
-              <input name="resume" type="hidden" value={resumeQuery} />
-              {isOtpStep ? (
-                <>
-                  <input name="email" type="hidden" value={email} />
-                  <input id="otp" name="otp" type="hidden" />
-                  <div class="otp-field" role="group" aria-label="One-time verification code">
-                    {Array.from({ length: 6 }, (_, index) => (
-                      <input
-                        key={index}
-                        aria-label={`Character ${index + 1} of 6`}
-                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                        autoFocus={index === 0}
-                        class="otp-input"
-                        data-otp-digit
-                        inputMode="numeric"
-                        maxLength={1}
-                        pattern="[0-9]"
-                        required
-                        style={`--i: ${index}`}
-                        type="text"
-                      />
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div class="field">
-                  <label htmlFor="email">Email address</label>
+      <div class="auth-content">
+        <div class="auth-heading">
+          <h2 id="auth-title">{isOtpStep ? 'Check your email' : 'Sign in to Hominem'}</h2>
+          <p class="card-copy">
+            {isOtpStep
+              ? `We sent a verification code to ${email}.`
+              : "Enter your email and we'll send you a one-time code — no password to remember."}
+          </p>
+        </div>
+        {error ? (
+          <p aria-live="polite" class="alert" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <form action={isOtpStep ? '/login/verify' : '/login/send'} method="post">
+          <input name="resume" type="hidden" value={resumeQuery} />
+          {isOtpStep ? (
+            <>
+              <input name="email" type="hidden" value={email} />
+              <input id="otp" name="otp" type="hidden" />
+              <div class="otp-field" role="group" aria-label="One-time verification code">
+                {Array.from({ length: 6 }, (_, index) => (
                   <input
-                    autoComplete="email"
-                    autoFocus
-                    id="email"
-                    name="email"
+                    key={index}
+                    aria-label={`Character ${index + 1} of 6`}
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                    autoFocus={index === 0}
+                    class="otp-input"
+                    data-otp-digit
+                    inputMode="numeric"
+                    maxLength={1}
+                    pattern="[0-9]"
                     required
-                    type="email"
-                    value={email}
+                    style={`--i: ${index}`}
+                    type="text"
                   />
-                </div>
-              )}
-              <AnimatedProgressButton
-                complete={isOtpStep ? false : emailSchema.safeParse(email).success}
-                message={isOtpStep ? 'Enter your 6-digit code' : 'Enter your email'}
-                progress={progress}
-              >
-                <button class="primary-button" type="submit">
-                  {isOtpStep ? 'Verify' : 'Continue'}
-                </button>
-              </AnimatedProgressButton>
-            </form>
-            {isOtpStep ? (
-              <div class="auth-links">
-                <form action="/login/send" method="post">
-                  <input name="resume" type="hidden" value={resumeQuery} />
-                  <input name="email" type="hidden" value={email} />
-                  <button class="secondary-button" type="submit">
-                    Resend code
-                  </button>
-                </form>
-                <a class="secondary-button" href={changeEmailUrl}>
-                  Use a different email
-                </a>
+                ))}
               </div>
-            ) : null}
+            </>
+          ) : (
+            <div class="field">
+              <label htmlFor="email">Email address</label>
+              <input
+                autoComplete="email"
+                autoFocus
+                id="email"
+                name="email"
+                required
+                type="email"
+                value={email}
+              />
+            </div>
+          )}
+          <AnimatedProgressButton
+            complete={isOtpStep ? false : emailSchema.safeParse(email).success}
+            message={isOtpStep ? 'Enter your 6-digit code' : 'Enter your email'}
+            progress={progress}
+          >
+            <button class="primary-button" type="submit">
+              {isOtpStep ? 'Verify' : 'Continue'}
+            </button>
+          </AnimatedProgressButton>
+        </form>
+        {isOtpStep ? (
+          <div class="auth-links">
+            <form action="/login/send" method="post">
+              <input name="resume" type="hidden" value={resumeQuery} />
+              <input name="email" type="hidden" value={email} />
+              <button class="secondary-button" type="submit">
+                Resend code
+              </button>
+            </form>
+            <a class="secondary-button" href={changeEmailUrl}>
+              Use a different email
+            </a>
           </div>
-        </section>
-      </main>
+        ) : null}
+      </div>
     </PageFrame>
   );
 }
@@ -205,43 +213,39 @@ export function ConsentPage({
 
   return (
     <PageFrame title="Authorize access | Hominem">
-      <main class="auth-layout">
-        <section aria-labelledby="consent-title" class="auth-card">
-          <div class="auth-content">
-            <div class="auth-heading">
-              <h2 id="consent-title">Authorize {clientName}</h2>
-              <p class="card-copy">This client is requesting access to your Hominem data.</p>
-            </div>
-            {error ? (
-              <p class="alert" role="alert">
-                {error}
-              </p>
-            ) : null}
-            <div class="field">
-              <label>Requested permissions</label>
-              {Object.entries(groupedScopes).map(([domain, domainScopes]) => {
-                const access = (['read', 'write'] as const).filter((level) =>
-                  domainScopes.some((scope) => scope.endsWith(`:${level}`)),
-                );
-                return (
-                  <div key={domain} class="card-copy">
-                    <strong>{domain}</strong>: {access.join(', ')}
-                  </div>
-                );
-              })}
-            </div>
-            <form action="/consent/decision" method="post">
-              <input name="oauth_query" type="hidden" value={query} />
-              <button class="primary-button" name="accept" type="submit" value="true">
-                Approve
-              </button>
-              <button class="secondary-button" name="accept" type="submit" value="false">
-                Deny
-              </button>
-            </form>
-          </div>
-        </section>
-      </main>
+      <div class="auth-content">
+        <div class="auth-heading">
+          <h2 id="consent-title">Authorize {clientName}</h2>
+          <p class="card-copy">This client is requesting access to your Hominem data.</p>
+        </div>
+        {error ? (
+          <p class="alert" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <div class="field">
+          <label>Requested permissions</label>
+          {Object.entries(groupedScopes).map(([domain, domainScopes]) => {
+            const access = (['read', 'write'] as const).filter((level) =>
+              domainScopes.some((scope) => scope.endsWith(`:${level}`)),
+            );
+            return (
+              <div key={domain} class="card-copy">
+                <strong>{domain}</strong>: {access.join(', ')}
+              </div>
+            );
+          })}
+        </div>
+        <form action="/consent/decision" method="post">
+          <input name="oauth_query" type="hidden" value={query} />
+          <button class="primary-button" name="accept" type="submit" value="true">
+            Approve
+          </button>
+          <button class="secondary-button" name="accept" type="submit" value="false">
+            Deny
+          </button>
+        </form>
+      </div>
     </PageFrame>
   );
 }
@@ -259,22 +263,18 @@ export function AuthErrorPage({
 
   return (
     <PageFrame>
-      <main class="auth-layout">
-        <section aria-labelledby="error-title" class="auth-card">
-          <div class="auth-content">
-            <div aria-hidden="true" class="error-symbol">
-              !
-            </div>
-            <div class="auth-heading">
-              <p class="secure-label">{accessLabel}</p>
-              <h2 id="error-title">Authorization stopped</h2>
-              <p class="card-copy">
-                {description ?? (error ? `The request ended with ${error}.` : null) ?? returnCopy}
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>
+      <div class="auth-content">
+        <div aria-hidden="true" class="error-symbol">
+          !
+        </div>
+        <div class="auth-heading">
+          <p class="secure-label">{accessLabel}</p>
+          <h2 id="error-title">Authorization stopped</h2>
+          <p class="card-copy">
+            {description ?? (error ? `The request ended with ${error}.` : null) ?? returnCopy}
+          </p>
+        </div>
+      </div>
     </PageFrame>
   );
 }
@@ -284,30 +284,26 @@ export function LogoutPage({
 }: { signedOut?: boolean } & Omit<PageFrameProps, 'children' | 'title'>) {
   return (
     <PageFrame title="Sign out | Hominem">
-      <main class="auth-layout">
-        <section aria-labelledby="logout-title" class="auth-card">
-          <div class="auth-content">
-            <div class="auth-heading">
-              <h2 id="logout-title">{signedOut ? 'Signed out' : 'Sign out?'}</h2>
-              <p class="card-copy">
-                {signedOut
-                  ? 'Your browser session has been cleared.'
-                  : 'This clears your Hominem browser session.'}
-              </p>
-              {signedOut ? (
-                <p class="card-copy">Start a new sign-in from the app or client you came from.</p>
-              ) : null}
-            </div>
-            {signedOut ? null : (
-              <form action="/logout" method="post">
-                <button class="primary-button" type="submit">
-                  Sign me out
-                </button>
-              </form>
-            )}
-          </div>
-        </section>
-      </main>
+      <div class="auth-content">
+        <div class="auth-heading">
+          <h2 id="logout-title">{signedOut ? 'Signed out' : 'Sign out?'}</h2>
+          <p class="card-copy">
+            {signedOut
+              ? 'Your browser session has been cleared.'
+              : 'This clears your Hominem browser session.'}
+          </p>
+          {signedOut ? (
+            <p class="card-copy">Start a new sign-in from the app or client you came from.</p>
+          ) : null}
+        </div>
+        {signedOut ? null : (
+          <form action="/logout" method="post">
+            <button class="primary-button" type="submit">
+              Sign me out
+            </button>
+          </form>
+        )}
+      </div>
     </PageFrame>
   );
 }
