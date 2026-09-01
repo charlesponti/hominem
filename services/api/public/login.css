@@ -200,8 +200,16 @@ input {
 .progress-button__track {
   stroke: var(--auth-border);
 }
+.progress-button__gradient-start {
+  stop-color: var(--auth-primary);
+  stop-opacity: 0.35;
+}
+.progress-button__gradient-end {
+  stop-color: var(--auth-primary);
+  stop-opacity: 1;
+}
 .progress-button__progress {
-  stroke: var(--auth-primary);
+  stroke: url('#progress-button-gradient');
   stroke-linecap: round;
   stroke-dasharray: 100;
   stroke-dashoffset: calc(100 - var(--progress, 0));

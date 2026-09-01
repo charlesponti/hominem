@@ -77,6 +77,12 @@ function AnimatedProgressButton({
       style={`--progress: ${Math.max(0, Math.min(1, progress)) * 100}`}
     >
       <svg aria-hidden="true" class="progress-button__border">
+        <defs>
+          <linearGradient id="progress-button-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop class="progress-button__gradient-start" offset="0%" />
+            <stop class="progress-button__gradient-end" offset="100%" />
+          </linearGradient>
+        </defs>
         <rect class="progress-button__track" />
         <rect class="progress-button__progress" pathLength="100" />
       </svg>
