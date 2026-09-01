@@ -48,15 +48,6 @@ export function PageFrame({ children, title = 'Secure access | Hominem' }: PageF
   );
 }
 
-export function BrandLockup() {
-  return (
-    <div class="brand-lockup">
-      <img alt="Hominem" class="brand-logo" src="/logo.hominem.500x500.webp" />
-      <span>Hominem</span>
-    </div>
-  );
-}
-
 function AnimatedProgressButton({
   children,
   complete,
@@ -269,18 +260,19 @@ export function AuthErrorPage({
   return (
     <PageFrame>
       <main class="auth-layout">
-        <section aria-labelledby="error-title" class="auth-card error-card">
-          <BrandLockup />
-          <div aria-hidden="true" class="error-symbol">
-            !
+        <section aria-labelledby="error-title" class="auth-card">
+          <div class="auth-content">
+            <div aria-hidden="true" class="error-symbol">
+              !
+            </div>
+            <div class="auth-heading">
+              <p class="secure-label">{accessLabel}</p>
+              <h2 id="error-title">Authorization stopped</h2>
+              <p class="card-copy">
+                {description ?? (error ? `The request ended with ${error}.` : null) ?? returnCopy}
+              </p>
+            </div>
           </div>
-          <div class="card-topline">
-            <p class="secure-label">{accessLabel}</p>
-          </div>
-          <h2 id="error-title">Authorization stopped</h2>
-          <p class="card-copy">
-            {description ?? (error ? `The request ended with ${error}.` : null) ?? returnCopy}
-          </p>
         </section>
       </main>
     </PageFrame>
@@ -293,23 +285,27 @@ export function LogoutPage({
   return (
     <PageFrame title="Sign out | Hominem">
       <main class="auth-layout">
-        <section aria-labelledby="logout-title" class="auth-card logout-card">
-          <BrandLockup />
-          <h2 id="logout-title">{signedOut ? 'Signed out' : 'Sign out?'}</h2>
-          <p class="card-copy">
-            {signedOut
-              ? 'Your browser session has been cleared.'
-              : 'This clears your Hominem browser session.'}
-          </p>
-          {signedOut ? (
-            <p class="card-copy">Start a new sign-in from the app or client you came from.</p>
-          ) : (
-            <form action="/logout" method="post">
-              <button class="primary-button" type="submit">
-                Sign me out
-              </button>
-            </form>
-          )}
+        <section aria-labelledby="logout-title" class="auth-card">
+          <div class="auth-content">
+            <div class="auth-heading">
+              <h2 id="logout-title">{signedOut ? 'Signed out' : 'Sign out?'}</h2>
+              <p class="card-copy">
+                {signedOut
+                  ? 'Your browser session has been cleared.'
+                  : 'This clears your Hominem browser session.'}
+              </p>
+              {signedOut ? (
+                <p class="card-copy">Start a new sign-in from the app or client you came from.</p>
+              ) : null}
+            </div>
+            {signedOut ? null : (
+              <form action="/logout" method="post">
+                <button class="primary-button" type="submit">
+                  Sign me out
+                </button>
+              </form>
+            )}
+          </div>
         </section>
       </main>
     </PageFrame>

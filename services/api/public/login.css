@@ -140,26 +140,6 @@ input {
   font-size: 30px;
   font-weight: 600;
 }
-.brand-lockup {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 32px;
-  color: var(--auth-text);
-  font-size: 14px;
-  font-weight: 600;
-}
-.brand-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  object-fit: cover;
-  filter: grayscale(1);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.brand-lockup:hover .brand-logo {
-  transform: rotate(-6deg) scale(1.06);
-}
 .card-copy {
   margin: 0;
   color: var(--auth-muted);
@@ -362,13 +342,6 @@ input {
   line-height: 1.45;
   animation: auth-card-in 0.3s ease-out both;
 }
-.error-card,
-.logout-card {
-  text-align: center;
-}
-.card-topline {
-  margin-bottom: 8px;
-}
 .secure-label {
   margin: 0;
   color: var(--auth-muted);
@@ -382,7 +355,6 @@ input {
   place-items: center;
   width: 54px;
   height: 54px;
-  margin: 0 auto 28px;
   border: 1px solid var(--auth-border);
   border-radius: 8px;
   color: var(--auth-danger);
@@ -399,10 +371,6 @@ input {
     opacity: 1;
     transform: none;
   }
-}
-.error-card .card-copy {
-  max-width: 320px;
-  margin-inline: auto;
 }
 @media (max-width: 540px) {
   .auth-card {
