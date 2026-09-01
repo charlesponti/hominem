@@ -17,7 +17,14 @@ vi.mock('./auth.server', () => ({
   getServerSession,
 }));
 
-import { requireAuthMiddleware, sessionMiddleware, userContext } from './middleware';
+import type { RouterContext } from 'react-router';
+
+import {
+  requireAuthMiddleware,
+  sessionMiddleware,
+  type SharedMiddlewareArgs,
+  userContext,
+} from './middleware';
 
 const testUser = {
   id: 'auth-user-id',
@@ -36,12 +43,15 @@ const testProfile = {
   slug: 'profile',
 } satisfies Partial<CareerProfileRecord> as CareerProfileRecord;
 
-function createRequestContext() {
+function createRequestContext(): {
+  context: SharedMiddlewareArgs['context'];
+  values: Map<unknown, unknown>;
+} {
   const values = new Map<unknown, unknown>();
   return {
     context: {
-      get: (key: unknown) => values.get(key),
-      set: (key: unknown, value: unknown) => values.set(key, value),
+      get: <T>(key: RouterContext<T>): T => values.get(key) as T,
+      set: <T>(key: RouterContext<T>, value: T) => values.set(key, value),
     },
     values,
   };
@@ -63,7 +73,7 @@ describe('career middleware', () => {
       {
         request: new Request('http://localhost/auth'),
         context: requestContext.context,
-      } as never,
+      },
       next,
     );
 
@@ -82,7 +92,7 @@ describe('career middleware', () => {
       {
         request: new Request('http://localhost/work.data'),
         context: requestContext.context,
-      } as never,
+      },
       next,
     );
 
@@ -94,7 +104,7 @@ describe('career middleware', () => {
       {
         request: new Request('http://localhost/account'),
         context: createRequestContext().context,
-      } as never,
+      },
       next,
     );
 
@@ -109,7 +119,7 @@ describe('career middleware', () => {
       {
         request: new Request('http://career-internal/work'),
         context: createRequestContext().context,
-      } as never,
+      },
       next,
     );
 
@@ -123,7 +133,7 @@ describe('career middleware', () => {
       {
         request: new Request('http://localhost/api/resume/convert'),
         context: createRequestContext().context,
-      } as never,
+      },
       next,
     );
 
@@ -131,44 +141,13 @@ describe('career middleware', () => {
     expect((result as Response).status).toBe(401);
   });
 
+  // loadPortfolioMiddleware/portfolioContext/requirePortfolioMiddleware no longer
+  // exist on ./middleware — these are stubbed out pending real coverage.
   it('ensures a portfolio for authenticated page routes', async () => {
-    /*
-    const { loadPortfolioMiddleware, portfolioContext, userContext } = await import('./middleware');
-    const requestContext = createRequestContext();
-    requestContext.context.set(userContext, testUser);
-
-    const request = new Request('http://localhost/account');
-    await loadPortfolioMiddleware(
-      {
-        request,
-        context: requestContext.context,
-      } as never,
-      next,
-    );
-
-    expect(ensureUserHasProfile).toHaveBeenCalledWith(request, testUser);
-    expect(requestContext.values.get(portfolioContext)).toBe(testProfile);
-    */
     expect(true).toBe(true);
   });
 
   it('redirects portfolio-required routes when portfolio context is missing', async () => {
-    /*
-    const { requirePortfolioMiddleware, userContext } = await import('./middleware');
-    const requestContext = createRequestContext();
-    requestContext.context.set(userContext, testUser);
-
-    const result = await requirePortfolioMiddleware(
-      {
-        request: new Request('http://localhost/work'),
-        context: requestContext.context,
-      } as never,
-      next,
-    );
-
-    expect(result).toBeInstanceOf(Response);
-    expect((result as Response).headers.get('location')).toBe('/work');
-    */
     expect(true).toBe(true);
   });
 });

@@ -42,7 +42,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "rm -rf .cache && tsc --noEmit",
     "test": "vitest run",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",

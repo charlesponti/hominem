@@ -171,7 +171,6 @@ export const MessageBranchContent = ({ children, ...props }: MessageBranchConten
     [children],
   );
 
-  // Use useEffect to update branches when they change
   useEffect(() => {
     if (branches.length !== childrenArray.length) {
       setBranches(childrenArray);
@@ -197,7 +196,6 @@ export type MessageBranchSelectorProps = ComponentProps<typeof ButtonGroup>;
 export const MessageBranchSelector = ({ className, ...props }: MessageBranchSelectorProps) => {
   const { totalBranches } = useMessageBranch();
 
-  // Don't render if there's only one branch
   if (totalBranches <= 1) {
     return null;
   }

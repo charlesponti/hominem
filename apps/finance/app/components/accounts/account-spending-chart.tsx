@@ -30,7 +30,7 @@ interface AccountSpendingChartProps {
 export function AccountSpendingChart({ accountId, accountName }: AccountSpendingChartProps) {
   const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
-  // Get last 6 months of data for this specific account - memoize to prevent infinite re-renders
+  // memoized so this doesn't trigger a re-render loop every render
   const { dateFrom, dateTo } = useMemo(() => {
     const now = new Date();
     return {
@@ -47,11 +47,11 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
   } = useTimeSeriesData({
     dateFrom,
     dateTo,
-    account: accountId, // Filter by this specific account
+    account: accountId,
     includeStats: false,
     compareToPrevious: false,
     groupBy: 'month',
-    enabled: !!accountId, // Only fetch if accountId is provided
+    enabled: !!accountId,
   });
 
   const chartData = useMemo(() => {

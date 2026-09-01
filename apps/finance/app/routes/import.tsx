@@ -28,7 +28,7 @@ export default function TransactionImportPage() {
   } = useImportTransactionsStore();
   const { toast } = useToast();
 
-  // Combine all files into a single list with status priority
+  // merges the raw file picks with their status updates into one ordered list
   const allFiles = useMemo(() => {
     const fileMap = new Map<
       string,
@@ -40,20 +40,18 @@ export default function TransactionImportPage() {
       }
     >();
 
-    // Track original file order for stability
+    // keep track of pick order so the sort below is stable
     let originalIndex = 0;
 
-    // Add selected files first to maintain their order
     for (const file of files) {
       fileMap.set(file.name, {
         file,
         status: undefined,
-        priority: 0, // Selected files have highest priority for display
+        priority: 0, // freshly selected files show up first
         originalIndex: originalIndex++,
       });
     }
 
-    // Add files from statuses, updating existing entries or adding new ones
     for (const status of statuses) {
       const existing = fileMap.get(status.file.name);
       const priority =
@@ -67,11 +65,9 @@ export default function TransactionImportPage() {
         }[status.status] || 5;
 
       if (existing) {
-        // Update existing file with status
         existing.status = status;
         existing.priority = priority;
       } else {
-        // Add new file from status
         fileMap.set(status.file.name, {
           file: status.file,
           status,
@@ -81,7 +77,7 @@ export default function TransactionImportPage() {
       }
     }
 
-    // Sort by priority (lower number = higher priority), then by original index for stability
+    // lower priority number = shows up higher; ties break by pick order
     const sortedItems = Array.from(fileMap.values()).sort((a, b) => {
       if (a.priority !== b.priority) {
         return a.priority - b.priority;
@@ -92,13 +88,11 @@ export default function TransactionImportPage() {
     return sortedItems.map((item) => ({
       fileName: item.file.name,
       status: item.status,
-      // Stable ID that doesn't change with status updates
-      id: item.file.name, // Use just the filename as the stable key
+      id: item.file.name, // filename stays stable across status updates, so use it as the key
       file: item.file,
     }));
   }, [files, statuses]);
 
-  // Get counts for different states
   const statusCounts = useMemo(() => {
     const counts = {
       selected: 0,
@@ -125,7 +119,6 @@ export default function TransactionImportPage() {
     return counts;
   }, [allFiles]);
 
-  // Enhanced handleDrop with validation
   const handleDropWithValidation = useCallback(
     (files: File[]) => {
       if (files.length > 0) {
@@ -141,7 +134,7 @@ export default function TransactionImportPage() {
     [handleDrop, toast],
   );
 
-  // Handle file removal (remove from both files and statuses)
+  // removes the file from both the picker list and its tracked status
   const handleRemoveFile = useCallback(
     (fileName: string) => {
       removeFile(fileName);
@@ -150,7 +143,6 @@ export default function TransactionImportPage() {
     [removeFile, removeFileStatus],
   );
 
-  // Memoize stable callbacks for FileImport components
   const memoizedStartSingleFile = useCallback(
     (file: File) => startSingleFile(file),
     [startSingleFile],
@@ -161,10 +153,8 @@ export default function TransactionImportPage() {
     [handleRemoveFile],
   );
 
-  // Handle import completion
   useEffect(() => {
     if (isImportInProgress && activeJobIds.length === 0 && statusCounts.completed > 0) {
-      // Only show completion toast if we had files that completed processing
       toast({
         title: 'Import completed',
         description: `Successfully processed ${statusCounts.completed} file(s)`,

@@ -11,11 +11,9 @@ function createTestQueryClient() {
   });
 }
 
-/**
- * `renderHook` pre-wrapped in a `QueryClientProvider`, for hooks that call
- * `useQueryClient`/`useMutation`/`useQuery`. Returns the QueryClient too, so
- * tests can seed or inspect cache state directly.
- */
+// `renderHook` pre-wrapped in a `QueryClientProvider`, for hooks that call
+// `useQueryClient`/`useMutation`/`useQuery`. Returns the QueryClient too, so
+// tests can seed or inspect cache state directly.
 export function renderHookWithQueryClient<TResult, TProps>(
   hook: (props: TProps) => TResult,
   options?: RenderHookOptions<TProps> & { queryClient?: QueryClient },

@@ -9,7 +9,7 @@ export const VOICE_ERROR_CODES = [
 export type VoiceErrorCode = (typeof VOICE_ERROR_CODES)[number];
 
 export function isVoiceErrorCode(code: string | undefined): code is VoiceErrorCode {
-  return VOICE_ERROR_CODES.includes(code as VoiceErrorCode);
+  return typeof code === 'string' && (VOICE_ERROR_CODES as readonly string[]).includes(code);
 }
 
 export const VOICE_TRANSPORTS = ['hono-rpc'] as const;
@@ -45,11 +45,8 @@ export interface VoiceEventPayload {
   reason?: VoiceDiscardReason;
 }
 
-/**
- * PostHog analytics integration for voice events.
- * NOTE: This couples the RPC client to PostHog. Consider moving to a dedicated
- * @hominem/analytics package if other domains need event emission.
- */
+// this ties the RPC client to PostHog directly - if other domains need event
+// emission too, probably worth pulling this into its own analytics package
 interface PostHogClientLike {
   capture: (
     event: string,

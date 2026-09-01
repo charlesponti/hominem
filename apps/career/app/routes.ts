@@ -9,7 +9,7 @@ export default [
   route('health', 'routes/health.ts'),
   route('api/portfolio/:owner_userid', 'routes/api.portfolio.$userId.ts'),
   route('api/career/applications', 'routes/api.career.applications.ts'),
-  // Used only by the onboarding "create my first profile" flow (UploadResumeForm mode="create").
+  // only hit by onboarding's "create my first profile" flow (UploadResumeForm mode="create")
   route('api/resume/convert', 'routes/api.resume.convert.ts'),
   route('api/resume/analyze', 'routes/api.resume.analyze.ts'),
   route('api/resume/jobs/:jobId/stream', 'routes/api.resume.jobs.$jobId.stream.ts'),

@@ -2,10 +2,7 @@ import type { CareerSocialLinksRecord } from '@hominem/db';
 
 import type { ResumePortfolio } from '../portfolio.server';
 
-/**
- * Formats portfolio data in a natural, LLM-friendly format
- * instead of JSON to improve AI comprehension and resume generation quality
- */
+// Plain text reads better than JSON for the model — it produces better resumes this way.
 export function formatPortfolioForLLM(
   portfolioData: ResumePortfolio,
   socialLinks: CareerSocialLinksRecord | null,

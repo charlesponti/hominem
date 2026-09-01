@@ -1,10 +1,10 @@
 import type { FinanceClient } from '@hominem/rpc/finance';
-import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 
+import { useFinanceApiClient } from './provider';
+
 function useFinanceClient(): FinanceClient {
-  const client = useApiClient();
-  return client.api.finance;
+  return useFinanceApiClient();
 }
 
 export function useHonoQuery<TData = unknown>(

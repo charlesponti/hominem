@@ -71,7 +71,6 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
   const { account: initialAccount, transactionsResult: initialTransactionsResult } = loaderData;
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
-  // Get account details
   const {
     account,
     isLoading: accountLoading,
@@ -82,13 +81,12 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
     initialAccount ? { initialData: normalizeInitialAccount(initialAccount) } : undefined,
   );
 
-  // Create a map with a single account for the TransactionsList component
+  // TransactionsList expects a Map of accounts, even though we only have this one
   const accountsMap = useMemo(() => {
     if (!account) return new Map();
     return new Map([[account.id, account]]);
   }, [account]);
 
-  // Get transactions for this specific account
   const {
     transactions,
     isLoading: transactionsLoading,
@@ -158,7 +156,6 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
 
       <AccountSpendingChart accountId={accountId} accountName={account.name} />
 
-      {/* Transactions Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Transactions</h2>

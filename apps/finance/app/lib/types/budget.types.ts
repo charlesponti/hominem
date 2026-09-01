@@ -1,9 +1,7 @@
 import type { BudgetCategoryData, TransactionListOutput } from '@hominem/rpc/finance';
 
-// Define the type based on what the API returns - use the base data type
 export type BudgetCategory = BudgetCategoryData;
 
-// Define the UI-specific type that includes calculated properties
 export interface BudgetCategoryWithSpending extends BudgetCategory {
   actualSpending: number;
   percentageSpent: number;

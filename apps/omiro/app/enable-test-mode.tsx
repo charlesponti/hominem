@@ -2,7 +2,7 @@ import { Redirect } from 'expo-router';
 
 import { enableTestMode } from '~/services/testing/test-mode';
 
-// Synchronous module-level call so MMKV is written before React renders/effects run.
+// Called synchronously at module load so MMKV gets written before React starts rendering/running effects.
 enableTestMode();
 
 export default function EnableTestMode() {

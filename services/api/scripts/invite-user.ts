@@ -1,11 +1,10 @@
 /**
- * Creates a development collection invite for a user by email.
+ * Creates a dev collection invite for a user by email.
  *
- * Usage:
- *   pnpm invite-user --email <user email>
+ * Usage: pnpm invite-user --email <user email>
  *
- * Set DEV_INVITE_OWNER_EMAIL to choose the collection owner. Without it, the
- * first development collection with an owner is used.
+ * Set DEV_INVITE_OWNER_EMAIL to pick the collection owner - otherwise it just
+ * grabs the first dev collection that has one.
  */
 import 'dotenv/config';
 import { parseArgs } from 'node:util';

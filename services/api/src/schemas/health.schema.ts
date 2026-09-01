@@ -109,7 +109,6 @@ export const healthSleepSummaryOutputSchema = z.object({
   count: z.number().int().min(0),
 });
 
-// Types
 export type HealthDailySummaryOutput = z.output<typeof healthDailySummaryOutputSchema>;
 export type HealthRecentWorkoutsOutput = z.output<typeof healthRecentWorkoutsOutputSchema>;
 export type HealthSleepSummaryOutput = z.output<typeof healthSleepSummaryOutputSchema>;

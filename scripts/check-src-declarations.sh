@@ -13,6 +13,7 @@ while IFS= read -r f; do
   fi
 done < <(
   find . -name "*.d.ts" \
+    -not -path "*/.claude/*" \
     -not -path "*/node_modules/*" \
     -not -path "*/.git/*" \
     -not -path "*/build/*" \

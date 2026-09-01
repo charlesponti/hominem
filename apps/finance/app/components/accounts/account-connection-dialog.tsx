@@ -49,7 +49,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
 
   const handleInstitutionChange = (institutionId: string) => {
     setSelectedInstitutionId(institutionId);
-    setSelectedPlaidAccountId(''); // Reset Plaid account selection when institution changes
+    setSelectedPlaidAccountId(''); // clear so we don't keep an account from the old institution
   };
 
   const handleLink = async () => {

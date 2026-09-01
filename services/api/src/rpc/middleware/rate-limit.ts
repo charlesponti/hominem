@@ -7,7 +7,6 @@ import type { AppContext } from './auth';
 
 interface RateLimitInput {
   bucket: string;
-  // Number of seconds the value will remain cached in Redis.
   windowSec: number;
   max: number;
 }
@@ -42,7 +41,7 @@ export function rateLimitMiddleware(input: RateLimitInput) {
         );
       }
     } catch {
-      // Fail open on cache failures to preserve availability.
+      // if Redis is down, let the request through rather than blocking everyone
     }
 
     return next();

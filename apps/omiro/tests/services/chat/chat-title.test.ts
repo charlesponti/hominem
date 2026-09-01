@@ -34,18 +34,14 @@ describe('chat title helpers', () => {
       kind: 'new',
     };
 
-    // Custom title takes precedence
     expect(getChatTitle('Saved title', captureSource)).toBe('Saved title');
 
-    // Falls back to source-derived when title is default
     expect(getChatTitle(DEFAULT_CHAT_TITLE, captureSource)).toBe('First real message');
     expect(getChatTitle(null, captureSource)).toBe('First real message');
     expect(getChatTitle(undefined, captureSource)).toBe('First real message');
 
-    // Linked note source
     expect(getChatTitle(DEFAULT_CHAT_TITLE, linkedNoteSource)).toBe('Linked note title');
 
-    // New chat falls back to default
     expect(getChatTitle(null, newSource)).toBe(DEFAULT_CHAT_TITLE);
   });
 

@@ -10,7 +10,7 @@ type MiddlewareContext = {
   set: <T>(key: RouterContext<T>, value: T) => void;
 };
 
-type SharedMiddlewareArgs = {
+export type SharedMiddlewareArgs = {
   request: Request;
   context: MiddlewareContext;
 };

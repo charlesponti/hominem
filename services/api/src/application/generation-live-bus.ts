@@ -48,19 +48,7 @@ export function subscribeToGenerationEvents(
           });
           return event ? { done: false, value: event } : { done: true, value: undefined };
         },
-        /**
-         *
-         * @example
-         * ```ts
-         * const subscription = subscribeToGenerationEvents(generationId);
-         * for await (const event of subscription) {
-         *   // Handle the event
-         * }
-         * subscription.close();
-         * subscription.return(); // This will also close the subscription
-         * ```
-         * @returns
-         */
+        // called when a for-await loop breaks/returns early — also closes the subscription
         return: async () => {
           close(generationId, subscriber);
           return { done: true, value: undefined };

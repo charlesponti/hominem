@@ -22,7 +22,7 @@ vi.mock('react-native', async (importOriginal) => {
 });
 
 // The hook keeps its "has the initial async value been fetched" flag at
-// module scope, so each test needs a fresh module instance to observe the
+// module scope, so each test needs its own fresh module instance to see the
 // initial-fetch behavior in isolation.
 async function loadHook() {
   vi.resetModules();

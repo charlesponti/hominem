@@ -31,9 +31,9 @@ function getDurableSequence(value: unknown): number | undefined {
 }
 
 // XHR-based SSE client for React Native / Hermes.
-// Hermes does not expose ReadableStream on fetch responses, but XHR.responseText
-// grows incrementally as data arrives — we slice from the last offset on each
-// readystatechange to extract new SSE lines without re-parsing the full body.
+// Hermes doesn't expose ReadableStream on fetch responses, but XHR.responseText
+// grows incrementally as data arrives -- we slice from the last offset on each
+// readystatechange to pull out new SSE lines without re-parsing the whole body.
 export async function consumeSseXhr<TEvent>({
   url,
   payload,
@@ -128,7 +128,7 @@ export async function consumeSseXhr<TEvent>({
 
     xhr.onreadystatechange = () => {
       if (settled) return;
-      // readyState 3 = LOADING (data arriving), 4 = DONE
+      // 3 = LOADING (data arriving), 4 = DONE
       if (xhr.readyState < 3) return;
 
       const newText = xhr.responseText.slice(offset);
@@ -177,7 +177,8 @@ function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-/** Consume a generation stream and resume its semantic event log once after a transport failure. */
+// Consumes a generation stream and, if the transport drops, resumes the
+// semantic event log once from where it left off.
 export async function consumeGenerationSseXhr({
   url,
   payload,

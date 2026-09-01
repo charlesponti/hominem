@@ -25,8 +25,8 @@ afterEach(() => {
 });
 
 // This resolver exists because a locally-run "production" build once picked
-// up an ambient APP_ENV from .env.development.local and silently shipped
-// the dev app identity to the App Store. It must never guess.
+// up an ambient APP_ENV from .env.development.local and quietly shipped the
+// dev app identity to the App Store. It should never guess.
 describe('getAppEnvironment', () => {
   it('defaults to development outside EAS and CI', () => {
     delete process.env.APP_ENV;

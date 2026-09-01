@@ -50,10 +50,8 @@ function setAuthContext(c: Parameters<MiddlewareHandler>[0], input: AuthContext)
   c.set('auth', input);
 }
 
-/**
- * Resolve the caller identity once at the API boundary. Route-specific middleware
- * may authorize the resolved context, but must not establish a second identity.
- */
+// Figures out who's calling, once, at the API boundary. Route middleware can
+// authorize based on this, but shouldn't set up a second identity of its own.
 export const authMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
     if (c.req.path.startsWith('/api/auth')) {

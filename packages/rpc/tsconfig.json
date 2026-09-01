@@ -12,11 +12,37 @@
     // `import type` for the Hono RPC client), so it isn't a real workspace
     // dependency — see services/api/src/rpc/app.ts for the actual export.
     // Keep this path in sync with services/api/package.json's "./types" export.
+    //
+    // No `references` entry to packages/chat: this package has a peer
+    // dependency on react, so `injectWorkspacePackages` gives it its own
+    // frozen copy of @hominem/chat under .pnpm whose `build/` doesn't exist
+    // yet at that snapshot, and pnpm's `types` condition 404s there and falls
+    // through to real `src/*.ts` — same trap `services/api` hit, see
+    // docs/type-performance.md. AGENTS.md's zero-references invariant also
+    // rules a `references` entry out regardless: this is the previously
+    // undocumented exception, now reconciled.
+    //
+    // @hominem/db, @hominem/career-services, @hominem/ai, and
+    // @hominem/finance-services below aren't this package's own
+    // dependencies — they're embedded inside @hominem/api/types itself.
+    // services/api's build/rpc/app.d.ts (the Hono AppType) preserves
+    // `import("@hominem/career-services").JobImportErrorCode`-style
+    // references literally rather than inlining them, so *every* consumer
+    // of that .d.ts — this package included — has to resolve those
+    // specifiers itself, hitting the exact same injectWorkspacePackages
+    // trap all over again even though services/api's own tsconfig.emit.json
+    // already routes around it for services/api's own compile.
     "paths": {
-      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"]
+      "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"],
+      "@hominem/api/finance": ["../../services/api/build/rpc/routes/finance.d.ts"],
+      "@hominem/chat": ["../chat/build/public.d.ts"],
+      "@hominem/chat/types": ["../chat/build/types-only.d.ts"],
+      "@hominem/db": ["../db/build/index.d.ts"],
+      "@hominem/career-services": ["../career/build/index.d.ts"],
+      "@hominem/ai": ["../ai/build/index.d.ts"],
+      "@hominem/finance-services": ["../finance/build/index.d.ts"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "*.tsbuildinfo"],
-  "references": [{ "path": "../chat" }]
+  "exclude": ["node_modules", "dist", "*.tsbuildinfo"]
 }

@@ -12,7 +12,7 @@ export function getDatesFromText(text: string) {
   const fullDate = text.match(/\d{4}-\d{2}-\d{2}/);
   const year = text.match(/(?<![\d.])\d{4}(?![\d.])/);
 
-  // Parse basic date formats without chrono-node
+  // doing basic date parsing by hand here instead of pulling in chrono-node
   const parsedDates: Array<{ start: string; end?: string }> = [];
 
   if (fullDate) {
@@ -24,7 +24,7 @@ export function getDatesFromText(text: string) {
         });
       }
     } catch {
-      // Ignore invalid dates
+      // not a valid date, skip it
     }
   }
 
@@ -50,14 +50,7 @@ export const formatTime = (seconds: number) => {
   return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-/**
- * Calculates and formats the time difference between a given date and now.
- * Returns a human-readable string like "5 minutes ago", "2 hours ago", etc.
- *
- * @param date - The date to calculate the time difference from
- * @param fallback - Optional fallback text when date is null/undefined (default: "Unknown")
- * @returns A formatted string representing the time ago
- */
+// turns a date into "5 minutes ago", "2 hours ago", etc.
 export function getTimeAgo(date: Date | string | null | undefined, fallback = 'Unknown'): string {
   if (!date) {
     return fallback;

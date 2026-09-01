@@ -43,9 +43,9 @@ const productionCalendarEventGateway: CalendarEventGateway = {
 
 let resolvedGateway: CalendarEventGateway | null = null;
 
-// E2E_TESTING only flips true in e2e builds; keep the ~125-line mock-data
-// fixture out of the production bundle by loading it lazily instead of
-// importing it statically at module scope.
+// E2E_TESTING is only ever true in e2e builds -- load the ~125-line mock-data
+// fixture lazily instead of importing it at module scope, so it stays out of
+// the production bundle.
 async function resolveGateway(): Promise<CalendarEventGateway> {
   if (resolvedGateway) return resolvedGateway;
   if (E2E_TESTING) {

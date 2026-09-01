@@ -172,6 +172,6 @@ export async function getBudgetTrackingData(
 export async function bulkCreateBudgetCategoriesFromTransactions(
   _ownerUserid: string,
 ): Promise<Selectable<AppTags>[]> {
-  // The category column no longer exists; tags are the canonical categorization system.
+  // categories are gone now, tags do this job, so nothing to backfill
   return [];
 }

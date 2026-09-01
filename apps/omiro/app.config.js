@@ -1,8 +1,8 @@
 const { z } = require('zod');
 const withPrivacyManifest = require('./plugins/withPrivacyManifest');
 
-// Keep this schema local because Expo evaluates the dynamic config during native builds.
-// It is intentionally duplicated from env.ts's appEnvironmentSchema rather than shared.
+// Keeping this schema local (instead of importing env.ts's) because Expo
+// evaluates this config during native builds, before that module is usable.
 const appEnvironmentSchema = z.enum(['development', 'e2e', 'production', 'screenshots']);
 
 const EXPO_OWNER = 'pontistudios';
@@ -42,14 +42,11 @@ function getBrandAssetPaths(appEnvironment) {
   };
 }
 
-/**
- * EAS injects EAS_BUILD_PROFILE on the remote builder and it can't be
- * shadowed by a local .env file the way APP_ENV can (see the incident where
- * a locally-run "production" build picked up .env.development.local's
- * ambient APP_ENV and silently shipped the dev bundle identity to the App
- * Store). On the builder, EAS_BUILD_PROFILE is treated as the source of
- * truth and a conflicting APP_ENV is a hard error rather than a guess.
- */
+// EAS sets EAS_BUILD_PROFILE on the builder, and unlike APP_ENV it can't get
+// shadowed by a stray local .env file (we got bit once by a "production"
+// build picking up .env.development.local and shipping the dev identity to
+// the App Store). So on the builder, EAS_BUILD_PROFILE wins and a
+// conflicting APP_ENV throws instead of us just guessing.
 function getAppEnvironment() {
   const appEnv = process.env.APP_ENV;
 
@@ -82,10 +79,9 @@ function getAppEnvironmentConfig(appEnvironment) {
   return APP_ENVIRONMENTS[appEnvironment];
 }
 
-// Only the production identity ships to the App Store, so only it gets a
-// fingerprint runtimeVersion + EAS Update URL. The update channel itself is
-// driven by eas.json's build profile `channel`, not set here, so the two
-// can't drift out of sync.
+// Only production ships to the App Store, so only it gets a fingerprint
+// runtimeVersion + EAS Update URL. The channel itself comes from eas.json's
+// build profile, not here, so the two can't drift apart.
 function getRuntimeVersion(appEnvironment) {
   return appEnvironment === 'production' ? { policy: 'fingerprint' } : undefined;
 }

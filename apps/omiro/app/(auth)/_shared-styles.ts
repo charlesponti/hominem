@@ -1,6 +1,6 @@
 import type { Theme } from '~/components/theme';
 
-/** Layout shared by the email-entry and OTP-verify screens. */
+// Styles shared by the email-entry and OTP-verify screens.
 export function authSharedStyles(theme: Theme) {
   return {
     container: { flex: 1, backgroundColor: theme.colors.background },

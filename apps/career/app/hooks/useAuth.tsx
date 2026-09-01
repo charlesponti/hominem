@@ -7,10 +7,7 @@ type RootLoaderData = {
   hasProfile?: boolean;
 };
 
-/**
- * Get the authenticated user from the root loader data
- * This provides server-side user data that's available immediately on page load
- */
+// Pulls the user from root's loader data, so it's there immediately on page load
 export const useUser = (): User | null => {
   const rootData = useRouteLoaderData('root') as RootLoaderData | undefined;
   return rootData?.user ?? null;

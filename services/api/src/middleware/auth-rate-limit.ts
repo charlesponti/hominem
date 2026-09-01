@@ -13,7 +13,7 @@ interface AuthRateLimit {
   max: number;
 }
 
-// High-risk extras only. Better Auth owns OTP rate limits for native paths.
+// Just the high-risk extras — Better Auth already rate-limits OTP for native paths.
 const AUTH_RATE_LIMITS: AuthRateLimit[] = [
   { path: '/api/auth/mobile/e2e/login', bucket: 'mobile-e2e-login', windowSec: 60, max: 20 },
 ];

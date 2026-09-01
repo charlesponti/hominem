@@ -20,8 +20,8 @@ interface VoiceRecordingPanelProps {
   onDone?: () => void;
   doneAccessibilityLabel?: string;
   // 'sending' covers the gap between a walkie-talkie auto-send and the
-  // spoken reply arriving — recording has already stopped, there's nothing
-  // left to cancel or stop, so those controls are hidden.
+  // spoken reply arriving -- recording's already stopped, nothing left to
+  // cancel or stop, so those controls just hide.
   phase?: 'recording' | 'sending';
 }
 
@@ -95,8 +95,8 @@ export function VoiceRecordingPanel({
       >
         <AppIcon name="xmark" size={20} />
       </IconButton>
-      {/* Fills the entire row between the cancel and stop buttons, mirroring the
-          idle row's [attach] [text, flex-1] [mic] geometry. */}
+      {/* Fills the row between cancel and stop, mirroring the idle row's
+          [attach] [text, flex-1] [mic] layout. */}
       <View
         style={[
           styles.recordingContent,

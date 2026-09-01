@@ -13,8 +13,6 @@ import {
 } from '../../schemas/finance.schema';
 import { registerTool } from '../tool-registry';
 
-// ── finance_net_worth ───────────────────────────────────────────────
-
 registerTool(
   {
     name: 'finance_net_worth',
@@ -30,8 +28,6 @@ registerTool(
   async (ownerUserId, input) => getFinanceNetWorth(ownerUserId, input.includeClosed),
 );
 
-// ── finance_recent_transactions ─────────────────────────────────────
-
 registerTool(
   {
     name: 'finance_recent_transactions',
@@ -46,8 +42,6 @@ registerTool(
   },
   async (ownerUserId, input) => getFinanceRecentTransactions(ownerUserId, input),
 );
-
-// ── finance_spending_by_category ────────────────────────────────────
 
 registerTool(
   {

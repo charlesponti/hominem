@@ -38,11 +38,9 @@ function timeBlockDraftReducer(
   return { ...state, [action.field]: action.value } as TimeBlockDraft;
 }
 
-/**
- * The event API only stores start/end, not a duration — this derives the
- * implied duration the same way for the initial draft and for the dirty
- * check, so the two can't silently drift out of sync.
- */
+// The event API only stores start/end, not a duration -- this derives the
+// implied duration the same way for the initial draft and the dirty check,
+// so the two can't quietly drift apart.
 function computeOriginalSchedule(
   isTask: boolean,
   task:

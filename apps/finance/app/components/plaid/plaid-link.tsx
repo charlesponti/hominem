@@ -45,7 +45,7 @@ export function PlaidLink({
   const userId = user?.id;
   const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken();
 
-  // Initialize link token only when user clicks the button
+  // only fetch a token once, and only if we don't already have one
   // biome-ignore lint/correctness/useExhaustiveDependencies: createLinkToken is stable from mutation
   const initializeLinkToken = useCallback(() => {
     if (!(userId && !linkToken && !isCreatingToken)) {
@@ -65,7 +65,6 @@ export function PlaidLink({
     });
   }, [userId, linkToken, isCreatingToken, onError]);
 
-  // Handle successful connection
   // biome-ignore lint/correctness/useExhaustiveDependencies: exchangeToken is stable from mutation
   const handleOnSuccess = useCallback<PlaidLinkOnSuccess>(
     (publicToken, metadata) => {
@@ -80,7 +79,6 @@ export function PlaidLink({
         return;
       }
 
-      // Use the current exchangeToken mutation directly
       exchangeToken.mutate(
         {
           publicToken,
@@ -114,7 +112,6 @@ export function PlaidLink({
     [onSuccess, onError],
   );
 
-  // Handle connection errors
   const handleOnExit = useCallback<PlaidLinkOnExit>(
     (error) => {
       if (error) {
@@ -131,7 +128,6 @@ export function PlaidLink({
     [onError],
   );
 
-  // Configure Plaid Link
   const config = {
     token: linkToken,
     onSuccess: handleOnSuccess,
@@ -144,11 +140,10 @@ export function PlaidLink({
   const hasError = createTokenError || exchangeError;
   const isReady = ready && linkToken && !isLoading;
 
-  // Auto-open Plaid Link when token is ready
   useEffect(() => {
     if (isReady && shouldAutoOpen) {
       open();
-      setShouldAutoOpen(false); // Prevent multiple opens
+      setShouldAutoOpen(false);
     }
   }, [isReady, shouldAutoOpen, open]);
 
@@ -156,8 +151,8 @@ export function PlaidLink({
     if (isReady) {
       open();
     } else if (!(linkToken && isLoading)) {
-      // Initialize link token when user clicks
-      setShouldAutoOpen(true); // Enable auto-open after token creation
+      // token isn't ready yet, so flag it to auto-open once it is
+      setShouldAutoOpen(true);
       initializeLinkToken();
     }
   };
@@ -218,7 +213,6 @@ export function PlaidLink({
     );
   }
 
-  // Default button variant
   return (
     <Button
       onClick={handleClick}

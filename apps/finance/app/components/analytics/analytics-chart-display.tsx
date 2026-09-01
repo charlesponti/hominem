@@ -43,7 +43,7 @@ export function AnalyticsChartDisplay({
   groupBy = 'month',
   compareToPrevious = false,
 }: AnalyticsChartDisplayProps) {
-  // Adjust date range to ensure full month is included
+  // snap the range to full months so we don't cut a month short
   const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo);
 
   const {

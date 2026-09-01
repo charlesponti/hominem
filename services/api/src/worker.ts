@@ -1,5 +1,5 @@
-// Must run before any module that reads process.env at import time (e.g.
-// @hominem/queues' Redis client), so it can't be reordered by import sorting.
+// Needs to load before anything that reads process.env at import time (e.g.
+// @hominem/queues' Redis client) - keep this import first, don't let auto-sort move it.
 import 'dotenv/config';
 import { createServer } from 'node:http';
 
@@ -21,7 +21,7 @@ const embeddingGenerationWorker = startEmbeddingGenerationWorker();
 const importTransactionsWorker = startImportTransactionsWorker();
 const resumeAnalysisWorker = startResumeAnalysisWorker();
 const speechUsageReconciliationWorker = startSpeechUsageReconciliationWorker();
-// Start career imports from the worker entrypoint so dev watchers reload queue handlers.
+// Started here (not elsewhere) so dev watchers actually reload the queue handlers.
 const careerJobImportWorker = startCareerJobImportWorker();
 const chatFileCleanupWorker = startChatFileCleanupWorker();
 const workerVersion = 'career-import-v2';

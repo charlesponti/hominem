@@ -1,10 +1,8 @@
 import { vi } from 'vitest';
 
-/**
- * In-memory stand-in for `~/services/storage/mmkv`'s `storage` export.
- * `vi.mock('~/services/storage/mmkv', () => mockMmkvModule())` in a test
- * file's top-level (hoisted) mock factory.
- */
+// In-memory stand-in for `~/services/storage/mmkv`'s `storage` export. Use
+// it via `vi.mock('~/services/storage/mmkv', () => mockMmkvModule())` in a
+// test file's top-level (hoisted) mock factory.
 export function mockMmkvModule() {
   const store = new Map<string, string | boolean>();
 

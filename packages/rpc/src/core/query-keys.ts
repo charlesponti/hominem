@@ -1,10 +1,5 @@
-/**
- * Shared query key factory for React Query.
- *
- * Single source of truth consumed by both web and mobile.
- * Keys follow the pattern: [domain, operation, ...params]
- *
- */
+// shared React Query key factory, used by both web and mobile
+// keys follow [domain, operation, ...params]
 
 export const queryKeys = {
   inbox: {

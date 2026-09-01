@@ -1,9 +1,6 @@
-/**
- * Provider- and transport-independent generation state machine types.
- *
- * The machine is deliberately synchronous and side-effect free. An adapter
- * turns its commands into provider, tool, persistence, and delivery effects.
- */
+// Types for the provider/transport-independent generation state machine.
+// It's deliberately synchronous and side-effect free — an adapter turns its
+// commands into actual provider, tool, persistence, and delivery effects.
 
 import type {
   GenerationCheckpoint,

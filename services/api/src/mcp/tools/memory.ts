@@ -14,8 +14,7 @@ import {
 } from '../../schemas/memory.schema';
 import { registerTool } from '../tool-registry';
 
-// Marks a note as an assistant-managed memory via the typed `kind` column —
-// memories show up wherever notes already appear in the app.
+// Memories are just notes with kind = 'memory', so they show up anywhere notes already do.
 const MEMORY_KIND = 'memory' as const;
 
 const noteService = new NoteService();
@@ -107,11 +106,10 @@ registerTool(
       query: input.query,
       limit,
     });
-    // The underlying search is a plain substring match, so a query like "food
-    // allergies" won't match a memory saved as "allergic to peanuts". Falling
-    // back to the full (capped) memory list lets the model reason over the
-    // actual content instead of silently reporting "nothing found" — cheap
-    // for a personal-scale memory store.
+    // Search is just a substring match, so "food allergies" won't find a memory
+    // saved as "allergic to peanuts". If nothing matches, fall back to the full
+    // recent list so the model can reason over the actual content instead of
+    // just saying "nothing found" — cheap enough at this scale.
     if (notes.length === 0) {
       const allNotes = await NoteRepository.list(db, {
         userId: ownerUserId,

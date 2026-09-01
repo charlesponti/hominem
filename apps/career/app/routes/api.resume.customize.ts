@@ -42,7 +42,6 @@ function parseJsonObject(content: string): unknown {
   return JSON.parse(jsonMatch?.[1] ?? trimmed);
 }
 
-// Input validation schema
 const customizeResumeSchema = z.object({
   job_posting: z.string().min(100, 'Job posting must be at least 100 characters').optional(),
   jobPostingData: z
@@ -69,12 +68,10 @@ export const action: ActionFunction = async ({ request, context }) => {
   try {
     const user = context.get(userContext)!;
 
-    // Validate request method
     if (request.method !== 'POST') {
       return data({ error: 'Method not allowed' }, { status: 405 });
     }
 
-    // Parse and validate input
     const body = (await request.json()) as CustomizeResumeApiRequest;
     const validation = customizeResumeSchema.safeParse(body);
 
@@ -90,7 +87,6 @@ export const action: ActionFunction = async ({ request, context }) => {
 
     const { job_posting, jobPostingData, resumeFormat, focusAreas, targetLength } = validation.data;
 
-    // Handle job posting input - either direct text or pre-scraped structured data
     let finalJobPosting: string;
     let jobPostingMetadata: {
       job_title?: string;
@@ -116,7 +112,6 @@ export const action: ActionFunction = async ({ request, context }) => {
       );
     }
 
-    // Fetch user's portfolio data
     const portfolio = await getResumePortfolioContext(user.id);
 
     if (!portfolio) {
@@ -130,10 +125,8 @@ export const action: ActionFunction = async ({ request, context }) => {
 
     const socialLinks = await SocialLinksRepository.get(db, user.id);
 
-    // Format portfolio data for better LLM consumption using utility function
     const portfolioContext = formatPortfolioForLLM(portfolio, socialLinks);
 
-    // Create AI prompt for resume customization
     const baseSystemPrompt = await loadResumeCustomizeSystemPrompt();
     const systemPrompt = `${baseSystemPrompt}
 
@@ -149,7 +142,6 @@ ${portfolioContext}
 
 Please create a customized resume that highlights the most relevant experience and skills for this specific job opportunity.`;
 
-    // Generate customized resume using the shared monorepo AI client
     const resumeEventId = randomUUID();
     const getResumeDurationMs = startAIUsageTimer();
     let result;
@@ -194,7 +186,6 @@ Please create a customized resume that highlights the most relevant experience a
       },
     });
 
-    // Extract key insights from the job posting for additional context
     const analysisEventId = randomUUID();
     const getAnalysisDurationMs = startAIUsageTimer();
     let analysisResult;

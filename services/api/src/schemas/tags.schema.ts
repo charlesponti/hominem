@@ -2,11 +2,10 @@ import * as z from 'zod';
 
 // ── shared ───────────────────────────────────────────────────────────
 
-// Entity types this tool surface currently supports. Grows incrementally as
-// later migration phases add more taggable domains (see
-// application/tags.service.ts's ENTITY_TABLE_MAP) — not a generic passthrough
-// to arbitrary table names, since entity_table casts straight to a Postgres
-// regclass.
+// Entity types this tool surface supports right now — grows as later migrations add
+// more taggable domains (see application/tags.service.ts's ENTITY_TABLE_MAP). Not a
+// generic passthrough to arbitrary table names, since entity_table casts straight to
+// a Postgres regclass.
 export const entityTypeSchema = z.enum(['people', 'places', 'possessions', 'notes']);
 
 const tagSchema = z.object({

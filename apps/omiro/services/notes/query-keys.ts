@@ -1,9 +1,5 @@
-/**
- * Re-export the shared query key factory from @hominem/rpc.
- *
- * This replaces the local key definitions that were diverging
- * from web. Both apps now share a single source of truth.
- */
+// Re-exports the shared query key factory from @hominem/rpc, so this app
+// and web use one source of truth instead of keys that can drift apart.
 import { queryKeys } from '@hominem/rpc/react';
 
 export const inboxKeys = {

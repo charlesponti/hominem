@@ -3,10 +3,7 @@ import { redirect } from 'react-router';
 import { getServerAuth } from './auth.server';
 import { hostedLoginUrl } from './hosted-auth.server';
 
-/**
- * Require authentication - throws 401 if not authenticated
- * Returns headers that MUST be included in the response
- */
+// redirects to login if there's no user - make sure the caller passes along the returned headers
 export async function requireAuth(request: Request) {
   const auth = await getServerAuth(request);
 

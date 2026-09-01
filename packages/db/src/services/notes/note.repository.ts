@@ -159,9 +159,6 @@ function decodeNoteSearchCursor(cursor: string): { updatedAt: string; id: string
 }
 
 export const NoteRepository = {
-  /**
-   * Fetch attached files grouped by note ID.
-   */
   async getAttachedFiles(
     handle: DbHandle,
     noteIds: string[],
@@ -198,10 +195,6 @@ export const NoteRepository = {
     return result;
   },
 
-  /**
-   * Get a single note by ID, enforcing ownership.
-   * Returns null if not found.
-   */
   async getOwned(handle: DbHandle, noteId: string, userId: string): Promise<NoteRow | null> {
     const note = await handle
       .selectFrom('app.notes')
@@ -213,9 +206,6 @@ export const NoteRepository = {
     return (note as NoteRow | undefined) ?? null;
   },
 
-  /**
-   * Get a note by ID with ownership check. Throws NotFoundError if missing.
-   */
   async getOwnedOrThrow(handle: DbHandle, noteId: string, userId: string): Promise<NoteRow> {
     const note = await NoteRepository.getOwned(handle, noteId, userId);
     if (!note) {
@@ -224,18 +214,12 @@ export const NoteRepository = {
     return note;
   },
 
-  /**
-   * Load a note with its attached files, ready for API response.
-   */
   async load(handle: DbHandle, noteId: string, userId: string): Promise<NoteRecord> {
     const note = await NoteRepository.getOwnedOrThrow(handle, noteId, userId);
     const attachedFiles = await NoteRepository.getAttachedFiles(handle, [note.id]);
     return toNoteRecord(note, attachedFiles.get(note.id) ?? []);
   },
 
-  /**
-   * List notes for a user with filtering and sorting.
-   */
   async list(handle: DbHandle, input: ListNotesInput): Promise<NoteRecord[]> {
     let query = handle.selectFrom('app.notes').selectAll().where('ownerUserid', '=', input.userId);
 
@@ -278,9 +262,6 @@ export const NoteRepository = {
     return rows.map((row) => toNoteRecord(row, attachedFiles.get(row.id) ?? []));
   },
 
-  /**
-   * Search notes by title/content text match.
-   */
   async search(handle: DbHandle, input: SearchNotesInput): Promise<SearchNotesPageRecord> {
     const limit = input.limit ? Math.min(input.limit, 20) : 10;
     const pattern = `%${input.query}%`;
@@ -328,9 +309,6 @@ export const NoteRepository = {
     };
   },
 
-  /**
-   * Insert a new note.
-   */
   async create(handle: DbHandle, input: CreateNoteInput): Promise<NoteRecord> {
     const created = await handle
       .insertInto('app.notes')
@@ -347,9 +325,6 @@ export const NoteRepository = {
     return toNoteRecord(created as NoteRow, []);
   },
 
-  /**
-   * Update an existing note with ownership enforcement.
-   */
   async update(handle: DbHandle, command: UpdateNoteCommand): Promise<void> {
     const sets: UpdateObject<Database, 'app.notes'> = {
       updatedat: new Date().toISOString(),
@@ -372,10 +347,6 @@ export const NoteRepository = {
     }
   },
 
-  /**
-   * Hard delete a note by ID with ownership enforcement.
-   * Permanently removes note from database.
-   */
   async hardDelete(handle: DbHandle, command: NoteMutationCommand): Promise<void> {
     const deleted = await handle
       .deleteFrom('app.notes')
@@ -387,10 +358,7 @@ export const NoteRepository = {
     if (!deleted) throw new NotFoundError('Note', { noteId: command.noteId });
   },
 
-  /**
-   * Sync note-file attachments. Validates file ownership, then replaces all.
-   * MUST be called inside a transaction for atomicity.
-   */
+  // Needs to run inside a transaction — it validates file ownership then replaces the whole set
   async syncFiles(handle: DbHandle, command: SyncNoteFilesCommand): Promise<void> {
     await NoteRepository.getOwnedOrThrow(handle, command.noteId, command.userId);
     const uniqueFileIds = [...new Set(command.fileIds)];

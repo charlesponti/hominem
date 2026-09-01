@@ -15,15 +15,14 @@ export function redirectSystemPath({
   path: string;
   initial: boolean;
 }): string {
-  // Strip leading slash for matching
   const normalized = path.startsWith('/') ? path.slice(1) : path;
 
-  // App Intent / Siri: note/add -> All
+  // Siri / App Intent shortcut for adding a note -> All tab
   if (normalized === 'note/add') {
     return STREAM_ROUTE;
   }
 
-  // OTP verification link: verify?token=xxx -> /(auth)/verify?token=xxx
+  // OTP link: verify?token=xxx -> the auth verify screen
   if (normalized.startsWith('verify')) {
     return `/(auth)/${normalized}`;
   }
@@ -33,41 +32,41 @@ export function redirectSystemPath({
     return getTimeBlockRoute(timeBlockMatch[1] as TimeBlockSource, timeBlockMatch[2]);
   }
 
-  // Chat with specific ID: chat/<id>
+  // chat/<id> -> that chat
   const chatIdMatch = normalized.match(/^chat\/([^?]+)/);
   if (chatIdMatch) {
     return getContentRoute('chat', chatIdMatch[1]);
   }
 
-  // Chat with seed (start new): chat?seed=<text> -> New Chat with seed
+  // chat?seed=<text> -> start a new chat with that seed
   if (normalized.startsWith('chat')) {
     const seedParam = normalized.replace(/^chat\??/, '');
     return `${NEW_CHAT_ROUTE}${seedParam ? `?${seedParam}` : ''}`;
   }
 
-  // Notes with specific ID
+  // notes/<id> -> that note
   const notesIdMatch = normalized.match(/^notes\/(.+)/);
   if (notesIdMatch) {
     return getContentRoute('note', notesIdMatch[1]);
   }
 
-  // Notes list -> inbox
+  // notes list -> All tab
   if (normalized === 'notes') {
     return STREAM_ROUTE;
   }
 
-  // Focus with specific ID -> note detail
+  // focus/<id> -> note detail (focus and notes share a detail view)
   const focusIdMatch = normalized.match(/^focus\/(.+)/);
   if (focusIdMatch) {
     return getContentRoute('note', focusIdMatch[1]);
   }
 
-  // Focus list -> inbox
+  // focus list -> All tab
   if (normalized === 'focus') {
     return STREAM_ROUTE;
   }
 
-  // Account/settings screen
+  // account -> settings screen
   if (normalized.startsWith('account')) {
     return SETTINGS_ROUTE;
   }

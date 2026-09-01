@@ -120,7 +120,7 @@ export async function deriveSkillsFromCareerHistory(
   const raw = getChatCompletionText(result);
   const parsed = JSON.parse(raw);
 
-  // json_object mode always returns an object; find the first array value
+  // json_object mode always wraps the result in an object, so grab the first array we find
   let arr: unknown[];
   if (Array.isArray(parsed)) {
     arr = parsed;

@@ -4,9 +4,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const PG_TZ_OFFSET = /([+-]\d{2})(?::?(\d{2}))?$/;
 
 // Postgres timestamptz columns come back as native strings (e.g.
-// "2026-08-10 14:14:39.401575+00") rather than ISO 8601. V8 parses that
-// loosely, but Hermes (React Native's JS engine) does not, so it must be
-// normalized to "...T...+00:00" before handing it to `Date`.
+// "2026-08-10 14:14:39.401575+00"), not ISO 8601. V8 parses that loosely,
+// but Hermes (React Native's JS engine) doesn't, so it needs normalizing to
+// "...T...+00:00" before we hand it to `Date`.
 function parsePgDate(value: string): Date {
   const isoish = value.trim().replace(' ', 'T');
   const match = isoish.match(PG_TZ_OFFSET);

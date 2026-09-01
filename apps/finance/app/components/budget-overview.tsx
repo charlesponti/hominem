@@ -27,14 +27,12 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   const categories = categoriesResult || [];
   const stats = statsResult || null;
 
-  // Calculate total budgeted amount from categories. The API now
-  // exposes `averageMonthlyExpense` and `type` directly on the category
-  // object (both optional), so we no longer need to cast.
   const totalBudgeted = useMemo(() => {
     if (categories.length === 0) {
       return 0;
     }
 
+    // skip income categories, we only want spending here
     return categories
       .filter((category) => category.type !== 'income')
       .reduce((sum, category) => {
@@ -43,10 +41,8 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
       }, 0);
   }, [categories]);
 
-  // Get actual spending from stats
   const totalActual = useMemo(() => stats?.totalExpenses || 0, [stats]);
 
-  // Calculate performance metrics
   const variance = totalBudgeted - totalActual;
   const isOverBudget = totalActual > totalBudgeted;
 
@@ -123,7 +119,6 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
             <div className="text-lg font-semibold">{formatCurrency(totalActual)}</div>
           </div>
 
-          {/* Remaining Budget */}
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">
               {isOverBudget ? 'Over Budget' : 'Remaining'}

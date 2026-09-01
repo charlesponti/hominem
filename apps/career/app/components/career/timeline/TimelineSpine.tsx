@@ -2,10 +2,8 @@ import type { CareerStoryTimeline } from '~/lib/career/queries/career-timeline';
 
 import { TimelineEntryCard } from './TimelineEntryCard';
 
-/**
- * Groups timeline entries by year from startDate.
- * Years are sorted descending. Undated entries go to the end in a catch-all group.
- */
+// Groups entries by year (newest first); anything without a startDate lands in
+// its own "undated" bucket at the end.
 function groupByYear(timeline: CareerStoryTimeline) {
   const years = new Map<number, CareerStoryTimeline>();
   let undated: CareerStoryTimeline = [];

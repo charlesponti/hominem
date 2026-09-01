@@ -2,12 +2,10 @@ import { useApiClient } from '@ponti-studios/ui/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-// Define query keys at the top of the file as constants
 const PLAID_CONNECTIONS_KEY = ['plaid', 'connections'];
 const PLAID_ACCOUNTS_KEY = ['plaid', 'accounts'];
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = ['plaid', 'accounts', 'institution'];
 
-// Type definitions
 interface CreateLinkTokenResponse {
   success: boolean;
   linkToken: string;
@@ -55,9 +53,6 @@ interface UnlinkAccountResponse {
   account: FinanceAccountResponse;
 }
 
-/**
- * Hook for creating a Plaid link token
- */
 export function useCreateLinkToken() {
   const apiClient = useApiClient();
   const [error, setError] = useState<Error | null>(null);
@@ -90,9 +85,6 @@ export function useCreateLinkToken() {
   };
 }
 
-/**
- * Hook for exchanging a public token for an access token
- */
 export function useExchangeToken() {
   const queryClient = useQueryClient();
   const apiClient = useApiClient();
@@ -112,7 +104,6 @@ export function useExchangeToken() {
       }
     },
     onSuccess: () => {
-      // Invalidate related queries to refresh connections and accounts
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
@@ -131,13 +122,6 @@ export function useExchangeToken() {
     data: exchangeToken.data,
   };
 }
-/**
- * Hook for manually syncing a Plaid item
- */
-
-/**
- * Hook for manually syncing a Plaid item
- */
 export function useSyncPlaidItem() {
   const queryClient = useQueryClient();
   const apiClient = useApiClient();
@@ -157,7 +141,6 @@ export function useSyncPlaidItem() {
       }
     },
     onSuccess: () => {
-      // Invalidate connections to update status
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
@@ -178,9 +161,6 @@ export function useSyncPlaidItem() {
   };
 }
 
-/**
- * Hook for removing a Plaid connection
- */
 export function useRemovePlaidConnection() {
   const queryClient = useQueryClient();
   const apiClient = useApiClient();
@@ -199,7 +179,6 @@ export function useRemovePlaidConnection() {
       }
     },
     onSuccess: () => {
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
@@ -219,9 +198,6 @@ export function useRemovePlaidConnection() {
   };
 }
 
-/**
- * Hook for linking an account to a Plaid institution
- */
 export function useLinkAccountToInstitution() {
   const queryClient = useQueryClient();
   const apiClient = useApiClient();
@@ -253,7 +229,6 @@ export function useLinkAccountToInstitution() {
     },
     onSuccess: (result, variables) => {
       void result;
-      // Invalidate related queries to refresh account data
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
       queryClient.invalidateQueries({
@@ -276,9 +251,6 @@ export function useLinkAccountToInstitution() {
   };
 }
 
-/**
- * Hook for unlinking an account from its institution
- */
 export function useUnlinkAccountFromInstitution() {
   const queryClient = useQueryClient();
   const apiClient = useApiClient();
@@ -299,7 +271,6 @@ export function useUnlinkAccountFromInstitution() {
     },
     onSuccess: (result, accountId) => {
       void result;
-      // Invalidate related queries to refresh account data
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'get', accountId] });

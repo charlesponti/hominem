@@ -178,6 +178,9 @@ importers:
       '@hominem/queues':
         specifier: workspace:*
         version: link:../../packages/queues
+      '@hominem/rpc':
+        specifier: workspace:*
+        version: link:../../packages/rpc
       '@hominem/services':
         specifier: workspace:*
         version: link:../../packages/services
@@ -414,6 +417,9 @@ importers:
       '@testing-library/jest-dom':
         specifier: 'catalog:'
         version: 7.0.0(@testing-library/dom@10.4.1)
+      '@testing-library/react':
+        specifier: ^16.3.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/react':
         specifier: 19.2.17
         version: 19.2.17

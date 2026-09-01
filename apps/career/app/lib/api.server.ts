@@ -1,25 +1,19 @@
 import type { careerRoutes } from '@hominem/api/career';
+import { customFetch } from '@hominem/rpc/fetch';
 import { hc } from 'hono/client';
 
 import { serverEnv } from './env.server';
 
-const customFetch =
-  (request?: Request): typeof fetch =>
-  async (input: RequestInfo | URL, init?: RequestInit) => {
-    const headers = new Headers(init?.headers);
-
-    if (request) {
-      const cookie = request.headers.get('cookie');
-      if (cookie) headers.set('cookie', cookie);
-    }
-
-    return fetch(input, { ...init, headers, credentials: 'include' });
-  };
-
 export function createServerHonoClient(request?: Request) {
   const career = hc<typeof careerRoutes>(
     new URL('/api/career', serverEnv.HOMINEM_INTERNAL_API_URL).toString(),
-    { fetch: customFetch(request) },
+    {
+      fetch: customFetch({
+        baseUrl: serverEnv.HOMINEM_INTERNAL_API_URL,
+        request,
+        throwOnError: false,
+      }),
+    },
   );
 
   return { career };
@@ -31,7 +25,7 @@ export async function fetchCareerProfile(
   const { career } = createServerHonoClient(request);
   const res = await career.profile.$get();
   const data = await res.json();
-  return (data as { profile: Record<string, unknown> | null }).profile;
+  return data.profile;
 }
 
 export async function fetchCareerEngagements(
@@ -44,10 +38,10 @@ export async function fetchCareerEngagements(
   if (query?.limit) params.set('limit', String(query.limit));
   const qs = params.toString();
   const res = await career.engagements.$get({
-    query: qs ? Object.fromEntries(params) : {},
-  } as never);
+    query: qs ? Object.fromEntries(params.entries()) : {},
+  });
   const data = await res.json();
-  return data as { engagements: Record<string, unknown>[] };
+  return data;
 }
 
 export async function fetchCareerApplications(
@@ -60,10 +54,10 @@ export async function fetchCareerApplications(
   if (query?.limit) params.set('limit', String(query.limit));
   const qs = params.toString();
   const res = await career.applications.$get({
-    query: qs ? Object.fromEntries(params) : {},
-  } as never);
+    query: qs ? Object.fromEntries(params.entries()) : {},
+  });
   const data = await res.json();
-  return data as { applications: Record<string, unknown>[] };
+  return data;
 }
 
 export async function fetchCareerApplicationDetail(
@@ -73,7 +67,7 @@ export async function fetchCareerApplicationDetail(
   const { career } = createServerHonoClient(request);
   const res = await career.applications[':id'].$get({ param: { id } });
   const data = await res.json();
-  return data as { application: Record<string, unknown> | null };
+  return data;
 }
 
 export async function fetchCareerEducation(
@@ -84,7 +78,9 @@ export async function fetchCareerEducation(
   const params = new URLSearchParams();
   if (query?.limit) params.set('limit', String(query.limit));
   const qs = params.toString();
-  const res = await career.education.$get({ query: qs ? Object.fromEntries(params) : {} } as never);
+  const res = await career.education.$get({
+    query: qs ? Object.fromEntries(params.entries()) : {},
+  });
   const data = await res.json();
-  return data as { education: Record<string, unknown>[] };
+  return data;
 }

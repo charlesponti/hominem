@@ -138,7 +138,7 @@ describe('MCP tool registry', () => {
         scopes: ['career:read'],
         resultCap: 1,
       },
-      async () => ['invalid'] as never,
+      async () => ['invalid'],
     );
 
     await expect(callTool(userId, 'array_output_tool', {})).rejects.toThrow(

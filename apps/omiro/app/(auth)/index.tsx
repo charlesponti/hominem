@@ -165,12 +165,11 @@ function AuthScreen() {
                     </Text>
                   ) : null}
 
-                  {/* Animated border + button container */}
                   <AnimatedCanvasButton
                     progress={progress.stage / 5}
                     style={styles.buttonContainer}
                   >
-                    {/* Helper text, centered inside the animating border (stages 0-4) */}
+                    {/* helper text sits here until stage 5, then the button fades in over it */}
                     {progress.stage < 5 && !displayError && (
                       <View style={styles.progressHelper}>
                         {progress.stage > 0 ? <Text style={styles.progressArrow}>↑</Text> : null}
@@ -178,7 +177,6 @@ function AuthScreen() {
                       </View>
                     )}
 
-                    {/* Button (stage 5 only) */}
                     <Animated.View
                       style={[{ position: 'absolute', width: '100%' }, continueButtonStyle]}
                     >

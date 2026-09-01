@@ -1,9 +1,6 @@
-/**
- * Reducers for the provider stream: text/reasoning accumulation, in-flight
- * tool-call fragment merging, and transient-retry vs terminal-failure
- * handling. This module never inspects the tool-call queue — routing a
- * completed turn's tool calls belongs to `tool-calls.ts`.
- */
+// Reducers for the provider stream: accumulating text/reasoning, merging
+// in-flight tool-call fragments, and deciding retry vs. terminal failure.
+// Doesn't touch the tool-call queue — that routing lives in `tool-calls.ts`.
 
 import { reduceGenerationFailed } from './lifecycle';
 import { persistCommand } from './shared';

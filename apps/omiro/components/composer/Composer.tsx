@@ -71,10 +71,11 @@ function ComposerContent(props: ComposerProps) {
   useEffect(() => {
     clearComposerRef.current = controller.clearComposer;
   }, [controller.clearComposer]);
-  // Static (mode-only) fields for the outer shell -- the kind-dependent
-  // fields (placeholder, submitTestID, ...) are recomputed inside
-  // ComposerInput/ComposerToolbar, the only things that know the live,
-  // possibly-inferred entry kind without subscribing to the message store here.
+  // Just the static (mode-only) fields for the outer shell -- the
+  // kind-dependent fields (placeholder, submitTestID, ...) get recomputed
+  // inside ComposerInput/ComposerToolbar, since those are the only places
+  // that know the live, possibly-inferred entry kind without subscribing to
+  // the message store here.
   const presentation = getComposerSubmissionConfig(props);
 
   const handleActiveAreaSubmit = useCallback(

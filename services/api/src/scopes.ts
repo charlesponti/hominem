@@ -1,10 +1,5 @@
-/**
- * Single source of truth for MCP scope constants.
- *
- * All MCP tool scopes live here. Never hardcode a scope string elsewhere —
- * import from this module. Scopes are intentionally NOT environment config:
- * enabling/disabling tools is a code decision, not a deploy-time switch.
- */
+// All MCP tool scopes live here - import from this module, don't hardcode a
+// scope string elsewhere. Turning tools on/off is a code change, not an env var.
 
 export const MCP_SCOPES = [
   'calendar:read',
@@ -27,8 +22,6 @@ export const MCP_SCOPES = [
 
 export type McpScope = (typeof MCP_SCOPES)[number];
 
-/**
- * Scopes for which MCP tools are registered. Defaults to every supported
- * scope; narrow this list to register only a subset of tools.
- */
+// Scopes that actually get MCP tools registered. Defaults to all of them -
+// trim this list if you only want a subset registered.
 export const MCP_ENABLED_SCOPES: readonly McpScope[] = MCP_SCOPES;

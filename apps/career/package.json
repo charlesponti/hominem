@@ -17,7 +17,7 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "typecheck": "react-router typegen && tsc --noEmit",
+    "typecheck": "react-router typegen && rm -rf .cache && tsc --noEmit",
     "gallery:screenshot": "jiti scripts/gallery-screenshot.ts",
     "gallery:login": "jiti scripts/gallery-login.ts"
   },
@@ -28,6 +28,7 @@
     "@hominem/db": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/queues": "workspace:*",
+    "@hominem/rpc": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/storage": "workspace:*",
     "@hominem/utils": "workspace:*",

@@ -78,7 +78,7 @@ function StoryAttachmentList() {
   );
 }
 
-/** A click-through harness for attachment, request, retry, and cancellation states. */
+/** Click through attachments, requests, retries, and cancellation. */
 export const InteractiveHarness: Story = {
   render: () => {
     const [requestState, setRequestState] = useState<'ready' | 'submitted' | 'streaming' | 'error'>(

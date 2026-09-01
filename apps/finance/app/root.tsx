@@ -15,7 +15,7 @@ import {
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import type { Route } from './+types/root';
-import { HonoProvider } from './lib/api';
+import { FinanceHonoProvider } from './lib/api';
 import { getServerSession } from './lib/auth.server';
 import { serverEnv } from './lib/env';
 
@@ -87,10 +87,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
   } = useRegisterSW();
 
   return (
-    <HonoProvider baseUrl={apiBaseUrl}>
+    <FinanceHonoProvider baseUrl={apiBaseUrl}>
       <UpdateGuard needRefresh={needRefresh} onRefresh={() => updateServiceWorker(true)} />
       <Outlet />
-    </HonoProvider>
+    </FinanceHonoProvider>
   );
 }
 

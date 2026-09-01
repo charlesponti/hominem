@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "rm -rf .cache && tsc --noEmit",
     "format": "pnpm exec oxfmt ./src --write",
     "format:check": "pnpm exec oxfmt ./src --check",
     "lint": "pnpm exec oxlint ./src",

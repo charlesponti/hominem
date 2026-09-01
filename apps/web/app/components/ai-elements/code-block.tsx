@@ -25,7 +25,7 @@ import {
 } from '~/components/ui/select';
 import { cn } from '~/lib/utils';
 
-// Shiki uses bitflags for font styles: 1=italic, 2=bold, 4=underline
+// shiki packs font styles into bitflags: 1=italic, 2=bold, 4=underline
 // oxlint-disable-next-line eslint(no-bitwise)
 const isItalic = (fontStyle: number | undefined) => fontStyle && fontStyle & 1;
 // oxlint-disable-next-line eslint(no-bitwise)
@@ -34,7 +34,7 @@ const isUnderline = (fontStyle: number | undefined) =>
   // oxlint-disable-next-line eslint(no-bitwise)
   fontStyle && fontStyle & 4;
 
-// Transform tokens to include pre-computed keys to avoid noArrayIndexKey lint
+// adds stable keys to tokens so we don't have to key by array index
 interface KeyedToken {
   token: ThemedToken;
   key: string;
@@ -53,7 +53,6 @@ const addKeysToTokens = (lines: ThemedToken[][]): KeyedLine[] =>
     })),
   }));
 
-// Token rendering component
 const TokenSpan = ({ token }: { token: ThemedToken }) => (
   <span
     className="dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)]"
@@ -72,7 +71,6 @@ const TokenSpan = ({ token }: { token: ThemedToken }) => (
   </span>
 );
 
-// Line number styles using CSS counters
 const LINE_NUMBER_CLASSES = cn(
   'block',
   'before:content-[counter(line)]',
@@ -86,7 +84,6 @@ const LINE_NUMBER_CLASSES = cn(
   'before:select-none',
 );
 
-// Line rendering component
 const LineSpan = ({
   keyedLine,
   showLineNumbers,
@@ -101,7 +98,6 @@ const LineSpan = ({
   </span>
 );
 
-// Types
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
@@ -118,21 +114,19 @@ interface CodeBlockContextType {
   code: string;
 }
 
-// Context
 const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
 
-// Highlighter cache (singleton per language)
+// one highlighter instance per language, reused across calls
 const highlighterCache = new Map<
   string,
   Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
 >();
 
-// Token cache
 const tokensCache = new Map<string, TokenizedCode>();
 
-// Subscribers for async token updates
+// callbacks waiting on a highlight that's still in flight for a given cache key
 const subscribers = new Map<string, Set<(result: TokenizedCode) => void>>();
 
 const getTokensCacheKey = (code: string, language: BundledLanguage) => {
@@ -158,7 +152,7 @@ const getHighlighter = (
   return highlighterPromise;
 };
 
-// Create raw tokens for immediate display while highlighting loads
+// plain untokenized lines to show right away, before shiki finishes loading
 const createRawTokens = (code: string): TokenizedCode => ({
   bg: 'transparent',
   fg: 'inherit',
@@ -174,7 +168,8 @@ const createRawTokens = (code: string): TokenizedCode => ({
   ),
 });
 
-// Synchronous highlight with callback for async results
+// returns cached tokens right away if we have them, otherwise kicks off
+// highlighting in the background and calls back when it's done
 export const highlightCode = (
   code: string,
   language: BundledLanguage,
@@ -183,13 +178,11 @@ export const highlightCode = (
 ): TokenizedCode | null => {
   const tokensCacheKey = getTokensCacheKey(code, language);
 
-  // Return cached result if available
   const cached = tokensCache.get(tokensCacheKey);
   if (cached) {
     return cached;
   }
 
-  // Subscribe callback if provided
   if (callback) {
     if (!subscribers.has(tokensCacheKey)) {
       subscribers.set(tokensCacheKey, new Set());
@@ -197,7 +190,6 @@ export const highlightCode = (
     subscribers.get(tokensCacheKey)?.add(callback);
   }
 
-  // Start highlighting in background - fire-and-forget async pattern
   getHighlighter(language)
     // oxlint-disable-next-line eslint-plugin-promise(prefer-await-to-then)
     .then((highlighter) => {
@@ -218,10 +210,8 @@ export const highlightCode = (
         tokens: result.tokens,
       };
 
-      // Cache the result
       tokensCache.set(tokensCacheKey, tokenized);
 
-      // Notify all subscribers
       const subs = subscribers.get(tokensCacheKey);
       if (subs) {
         for (const sub of subs) {
@@ -364,16 +354,15 @@ export const CodeBlockContent = ({
   language: BundledLanguage;
   showLineNumbers?: boolean;
 }) => {
-  // Memoized raw tokens for immediate display
   const rawTokens = useMemo(() => createRawTokens(code), [code]);
 
-  // Synchronous cache lookup — avoids setState in effect for cached results
+  // check the cache synchronously so we can skip the setState round-trip when it's already warm
   const syncTokens = useMemo(
     () => highlightCode(code, language) ?? rawTokens,
     [code, language, rawTokens],
   );
 
-  // Async highlighting result (populated after shiki loads)
+  // gets filled in once shiki finishes highlighting async
   const [asyncResult, setAsyncResult] = useState<{
     key: string;
     tokens: TokenizedCode;

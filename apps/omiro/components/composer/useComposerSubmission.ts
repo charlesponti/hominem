@@ -81,8 +81,8 @@ export function useComposerSubmission(props: ComposerProps) {
         void autoUpdateChatTitle(trimmedMessage);
       } catch (error) {
         // The mutation's onError already marks the message failed inline in
-        // the transcript; this only prevents an unhandled rejection from the
-        // fire-and-forget `void submission.submit(...)` call sites.
+        // the transcript -- this catch just stops an unhandled rejection from
+        // the fire-and-forget `void submission.submit(...)` call sites.
         logger.warn('[useComposerSubmission] sendChatMessage failed', { error });
       }
     },

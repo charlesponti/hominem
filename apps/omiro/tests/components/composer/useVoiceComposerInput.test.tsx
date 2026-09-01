@@ -133,7 +133,7 @@ describe('useVoiceComposerInput', () => {
       await fakeRecorder.lastOptions?.onRecordingStopped('file://recording.m4a');
     });
 
-    // The user edits the draft themselves before cleanup finishes.
+    // User edits the draft themselves before cleanup finishes.
     act(() => setMessage('Edited by user'));
     setMessage.mockClear();
     await act(async () => {
@@ -141,8 +141,8 @@ describe('useVoiceComposerInput', () => {
       await Promise.resolve();
     });
 
-    // Cleanup still writes back through setMessage, but with the draft left
-    // untouched -- the cleaned text is discarded because the draft moved on.
+    // Cleanup still writes back through setMessage, but with the draft
+    // untouched -- the cleaned text gets dropped since the draft moved on.
     expect(setMessage).toHaveBeenCalledWith('Edited by user');
     expect(setMessage).not.toHaveBeenCalledWith('Cleaned text.');
   });

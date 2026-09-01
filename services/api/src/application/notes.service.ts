@@ -16,13 +16,12 @@ interface UpdateNoteParams {
 
 export class NoteService {
   async createNote(userId: string, input: CreateNoteParams): Promise<NoteRecord> {
-    // Explicit return type: without it, TS infers runInTransaction's `T`
-    // from this whole callback body (every awaited repository call) before
-    // checking it -- one of the most expensive single checkExpression spans
-    // in the services/api typecheck (~765ms). Annotating short-circuits that.
+    // Need the explicit return type here — without it TS infers runInTransaction's T from
+    // this whole callback before checking it, which is one of the slowest typecheck spans
+    // in services/api (~765ms). Annotating it short-circuits that.
     return runInTransaction(async (trx): Promise<NoteRecord> => {
       const content = input.content.trim();
-      // Title is only set when explicitly provided — never auto-derived from content
+      // never auto-derive the title from content — only use it if it was actually passed in
       const title = input.title?.trim() || null;
       const excerpt = deriveExcerpt(content);
 
@@ -47,9 +46,9 @@ export class NoteService {
     return runInTransaction(async (trx): Promise<NoteRecord> => {
       const existing = await NoteRepository.getOwnedOrThrow(trx, noteId, userId);
       const nextContent = input.content !== undefined ? input.content.trim() : existing.content;
-      // Only update title when explicitly sent; never re-derive from content on updates
+      // same deal — only touch the title if it was explicitly sent
       const nextTitle = input.title !== undefined ? input.title?.trim() || null : existing.title;
-      // Always recompute excerpt from current content
+      // but the excerpt always gets recomputed, since it just follows the content
       const nextExcerpt = deriveExcerpt(nextContent);
 
       await NoteRepository.update(trx, {

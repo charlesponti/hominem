@@ -14,7 +14,7 @@ export interface ChatMessageToolCall {
 
 export interface ChatMessageItem {
   id: string;
-  /** Stable client-side identity for list rendering across server reconciliation. */
+  // Stable id for list rendering that survives server reconciliation
   renderKey?: string;
   role: 'user' | 'assistant' | 'system';
   message: string;
@@ -25,9 +25,8 @@ export interface ChatMessageItem {
   toolCalls: ChatMessageToolCall[] | null;
   isStreaming?: boolean;
   audio?: { url: string; mimeType: string } | null;
-  // Set in place (rather than rolling the message back out of the list) when
-  // a send fails or a stream is interrupted, so the transcript keeps a
-  // record the user can retry instead of silently losing what they typed.
+  // Set when a send fails or a stream gets interrupted, instead of removing
+  // the message — keeps it visible in the transcript so the user can retry
   failed?: boolean;
   error?: string | null;
 }

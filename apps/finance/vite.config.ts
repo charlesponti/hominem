@@ -85,7 +85,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       }),
 
-      // Add bundle analyzer when ANALYZE flag is set
       isAnalyze &&
         visualizer({
           open: true,
@@ -95,13 +94,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         }),
     ].filter(Boolean) satisfies PluginOption[],
 
-    // CSS optimization options
     css: {
-      // Enable CSS modules
       modules: {
         localsConvention: 'camelCaseOnly' as const,
       },
-      // Optimize in production
       devSourcemap: !isProd,
     },
 

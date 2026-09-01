@@ -19,12 +19,10 @@ async function waitForEndpoint(url: string, maxRetries: number): Promise<void> {
 }
 
 async function waitForAppSsr(url: string, maxRetries: number): Promise<void> {
-  // The finance app in dev mode does a full SSR build on the first real request.
-  // We must wait until that SSR request completes (may take >15s) before tests run.
+  // in dev mode the app's first real request triggers a full SSR build, which can take 15s+
   for (let i = 0; i < maxRetries; i++) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
-      // A successful SSR response will be HTML with 200 or a redirect (3xx)
       if (res.status < 500) return;
     } catch {
       // build in progress, wait
@@ -36,11 +34,9 @@ async function waitForAppSsr(url: string, maxRetries: number): Promise<void> {
 
 export default async function globalSetup(config: FullConfig) {
   void config;
-  // Wait for the API to accept connections.
   await waitForEndpoint(`${API_BASE_URL}/`, MAX_RETRIES);
 
-  // Wait for the finance app to finish its initial SSR build AND process a real request.
-  // In react-router dev mode, the first SSR request triggers the Vite build pipeline
-  // which can take 20-30s. We wait here so the first test doesn't hit a slow build.
+  // react-router dev mode kicks off the Vite build pipeline on the first SSR request,
+  // which can take 20-30s - wait here so the first test doesn't eat that cost
   await waitForAppSsr(`${APP_BASE_URL}/auth`, 60);
 }

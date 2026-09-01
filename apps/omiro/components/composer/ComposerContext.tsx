@@ -51,8 +51,8 @@ interface ComposerProviderProps {
   initialAttachments?: ComposerAttachment[];
 }
 
-// The server's `type` classification is preferred; falling back to a client-side
-// mimetype guess only covers files the server couldn't categorize.
+// Prefer the server's `type` classification; only fall back to guessing from
+// the mimetype for files the server couldn't categorize.
 function getAttachmentType(uploadedFile: UploadedFile): string {
   return uploadedFile.type !== 'unknown'
     ? uploadedFile.type
@@ -65,8 +65,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     () => initialAttachments,
   );
   const attachmentsRef = useRef(initialAttachments);
-  // File ids handed off to a submission (note/chat/message) that must survive
-  // this provider unmounting mid-flight — see the unmount cleanup effect below.
+  // File ids handed off to an in-flight submission (note/chat/message) --
+  // need to survive this provider unmounting mid-flight, see the cleanup
+  // effect below.
   const committedFileIdsRef = useRef<Set<string>>(new Set());
 
   const { uploadAssets, uploadState, clearErrors } = useFileUpload();
@@ -202,11 +203,11 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
     ],
   );
 
-  // Deletes any uploaded file left attached when this provider unmounts —
-  // e.g. the user backed out of the composer without submitting. Files that
-  // markAttachmentsSubmitted() already claimed for an in-flight submission are
-  // skipped so a race between unmount and that submission can't delete files
-  // the note/chat/message is about to reference.
+  // Cleans up any uploaded file still attached when this provider unmounts
+  // (e.g. the user backed out without submitting). Skips files
+  // markAttachmentsSubmitted() already claimed for an in-flight submission,
+  // so an unmount racing with that submission can't delete files the
+  // note/chat/message is about to reference.
   useEffect(
     () => () => {
       attachmentsRef.current.forEach((attachment) => {

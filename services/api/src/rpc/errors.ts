@@ -1,4 +1,4 @@
-// Re-export canonical error hierarchy from @hominem/db
+// just re-exporting the shared error types from @hominem/db
 export {
   ForbiddenError,
   InternalError,

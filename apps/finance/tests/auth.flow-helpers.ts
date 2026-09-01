@@ -17,10 +17,8 @@ export function createAuthTestEmail(prefix: string) {
 export async function startEmailOtpFlow(page: Page, email: string) {
   await page.goto('/auth');
 
-  // Wait for full React hydration: in Vite dev mode, React may still be
-  // reconciling the SSR HTML when the page appears ready. A fill before
-  // hydration is complete will be wiped when React takes over the DOM.
-  // Retry until the fill value sticks — this is the reliable hydration signal.
+  // in dev mode the page can look ready before React finishes hydrating, and a fill
+  // done too early gets wiped when hydration takes over - so retry until it sticks
   const emailInput = page.getByLabel('Email address');
   await emailInput.waitFor({ state: 'visible' });
   await expect(async () => {
@@ -72,17 +70,14 @@ export async function signInWithEmailOtp(page: Page, email: string) {
 export async function enterOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6);
 
-  // Check if the page uses individual digit inputs or a single OTP field
   const digitInputs = page.locator('input[inputmode="numeric"]');
   const hasDigitInputs = await digitInputs.count();
 
   if (hasDigitInputs > 0) {
-    // Individual digit inputs — fill each one
     for (let i = 0; i < 6; i++) {
       await digitInputs.nth(i).fill(normalized[i] ?? '');
     }
 
-    // Verify digit inputs have values
     await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '', { timeout: 5000 });
   }
 
@@ -94,7 +89,7 @@ export async function enterOtpCode(page: Page, otp: string) {
     await otpField.fill(normalized);
     await expect(otpField).toHaveValue(normalized, { timeout: 5000 });
 
-    // Manually trigger React events
+    // fire these manually so React's controlled-input listeners pick up the change
     await otpField.evaluate((input, value) => {
       if (!(input instanceof HTMLInputElement)) return;
       input.value = value;
@@ -111,7 +106,6 @@ export async function submitOtpCode(page: Page, otp: string) {
   expect(normalized.length).toBeGreaterThan(3);
   await enterOtpCode(page, normalized);
 
-  // Submit the form
   await page.locator('input[name="otp"]').evaluate((input) => {
     if (!(input instanceof HTMLInputElement)) return;
     const form = input.closest('form');

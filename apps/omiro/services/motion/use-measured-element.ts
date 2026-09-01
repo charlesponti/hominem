@@ -5,13 +5,11 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 export type MeasuredRect = MeasuredDimensions;
 
-/**
- * Composer/message measurement primitive for same-screen overlay handoffs
- * (toast, printer surface). Measures on the UI thread so the flight can start
- * from an accurate rect without waiting on a bridge round-trip; `onMeasured`
- * receives `null` if the node isn't mounted or measurement otherwise fails
- * (e.g. it was unmounted between the request and the UI-thread read).
- */
+// Composer/message measurement primitive for same-screen overlay handoffs
+// (toast, printer surface). Measures on the UI thread so the flight can
+// start from an accurate rect without waiting on a bridge round-trip.
+// `onMeasured` gets `null` if the node isn't mounted or measurement
+// otherwise fails (e.g. unmounted between the request and the UI-thread read).
 export function useMeasuredElement<TRef extends View = View>(): {
   ref: AnimatedRef<TRef>;
   measure: (onMeasured: (rect: MeasuredRect | null) => void) => void;

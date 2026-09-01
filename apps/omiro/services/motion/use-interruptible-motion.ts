@@ -10,34 +10,30 @@ import { nativeMotionTiming } from './native-motion';
 type MotionPhase = 'idle' | 'active' | 'done';
 
 export interface InterruptibleMotion {
-  /** JS-thread phase for conditional rendering; do not use it to drive style. */
+  // JS-thread phase for conditional rendering -- don't use it to drive style.
   phase: MotionPhase;
-  /** UI-thread progress (0 = start, 1 = resolved) for `useAnimatedStyle`. */
+  // UI-thread progress (0 = start, 1 = resolved) for `useAnimatedStyle`.
   progress: SharedValue<number>;
-  /** Begin the motion from its start value toward resolved. */
+  // Starts the motion from its start value toward resolved.
   start: () => void;
-  /**
-   * Cancel-and-settle: stop whatever is running and resolve straight to the
-   * end value, per the shared `cancel-and-settle` interruption policy (see
-   * `nativeMotionContracts.interruption`). Call this when something else
-   * demands the flight finish now — a second send arrives, the screen is
-   * leaving — rather than letting it hang mid-motion or snap.
-   */
+  // Cancel-and-settle: stop whatever's running and resolve straight to the
+  // end value, per the shared `cancel-and-settle` interruption policy (see
+  // `nativeMotionContracts.interruption`). Call this when something else
+  // needs the flight to finish now -- a second send arrives, the screen's
+  // leaving -- instead of letting it hang mid-motion or just snap.
   settle: (onDone?: () => void) => void;
-  /**
-   * Hard-stop with no resolving animation; the value freezes wherever it was
-   * interrupted. Use only when the visual result no longer matters, e.g. the
-   * flight's underlying message was discarded and the node is unmounting.
-   */
+  // Hard-stop, no resolving animation -- the value freezes wherever it got
+  // interrupted. Only use this when the visual result doesn't matter
+  // anymore, e.g. the flight's underlying message got discarded and the
+  // node's unmounting.
   cancel: () => void;
 }
 
-/**
- * Generalizes the cancel-on-unmount + interruptible `withTiming` pattern
- * already used by `ChatThinkingIndicator`'s dot animation into a reusable
- * phase state machine, so composer/message flight primitives (toast handoff,
- * printer handoff) don't each reimplement shared-value lifecycle management.
- */
+// Generalizes the cancel-on-unmount + interruptible `withTiming` pattern
+// already used by `ChatThinkingIndicator`'s dot animation into a reusable
+// phase state machine, so composer/message flight primitives (toast handoff,
+// printer handoff) don't each have to reimplement shared-value lifecycle
+// management.
 export function useInterruptibleMotion(): InterruptibleMotion {
   const reducedMotion = useReducedMotion();
   const progress = useSharedValue(0);

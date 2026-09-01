@@ -13,13 +13,9 @@ function rateLimitKey(userId: string) {
   return `ratelimit:mcp:${identifier}`;
 }
 
-/**
- * Enforce the MCP request limit through the shared Redis instance so the limit
- * applies consistently across API processes and deployments.
- *
- * Cache failures are reported separately so the route can fail closed while
- * authentication and scope checks remain mandatory at the route boundary.
- */
+// Rate limit goes through shared Redis so it's consistent across API processes/deployments.
+// 'unavailable' is reported separately from 'limited' so the route can fail closed on it,
+// while auth/scope checks still always run at the route boundary.
 export type RateLimitResult = 'allowed' | 'limited' | 'unavailable';
 
 export async function checkRateLimit(userId: string): Promise<RateLimitResult> {

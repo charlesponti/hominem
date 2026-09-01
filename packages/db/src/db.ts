@@ -8,21 +8,19 @@ export type Database = DB;
 
 const { Pool, types } = pg;
 
-// Re-export Kysely's sql template tag for raw SQL queries
-// Usage: await sql`SELECT * FROM users`.execute(db)
+// Re-export Kysely's sql tag so callers can do raw SQL without importing kysely directly
 export const sql = kyselySql;
 
-// Configure pg to return dates as strings instead of Date objects
-// This ensures consistent string types across the codebase
+// Keep dates as raw strings instead of letting pg parse them into JS Date
+// objects, so the whole codebase deals with one consistent type
 types.setTypeParser(types.builtins.TIMESTAMP, (val) => val);
 types.setTypeParser(types.builtins.TIMESTAMPTZ, (val) => val);
 types.setTypeParser(types.builtins.DATE, (val) => val);
 
-// Configure pg to return numeric as number for consistent types
-// Safe for finance amounts — precision loss only affects very large values
+// Parse numeric as a JS number instead of a string. Fine for finance
+// amounts — you'd only lose precision on numbers way bigger than any real balance
 types.setTypeParser(types.builtins.NUMERIC, (val) => parseFloat(val));
 
-// Create a connection pool
 const connectionString = env.DATABASE_URL;
 
 if (!connectionString) {
@@ -40,11 +38,10 @@ export const db = new Kysely<Database>({
   plugins: [new CamelCasePlugin()],
 });
 
-// better-auth manages its own tables (account, session, user, verification,
-// jwks, deviceCode) and writes genuinely camelCase columns to Postgres directly, unlike
-// our app.* tables which are snake_case at rest. Those tables must bypass
-// CamelCasePlugin or it will mistranslate already-camelCase columns into snake_case SQL
-// that doesn't exist.
+// better-auth's own tables (account, session, user, verification, jwks,
+// deviceCode) actually store camelCase columns, unlike our snake_case app.*
+// tables. Skip CamelCasePlugin for this client or it'll try to rewrite
+// already-camelCase columns into snake_case SQL that doesn't exist.
 export const authDb = new Kysely<Database>({
   dialect: new PostgresDialect({
     pool,

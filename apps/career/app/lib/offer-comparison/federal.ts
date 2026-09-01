@@ -62,11 +62,10 @@ export function computeFederalTax(gross: number, status: FilingStatus): number {
   return tax;
 }
 
-// FICA (Social Security + Medicare)
 export function computeFICA(gross: number): number {
   const ssWageBase = 176_100;
   const socialSecurity = Math.min(gross, ssWageBase) * 0.062;
   const medicare = gross * 0.0145;
-  // Additional 0.9% Medicare surcharge on income over $200k single / $250k married
+  // doesn't account for the extra 0.9% Medicare surcharge above $200k single / $250k married
   return socialSecurity + medicare;
 }

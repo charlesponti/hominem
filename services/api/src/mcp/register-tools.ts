@@ -1,9 +1,8 @@
 import { MCP_ENABLED_SCOPES } from '../scopes';
 
-// Conditional imports — only register tools whose scope is in MCP_ENABLED_SCOPES.
-// Shared by the outward-facing MCP HTTP server (mcp/routes.ts) and the
-// in-process chat tool adapter (mcp/chat-tool-adapter.ts) so neither depends on the
-// other having already run.
+// Only imports tools whose scope is in MCP_ENABLED_SCOPES. Shared by the MCP
+// HTTP server (mcp/routes.ts) and the in-process chat tool adapter
+// (mcp/chat-tool-adapter.ts) so neither one has to run first.
 let registrationPromise: Promise<void> | null = null;
 
 async function registerAll(): Promise<void> {

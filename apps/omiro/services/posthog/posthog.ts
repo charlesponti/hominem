@@ -29,7 +29,7 @@ export const posthog = disabled
         autocapture: {
           uncaughtExceptions: true,
           unhandledRejections: true,
-          // Leave console empty — PostHogErrorBoundary is used, which would double-capture
+          // Leave console empty -- PostHogErrorBoundary handles this, so this would double-capture
           console: [],
         },
       },

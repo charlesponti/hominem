@@ -1,14 +1,12 @@
-/**
- * Provider- and transport-independent generation state machine.
- *
- * The machine is deliberately synchronous and side-effect free. An adapter
- * turns its commands into provider, tool, persistence, and delivery effects.
- *
- * `reduceGeneration` is a thin dispatcher: each branch delegates to the
- * module that owns that piece of state — `lifecycle.ts` (start/cancel/
- * terminal outcomes), `provider.ts` (stream accumulation/retry), or
- * `tool-calls.ts` (the tool-call queue, including turn-completed routing).
- */
+// A generation state machine that doesn't know or care about the provider or
+// transport. It's deliberately synchronous and side-effect free — an adapter
+// turns its commands into actual provider, tool, persistence, and delivery
+// effects.
+//
+// `reduceGeneration` is just a dispatcher: each branch hands off to whichever
+// module owns that state — `lifecycle.ts` for start/cancel/terminal outcomes,
+// `provider.ts` for stream accumulation/retry, `tool-calls.ts` for the
+// tool-call queue (including turn-completed routing).
 
 import {
   reduceCancelRequested,
@@ -101,11 +99,9 @@ function isAsyncInputs(value: object): value is AsyncIterable<GenerationInput> {
   return Symbol.asyncIterator in value && typeof value[Symbol.asyncIterator] === 'function';
 }
 
-/**
- * Interpret machine commands serially. The effect interpreter owns all I/O;
- * every effect result is fed back through the pure reducer before the next
- * command runs.
- */
+// Runs machine commands one at a time. The effect interpreter handles all
+// the I/O; each effect's result gets fed back through the pure reducer
+// before the next command runs.
 export async function runGeneration(input: RunGenerationInput): Promise<GenerationState> {
   let state = createGenerationState(input.generationId);
   const inputs: GenerationInput[] = [

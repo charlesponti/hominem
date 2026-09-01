@@ -16,11 +16,11 @@ vi.mock('@react-native-community/netinfo', () => ({
 const { useNetworkStatus } = await import('~/hooks/use-network-status');
 
 describe('useNetworkStatus', () => {
-  // Reset in `beforeEach` (not `afterEach`) so that Testing Library's own
-  // automatic unmount-on-cleanup for the *previous* test's hook — which
-  // fires in the afterEach chain, sometimes after this file's own
-  // afterEach — doesn't leak an extra `mockUnsubscribe` call into the next
-  // test's assertions.
+  // Reset in `beforeEach` (not `afterEach`) so Testing Library's own
+  // automatic unmount-on-cleanup for the *previous* test's hook -- which
+  // fires in the afterEach chain, sometimes after this file's own afterEach
+  // -- doesn't leak an extra `mockUnsubscribe` call into the next test's
+  // assertions.
   beforeEach(() => {
     vi.clearAllMocks();
     listener = undefined;

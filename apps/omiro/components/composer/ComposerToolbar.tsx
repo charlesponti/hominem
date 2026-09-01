@@ -49,9 +49,9 @@ interface ComposerToolbarProps {
   onSubmit: (kind: ComposerSubmitKind, message: string, canSubmit: boolean) => void;
 }
 
-// The message-store-subscribed action row -- attach, entry-kind toggle,
-// enhance/walkie-talkie/mic/send -- kept separate from ComposerInput so
-// typing re-renders each independently instead of the whole composer (see
+// The action row (attach, entry-kind toggle, enhance/walkie-talkie/mic/send)
+// subscribes to the message store separately from ComposerInput, so typing
+// re-renders each independently instead of the whole composer (see
 // useComposerMessageStore.ts).
 function ComposerToolbarComponent({
   composerProps,

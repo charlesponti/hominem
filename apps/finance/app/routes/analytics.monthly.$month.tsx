@@ -25,7 +25,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { stats };
 }
 
-// Helper function to format month string (e.g., "2024-05" to "May 2024")
+// turns "2024-05" into "May 2024"
 function formatMonthDisplay(monthStr: string | undefined) {
   if (!monthStr) return '';
   const [year, month] = monthStr.split('-');
@@ -50,7 +50,6 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
 
       {isLoading && (
         <div className="flex flex-col gap-4">
-          {/* Loading skeleton cards */}
           {[0, 1, 2, 3].map((index) => (
             <Card key={index}>
               <CardHeader>
@@ -87,7 +86,6 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
 
       {stats && !isLoading && !error && (
         <div className="flex flex-col gap-4">
-          {/* Combined Summary Card */}
           <Card>
             <CardHeader>
               <CardTitle>Summary</CardTitle>
@@ -116,7 +114,6 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
             </CardContent>
           </Card>
 
-          {/* Tag Spending */}
           <Card>
             <CardHeader>
               <CardTitle>Spending by Tag</CardTitle>

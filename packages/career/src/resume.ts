@@ -176,9 +176,6 @@ export class ResumeParseError extends Error {
   }
 }
 
-/**
- * Extracts raw text content from a resume PDF file.
- */
 export async function extractPdfText(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   return new Promise<string>((resolve, reject) => {
@@ -198,10 +195,7 @@ export async function extractPdfText(file: File): Promise<string> {
   });
 }
 
-/**
- * Sends extracted resume text to the LLM and validates the structured response.
- * Throws `ResumeParseError` on either an AI-parsing or schema-validation failure.
- */
+// Throws ResumeParseError if the AI parse or the schema validation fails
 export async function parseResumeWithAI(pdfText: string): Promise<ConvertedResumeData> {
   const systemPrompt = await loadResumeParserSystemPrompt();
 
@@ -251,9 +245,7 @@ function truncateSlugBase(slug: string, suffix = ''): string {
   return slug.slice(0, maxBaseLength).replace(/-$/g, '') || 'portfolio';
 }
 
-/**
- * Generates a unique career-profile slug, appending a numeric suffix on collision.
- */
+// Appends a numeric suffix if the slug is already taken
 export async function generateUniqueSlug(
   handle: DbHandle,
   base: string,
@@ -303,12 +295,10 @@ const SOCIAL_FIELD_MAP: Array<{ field: SocialLinkField; label: string }> = [
   { field: 'website', label: 'Website' },
 ];
 
-/**
- * Diffs freshly-parsed resume data against the user's current profile.
- * Emits a scalar-field change only where the value actually differs; every
- * parsed work-experience/skill/project entry is emitted unconditionally
- * since those are new rows, not diffable sub-fields of an existing one.
- */
+// Diffs freshly-parsed resume data against the current profile. Scalar
+// fields only show up in the diff if they actually changed, but every
+// parsed work-experience/skill/project entry is included regardless — those
+// are new rows, not sub-fields you can diff against an existing one.
 export function buildResumeImportDiff(
   parsed: ConvertedResumeData,
   currentProfile: CareerProfileRecord | null,

@@ -10,9 +10,6 @@ export interface DownloadedImage {
   size: number;
 }
 
-/**
- * Downloads an image from a URL with retry logic
- */
 export async function downloadImage(
   { url, maxRetries = 3, timeout = 10000 }: DownloadImageOptions,
   referer?: string,
@@ -28,7 +25,7 @@ export async function downloadImage(
         signal: controller.signal,
         headers: {
           'User-Agent': 'Hominem/1.0',
-          // Use Referer to satisfy browser-key restrictions when fetching from Legacy API
+          // legacy API's browser-key restrictions need a Referer header or the fetch gets rejected
           ...(referer ? { Referer: referer } : {}),
         },
       });
@@ -52,7 +49,7 @@ export async function downloadImage(
       lastError = error instanceof Error ? error : new Error(String(error));
 
       if (attempt < maxRetries - 1) {
-        // Wait before retrying (exponential backoff)
+        // back off exponentially between retries
         await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
       }
     }

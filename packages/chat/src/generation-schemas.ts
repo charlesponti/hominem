@@ -1,13 +1,9 @@
-/**
- * Canonical runtime schemas for the generation machine's event contract.
- *
- * Each schema is `satisfies`-checked against the hand-written type it
- * mirrors in `generation-machine/types.ts` and `generation-events.ts`, so a
- * shape change to either drifts into a compile error here instead of
- * silently diverging. Exported independently of the reducer/interpreter via
- * the `./schemas` subpath so consumers can validate the wire contract
- * without pulling in the generation engine itself.
- */
+// Runtime schemas for the generation machine's event contract. Each one is
+// `satisfies`-checked against the hand-written type it mirrors in
+// generation-machine/types.ts and generation-events.ts, so if either shape
+// changes you get a compile error here instead of silent drift. Exported
+// separately via the `./schemas` subpath so consumers can validate the wire
+// contract without pulling in the whole generation engine.
 import * as z from 'zod';
 
 import type {

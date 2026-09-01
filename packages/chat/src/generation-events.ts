@@ -1,4 +1,4 @@
-/** JSON values that can safely cross the durable event boundary. */
+// JSON values safe to send across the durable event boundary
 export type GenerationJsonValue =
   | string
   | number
@@ -7,12 +7,12 @@ export type GenerationJsonValue =
   | readonly GenerationJsonValue[]
   | { readonly [key: string]: GenerationJsonValue };
 
-/** Provider/tool request context retained for a resumable generation. */
+// Provider/tool request context kept around so a generation can be resumed
 export type GenerationRequestContext = {
   readonly [key: string]: GenerationJsonValue;
 };
 
-/** Minimum durable context required to start or resume a generation. */
+// The minimum you need to start or resume a generation
 export type GenerationStartContext = {
   chatId: string;
   kind: 'send' | 'start' | 'regenerate';
@@ -21,7 +21,7 @@ export type GenerationStartContext = {
   requestContext: GenerationRequestContext;
 };
 
-/** Minimal message DTO needed to reconcile optimistic and persisted messages. */
+// Minimal message shape needed to reconcile optimistic vs. persisted messages
 export type GenerationMessageSnapshot = {
   id: string;
   chatId: string;
@@ -30,7 +30,7 @@ export type GenerationMessageSnapshot = {
   reasoning?: string | null;
 };
 
-/** Stable identity shared by all provider/tool events in one turn. */
+// Stable identity shared by all provider/tool events within one turn
 export type GenerationTurn = {
   turnId: string;
   iteration: number;

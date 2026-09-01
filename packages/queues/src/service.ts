@@ -8,11 +8,8 @@ export const IMPORT_JOB_PREFIX = 'import:job:';
 export const USER_JOBS_PREFIX = 'import:user:';
 export const IMPORT_PREFLIGHT_PREFIX = 'import:preflight:';
 export const IMPORT_PREFLIGHT_TTL = 7 * 24 * 60 * 60;
-export const JOB_EXPIRATION_TIME = 60 * 60; // 1 hour expiration time for jobs
+export const JOB_EXPIRATION_TIME = 60 * 60; // 1 hour
 
-/**
- * Get job status from Redis
- */
 export async function getJobStatus<T>(jobId: string): Promise<T | null> {
   try {
     const job = await redis.get(`${IMPORT_JOB_PREFIX}${jobId}`);
@@ -23,11 +20,6 @@ export async function getJobStatus<T>(jobId: string): Promise<T | null> {
   }
 }
 
-/**
- * Remove job from Redis
- * @param jobId - The ID of the job to remove
- * @param userId - Optional user ID to also remove from user's job list
- */
 export async function removeJobFromQueue(jobId: string, userId?: string) {
   let user: string | undefined = userId;
 
@@ -51,13 +43,6 @@ export async function removeJobFromQueue(jobId: string, userId?: string) {
   await pipeline.exec();
 }
 
-/**
- * Get jobs by user ID with pagination
- * @param userId - The user ID to get jobs for
- * @param page - Page number (1-based)
- * @param limit - Number of jobs per page
- * @returns Array of job objects and pagination metadata
- */
 export async function getUserJobs<T extends BaseJob<string>>(
   userId: string,
   page = 1,
@@ -97,9 +82,6 @@ export async function getUserJobs<T extends BaseJob<string>>(
   }
 }
 
-/**
- * Get Base64 encoded file content for a given job ID
- */
 export async function getImportFileContent(jobId: string): Promise<string | null> {
   return redis.get(`${IMPORT_JOB_PREFIX}${jobId}:csv`);
 }
@@ -221,9 +203,6 @@ export async function publishImportProgress<T>(data: T): Promise<void> {
   await redis.publish('import:progress', JSON.stringify({ type: 'import:progress', data }));
 }
 
-/**
- * Get all active import jobs
- */
 export async function getActiveJobs<T extends BaseJob<string>>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY);
@@ -236,7 +215,7 @@ export async function getActiveJobs<T extends BaseJob<string>>(): Promise<T[]> {
     const now = Date.now();
     const jobsToRemove = jobs.filter((job) => {
       const isDone = job.status === 'done' || job.status === 'error' || job.status === 'cancelled';
-      const isOld = job.endTime && now - job.endTime > 10 * 60 * 1000; // 10 minutes
+      const isOld = job.endTime && now - job.endTime > 10 * 60 * 1000; // done more than 10 min ago
       return isDone && isOld;
     });
 
@@ -266,9 +245,6 @@ export async function getJobsByIds<T extends BaseJob<string>>(jobIds: string[]):
   }
 }
 
-/**
- * Get all queued import jobs
- */
 export async function getQueuedJobs<T extends BaseJob<string>>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY);

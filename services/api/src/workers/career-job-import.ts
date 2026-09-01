@@ -76,7 +76,7 @@ async function processCareerImport(job: Job<CareerImportQueuePayload>): Promise<
   const { jobId, userId } = job.data;
   const record = await CareerImportRepository.getByQueueJobId(db, userId, jobId);
   if (!record) throw new Error(`Career import ${jobId} was not found`);
-  // The database row is the durable source of truth; older queue payloads may omit sourceUrl.
+  // Trust the DB row over the queue payload — older payloads might not have sourceUrl.
   const sourceUrl = record.sourceUrl;
 
   await updateState(record.id, {

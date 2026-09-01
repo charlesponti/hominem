@@ -156,7 +156,6 @@ export function ApplicationResumeTab({
 
   return (
     <div className="space-y-4">
-      {/* Job posting summary */}
       {hasStructuredPosting && parsedJobPosting && (
         <Card>
           <CardContent>
@@ -187,7 +186,6 @@ export function ApplicationResumeTab({
         </Card>
       )}
 
-      {/* Saved resume preview */}
       {application.resumeUrl && !showRegenerate && !generatedResume && (
         <Card>
           <CardHeader>
@@ -226,7 +224,6 @@ export function ApplicationResumeTab({
         </Card>
       )}
 
-      {/* Generate form */}
       {showGenerateForm && (
         <Card>
           <CardHeader>
@@ -316,7 +313,6 @@ export function ApplicationResumeTab({
         </Card>
       )}
 
-      {/* Generated resume result */}
       {generatedResume && (
         <Card>
           <CardHeader>

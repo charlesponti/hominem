@@ -62,20 +62,17 @@ export function resolveAuthRedirect(
   };
 }
 
-/**
- * Resolves a resume URL for Better Auth's MCP/OIDC authorize flow, which
- * redirects unauthenticated requests to a configured `loginPage` with the
- * original authorize query string attached (see
- * Better Auth's OAuth 2.1 authorize endpoint. After login, the browser must
- * navigate back to that same authorize endpoint (same query string) on the
- * API's own origin so the newly-established session cookie is sent and the
- * flow can resume — a plain in-app redirect can't do this since it's a
- * different origin.
- *
- * This is not an open-redirect risk: the destination host+path is always
- * `${apiBaseUrl}/api/auth/oauth2/authorize`, a trusted config value never taken
- * from the query string. Only the query string itself is forwarded verbatim.
- */
+// Builds the URL to resume Better Auth's MCP/OIDC authorize flow after
+// login. That flow redirects unauthenticated requests to our `loginPage`
+// with the original authorize query string attached. After login, the
+// browser needs to go back to that same authorize endpoint (same query
+// string) on the API's own origin so the new session cookie actually gets
+// sent — a normal in-app redirect can't do that since it's a different
+// origin.
+//
+// Not an open-redirect risk: the host+path is always
+// `${apiBaseUrl}/api/auth/oauth2/authorize`, a trusted config value, never
+// taken from the query string. Only the query string itself gets forwarded.
 export function resolveOAuthResumeUrl(search: string, apiBaseUrl: string): string | null {
   const params = new URLSearchParams(search);
   const responseType = params.get('response_type');
@@ -91,17 +88,14 @@ export function resolveOAuthResumeUrl(search: string, apiBaseUrl: string): strin
   return url.toString();
 }
 
-/**
- * Resolves a post-login redirect target for apps that don't host their own
- * login UI and instead send users to the shared hosted `/login` page with
- * `?next=<absolute-url>` (see services/api/src/routes/login.tsx's "app
- * redirect" mode). Unlike resolveAuthRedirect (same-origin relative paths
- * only), `next` here is a cross-origin absolute URL by necessity — the
- * destination is a different app's origin entirely — so the allowlist of
- * trusted app origins is the only thing standing between this and an open
- * redirect. Only `next`'s origin is checked; the path/query/hash are
- * forwarded as-is once the origin clears the allowlist.
- */
+// For apps that don't have their own login UI and send users to the shared
+// hosted `/login` page with `?next=<absolute-url>` instead (see
+// services/api/src/routes/login.tsx's "app redirect" mode). Unlike
+// resolveAuthRedirect, which only allows same-origin relative paths, `next`
+// here has to be a cross-origin absolute URL since it's pointing at a
+// different app entirely — so the allowlist of trusted origins is the only
+// thing preventing an open redirect. Only the origin gets checked; path,
+// query, and hash pass through once it clears the allowlist.
 export function resolveAppRedirectUrl(
   next: string | null | undefined,
   allowedOrigins: readonly string[],

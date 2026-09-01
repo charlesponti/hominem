@@ -17,7 +17,6 @@ import { env } from '../env';
 import { MCP_SCOPES } from '../scopes';
 import { enableTestOtpStore, recordTestOtp } from './test-otp-store';
 
-// Enable the test OTP store in non-production environments
 if (env.NODE_ENV !== 'production') {
   enableTestOtpStore();
 }
@@ -91,18 +90,16 @@ function generateNumericOtp({ length, isTest }: { length: number; isTest?: boole
     .padStart(length, '0');
 }
 
-// Only production actually delivers OTP emails; everywhere else the code is
-// deterministic (000000) and routed to the test OTP store instead.
+// Only production actually sends OTP emails - everywhere else we use the
+// fixed 000000 code and stash it in the test OTP store instead.
 function shouldSendEmails(): boolean {
   return env.NODE_ENV === 'production';
 }
 
-// A stable, non-PII identifier for correlating log lines about the same
-// recipient without writing raw email addresses to logs. The logger's
-// redaction matches key names containing "email" (substring, case
-// insensitive) — so the field names here must avoid that substring too,
-// not just avoid holding a raw address, or they get redacted into
-// uselessness the same way a raw `email` field would.
+// Lets us tie log lines to the same recipient without logging a raw email.
+// The logger auto-redacts any key with "email" in the name (case insensitive),
+// so these field names have to dodge that substring too - not just avoid
+// holding the raw address - otherwise they'd get redacted into mush anyway.
 function emailLogContext(email: string): { recipientHash: string; recipientDomain: string } {
   return {
     recipientHash: createHash('sha256').update(email).digest('hex').slice(0, 12),
@@ -241,9 +238,9 @@ function getAuthPlugins() {
   return plugins;
 }
 
-// Email OTP is the product auth surface. Password auth, device
-// authorization, JWT/JWKS, and one-time tokens are intentionally disabled until
-// a concrete client needs them (see kernel-better-auth surface map).
+// Email OTP is the only auth surface we actually use. Password auth, device
+// authorization, JWT/JWKS, and one-time tokens are turned off on purpose
+// until something actually needs them.
 const betterAuthOptions: BetterAuthOptions = {
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.API_URL,

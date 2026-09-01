@@ -11,8 +11,8 @@ import {
 } from '../../schemas/memory.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
-// Memories are notes discriminated by the typed `kind` column — see
-// mcp/tools/memory.ts for the AI-facing surface over the same rows.
+// Memories are just notes with kind = 'memory' — see mcp/tools/memory.ts
+// for the AI-facing surface over these same rows.
 const MEMORY_KIND = 'memory' as const;
 
 const noteService = new NoteService();

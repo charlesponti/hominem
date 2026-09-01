@@ -22,11 +22,10 @@ interface NoteDraftPreviewProps {
   testID?: string;
 }
 
-// The long-form-safe preview surface for generated note content -- unlike a
-// composer draft (a sentence or two), this can be an essay, so it renders as
-// a bounded, scrollable body-text block rather than one giant centered
-// heading. While loading, pulses skeleton bars instead of text that doesn't
-// exist yet; once settled, crossfades into the real content.
+// Preview surface built for long-form content -- unlike a composer draft (a
+// sentence or two), this can be a whole essay, so it's a bounded, scrollable
+// text block instead of one giant heading. Pulses skeleton bars while
+// loading, then crossfades into the real content once it's ready.
 export function NoteDraftPreview({ text, isLoading, testID }: NoteDraftPreviewProps) {
   const { foreground, muted, popover } = useAppTheme().colors;
   const styles = useStyles((theme) => ({

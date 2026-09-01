@@ -1,8 +1,6 @@
-/**
- * Reducers for generation lifecycle transitions that aren't about the
- * provider stream or the tool-call queue: kicking off a run, cancellation,
- * and the two terminal outcomes (saved/failed).
- */
+// Reducers for the lifecycle stuff that isn't the provider stream or the
+// tool-call queue: kicking off a run, cancelling, and the two terminal
+// outcomes (saved/failed).
 
 import type { GenerationMessageSnapshot } from '../generation-events';
 import { persistCommand, phaseCommands } from './shared';

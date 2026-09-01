@@ -22,11 +22,8 @@ function BrandIcon({ path, viewBox = '0 0 24 24' }: { path: string; viewBox?: st
   );
 }
 
-/**
- * Social-links fieldset. Reads and writes through the page-level
- * react-hook-form context so all profile fields share one dirty state and
- * one save action (see ProfilePage's SaveBar).
- */
+// Hooks into the page-level react-hook-form context (not its own form) so
+// this fieldset shares dirty state and the save action with ProfilePage's SaveBar.
 export function SocialLinksSection() {
   const {
     register,
@@ -40,7 +37,6 @@ export function SocialLinksSection() {
       <Card>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* GitHub */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="github"
@@ -70,7 +66,6 @@ export function SocialLinksSection() {
               {errors.github && <p className="text-sm text-destructive">{errors.github.message}</p>}
             </div>
 
-            {/* LinkedIn */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="linkedin"
@@ -102,7 +97,6 @@ export function SocialLinksSection() {
               )}
             </div>
 
-            {/* Twitter */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="twitter"
@@ -134,7 +128,6 @@ export function SocialLinksSection() {
               )}
             </div>
 
-            {/* Website */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="website"

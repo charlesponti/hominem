@@ -10,15 +10,11 @@ export type UploadedFileDto = UploadResponse['file'];
 // ============================================================================
 // Client-normalized file types
 // ============================================================================
-// Deliberately separate from UploadedFileDto above: that's the raw RPC wire
-// shape, this is what apps/web and apps/omiro each map it into via their own
-// toUploadedFile() (dates parsed, etc.) before rendering. Shared here because
-// both apps needed the identical shape, not because it should track the wire
-// type -- if the two ever need to diverge, split them back apart.
+// kept separate from UploadedFileDto on purpose: that's the raw RPC wire shape,
+// this is what apps/web and apps/omiro map it into via their own toUploadedFile()
+// (parsed dates, etc.) before rendering. it's shared just because both apps happen
+// to need the same shape right now -- if that stops being true, split them back apart
 
-/**
- * Processed file from server-side file processing
- */
 export interface ProcessedFile {
   id: string;
   originalName: string;
@@ -33,9 +29,6 @@ export interface ProcessedFile {
   transcription?: string;
 }
 
-/**
- * Successfully uploaded file, normalized for client-side use
- */
 export interface UploadedFile extends ProcessedFile {
   url: string;
   uploadedAt: Date;

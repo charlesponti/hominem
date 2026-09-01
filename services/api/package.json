@@ -32,7 +32,7 @@
     "start:worker": "node dist/worker.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "rm -rf .cache && tsc --noEmit",
     "e2e:setup": "tsx scripts/e2e-setup.ts",
     "export-calendar": "tsx scripts/export-calendar.ts",
     "export-user": "tsx scripts/export-user.ts",

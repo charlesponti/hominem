@@ -10,8 +10,8 @@ export function useResetAuthForE2E() {
   const queryClient = useQueryClient();
   return useCallback(async () => {
     if (!E2E_TESTING) return;
-    // Best-effort: even if the server-side sign-out fails, local state must
-    // still be wiped so a stale cache from a prior account never leaks in.
+    // Best-effort: even if the server-side sign-out fails, still wipe local
+    // state so a stale cache from a prior account can't leak in.
     await authClient
       .signOut()
       .catch((error) => logger.warn('[useResetAuthForE2E] Best-effort sign-out failed', { error }));

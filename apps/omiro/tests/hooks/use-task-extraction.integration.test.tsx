@@ -166,7 +166,7 @@ describe('useTaskExtraction', () => {
 
     expect(mockTasksBatchPost).not.toHaveBeenCalled();
     expect(mockAlert).toHaveBeenCalledWith('Could not save content', 'Please try again.');
-    // Rejected accept returns to the reviewing state rather than clearing it.
+    // A rejected accept goes back to the reviewing state instead of clearing it.
     expect(result.current.isReviewVisible).toBe(true);
   });
 });

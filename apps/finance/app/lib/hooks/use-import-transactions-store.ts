@@ -4,15 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store';
 
-// Define constants for channel names and message types
 const IMPORT_PROGRESS_CHANNEL = 'import:progress';
 const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = 'subscribed';
 const IMPORT_PROGRESS_CHANNEL_TYPE = 'subscribe';
 const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const;
 const PREFLIGHT_STORAGE_KEY = 'finance:copilot-import:preflight-id';
 
-// Throttle delay for progress updates (in milliseconds)
-const PROGRESS_UPDATE_THROTTLE = 100;
+const PROGRESS_UPDATE_THROTTLE = 100; // ms
 
 export type ImportPreflightPreview = {
   preflight: { preflightId: string; fileName: string; expiresAt: number };
@@ -54,14 +52,12 @@ export function useImportTransactionsStore() {
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [preflight, setPreflight] = useState<ImportPreflightPreview | null>(null);
-  // Throttling refs for progress updates
   const progressUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingUpdatesRef = useRef<ImportTransactionsJob[]>([]);
 
-  // Cache for stable file objects when converting from jobs
+  // keeps File objects stable across renders so we're not creating new ones every update
   const fileCache = useRef(new Map<string, File>());
 
-  // Get WebSocket store functions
   const { isConnected, connect, sendMessage, subscribe } = useWebSocketStore();
 
   const getStableFile = useCallback((fileName: string): File => {
@@ -90,7 +86,6 @@ export function useImportTransactionsStore() {
     [getStableFile],
   );
 
-  // Connect on initialization
   useEffect(() => {
     connect();
   }, [connect]);
@@ -107,23 +102,19 @@ export function useImportTransactionsStore() {
       .catch(() => window.localStorage.removeItem(PREFLIGHT_STORAGE_KEY));
   }, []);
 
-  // Throttled update function to reduce re-render frequency
+  // batches rapid progress events into one update every PROGRESS_UPDATE_THROTTLE ms
   const throttledUpdateProgress = useCallback(
     (jobData: ImportTransactionsJob[]) => {
-      // Store the latest update
       pendingUpdatesRef.current = jobData;
 
-      // Clear existing timeout
       if (progressUpdateTimeoutRef.current) {
         clearTimeout(progressUpdateTimeoutRef.current);
       }
 
-      // Set new timeout
       progressUpdateTimeoutRef.current = setTimeout(() => {
         const latestJobData = pendingUpdatesRef.current;
         if (!latestJobData.length) return;
 
-        // Batch all state updates to prevent multiple re-renders
         setStatuses((prevStatuses) => {
           const updatedStatuses = prevStatuses.length
             ? prevStatuses.map((status) => {
@@ -148,7 +139,6 @@ export function useImportTransactionsStore() {
           return updatedStatuses;
         });
 
-        // Batch active job ID updates
         const completedJobs = latestJobData.filter(
           (job) => job.status === 'done' || job.status === 'error',
         );
@@ -162,12 +152,11 @@ export function useImportTransactionsStore() {
     [convertJobToFileStatusStable],
   );
 
-  // Process real-time job updates from WebSocket
   const updateImportProgress = useCallback(
     (jobData: ImportTransactionsJob[]) => {
       if (!jobData.length) return;
 
-      // Use throttled update for frequent progress updates
+      // throttle frequent progress ticks, but apply status changes right away
       const hasProgressUpdates = jobData.some(
         (job) => job.status === 'processing' || job.status === 'uploading',
       );
@@ -175,7 +164,6 @@ export function useImportTransactionsStore() {
       if (hasProgressUpdates) {
         throttledUpdateProgress(jobData);
       } else {
-        // For non-progress updates (status changes), update immediately
         setStatuses((prevStatuses) => {
           const updatedStatuses = prevStatuses.length
             ? prevStatuses.map((status) => {
@@ -200,7 +188,6 @@ export function useImportTransactionsStore() {
           return updatedStatuses;
         });
 
-        // Update active job IDs for completed jobs
         const completedJobs = jobData.filter(
           (job) => job.status === 'done' || job.status === 'error',
         );
@@ -214,7 +201,6 @@ export function useImportTransactionsStore() {
     [throttledUpdateProgress, convertJobToFileStatusStable],
   );
 
-  // Cleanup throttled updates on unmount
   useEffect(() => {
     return () => {
       if (progressUpdateTimeoutRef.current) {
@@ -223,13 +209,11 @@ export function useImportTransactionsStore() {
     };
   }, []);
 
-  // Mutation for importing files
   const importMutation = useMutation({
     mutationFn: async (files: File[]): Promise<ImportPreflightPreview[]> => {
       try {
         setError(null);
 
-        // Initialize optimistic statuses
         const results = await Promise.all(
           files.map(async (file) => {
             const formData = new FormData();
@@ -255,7 +239,6 @@ export function useImportTransactionsStore() {
       }
     },
     onSuccess: () => {
-      // Invalidate any related queries
       queryClient.invalidateQueries({ queryKey: IMPORT_TRANSACTIONS_KEY });
     },
     onError: (err) => {
@@ -293,16 +276,14 @@ export function useImportTransactionsStore() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
   }, []);
 
-  // Subscribe to WebSocket messages when connected
   useEffect(() => {
     if (!isConnected) return;
 
-    // Send subscription message
     sendMessage({
       type: IMPORT_PROGRESS_CHANNEL_TYPE,
     });
 
-    // Subscribe to both channels (progress updates and confirmation of subscription)
+    // the server acks on a separate channel, so we subscribe to both
     const unsubscribeProgress = subscribe<ImportTransactionsJob[]>(
       IMPORT_PROGRESS_CHANNEL,
       (message: WebSocketMessage<ImportTransactionsJob[]>) => {
@@ -321,14 +302,12 @@ export function useImportTransactionsStore() {
       },
     );
 
-    // Cleanup subscriptions
     return () => {
       unsubscribeProgress();
       unsubscribeSubscribed();
     };
   }, [isConnected, sendMessage, subscribe, updateImportProgress]);
 
-  // Function to remove a file status (for cleanup when user removes files)
   const removeFileStatus = useCallback((fileName: string) => {
     setStatuses((prev) => prev.filter((status) => status.file.name !== fileName));
   }, []);

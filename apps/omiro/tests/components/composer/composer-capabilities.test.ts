@@ -107,7 +107,7 @@ describe('deriveComposerContentCapabilities', () => {
       voice: { ...idleVoice, isCleaningVoice: true },
     });
     expect(result.canOpenEnhance).toBe(false);
-    // Cleanup doesn't count as isInteractionBusy on its own, so submit still can.
+    // Cleanup alone doesn't count as isInteractionBusy, so submit's still allowed.
     expect(result.canSubmit).toBe(true);
   });
 

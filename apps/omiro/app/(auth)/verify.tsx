@@ -113,7 +113,6 @@ function VerifyScreen() {
   });
   const normalizedOtp = normalizeOtp(otp);
 
-  // Countdown
   const [tokenSentAt, setTokenSentAt] = React.useState(initialTokenSentAt);
   const [secondsLeft, setSecondsLeft] = React.useState(() =>
     resolveSecondsLeft(initialTokenSentAt),
@@ -128,7 +127,7 @@ function VerifyScreen() {
     return () => clearInterval(id);
   }, [tokenSentAt]);
 
-  // Success state — brief pause before redirect
+  // Wait a beat before redirecting so the success state is actually visible
   React.useEffect(() => {
     if (!verifySucceeded) return;
     const id = setTimeout(() => {
@@ -317,8 +316,8 @@ function VerifyScreen() {
                 </Animated.View>
               ) : null}
 
-              {/* Clockwise-drawing border fills in as digits are entered, then fades
-                  into the Verify button once all 6 are present — zero layout shift. */}
+              {/* border fills in clockwise as digits go in, then fades into the
+                  Verify button once all 6 are there -- no layout shift */}
               <AnimatedCanvasButton
                 progress={normalizedOtp.length / 6}
                 style={styles.verifyButtonContainer}

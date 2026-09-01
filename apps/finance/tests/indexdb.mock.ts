@@ -66,5 +66,6 @@ export const indexedDB = {
   })),
 };
 
-// Assign the mock to global
+// this mock only bothers with `open()` since that's all the code under test calls,
+// so it doesn't fully satisfy IDBFactory - the double assertion below is intentional
 global.indexedDB = indexedDB as unknown as IDBFactory;

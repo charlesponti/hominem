@@ -13,17 +13,12 @@ export interface ChatMessageToolCallRecord {
   type: 'tool-call';
   toolCallId: string;
   args: Record<string, unknown>;
-  /**
-   * Tool-call lifecycle. `pending` and `rejected` describe confirmation;
-   * `completed` and `failed` describe execution. Absent (undefined) means
-   * the call predates lifecycle tracking.
-   */
+  // pending/rejected are about confirmation, completed/failed are about
+  // execution. Undefined means the call predates lifecycle tracking.
   status?: 'completed' | 'pending' | 'rejected' | 'failed';
-  /**
-   * Human-readable description of the specific record a `pending` call
-   * would affect (e.g. a skill's name/level), so an approval UI can show
-   * more than a raw id. Only ever set for `requiresConfirmation` tools.
-   */
+  // Human-readable description of what a pending call would affect (e.g. a
+  // skill's name/level), so the approval UI has more than a raw id to show.
+  // Only set for requiresConfirmation tools.
   preview?: Record<string, unknown> | null;
 }
 

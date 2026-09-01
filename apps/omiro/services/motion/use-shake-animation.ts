@@ -7,11 +7,9 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
-/**
- * A short horizontal shake, used to call attention to a validation error.
- * Re-fires the sequence whenever `trigger` flips to true (e.g. an error
- * becoming non-null) rather than continuously re-deriving from its value.
- */
+// A short horizontal shake, used to draw attention to a validation error.
+// Re-fires whenever `trigger` flips to true (e.g. an error becoming
+// non-null) instead of continuously re-deriving from its value.
 export function useShakeAnimation(trigger: boolean) {
   const shakeX = useSharedValue(0);
 

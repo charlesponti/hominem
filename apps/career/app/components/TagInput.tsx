@@ -49,7 +49,6 @@ export function TagInput({
     [tagList, onChange],
   );
 
-  // Fetch suggestions with debounce
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -117,7 +116,7 @@ export function TagInput({
   };
 
   const handleBlur = () => {
-    // Delay closing so click on suggestion registers
+    // wait a beat before closing so a click on a suggestion still lands
     setTimeout(() => {
       setOpen(false);
       setActiveIndex(-1);
@@ -128,7 +127,6 @@ export function TagInput({
     }
   };
 
-  // Scroll active suggestion into view
   useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
       const item = listRef.current.children[activeIndex] as HTMLElement | undefined;
@@ -184,7 +182,7 @@ export function TagInput({
                 index === activeIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
               }`}
               onMouseDown={(e) => {
-                e.preventDefault(); // prevent blur before click
+                e.preventDefault(); // don't let blur fire before the click lands
                 selectSuggestion(suggestion);
               }}
               onMouseEnter={() => setActiveIndex(index)}

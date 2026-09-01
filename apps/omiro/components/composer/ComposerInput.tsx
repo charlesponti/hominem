@@ -12,10 +12,10 @@ import { getComposerSubmissionConfig } from './composerSubmission.helpers';
 import type { ComposerMessageStore } from './useComposerMessageStore';
 import { useComposerMessageStore } from './useComposerMessageStore';
 
-// A generous ceiling meant to stop pathological pastes (megabytes of text)
-// from bloating the draft/optimistic message and jamming layout/markdown
-// rendering -- not a meaningful constraint for normal chat messages. The
-// counter only appears once the user is close to it.
+// Generous ceiling just to stop pathological pastes (megabytes of text) from
+// bloating the draft/optimistic message and jamming up layout/markdown
+// rendering -- normal chat messages never come close. Counter only shows up
+// once you're near the limit.
 const MAX_MESSAGE_LENGTH = 8000;
 const LENGTH_WARNING_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -27,13 +27,13 @@ interface ComposerInputProps {
   onFocus: () => void;
   onBlur: () => void;
   // Wraps messageStore.setMessage with the draft-persistence side effect
-  // (writeChatDraft / inbox onDraftChange) -- must be used for the TextField's
-  // onChangeText instead of calling messageStore.setMessage directly.
+  // (writeChatDraft / inbox onDraftChange) -- use this for the TextField's
+  // onChangeText, not messageStore.setMessage directly.
   onChangeMessage: (message: string) => void;
 }
 
-// The message-store-subscribed text field -- typing re-renders this
-// component alone, not Composer.tsx or ComposerToolbar (see
+// The text field subscribed to the message store -- typing only re-renders
+// this component, not Composer.tsx or ComposerToolbar (see
 // useComposerMessageStore.ts).
 function ComposerInputComponent({
   composerProps,

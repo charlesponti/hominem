@@ -1,6 +1,6 @@
 interface RateLimitOptions {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Max requests per window
+  windowMs: number;
+  maxRequests: number;
 }
 
 interface RateLimitEntry {
@@ -26,7 +26,6 @@ class RateLimiter {
     const entry = this.store.get(identifier);
 
     if (!entry || now > entry.resetTime) {
-      // First request or window expired
       const resetTime = now + this.options.windowMs;
       this.store.set(identifier, { count: 1, resetTime });
       return {
@@ -37,7 +36,6 @@ class RateLimiter {
     }
 
     if (entry.count >= this.options.maxRequests) {
-      // Rate limit exceeded
       return {
         allowed: false,
         resetTime: entry.resetTime,
@@ -45,7 +43,6 @@ class RateLimiter {
       };
     }
 
-    // Increment count
     entry.count++;
     this.store.set(identifier, entry);
 
@@ -56,7 +53,6 @@ class RateLimiter {
     };
   }
 
-  // Clean up expired entries periodically
   cleanup() {
     const now = Date.now();
     for (const [key, entry] of this.store.entries()) {
@@ -72,11 +68,10 @@ class RateLimiter {
 }
 
 export const resumeConvertRateLimit = new RateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 3, // 3 resume conversions per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 3,
 });
 
-// Cleanup every 5 minutes
 setInterval(
   () => {
     resumeConvertRateLimit.cleanup();

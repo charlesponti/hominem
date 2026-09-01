@@ -119,7 +119,7 @@ describe('MCP OAuth integration', () => {
     const registration = await readJson<{ client_id: string }>(registrationResponse);
     expect(registration.client_id).toBeTruthy();
 
-    // Create the test user through the same Better Auth-backed test helper used by mobile e2e.
+    // Create the test user with the same Better Auth test helper the mobile e2e tests use.
     const e2eLoginResponse = await app.request(`${apiUrl}/api/auth/mobile/e2e/login`, {
       method: 'POST',
       headers: {

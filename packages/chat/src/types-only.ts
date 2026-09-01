@@ -1,8 +1,4 @@
-/**
- * @hominem/chat/types
- *
- * Pure-types barrel for environments that only need contracts.
- */
+// @hominem/chat/types — a types-only barrel for environments that just need the contracts
 export * from './chat.types';
 export * from './capture-types';
 export * from './generation-machine';

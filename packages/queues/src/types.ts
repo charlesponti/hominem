@@ -1,19 +1,8 @@
-/**
- * Job processing types used across the monorepo
- *
- * These types define the structure of background jobs that are
- * processed by workers and can be tracked by the UI.
- */
+// background job types shared across workers and the UI
 
-/**
- * Status of a job
- */
 export type JobStatus = 'queued' | 'uploading' | 'processing' | 'done' | 'error' | 'cancelled';
 
-/**
- * Statistics for tracking job progress
- * All properties are made optional to allow for partial updates
- */
+// everything's optional here since we send partial updates as a job progresses
 export interface JobStats {
   progress?: number;
   processingTime?: number;
@@ -26,9 +15,6 @@ export interface JobStats {
   errors?: string[];
 }
 
-/**
- * Base job information shared by all job types
- */
 export interface BaseJob<TStatus extends string = JobStatus> {
   jobId: string;
   userId: string;
@@ -43,9 +29,6 @@ export interface ChatFileCleanupQueuePayload {
   userId: string;
 }
 
-/**
- * Generic file status information for UI
- */
 export interface FileStatus {
   jobId?: string;
   file: File;
@@ -54,9 +37,6 @@ export interface FileStatus {
   stats?: JobStats;
 }
 
-/**
- * Transaction import job options
- */
 export interface ImportTransactionsJob extends BaseJob {
   type: 'import-transactions';
   fileName: string;
@@ -67,16 +47,13 @@ export interface ImportTransactionsJob extends BaseJob {
   endTime?: number;
 }
 
-/**
- * Data payload specifically for creating an 'import-transactions' job in BullMQ.
- * This defines the structure of the `data` field when a job is added to the queue.
- */
+// shape of the `data` field when we add an import-transactions job to BullMQ
 export interface ImportTransactionsQueuePayload {
   planId: string;
   fileName: string;
   userId: string;
-  status: JobStatus; // Should be 'queued' when initially added
-  createdAt: number; // Timestamp of when the job data was prepared
+  status: JobStatus;
+  createdAt: number;
   type: 'import-transactions';
 }
 
@@ -121,10 +98,8 @@ export interface SpeechUsageReconciliationJob {
   speechRunId: string;
 }
 
-/**
- * Resume import: parsing a PDF resume and diffing it against the user's
- * existing career profile so changes can be reviewed before being applied.
- */
+// stages for parsing a PDF resume and diffing it against the user's existing
+// career profile so they can review changes before they get applied
 export type ResumeAnalysisStage =
   | 'queued'
   | 'pdf-extraction'
@@ -145,7 +120,7 @@ export interface ResumeAnalysisQueuePayload {
   createdAt: number;
 }
 
-/** A changed scalar field on the profile or social-links record. */
+// a changed scalar field on the profile or social-links record
 export interface ResumeScalarFieldChange {
   field: string;
   group: 'basics' | 'social';
@@ -154,7 +129,7 @@ export interface ResumeScalarFieldChange {
   proposed: string | boolean | null;
 }
 
-/** A new list-type record (work experience, skill, or project) parsed from the resume. */
+// a new list-type record (work experience, skill, or project) parsed from the resume
 export interface ResumeListItemChange {
   key: string;
   group: 'workExperience' | 'skills' | 'projects';

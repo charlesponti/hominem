@@ -1,12 +1,9 @@
-/**
- * Deliberately inlined rather than imported from @hominem/utils: this package
- * publishes to GitHub Packages for consumers outside the monorepo (see
- * README.md), and @hominem/utils is workspace-only, so importing it here
- * would ship an entry point that cannot resolve for an external consumer.
- * packages/utils keeps its own copy for its own consumers — a one-line pure
- * string function is the cheaper duplication versus coupling a published
- * package to an unpublished one.
- */
+// These are inlined on purpose instead of imported from @hominem/utils. This
+// package publishes to GitHub Packages for consumers outside the monorepo
+// (see README.md), but @hominem/utils is workspace-only — importing it here
+// would ship an entry point external consumers can't resolve. packages/utils
+// keeps its own copy for its own consumers; duplicating a one-line string
+// function is cheaper than coupling a published package to an unpublished one.
 export function normalizeOtp(value: string, length = 6): string {
   return value.replace(/\D/g, '').slice(0, length);
 }

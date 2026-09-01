@@ -1,6 +1,6 @@
-// Props are keyed by `mode` because the composer's whole behavior forks on it:
-// inbox mode saves notes/starts chats and takes its draft from the caller,
-// chat mode sends messages and manages its own draft (see useComposerSubmission).
+// Keyed by `mode` because the composer's whole behavior forks on it: inbox
+// mode saves notes/starts chats and takes its draft from the caller, chat
+// mode sends messages and manages its own draft (see useComposerSubmission).
 interface ComposerInboxProps {
   mode: 'inbox';
   initialMessage?: string;
@@ -26,9 +26,9 @@ interface ComposerChatProps {
   mode: 'chat';
   chatId: string;
   testID?: string;
-  // Owned by the screen (ChatScreen) and shared with the message list's
-  // retry action, so sending and retrying a failed message share one
-  // in-flight mutation instead of racing two independent streams.
+  // Owned by ChatScreen and shared with the message list's retry action, so
+  // sending and retrying a failed message share one in-flight mutation
+  // instead of racing two separate streams.
   chatSend: ComposerChatSend;
 }
 

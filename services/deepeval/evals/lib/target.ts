@@ -9,7 +9,7 @@ import {
   type ModelConfig,
 } from './openrouter';
 
-/** The application boundary under evaluation; DeepEval owns all evaluation logic. */
+// This is the thing actually being evaluated - DeepEval handles all the eval logic itself.
 export const runTarget = observe({
   type: 'llm',
   name: 'hominem_eval_target',

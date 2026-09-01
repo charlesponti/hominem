@@ -77,7 +77,7 @@ function writeLog(level: LogLevel, message: string, data?: LogValue) {
   try {
     telemetryLogSink?.(level, message, isRecord(data) ? data : undefined);
   } catch {
-    // Telemetry must never interfere with application logging.
+    // never let telemetry break actual logging
   }
 
   switch (level) {

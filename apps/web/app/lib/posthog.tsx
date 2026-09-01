@@ -9,7 +9,7 @@ const host =
 if (apiKey && typeof window !== 'undefined') {
   posthog.init(apiKey, {
     api_host: host,
-    // Disable in development unless a key is explicitly set
+    // note: this whole block only runs when apiKey is set, so this check never fires
     loaded: (ph) => {
       if (import.meta.env.DEV && !apiKey) {
         ph.opt_out_capturing();
@@ -27,7 +27,7 @@ interface AnalyticsProviderProps {
 
 export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
   if (!apiKey) {
-    // No PostHog key: render children directly; useFeatureFlag returns false.
+    // no key, no provider — useFeatureFlag will just return false
     return <>{children}</>;
   }
 

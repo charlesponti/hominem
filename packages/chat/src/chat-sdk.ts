@@ -7,16 +7,14 @@ import type {
   ToolResult,
 } from './generation-machine';
 
-/**
- * The model boundary used by the chat SDK. A provider only knows how to open
- * turns and receive tool results; it does not own generation lifecycle.
- */
+// The model boundary the chat SDK talks to — a provider just opens turns and
+// gets tool results back, it doesn't own the generation lifecycle
 export type ChatModel = GenerationPorts['provider'];
 
-/** The application-owned tool boundary used by a generation. */
+// The tool boundary owned by the application
 export type ChatTools = GenerationPorts['tools'];
 
-/** Persistence and delivery dependencies supplied by the host application. */
+// Persistence and delivery deps supplied by the host app
 export type ChatGenerationLifecycle = {
   events: GenerationPorts['events'];
   generation: GenerationPorts['generation'];
@@ -93,12 +91,9 @@ class GenerationsResource {
   }
 }
 
-/**
- * Resource-oriented chat SDK facade.
- *
- * API, web, and mobile integrations configure this once and work with
- * addressable generation resources instead of assembling provider callbacks.
- */
+// Resource-oriented chat SDK facade. API, web, and mobile all configure this
+// once and then work with addressable generation resources, instead of
+// wiring up provider callbacks themselves each time.
 export class ChatClient {
   readonly generations: GenerationsResource;
 

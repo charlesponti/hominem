@@ -2,7 +2,11 @@
 // Finance — Schemas, Types & Client
 // ============================================================================
 
-import type { HonoClient } from './core/api-client';
+import type { financeRoutes } from '@hominem/api/finance';
+import { hc } from 'hono/client';
+
+import type { ClientConfig } from './core/api-client';
+import { customFetch } from './core/api-client';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -434,4 +438,10 @@ export type AffordabilityCheckOutput = {
 // Client
 // ---------------------------------------------------------------------------
 
-export type FinanceClient = HonoClient['api']['finance'];
+export type FinanceClient = ReturnType<typeof hc<typeof financeRoutes>>;
+
+export function createFinanceApiClient(config: ClientConfig): FinanceClient {
+  return hc<typeof financeRoutes>(new URL('/api/finance', config.baseUrl).toString(), {
+    fetch: customFetch(config),
+  });
+}

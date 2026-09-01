@@ -58,7 +58,6 @@ export async function listHealthDailySummary(
     grouped.set(date, existing);
   }
 
-  // Convert to sorted array
   const days = [...grouped.entries()]
     .map(([date, v]) => ({
       date,

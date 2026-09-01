@@ -143,7 +143,6 @@ async function performMobileUploads(
     }
   };
 
-  // Initialize all assets to 0% progress
   assets.forEach((asset) => {
     options?.onAssetProgress?.(asset.assetId, 0);
   });

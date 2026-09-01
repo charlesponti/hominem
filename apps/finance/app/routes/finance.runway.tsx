@@ -51,7 +51,6 @@ export default function RunwayPage() {
     return response.projectionData;
   }, [runwayMutation.data]);
 
-  // Calculate runway metrics from RPC response
   const runwayMetrics = useMemo(() => {
     const response = runwayMutation.data;
     if (!response) {
@@ -91,7 +90,6 @@ export default function RunwayPage() {
       setPlannedPurchases(updatedPurchases);
       setNewPurchase({ description: '', amount: 0, date: '' });
 
-      // Recalculate if we have the required values
       if (initialBalance > 0 && monthlyExpenses > 0) {
         runwayMutation.mutate({
           balance: initialBalance,
@@ -106,7 +104,6 @@ export default function RunwayPage() {
     const updatedPurchases = plannedPurchases.filter((_, i) => i !== index);
     setPlannedPurchases(updatedPurchases);
 
-    // Recalculate if we have the required values
     if (initialBalance > 0 && monthlyExpenses > 0) {
       runwayMutation.mutate({
         balance: initialBalance,
@@ -126,7 +123,6 @@ export default function RunwayPage() {
     }
   };
 
-  // Auto-calculate when values change
   const handleInputChange = (field: 'initialBalance' | 'monthlyExpenses', value: number) => {
     if (field === 'initialBalance') {
       setInitialBalance(value);
@@ -134,7 +130,6 @@ export default function RunwayPage() {
       setMonthlyExpenses(value);
     }
 
-    // Auto-calculate if both values are set
     const newBalance = field === 'initialBalance' ? value : initialBalance;
     const newMonthlyExpenses = field === 'monthlyExpenses' ? value : monthlyExpenses;
 
@@ -159,7 +154,6 @@ export default function RunwayPage() {
         )}
       </div>
 
-      {/* Summary Cards */}
       {chartData.length > 0 && (
         <div className="grid gap-6 md:grid-cols-4">
           <Card>
@@ -219,7 +213,6 @@ export default function RunwayPage() {
         </div>
       )}
 
-      {/* Input Form */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -302,7 +295,6 @@ export default function RunwayPage() {
         </Card>
       </div>
 
-      {/* Planned Purchases List */}
       {plannedPurchases.length > 0 && (
         <Card>
           <CardHeader>
@@ -340,7 +332,6 @@ export default function RunwayPage() {
         </Card>
       )}
 
-      {/* Chart */}
       {chartData.length > 0 && (
         <Card>
           <CardHeader>

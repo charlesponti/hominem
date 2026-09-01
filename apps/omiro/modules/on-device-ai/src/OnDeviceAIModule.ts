@@ -1,7 +1,7 @@
 import { requireNativeModule } from 'expo';
 
 // Must stay in sync with the `code` values thrown by OnDeviceAIException in
-// OnDeviceAIModule.swift — that's the only place these strings are otherwise
+// OnDeviceAIModule.swift -- that's the only other place these strings are
 // defined, so a typo on either side would silently break routing.
 export const OnDeviceAIErrorCode = {
   MODEL_UNAVAILABLE: 'MODEL_UNAVAILABLE',
@@ -47,9 +47,9 @@ export interface OnDeviceAIResult {
   isOnDevice: true;
 }
 
-// Emitted throughout `askCalendar` — session start, prompt send, tool calls
-// and results, and the final response — so the JS side can render the
-// on-device processing steps as they happen instead of only the final text.
+// Emitted throughout `askCalendar` -- session start, prompt sent, tool calls
+// and results, final response -- so the JS side can render the on-device
+// steps as they happen instead of only the final text.
 export interface OnDeviceAILogEvent {
   type: string;
   message: string;

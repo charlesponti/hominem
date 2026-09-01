@@ -17,21 +17,19 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       tailwindcss(),
       reactRouter(),
       VitePWA({
-        // The app maintains its own public/manifest.json and links it
-        // directly in root.tsx — let the plugin manage only the service
-        // worker, not the manifest.
+        // we manage public/manifest.json ourselves and link it in root.tsx,
+        // so let this plugin handle just the service worker
         manifest: false,
         outDir: 'build/client',
         registerType: 'autoUpdate',
         injectRegister: false,
         devOptions: {
-          // Precached-hash service workers and Vite's dev-mode dependency
-          // optimizer (which reissues module URLs with new version hashes
-          // whenever it re-bundles) are fundamentally incompatible — a
-          // worker intercepting `script` requests in dev serves stale
-          // optimizer output and masks Vite's own reload signal. Only ever
-          // register in production, where workbox precaches a fixed,
-          // content-hashed build.
+          // content-hashed service workers don't play nice with Vite's dev
+          // optimizer, which reissues module URLs with new hashes every
+          // rebundle — a worker intercepting script requests in dev would
+          // serve stale optimizer output and hide Vite's reload signal. So
+          // only register in production, where the build is fixed and
+          // content-hashed.
           enabled: false,
         },
         workbox: {
@@ -74,7 +72,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           ],
         },
       }),
-      // Add bundle analyzer when ANALYZE flag is set
       isAnalyze &&
         visualizer({
           open: true,
@@ -84,19 +81,17 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         }),
     ].filter(Boolean) as PluginOption[],
 
-    // CSS optimization options
     css: {
-      // Enable CSS modules
       modules: {
         localsConvention: 'camelCaseOnly' as const,
       },
-      // Optimize in production
+      // sourcemaps only outside prod, no need to ship them in the build
       devSourcemap: !isProd,
     },
 
-    // Pre-bundle radix primitives used by lazily-loaded components so the
-    // optimizer never discovers them mid-session (causes duplicate-React
-    // invalid-hook crashes until a hard reload).
+    // pre-bundle radix primitives used by lazily-loaded components so the
+    // optimizer doesn't discover them mid-session — that causes
+    // duplicate-React invalid-hook crashes until you hard reload
     optimizeDeps: {
       force: mode === 'development',
       include: [
@@ -122,42 +117,36 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
     build: {
       cssCodeSplit: true,
-      chunkSizeWarningLimit: 1200, // Allow route chunks up to 1.2MB
+      chunkSizeWarningLimit: 1200,
       minify: isProd ? 'oxc' : false,
       rollupOptions: {
         external: ['node:perf_hooks', 'perf_hooks'],
         output: {
           manualChunks(id) {
-            // Split vendor dependencies into separate chunks
             if (id.includes('node_modules/')) {
-              // React core - split react and react-dom separately to stay under limit
+              // react and react-dom split apart to each stay under the chunk size limit
               if (id.includes('/react-dom/')) {
                 return 'vendor-react-dom';
               }
               if (id.includes('/react/') && !id.includes('/react-dom/')) {
                 return 'vendor-react';
               }
-              // React Router
               if (id.includes('/react-router/')) {
                 return 'vendor-router';
               }
-              // AI/ML libraries
               if (id.includes('/ai/') || id.includes('/ai-sdk/')) {
                 return 'vendor-ai';
               }
-              // Radix UI components
               if (id.includes('/@radix-ui/')) {
                 return 'vendor-radix';
               }
-              // Lucide icons (often large)
+              // icons tend to be large, keep them in their own chunk
               if (id.includes('/lucide-react/')) {
                 return 'vendor-icons';
               }
-              // Syntax highlighter (heavy with languages)
               if (id.includes('/react-syntax-highlighter/')) {
                 return 'vendor-syntax-highlighter';
               }
-              // Markdown renderer
               if (
                 id.includes('/react-markdown/') ||
                 id.includes('/remark-') ||
@@ -165,11 +154,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
               ) {
                 return 'vendor-markdown';
               }
-              // Uppy file upload
               if (id.includes('/@uppy/')) {
                 return 'vendor-uppy';
               }
-              // GSAP animations
               if (id.includes('/gsap/')) {
                 return 'vendor-gsap';
               }

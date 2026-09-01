@@ -1,7 +1,7 @@
 import { sql, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
-import type { AppVectorDocuments } from '../../types/database';
+import type { AppVectorDocuments, Json } from '../../types/database';
 
 type VectorDocumentRow = Selectable<AppVectorDocuments>;
 
@@ -13,7 +13,7 @@ export interface VectorDocumentRecord {
   entityType: VectorDocumentEntityType;
   entityId: string;
   content: string;
-  metadata: unknown;
+  metadata: Json | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,7 +24,7 @@ export interface UpsertVectorDocumentInput {
   entityId: string;
   content: string;
   embedding: number[];
-  metadata?: unknown;
+  metadata?: Json | null;
 }
 
 export interface SearchVectorDocumentsInput {
@@ -59,7 +59,7 @@ function toVectorLiteral(embedding: number[]): string {
 export const VectorDocumentRepository = {
   async upsert(handle: DbHandle, input: UpsertVectorDocumentInput): Promise<VectorDocumentRecord> {
     const vectorLiteral = toVectorLiteral(input.embedding);
-    const metadata = input.metadata === undefined ? null : (input.metadata as never);
+    const metadata = input.metadata ?? null;
 
     const row = await handle
       .insertInto('app.vectorDocuments')
@@ -97,10 +97,7 @@ export const VectorDocumentRepository = {
       .execute();
   },
 
-  /**
-   * Cosine similarity search, ordered by ascending distance (not descending
-   * similarity) so the HNSW index can be used.
-   */
+  // Orders by ascending distance rather than descending similarity so the HNSW index can be used
   async search(
     handle: DbHandle,
     input: SearchVectorDocumentsInput,

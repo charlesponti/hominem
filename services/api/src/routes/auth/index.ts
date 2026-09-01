@@ -12,15 +12,11 @@ import { testAuthRoutes } from './test-routes';
 
 export const authRoutes = new Hono<AppEnv>();
 
-// ---------------------------------------------------------------------------
-// Session / logout (SSR + first-party apps)
-//
-// getServerAuth (packages/auth/src/server.ts) now calls Better Auth's own
-// GET /api/auth/get-session directly instead of this reshaped endpoint.
-// This route stays because apps/finance still calls it directly (its logout
-// action) — remove once those callers
-// migrate to the native Better Auth session/sign-out endpoints too.
-// ---------------------------------------------------------------------------
+// Session / logout for SSR + first-party apps.
+// getServerAuth (packages/auth/src/server.ts) now hits Better Auth's own
+// GET /api/auth/get-session directly instead of going through this endpoint.
+// This route is only still here because apps/finance's logout action calls it
+// directly — remove once that's migrated to the native Better Auth endpoints.
 
 authRoutes.get('/session', async (c) => {
   try {

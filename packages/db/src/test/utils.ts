@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto';
 
-// Kysely-compatible test utilities
-
 export const isIntegrationDatabaseAvailable = async (): Promise<boolean> => {
   try {
     const { pool } = await import('../db');
@@ -21,10 +19,7 @@ export const createDeterministicIdFactory = (prefix: string) => {
   };
 };
 
-/**
- * Check if a database table exists.
- * Supports both bare table names and schema-qualified names (e.g., 'tags' or 'app.tags').
- */
+// Works with bare table names or schema-qualified ones ('tags' or 'app.tags')
 export const tableExists = async (tableName: string): Promise<boolean> => {
   try {
     const { pool } = await import('../db');

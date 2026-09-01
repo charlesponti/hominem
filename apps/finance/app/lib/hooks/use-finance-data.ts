@@ -94,7 +94,6 @@ export const useFinancialInstitutions = () =>
       .then((r: { json: () => Promise<InstitutionsListOutput> }) => r.json()),
   );
 
-// Hook that adds value by transforming data for unified view
 export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
   const allAccountsQuery = useHonoQuery<AccountAllOutput>(
     ['finance', 'accounts', 'all'],
@@ -148,7 +147,6 @@ interface UseFinanceTransactionsOptions {
   initialData?: TransactionListOutput;
 }
 
-// Hook that adds value through complex state management and data transformation
 export function useFinanceTransactions({
   filters = {},
   sortOptions = [{ field: 'date', direction: 'desc' }],
@@ -156,7 +154,6 @@ export function useFinanceTransactions({
   limit = 25,
   initialData,
 }: UseFinanceTransactionsOptions = {}) {
-  // Convert sort options to API format
   const sortBy = useMemo(() => {
     return sortOptions[0]?.field || 'date';
   }, [sortOptions]);

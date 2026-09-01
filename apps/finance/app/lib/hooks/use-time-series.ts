@@ -14,9 +14,6 @@ interface TimeSeriesParams {
   enabled?: boolean | undefined;
 }
 
-/**
- * Custom hook to fetch and manage time series data using Hono RPC
- */
 export function useTimeSeriesData({
   dateFrom,
   dateTo,
@@ -58,18 +55,17 @@ export function useTimeSeriesData({
         .then((r) => r.json()),
     {
       enabled,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2, // Only retry 2 times before giving up
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-      refetchOnWindowFocus: false, // Don't refetch when window gains focus
-      refetchOnReconnect: false, // Don't refetch when network reconnects
+      staleTime: 5 * 60 * 1000,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // exponential backoff
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   );
 
-  // Helper to format date labels based on grouping
   const formatDateLabel = (dateStr: string) => {
     if (groupBy === 'month') {
-      // Convert YYYY-MM to MMM YYYY
+      // YYYY-MM -> MMM YYYY
       const parts = dateStr.split('-');
       const year = parts[0];
       const month = parts[1];
@@ -86,7 +82,6 @@ export function useTimeSeriesData({
     return dateStr;
   };
 
-  // Format data for charts
   const chartData = Array.isArray(query.data?.data)
     ? query.data.data.map((item) => ({
         name: formatDateLabel(item.date),

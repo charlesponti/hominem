@@ -27,10 +27,9 @@ const ROLE_RANK: Record<'owner' | 'editor' | 'viewer', number> = {
 };
 
 /**
- * A collection is visible to its owner and to any member with an accepted
- * invite. Writes to a collection's items require at least `editor`; only the
- * owner may invite/manage members. Returns the caller's effective role, or
- * null if they have no access at all.
+ * A collection is visible to its owner and to any member with an accepted invite.
+ * Editing items needs at least `editor`; only the owner can invite/manage members.
+ * Returns the caller's role, or null if they have no access.
  */
 async function getAccessRole(
   userId: string,
@@ -231,9 +230,8 @@ export async function inviteMember(ownerUserId: string, input: InviteMemberInput
     return { member: mapMemberRow(row) };
   }
 
-  // No hominem account for this email yet — store the invite by email; it
-  // activates (userId gets backfilled) the moment that email signs up, via
-  // activatePendingInvitesForUser.
+  // no hominem account for this email yet, so stash the invite by email — it gets
+  // activated (userId backfilled) once that email signs up, via activatePendingInvitesForUser
   await db
     .insertInto('app.collectionMembers')
     .values({
@@ -261,10 +259,9 @@ export async function inviteMember(ownerUserId: string, input: InviteMemberInput
 }
 
 /**
- * Activates every pending email-only invite for a newly created account,
- * turning `invitedEmail`-only rows into real `userId` memberships. The
- * invitee still has to call accept_member_invite — this just makes the
- * invite discoverable and acceptable once they exist as a user.
+ * Turns pending email-only invites into real userId memberships for a newly created
+ * account. The invitee still needs to call accept_member_invite — this just makes
+ * the invite visible/acceptable now that they exist as a user.
  */
 export async function activatePendingInvitesForUser(userId: string, email: string): Promise<void> {
   await db

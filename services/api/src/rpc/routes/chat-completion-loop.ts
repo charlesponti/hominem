@@ -96,7 +96,7 @@ interface StreamOnceResult {
   reasoningText: string;
   requestedToolCalls: AccumulatingToolCall[];
   usage: AIUsageMetrics | null;
-  /** True when the provider returned an in-band error with no usable content. */
+  /** true if the provider sent back an in-band error with nothing usable in it */
   erroredEmpty: boolean;
 }
 
@@ -183,12 +183,10 @@ async function streamOnceAttempt(opts: {
   };
 }
 
-/**
- * Runs a (possibly multi-turn) chat completion, executing any MCP tool calls
- * the model requests in between turns, until it produces a final text answer
- * or `maxIterations` is reached (at which point one last call is made with
- * tools disabled to force a text response instead of truncating silently).
- */
+// Runs the chat completion loop, running any MCP tool calls the model asks for
+// in between turns, until it gives a final text answer or hits maxIterations
+// (at which point we make one last call with tools off to force a real answer
+// instead of just cutting the conversation off).
 export async function runCompletionWithTools(
   input: RunCompletionWithToolsInput,
 ): Promise<RunCompletionWithToolsResult> {
@@ -196,9 +194,9 @@ export async function runCompletionWithTools(
   const toolRuntime = input.toolRuntime ?? productionToolRuntime;
   const maxIterations = input.maxIterations ?? DEFAULT_MAX_ITERATIONS;
   const toolCallRecords: ChatMessageToolCallRecord[] = [];
-  // This cache intentionally lives only for one generation. Read-only tools can
-  // be safely reused within a single model turn, while writes and destructive
-  // actions must always execute according to the model's request.
+  // Only lives for this one generation. Read-only tool results can be reused
+  // within a single model turn, but writes/destructive actions always have to
+  // run for real, every time the model asks.
   const readOnlyToolResults = new Map<string, Promise<McpToolResult>>();
   let usage: AIUsageMetrics | null = null;
 
@@ -216,10 +214,9 @@ export async function runCompletionWithTools(
     });
     usage = sumUsage(usage, result.usage);
 
-    // Tool-calling requests occasionally come back from the provider as an
-    // in-band error with no content and no tool calls (no exception thrown).
-    // Retry once without tools so the user still gets a text answer instead
-    // of a hard failure.
+    // Sometimes the provider comes back with an in-band error and nothing
+    // else (no content, no tool calls, no thrown exception). Retry once
+    // without tools so the user gets a text answer instead of a hard failure.
     if (result.erroredEmpty && useTools) {
       if (input.requiresToolCall) throw new Error('The model did not perform the required lookup');
       const retry = await streamOnce({
@@ -244,9 +241,9 @@ export async function runCompletionWithTools(
       };
     }
 
-    // If any requested call needs human approval, stop here rather than
-    // executing it (or any other call from this same turn) — surface it to
-    // the caller so a confirmation prompt can be shown before anything runs.
+    // If any of these calls needs human approval, stop here instead of running
+    // it (or anything else from this turn) — let the caller show a confirmation
+    // prompt before anything actually runs.
     const gatedCall = requestedToolCalls.find(
       (call) => toolRuntime.getToolDefinition(call.name)?.requiresConfirmation,
     );
@@ -404,8 +401,8 @@ export async function runCompletionWithTools(
     }
   }
 
-  // Iteration cap reached — force a final text-only answer instead of
-  // silently truncating the conversation.
+  // Hit the iteration cap — force one final text-only answer instead of just
+  // cutting the conversation off.
   const finalCompletion = streamChatCompletion({
     model: input.model,
     messages,

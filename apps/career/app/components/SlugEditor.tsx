@@ -22,7 +22,6 @@ interface ValidationState {
 const DEFAULT_SLUG_PLACEHOLDER = 'your-profile-name';
 
 export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEditorProps) {
-  // Component state
   const [slugValue, setSlugValue] = useState(initialSlug);
   const [isSaving, setIsSaving] = useState(false);
   const [validation, setValidation] = useState<ValidationState>({
@@ -32,21 +31,17 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
     isValid: true,
   });
 
-  // Reset slug value when initialSlug changes (from successful save)
   useEffect(() => {
     setSlugValue(initialSlug);
   }, [initialSlug]);
 
-  // Debounced slug validation
   const validateSlug = useCallback(
     async (slug: string) => {
-      // Reset validation if empty or same as initial
       if (!slug || slug === initialSlug) {
         setValidation({ isChecking: false, isAvailable: null, message: '', isValid: true });
         return;
       }
 
-      // Basic client-side validation
       if (slug.length < 3) {
         setValidation({
           isChecking: false,
@@ -67,7 +62,6 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
         return;
       }
 
-      // Server-side availability check
       setValidation({
         isChecking: true,
         isAvailable: null,
@@ -112,7 +106,6 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
     [profileId, initialSlug],
   );
 
-  // Debounce validation calls
   useEffect(() => {
     const timer = setTimeout(() => {
       validateSlug(slugValue);
@@ -121,7 +114,6 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
     return () => clearTimeout(timer);
   }, [slugValue, validateSlug]);
 
-  // Event handlers
   const handleSave = async () => {
     if (!validation.isValid || !validation.isAvailable || slugValue === initialSlug || isSaving) {
       return;
@@ -136,16 +128,13 @@ export function SlugEditor({ profileId, initialSlug, liveUrl, onSave }: SlugEdit
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Transform input to valid slug format
     const newValue = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setSlugValue(newValue);
   };
 
-  // Determine if save button should be enabled
   const canSave =
     validation.isValid && validation.isAvailable && slugValue !== initialSlug && !isSaving;
 
-  // Get status icon and styling
   const getValidationStatus = () => {
     if (!slugValue || slugValue === initialSlug) return null;
 

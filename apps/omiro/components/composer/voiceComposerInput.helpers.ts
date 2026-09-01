@@ -26,8 +26,8 @@ export function mergeTranscriptIntoDraft(message: string, transcript: string) {
 }
 
 // Swaps the raw transcript for its cleaned version only if the draft still
-// ends with exactly that raw text — if the user has since edited it away,
-// there's nothing left to safely replace.
+// ends with exactly that raw text -- if the user's since edited it away,
+// there's nothing safe to replace.
 export function replaceTranscriptInDraft(draft: string, rawText: string, cleanedText: string) {
   const suffix = draft.endsWith(rawText) ? rawText : null;
   if (!suffix) {
@@ -37,10 +37,10 @@ export function replaceTranscriptInDraft(draft: string, rawText: string, cleaned
   return `${draft.slice(0, -rawText.length)}${cleanedText}`;
 }
 
-// Cleanup runs in the background after the raw transcript is already inserted,
-// so by the time it resolves the user may have kept typing. Only apply the
-// cleaned text if the draft is unchanged since insertion — otherwise a
-// cleanup edit could clobber or land in the wrong place relative to newer text.
+// Cleanup runs in the background after the raw transcript's already inserted,
+// so the user may have kept typing by the time it resolves. Only apply the
+// cleaned text if the draft hasn't changed since insertion -- otherwise the
+// cleanup edit could clobber or land in the wrong spot relative to newer text.
 export function maybeApplyCleanedTranscript(input: {
   currentDraft: string;
   insertedDraft: string;

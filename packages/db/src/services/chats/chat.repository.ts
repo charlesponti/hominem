@@ -211,11 +211,9 @@ export const ChatRepository = {
     return row ? toChatGenerationRunRecord(row) : null;
   },
 
-  /**
-   * Look up a generation run by id alone (no chatId) — `id` is the table's
-   * primary key, globally unique. Used by `/start-stream`, which has no
-   * chatId yet at the point it needs to detect a retried `generationId`.
-   */
+  // Looks up by id alone since it's globally unique — needed by
+  // /start-stream, which doesn't have a chatId yet when it checks for a
+  // retried generationId.
   async getGenerationRunById(
     handle: DbHandle,
     generationId: string,
@@ -294,9 +292,6 @@ export const ChatRepository = {
     return row ? toChatGenerationRunRecord(row) : null;
   },
 
-  /**
-   * Get a chat by ID with ownership enforcement. Throws if not found.
-   */
   async getOwnedOrThrow(handle: DbHandle, chatId: string, userId: string): Promise<ChatRecord> {
     const chat = await handle
       .selectFrom('app.chats')
@@ -312,9 +307,6 @@ export const ChatRepository = {
     return toChatRecord(chat);
   },
 
-  /**
-   * List non-archived chats for a user, ordered by last message.
-   */
   async listForUser(
     handle: DbHandle,
     userId: string,
@@ -351,9 +343,6 @@ export const ChatRepository = {
     };
   },
 
-  /**
-   * Create a new chat.
-   */
   async create(
     handle: DbHandle,
     input: { userId: string; title: string; archivedAt?: string | null },
@@ -371,9 +360,6 @@ export const ChatRepository = {
     return toChatRecord(chat);
   },
 
-  /**
-   * Update a chat's title.
-   */
   async updateTitle(
     handle: DbHandle,
     chatId: string,
@@ -388,9 +374,6 @@ export const ChatRepository = {
       .executeTakeFirstOrThrow();
   },
 
-  /**
-   * Archive a chat.
-   */
   async archive(handle: DbHandle, chatId: string, userId: string): Promise<ChatRecord> {
     const archived = await handle
       .updateTable('app.chats')
@@ -406,10 +389,7 @@ export const ChatRepository = {
     return toChatRecord(archived);
   },
 
-  /**
-   * Update a user message's content. Only the message's author may edit it,
-   * and only 'user' role messages are editable.
-   */
+  // Only the author can edit their own message, and only user messages are editable
   async updateMessageContent(
     handle: DbHandle,
     chatId: string,
@@ -508,9 +488,6 @@ export const ChatRepository = {
     return { deletedMessageIds, cleanupFileIds };
   },
 
-  /**
-   * Fetch a single message by id.
-   */
   async getMessageById(
     handle: DbHandle,
     chatId: string,
@@ -528,11 +505,8 @@ export const ChatRepository = {
     return toChatMessageRecord(row);
   },
 
-  /**
-   * Update the `status` of a single entry within a message's `toolCalls`
-   * array (used by the tool-call approve/reject flow). Throws if the message
-   * or the matching tool call isn't found.
-   */
+  // Updates one entry's status inside a message's toolCalls array, for the
+  // approve/reject flow. Throws if the message or tool call can't be found.
   async updateToolCallStatus(
     handle: DbHandle,
     chatId: string,
@@ -573,10 +547,8 @@ export const ChatRepository = {
     return toChatMessageRecord(updated);
   },
 
-  /**
-   * Fetch the messages immediately preceding a given point in time (for
-   * regenerate), ordered oldest-first like getMessages.
-   */
+  // Used for regenerate — grabs the messages right before a given timestamp,
+  // oldest-first like getMessages.
   async getMessagesBefore(
     handle: DbHandle,
     chatId: string,
@@ -596,10 +568,7 @@ export const ChatRepository = {
     return messages.map(toChatMessageRecord);
   },
 
-  /**
-   * Replace an assistant message's content (used for regenerate). Clears any
-   * attached audio file since it no longer matches the new text.
-   */
+  // Used for regenerate. Clears any attached audio file since it won't match the new text.
   async replaceAssistantMessageContent(
     handle: DbHandle,
     chatId: string,
@@ -629,9 +598,6 @@ export const ChatRepository = {
     return toChatMessageRecord(updated);
   },
 
-  /**
-   * Touch lastMessageAt after sending messages.
-   */
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {
     await handle
       .updateTable('app.chats')
@@ -640,14 +606,9 @@ export const ChatRepository = {
       .execute();
   },
 
-  /**
-   * Get messages for a chat.
-   *
-   * Paginates from the most recent message backward: `offset=0` returns the
-   * latest `limit` messages (chronological order), `offset=limit` returns
-   * the `limit` messages before those, etc. Callers wanting "load older
-   * history" should increase `offset`, mirroring `getMessagesBefore`.
-   */
+  // Paginates backward from the newest message: offset=0 gets the latest
+  // `limit` messages, offset=limit gets the `limit` before those, and so on.
+  // To load older history, just bump offset up.
   async getMessages(
     handle: DbHandle,
     chatId: string,
@@ -667,9 +628,6 @@ export const ChatRepository = {
     return messages.map(toChatMessageRecord);
   },
 
-  /**
-   * Search all messages in a chat by content.
-   */
   async searchMessages(
     handle: DbHandle,
     chatId: string,
@@ -690,9 +648,7 @@ export const ChatRepository = {
     return messages.map(toChatMessageRecord);
   },
 
-  /**
-   * Insert a single message. Returns the raw row for transaction composition.
-   */
+  // Returns the raw row (not the mapped record) so callers can compose this into a transaction
   async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRow> {
     return (await handle
       .insertInto('app.chatMessages')
@@ -710,10 +666,7 @@ export const ChatRepository = {
       .executeTakeFirstOrThrow()) as ChatMessageRow;
   },
 
-  /**
-   * Attach a note to a chat as a persistent context source. Idempotent --
-   * adding an already-attached note is a no-op, not an error.
-   */
+  // Idempotent — attaching a note that's already attached is a no-op, not an error
   async addChatSource(
     handle: DbHandle,
     chatId: string,
@@ -747,9 +700,6 @@ export const ChatRepository = {
     return toChatSourceRecord(row, note.title);
   },
 
-  /**
-   * Detach a note from a chat. Returns whether a source was actually removed.
-   */
   async removeChatSource(handle: DbHandle, chatId: string, noteId: string): Promise<boolean> {
     const result = await handle
       .deleteFrom('app.chatSources')
@@ -760,9 +710,6 @@ export const ChatRepository = {
     return (result.numDeletedRows ?? 0n) > 0n;
   },
 
-  /**
-   * List the notes currently attached to a chat, most recently added first.
-   */
   async listChatSources(handle: DbHandle, chatId: string): Promise<ChatSourceRecord[]> {
     const rows = (await handle
       .selectFrom('app.chatSources as source')
@@ -789,10 +736,7 @@ export const ChatRepository = {
     return rows.map((row) => toChatSourceRecord(row, row.title));
   },
 
-  /**
-   * Resolve the full note context (content + attached files) for every note
-   * currently attached to a chat -- read once per generation turn.
-   */
+  // Pulls full note content + attached files for every note on this chat — read once per generation turn
   async getChatSourceContext(handle: DbHandle, chatId: string): Promise<NoteContext[]> {
     const notes = (await handle
       .selectFrom('app.chatSources as source')
@@ -854,9 +798,6 @@ export const ChatRepository = {
     return [...notesById.values()];
   },
 
-  /**
-   * Resolve chat file attachments by file IDs with ownership check.
-   */
   async resolveChatFiles(
     handle: DbHandle,
     userId: string,

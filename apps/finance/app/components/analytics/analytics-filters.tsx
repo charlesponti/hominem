@@ -188,7 +188,7 @@ export function AnalyticsFilters({
   const includeStatsId = useId();
   const compareToPreviousId = useId();
 
-  // Ensure we have valid data even during loading
+  // fall back to empty arrays while the queries are still loading
   const safeAccounts: Array<{ id: string; name: string }> = (
     Array.isArray(accountsQuery.data) ? accountsQuery.data : []
   ).map((acc) => ({ id: acc.id, name: acc.name }));
@@ -205,7 +205,6 @@ export function AnalyticsFilters({
     <Card>
       <div className="px-4 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Filter Dialog Trigger */}
           <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger asChild>
               <Button variant="outline" size="sm">
@@ -224,7 +223,6 @@ export function AnalyticsFilters({
                     </Dialog.Description>
                   </div>
                   <div className="space-y-6">
-                    {/* Date Range Filters */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label htmlFor={dateFromId}>From Date</label>
@@ -244,7 +242,6 @@ export function AnalyticsFilters({
                       </div>
                     </div>
 
-                    {/* Account and Tag Filters */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <AccountSelect
                         selectedAccount={selectedAccount}
@@ -282,7 +279,6 @@ export function AnalyticsFilters({
                       </Select>
                     </div>
 
-                    {/* Toggle Filters */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
@@ -326,7 +322,6 @@ export function AnalyticsFilters({
             </Dialog.Portal>
           </Dialog.Root>
 
-          {/* Active Filters Display */}
           <div className="flex-1 min-w-0">
             <FilterChips
               dateFrom={dateFrom}

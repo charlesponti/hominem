@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FetcherWithComponents } from 'react-router';
 
 export interface EditorSubmissionResult<TRecord> {
   success: boolean;
@@ -9,8 +8,13 @@ export interface EditorSubmissionResult<TRecord> {
   operation?: string;
 }
 
+interface SubmissionFetcher {
+  state: string;
+  data: unknown;
+}
+
 interface UseCareerEditorSubmissionOptions<TRecord> {
-  fetcher: FetcherWithComponents<unknown>;
+  fetcher: SubmissionFetcher;
   errorMessage: string;
   onSuccess?: (result: EditorSubmissionResult<TRecord>) => void;
 }

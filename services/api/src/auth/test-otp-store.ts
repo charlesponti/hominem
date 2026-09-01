@@ -1,4 +1,4 @@
-// Test OTP store for e2e tests
+// In-memory OTP store so tests/e2e can grab the code without a real email
 
 type TestOtpRecord = {
   email: string;
@@ -26,7 +26,7 @@ export function getLatestTestOtp(input: { email: string; type?: string }): TestO
     return otpStore.get(`${input.email}:${input.type}`) ?? null;
   }
 
-  // Prefer exact email-only key, else any typed record for this email.
+  // try the email-only key first, otherwise grab any typed record for this email
   const direct = otpStore.get(input.email);
   if (direct) return direct;
 

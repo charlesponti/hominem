@@ -1,13 +1,11 @@
-/**
- * Reducers for the tool-call queue: routing a completed provider turn's
- * requested calls (straight through, or paused for confirmation), running
- * them one at a time, and folding results back in before the next provider
- * turn opens.
- *
- * `reduceProviderTurnCompleted` lives here rather than in `provider.ts`
- * because its logic is entirely about the tool-call queue — it only reads
- * `state.requestedToolCalls`, which `provider.ts` has already accumulated.
- */
+// Reducers for the tool-call queue: routing a completed provider turn's
+// requested calls (either straight through or paused for confirmation),
+// running them one at a time, and folding results back in before the next
+// provider turn opens.
+//
+// `reduceProviderTurnCompleted` lives here instead of `provider.ts` because
+// it's entirely about the tool-call queue — it just reads
+// `state.requestedToolCalls`, which `provider.ts` already built up.
 
 import { reduceGenerationFailed } from './lifecycle';
 import { persistCommand, phaseCommands, toolCallIdempotencyKey } from './shared';
@@ -21,7 +19,7 @@ import type {
   ToolResult,
 } from './types';
 
-/** Dispatches the next queued call as a running effect; not itself a dispatch-table entry. */
+// Kicks off the next queued call as a running effect — not a dispatch-table entry itself
 function runNextToolCall(state: GenerationState, call: GenerationToolCall): GenerationStep {
   return {
     state: {

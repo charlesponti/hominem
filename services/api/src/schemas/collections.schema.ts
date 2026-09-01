@@ -130,7 +130,6 @@ export const listPendingInvitesOutputSchema = z.object({
   count: z.number().int().min(0),
 });
 
-// Types
 export type CollectionSummary = z.output<typeof collectionSummarySchema>;
 export type CollectionMember = z.output<typeof collectionMemberSchema>;
 export type CollectionItem = z.output<typeof collectionItemSchema>;

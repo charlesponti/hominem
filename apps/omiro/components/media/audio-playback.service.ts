@@ -10,11 +10,11 @@ type PlaybackSnapshot = {
 };
 
 // Sibling to audio.service.ts, but for playback: a single-active-player
-// singleton (only one reply plays at a time — starting a new one stops
-// whatever was playing), keyed by chat message id rather than a recording
-// ownerId. Uses expo-audio's non-hook createAudioPlayer so it's addressable
-// from module-level callers (SSE event handlers, chat-message action
-// buttons) rather than tied to one component's lifecycle.
+// singleton (only one reply plays at a time -- starting a new one stops
+// whatever was playing), keyed by chat message id instead of a recording
+// ownerId. Uses expo-audio's non-hook createAudioPlayer so it's callable
+// from module-level code (SSE event handlers, chat-message action buttons),
+// not tied to one component's lifecycle.
 function createPlaybackController() {
   const store = createStore<PlaybackSnapshot>({ activeMessageId: null, playing: false });
   let player: AudioPlayer | null = null;
@@ -24,8 +24,8 @@ function createPlaybackController() {
     if (audioModeReady) return;
     audioModeReady = true;
     // playsInSilentMode already defaults to true in this SDK, and
-    // audio.service.ts's recording session may have set allowsRecording —
-    // leave that alone here, this is just a defensive no-op safeguard.
+    // audio.service.ts's recording session may have set allowsRecording --
+    // leave that alone, this is just a defensive no-op safeguard.
     Audio.setAudioModeAsync({ playsInSilentMode: true }).catch((error: Error) =>
       logger.error('[audio-playback] set audio mode failed', error),
     );

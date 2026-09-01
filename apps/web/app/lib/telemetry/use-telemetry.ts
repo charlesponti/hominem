@@ -4,10 +4,8 @@ import { useEffect, useRef } from 'react';
 import { getClientEnv } from '../env.client';
 import { initTelemetry } from './browser';
 
-/**
- * Hook to initialize OpenTelemetry in the browser
- * Should be called once at app startup
- */
+// call once at app startup — actual browser-side telemetry is a no-op
+// (see browser.ts), events go through the API proxy instead
 export function useTelemetry() {
   const initialized = useRef(false);
 
@@ -15,12 +13,10 @@ export function useTelemetry() {
     if (initialized.current) return;
     initialized.current = true;
 
-    // Only initialize in browser
     if (typeof window === 'undefined') return;
 
     const clientEnv = getClientEnv();
 
-    // Check if telemetry is explicitly disabled
     if (
       clientEnv.VITE_OTEL_EXPORTER_OTLP_ENDPOINT === 'none' ||
       clientEnv.VITE_OTEL_DISABLED === 'true'
@@ -37,7 +33,6 @@ export function useTelemetry() {
         samplingRatio: parseFloat(clientEnv.VITE_OTEL_TRACES_SAMPLER_ARG),
       });
 
-      // Cleanup on page unload
       return () => {
         telemetry.shutdown().catch((error) => logger.error('telemetry_shutdown_failed', { error }));
       };

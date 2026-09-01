@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveTimeRequest } from '~/components/time/time-request';
+import type { TimeBlock } from '~/components/time/time-types';
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
@@ -15,6 +16,22 @@ const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
   recurrenceDescription: null,
   startDate: '2026-08-10T10:00:00.000Z',
   title: 'Planning',
+  ...overrides,
+});
+
+const timeBlock = (overrides: Partial<TimeBlock> = {}): TimeBlock => ({
+  primary_intent: 'search',
+  title: null,
+  target_title: null,
+  participants: null,
+  location: null,
+  duration: null,
+  start_time: null,
+  end_time: null,
+  scheduling_window_start: null,
+  scheduling_window_end: null,
+  deadline_fixed: null,
+  recurrence_rule: null,
   ...overrides,
 });
 
@@ -41,7 +58,7 @@ describe('resolveTimeRequest', () => {
   it('returns an answer for a calendar search', async () => {
     const result = await resolveTimeRequest({
       ...options,
-      parse: vi.fn(async () => ({ block: { primary_intent: 'search' } as never })),
+      parse: vi.fn(async () => ({ block: timeBlock({ primary_intent: 'search' }) })),
       prompt: 'When am I free?',
     });
 
@@ -54,7 +71,7 @@ describe('resolveTimeRequest', () => {
     const result = await resolveTimeRequest({
       ...options,
       gateway: { ...options.gateway, listEvents },
-      parse: vi.fn(async () => ({ block: { primary_intent: 'search' } as never })),
+      parse: vi.fn(async () => ({ block: timeBlock({ primary_intent: 'search' }) })),
       permission: 'denied',
       prompt: 'Find my next meeting',
     });
@@ -73,7 +90,7 @@ describe('resolveTimeRequest', () => {
       ...options,
       events: [matchingEvent],
       parse: vi.fn(async () => ({
-        block: { primary_intent: 'edit_event', target_title: 'Planning' } as never,
+        block: timeBlock({ primary_intent: 'edit_event', target_title: 'Planning' }),
       })),
       prompt: 'Move planning',
     });
@@ -88,7 +105,7 @@ describe('resolveTimeRequest', () => {
       ...options,
       events: [first, second],
       parse: vi.fn(async () => ({
-        block: { primary_intent: 'edit_event', target_title: 'Planning' } as never,
+        block: timeBlock({ primary_intent: 'edit_event', target_title: 'Planning' }),
       })),
       prompt: 'Move planning',
     });
@@ -101,7 +118,7 @@ describe('resolveTimeRequest', () => {
   });
 
   it('returns a draft for a task request', async () => {
-    const block = { primary_intent: 'add_task', title: 'Write brief' } as never;
+    const block = timeBlock({ primary_intent: 'add_task', title: 'Write brief' });
     const result = await resolveTimeRequest({
       ...options,
       parse: vi.fn(async () => ({ block })),
