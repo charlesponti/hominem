@@ -16,6 +16,7 @@
 	};
 	const emailProgress = (email) => {
 		if (!email) return [0, "Enter your email"];
+		if (/\s/.test(email)) return [.2, "Remove the spaces"];
 		if (!email.includes("@")) return [.2, "Add the @ symbol"];
 		const domain = email.split("@")[1] ?? "";
 		if (!domain) return [.4, "Almost there! Add the domain"];

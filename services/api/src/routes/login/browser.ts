@@ -28,6 +28,7 @@ const progressButtonState = (
 
 const emailProgress = (email: string): [number, string] => {
   if (!email) return [0, 'Enter your email'];
+  if (/\s/.test(email)) return [0.2, 'Remove the spaces'];
   if (!email.includes('@')) return [0.2, 'Add the @ symbol'];
   const domain = email.split('@')[1] ?? '';
   if (!domain) return [0.4, 'Almost there! Add the domain'];
