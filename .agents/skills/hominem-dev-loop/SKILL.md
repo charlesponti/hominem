@@ -54,6 +54,22 @@ remembers this configuration, so subsequent `pnpm dev` runs auto-attach to
 the running proxy instead of trying to start their own. `.env.example`
 defaults already point at `https://<name>.localhost:4200`.
 
+Each of `api`/`web`/`career`/`finance`'s `package.json` has its own
+`"portless": { "name", "script": "dev:app" }` key — that's what portless
+actually reads when a package's own `"dev": "portless"` script runs (a root
+`portless.json` apps map is only consulted for the bare, monorepo-wide
+`portless` command, which this repo's turbo-driven `pnpm dev` never uses).
+If you add a new portless-fronted app, give it this key, not a root config
+entry.
+
+`services/api`'s hosted login page ships a client bundle
+(`public/login.js`) built from `src/routes/login/browser.ts` — this is a
+committed artifact, not compiled at request time, so a source-only edit to
+`browser.ts` has no effect until it's rebuilt. `pnpm dev`/`dev:api` handles
+this automatically (see [services/api/AGENTS.md](../../../services/api/AGENTS.md)); an out-of-band build needs
+`node build.mjs` run from `services/api`, with the regenerated
+`public/login.js` committed alongside the source change.
+
 ## Smallest loop by default
 
 1. `just setup`
