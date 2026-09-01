@@ -164,6 +164,30 @@ Unlike `runInTransaction` above, we didn't fix this one. Kysely's `SelectQueryBu
 
 Worth rerunning `scripts/find-duplicate-shapes.mjs` periodically rather than trusting this list to stay accurate — it's read-only and takes about 8s on the full tree, and the actual set of duplicates will drift as the codebase grows.
 
+## The `tsc --noEmit` incremental cache: a correctness bug we traded away on purpose
+
+Everything above is about making real type-checks faster. This section is about a case where we found the opposite problem — `tsc`'s own incremental cache making a type-check *cheaper than it should be*, by silently skipping work it needed to do — and chose to give back some of that speed on purpose. See [ADR 0001](adr/0001-clear-tsbuildinfo-before-typecheck.md) for the full writeup; this is the summary in context.
+
+Every package on the shared `tsconfig.profiles/package.json` profile (everything except `services/ori` and `services/deepeval`) sets `composite: true`, which forces `incremental: true` and a persisted `./.cache/tsconfig.tsbuildinfo` per package. We hit this directly: after fixing a real type error in `packages/db`, `pnpm -w typecheck` reported all 34 tasks green — including `packages/ai`, which had its own genuine, unrelated type error (`RecordAIUsageEventInput.metadata: Record<string, unknown>` isn't assignable to the `Json` type `packages/db`'s repositories actually expect). Turborepo correctly re-invoked `@hominem/ai`'s `tsc --noEmit` as a cache miss, but `tsc` itself consulted its own stale `.tsbuildinfo` and didn't re-check `ai-usage.ts` against `@hominem/db`'s freshly-rebuilt `build/index.d.ts`. Deleting `packages/ai/.cache` and rerunning surfaced the error immediately — and running `turbo run typecheck --force` after clearing every package's `.cache`/`*.tsbuildinfo` repo-wide reproduced the same result everywhere. That's a real, reproducible false-pass in a check whose entire job is to not do that.
+
+**The fix:** every affected package's `typecheck` script now runs `rm -rf .cache && tsc --noEmit` (prefixes/suffixes like `react-router typegen &&` or `-p tsconfig.json` preserved). `build` scripts are untouched — a stale build-time cache doesn't produce this same silent-pass failure mode, since build output is still content-addressed and consumed downstream via the `paths` overrides described above.
+
+**The cost, measured** (cold vs. warm-and-unchanged `tsc --noEmit`, i.e. exactly the reuse this fix gives up):
+
+| package | cold | warm (unchanged) | reuse lost |
+|---|---|---|---|
+| `services/api` | 5.30s | 5.08s | ~0% (noise) |
+| `apps/omiro` | 5.10s | 4.63s | ~9% |
+| `packages/rpc` | 1.79s | 0.95s | ~47% |
+| `packages/db` | 1.46s | 0.57s | ~61% |
+| `packages/utils` | 0.57s | 0.50s | ~12% |
+
+Worth noting for anyone reading this alongside the rest of the doc: `services/api`, the package everything else here spends the most effort on, shows essentially zero cost from this fix. Its time is dominated by the one-time `DbHandle` union comparison and the Kysely chains documented above — not by incremental reuse — so this fix and everything above it are complementary, not in tension.
+
+This cost only lands on invocations Turborepo already decided were necessary (its own content-hash task cache still skips the script entirely, at zero cost, when nothing relevant changed), never applies to CI (which always starts cold anyway), and has zero effect on `pnpm dev:types`/tsserver/editor responsiveness — that path is `scripts/watch-types.sh`, a persistent process built on the live-redirect model described above, and it never touches these per-package `.tsbuildinfo` files at all.
+
+We considered a more surgical fix — hash each package's direct workspace dependencies' `build/**/*.d.ts` output and only clear `.cache` when that hash actually changes, preserving `tsc`'s incremental reuse for pure same-package edits — but didn't build it. It's real, nontrivial cache-invalidation logic to get right and maintain, for a win bounded to a handful of `rpc`/`db`-sized packages. Flagged as a possible follow-up if that cost is ever actually felt during normal iteration, rather than just in this one-off benchmark.
+
 ## Numbers, for reference
 
 Before any of the fixes in this document: a full cold monorepo typecheck took about 24.3s — the composite `tsc -b` build was ~7.7s, `services/api` alone was ~11–14s, and `packages/rpc`'s emit was ~1.6s. From the callback-annotation fixes alone, `services/api`'s own `checkSourceFile` total dropped from ~8.29s to ~7.57s, on top of the ~13% win on `tsc -p tsconfig.emit.json` from the `paths`-override fix described above. Separately — and this is the number that actually governs how `pnpm dev:types`/editor responsiveness *feels*, as opposed to any `tsc --noEmit` CI number — tsserver's `open` cost dropped 57% for `apps/web` (14287ms → 6207ms) and 31% for `apps/omiro` (7033ms → 4864ms) once the same `injectWorkspacePackages` `paths`-override fix got extended to every consumer of `@hominem/api/types`, not just `services/api` itself (see "the trap re-appears at every consumer" above). `apps/finance` ended up with a different, larger-in-kind fix on top of all that: dropping the root `@hominem/api/types` dependency entirely in favor of the narrow `@hominem/api/finance` export (see "Per-domain route splitting" above) — 13% faster `open`, 46% faster `geterr`. None of this makes the monorepo feel instantaneous, and it shouldn't — a project this size, doing real structural inference across roughly 1000 files, legitimately takes several seconds. What these fixes removed was identifiable waste, not the inherent cost of the type system doing its actual job.
