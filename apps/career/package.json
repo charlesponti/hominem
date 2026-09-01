@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build && mkdir -p build/lib && cp -R app/lib/prompts build/lib/",
-    "dev": "react-router dev",
+    "dev": "portless",
+    "dev:app": "react-router dev",
     "dev:clean": "rm -rf node_modules/.vite && react-router dev",
     "dev:debug": "node --inspect-brk ./node_modules/.bin/react-router dev",
     "lint": "oxlint app tests",
@@ -58,6 +59,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@react-router/dev": "catalog:",
     "@tailwindcss/vite": "^4.1.8",
     "@testing-library/jest-dom": "catalog:",
@@ -67,7 +69,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitest/coverage-v8": "4.1.2",
-    "@playwright/test": "^1.62.1",
     "jiti": "catalog:",
     "jsdom": "^30.0.0",
     "msw": "^2.12.13",

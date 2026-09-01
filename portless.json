@@ -1,0 +1,8 @@
+{
+  "apps": {
+    "services/api": { "name": "api", "script": "dev:app" },
+    "apps/web": { "name": "web", "script": "dev:app" },
+    "apps/career": { "name": "career", "script": "dev:app" },
+    "apps/finance": { "name": "finance", "script": "dev:app" }
+  }
+}
