@@ -1,0 +1,2 @@
+watch:
+    pnpm dev:types
