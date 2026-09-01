@@ -23,7 +23,7 @@
     "build:worker": "node build.mjs worker",
     "build:types": "tsc -p tsconfig.emit.json",
     "dev": "portless",
-    "dev:app": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
+    "dev:app": "SERVICE_NAME=api node scripts/dev.mjs",
     "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
