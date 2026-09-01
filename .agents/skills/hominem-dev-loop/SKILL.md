@@ -13,6 +13,24 @@ Never start long-running services yourself (Expo/Metro, `pnpm dev`, the API,
 workers, databases, Docker) — the user starts them. This skill's commands
 assume the user has already started whatever the task needs.
 
+## First-time setup: env files in a new worktree
+
+A freshly created worktree has none of the git-ignored `.env` files each
+app/service/package needs (they hold real secrets, so they're never
+committed). Copy them over from the main checkout in one step:
+
+```bash
+scripts/sync-worktree-env.sh            # copies whatever's missing
+scripts/sync-worktree-env.sh --dry-run  # preview without changing anything
+scripts/sync-worktree-env.sh --force    # also overwrite files that already exist
+```
+
+It never overwrites an existing file by default, so it's safe to re-run.
+After copying, review the `*_URL` / `VITE_PUBLIC_API_URL` /
+`HOMINEM_INTERNAL_API_URL` values in the copied files — a worktree running
+its own portless-proxied instance (see below) needs the `:4200` portless
+URLs, not the plain-port ones the main checkout may still use.
+
 ## First-time setup: portless proxy
 
 `pnpm dev` for `api`/`web`/`career`/`finance` runs through
