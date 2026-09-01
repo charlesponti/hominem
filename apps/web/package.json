@@ -92,5 +92,9 @@
     "workerDirectory": [
       "public"
     ]
+  },
+  "portless": {
+    "name": "web",
+    "script": "dev:app"
   }
 }

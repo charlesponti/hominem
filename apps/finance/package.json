@@ -60,5 +60,9 @@
     "vite": "catalog:",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "catalog:"
+  },
+  "portless": {
+    "name": "finance",
+    "script": "dev:app"
   }
 }

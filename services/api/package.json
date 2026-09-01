@@ -80,5 +80,9 @@
     "@vitest/coverage-v8": "4.1.0",
     "rolldown": "^1.0.0",
     "tsx": "^4.10.0"
+  },
+  "portless": {
+    "name": "api",
+    "script": "dev:app"
   }
 }
