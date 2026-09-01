@@ -42,7 +42,7 @@
     "test:coverage": "vitest run --coverage",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "rm -rf .cache && tsc --noEmit"
   },
   "dependencies": {
     "@hominem/chat": "workspace:*",
