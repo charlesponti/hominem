@@ -10,7 +10,7 @@ describe('useCareerEditorSubmission', () => {
     const { rerender, result } = renderHook(
       ({ fetcher }: { fetcher: { state: string; data: unknown } }) =>
         useCareerEditorSubmission({
-          fetcher: fetcher as never,
+          fetcher,
           errorMessage: 'Failed to save',
           onSuccess,
         }),
@@ -41,7 +41,7 @@ describe('useCareerEditorSubmission', () => {
         fetcher: {
           state: 'idle',
           data: { success: false, error: 'Validation failed' },
-        } as never,
+        },
         errorMessage: 'Failed to save',
       }),
     );
@@ -57,7 +57,7 @@ describe('useCareerEditorSubmission', () => {
         fetcher: {
           state: 'idle',
           data: { success: true, data: { id: 'project-1' } },
-        } as never,
+        },
         errorMessage: 'Failed to save',
         onSuccess,
       }),

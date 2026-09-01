@@ -10,6 +10,7 @@ import {
   type AIUsageOperation,
   type AIUsageTimeseriesGranularity,
   type AIUsageTimeseriesRecord,
+  type JsonObject,
 } from '@hominem/db';
 import { logger } from '@hominem/telemetry';
 
@@ -26,7 +27,7 @@ type RecordAIUsageEventInput = {
   feature: AIUsageFeature;
   operation: AIUsageOperation;
   usage?: AIUsageMetrics | null;
-  metadata?: Record<string, unknown>;
+  metadata?: JsonObject;
   model?: string | null;
   durationMs: number;
   status?: AIUsageEventStatus;
@@ -72,9 +73,9 @@ export function getAIUsageFailureDetails(error: unknown): AIUsageFailureDetails 
 }
 
 function buildMetadata(
-  metadata: Record<string, unknown> | undefined,
+  metadata: JsonObject | undefined,
   usage: AIUsageMetrics,
-): Record<string, unknown> | undefined {
+): JsonObject | undefined {
   if (usage.reportedTotalTokens === null) {
     return metadata;
   }

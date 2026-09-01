@@ -6,6 +6,9 @@ import {
   findOpenings,
   getAvailabilityRange,
 } from '~/components/time/time-utils';
+import type { TaskListItem } from '@hominem/rpc/types';
+
+import type { TimeBlock } from '~/components/time/time-types';
 import type { CalendarEvent } from '~/modules/on-device-ai';
 
 const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
@@ -23,17 +26,29 @@ const event = (overrides: Partial<CalendarEvent> = {}): CalendarEvent => ({
   ...overrides,
 });
 
-const task = (overrides = {}) =>
-  ({
-    dueAt: null,
-    id: 'task-1',
-    parentTaskId: null,
-    scheduledEndAt: '2026-07-28T10:30:00.000Z',
-    scheduledStartAt: '2026-07-28T10:00:00.000Z',
-    status: 'open',
-    title: 'Write brief',
-    ...overrides,
-  }) as never;
+const task = (overrides: Partial<TaskListItem> = {}): TaskListItem => ({
+  artifactType: 'task',
+  childCount: 0,
+  completedAt: null,
+  createdAt: '2026-07-28T09:00:00.000Z',
+  description: null,
+  dueAt: null,
+  durationMinutes: null,
+  id: 'task-1',
+  location: null,
+  ownerUserId: 'user-1',
+  parentTaskId: null,
+  priority: 'medium',
+  scheduledEndAt: '2026-07-28T10:30:00.000Z',
+  scheduledStartAt: '2026-07-28T10:00:00.000Z',
+  schedulingWindowEndAt: null,
+  schedulingWindowStartAt: null,
+  status: 'open',
+  timeZone: null,
+  title: 'Write brief',
+  updatedAt: '2026-07-28T09:00:00.000Z',
+  ...overrides,
+});
 
 describe('Time stream rows', () => {
   it('keeps task rows available without calendar permission', () => {
@@ -73,7 +88,20 @@ describe('Time stream rows', () => {
 describe('Time availability', () => {
   it('uses the next seven local days when parsing does not provide a window', () => {
     const range = getAvailabilityRange(
-      { scheduling_window_end: null, scheduling_window_start: null } as never,
+      {
+        primary_intent: 'schedule_gap_fill',
+        title: null,
+        target_title: null,
+        participants: null,
+        location: null,
+        duration: null,
+        start_time: null,
+        end_time: null,
+        scheduling_window_start: null,
+        scheduling_window_end: null,
+        deadline_fixed: null,
+        recurrence_rule: null,
+      } satisfies TimeBlock,
       new Date('2026-07-27T09:00:00.000Z'),
     );
 

@@ -2,7 +2,7 @@ import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
 import { sql, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
-import type { AppAiUsageEvents, Numeric } from '../../types/database';
+import type { AppAiUsageEvents, Json, Numeric } from '../../types/database';
 
 type AIUsageEventRow = Selectable<AppAiUsageEvents>;
 
@@ -46,7 +46,7 @@ export interface AIUsageEventRecord {
   reasoningTokens: number | null;
   costUsd: number | null;
   durationMs: number | null;
-  metadata: unknown;
+  metadata: Json | null;
   createdAt: string;
 }
 
@@ -69,7 +69,7 @@ export interface CreateAIUsageEventInput {
   usageAvailable?: boolean;
   errorCode?: string | null;
   errorStatus?: number | null;
-  metadata?: unknown;
+  metadata?: Json | null;
 }
 
 export interface AIUsageQueryRange {
@@ -189,7 +189,7 @@ export const AIUsageEventRepository = {
         reasoningTokens: input.reasoningTokens ?? null,
         costUsd: input.costUsd ?? null,
         durationMs: input.durationMs ?? null,
-        metadata: input.metadata === undefined ? null : (input.metadata as never),
+        metadata: input.metadata ?? null,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -219,7 +219,7 @@ export const AIUsageEventRepository = {
         reasoningTokens: input.reasoningTokens ?? null,
         costUsd: input.costUsd ?? null,
         durationMs: input.durationMs ?? null,
-        metadata: input.metadata === undefined ? null : (input.metadata as never),
+        metadata: input.metadata ?? null,
       })
       .onConflict((conflict) => conflict.column('id').doNothing())
       .returning('id')

@@ -41,7 +41,25 @@ describe('useStartChatSubmission', () => {
       }: {
         onAccepted?: (event: Extract<GenerationWireEvent, { type: 'generation.accepted' }>) => void;
       }) => {
-        onAccepted?.({ payload: { chatId: 'chat-1' } } as never);
+        onAccepted?.({
+          version: 1,
+          generationId: 'generation-1',
+          sequence: 1,
+          type: 'generation.accepted',
+          payload: {
+            type: 'generation.accepted',
+            chatId: 'chat-1',
+            chat: {
+              id: 'chat-1',
+              userId: 'user-1',
+              title: 'New chat',
+              archivedAt: null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            userMessage: null,
+          },
+        });
       },
     );
 

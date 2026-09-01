@@ -7,7 +7,7 @@ export async function cleanupIntegrationFinanceUser(userId: string): Promise<voi
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom('app.tagAssignments')
-      .where('entityTable', '=', sql`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass`)
+      .where('entityTable', '=', sql<string>`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass`)
       .where('entityId', 'in', (eb) =>
         eb.selectFrom('app.financeTransactions').select('id').where('userId', '=', userId),
       )

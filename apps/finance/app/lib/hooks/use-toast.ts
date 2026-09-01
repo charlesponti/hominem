@@ -4,7 +4,7 @@ import { toast as showToast, type ToastOptions } from '~/lib/toast';
 export function useToast() {
   return {
     toast: (message: ToastOptions) => showToast(message),
-    toasts: [] as never[],
+    toasts: [] as ToastOptions[],
     dismiss: (_id: string) => {},
   };
 }

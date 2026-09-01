@@ -31,6 +31,7 @@ vi.mock('../middleware/auth', () => ({
 }));
 
 import type { AuthContext } from '../auth/types';
+import type { McpHonoEnv } from './server';
 import { mcpAuthorizationMiddleware } from './routes';
 
 const auth = {
@@ -41,10 +42,10 @@ const auth = {
 } as AuthContext;
 
 function createApp() {
-  const app = new Hono();
+  const app = new Hono<McpHonoEnv>();
   app.use('*', async (c, next) => {
     c.set('auth', auth);
-    return mcpAuthorizationMiddleware(c as never, next as never);
+    return mcpAuthorizationMiddleware(c, next);
   });
   app.get('*', (c) => c.json({ ok: true }));
   return app;

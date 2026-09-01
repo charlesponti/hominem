@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 
 import type { AppFinanceTransactions, Selectable } from '@hominem/db';
 import { db } from '@hominem/db';
-import { sql, type Insertable, type Updateable } from 'kysely';
+import { sql, type Insertable, type SqlBool, type Updateable } from 'kysely';
 import z from 'zod';
 
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';
@@ -78,7 +78,7 @@ export async function queryTransactionsByContract(input: {
 
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (
+      sql<SqlBool>`exists (
         select 1
         from app.tag_assignments ti_filter
         join app.tags tg_filter
@@ -94,7 +94,7 @@ export async function queryTransactionsByContract(input: {
     );
   } else if (tagIds.length > 0) {
     query = query.where(
-      sql<boolean>`exists (
+      sql<SqlBool>`exists (
         select 1
         from app.tag_assignments ti_filter
         join app.tags tg_filter
@@ -107,7 +107,7 @@ export async function queryTransactionsByContract(input: {
     );
   } else if (tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (
+      sql<SqlBool>`exists (
         select 1
         from app.tag_assignments ti_filter
         join app.tags tg_filter
@@ -150,7 +150,7 @@ export async function replaceTransactionTags(
       .selectFrom('app.tags')
       .select('id')
       .where('ownerUserid', '=', userId)
-      .where(sql<boolean>`id in (${sqlValueList(uniqueTagIds)})` as never)
+      .where(sql<SqlBool>`id in (${sqlValueList(uniqueTagIds)})`)
       .execute();
     const validIds = new Set((validTagResult as Array<{ id: string }>).map((row) => row.id));
     if (validIds.size !== uniqueTagIds.length) {
@@ -160,7 +160,7 @@ export async function replaceTransactionTags(
 
   await db
     .deleteFrom('app.tagAssignments')
-    .where('entityTable', '=', sql`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass` as never)
+    .where('entityTable', '=', sql<string>`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass`)
     .where('entityId', '=', transactionId)
     .execute();
 
@@ -189,7 +189,7 @@ export async function getTransactionTagIds(
       join.onRef('tg.id', '=', 'ti.tagId').on('tg.ownerUserid', '=', userId),
     )
     .select('ti.tagId')
-    .where('ti.entityTable', '=', sql`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass` as never)
+    .where('ti.entityTable', '=', sql<string>`${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass`)
     .where('ti.entityId', '=', transactionId)
     .orderBy('ti.tagId', 'asc')
     .execute();
@@ -486,15 +486,15 @@ export async function queryAnalyticsTransactionsByContract(input: {
 
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)})))` as never,
+      sql<SqlBool>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)})))`,
     );
   } else if (tagIds.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and ti_filter.tag_id in (${sqlValueList(tagIds)}))` as never,
+      sql<SqlBool>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and ti_filter.tag_id in (${sqlValueList(tagIds)}))`,
     );
   } else if (tagNames.length > 0) {
     query = query.where(
-      sql<boolean>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and tg_filter.name in (${sqlValueList(tagNames)}))` as never,
+      sql<SqlBool>`exists (select 1 from app.tag_assignments ti_filter join app.tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_userid = ${parsed.userId} where ti_filter.entity_table = ${FINANCE_TRANSACTION_ENTITY_TYPE}::regclass and ti_filter.entity_id = t.id and tg_filter.name in (${sqlValueList(tagNames)}))`,
     );
   }
 
