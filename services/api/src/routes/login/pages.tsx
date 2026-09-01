@@ -232,6 +232,9 @@ export function ConsentPage({
               );
               return (
                 <div key={domain} class="scope-row">
+                  <span aria-hidden="true" class="scope-icon">
+                    {domain.charAt(0).toUpperCase()}
+                  </span>
                   <span class="scope-name">{domain}</span>
                   <span class="scope-badges">
                     {access.map((level) => (
