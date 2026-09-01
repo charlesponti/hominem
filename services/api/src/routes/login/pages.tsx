@@ -225,16 +225,25 @@ export function ConsentPage({
         ) : null}
         <div class="field">
           <label>Requested permissions</label>
-          {Object.entries(groupedScopes).map(([domain, domainScopes]) => {
-            const access = (['read', 'write'] as const).filter((level) =>
-              domainScopes.some((scope) => scope.endsWith(`:${level}`)),
-            );
-            return (
-              <div key={domain} class="card-copy">
-                <strong>{domain}</strong>: {access.join(', ')}
-              </div>
-            );
-          })}
+          <div class="scope-list">
+            {Object.entries(groupedScopes).map(([domain, domainScopes]) => {
+              const access = (['read', 'write'] as const).filter((level) =>
+                domainScopes.some((scope) => scope.endsWith(`:${level}`)),
+              );
+              return (
+                <div key={domain} class="scope-row">
+                  <span class="scope-name">{domain}</span>
+                  <span class="scope-badges">
+                    {access.map((level) => (
+                      <span key={level} class={`scope-badge scope-badge-${level}`}>
+                        {level}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
         <form action="/consent/decision" method="post">
           <input name="oauth_query" type="hidden" value={query} />

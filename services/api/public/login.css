@@ -111,7 +111,7 @@ input {
 }
 .auth-card {
   width: 100%;
-  padding: 64px 48px;
+  padding: 40px 48px;
   border: 1px solid var(--auth-border);
   border-radius: 8px;
   color: var(--auth-text);
@@ -199,6 +199,62 @@ input {
   border-color: var(--auth-primary);
   background: var(--auth-card);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-primary) 12%, transparent);
+}
+.scope-list {
+  display: grid;
+  gap: 8px;
+}
+.scope-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--auth-border);
+  border-radius: 8px;
+  background: var(--auth-panel);
+}
+.scope-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--auth-border);
+  border-radius: 50%;
+  color: var(--auth-text);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--auth-card);
+}
+.scope-name {
+  flex: 1;
+  color: var(--auth-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.scope-badges {
+  display: flex;
+  gap: 6px;
+}
+.scope-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.scope-badge-read {
+  color: var(--auth-muted);
+  background: transparent;
+  border: 1px solid var(--auth-border);
+}
+.scope-badge-write {
+  color: var(--auth-primary-text);
+  background: var(--auth-primary);
+  border: 1px solid var(--auth-primary);
 }
 .otp-field {
   display: flex;
@@ -395,7 +451,7 @@ input {
 }
 @media (max-width: 540px) {
   .auth-card {
-    padding: 48px 16px;
+    padding: 32px 16px;
   }
   .auth-links {
     align-items: flex-start;
