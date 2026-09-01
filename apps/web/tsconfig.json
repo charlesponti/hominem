@@ -15,7 +15,7 @@
     // — not a real runtime dependency, so it isn't listed in package.json.
     // Keep this path in sync with services/api/package.json's "./types" export.
     //
-    // @hominem/db, @hominem/career-services, @hominem/ai, @hominem/chat, and
+    // @hominem/db, @hominem/career-services, @hominem/ai, and
     // @hominem/finance-services below aren't this app's own dependencies —
     // services/api's build/rpc/app.d.ts (the Hono AppType) preserves
     // `import("@hominem/career-services").JobImportErrorCode`-style
