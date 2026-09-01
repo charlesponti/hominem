@@ -4,23 +4,6 @@ import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from '
 import { memo, useEffect, useState } from 'react';
 
 import {
-  Message,
-  MessageAction,
-  MessageActions,
-  MessageContent,
-  MessageResponse,
-} from '~/components/chat/message';
-import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat/reasoning';
-import { Shimmer } from '~/components/chat/shimmer';
-import {
-  Tool,
-  ToolApprovalActions,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolPreview,
-} from '~/components/chat/tool';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -31,7 +14,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '~/components/alert-dialog';
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+  MessageResponse,
+} from '~/components/chat/message';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat/reasoning';
+import { Shimmer } from '~/components/chat/shimmer';
 import { SpeechPlayer } from '~/components/chat/speech-player';
+import {
+  Tool,
+  ToolApprovalActions,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolPreview,
+} from '~/components/chat/tool';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
 import type { ChatMessageView } from '~/lib/types/chat';
 import { cn } from '~/lib/utils';

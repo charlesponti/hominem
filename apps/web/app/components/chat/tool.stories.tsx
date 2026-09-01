@@ -1,13 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  Tool,
-  ToolApprovalActions,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolPreview,
-} from './tool';
+import { Tool, ToolApprovalActions, ToolContent, ToolHeader, ToolInput, ToolPreview } from './tool';
 
 const meta = {
   title: 'Chat/Primitives/Tool',
