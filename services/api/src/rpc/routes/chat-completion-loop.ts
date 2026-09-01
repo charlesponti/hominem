@@ -263,7 +263,8 @@ export async function runCompletionWithTools(
         type: 'tool-call',
         toolCallId: gatedCall.id,
         args: parsedArgs,
-        status: 'pending',
+        confirmationStatus: 'pending',
+        executionStatus: 'pending',
         preview,
       });
       return {
@@ -396,6 +397,7 @@ export async function runCompletionWithTools(
           type: 'tool-call',
           toolCallId: result.call.id,
           args: result.parsedArgs,
+          executionStatus: 'completed',
         });
       }
     }

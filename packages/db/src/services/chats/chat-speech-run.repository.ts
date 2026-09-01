@@ -75,7 +75,7 @@ export const ChatSpeechRunRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toRecord(row as ChatSpeechRunRow);
+    return toRecord(row);
   },
 
   async getById(
@@ -88,7 +88,7 @@ export const ChatSpeechRunRepository = {
       query = query.where('ownerUserId', '=', ownerUserId);
     }
     const row = await query.executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async setProviderGenerationId(
@@ -101,7 +101,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async markComplete(
@@ -114,7 +114,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async markReconciliation(
@@ -135,7 +135,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async listPending(handle: DbHandle, limit = 100): Promise<ChatSpeechRunRecord[]> {
@@ -147,7 +147,7 @@ export const ChatSpeechRunRepository = {
       .orderBy('createdAt', 'asc')
       .limit(limit)
       .execute();
-    return rows.map((row) => toRecord(row as ChatSpeechRunRow));
+    return rows.map((row) => toRecord(row));
   },
 
   async getUsageHealth(handle: DbHandle): Promise<ChatSpeechUsageHealthRecord> {

@@ -58,7 +58,8 @@ describe('ChatMessage', () => {
               toolName: 'delete_note',
               args: { noteId: 'note-1' },
               preview: { title: 'Draft note' },
-              status: 'pending',
+              confirmationStatus: 'pending',
+              executionStatus: 'pending',
             },
           ],
         })}

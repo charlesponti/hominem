@@ -13,7 +13,6 @@ export {
   stringToDate,
 } from './dates';
 export { delay } from './delay';
-export { isRecord } from './guards';
 export {
   buildStoredFileName,
   classifyFileByMimeType,

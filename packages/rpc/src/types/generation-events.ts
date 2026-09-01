@@ -1,3 +1,4 @@
+import { chatMessageFileSchema, chatMessageToolCallSchema } from '@hominem/chat';
 import type {
   ChatGenerationKind,
   GenerationPhase,
@@ -28,31 +29,14 @@ const toolResultSchema = z.object({
   content: z.string(),
   error: z.boolean(),
 });
-const fileSchema = z.object({
-  type: z.enum(['image', 'file', 'audio']),
-  fileId: z.string().optional(),
-  url: z.string().optional(),
-  filename: z.string().optional(),
-  mimeType: z.string().optional(),
-  size: z.number().optional(),
-  metadata: jsonObjectSchema.optional(),
-});
-const messageToolCallSchema = z.object({
-  toolName: z.string(),
-  type: z.literal('tool-call'),
-  toolCallId: z.string(),
-  args: jsonObjectSchema,
-  status: z.enum(['completed', 'pending', 'rejected', 'failed']).optional(),
-  preview: jsonObjectSchema.nullable().optional(),
-});
 const messageSchema = z.object({
   id: z.string().min(1),
   chatId: z.string().min(1),
   userId: z.string().min(1),
   role: z.enum(['system', 'user', 'assistant', 'tool']),
   content: z.string(),
-  files: z.array(fileSchema).nullable(),
-  toolCalls: z.array(messageToolCallSchema).nullable(),
+  files: z.array(chatMessageFileSchema).nullable(),
+  toolCalls: z.array(chatMessageToolCallSchema).nullable(),
   reasoning: z.string().nullable(),
   parentMessageId: z.string().nullable(),
   createdAt: z.string(),

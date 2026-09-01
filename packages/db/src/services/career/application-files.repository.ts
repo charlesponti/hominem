@@ -18,7 +18,7 @@ export const ApplicationFilesRepository = {
       .selectAll()
       .where('applicationId', '=', applicationId)
       .orderBy('createdAt', 'desc')
-      .execute() as Promise<CareerApplicationFileRecord[]>;
+      .execute();
   },
 
   async create(
@@ -30,7 +30,7 @@ export const ApplicationFilesRepository = {
       .insertInto('app.careerApplicationFiles')
       .values({ applicationId, ...input })
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerApplicationFileRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async remove(handle: DbHandle, applicationId: string, id: string): Promise<void> {

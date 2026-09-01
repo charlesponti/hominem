@@ -21,13 +21,20 @@ export const Tool = ({ className, ...props }: ToolProps) => (
   />
 );
 
-type ToolCallStatus = NonNullable<ChatMessageToolCall['status']>;
+export type ToolCallStatus = 'pending' | 'completed' | 'rejected' | 'failed';
+
+export function getToolCallStatus(toolCall: ChatMessageToolCall): ToolCallStatus {
+  if (toolCall.confirmationStatus === 'pending') return 'pending';
+  if (toolCall.confirmationStatus === 'rejected') return 'rejected';
+  if (toolCall.executionStatus === 'failed') return 'failed';
+  return 'completed';
+}
 
 export type ToolHeaderProps = {
   title?: string;
   className?: string;
   toolName: string;
-  status: ChatMessageToolCall['status'];
+  status?: ToolCallStatus;
 };
 
 const statusLabels: Record<ToolCallStatus, string> = {
@@ -44,7 +51,7 @@ const statusIcons: Record<ToolCallStatus, ReactNode> = {
   failed: <XCircleIcon className="size-4 text-red-600" />,
 };
 
-export const getStatusBadge = (status: ChatMessageToolCall['status']) => {
+export const getStatusBadge = (status?: ToolCallStatus) => {
   const resolved = status ?? 'completed';
   return (
     <span

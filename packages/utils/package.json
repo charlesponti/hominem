@@ -30,10 +30,6 @@
       "types": "./build/files.d.ts",
       "default": "./src/files.ts"
     },
-    "./guards": {
-      "types": "./build/guards.d.ts",
-      "default": "./src/guards.ts"
-    },
     "./numbers": {
       "types": "./build/numbers.d.ts",
       "default": "./src/numbers.ts"

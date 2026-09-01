@@ -19,7 +19,7 @@ export const SocialLinksRepository = {
       .selectAll()
       .where('ownerUserid', '=', ownerUserId)
       .executeTakeFirst();
-    return (result ?? null) as CareerSocialLinksRecord | null;
+    return result ?? null;
   },
 
   async save(
@@ -32,6 +32,6 @@ export const SocialLinksRepository = {
       .values({ ownerUserid: ownerUserId, ...links })
       .onConflict((oc) => oc.column('ownerUserid').doUpdateSet(links))
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerSocialLinksRecord>;
+      .executeTakeFirstOrThrow();
   },
 };

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { authDb, db } from '../../db';
+import { ValidationError } from '../../errors';
 import { ChatRepository } from './chat.repository';
 
 describe('ChatRepository message deletion', () => {
@@ -166,5 +167,30 @@ describe('ChatRepository message deletion', () => {
       ),
     ).rejects.toThrow('ChatMessage not found');
     await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toHaveLength(3);
+  });
+
+  it('raises a safe validation error for invalid persisted message JSON', async () => {
+    const fixture = await createFixture();
+
+    await db
+      .updateTable('app.chatMessages')
+      .set({ files: JSON.stringify([{ type: 'file', metadata: [] }]) })
+      .where('id', '=', fixture.messageIds.first)
+      .execute();
+
+    try {
+      await ChatRepository.getMessageById(db, fixture.chatId, fixture.messageIds.first);
+      expect.fail('Expected invalid persisted JSON to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error).toMatchObject({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid chat message files',
+        details: {
+          messageId: fixture.messageIds.first,
+          field: 'files',
+        },
+      });
+    }
   });
 });

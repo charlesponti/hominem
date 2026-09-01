@@ -1,4 +1,5 @@
 export * from './chat.types';
+export * from './generation-schemas';
 export * from './sse';
 export * from './capture-types';
 export * from './dates';

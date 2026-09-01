@@ -1,6 +1,7 @@
 import { type AIUsageMetrics } from '@hominem/ai';
 import {
   ChatClient,
+  chatMessageJsonObjectSchema,
   type GenerationHistoryEventPayload,
   type GenerationToolCall,
   type ToolResult,
@@ -19,14 +20,11 @@ import type {
 function parseArguments(call: GenerationToolCall): Record<string, unknown> {
   if (!call.arguments) return {};
   const value: unknown = JSON.parse(call.arguments);
-  if (!isRecord(value)) {
+  const parsed = chatMessageJsonObjectSchema.safeParse(value);
+  if (!parsed.success) {
     throw new Error(`Invalid tool arguments for ${call.name}`);
   }
-  return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return parsed.data;
 }
 
 function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessageToolCallRecord {
@@ -42,7 +40,8 @@ function toToolRecord(call: GenerationToolCall, result?: ToolResult): ChatMessag
     type: 'tool-call',
     toolCallId: call.id,
     args,
-    status: result ? (result.error ? 'failed' : 'completed') : 'pending',
+    confirmationStatus: result ? undefined : 'pending',
+    executionStatus: result ? (result.error ? 'failed' : 'completed') : 'pending',
   };
 }
 

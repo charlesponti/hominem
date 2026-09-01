@@ -9,7 +9,7 @@ import { AccountHeader } from '~/components/accounts/account-header';
 import { AccountSpendingChart } from '~/components/accounts/account-spending-chart';
 import { TransactionsList } from '~/components/transactions/transactions-list';
 import { createServerHonoClient } from '~/lib/api.server';
-import { requireAuth } from '~/lib/guards';
+import { requireAuth } from '~/lib/require-auth.server';
 import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts.$id';

@@ -6,6 +6,55 @@
 // contract without pulling in the whole generation engine.
 import { z } from 'zod';
 
+export const chatMessageJsonObjectSchema = z.record(z.string(), z.json());
+
+export const chatMessageFileSchema = z
+  .object({
+    type: z.enum(['image', 'file', 'audio']),
+    fileId: z.string().optional(),
+    url: z.string().optional(),
+    filename: z.string().optional(),
+    mimeType: z.string().optional(),
+    size: z.number().finite().nonnegative().optional(),
+    metadata: chatMessageJsonObjectSchema.optional(),
+  })
+  .strict();
+
+export const chatMessageToolCallSchema = z
+  .object({
+    toolName: z.string().min(1),
+    type: z.literal('tool-call'),
+    toolCallId: z.string().min(1),
+    args: chatMessageJsonObjectSchema,
+    confirmationStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
+    executionStatus: z.enum(['pending', 'running', 'completed', 'failed']).optional(),
+    preview: chatMessageJsonObjectSchema.nullable().optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.confirmationStatus === 'pending' &&
+      ['completed', 'failed'].includes(value.executionStatus ?? '')
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Awaiting confirmation cannot be terminal',
+      });
+    }
+    if (
+      value.confirmationStatus === 'rejected' &&
+      ['running', 'completed', 'failed'].includes(value.executionStatus ?? '')
+    ) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Rejected tools cannot execute' });
+    }
+  });
+
+export const chatMessageFilesSchema = z.array(chatMessageFileSchema).nullable();
+export const chatMessageToolCallsSchema = z.array(chatMessageToolCallSchema).nullable();
+
+export type ChatMessageFileRecord = z.infer<typeof chatMessageFileSchema>;
+export type ChatMessageToolCallRecord = z.infer<typeof chatMessageToolCallSchema>;
+
 import type {
   GenerationCheckpoint,
   GenerationMessageSnapshot,

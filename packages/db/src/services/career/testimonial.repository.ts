@@ -25,7 +25,7 @@ export const TestimonialRepository = {
       .selectAll()
       .where('ownerUserid', '=', ownerUserId)
       .orderBy('sortOrder', 'asc')
-      .execute() as Promise<CareerTestimonialRecord[]>;
+      .execute();
   },
 
   async create(
@@ -37,7 +37,7 @@ export const TestimonialRepository = {
       .insertInto('app.careerTestimonials')
       .values({ ownerUserid: ownerUserId, ...input })
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerTestimonialRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async update(
@@ -53,7 +53,7 @@ export const TestimonialRepository = {
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
       .executeTakeFirst();
-    return (result ?? null) as CareerTestimonialRecord | null;
+    return result ?? null;
   },
 
   async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {

@@ -164,7 +164,7 @@ export const AIUsageEventRepository = {
       .where('id', '=', id)
       .executeTakeFirst();
 
-    return row ? toAIUsageEventRecord(row as AIUsageEventRow) : null;
+    return row ? toAIUsageEventRecord(row) : null;
   },
 
   async create(handle: DbHandle, input: CreateAIUsageEventInput): Promise<AIUsageEventRecord> {
@@ -194,7 +194,7 @@ export const AIUsageEventRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toAIUsageEventRecord(row as AIUsageEventRow);
+    return toAIUsageEventRecord(row);
   },
 
   async createIfAbsent(handle: DbHandle, input: CreateAIUsageEventInput): Promise<boolean> {

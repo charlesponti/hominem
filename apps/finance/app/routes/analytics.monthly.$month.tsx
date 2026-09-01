@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/prim
 import { redirect, useParams } from 'react-router';
 
 import { createServerHonoClient } from '~/lib/api.server';
-import { requireAuth } from '~/lib/guards';
+import { requireAuth } from '~/lib/require-auth.server';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
 

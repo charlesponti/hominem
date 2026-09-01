@@ -145,7 +145,10 @@ describe('runCompletionWithTools', () => {
 
     expect(mocks.callTool).not.toHaveBeenCalled();
     expect(result.pendingToolCall).toMatchObject({ toolName: 'forget_memory' });
-    expect(result.toolCallRecords[0]).toMatchObject({ status: 'pending' });
+    expect(result.toolCallRecords[0]).toMatchObject({
+      confirmationStatus: 'pending',
+      executionStatus: 'pending',
+    });
   });
 
   it('returns a final text answer after the interaction budget is exhausted', async () => {

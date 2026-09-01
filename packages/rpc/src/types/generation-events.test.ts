@@ -47,6 +47,51 @@ const envelope = (payload: GenerationDomainEvent['payload']): Record<string, unk
 });
 
 describe('generation RPC event contract', () => {
+  it('validates independent tool confirmation and execution state', () => {
+    const toolCall = {
+      type: 'tool-call' as const,
+      toolName: 'delete_note',
+      toolCallId: 'call-1',
+      args: { id: 'note-1' },
+      confirmationStatus: 'approved' as const,
+      executionStatus: 'completed' as const,
+    };
+    const event = parseGenerationDomainEvent(
+      envelope({
+        type: 'generation.committed',
+        metadata: turn,
+        message: { ...message, toolCalls: [toolCall] },
+      }),
+    );
+
+    if (event.type !== 'generation.committed') throw new Error('Expected committed event');
+    expect(event.payload.message.toolCalls).toEqual([toolCall]);
+    expect(() =>
+      parseGenerationDomainEvent({
+        ...envelope({ type: 'generation.committed', metadata: turn, message }),
+        payload: {
+          type: 'generation.committed',
+          metadata: turn,
+          message: { ...message, toolCalls: [{ ...toolCall, status: 'completed' }] },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseGenerationDomainEvent(
+        envelope({
+          type: 'generation.committed',
+          metadata: turn,
+          message: {
+            ...message,
+            toolCalls: [
+              { ...toolCall, confirmationStatus: 'pending', executionStatus: 'completed' },
+            ],
+          },
+        }),
+      ),
+    ).toThrow();
+  });
+
   it('adapts every durable and live wire event to the shared chat reducer', () => {
     const payloads: GenerationDomainEvent['payload'][] = [
       {

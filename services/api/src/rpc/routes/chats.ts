@@ -1467,17 +1467,17 @@ const chatByIdRoutes = new Hono<AppContext>()
       if (!pendingCall) {
         throw new ValidationError('Tool call not found');
       }
-      if (pendingCall.status !== 'pending') {
+      if (pendingCall.confirmationStatus !== 'pending') {
         throw new ValidationError('Tool call is not awaiting confirmation');
       }
 
       if (!approved) {
-        const updated = await ChatRepository.updateToolCallStatus(
+        const updated = await ChatRepository.updateToolCallLifecycle(
           db,
           chatId,
           messageId,
           toolCallId,
-          'rejected',
+          { confirmationStatus: 'rejected' },
         );
         return c.json(toChatMessageDto(updated));
       }
@@ -1522,13 +1522,10 @@ const chatByIdRoutes = new Hono<AppContext>()
         toolError = error instanceof Error ? error.message : 'Tool call failed';
         toolResultContent = JSON.stringify({ error: toolError });
       }
-      await ChatRepository.updateToolCallStatus(
-        db,
-        chatId,
-        messageId,
-        toolCallId,
-        toolError ? 'rejected' : 'completed',
-      );
+      await ChatRepository.updateToolCallLifecycle(db, chatId, messageId, toolCallId, {
+        confirmationStatus: 'approved',
+        executionStatus: toolError ? 'failed' : 'completed',
+      });
       await ChatRepository.createGenerationRun(db, {
         id: generationId,
         chatId,

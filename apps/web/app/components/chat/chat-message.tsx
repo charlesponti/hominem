@@ -4,23 +4,6 @@ import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from '
 import { memo, useEffect, useState } from 'react';
 
 import {
-  Message,
-  MessageAction,
-  MessageActions,
-  MessageContent,
-  MessageResponse,
-} from '~/components/chat/message';
-import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat/reasoning';
-import { Shimmer } from '~/components/chat/shimmer';
-import {
-  Tool,
-  ToolApprovalActions,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolPreview,
-} from '~/components/chat/tool';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -31,7 +14,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '~/components/alert-dialog';
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+  MessageResponse,
+} from '~/components/chat/message';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat/reasoning';
+import { Shimmer } from '~/components/chat/shimmer';
 import { SpeechPlayer } from '~/components/chat/speech-player';
+import {
+  getToolCallStatus,
+  Tool,
+  ToolApprovalActions,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolPreview,
+} from '~/components/chat/tool';
 import type { RegenerationStatus } from '~/lib/hooks/use-regenerate-message';
 import type { ChatMessageView } from '~/lib/types/chat';
 import { cn } from '~/lib/utils';
@@ -91,11 +92,12 @@ function ToolCall({
   onApprove?: ChatMessageProps['onApproveTool'];
   onReject?: ChatMessageProps['onRejectTool'];
 }) {
-  const isPending = toolCall.status === 'pending';
+  const status = getToolCallStatus(toolCall);
+  const isPending = toolCall.confirmationStatus === 'pending';
 
   return (
     <Tool defaultOpen={isPending}>
-      <ToolHeader status={toolCall.status} toolName={toolCall.toolName} />
+      <ToolHeader status={status} toolName={toolCall.toolName} />
       <ToolContent>
         {toolCall.preview ? (
           <ToolPreview preview={toolCall.preview} />

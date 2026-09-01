@@ -192,7 +192,7 @@ describe('chat generation service', () => {
       idempotencyKey: 'generation-1:generation-1:0:call-1',
       toolName: 'write',
     });
-    expect(result.toolCallRecords[0]).toMatchObject({ status: 'completed' });
+    expect(result.toolCallRecords[0]).toMatchObject({ executionStatus: 'completed' });
   });
 
   it('maps live events, aggregates usage, and forwards durable records', async () => {
@@ -358,7 +358,7 @@ describe('chat generation service', () => {
     });
 
     expect(result.toolCallRecords).toEqual([
-      expect.objectContaining({ status: 'failed', args: {} }),
+      expect.objectContaining({ executionStatus: 'failed', args: {} }),
     ]);
   });
 

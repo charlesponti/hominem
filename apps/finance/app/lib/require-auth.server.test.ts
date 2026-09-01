@@ -16,7 +16,7 @@ vi.mock('./env.server', () => ({
   },
 }));
 
-import { requireAuth } from './guards';
+import { requireAuth } from './require-auth.server';
 
 describe('requireAuth', () => {
   beforeEach(() => {
