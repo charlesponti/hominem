@@ -34,8 +34,10 @@ URLs, not the plain-port ones the main checkout may still use.
 ## First-time setup: portless proxy
 
 `pnpm dev` for `api`/`web`/`career`/`finance` runs through
-[portless](https://github.com/vercel-labs/portless) (see `/portless.json`),
-which gives each service a stable `https://<name>.localhost` URL instead of
+[portless](https://github.com/vercel-labs/portless), configured per-package
+(each app's `package.json` has its own `"portless": { "name", "script" }`
+key — see below; there is no root `portless.json`), which gives each service
+a stable `https://<name>.localhost` URL instead of
 a fixed port — this is what lets the same app run from multiple worktrees
 without a port collision (portless prefixes the worktree's branch name onto
 the hostname automatically).
@@ -61,6 +63,15 @@ actually reads when a package's own `"dev": "portless"` script runs (a root
 `portless` command, which this repo's turbo-driven `pnpm dev` never uses).
 If you add a new portless-fronted app, give it this key, not a root config
 entry.
+
+Because portless gives each app its own subdomain (`api.localhost`,
+`career.localhost`, `finance.localhost`, `web.localhost`) rather than just a
+different port on the same host, the hosted-login session cookie needs
+`services/api`'s `AUTH_COOKIE_DOMAIN=localhost` (see `.env.example`) to be
+shared across them via Better Auth's cross-subdomain cookies — without it,
+login appears to succeed but the other apps never see the session and bounce
+back to `/login`. See [docs/authentication.md](../../../docs/authentication.md)
+for the full cookie-domain mechanism.
 
 `services/api`'s hosted login page ships a client bundle
 (`public/login.js`) built from `src/routes/login/browser.ts` — this is a

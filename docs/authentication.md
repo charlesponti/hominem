@@ -29,10 +29,13 @@ derives every cookie attribute from env config:
 - Cross-subdomain cookies (`Domain=<AUTH_COOKIE_DOMAIN>`) only turn on when
   `AUTH_COOKIE_DOMAIN` is non-empty. Production sets it to the shared parent
   domain, so one cookie is valid across Career, Finance, and the API's own
-  origin. Local development typically leaves it unset, so the cookie is
-  scoped to whichever single origin issued it — session sharing across
-  `localhost` ports isn't needed because each app talks to the same local API
-  directly.
+  origin. Local development sets it to `localhost` for the same reason:
+  under the [portless](https://github.com/vercel-labs/portless) proxy (see
+  the `hominem-development` skill), api/web/career/finance each get their
+  own `https://<name>.localhost:4200` subdomain rather than sharing one host
+  on different ports, so without `AUTH_COOKIE_DOMAIN=localhost` the cookie
+  set during hosted login stays scoped to `api.localhost` and the other
+  apps never see it.
 - `sameSite: 'lax'` and `httpOnly: true` are constant in both environments.
 
 ## How the apps talk to the API

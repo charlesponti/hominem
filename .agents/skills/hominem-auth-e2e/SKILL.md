@@ -23,6 +23,17 @@ logic lives here once instead of being reimplemented per feature.
 Pick (1) whenever possible; drop to (2) only for the specific step that
 needs eyes.
 
+## Which URLs to use
+
+The plain `http://localhost:4040` (API) / `http://localhost:4445` (web)
+ports below are `lib.sh`'s and `packages/env`'s fallback defaults, and match
+what the Browser pane's `.claude/launch.json` config starts on its own. If
+the ambient dev environment was instead started with `pnpm dev` (the normal
+path — see the `hominem-development` skill), the apps run through the
+portless proxy at `https://api.localhost:4200` / `https://web.localhost:4200`
+instead, and `lib.sh`'s curl helpers need `HOMINEM_API_URL=https://api.localhost:4200`
+set to reach it. Check which is actually running before picking a URL.
+
 ## Default to the stable test user
 
 For any test that only needs **one** identity, use the stable default
