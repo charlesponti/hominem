@@ -48,9 +48,7 @@ describe('API login route', () => {
     const response = await createApp().request(`http://localhost/login?${oauthQuery}`);
 
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain(
-      'Enter your email to receive the one-time code.',
-    );
+    await expect(response.text()).resolves.toContain('a one-time code — no password to remember');
     expect(mocks.getSession).toHaveBeenCalledOnce();
   });
 
@@ -68,9 +66,7 @@ describe('API login route', () => {
     const response = await createApp().request(`http://localhost/login?next=${next}`);
 
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain(
-      'Enter your email to receive the one-time code.',
-    );
+    await expect(response.text()).resolves.toContain('a one-time code — no password to remember');
   });
 
   it('rejects an app redirect request to a non-allow-listed origin', async () => {
