@@ -1,13 +1,16 @@
 import {
   chatMessageFilesSchema,
   chatMessageToolCallsSchema,
+  chatGenerationKindSchema,
+  chatGenerationStatusSchema,
+  type ChatMessageSnapshot,
   type ChatMessageFileRecord,
   type ChatMessageToolCallRecord,
   type ChatGenerationKind,
   type ChatGenerationStatus,
 } from '@hominem/chat';
 import type { Selectable } from 'kysely';
-import type { ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 
 import { NotFoundError, ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
@@ -34,22 +37,13 @@ export interface ChatPage {
 }
 
 type ChatListCursor = { id: string; lastMessageAt: string };
+const chatListCursorSchema = z.object({
+  id: z.string().min(1),
+  lastMessageAt: z.string().datetime(),
+});
 
-export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
-
-export interface ChatMessageRecord {
-  id: string;
-  chatId: string;
-  userId: string;
-  role: ChatMessageRole;
-  content: string;
-  files: ChatMessageFileRecord[] | null;
-  toolCalls: ChatMessageToolCallRecord[] | null;
-  reasoning: string | null;
-  parentMessageId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ChatMessageRecord = ChatMessageSnapshot;
+export type ChatMessageRole = ChatMessageSnapshot['role'];
 
 export interface ChatSourceRecord {
   id: string;
@@ -141,11 +135,9 @@ function parseChatMessageToolCalls(
 
 function decodeChatListCursor(cursor: string): ChatListCursor {
   try {
-    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as ChatListCursor;
-    if (!value.id || !value.lastMessageAt || Number.isNaN(Date.parse(value.lastMessageAt))) {
-      throw new Error('Invalid cursor');
-    }
-    return value;
+    return chatListCursorSchema.parse(
+      JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')),
+    );
   } catch {
     throw new ValidationError('Invalid chat cursor');
   }
@@ -164,8 +156,12 @@ function toChatMessageRecord(row: ChatMessageRow): ChatMessageRecord {
   return {
     id: row.id,
     chatId: row.chatId,
-    userId: row.authorUserid ?? '',
-    role: row.role as ChatMessageRole,
+    userId:
+      row.authorUserid ??
+      (() => {
+        throw new ValidationError('Invalid chat message owner', { messageId: row.id });
+      })(),
+    role: z.enum(['system', 'user', 'assistant', 'tool']).parse(row.role),
     content: row.content,
     files: parseChatMessageFiles(row.files, row.id),
     toolCalls: parseChatMessageToolCalls(row.toolCalls, row.id),
@@ -201,8 +197,8 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
     id: row.id,
     chatId: row.chatId,
     ownerUserId: row.ownerUserId,
-    kind: row.kind as ChatGenerationKind,
-    status: row.status as ChatGenerationStatus,
+    kind: chatGenerationKindSchema.parse(row.kind),
+    status: chatGenerationStatusSchema.parse(row.status),
     userMessageId: row.userMessageId,
     targetAssistantMessageId: row.targetAssistantMessageId,
     assistantMessageId: row.assistantMessageId,
@@ -212,7 +208,7 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
   };
 }
 
-function toJsonColumnValue(value: unknown[] | null | undefined): string | null {
+function toJsonColumnValue(value: readonly unknown[] | null | undefined): string | null {
   return value ? JSON.stringify(value) : null;
 }
 
@@ -247,6 +243,24 @@ export const ChatRepository = {
       .selectAll()
       .where('id', '=', generationId)
       .where('ownerUserId', '=', ownerUserId)
+      .executeTakeFirst();
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async getAwaitingGenerationRunForAssistantMessage(
+    handle: DbHandle,
+    chatId: string,
+    assistantMessageId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('assistantMessageId', '=', assistantMessageId)
+      .where('ownerUserId', '=', ownerUserId)
+      .where('status', '=', 'awaiting_confirmation')
       .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
@@ -597,13 +611,17 @@ export const ChatRepository = {
     chatId: string,
     messageId: string,
     content: string,
-    options?: { reasoning?: string | null; toolCalls?: ChatMessageToolCallRecord[] | null },
+    options?: {
+      reasoning?: string | null;
+      toolCalls?: ChatMessageToolCallRecord[] | null;
+      files?: ChatMessageFileRecord[] | null;
+    },
   ): Promise<ChatMessageRecord> {
     const updated = await handle
       .updateTable('app.chatMessages')
       .set({
         content,
-        files: null,
+        files: options?.files === undefined ? null : toJsonColumnValue(options.files),
         reasoning: options?.reasoning ?? null,
         toolCalls: toJsonColumnValue(options?.toolCalls ?? null),
         updatedat: new Date().toISOString(),
@@ -680,9 +698,9 @@ export const ChatRepository = {
         authorUserid: input.authorUserId,
         role: input.role,
         content: input.content,
-        files: toJsonColumnValue(input.files as unknown[] | null),
+        files: toJsonColumnValue(input.files),
         reasoning: input.reasoning ?? null,
-        toolCalls: toJsonColumnValue(input.toolCalls as unknown[] | null),
+        toolCalls: toJsonColumnValue(input.toolCalls),
         parentMessageId: input.parentMessageId ?? null,
       })
       .returningAll()

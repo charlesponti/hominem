@@ -1,6 +1,6 @@
 ---
 title: "Complete functional chat shipping evidence"
-status: "todo"
+status: "Open"
 priority: "high"
 labels: [chat, e2e, browser, ios, evidence]
 depends_on: [007-generation-observability.md, 009-remove-generation-compatibility.md]

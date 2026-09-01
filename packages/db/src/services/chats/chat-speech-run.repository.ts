@@ -42,6 +42,16 @@ export interface ChatSpeechUsageHealthRecord {
   oldestPendingAt: string | null;
 }
 
+function parseSpeechRunStatus(value: string): ChatSpeechRunStatus {
+  if (value === 'pending' || value === 'succeeded' || value === 'failed') return value;
+  throw new Error('Invalid chat speech run status');
+}
+
+function parseReconciliationStatus(value: string): ChatSpeechReconciliationStatus {
+  if (value === 'pending' || value === 'succeeded' || value === 'failed') return value;
+  throw new Error('Invalid chat speech reconciliation status');
+}
+
 function toRecord(row: ChatSpeechRunRow): ChatSpeechRunRecord {
   return {
     id: row.id,
@@ -51,8 +61,8 @@ function toRecord(row: ChatSpeechRunRow): ChatSpeechRunRecord {
     provider: row.provider,
     providerGenerationId: row.providerGenerationId,
     characterCount: row.characterCount,
-    status: row.status as ChatSpeechRunStatus,
-    reconciliationStatus: row.reconciliationStatus as ChatSpeechReconciliationStatus,
+    status: parseSpeechRunStatus(row.status),
+    reconciliationStatus: parseReconciliationStatus(row.reconciliationStatus),
     reconciliationAttempts: row.reconciliationAttempts,
     lastReconciliationError: row.lastReconciliationError,
     createdAt: new Date(row.createdAt).toISOString(),

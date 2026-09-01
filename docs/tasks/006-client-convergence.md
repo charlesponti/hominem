@@ -1,6 +1,6 @@
 ---
 title: "Prove Web and Omiro client convergence"
-status: "todo"
+status: "Partial"
 priority: "high"
 labels: [chat, web, omiro, replay, testing]
 depends_on: [002-chat-tool-event-round-trip.md, 005-generation-cursor-recovery.md]

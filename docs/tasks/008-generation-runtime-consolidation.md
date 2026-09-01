@@ -1,6 +1,6 @@
 ---
 title: "Consolidate the production generation runtime"
-status: "todo"
+status: "Implemented"
 priority: "high"
 labels: [chat, api, architecture, refactor]
 depends_on: [002-chat-tool-event-round-trip.md, 004-generation-crash-recovery.md, 006-client-convergence.md, 007-generation-observability.md]

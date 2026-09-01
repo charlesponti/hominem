@@ -23,10 +23,6 @@
       "types": "./build/types/index.d.ts",
       "default": "./src/types/index.ts"
     },
-    "./generation-events": {
-      "types": "./build/generation-events.d.ts",
-      "default": "./src/generation-events.ts"
-    },
     "./types/*": {
       "types": "./build/types/*.d.ts",
       "default": "./src/types/*.ts"

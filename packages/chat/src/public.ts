@@ -7,5 +7,6 @@ export * from './generation-machine';
 export * from './generation-client';
 export * from './generation-interpreter';
 export * from './generation-events';
+export { reconstructProviderToolCalls } from './generation-machine/provider';
 export * from './generation-projection';
 export * from './chat-sdk';

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { CapabilityDefinition } from './capability';
-import { runChatGeneration } from './chat-generation-service';
+import { executeGenerationTurn, ToolInputError } from './chat-generation-engine';
 
 vi.mock('@hominem/ai', () => ({
   streamChatCompletion: vi.fn(),
@@ -62,7 +62,7 @@ describe('chat generation service', () => {
       );
 
     const callTool = vi.fn().mockResolvedValue({ content: [{ type: 'text', text: 'result' }] });
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
@@ -110,14 +110,14 @@ describe('chat generation service', () => {
     );
     const isCancelled = vi.fn(() => true);
 
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
       model: 'model-1',
       messages: [{ role: 'user', content: 'question' }],
       tools: [],
-      isCancelled,
+      cancellation: { isRequested: isCancelled },
     });
 
     expect(result.assistantText).toBe('');
@@ -167,7 +167,7 @@ describe('chat generation service', () => {
       error: false,
     });
 
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
@@ -234,13 +234,13 @@ describe('chat generation service', () => {
     );
     const liveEvents: string[] = [];
     const durableEvents: string[] = [];
-    const persistEvent = vi.fn(
+    const appendEvent = vi.fn(
       async ({
         event,
         idempotencyKey,
       }: {
         event: Parameters<
-          NonNullable<Parameters<typeof runChatGeneration>[0]['persistEvent']>
+          NonNullable<Parameters<typeof executeGenerationTurn>[0]['eventStore']>['append']
         >[0]['event'];
         idempotencyKey: string;
       }) => ({
@@ -254,28 +254,34 @@ describe('chat generation service', () => {
       }),
     );
 
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
       model: 'model-1',
       messages: [{ role: 'user', content: 'question' }],
       tools: [],
-      persistEvent,
-      onDurableEvent: (event) => {
-        durableEvents.push(event.type);
+      eventStore: { append: appendEvent },
+      durableEvents: {
+        accept: (event) => {
+          durableEvents.push(event.type);
+        },
       },
-      onEvent: (event) => {
-        liveEvents.push(event.type);
+      liveEvents: {
+        accept: (event) => {
+          liveEvents.push(event.type);
+        },
       },
     });
 
     expect(result.assistantText).toBe('answer');
     expect(result.reasoningText).toBe('thinking');
     expect(result.usage?.totalTokens).toBe(6);
-    expect(persistEvent).toHaveBeenCalled();
+    expect(appendEvent).toHaveBeenCalled();
     expect(durableEvents.length).toBeGreaterThan(0);
-    expect(liveEvents).toEqual(expect.arrayContaining(['text-delta', 'reasoning-delta', 'phase']));
+    expect(liveEvents).toEqual(
+      expect.arrayContaining(['text-delta', 'reasoning-delta', 'phase-changed']),
+    );
   });
 
   it('skips configured start and terminal persistence', async () => {
@@ -290,22 +296,20 @@ describe('chat generation service', () => {
         },
       ]),
     );
-    const persistEvent = vi.fn();
+    const appendEvent = vi.fn();
 
-    await runChatGeneration({
+    await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
       model: 'model-1',
       messages: [{ role: 'user', content: 'question' }],
       tools: [],
-      persistEvent,
-      persistStarted: false,
-      persistTerminal: false,
+      eventStore: { append: appendEvent },
     });
 
-    expect(persistEvent).toHaveBeenCalledTimes(2);
-    expect(persistEvent.mock.calls.map(([call]) => call.event.type)).toEqual([
+    expect(appendEvent).toHaveBeenCalledTimes(2);
+    expect(appendEvent.mock.calls.map(([call]) => call.event.type)).toEqual([
       'generation.phase_changed',
       'generation.phase_changed',
     ]);
@@ -347,7 +351,8 @@ describe('chat generation service', () => {
       );
 
     const callTool = vi.fn().mockRejectedValue('boom');
-    const result = await runChatGeneration({
+    const save = vi.fn().mockImplementation(({ result }: { result: unknown }) => result);
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
@@ -355,11 +360,75 @@ describe('chat generation service', () => {
       messages: [{ role: 'user', content: 'question' }],
       tools: [],
       toolRuntime: { callTool, getToolDefinition: vi.fn(() => undefined) },
+      effectStore: { get: vi.fn().mockResolvedValue(null), save },
     });
 
     expect(result.toolCallRecords).toEqual([
       expect.objectContaining({ executionStatus: 'failed', args: {} }),
     ]);
+    expect(save.mock.calls[0]?.[0].result.content).toBe(
+      JSON.stringify({ error: 'Tool call failed' }),
+    );
+  });
+
+  it('classifies malformed JSON arguments and never invokes the tool', async () => {
+    mockedStream
+      .mockReturnValueOnce(
+        chunks([
+          {
+            created: 0,
+            id: 'chunk-1',
+            model: 'model-1',
+            object: 'chat.completion.chunk',
+            choices: [
+              {
+                index: 0,
+                finishReason: null,
+                delta: {
+                  toolCalls: [
+                    { index: 0, id: 'call-1', function: { name: 'lookup', arguments: '{' } },
+                  ],
+                },
+              },
+            ],
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        chunks([
+          {
+            created: 0,
+            id: 'chunk-2',
+            model: 'model-1',
+            object: 'chat.completion.chunk',
+            choices: [{ index: 0, finishReason: null, delta: { content: 'done' } }],
+          },
+        ]),
+      );
+    const callTool = vi.fn();
+    const save = vi.fn().mockImplementation(({ result }: { result: unknown }) => result);
+
+    await executeGenerationTurn({
+      userId: 'user-1',
+      generationId: 'generation-1',
+      chatId: 'chat-1',
+      model: 'model-1',
+      messages: [{ role: 'user', content: 'question' }],
+      tools: [],
+      toolRuntime: { callTool, getToolDefinition: vi.fn(() => undefined) },
+      effectStore: { get: vi.fn().mockResolvedValue(null), save },
+    });
+
+    expect(callTool).not.toHaveBeenCalled();
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({ error: true }),
+      }),
+    );
+    expect(new ToolInputError('lookup')).toMatchObject({
+      name: 'ToolInputError',
+      category: 'tool_input',
+    });
   });
 
   it('previews a confirmation-required tool and returns its pending call', async () => {
@@ -398,7 +467,7 @@ describe('chat generation service', () => {
       preview,
     };
 
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',
@@ -453,7 +522,7 @@ describe('chat generation service', () => {
       preview: vi.fn().mockRejectedValue('preview failed'),
     };
 
-    const result = await runChatGeneration({
+    const result = await executeGenerationTurn({
       userId: 'user-1',
       generationId: 'generation-1',
       chatId: 'chat-1',

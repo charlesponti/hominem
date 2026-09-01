@@ -326,4 +326,41 @@ describe('OpenRouter generation provider', () => {
       maxAttempts: 4,
     });
   });
+
+  it('rejects malformed provider tool-call chunks before they reach the machine', async () => {
+    mockedStream.mockReturnValueOnce(
+      chunks([
+        chunk([
+          {
+            index: -1,
+            finishReason: null,
+            delta: { toolCalls: [{ index: -1, function: { arguments: '{}' } }] },
+          },
+        ]),
+      ]),
+    );
+    const provider = new OpenRouterChatModel({
+      model: 'test-model',
+      messages: [],
+      tools: [],
+    });
+
+    await expect(
+      collect(
+        provider.open({
+          turnId: 'turn-invalid',
+          iteration: 0,
+          state: createGenerationState('generation-1'),
+        }),
+      ),
+    ).resolves.toEqual([
+      {
+        type: 'provider-turn-failed',
+        message: 'Provider returned an invalid generation chunk',
+        transient: false,
+        attempt: 0,
+        maxAttempts: 2,
+      },
+    ]);
+  });
 });

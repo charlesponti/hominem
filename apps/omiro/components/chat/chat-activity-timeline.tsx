@@ -9,10 +9,13 @@ import AppIcon from '../ui/icon';
 
 const stageCopy = {
   preparing: t.chat.generation.thinking,
+  running: t.chat.generation.thinking,
+  awaiting_confirmation: t.chat.generation.thinking,
   saving: t.chat.generation.saving,
   stopping: t.chat.generation.stopping,
   failed: t.chat.generation.failed,
   cancelled: t.chat.generation.cancelled,
+  committed: t.chat.generation.saving,
 } as const;
 
 export function ChatActivityTimeline({
@@ -43,7 +46,11 @@ export function ChatActivityTimeline({
     timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
     timelineActionText: { ...theme.textVariants.footnote, color: theme.colors.primary },
   }));
-  const isActive = generation.stage === 'preparing' || generation.stage === 'saving';
+  const isActive =
+    generation.stage === 'preparing' ||
+    generation.stage === 'running' ||
+    generation.stage === 'awaiting_confirmation' ||
+    generation.stage === 'saving';
   const isStopping = generation.stage === 'stopping';
 
   return (

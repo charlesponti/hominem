@@ -1,4 +1,4 @@
-import type { GenerationWireEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/chat';
 import { describe, expect, it, vi } from 'vitest';
 
 import { consumeSseResponse } from './consume-sse-response';

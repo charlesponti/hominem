@@ -1,9 +1,9 @@
-import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
 import {
+  createGenerationClientState,
   getGenerationFailureMessage,
   parseGenerationWireEvent,
-  toGenerationClientEvents,
-} from '@hominem/rpc/generation-events';
+  reduceGenerationClientEvent,
+} from '@hominem/chat';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -79,7 +79,13 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         ...previous,
         createOptimisticMessage(chatId, message, userMessageId),
       ]);
-      setGeneration({ id: generationId, chatId, stage: 'preparing', userMessageId });
+      setGeneration({
+        id: generationId,
+        chatId,
+        stage: 'preparing',
+        lastDurableSequence: 0,
+        userMessageId,
+      });
       return { userMessageId };
     },
     mutationFn: async ({ generationId, message, fileIds, responseModality }) => {
@@ -103,21 +109,17 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         getHeaders: getAuthHeaders,
         signal: controller.signal,
         parseEvent: parseGenerationWireEvent,
+        getReplayCursor: () => clientState.lastDurableSequence,
         onEvent: (event) => {
-          for (const clientEvent of toGenerationClientEvents(event)) {
-            clientState = reduceGenerationClientEvent(clientState, clientEvent);
-            const current = generationRef.current;
-            if (!current || current.id !== generationId) continue;
-            if (clientState.phase === 'preparing' || clientState.phase === 'saving') {
-              setGeneration({ ...current, stage: clientState.phase });
-            }
-            if (clientState.phase === 'cancel_requested') {
-              setGeneration({ ...current, stage: 'stopping' });
-            }
-            if (clientState.phase === 'cancelled') {
-              setGeneration({ ...current, stage: 'cancelled' });
-            }
-          }
+          clientState = reduceGenerationClientEvent(clientState, event);
+          const current = generationRef.current;
+          if (!current || current.id !== generationId) return;
+          const stage = clientState.phase === 'cancel_requested' ? 'stopping' : clientState.phase;
+          setGeneration({
+            ...current,
+            stage,
+            lastDurableSequence: clientState.lastDurableSequence,
+          });
           const failureMessage = getGenerationFailureMessage(event);
           if (failureMessage) throw new Error(failureMessage);
           if (

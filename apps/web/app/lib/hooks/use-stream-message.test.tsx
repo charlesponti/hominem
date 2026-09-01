@@ -62,6 +62,7 @@ function interruptedStreamResponse(events: string[]) {
 describe('useStreamMessage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     vi.stubGlobal('crypto', { randomUUID: () => 'g1' });
   });
 
@@ -357,6 +358,51 @@ describe('useStreamMessage', () => {
     await result.current.stream({ message: 'Recover cancellation' });
 
     await waitFor(() => expect(result.current.status).toBe('cancelled'));
+  });
+
+  it('reattaches an active persisted checkpoint from its durable cursor', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'g1', phase: 'running', lastDurableSequence: 5 }),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].stream.$get.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 6,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'm1',
+              chatId: 'chat-1',
+              userId: 'u1',
+              role: 'assistant',
+              content: 'Recovered after launch',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01',
+              updatedAt: '2026-01-01',
+            },
+          },
+        }),
+      ]),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('committed'));
+    expect(mockClient.api.chats[':id'].stream.$post).not.toHaveBeenCalled();
+    expect(
+      mockClient.api.chats[':id'].generations[':generationId'].stream.$get,
+    ).toHaveBeenCalledWith(
+      { param: { id: 'chat-1', generationId: 'g1' } },
+      { init: expect.objectContaining({ headers: { 'Last-Event-ID': '5' } }) },
+    );
+    expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
   });
 
   it('records a durable cancellation and invokes the cancellation callback', async () => {

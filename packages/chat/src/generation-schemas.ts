@@ -9,6 +9,61 @@ import { z } from 'zod';
 export const chatMessageJsonObjectSchema = z.record(z.string(), z.json());
 export type ChatMessageJsonObject = z.infer<typeof chatMessageJsonObjectSchema>;
 
+export const chatGenerationKindSchema = z.enum(['send', 'start', 'regenerate']);
+export const chatGenerationStatusSchema = z.enum([
+  'queued',
+  'preparing',
+  'running',
+  'awaiting_confirmation',
+  'saving',
+  'cancel_requested',
+  'committed',
+  'cancelled',
+  'failed',
+]);
+
+export const generationClientCheckpointSchema = z
+  .object({
+    generationId: z.string().min(1),
+    phase: z.enum([
+      'preparing',
+      'running',
+      'awaiting_confirmation',
+      'saving',
+      'cancel_requested',
+      'committed',
+      'cancelled',
+      'failed',
+    ]),
+    lastDurableSequence: z.number().int().nonnegative().safe(),
+  })
+  .strict();
+
+export type GenerationClientCheckpoint = z.infer<typeof generationClientCheckpointSchema>;
+
+export const providerToolCallDeltaSchema = z
+  .object({
+    index: z.number().int().nonnegative(),
+    id: z.string().nullable().optional(),
+    function: z
+      .object({
+        name: z.string().nullable().optional(),
+        arguments: z.string().nullable().optional(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
+  })
+  .strict();
+
+export const providerChunkSchema = z
+  .object({
+    content: z.string().nullable().optional(),
+    reasoning: z.string().nullable().optional(),
+    toolCalls: z.array(providerToolCallDeltaSchema).optional(),
+  })
+  .strict();
+
 export const chatMessageFileSchema = z
   .object({
     type: z.enum(['image', 'file', 'audio']),
@@ -56,9 +111,38 @@ export const chatMessageToolCallsSchema = z.array(chatMessageToolCallSchema).nul
 export type ChatMessageFileRecord = z.infer<typeof chatMessageFileSchema>;
 export type ChatMessageToolCallRecord = z.infer<typeof chatMessageToolCallSchema>;
 
+export const chatSnapshotSchema = z
+  .object({
+    id: z.string().min(1),
+    userId: z.string().min(1),
+    title: z.string(),
+    archivedAt: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .strict();
+
+export const chatMessageSnapshotSchema = z
+  .object({
+    id: z.string().min(1),
+    chatId: z.string().min(1),
+    userId: z.string().min(1),
+    role: z.enum(['system', 'user', 'assistant', 'tool']),
+    content: z.string(),
+    files: chatMessageFilesSchema,
+    toolCalls: chatMessageToolCallsSchema,
+    reasoning: z.string().nullable(),
+    parentMessageId: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .strict();
+
+export type ChatSnapshot = z.infer<typeof chatSnapshotSchema>;
+export type ChatMessageSnapshot = z.infer<typeof chatMessageSnapshotSchema>;
+
 import type {
   GenerationCheckpoint,
-  GenerationMessageSnapshot,
   GenerationRequestContext,
   GenerationRetryMetadata,
   GenerationStartContext,
@@ -107,13 +191,7 @@ const toolResultSchema = z.object({
   error: z.boolean(),
 }) satisfies z.ZodType<ToolResult>;
 
-const messageSnapshotSchema = z.object({
-  id: z.string().min(1),
-  chatId: z.string().min(1),
-  role: z.enum(['user', 'assistant']),
-  content: z.string(),
-  reasoning: z.string().nullable().optional(),
-}) satisfies z.ZodType<GenerationMessageSnapshot>;
+const messageSnapshotSchema = chatMessageSnapshotSchema;
 
 const startContextSchema = z.object({
   chatId: z.string().min(1),
@@ -151,6 +229,7 @@ const historySchemas = {
   'generation.accepted': z.object({
     type: z.literal('generation.accepted'),
     chatId: z.string().min(1),
+    chat: chatSnapshotSchema,
     userMessage: messageSnapshotSchema.nullable(),
   }) satisfies z.ZodType<HistoryPayload<'generation.accepted'>>,
   'generation.phase_changed': z.object({
@@ -294,6 +373,14 @@ export const GenerationStreamEventSchema = z.object({
   event: GenerationStreamEventPayloadSchema,
 }) satisfies z.ZodType<GenerationStreamEvent>;
 
+// Public naming for the live-only half of the wire contract. Keeping this
+// alias here prevents transport packages from defining a second event model.
+export const GenerationLiveEventSchema = GenerationStreamEventSchema;
+export type GenerationLiveEvent = GenerationStreamEvent;
+export type GenerationLiveEventPayload = GenerationStreamEventPayload;
+export type GenerationDomainEvent = GenerationHistoryEvent;
+export type GenerationDomainEventPayload = GenerationHistoryEventPayload;
+
 export function parseGenerationHistoryEventPayload(input: unknown): GenerationHistoryEventPayload {
   return GenerationHistoryEventPayloadSchema.parse(input);
 }
@@ -304,4 +391,39 @@ export function parseGenerationHistoryEvent(input: unknown): GenerationHistoryEv
 
 export function parseGenerationStreamEvent(input: unknown): GenerationStreamEvent {
   return GenerationStreamEventSchema.parse(input);
+}
+
+export function parseGenerationLiveEvent(input: unknown): GenerationLiveEvent {
+  return GenerationStreamEventSchema.parse(input);
+}
+
+export const GenerationWireEventSchema = z.union([
+  GenerationHistoryEventSchema,
+  GenerationStreamEventSchema,
+]);
+
+export type GenerationWireEvent = GenerationHistoryEvent | GenerationStreamEvent;
+
+export function parseGenerationWireEvent(input: unknown): GenerationWireEvent {
+  return GenerationWireEventSchema.parse(input);
+}
+
+export function createGenerationEventDeduplicator(): (
+  event: GenerationWireEvent,
+) => GenerationWireEvent | null {
+  const seenDurableEvents = new Set<string>();
+  return (event) => {
+    if ('sequence' in event) {
+      const key = `${event.generationId}:${event.sequence}`;
+      if (seenDurableEvents.has(key)) return null;
+      seenDurableEvents.add(key);
+    }
+    return event;
+  };
+}
+
+export function getGenerationFailureMessage(event: GenerationWireEvent): string | null {
+  if ('payload' in event && event.type === 'generation.failed') return event.payload.message;
+  if ('event' in event && event.event.type === 'error') return event.event.message;
+  return null;
 }

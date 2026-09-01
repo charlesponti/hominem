@@ -1,6 +1,6 @@
 ---
 title: "Add generation recovery observability"
-status: "todo"
+status: "Partial"
 priority: "medium"
 labels: [chat, observability, tracing]
 depends_on: [004-generation-crash-recovery.md]

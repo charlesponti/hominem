@@ -1,6 +1,6 @@
 ---
 title: 'Define the chat domain contract'
-status: 'in-progress'
+status: 'Implemented'
 priority: 'high'
 labels: [chat, domain, schema]
 depends_on: []

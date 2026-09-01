@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
+import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationInterpreter as createPortsInterpreter,
   runGenerationWithPorts,
@@ -10,13 +10,9 @@ import {
   type GenerationInput,
   type GenerationState,
 } from './generation-machine';
+import { messageSnapshot } from './generation-test-fixtures';
 
-const savedMessage = {
-  id: 'assistant-1',
-  chatId: 'chat-1',
-  role: 'assistant',
-  content: 'done',
-} satisfies GenerationMessageSnapshot;
+const savedMessage = messageSnapshot({ id: 'assistant-1', chatId: 'chat-1', content: 'done' });
 
 const startContext = {
   chatId: 'chat-1',

@@ -15,7 +15,11 @@ import {
   reduceGenerationSaved,
   reduceStart,
 } from './lifecycle';
-import { reduceProviderChunk, reduceProviderTurnFailed } from './provider';
+import {
+  reconstructProviderToolCalls,
+  reduceProviderChunk,
+  reduceProviderTurnFailed,
+} from './provider';
 import {
   reduceConfirmationApproved,
   reduceConfirmationRejected,
@@ -24,13 +28,16 @@ import {
 } from './tool-calls';
 import type {
   GenerationEffectResult,
+  GenerationHistoryEvent,
   GenerationInput,
   GenerationState,
   GenerationStep,
+  GenerationToolCall,
   RunGenerationInput,
 } from './types';
 
 export type * from './types';
+export { reconstructProviderToolCalls };
 export { generationEventIdempotencyKey } from './shared';
 
 export function createGenerationState(generationId: string): GenerationState {
@@ -49,6 +56,97 @@ export function createGenerationState(generationId: string): GenerationState {
     pendingConfirmation: null,
     lastError: null,
   };
+}
+
+/** Rebuild the machine state needed to continue from durable history. */
+export function restoreGenerationState(
+  generationId: string,
+  events: readonly GenerationHistoryEvent[],
+): GenerationState {
+  let state = createGenerationState(generationId);
+  let pendingCall: GenerationToolCall | null = null;
+
+  for (const event of events) {
+    const payload = event.payload;
+    switch (payload.type) {
+      case 'generation.started':
+        state = { ...state, phase: 'running', turnId: `${generationId}:0` };
+        break;
+      case 'generation.phase_changed':
+        state = { ...state, phase: payload.phase };
+        break;
+      case 'generation.checkpointed':
+        state = {
+          ...state,
+          phase: 'awaiting_confirmation',
+          iteration: payload.checkpoint.iteration,
+          turnId: payload.checkpoint.turnId,
+          assistantText: payload.checkpoint.assistantMessage.content,
+          reasoningText: payload.checkpoint.assistantMessage.reasoning ?? '',
+        };
+        break;
+      case 'confirmation.required':
+        pendingCall = payload.call;
+        state = {
+          ...state,
+          phase: 'awaiting_confirmation',
+          pendingConfirmation: payload.call,
+          toolCalls: state.toolCalls.some((call) => call.id === payload.call.id)
+            ? state.toolCalls
+            : [...state.toolCalls, payload.call],
+        };
+        break;
+      case 'tool.requested':
+        state = {
+          ...state,
+          activeToolCall: payload.call,
+          toolCalls: state.toolCalls.some((call) => call.id === payload.call.id)
+            ? state.toolCalls
+            : [...state.toolCalls, payload.call],
+        };
+        break;
+      case 'tool.completed':
+      case 'tool.failed':
+        state = {
+          ...state,
+          activeToolCall: null,
+          completedToolResults: state.completedToolResults.some(
+            (result) => result.callId === payload.result.callId,
+          )
+            ? state.completedToolResults
+            : [...state.completedToolResults, payload.result],
+        };
+        break;
+      case 'generation.committed':
+        state = { ...state, phase: 'committed', pendingConfirmation: null };
+        break;
+      case 'generation.cancelled':
+        state = { ...state, phase: 'cancelled', pendingConfirmation: null };
+        break;
+      case 'generation.failed':
+        state = { ...state, phase: 'failed', lastError: payload.message };
+        break;
+      case 'generation.cancel_requested':
+        state = { ...state, phase: 'cancel_requested' };
+        break;
+      case 'generation.accepted':
+      case 'generation.retry_scheduled':
+        break;
+      case 'confirmation.approved':
+      case 'confirmation.rejected':
+        if (pendingCall?.id === payload.callId) pendingCall = null;
+        state = {
+          ...state,
+          phase: 'running',
+          pendingConfirmation: null,
+        };
+        break;
+    }
+  }
+
+  return pendingCall && state.phase === 'awaiting_confirmation'
+    ? { ...state, pendingConfirmation: pendingCall }
+    : state;
 }
 
 export function reduceGeneration(state: GenerationState, input: GenerationInput): GenerationStep {
@@ -103,7 +201,7 @@ function isAsyncInputs(value: object): value is AsyncIterable<GenerationInput> {
 // the I/O; each effect's result gets fed back through the pure reducer
 // before the next command runs.
 export async function runGeneration(input: RunGenerationInput): Promise<GenerationState> {
-  let state = createGenerationState(input.generationId);
+  let state = input.initialState ?? createGenerationState(input.generationId);
   const inputs: GenerationInput[] = [
     input.initialInput ?? {
       type: 'start',

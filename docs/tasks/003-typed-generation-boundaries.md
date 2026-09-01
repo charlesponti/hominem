@@ -1,6 +1,6 @@
 ---
 title: "Replace untyped generation boundary parsing"
-status: "todo"
+status: "Partial"
 priority: "high"
 labels: [chat, validation, api, ci]
 depends_on: []

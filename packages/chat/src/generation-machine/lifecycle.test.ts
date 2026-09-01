@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GenerationMessageSnapshot, GenerationStartContext } from '../generation-events';
+import type { GenerationStartContext } from '../generation-events';
+import { messageSnapshot } from '../generation-test-fixtures';
 import {
   reduceCancelRequested,
   reduceEffectStopped,
@@ -89,12 +90,7 @@ describe('reduceEffectStopped', () => {
 
 describe('reduceGenerationSaved', () => {
   it('commits with the saved message', () => {
-    const message: GenerationMessageSnapshot = {
-      id: 'assistant-1',
-      chatId: 'chat-1',
-      role: 'assistant',
-      content: 'Done.',
-    };
+    const message = messageSnapshot({ id: 'assistant-1', chatId: 'chat-1', content: 'Done.' });
     const step = reduceGenerationSaved(baseState({ phase: 'saving' }), message);
 
     expect(step.state.phase).toBe('committed');

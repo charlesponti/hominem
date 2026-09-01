@@ -55,6 +55,7 @@ export type {
 } from './services/chats/chat-speech-run.repository';
 export type {
   ChatMessageFileRecord,
+  ChatGenerationRunRecord,
   ChatMessageRecord,
   ChatMessageRole,
   ChatMessageToolCallRecord,

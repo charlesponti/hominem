@@ -23,6 +23,7 @@ import {
   useEditChatMessage,
   useRegenerateMessage,
   useSendMessage,
+  useToolCallRespond,
 } from '~/services/chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
@@ -105,6 +106,7 @@ export function ChatScreen({ id }: { id: string }) {
     () => ({ sendChatMessage, isChatSending }),
     [sendChatMessage, isChatSending],
   );
+  const toolCallRespond = useToolCallRespond({ chatId });
   const editMessage = useEditChatMessage(chatId);
   const handleEditMessage = useCallback(
     (messageId: string, content: string) => {
@@ -225,6 +227,8 @@ export function ChatScreen({ id }: { id: string }) {
           onEdit={handleEditMessage}
           onRegenerate={regenerateMessage}
           onRetry={retryFailedMessage}
+          onToolCallRespond={toolCallRespond.respond}
+          isRespondingToToolCall={toolCallRespond.isResponding}
           generation={activeGeneration}
           onCancelGeneration={() => {
             void cancelActiveGeneration();

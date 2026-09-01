@@ -7,3 +7,4 @@ export * from './use-edit-message';
 export * from './use-regenerate-message';
 export * from './use-send-message';
 export * from './use-start-chat';
+export * from './use-tool-call-respond';

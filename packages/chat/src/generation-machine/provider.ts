@@ -10,9 +10,25 @@ import type {
   GenerationState,
   GenerationStep,
   GenerationToolCall,
+  ProviderToolCall,
   ProviderChunk,
   ProviderToolCallDelta,
 } from './types';
+
+export function reconstructProviderToolCalls(
+  calls: ReadonlyMap<number, ProviderToolCallDelta>,
+): ProviderToolCall[] {
+  return [...calls.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([, call]) => ({
+      id: call.id ?? '',
+      type: 'function',
+      function: {
+        name: call.function?.name ?? '',
+        arguments: call.function?.arguments ?? '',
+      },
+    }));
+}
 
 function mergeToolCall(
   current: GenerationToolCall | undefined,

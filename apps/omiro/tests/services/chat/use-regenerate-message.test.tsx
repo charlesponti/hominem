@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import type { ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/chat';
+import type { ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

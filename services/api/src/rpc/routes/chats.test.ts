@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   listGenerationEvents: vi.fn(),
   getGenerationRun: vi.fn(),
   getGenerationRunById: vi.fn(),
+  getAwaitingGenerationRunForAssistantMessage: vi.fn(),
   updateGenerationRun: vi.fn(),
   cancelGenerationRun: vi.fn(),
   createSpeechRun: vi.fn(),
@@ -56,8 +57,10 @@ const mocks = vi.hoisted(() => ({
   }),
   enqueueEmbedding: vi.fn(),
   enqueueSpeechUsageReconciliation: vi.fn(),
-  streamChatReplySpeech: vi.fn(),
-  synthesizeChatReplySpeech: vi.fn(),
+  streamMessageSpeech: vi.fn(),
+  synthesizeReplyAudioFile: vi.fn(),
+  persistSpeechRun: vi.fn(),
+  synthesizeSpeech: vi.fn(),
   storeFile: vi.fn(),
 }));
 
@@ -65,6 +68,7 @@ vi.mock('@hominem/ai', () => ({
   AUDIO_TTS_MODEL: 'test-tts-model',
   CHAT_MODEL: 'test-chat-model',
   getSpeechUsageEstimate: mocks.getSpeechUsageEstimate,
+  synthesizeSpeech: mocks.synthesizeSpeech,
   getChatCompletionUsage: vi.fn((chunk: { usage?: unknown }) => chunk.usage ?? null),
   streamChatCompletion: mocks.streamChatCompletion,
 }));
@@ -89,6 +93,8 @@ vi.mock('@hominem/db', async () => {
       createGenerationRun: mocks.createGenerationRun,
       getGenerationRun: mocks.getGenerationRun,
       getGenerationRunById: mocks.getGenerationRunById,
+      getAwaitingGenerationRunForAssistantMessage:
+        mocks.getAwaitingGenerationRunForAssistantMessage,
       updateGenerationRun: mocks.updateGenerationRun,
       cancelGenerationRun: mocks.cancelGenerationRun,
       getChatSourceContext: mocks.getChatSourceContext,
@@ -149,9 +155,13 @@ vi.mock('../../application/ai-usage.service', () => ({
   startAIUsageTimer: () => () => 0,
 }));
 
-vi.mock('./chat-speech.service', () => ({
-  streamChatReplySpeech: mocks.streamChatReplySpeech,
-  synthesizeChatReplySpeech: mocks.synthesizeChatReplySpeech,
+vi.mock('../../application/chat-speech.service', () => ({
+  ChatSpeechUnavailableError: class ChatSpeechUnavailableError extends Error {},
+  chatSpeechService: {
+    streamMessageSpeech: mocks.streamMessageSpeech,
+    synthesizeReplyAudioFile: mocks.synthesizeReplyAudioFile,
+    persistSpeechRun: mocks.persistSpeechRun,
+  },
 }));
 
 vi.mock('../../mcp/chat-tool-adapter', () => ({
@@ -189,6 +199,29 @@ const testUser: RpcUser = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
+const testChat = {
+  id: '00000000-0000-4000-8000-000000000001',
+  userId: testUser.id,
+  title: 'Test chat',
+  archivedAt: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+const testAssistantMessage = {
+  id: '00000000-0000-4000-8000-000000000002',
+  chatId: '00000000-0000-4000-8000-000000000001',
+  userId: testUser.id,
+  role: 'assistant' as const,
+  content: 'Hi there',
+  files: null,
+  toolCalls: null,
+  reasoning: null,
+  parentMessageId: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 function createApp() {
   const app = new Hono<AppContext>()
     .onError(apiErrorHandler)
@@ -211,7 +244,7 @@ function createApp() {
 function phaseEvent(sequence: number): ChatGenerationEventRecord {
   return {
     id: `event-${sequence}`,
-    generationId: 'generation-1',
+    generationId: '00000000-0000-4000-8000-000000000003',
     sequence,
     type: 'generation.phase_changed',
     payload: { type: 'generation.phase_changed', phase: 'running' },
@@ -223,7 +256,7 @@ function phaseEvent(sequence: number): ChatGenerationEventRecord {
 function cancelledEvent(sequence: number): ChatGenerationEventRecord {
   return {
     id: `event-${sequence}`,
-    generationId: 'generation-1',
+    generationId: '00000000-0000-4000-8000-000000000003',
     sequence,
     type: 'generation.cancelled',
     payload: { type: 'generation.cancelled' },
@@ -235,7 +268,7 @@ function cancelledEvent(sequence: number): ChatGenerationEventRecord {
 describe('chat stream accounting', () => {
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
-    mocks.createChat.mockResolvedValue({ id: 'chat-id' });
+    mocks.createChat.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000001' });
     mocks.getMessages.mockResolvedValue([]);
     mocks.insertMessage.mockResolvedValue({ id: 'message-id' });
     mocks.createGenerationRun.mockResolvedValue(undefined);
@@ -261,7 +294,7 @@ describe('chat stream accounting', () => {
     mocks.listGenerationEvents.mockResolvedValue([]);
     mocks.saveToolEffect.mockImplementation(async (input: { result: unknown }) => ({
       id: 'effect-1',
-      generationId: 'generation-1',
+      generationId: '00000000-0000-4000-8000-000000000003',
       idempotencyKey: 'effect-1',
       toolName: 'tool',
       result: input.result,
@@ -270,7 +303,7 @@ describe('chat stream accounting', () => {
     mocks.getGenerationRun.mockResolvedValue(null);
     mocks.getGenerationRunById.mockResolvedValue(null);
     mocks.updateGenerationRun.mockResolvedValue(undefined);
-    mocks.getMessageById.mockResolvedValue({ id: 'message-id' });
+    mocks.getMessageById.mockResolvedValue({ ...testAssistantMessage, id: 'message-id' });
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.resolveChatFiles.mockResolvedValue([]);
@@ -285,7 +318,7 @@ describe('chat stream accounting', () => {
     mocks.setSpeechGenerationId.mockResolvedValue({ id: 'speech-run-id' });
     mocks.markSpeechComplete.mockResolvedValue({ id: 'speech-run-id' });
     mocks.markSpeechReconciliation.mockResolvedValue({ id: 'speech-run-id' });
-    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.streamChatCompletion.mockReturnValue(
       (async function* () {
         yield {
@@ -384,7 +417,7 @@ describe('chat stream accounting', () => {
     mocks.createGenerationRun.mockClear();
     mocks.getGenerationRunById.mockResolvedValue({
       id: '11111111-1111-4111-8111-111111111119',
-      chatId: 'existing-chat-id',
+      chatId: 'existing-00000000-0000-4000-8000-000000000001',
       ownerUserId: '11111111-1111-4111-8111-111111111111',
       kind: 'start',
       status: 'committed',
@@ -397,12 +430,36 @@ describe('chat stream accounting', () => {
     });
     mocks.getMessageById.mockResolvedValue({
       id: 'assistant-message-id',
-      chatId: 'existing-chat-id',
+      chatId: 'existing-00000000-0000-4000-8000-000000000001',
       role: 'assistant',
       content: 'Already generated reply',
       createdAt: '2026-01-01T00:00:01.000Z',
       files: null,
     });
+    mocks.listGenerationEvents.mockResolvedValue([
+      {
+        id: 'event-1',
+        generationId: '11111111-1111-4111-8111-111111111119',
+        sequence: 1,
+        type: 'generation.committed',
+        payload: {
+          type: 'generation.committed',
+          message: {
+            id: 'assistant-message-id',
+            chatId: 'existing-00000000-0000-4000-8000-000000000001',
+            userId: testUser.id,
+            role: 'assistant',
+            content: 'Already generated reply',
+            files: null,
+            toolCalls: null,
+            reasoning: null,
+            parentMessageId: null,
+            createdAt: '2026-01-01T00:00:01.000Z',
+            updatedAt: '2026-01-01T00:00:01.000Z',
+          },
+        },
+      },
+    ]);
 
     const response = await createApp().request('/api/chats/start-stream', {
       method: 'POST',
@@ -422,11 +479,14 @@ describe('chat stream accounting', () => {
   });
 
   it('replays durable generation events from Last-Event-ID', async () => {
-    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'committed' });
+    mocks.getGenerationRun.mockResolvedValue({
+      id: '00000000-0000-4000-8000-000000000003',
+      status: 'committed',
+    });
     mocks.listGenerationEvents.mockResolvedValue([
       {
         id: 'event-2',
-        generationId: 'generation-1',
+        generationId: '00000000-0000-4000-8000-000000000003',
         sequence: 2,
         type: 'generation.phase_changed',
         payload: { type: 'generation.phase_changed', phase: 'running' },
@@ -436,7 +496,7 @@ describe('chat stream accounting', () => {
     ]);
 
     const response = await createApp().request(
-      '/api/chats/chat-id/generations/generation-1/stream',
+      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000003/stream',
       {
         headers: { 'Last-Event-ID': '1' },
       },
@@ -444,14 +504,22 @@ describe('chat stream accounting', () => {
 
     expect(response.status).toBe(200);
     const body = await response.text();
-    expect(mocks.listGenerationEvents).toHaveBeenCalledWith({}, 'generation-1', testUser.id, 1);
+    expect(mocks.listGenerationEvents).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000003',
+      testUser.id,
+      1,
+    );
     expect(body).toContain('id: 2');
     expect(body).toContain('generation.phase_changed');
     expect(body).toContain('[DONE]');
   });
 
   it('does not lose events published while replay is loading', async () => {
-    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'running' });
+    mocks.getGenerationRun.mockResolvedValue({
+      id: '00000000-0000-4000-8000-000000000003',
+      status: 'running',
+    });
     mocks.listGenerationEvents.mockImplementation(async () => {
       publishGenerationEvent(phaseEvent(2));
       publishGenerationEvent(cancelledEvent(3));
@@ -459,7 +527,7 @@ describe('chat stream accounting', () => {
     });
 
     const response = await createApp().request(
-      '/api/chats/chat-id/generations/generation-1/stream?afterSequence=0',
+      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000003/stream?afterSequence=0',
     );
 
     expect(response.status).toBe(200);
@@ -473,10 +541,13 @@ describe('chat stream accounting', () => {
 
   it('rejects malformed replay cursors before reading events', async () => {
     mocks.listGenerationEvents.mockClear();
-    mocks.getGenerationRun.mockResolvedValue({ id: 'generation-1', status: 'committed' });
+    mocks.getGenerationRun.mockResolvedValue({
+      id: '00000000-0000-4000-8000-000000000003',
+      status: 'committed',
+    });
 
     const response = await createApp().request(
-      '/api/chats/chat-id/generations/generation-1/stream?afterSequence=1.5',
+      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000003/stream?afterSequence=1.5',
     );
 
     expect(response.status).toBe(400);
@@ -517,22 +588,29 @@ describe('chat list pagination', () => {
 
 describe('chat message search', () => {
   beforeEach(() => {
-    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.searchMessages.mockClear();
     mocks.searchMessages.mockResolvedValue([]);
   });
 
   it('searches all messages for an owned chat', async () => {
     const response = await createApp().request(
-      '/api/chats/chat-id/messages/search?query=important&limit=25',
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/search?query=important&limit=25',
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.searchMessages).toHaveBeenCalledWith({}, 'chat-id', 'important', 25);
+    expect(mocks.searchMessages).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      'important',
+      25,
+    );
   });
 
   it('rejects a search without a query', async () => {
-    const response = await createApp().request('/api/chats/chat-id/messages/search');
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/search',
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.searchMessages).not.toHaveBeenCalled();
@@ -541,27 +619,30 @@ describe('chat message search', () => {
 
 describe('chat message deletion', () => {
   beforeEach(() => {
-    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.deleteUserMessageAndFollowing.mockReset();
     mocks.deleteUserMessageAndFollowing.mockResolvedValue({
-      deletedMessageIds: ['message-1', 'message-2'],
+      deletedMessageIds: ['00000000-0000-4000-8000-000000000003', 'message-2'],
       cleanupFileIds: [],
     });
   });
 
   it('deletes the selected user message and later messages', async () => {
-    const response = await createApp().request('/api/chats/chat-id/messages/message-1', {
-      method: 'DELETE',
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
+      {
+        method: 'DELETE',
+      },
+    );
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      deletedMessageIds: ['message-1', 'message-2'],
+      deletedMessageIds: ['00000000-0000-4000-8000-000000000003', 'message-2'],
     });
     expect(mocks.deleteUserMessageAndFollowing).toHaveBeenCalledWith(
       {},
-      'chat-id',
-      'message-1',
+      '00000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000003',
       testUser.id,
     );
   });
@@ -569,9 +650,12 @@ describe('chat message deletion', () => {
   it('does not delete when the chat is not owned', async () => {
     mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
 
-    const response = await createApp().request('/api/chats/chat-id/messages/message-1', {
-      method: 'DELETE',
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
+      {
+        method: 'DELETE',
+      },
+    );
 
     expect(response.status).not.toBe(200);
     expect(mocks.deleteUserMessageAndFollowing).not.toHaveBeenCalled();
@@ -580,23 +664,35 @@ describe('chat message deletion', () => {
 
 describe('chat message regenerate', () => {
   const userMessage = {
-    id: 'user-1',
+    id: '00000000-0000-4000-8000-000000000004',
+    chatId: '00000000-0000-4000-8000-000000000001',
+    userId: testUser.id,
     role: 'user',
     content: 'Hello',
     createdAt: '2026-01-01T00:00:00.000Z',
     files: null,
+    toolCalls: null,
+    reasoning: null,
+    parentMessageId: null,
+    updatedAt: '2026-01-01T00:00:00.000Z',
   };
   const assistantMessage = {
-    id: 'assistant-1',
+    id: '00000000-0000-4000-8000-000000000002',
+    chatId: '00000000-0000-4000-8000-000000000001',
+    userId: testUser.id,
     role: 'assistant',
     content: 'Hi',
     createdAt: '2026-01-01T00:00:01.000Z',
     files: null,
+    toolCalls: null,
+    reasoning: null,
+    parentMessageId: '00000000-0000-4000-8000-000000000004',
+    updatedAt: '2026-01-01T00:00:01.000Z',
   };
 
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
-    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.replaceAssistantMessageContent.mockReset();
     mocks.replaceAssistantMessageContent.mockResolvedValue({
@@ -627,7 +723,7 @@ describe('chat message regenerate', () => {
 
   it('regenerates an assistant message using the prior user turn', async () => {
     const response = await createApp().request(
-      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/regenerate',
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -639,19 +735,23 @@ describe('chat message regenerate', () => {
     const body = await response.text();
     expect(body).toContain('Regenerated reply');
 
-    expect(mocks.getMessagesBefore).toHaveBeenCalledWith({}, 'chat-id', '2026-01-01T00:00:01.000Z');
+    expect(mocks.getMessagesBefore).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      '2026-01-01T00:00:01.000Z',
+    );
 
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
 
     expect(mocks.replaceAssistantMessageContent).toHaveBeenCalledWith(
       {},
-      'chat-id',
-      'assistant-1',
+      '00000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000002',
       'Regenerated reply',
       { reasoning: null, toolCalls: null },
     );
-    expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, 'chat-id');
+    expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, '00000000-0000-4000-8000-000000000001');
   });
 
   it('finds the parent user turn even when it is not the most recent prior message', async () => {
@@ -662,7 +762,7 @@ describe('chat message regenerate', () => {
     ]);
 
     const response = await createApp().request(
-      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/regenerate',
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -681,11 +781,14 @@ describe('chat message regenerate', () => {
   it('rejects regenerating a user message', async () => {
     mocks.getMessageById.mockResolvedValue(userMessage);
 
-    const response = await createApp().request('/api/chats/chat-id/messages/user-1/regenerate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111116' }),
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111116' }),
+      },
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
@@ -694,11 +797,14 @@ describe('chat message regenerate', () => {
   it('rejects regenerating a message that does not exist', async () => {
     mocks.getMessageById.mockResolvedValue(undefined);
 
-    const response = await createApp().request('/api/chats/chat-id/messages/missing/regenerate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111117' }),
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/missing/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111117' }),
+      },
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
@@ -708,7 +814,7 @@ describe('chat message regenerate', () => {
     mocks.getMessagesBefore.mockResolvedValue([]);
 
     const response = await createApp().request(
-      '/api/chats/chat-id/messages/assistant-1/regenerate',
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/regenerate',
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -723,22 +829,30 @@ describe('chat message regenerate', () => {
 
 describe('chat stream walkie-talkie audio leg', () => {
   beforeEach(() => {
-    mocks.synthesizeChatReplySpeech.mockReset();
-    mocks.streamChatReplySpeech.mockReset();
+    mocks.streamMessageSpeech.mockReset();
+    mocks.synthesizeReplyAudioFile.mockReset();
+    mocks.persistSpeechRun.mockReset();
     mocks.storeFile.mockReset();
     mocks.insertMessage.mockReset();
-    mocks.getOwnedOrThrow.mockResolvedValue({ id: 'chat-id' });
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.getMessages.mockResolvedValue([]);
-    mocks.insertMessage.mockResolvedValue({ id: 'assistant-id' });
+    mocks.insertMessage.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000002' });
     mocks.createGenerationRun.mockResolvedValue(undefined);
     mocks.getGenerationRun.mockResolvedValue(null);
     mocks.getGenerationRunById.mockResolvedValue(null);
     mocks.updateGenerationRun.mockResolvedValue(undefined);
     mocks.getMessageById.mockResolvedValue({
-      id: 'assistant-id',
+      id: '00000000-0000-4000-8000-000000000002',
+      chatId: '00000000-0000-4000-8000-000000000001',
+      userId: testUser.id,
       role: 'assistant',
       content: 'Hi there',
       files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
     });
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.getChatSourceContext.mockResolvedValue([]);
@@ -754,13 +868,43 @@ describe('chat stream walkie-talkie audio leg', () => {
         yield { choices: [{ delta: { content: 'Hi there' } }] };
       })(),
     );
+    mocks.synthesizeReplyAudioFile.mockImplementation(async (userId: string, text: string) => {
+      try {
+        const result = await mocks.synthesizeSpeech({ text });
+        const stored = await mocks.storeFile(result.buffer, result.mimeType, userId, {
+          originalName: 'reply.mp3',
+        });
+        return {
+          file: {
+            type: 'audio',
+            fileId: stored.id,
+            url: stored.url,
+            filename: stored.originalName,
+            mimeType: result.mimeType,
+            size: result.buffer.byteLength,
+          },
+          eventId: 'speech-event-id',
+          generationId: result.generationId ?? null,
+          usageAvailable: true,
+          status: 'succeeded',
+        };
+      } catch {
+        return {
+          file: null,
+          eventId: 'speech-event-id',
+          generationId: null,
+          usageAvailable: false,
+          status: 'failed',
+        };
+      }
+    });
   });
 
   it('synthesizes and attaches audio before committing the durable reply', async () => {
-    mocks.synthesizeChatReplySpeech.mockResolvedValue({
-      kind: 'success',
+    mocks.synthesizeSpeech.mockResolvedValue({
       buffer: Buffer.from('fake-mp3-bytes'),
       mimeType: 'audio/mpeg',
+      generationId: null,
     });
     mocks.storeFile.mockResolvedValue({
       id: 'file-id',
@@ -772,15 +916,18 @@ describe('chat stream walkie-talkie audio leg', () => {
       uploadedAt: new Date(),
     });
 
-    const response = await createApp().request('/api/chats/chat-id/stream', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        generationId: '11111111-1111-4111-8111-111111111119',
-        message: 'Hello',
-        responseModality: 'audio',
-      }),
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/stream',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          generationId: '11111111-1111-4111-8111-111111111119',
+          message: 'Hello',
+          responseModality: 'audio',
+        }),
+      },
+    );
 
     expect(response.status).toBe(200);
     const body = await response.text();
@@ -788,7 +935,7 @@ describe('chat stream walkie-talkie audio leg', () => {
     expect(body).toMatch(/id: \d+\n/);
     expect(body).not.toContain('"type":"audio"');
 
-    expect(mocks.synthesizeChatReplySpeech).toHaveBeenCalledWith('Hi there');
+    expect(mocks.synthesizeSpeech).toHaveBeenCalledWith({ text: 'Hi there' });
     expect(mocks.storeFile).toHaveBeenCalledWith(
       expect.any(Buffer),
       'audio/mpeg',
@@ -808,26 +955,24 @@ describe('chat stream walkie-talkie audio leg', () => {
         ],
       }),
     );
-    expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ feature: 'chat_speech', operation: 'speech', status: 'succeeded' }),
-    );
+    expect(mocks.synthesizeReplyAudioFile).toHaveBeenCalledWith(testUser.id, 'Hi there');
   });
 
   it('degrades silently to text-only when speech synthesis fails', async () => {
-    mocks.synthesizeChatReplySpeech.mockResolvedValue({
-      kind: 'error',
-      message: 'provider down',
-    });
+    mocks.synthesizeSpeech.mockRejectedValue(new Error('provider down'));
 
-    const response = await createApp().request('/api/chats/chat-id/stream', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        generationId: '11111111-1111-4111-8111-111111111120',
-        message: 'Hello',
-        responseModality: 'audio',
-      }),
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/stream',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          generationId: '11111111-1111-4111-8111-111111111120',
+          message: 'Hello',
+          responseModality: 'audio',
+        }),
+      },
+    );
 
     expect(response.status).toBe(200);
     const body = await response.text();
@@ -846,27 +991,29 @@ describe('chat stream walkie-talkie audio leg', () => {
   });
 
   it('does not synthesize audio when responseModality is omitted', async () => {
-    const response = await createApp().request('/api/chats/chat-id/stream', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        generationId: '11111111-1111-4111-8111-111111111121',
-        message: 'Hello',
-      }),
-    });
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/stream',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          generationId: '11111111-1111-4111-8111-111111111121',
+          message: 'Hello',
+        }),
+      },
+    );
 
     expect(response.status).toBe(200);
     await response.text();
 
-    expect(mocks.synthesizeChatReplySpeech).not.toHaveBeenCalled();
+    expect(mocks.streamMessageSpeech).not.toHaveBeenCalled();
     expect(mocks.storeFile).not.toHaveBeenCalled();
   });
 
   it('streams speech for an owned assistant message', async () => {
-    mocks.streamChatReplySpeech.mockResolvedValue({
-      kind: 'success',
+    mocks.streamMessageSpeech.mockResolvedValue({
       mimeType: 'audio/mpeg',
-      generationId: 'gen-tts-1',
+      providerReadyDurationMs: 3,
       stream: new ReadableStream({
         start(controller) {
           controller.enqueue(new TextEncoder().encode('audio-'));
@@ -876,22 +1023,17 @@ describe('chat stream walkie-talkie audio leg', () => {
       }),
     });
 
-    const response = await createApp().request('/api/chats/chat-id/messages/assistant-id/speech');
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/speech',
+    );
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('audio/mpeg');
     expect(await response.text()).toBe('audio-bytes');
-    expect(mocks.streamChatReplySpeech).toHaveBeenCalledWith('Hi there');
-    expect(mocks.recordAIUsageEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ feature: 'chat_speech', status: 'succeeded' }),
-    );
-    expect(mocks.setSpeechGenerationId).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ providerGenerationId: 'gen-tts-1' }),
-    );
-    expect(mocks.markSpeechReconciliation).toHaveBeenCalledWith(
-      {},
-      expect.objectContaining({ id: expect.any(String), status: 'succeeded' }),
-    );
+    expect(mocks.streamMessageSpeech).toHaveBeenCalledWith({
+      chatId: '00000000-0000-4000-8000-000000000001',
+      messageId: '00000000-0000-4000-8000-000000000002',
+      ownerUserId: testUser.id,
+    });
   });
 });

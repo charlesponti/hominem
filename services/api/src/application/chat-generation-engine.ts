@@ -2,8 +2,10 @@ import { type AIUsageMetrics } from '@hominem/ai';
 import {
   ChatClient,
   chatMessageJsonObjectSchema,
+  chatMessageSnapshotSchema,
   type ChatMessageJsonObject,
   type GenerationHistoryEventPayload,
+  type GenerationStreamEventPayload,
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
@@ -12,18 +14,28 @@ import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@homi
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
 import { OpenRouterChatModel } from './chat-generation-provider';
 import type { ChatGenerationEffectStore } from './chat-generation-tools';
-import type {
-  ChatGenerationLiveEvent,
-  RunCompletionWithToolsInput,
-  RunCompletionWithToolsResult,
-} from './chat-generation-types';
+import type { GenerationEngineInput, GenerationEngineResult } from './chat-generation-types';
+
+export class ToolInputError extends Error {
+  readonly category = 'tool_input';
+
+  constructor(toolName: string) {
+    super(`Tool arguments are invalid for ${toolName}`);
+    this.name = 'ToolInputError';
+  }
+}
 
 function parseArguments(call: GenerationToolCall): ChatMessageJsonObject {
   if (!call.arguments) return {};
-  const value: unknown = JSON.parse(call.arguments);
+  let value: unknown;
+  try {
+    value = JSON.parse(call.arguments);
+  } catch {
+    throw new ToolInputError(call.name);
+  }
   const parsed = chatMessageJsonObjectSchema.safeParse(value);
   if (!parsed.success) {
-    throw new Error(`Invalid tool arguments for ${call.name}`);
+    throw new ToolInputError(call.name);
   }
   return parsed.data;
 }
@@ -64,27 +76,25 @@ function addUsage(
   };
 }
 
-function mapLiveEvent(
-  event: Parameters<NonNullable<RunCompletionWithToolsInput['onEvent']>>[0],
-): ChatGenerationLiveEvent {
-  return event;
-}
-
-export async function runChatGeneration(
-  input: RunCompletionWithToolsInput & {
+export async function executeGenerationTurn(
+  input: GenerationEngineInput & {
     generationId: string;
     chatId: string;
+    generationKind?: 'send' | 'start' | 'regenerate';
+    userMessageId?: string | null;
+    targetAssistantMessageId?: string | null;
     effectStore?: ChatGenerationEffectStore;
-    persistEvent?: (input: {
-      event: GenerationHistoryEventPayload;
-      idempotencyKey: string;
-    }) => Promise<ChatGenerationEventRecord | null>;
-    persistStarted?: boolean;
-    persistTerminal?: boolean;
-    onDurableEvent?: (event: ChatGenerationEventRecord) => Promise<void> | void;
-    isCancelled?: () => boolean | Promise<boolean>;
+    eventStore?: {
+      append: (input: {
+        event: GenerationHistoryEventPayload;
+        idempotencyKey: string;
+      }) => Promise<ChatGenerationEventRecord | null>;
+    };
+    durableEvents?: { accept: (event: ChatGenerationEventRecord) => Promise<void> | void };
+    liveEvents?: { accept: (event: GenerationStreamEventPayload) => Promise<void> | void };
+    cancellation?: { isRequested: () => boolean | Promise<boolean> };
   },
-): Promise<RunCompletionWithToolsResult> {
+): Promise<GenerationEngineResult> {
   let usage: AIUsageMetrics | null = null;
   const calls = new Map<string, GenerationToolCall>();
   const results = new Map<string, ToolResult>();
@@ -96,7 +106,7 @@ export async function runChatGeneration(
     tools: input.tools,
     maxTokens: input.maxTokens,
     reasoning: input.reasoning,
-    requiresToolCall: input.requiresToolCall,
+    requiresToolCall: input.initialState ? false : input.requiresToolCall,
     requiresConfirmation: (name) => runtime?.getToolDefinition(name)?.requiresConfirmation ?? false,
     onUsage: (next) => {
       usage = addUsage(usage, next);
@@ -136,13 +146,11 @@ export async function runChatGeneration(
                 result,
               })
             : result;
-        } catch (error) {
+        } catch {
           const result: ToolResult = {
             callId: call.id,
             toolName: call.name,
-            content: JSON.stringify({
-              error: error instanceof Error ? error.message : 'Tool call failed',
-            }),
+            content: JSON.stringify({ error: 'Tool call failed' }),
             error: true,
           };
           results.set(call.id, result);
@@ -170,13 +178,11 @@ export async function runChatGeneration(
             content: JSON.stringify(value),
             error: false,
           };
-        } catch (error) {
+        } catch {
           return {
             callId: call.id,
             toolName: call.name,
-            content: JSON.stringify({
-              error: error instanceof Error ? error.message : 'Preview failed',
-            }),
+            content: JSON.stringify({ error: 'Tool preview failed' }),
             error: true,
           };
         }
@@ -185,47 +191,53 @@ export async function runChatGeneration(
     lifecycle: {
       events: {
         persist: async (command) => {
-          if (command.event.type === 'generation.started' && input.persistStarted === false) {
-            return;
-          }
           if (
-            input.persistTerminal === false &&
-            ['generation.committed', 'generation.cancelled', 'generation.failed'].includes(
-              command.event.type,
-            )
+            [
+              'generation.started',
+              'generation.committed',
+              'generation.cancelled',
+              'generation.failed',
+            ].includes(command.event.type)
           ) {
             return;
           }
-          const record = await input.persistEvent?.({
+          const record = await input.eventStore?.append({
             event: command.event,
             idempotencyKey: command.idempotencyKey,
           });
-          if (record) await input.onDurableEvent?.(record);
+          if (record) await input.durableEvents?.accept(record);
         },
         emit: async (event) => {
           if (event.type === 'text-delta') {
-            await input.onEvent?.({ type: 'text-delta', text: event.text });
+            await input.liveEvents?.accept({ type: 'text-delta', text: event.text });
           } else if (event.type === 'reasoning-delta') {
-            await input.onEvent?.({ type: 'reasoning-delta', text: event.text });
+            await input.liveEvents?.accept({ type: 'reasoning-delta', text: event.text });
           } else if (event.type === 'tool-step') {
-            await input.onEvent?.(event);
+            await input.liveEvents?.accept(event);
           } else if (event.type === 'phase-changed') {
-            await input.onEvent?.(mapLiveEvent({ type: 'phase', phase: 'generating' }));
+            await input.liveEvents?.accept({ type: 'phase-changed', phase: 'running' });
           }
         },
       },
       generation: {
-        save: async (state) => ({
-          id: `${input.generationId}:assistant`,
-          chatId: input.chatId,
-          role: 'assistant',
-          content: state.assistantText,
-          reasoning: state.reasoningText || null,
-        }),
+        save: async (state) =>
+          chatMessageSnapshotSchema.parse({
+            id: `${input.generationId}:assistant`,
+            chatId: input.chatId,
+            userId: input.userId,
+            role: 'assistant',
+            content: state.assistantText,
+            files: null,
+            toolCalls: null,
+            reasoning: state.reasoningText || null,
+            parentMessageId: input.targetAssistantMessageId ?? null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }),
         stop: async () => undefined,
       },
       control: {
-        isCancelled: input.isCancelled,
+        isCancelled: input.cancellation?.isRequested,
       },
     },
   });
@@ -234,11 +246,13 @@ export async function runChatGeneration(
     id: input.generationId,
     context: {
       chatId: input.chatId,
-      kind: 'send',
-      userMessageId: null,
-      targetAssistantMessageId: null,
+      kind: input.generationKind ?? 'send',
+      userMessageId: input.userMessageId ?? null,
+      targetAssistantMessageId: input.targetAssistantMessageId ?? null,
       requestContext: {},
     },
+    initialState: input.initialState,
+    initialInput: input.initialInput,
   });
   const state = await generation.run();
   if (state.phase === 'failed') throw new Error(state.lastError ?? 'Generation failed');
@@ -247,7 +261,13 @@ export async function runChatGeneration(
   return {
     assistantText: state.assistantText,
     reasoningText: state.reasoningText || null,
-    toolCallRecords: state.toolCalls.map((call) => toToolRecord(call, results.get(call.id))),
+    toolCallRecords: state.toolCalls.map((call) =>
+      toToolRecord(
+        call,
+        results.get(call.id) ??
+          state.completedToolResults.find((result) => result.callId === call.id),
+      ),
+    ),
     usage,
     pendingToolCall: pending
       ? {

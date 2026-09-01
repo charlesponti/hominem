@@ -1,6 +1,6 @@
 ---
 title: "Remove legacy generation compatibility paths"
-status: "todo"
+status: "Implemented"
 priority: "high"
 labels: [chat, api, cleanup, legacy]
 depends_on: [008-generation-runtime-consolidation.md]

@@ -1,4 +1,4 @@
-import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
+import type { GenerationStartContext } from './generation-events';
 import type {
   ChatGenerationKind,
   ChatGenerationStatus,
@@ -41,7 +41,7 @@ function assertStartContext(
   }
 }
 
-function messageId(message: GenerationMessageSnapshot): string {
+function messageId(message: { id: string }): string {
   return message.id;
 }
 

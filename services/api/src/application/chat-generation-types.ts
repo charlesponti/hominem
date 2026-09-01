@@ -1,26 +1,15 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
+import type { GenerationInput, GenerationState } from '@hominem/chat';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
 import type { callTool, getToolDefinition } from '../mcp/tool-registry';
-
-/** Old-format event shape kept around for the route-owned stream. */
-export type ChatGenerationLiveEvent =
-  | { type: 'text-delta'; text: string }
-  | { type: 'reasoning-delta'; text: string }
-  | {
-      type: 'tool-step';
-      toolCallId: string;
-      toolName: string;
-      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-    }
-  | { type: 'phase'; phase: 'generating' };
 
 export type ChatToolRuntime = {
   callTool: typeof callTool;
   getToolDefinition: typeof getToolDefinition;
 };
 
-export interface RunCompletionWithToolsInput {
+export interface GenerationEngineInput {
   userId: string;
   model: string;
   messages: ChatMessages[];
@@ -30,10 +19,11 @@ export interface RunCompletionWithToolsInput {
   maxIterations?: number;
   requiresToolCall?: boolean;
   toolRuntime?: ChatToolRuntime;
-  onEvent?: (event: ChatGenerationLiveEvent) => Promise<void> | void;
+  initialState?: GenerationState;
+  initialInput?: GenerationInput;
 }
 
-export interface RunCompletionWithToolsResult {
+export interface GenerationEngineResult {
   assistantText: string;
   reasoningText: string | null;
   toolCallRecords: ChatMessageToolCallRecord[];

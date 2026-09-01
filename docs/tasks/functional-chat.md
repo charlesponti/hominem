@@ -1,7 +1,6 @@
 # Functional Chat Task Index
 
-The canonical architecture, current implementation status, invariants,
-definition of done, and ordered open work for functional chat live in
+The current chat-generation contract and architecture live in
 [`../chat-generation.md`](../chat-generation.md).
 
 This file is retained as the stable task-index location. Individual tasks are

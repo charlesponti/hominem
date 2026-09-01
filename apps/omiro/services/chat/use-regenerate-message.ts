@@ -1,9 +1,9 @@
-import { createGenerationClientState, reduceGenerationClientEvent } from '@hominem/chat';
 import {
+  createGenerationClientState,
   getGenerationFailureMessage,
   parseGenerationWireEvent,
-  toGenerationClientEvents,
-} from '@hominem/rpc/generation-events';
+  reduceGenerationClientEvent,
+} from '@hominem/chat';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
@@ -42,21 +42,17 @@ export function useRegenerateMessage(chatId: string) {
         getHeaders: getAuthHeaders,
         signal: controller.signal,
         parseEvent: parseGenerationWireEvent,
+        getReplayCursor: () => clientState.lastDurableSequence,
         onEvent: (event) => {
           const current = generationRef.current;
           if (!current || event.generationId !== current.id) return;
-          for (const clientEvent of toGenerationClientEvents(event)) {
-            clientState = reduceGenerationClientEvent(clientState, clientEvent);
-            if (clientState.phase === 'preparing' || clientState.phase === 'saving') {
-              setGeneration({ ...current, stage: clientState.phase });
-            }
-            if (clientState.phase === 'cancel_requested') {
-              setGeneration({ ...current, stage: 'stopping' });
-            }
-            if (clientState.phase === 'cancelled') {
-              setGeneration({ ...current, stage: 'cancelled' });
-            }
-          }
+          clientState = reduceGenerationClientEvent(clientState, event);
+          const stage = clientState.phase === 'cancel_requested' ? 'stopping' : clientState.phase;
+          setGeneration({
+            ...current,
+            stage,
+            lastDurableSequence: clientState.lastDurableSequence,
+          });
           const failureMessage = getGenerationFailureMessage(event);
           if (failureMessage) throw new Error(failureMessage);
           if ('payload' in event && event.type === 'generation.phase_changed') {
@@ -99,6 +95,7 @@ export function useRegenerateMessage(chatId: string) {
         id: generationId,
         chatId,
         stage: 'preparing',
+        lastDurableSequence: 0,
         targetMessageId: messageId,
       });
       void mutation.mutateAsync({ messageId, generationId }).catch(() => undefined);

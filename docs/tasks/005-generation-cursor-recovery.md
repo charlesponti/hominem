@@ -1,6 +1,6 @@
 ---
 title: "Restore generation cursors across reconnects"
-status: "todo"
+status: "Partial"
 priority: "high"
 labels: [chat, replay, web, omiro]
 depends_on: [004-generation-crash-recovery.md]

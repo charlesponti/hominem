@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createGenerationClientState,
+  parseGenerationClientCheckpoint,
   reduceGenerationClientEvent,
+  toGenerationClientCheckpoint,
   type GenerationClientEvent,
   type GenerationClientErrorEvent,
 } from './generation-client';
-import type { GenerationMessageSnapshot } from './generation-events';
 import type { GenerationHistoryEvent } from './generation-machine';
+import { chatSnapshot, messageSnapshot } from './generation-test-fixtures';
 
 const call = {
   id: 'call-1',
@@ -17,13 +19,12 @@ const call = {
   turnId: 'turn-1',
 };
 
-const message: GenerationMessageSnapshot = {
+const message = messageSnapshot({
   id: 'assistant-1',
   chatId: 'chat-1',
-  role: 'assistant',
   content: 'Done',
   reasoning: 'Because',
-};
+});
 
 function durable(
   sequence: number,
@@ -167,6 +168,50 @@ describe('generation client reducer', () => {
     expect(state.phase).toBe('cancelled');
   });
 
+  it('round-trips rejected confirmation and a later failed tool without double-applying replay', () => {
+    const secondCall = {
+      ...call,
+      id: 'call-2',
+      name: 'write',
+      arguments: '{"value":"x"}',
+    };
+    const events: GenerationClientEvent[] = [
+      durable(1, { type: 'tool.requested', call }),
+      durable(2, { type: 'confirmation.required', call }),
+      durable(3, {
+        type: 'confirmation.rejected',
+        callId: call.id,
+        reason: 'User rejected tool call',
+        call,
+      }),
+      durable(4, { type: 'tool.requested', call: secondCall }),
+      durable(5, {
+        type: 'tool.failed',
+        result: {
+          callId: secondCall.id,
+          toolName: secondCall.name,
+          content: 'failed',
+          error: true,
+        },
+      }),
+    ];
+
+    let state = createGenerationClientState('generation-1');
+    for (const event of events) state = reduceGenerationClientEvent(state, event);
+    const beforeDuplicate = state;
+    state = reduceGenerationClientEvent(state, events.at(-1)!);
+
+    expect(state).toBe(beforeDuplicate);
+    expect(state).toMatchObject({
+      phase: 'awaiting_confirmation',
+      lastDurableSequence: 5,
+      toolSteps: [
+        { toolCallId: 'call-1', toolName: 'search', status: 'requested' },
+        { toolCallId: 'call-2', toolName: 'write', status: 'failed' },
+      ],
+    });
+  });
+
   it('reduces start, accept, checkpoint, confirmation resolution, and cancellation request as no-op facts', () => {
     let state = createGenerationClientState('generation-1');
     const events = [
@@ -183,7 +228,13 @@ describe('generation client reducer', () => {
       durable(2, {
         type: 'generation.accepted',
         chatId: 'chat-1',
-        userMessage: { id: 'user-1', chatId: 'chat-1', role: 'user', content: 'Hi' },
+        chat: chatSnapshot(),
+        userMessage: messageSnapshot({
+          id: 'user-1',
+          chatId: 'chat-1',
+          role: 'user',
+          content: 'Hi',
+        }),
       }),
       durable(3, {
         type: 'generation.checkpointed',
@@ -222,5 +273,25 @@ describe('generation client reducer', () => {
     );
 
     expect(state).toMatchObject({ phase: 'committed', text: 'Done', reasoning: 'prior' });
+  });
+
+  it('round-trips only the durable client checkpoint and rejects unsafe persisted values', () => {
+    let state = createGenerationClientState('generation-1');
+    state = reduceGenerationClientEvent(
+      state,
+      durable(4, { type: 'generation.phase_changed', phase: 'awaiting_confirmation' }),
+    );
+
+    const checkpoint = toGenerationClientCheckpoint(state);
+    expect(checkpoint).toEqual({
+      generationId: 'generation-1',
+      phase: 'awaiting_confirmation',
+      lastDurableSequence: 4,
+    });
+    expect(parseGenerationClientCheckpoint(checkpoint)).toEqual(checkpoint);
+    expect(() =>
+      parseGenerationClientCheckpoint({ ...checkpoint, lastDurableSequence: Number.NaN }),
+    ).toThrow();
+    expect(() => parseGenerationClientCheckpoint({ ...checkpoint, unexpected: true })).toThrow();
   });
 });

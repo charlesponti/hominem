@@ -2,18 +2,26 @@ import {
   type AIUsageMetrics,
   type ChatFunctionTool,
   type ChatMessages,
-  type ChatToolCall,
   type ChatRequest,
   getChatCompletionUsage,
   streamChatCompletion,
 } from '@hominem/ai';
 import {
+  providerChunkSchema,
+  reconstructProviderToolCalls,
   type ChatModel,
   type GenerationInput,
   type GenerationState,
   type ProviderChunk,
   type ProviderToolCallDelta,
 } from '@hominem/chat';
+
+export class ProviderInputError extends Error {
+  constructor() {
+    super('Provider returned an invalid generation chunk');
+    this.name = 'ProviderInputError';
+  }
+}
 
 export type OpenRouterChatModelOptions = {
   model: string;
@@ -41,24 +49,13 @@ function toProviderChunk(chunk: {
   }[];
 }): ProviderChunk {
   const delta = chunk.choices?.[0]?.delta;
-  return {
+  const result = providerChunkSchema.safeParse({
     content: delta?.content,
     reasoning: delta?.reasoning,
     toolCalls: delta?.toolCalls,
-  };
-}
-
-function reconstructedCalls(calls: Map<number, ProviderToolCallDelta>): ChatToolCall[] {
-  return [...calls.entries()]
-    .sort(([left], [right]) => left - right)
-    .map(([, call]) => ({
-      id: call.id ?? '',
-      type: 'function',
-      function: {
-        name: call.function?.name ?? '',
-        arguments: call.function?.arguments ?? '',
-      },
-    }));
+  });
+  if (!result.success) throw new ProviderInputError();
+  return result.data;
 }
 
 function isTransient(error: unknown): boolean {
@@ -104,7 +101,7 @@ export class OpenRouterChatModel implements ChatModel {
         yield { type: 'provider-chunk', chunk: providerChunk };
       }
 
-      const toolCalls = reconstructedCalls(calls);
+      const toolCalls = reconstructProviderToolCalls(calls);
       if (toolCalls.length > 0) {
         this.messages.push({ role: 'assistant', content: null, toolCalls });
       }
@@ -123,7 +120,12 @@ export class OpenRouterChatModel implements ChatModel {
     } catch (error) {
       yield {
         type: 'provider-turn-failed',
-        message: error instanceof Error ? error.message : 'Provider request failed',
+        message:
+          error instanceof ProviderInputError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : 'Provider request failed',
         transient: isTransient(error),
         attempt: Math.max(this.attempt, generationIteration),
         maxAttempts: this.options.maxAttempts ?? 2,

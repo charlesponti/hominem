@@ -61,7 +61,7 @@ function getChatToolProjection(
 
 // All registered MCP tools, converted to the JSON-Schema shape OpenRouter wants.
 // Write tools are included too — anything flagged `requiresConfirmation` gets
-// gated at execution time in chat-completion-loop.ts, not filtered out here.
+// gated at execution time in the chat generation application service, not filtered out here.
 // Registration failures bubble up to the caller instead of failing silently,
 // so a private-data request never quietly turns into an ungrounded answer.
 export async function getChatTools(): Promise<ChatFunctionTool[]> {

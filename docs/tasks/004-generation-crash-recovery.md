@@ -1,6 +1,6 @@
 ---
 title: "Implement deterministic generation crash recovery"
-status: "todo"
+status: "Partial"
 priority: "urgent"
 labels: [chat, recovery, database, reliability]
 depends_on: [001-chat-domain-contract.md, 003-typed-generation-boundaries.md]

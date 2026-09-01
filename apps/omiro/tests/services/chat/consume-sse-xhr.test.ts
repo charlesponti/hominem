@@ -1,7 +1,4 @@
-import {
-  createGenerationEventDeduplicator,
-  parseGenerationWireEvent,
-} from '@hominem/rpc/generation-events';
+import { createGenerationEventDeduplicator, parseGenerationWireEvent } from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { consumeGenerationSseXhr, consumeSseXhr } from '~/services/chat/consume-sse-xhr';
@@ -276,6 +273,7 @@ describe('consumeSseXhr', () => {
         `https://example.test/generations/g1/stream?afterSequence=${afterSequence}`,
       getHeaders: async () => ({}),
       parseEvent: parseGenerationWireEvent,
+      getReplayCursor: () => 9,
       onEvent,
     });
 
@@ -298,7 +296,7 @@ describe('consumeSseXhr', () => {
 
     expect(first.method).toBe('POST');
     expect(replay.method).toBe('GET');
-    expect(replay.url).toContain('afterSequence=1');
+    expect(replay.url).toContain('afterSequence=9');
     expect(onEvent).toHaveBeenCalledTimes(2);
   });
 
@@ -313,6 +311,7 @@ describe('consumeSseXhr', () => {
       onEvent: () => {
         throw new Error('domain failure');
       },
+      getReplayCursor: () => 0,
     });
 
     await Promise.resolve();
@@ -339,6 +338,7 @@ describe('consumeSseXhr', () => {
           throw new DOMException('Aborted', 'AbortError');
         },
         onEvent: vi.fn(),
+        getReplayCursor: () => 0,
       }),
     ).rejects.toMatchObject({ name: 'AbortError' });
 

@@ -1,6 +1,6 @@
 ---
 title: "Complete chat tool event round trips"
-status: "todo"
+status: "Partial"
 priority: "high"
 labels: [chat, events, rpc, clients]
 depends_on: [001-chat-domain-contract.md]
