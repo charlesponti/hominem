@@ -1,9 +1,9 @@
 ---
-name: hominem-dev-loop
+name: hominem-development
 description: Run the local development, validation, and production user-data merge commands for this repo (just/pnpm loop, local OpenTelemetry stack, merge-user-data tool). Use when starting local dev, choosing a validation command, or merging a user's local data into production.
 ---
 
-# Hominem dev loop
+# Hominem development
 
 Deployment-authority rules (one deployment authority per service, what proves
 a deployment succeeded) live in [docs/development.md](../../../docs/development.md)
