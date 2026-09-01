@@ -76,7 +76,7 @@ function AnimatedProgressButton({
       class="progress-button"
       data-complete={String(complete)}
       data-progress-button
-      data-progress-zero={progress <= 0}
+      data-progress-zero={progress <= 0 ? true : undefined}
       style={`--progress: ${Math.max(0, Math.min(1, progress)) * 100}`}
     >
       <svg aria-hidden="true" class="progress-button__border">

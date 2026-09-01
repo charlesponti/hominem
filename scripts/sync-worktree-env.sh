@@ -42,7 +42,7 @@ echo
 # tracked and already present via the worktree's own checkout.
 mapfile -d '' -t files < <(
   git -C "$main_root" ls-files --others --ignored --exclude-standard -z -- '*.env*' \
-    | grep -zv '/node_modules/' \
+    | grep -zv '^node_modules/\|/node_modules/' \
     | grep -zv '^\.claude/' \
     | grep -zv '/$' \
     | grep -zv '\.example$'
