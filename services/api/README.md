@@ -34,6 +34,12 @@ For most API changes, the loop is simple:
 
 The API listens on `http://localhost:4040`.
 
+For Browser chat verification, set `HOMINEM_AI_PROVIDER=scripted` in the API
+environment and restart the API. This uses deterministic local responses at
+the OpenRouter HTTP boundary, including collection tool calls and their
+post-approval completion. It is rejected when `NODE_ENV=production`; omit the
+flag or set it to `openrouter` for normal provider traffic.
+
 ### Testing
 
 `pnpm test --filter=@hominem/api...` supplies the checked-in test database and auth test

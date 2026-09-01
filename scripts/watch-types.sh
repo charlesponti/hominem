@@ -36,4 +36,7 @@ echo "[watch-types] services/api declarations: tsconfig.emit.json"
 echo "[watch-types] packages/rpc declarations: tsconfig.emit.json"
 (cd "$root/packages/rpc" && "$tsc_bin" -p tsconfig.emit.json --watch --preserveWatchOutput) &
 
+echo "[watch-types] packages/env declarations: tsconfig.emit.json"
+(cd "$root/packages/env" && "$tsc_bin" -p tsconfig.emit.json --watch --preserveWatchOutput) &
+
 wait

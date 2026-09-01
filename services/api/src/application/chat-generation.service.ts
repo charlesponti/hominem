@@ -620,7 +620,14 @@ export class ChatGenerationService {
     ];
     const toolPlan = await this.planTools(messages);
     const events = await ChatGenerationRepository.listEvents(db, run.id, input.userId, 0);
-    const initialState = restoreGenerationState(run.id, events.map(toHistoryEvent));
+    const initialState = {
+      ...restoreGenerationState(run.id, events.map(toHistoryEvent)),
+      // The checkpoint contains the approval prompt. A resumed generation
+      // must start a fresh assistant body so that prompt text is not appended
+      // to the post-approval response.
+      assistantText: '',
+      reasoningText: '',
+    };
     return this.execute({
       userId: input.userId,
       generationId: run.id,
@@ -634,6 +641,7 @@ export class ChatGenerationService {
         : undefined,
       reasoning: getReasoningConfig(),
       userMessageId: null,
+      targetAssistantMessageId: input.messageId,
       kind: 'send',
       resume: true,
       initialState,
@@ -1029,10 +1037,18 @@ export class ChatGenerationService {
       result.responseModality === 'audio' && result.assistantText.trim()
         ? await chatSpeechService.synthesizeReplyAudioFile(input.userId, result.assistantText)
         : null;
+    const toolCalls =
+      input.confirmation?.approved === false
+        ? result.toolCallRecords.map((toolCall) =>
+            toolCall.toolCallId === input.confirmation?.toolCallId
+              ? { ...toolCall, confirmationStatus: 'rejected' as const, executionStatus: undefined }
+              : toolCall,
+          )
+        : result.toolCallRecords;
     await this.dependencies.failureHooks?.beforeSnapshotCommit?.();
     const message = await runInTransaction(async (trx): Promise<ChatMessageRecord> => {
       const updated =
-        input.kind === 'regenerate' && input.targetAssistantMessageId
+        input.targetAssistantMessageId && (input.kind === 'regenerate' || input.confirmation)
           ? await ChatRepository.replaceAssistantMessageContent(
               trx,
               input.chatId,
@@ -1040,7 +1056,7 @@ export class ChatGenerationService {
               content,
               {
                 reasoning: result.reasoningText,
-                toolCalls: result.toolCallRecords.length > 0 ? result.toolCallRecords : null,
+                toolCalls: toolCalls.length > 0 ? toolCalls : null,
                 files: audio?.file ? [audio.file] : undefined,
               },
             )
@@ -1051,7 +1067,7 @@ export class ChatGenerationService {
                 role: 'assistant',
                 content,
                 reasoning: result.reasoningText,
-                toolCalls: result.toolCallRecords.length > 0 ? result.toolCallRecords : null,
+                toolCalls: toolCalls.length > 0 ? toolCalls : null,
                 files: audio?.file ? [audio.file] : null,
                 parentMessageId: input.userMessageId ?? null,
               });

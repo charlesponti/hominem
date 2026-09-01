@@ -254,6 +254,10 @@ describe('HominemTests', () => {
         (event) => 'sequence' in event && event.payload.type === 'confirmation.approved',
       ),
     ).toBe(true);
+    const after = await test.inspect(checkpoint.generationId);
+    const assistantMessages = after.messages.filter((message) => message.role === 'assistant');
+    expect(assistantMessages).toHaveLength(1);
+    expect(assistantMessages[0]?.content).toBe('Approval completed');
     expect(provider.calls).toBe(2);
   });
 
@@ -378,6 +382,7 @@ describe('HominemTests', () => {
       fragmentedToolCallTurn('sdk_rejected_tool', 'call-reject', ['{"value":"no"}'], {
         requiresConfirmation: true,
       }),
+      textTurn('Rejection acknowledged'),
     ]);
     test = await HominemTests.create({ provider });
     test.tools.add(tool);

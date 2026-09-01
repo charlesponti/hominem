@@ -205,10 +205,37 @@ the Browser surface for this run and remains unverified.
 - The `create_collection` capability is now marked confirmation-required so the
   real tool boundary checkpoints the write before execution.
 - Focused Web coverage passes for the confirmation phase and accessible tool
-  actions. The live Browser rerun remained inconclusive because the already
-  running API process did not reload the capability metadata; it continued to
-  execute the test write immediately. Re-run B-007 after restarting/reloading
-  the API service, then continue the ordered browser matrix.
+  actions. The API watcher did restart its child process, but the live Browser
+  rerun still executed the test write immediately. The loaded capability
+  definition and live request path remain uncorrelated. The focused API
+  registration test now confirms the real `create_collection` definition is
+  confirmation-required; a fresh Browser session currently has no open tabs,
+  so the live B-007 rerun remains unverified.
+- Follow-up Browser rerun: the pending `create_collection` card rendered with
+  `Approve` and `Reject`, proving the Web confirmation state is now reachable.
+  Approval reached the API but the resumed generation failed with
+  `internal_error: Provider returned error`; no completion was observed in the
+  Web UI. B-007 is therefore `Partial` until the running environment exposes a
+  supported provider-success seam or valid provider configuration. The ordered
+  matrix remains stopped at B-007.
+- Added an opt-in local scripted OpenRouter mode backed by MSW. It intercepts
+  the real SDK HTTP request, returns deterministic streamed tool calls and
+  post-tool completions, and is rejected in production. The mode is documented
+  in `services/api/README.md`; its SDK-boundary tests pass.
+- Live Browser verification with `HOMINEM_AI_PROVIDER=scripted`: approval now
+  reaches a completed `create_collection` tool state and a successful provider
+  completion. The resumed completion currently appears as an additional
+  assistant message while the original awaiting-confirmation message is also
+  marked completed, so the no-duplicate assertion remains an open Web/API
+  blocker. Historical Browser console entries still include hydration warnings
+  and earlier network errors; a clean post-restart console capture is still
+  required.
+- Fixed the resume duplication path by clearing checkpoint prompt text and
+  replacing the original confirmation message on approval/rejection. The
+  durable testkit now asserts one assistant message containing only the resumed
+  reply. A fresh Browser rerun was not completed because the local Vite route
+  manifest intermittently returned `Failed to fetch` while navigating to a new
+  chat.
 
 ## Exit gate
 

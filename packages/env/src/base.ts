@@ -12,6 +12,7 @@ export const baseSchema = z.object({
   DB_IDLE_TIMEOUT: z.coerce.number().int().positive().optional(),
   DB_MAX_LIFETIME: z.coerce.number().int().positive().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
+  HOMINEM_AI_PROVIDER: z.enum(['openrouter', 'scripted']).default('openrouter'),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_FROM_NAME: z.string().optional(),

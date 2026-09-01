@@ -242,8 +242,11 @@ describe('ChatGenerationService.cancel', () => {
           initialInput: { type: 'confirmation-approved', callId: 'call-1' },
           initialState: expect.objectContaining({
             phase: 'awaiting_confirmation',
+            assistantText: '',
+            reasoningText: '',
             pendingConfirmation: expect.objectContaining({ id: 'call-1' }),
           }),
+          targetAssistantMessageId: pendingMessage.id,
           messages: expect.not.arrayContaining([expect.objectContaining({ role: 'tool' })]),
         }),
       ),

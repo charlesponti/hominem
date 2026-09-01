@@ -162,6 +162,20 @@ describe('ChatMessage', () => {
     expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
   });
 
+  it('copies non-empty user messages', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    render(<ChatMessage message={message({ role: 'user', content: 'Copy this request' })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy user message' }));
+
+    expect(writeText).toHaveBeenCalledWith('Copy this request');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Copied user message' })).toBeTruthy(),
+    );
+    expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
+  });
+
   it('reports native share success and failure accessibly', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'share', { configurable: true, value: share });
