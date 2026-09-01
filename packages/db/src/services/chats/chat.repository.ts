@@ -12,6 +12,7 @@ import {
 import type { Selectable } from 'kysely';
 import { z, type ZodType } from 'zod';
 
+import { sql } from '../../db';
 import { NotFoundError, ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
@@ -642,7 +643,7 @@ export const ChatRepository = {
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {
     await handle
       .updateTable('app.chats')
-      .set({ lastMessageAt: new Date().toISOString() })
+      .set({ lastMessageAt: sql<string>`GREATEST(last_message_at, CURRENT_TIMESTAMP)` })
       .where('id', '=', chatId)
       .execute();
   },

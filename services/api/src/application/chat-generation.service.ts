@@ -47,6 +47,11 @@ import {
   recordGenerationToolEffect,
 } from './chat-generation-telemetry';
 import type { ChatGenerationEffectStore } from './chat-generation-tools';
+import type {
+  ChatGenerationFailureHooks,
+  ChatGenerationModelFactory,
+  ChatToolRuntime,
+} from './chat-generation-types';
 import { buildChatSystemPrompt } from './chat-prompts';
 import { chatSpeechService } from './chat-speech.service';
 import { publishGenerationEvent, subscribeToGenerationEvents } from './generation-live-bus';
@@ -353,6 +358,27 @@ function createEffectStore(ownerUserId: string): ChatGenerationEffectStore {
 }
 
 export class ChatGenerationService {
+  constructor(
+    private readonly dependencies: {
+      modelFactory?: ChatGenerationModelFactory;
+      toolRuntime?: ChatToolRuntime;
+      planChatTools?: typeof planChatTools;
+      failureHooks?: ChatGenerationFailureHooks;
+      embeddingQueue?: {
+        add: (...args: Parameters<typeof embeddingQueue.add>) => Promise<unknown>;
+      };
+    } = {},
+  ) {}
+
+  private planTools(messages: ChatMessages[]): ReturnType<typeof planChatTools> {
+    return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
+  }
+
+  private publishEvent(event: ChatGenerationEventRecord): void {
+    this.dependencies.failureHooks?.beforeEventPublish?.(event);
+    publishGenerationEvent(event);
+  }
+
   async regenerateMessage(input: RegenerateMessageInput): Promise<GenerationStreamQueue> {
     await assertUnderMonthlyUsageLimit(input.userId);
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
@@ -394,7 +420,7 @@ export class ChatGenerationService {
       formatUserContentWithContext(parent.content, notes, parent.files ?? []),
       buildChatSystemPrompt(input.responseLength),
     );
-    const toolPlan = await planChatTools({ model: CHAT_MODEL, messages });
+    const toolPlan = await this.planTools(messages);
     return this.regenerate({
       userId: input.userId,
       generationId: input.generationId,
@@ -452,7 +478,7 @@ export class ChatGenerationService {
       formatUserContentWithContext(input.message, [], files),
       buildChatSystemPrompt(input.responseLength),
     );
-    const toolPlan = await planChatTools({ model: CHAT_MODEL, messages });
+    const toolPlan = await this.planTools(messages);
     return this.start({
       userId: input.userId,
       generationId: input.generationId,
@@ -516,7 +542,7 @@ export class ChatGenerationService {
       formatUserContentWithContext(input.message, notes, files),
       buildChatSystemPrompt(input.responseLength),
     );
-    const toolPlan = await planChatTools({ model: CHAT_MODEL, messages });
+    const toolPlan = await this.planTools(messages);
     return this.send({
       userId: input.userId,
       generationId: input.generationId,
@@ -592,7 +618,7 @@ export class ChatGenerationService {
         ],
       },
     ];
-    const toolPlan = await planChatTools({ model: CHAT_MODEL, messages });
+    const toolPlan = await this.planTools(messages);
     const events = await ChatGenerationRepository.listEvents(db, run.id, input.userId, 0);
     const initialState = restoreGenerationState(run.id, events.map(toHistoryEvent));
     return this.execute({
@@ -713,6 +739,7 @@ export class ChatGenerationService {
     input: CancelInput,
   ): Promise<Awaited<ReturnType<typeof ChatRepository.cancelGenerationRun>>> {
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.ownerUserId);
+    await this.dependencies.failureHooks?.beforeCancellationCommit?.();
     const requestedAt = new Date().toISOString();
     let events: ChatGenerationEventRecord[] = [];
     try {
@@ -767,7 +794,7 @@ export class ChatGenerationService {
     } catch (error) {
       if (!(error instanceof GenerationProjectionError)) throw error;
     }
-    for (const event of events) publishGenerationEvent(event);
+    for (const event of events) this.publishEvent(event);
     return ChatRepository.getGenerationRunById(db, input.generationId, input.ownerUserId);
   }
 
@@ -790,6 +817,7 @@ export class ChatGenerationService {
     let eventOrdinal = 0;
 
     const append = async (event: GenerationHistoryEventPayload): Promise<void> => {
+      await this.dependencies.failureHooks?.beforeEventAppend?.(event);
       const record = await runInTransaction((trx) =>
         ChatGenerationRepository.appendEvent(trx, {
           generationId: input.generationId,
@@ -803,7 +831,7 @@ export class ChatGenerationService {
         sequence: record.sequence,
         delivery: 'live',
       });
-      publishGenerationEvent(record);
+      this.publishEvent(record);
       queue.push(toHistoryEvent(record));
     };
 
@@ -844,49 +872,56 @@ export class ChatGenerationService {
         requiresToolCall: input.requiresToolCall,
         initialState: input.initialState,
         initialInput: input.initialInput,
+        modelFactory: this.dependencies.modelFactory,
+        toolRuntime: this.dependencies.toolRuntime,
         maxTokens: input.maxTokens,
         effectStore: createEffectStore(input.userId),
         eventStore: {
           append: ({ event, idempotencyKey }) =>
-            runInTransaction(async (trx) => {
-              const record = await ChatGenerationRepository.appendEvent(trx, {
-                generationId: input.generationId,
-                ownerUserId: input.userId,
-                event,
-                idempotencyKey,
-              });
-              if (input.confirmation) {
-                const lifecycle =
-                  event.type === 'confirmation.rejected'
-                    ? { confirmationStatus: 'rejected' as const }
-                    : event.type === 'confirmation.approved'
-                      ? {
-                          confirmationStatus: 'approved' as const,
-                          executionStatus: 'running' as const,
-                        }
-                      : event.type === 'tool.requested'
-                        ? { executionStatus: 'running' as const }
-                        : event.type === 'tool.completed'
-                          ? { executionStatus: 'completed' as const }
-                          : event.type === 'tool.failed'
-                            ? { executionStatus: 'failed' as const }
-                            : null;
-                if (lifecycle) {
-                  await ChatRepository.updateToolCallLifecycle(
-                    trx,
-                    input.chatId,
-                    input.confirmation.messageId,
-                    input.confirmation.toolCallId,
-                    lifecycle,
-                  );
+            (async () => {
+              await this.dependencies.failureHooks?.beforeEventAppend?.(event);
+              return runInTransaction(async (trx) => {
+                const record = await ChatGenerationRepository.appendEvent(trx, {
+                  generationId: input.generationId,
+                  ownerUserId: input.userId,
+                  event,
+                  idempotencyKey,
+                });
+                if (input.confirmation) {
+                  const lifecycle =
+                    event.type === 'confirmation.rejected'
+                      ? { confirmationStatus: 'rejected' as const }
+                      : event.type === 'confirmation.approved'
+                        ? {
+                            confirmationStatus: 'approved' as const,
+                            executionStatus: 'running' as const,
+                          }
+                        : event.type === 'tool.requested'
+                          ? { executionStatus: 'running' as const }
+                          : event.type === 'tool.completed'
+                            ? { executionStatus: 'completed' as const }
+                            : event.type === 'tool.failed'
+                              ? input.confirmation.approved
+                                ? { executionStatus: 'failed' as const }
+                                : { confirmationStatus: 'rejected' as const }
+                              : null;
+                  if (lifecycle) {
+                    await ChatRepository.updateToolCallLifecycle(
+                      trx,
+                      input.chatId,
+                      input.confirmation.messageId,
+                      input.confirmation.toolCallId,
+                      lifecycle,
+                    );
+                  }
                 }
-              }
-              return record;
-            }),
+                return record;
+              });
+            })(),
         },
         durableEvents: {
           accept: (record) => {
-            publishGenerationEvent(record);
+            this.publishEvent(record);
             queue.push(toHistoryEvent(record));
           },
         },
@@ -994,6 +1029,7 @@ export class ChatGenerationService {
       result.responseModality === 'audio' && result.assistantText.trim()
         ? await chatSpeechService.synthesizeReplyAudioFile(input.userId, result.assistantText)
         : null;
+    await this.dependencies.failureHooks?.beforeSnapshotCommit?.();
     const message = await runInTransaction(async (trx): Promise<ChatMessageRecord> => {
       const updated =
         input.kind === 'regenerate' && input.targetAssistantMessageId
@@ -1050,7 +1086,7 @@ export class ChatGenerationService {
       });
       return updated;
     });
-    await embeddingQueue.add(
+    await (this.dependencies.embeddingQueue ?? embeddingQueue).add(
       'generate-embedding',
       {
         jobId: `chat-${input.chatId}`,

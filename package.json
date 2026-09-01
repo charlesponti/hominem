@@ -26,6 +26,7 @@
     "dev:api": "turbo run dev:types dev --filter @hominem/api",
     "dev:career": "turbo run dev:types dev --filter @hominem/career",
     "dev:finance": "turbo run dev:types dev --filter @hominem/finance",
+    "dev:web": "turbo run dev:types dev --filter @hominem/web",
     "dev:types": "bash scripts/watch-types.sh",
     "dev:worker": "pnpm run --filter @hominem/api dev:worker",
     "mobile:prebuild": "pnpm --filter @hominem/omiro prebuild:dev",

@@ -12,6 +12,7 @@ export interface UseChatMessagesOptions {
 export interface UseChatMessagesReturn {
   messages: ChatMessageView[];
   isLoading: boolean;
+  isFetching: boolean;
   error: Error | null;
   isNotFound: boolean;
   retry: () => Promise<unknown>;
@@ -122,11 +123,13 @@ export function useChatMessages({
 
   const messages: ChatMessageView[] = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
   const isLoading = messagesQuery.isLoading;
+  const isFetching = messagesQuery.isFetching;
   const error = messagesQuery.error;
 
   return {
     messages,
     isLoading,
+    isFetching,
     error,
     isNotFound: getErrorStatus(error) === 404,
     retry: messagesQuery.refetch,

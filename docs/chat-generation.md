@@ -36,12 +36,17 @@ authoritative; run and client state are projections or recovery aids.
 3. The provider adapter normalizes chunks. The machine accumulates text and
    reasoning deltas and reconstructs tool calls from fragments sharing a tool
    call index and ID.
+   Invalid chunks produce a safe diagnostic containing validation paths and
+   structural shape only; content and tool arguments are never logged.
 4. The interpreter executes planned tool effects sequentially. A
    confirmation-required tool persists a checkpoint and pauses in
    `awaiting_confirmation`; approval or rejection resumes the original
    generation identity.
 5. Semantic events are appended durably before they are published or yielded.
    Token and reasoning deltas are live-only.
+   Provider usage is optional metadata: a valid semantic response may commit
+   without it, and the usage record marks `usageAvailable: false` rather than
+   inventing token or cost values.
 6. The run reaches one durable terminal decision: committed, failed, or
    cancelled. Failures preserve durable state and can be retried as a new
    attempt under the same generation identity.

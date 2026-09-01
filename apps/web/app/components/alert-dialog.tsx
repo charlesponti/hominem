@@ -5,7 +5,6 @@ import { cn } from '../lib/utils';
 import { buttonVariants } from './button';
 
 const AlertDialog = AlertDialogPrimitive.Root;
-
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 const AlertDialogPortal = ({ children, ...props }: AlertDialogPrimitive.AlertDialogPortalProps) => (
@@ -41,7 +40,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed z-50 grid w-full max-w-lg scale-100 gap-4 border p-6 opacity-100 animate-in fade-in-90 slide-in-from-bottom-10 sm: sm:zoom-in-90 sm:slide-in-from-bottom-0',
+        'fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-[30rem] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border bg-popover p-6 text-popover-foreground shadow-lg outline-none animate-in fade-in-90 zoom-in-90',
         className,
       )}
       {...props}

@@ -45,6 +45,7 @@ export const providerToolCallDeltaSchema = z
   .object({
     index: z.number().int().nonnegative(),
     id: z.string().nullable().optional(),
+    type: z.literal('function').optional(),
     function: z
       .object({
         name: z.string().nullable().optional(),

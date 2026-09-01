@@ -7,6 +7,7 @@ import {
   ChatGenerationInputError,
   chatGenerationService,
 } from '../../application/chat-generation.service';
+import type { ChatGenerationService } from '../../application/chat-generation.service';
 import {
   ChatsRegenerateMessageSchema,
   ChatsSendSchema,
@@ -53,12 +54,13 @@ function getGenerationReplayCursor(c: {
 
 async function writeGenerationReplay(
   stream: GenerationStream,
+  service: ChatGenerationService,
   generationId: string,
   ownerUserId: string,
   afterSequence: number,
   terminal: boolean,
 ): Promise<void> {
-  for await (const event of await chatGenerationService.replay({
+  for await (const event of await service.replay({
     generationId,
     ownerUserId,
     afterSequence,
@@ -68,144 +70,147 @@ async function writeGenerationReplay(
   }
 }
 
-export const chatGenerationRoutes = new Hono<AppContext>()
-  .get('/generations/:generationId', async (c) => {
-    const userId = c.get('auth')!.userId;
-    const chatId = getChatId(c);
-    const generationId = getGenerationId(c);
+export function createChatGenerationRoutes(service: ChatGenerationService = chatGenerationService) {
+  return new Hono<AppContext>()
+    .get('/generations/:generationId', async (c) => {
+      const userId = c.get('auth')!.userId;
+      const chatId = getChatId(c);
+      const generationId = getGenerationId(c);
 
-    const run = await chatGenerationService.getGeneration({
-      chatId,
-      generationId,
-      ownerUserId: userId,
-    });
-    if (!run) throw new ValidationError('Generation run not found');
-    return c.json(run);
-  })
-  .get('/generations/:generationId/stream', async (c) => {
-    const userId = c.get('auth')!.userId;
-    const chatId = getChatId(c);
-    const generationId = getGenerationId(c);
-
-    const run = await chatGenerationService.getGeneration({
-      chatId,
-      generationId,
-      ownerUserId: userId,
-    });
-    if (!run) throw new ValidationError('Generation run not found');
-    const afterSequence = getGenerationReplayCursor(c);
-
-    return streamSSE(c, async (stream) => {
-      await writeGenerationReplay(
-        stream,
+      const run = await service.getGeneration({
+        chatId,
         generationId,
-        userId,
-        afterSequence,
-        ['committed', 'cancelled', 'failed'].includes(run.status),
-      );
-      await stream.writeSSE({ data: '[DONE]' });
-    });
-  })
-  .post('/generations/:generationId/cancel', async (c) => {
-    const userId = c.get('auth')!.userId;
-    const chatId = getChatId(c);
-    const generationId = getGenerationId(c);
-
-    const run = await chatGenerationService.cancel({
-      chatId,
-      generationId,
-      ownerUserId: userId,
-    });
-    if (!run) throw new ValidationError('Generation cannot be cancelled');
-    return c.json(run);
-  })
-  .post(
-    '/messages/:messageId/regenerate',
-    zValidator('json', ChatsRegenerateMessageSchema),
-    async (c) => {
+        ownerUserId: userId,
+      });
+      if (!run) throw new ValidationError('Generation run not found');
+      return c.json(run);
+    })
+    .get('/generations/:generationId/stream', async (c) => {
       const userId = c.get('auth')!.userId;
       const chatId = getChatId(c);
-      const messageId = getMessageId(c);
-      const { generationId, responseLength } = c.req.valid('json');
-      let events;
-      try {
-        events = await chatGenerationService.regenerateMessage({
-          userId,
+      const generationId = getGenerationId(c);
+
+      const run = await service.getGeneration({
+        chatId,
+        generationId,
+        ownerUserId: userId,
+      });
+      if (!run) throw new ValidationError('Generation run not found');
+      const afterSequence = getGenerationReplayCursor(c);
+
+      return streamSSE(c, async (stream) => {
+        await writeGenerationReplay(
+          stream,
+          service,
           generationId,
-          chatId,
-          messageId,
-          responseLength,
-        });
-      } catch (error) {
-        if (error instanceof ChatGenerationInputError) {
-          throw new ValidationError(error.message);
-        }
-        throw error;
-      }
-
-      return streamSSE(c, (stream) => writeGenerationStream(stream, events));
-    },
-  )
-  .post(
-    '/messages/:messageId/tool-calls/:toolCallId/respond',
-    zValidator('json', ChatsToolCallRespondSchema),
-    async (c) => {
+          userId,
+          afterSequence,
+          ['committed', 'cancelled', 'failed'].includes(run.status),
+        );
+        await stream.writeSSE({ data: '[DONE]' });
+      });
+    })
+    .post('/generations/:generationId/cancel', async (c) => {
       const userId = c.get('auth')!.userId;
       const chatId = getChatId(c);
-      const messageId = getMessageId(c);
-      const toolCallId = c.req.param('toolCallId');
-      if (!toolCallId) throw new ValidationError('Tool call id is required');
-      const { approved, responseLength } = c.req.valid('json');
-      let events;
-      try {
-        events = await chatGenerationService.respondToConfirmation({
-          userId,
-          chatId,
-          messageId,
-          toolCallId,
-          approved,
-          responseLength,
-        });
-      } catch (error) {
-        if (error instanceof ChatGenerationInputError) {
-          throw new ValidationError(error.message);
+      const generationId = getGenerationId(c);
+
+      const run = await service.cancel({
+        chatId,
+        generationId,
+        ownerUserId: userId,
+      });
+      if (!run) throw new ValidationError('Generation cannot be cancelled');
+      return c.json(run);
+    })
+    .post(
+      '/messages/:messageId/regenerate',
+      zValidator('json', ChatsRegenerateMessageSchema),
+      async (c) => {
+        const userId = c.get('auth')!.userId;
+        const chatId = getChatId(c);
+        const messageId = getMessageId(c);
+        const { generationId, responseLength } = c.req.valid('json');
+        let events;
+        try {
+          events = await service.regenerateMessage({
+            userId,
+            generationId,
+            chatId,
+            messageId,
+            responseLength,
+          });
+        } catch (error) {
+          if (error instanceof ChatGenerationInputError) {
+            throw new ValidationError(error.message);
+          }
+          throw error;
         }
-        throw error;
-      }
+
+        return streamSSE(c, (stream) => writeGenerationStream(stream, events));
+      },
+    )
+    .post(
+      '/messages/:messageId/tool-calls/:toolCallId/respond',
+      zValidator('json', ChatsToolCallRespondSchema),
+      async (c) => {
+        const userId = c.get('auth')!.userId;
+        const chatId = getChatId(c);
+        const messageId = getMessageId(c);
+        const toolCallId = c.req.param('toolCallId');
+        if (!toolCallId) throw new ValidationError('Tool call id is required');
+        const { approved, responseLength } = c.req.valid('json');
+        let events;
+        try {
+          events = await service.respondToConfirmation({
+            userId,
+            chatId,
+            messageId,
+            toolCallId,
+            approved,
+            responseLength,
+          });
+        } catch (error) {
+          if (error instanceof ChatGenerationInputError) {
+            throw new ValidationError(error.message);
+          }
+          throw error;
+        }
+
+        return streamSSE(c, (stream) => writeGenerationStream(stream, events));
+      },
+    )
+    .post('/stream', zValidator('json', ChatsSendSchema), async (c) => {
+      const userId = c.get('auth')!.userId;
+      const chatId = getChatId(c);
+      const {
+        generationId,
+        message,
+        fileIds = [],
+        responseModality,
+        responseLength,
+      } = c.req.valid('json');
+      const events = await service.sendMessage({
+        userId,
+        generationId,
+        chatId,
+        message,
+        fileIds,
+        responseLength,
+        responseModality,
+      });
 
       return streamSSE(c, (stream) => writeGenerationStream(stream, events));
-    },
-  )
-  .post('/stream', zValidator('json', ChatsSendSchema), async (c) => {
-    const userId = c.get('auth')!.userId;
-    const chatId = getChatId(c);
-    const {
-      generationId,
-      message,
-      fileIds = [],
-      responseModality,
-      responseLength,
-    } = c.req.valid('json');
-    const events = await chatGenerationService.sendMessage({
-      userId,
-      generationId,
-      chatId,
-      message,
-      fileIds,
-      responseLength,
-      responseModality,
     });
+}
 
-    return streamSSE(c, (stream) => writeGenerationStream(stream, events));
-  });
-
-export const chatStartGenerationRoute = new Hono<AppContext>().post(
-  '/',
-  zValidator('json', ChatsStartStreamSchema),
-  async (c) => {
+export function createChatStartGenerationRoute(
+  service: ChatGenerationService = chatGenerationService,
+) {
+  return new Hono<AppContext>().post('/', zValidator('json', ChatsStartStreamSchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const { generationId, title, message, fileIds = [], responseLength } = c.req.valid('json');
-    const events = await chatGenerationService.startMessage({
+    const events = await service.startMessage({
       userId,
       generationId,
       title,
@@ -215,5 +220,8 @@ export const chatStartGenerationRoute = new Hono<AppContext>().post(
     });
 
     return streamSSE(c, (stream) => writeGenerationStream(stream, events));
-  },
-);
+  });
+}
+
+export const chatGenerationRoutes = createChatGenerationRoutes();
+export const chatStartGenerationRoute = createChatStartGenerationRoute();

@@ -44,6 +44,7 @@ export type GenerationToolCall = {
 export type ProviderToolCallDelta = {
   index: number;
   id?: string | null;
+  type?: 'function';
   function?: { name?: string | null; arguments?: string | null } | null;
 };
 

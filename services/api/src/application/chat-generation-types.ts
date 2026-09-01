@@ -1,12 +1,36 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
-import type { GenerationInput, GenerationState } from '@hominem/chat';
-import type { ChatMessageToolCallRecord } from '@hominem/db';
+import type {
+  ChatModel,
+  GenerationHistoryEventPayload,
+  GenerationInput,
+  GenerationState,
+} from '@hominem/chat';
+import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
 import type { callTool, getToolDefinition } from '../mcp/tool-registry';
 
 export type ChatToolRuntime = {
   callTool: typeof callTool;
   getToolDefinition: typeof getToolDefinition;
+};
+
+export type ChatGenerationModelFactory = (input: {
+  model: string;
+  messages: ChatMessages[];
+  tools: ChatFunctionTool[];
+  maxTokens?: number;
+  reasoning?: ChatRequest['reasoning'];
+  requiresToolCall?: boolean;
+  requiresConfirmation?: (toolName: string) => boolean;
+  // Missing usage must not invalidate otherwise valid generation semantics.
+  onUsage?: (usage: AIUsageMetrics | null) => void;
+}) => ChatModel;
+
+export type ChatGenerationFailureHooks = {
+  beforeEventAppend?: (event: GenerationHistoryEventPayload) => void | Promise<void>;
+  beforeSnapshotCommit?: () => void | Promise<void>;
+  beforeEventPublish?: (event: ChatGenerationEventRecord) => void;
+  beforeCancellationCommit?: () => void | Promise<void>;
 };
 
 export interface GenerationEngineInput {
@@ -19,6 +43,7 @@ export interface GenerationEngineInput {
   maxIterations?: number;
   requiresToolCall?: boolean;
   toolRuntime?: ChatToolRuntime;
+  modelFactory?: ChatGenerationModelFactory;
   initialState?: GenerationState;
   initialInput?: GenerationInput;
 }

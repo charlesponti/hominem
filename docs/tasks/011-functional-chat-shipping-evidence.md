@@ -12,12 +12,17 @@ estimated_size: 'L'
 
 Focused Chat, DB, and API suites are green: 163 Chat tests, 26 DB tests, and
 250 API tests in the latest runs. A prior full monorepo gate passed 26/26
-projects. No browser or iOS simulator evidence has been recorded, and the
+projects. Browser playbook scenarios B-001 and B-002 have been observed in the
+integrated browser; no iOS simulator evidence has been recorded, and the
 latest full gate must be rerun after the final boundary changes.
 
 ## Remaining release gate
 
 Boundary: production API ↔ Web browser and API ↔ Apple-only Omiro simulator.
+
+Use [`../chat-browser-playbook.md`](../chat-browser-playbook.md) for the Web
+scenario order, reset rules, assertions, and evidence record. Map the same
+scenario IDs to the corresponding Omiro flow where applicable.
 
 Run send, start, regenerate, confirmation approval/rejection, cancellation,
 provider/tool failure and retry, reconnect, terminal replay, and fresh launch

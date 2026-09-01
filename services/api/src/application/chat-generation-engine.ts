@@ -100,18 +100,22 @@ export async function executeGenerationTurn(
   const results = new Map<string, ToolResult>();
   let pendingPreview: Record<string, unknown> | null = null;
   const runtime = input.toolRuntime ?? { callTool, getToolDefinition };
-  const model = new OpenRouterChatModel({
+  const modelOptions = {
     model: input.model,
     messages: input.messages,
     tools: input.tools,
     maxTokens: input.maxTokens,
     reasoning: input.reasoning,
     requiresToolCall: input.initialState ? false : input.requiresToolCall,
-    requiresConfirmation: (name) => runtime?.getToolDefinition(name)?.requiresConfirmation ?? false,
-    onUsage: (next) => {
+    requiresConfirmation: (name: string) =>
+      runtime?.getToolDefinition(name)?.requiresConfirmation ?? false,
+    onUsage: (next: AIUsageMetrics | null) => {
       usage = addUsage(usage, next);
     },
-  });
+  };
+  const model = input.modelFactory
+    ? input.modelFactory(modelOptions)
+    : new OpenRouterChatModel(modelOptions);
 
   const chat = new ChatClient({
     model,

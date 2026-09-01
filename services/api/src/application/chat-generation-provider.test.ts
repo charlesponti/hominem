@@ -5,9 +5,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OpenRouterChatModel } from './chat-generation-provider';
 
+const mockedLogger = vi.hoisted(() => ({ warn: vi.fn() }));
+
 vi.mock('@hominem/ai', () => ({
   streamChatCompletion: vi.fn(),
 }));
+
+vi.mock('@hominem/telemetry', () => ({ logger: mockedLogger }));
 
 const mockedStream = vi.mocked(streamChatCompletion);
 type StreamChunk =
@@ -40,6 +44,7 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
 describe('OpenRouter generation provider', () => {
   beforeEach(() => {
     mockedStream.mockReset();
+    mockedLogger.warn.mockReset();
   });
 
   it('translates text, reasoning, and fragmented tool calls into machine inputs', async () => {
@@ -53,7 +58,12 @@ describe('OpenRouter generation provider', () => {
             delta: {
               toolCalls: [
                 { index: 1, id: 'second', function: { name: 'second', arguments: '{}' } },
-                { index: 0, id: 'first', function: { name: 'first', arguments: '{"q' } },
+                {
+                  index: 0,
+                  id: 'first',
+                  type: 'function',
+                  function: { name: 'first', arguments: '{"q' },
+                },
               ],
             },
           },
@@ -123,6 +133,24 @@ describe('OpenRouter generation provider', () => {
     expect(mockedStream).toHaveBeenCalledWith(
       expect.objectContaining({ toolChoice: 'required', parallelToolCalls: false }),
     );
+    expect(mockedStream.mock.calls[0]?.[0].messages).toEqual([
+      {
+        role: 'assistant',
+        content: null,
+        toolCalls: [
+          {
+            id: 'first',
+            type: 'function',
+            function: { name: 'first', arguments: '{"q":"x"}' },
+          },
+          {
+            id: 'second',
+            type: 'function',
+            function: { name: 'second', arguments: '{}' },
+          },
+        ],
+      },
+    ]);
   });
 
   it('only requires a tool on the first turn and preserves tool-result transcript order', async () => {
@@ -362,5 +390,19 @@ describe('OpenRouter generation provider', () => {
         maxAttempts: 2,
       },
     ]);
+    expect(mockedLogger.warn).toHaveBeenCalledWith('provider_chunk_rejected', {
+      model: 'test-model',
+      iteration: 0,
+      issuePaths: ['toolCalls.0.index'],
+      shape: {
+        choiceCount: 1,
+        hasDelta: true,
+        contentType: 'undefined',
+        reasoningType: 'undefined',
+        toolCallsType: 'array',
+        toolCallIndexes: [-1],
+        toolCallFunctionKeys: [['arguments']],
+      },
+    });
   });
 });
