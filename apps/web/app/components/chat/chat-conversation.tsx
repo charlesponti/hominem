@@ -1,5 +1,7 @@
 import { memo, useCallback } from 'react';
 
+import { ChatLinkedNoteContext } from '~/components/chat/chat-linked-note-context';
+import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
 import {
   Conversation,
   ConversationContent,
@@ -7,8 +9,6 @@ import {
 } from '~/components/chat/conversation';
 import { Message, MessageContent } from '~/components/chat/message';
 import { Shimmer } from '~/components/chat/shimmer';
-import { ChatLinkedNoteContext } from '~/components/chat/chat-linked-note-context';
-import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
 import type { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import type { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import type { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';

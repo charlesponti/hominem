@@ -17,6 +17,17 @@ vi.mock('./auth.server', () => ({
   getServerSession,
 }));
 
+// Pin instead of inheriting the real, git-ignored .env — these assertions
+// hardcode this exact origin, so a local .env pointed at a different
+// PUBLIC_APP_URL (e.g. a portless URL, see docs) would otherwise silently
+// desync the two.
+vi.mock('./env.server', () => ({
+  serverEnv: {
+    PUBLIC_APP_URL: 'https://career.localhost:4451',
+    VITE_PUBLIC_API_URL: 'http://localhost:3000',
+  },
+}));
+
 import type { RouterContext } from 'react-router';
 
 import {
@@ -41,7 +52,7 @@ const testProfile = {
   ownerUserid: testUser.id,
   title: 'Profile',
   slug: 'profile',
-} satisfies Partial<CareerProfileRecord> as CareerProfileRecord;
+} satisfies Partial<CareerProfileRecord>;
 
 function createRequestContext(): {
   context: SharedMiddlewareArgs['context'];
@@ -50,6 +61,7 @@ function createRequestContext(): {
   const values = new Map<unknown, unknown>();
   return {
     context: {
+      // oxlint-disable-next-line typescript/consistent-type-assertions
       get: <T>(key: RouterContext<T>): T => values.get(key) as T,
       set: <T>(key: RouterContext<T>, value: T) => values.set(key, value),
     },
@@ -96,7 +108,7 @@ describe('career middleware', () => {
       next,
     );
 
-    expect((result as Response).headers.getSetCookie()).toEqual(headers.getSetCookie());
+    expect(result?.headers.getSetCookie()).toEqual(headers.getSetCookie());
   });
 
   it('redirects page requests when auth is required and no session exists', async () => {
@@ -109,22 +121,28 @@ describe('career middleware', () => {
     );
 
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).headers.get('location')).toBe(
-      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%3A4451%2Faccount',
+    expect(result?.headers.get('location')).toBe(
+      'http://localhost:3000/login?next=https%3A%2F%2Fcareer.localhost%3A4451%2Faccount',
     );
   });
 
   it('uses the configured public origin for hosted login redirects', async () => {
+    // Deliberately on a different port than the mocked PUBLIC_APP_URL above,
+    // to prove the redirect uses the configured origin, not the incoming
+    // request's own — buildHostedLoginUrl always preserves appOrigin's port
+    // verbatim, so this must land on :4451, not :9999.
     const result = await requireAuthMiddleware(
       {
-        request: new Request('http://career-internal/work'),
+        request: new Request('https://career.localhost:9999/work'),
         context: createRequestContext().context,
       },
       next,
     );
 
-    expect((result as Response).headers.get('location')).toBe(
-      'http://localhost:3000/login?next=http%3A%2F%2Flocalhost%3A4451%2Fwork',
+    expect(result?.headers.get('location')).toBe(
+      new URL(
+        'http://localhost:3000/login?next=https%3A%2F%2Fcareer.localhost%3A4451%2Fwork',
+      ).toString(),
     );
   });
 
@@ -138,7 +156,7 @@ describe('career middleware', () => {
     );
 
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).status).toBe(401);
+    expect(result?.status).toBe(401);
   });
 
   // loadPortfolioMiddleware/portfolioContext/requirePortfolioMiddleware no longer

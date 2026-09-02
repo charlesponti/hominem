@@ -8,26 +8,28 @@
 	const progressButtonState = (button, progress, complete, message, showArrow) => {
 		button.style.setProperty("--progress", String(Math.max(0, Math.min(100, progress * 100))));
 		button.dataset.complete = String(complete);
+		button.toggleAttribute("data-progress-zero", progress <= 0);
 		const messageElement = button.querySelector("[data-progress-message]");
 		if (messageElement) messageElement.textContent = message;
 		const arrow = button.querySelector("[data-progress-arrow]");
 		if (arrow) arrow.hidden = !showArrow;
 	};
-	const emailProgress = (email) => {
+	const emailProgress = (email, isValid) => {
 		if (!email) return [0, "Enter your email"];
+		if (/\s/.test(email)) return [.2, "Remove the spaces"];
 		if (!email.includes("@")) return [.2, "Add the @ symbol"];
 		const domain = email.split("@")[1] ?? "";
 		if (!domain) return [.4, "Almost there! Add the domain"];
 		if (!domain.includes(".")) return [.6, "Don't forget the domain extension"];
 		if ((domain.split(".")[1] ?? "").length < 2) return [.8, "Complete the domain extension"];
-		return [1, "Ready to go!"];
+		return isValid ? [1, "Ready to go!"] : [.8, "Check the email address"];
 	};
 	const updateProgressButton = (button) => {
 		const form = button.closest("form");
 		const emailInput = form?.querySelector("[name=\"email\"]");
 		const otpInputsForForm = Array.from(form?.querySelectorAll("[data-otp-digit]") ?? []);
 		if (emailInput && otpInputsForForm.length === 0) {
-			const [progress, message] = emailProgress(emailInput.value);
+			const [progress, message] = emailProgress(emailInput.value, emailInput.checkValidity());
 			progressButtonState(button, progress, progress === 1, message, progress > 0);
 			return;
 		}
@@ -49,6 +51,21 @@
 		if (button) updateProgressButton(button);
 		inputs[Math.min(start + digits.length, inputs.length - 1)]?.focus();
 	};
+	document.addEventListener("keydown", (event) => {
+		const input = event.target;
+		if (!(input instanceof HTMLInputElement) || !input.matches("[data-otp-digit]")) return;
+		if (event.key !== "Backspace" && event.key !== "Delete") return;
+		if (input.value) return;
+		const inputs = otpInputs();
+		const previous = inputs[inputs.indexOf(input) - 1];
+		if (!previous) return;
+		event.preventDefault();
+		previous.value = "";
+		previous.focus();
+		syncOtp(input.form);
+		const button = input.form?.querySelector("[data-progress-button]");
+		if (button) updateProgressButton(button);
+	});
 	document.addEventListener("paste", (event) => {
 		const input = event.target;
 		if (!(input instanceof HTMLInputElement) || !input.matches("[data-otp-digit]")) return;

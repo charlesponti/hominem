@@ -81,5 +81,8 @@ export function convertSchemaToJsonSchema(
     return jsonSchema;
   }
 
-  return makeStructuredOutputCompatible(jsonSchema, (jsonSchema.required as string[] | undefined) ?? []);
+  return makeStructuredOutputCompatible(
+    jsonSchema,
+    (jsonSchema.required as string[] | undefined) ?? [],
+  );
 }

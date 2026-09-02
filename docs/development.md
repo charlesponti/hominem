@@ -8,7 +8,7 @@ The system must behave predictably from a clean checkout through deployment and 
 
 The full command list, the default dev/validation loops, local OpenTelemetry
 setup, and the production user-data merge tool are runbook content — see the
-`hominem-dev-loop` skill (`.agents/skills/hominem-dev-loop/`).
+`hominem-development` skill (`.agents/skills/hominem-development/`).
 
 ## Development rules
 

@@ -10,7 +10,8 @@
     "format:check": "oxfmt app --check",
     "build": "react-router build",
     "doctor": "react-doctor app --verbose --no-supply-chain --no-score",
-    "dev": "react-router dev",
+    "dev": "portless",
+    "dev:app": "react-router dev",
     "dev:clean": "rm -rf node_modules/.vite && react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "test": "vitest run --config vitest.config.ts --passWithNoTests",
@@ -68,13 +69,13 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.0",
     "@react-router/dev": "catalog:",
     "@storybook/react-vite": "^10.5.10",
     "@tailwindcss/vite": "^4.1.8",
     "@testing-library/react": "^16.3.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitest/coverage-v8": "4.1.0",
     "jsdom": "^30.0.1",
     "msw": "^2.15.0",
     "msw-storybook-addon": "^3.0.0",
@@ -91,5 +92,9 @@
     "workerDirectory": [
       "public"
     ]
+  },
+  "portless": {
+    "name": "web",
+    "script": "dev:app"
   }
 }

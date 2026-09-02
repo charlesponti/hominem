@@ -1,5 +1,7 @@
 import { build } from 'rolldown';
 
+import { loginClientBuildOptions } from './scripts/login-client-bundle.mjs';
+
 const sharedConfig = {
   tsconfig: './tsconfig.json',
   platform: 'node',
@@ -11,26 +13,17 @@ const sharedConfig = {
 
 const target = process.argv[2] ?? 'all';
 
-const entries =
+const nodeEntries =
   target === 'worker'
     ? [['src/worker.ts', 'dist/worker.mjs']]
     : [
         ['src/index.ts', 'dist/index.mjs'],
         ['src/worker.ts', 'dist/worker.mjs'],
-        ['src/routes/login/browser.ts', 'public/login.js'],
       ];
 
-await Promise.all(
-  entries.map(([input, file]) =>
-    build({
-      ...sharedConfig,
-      platform: input.includes('/browser.') ? 'browser' : sharedConfig.platform,
-      input,
-      output: {
-        file,
-        format: input.includes('/browser.') ? 'iife' : 'esm',
-        codeSplitting: false,
-      },
-    }),
+await Promise.all([
+  ...nodeEntries.map(([input, file]) =>
+    build({ ...sharedConfig, input, output: { file, format: 'esm', codeSplitting: false } }),
   ),
-);
+  ...(target === 'worker' ? [] : [build(loginClientBuildOptions)]),
+]);

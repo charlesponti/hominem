@@ -22,7 +22,8 @@
     "build": "node build.mjs && pnpm build:types",
     "build:worker": "node build.mjs worker",
     "build:types": "tsc -p tsconfig.emit.json",
-    "dev": "SERVICE_NAME=api tsx watch --tsconfig tsconfig.dev.json src/index.ts",
+    "dev": "portless",
+    "dev:app": "SERVICE_NAME=api node scripts/dev.mjs",
     "dev:worker": "SERVICE_NAME=api-worker tsx watch --tsconfig tsconfig.dev.json src/worker.ts",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
@@ -79,5 +80,9 @@
     "@vitest/coverage-v8": "4.1.0",
     "rolldown": "^1.0.0",
     "tsx": "^4.10.0"
+  },
+  "portless": {
+    "name": "api",
+    "script": "dev:app"
   }
 }

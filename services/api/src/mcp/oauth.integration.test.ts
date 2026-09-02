@@ -68,6 +68,10 @@ describe('MCP OAuth integration', () => {
       NODE_ENV: 'test',
       AUTH_E2E_ENABLED: 'true',
       AUTH_E2E_SECRET: 'otp-secret',
+      // Pin this instead of inheriting the real env.API_URL — a local .env
+      // pointed at a portless URL (see docs) would otherwise silently
+      // desync this from the `apiUrl` constant this file asserts against.
+      API_URL: apiUrl,
     })) as CreateServer;
     app = createServer();
     vi.stubGlobal('fetch', (input: string | URL | Request, init?: RequestInit) =>
@@ -159,7 +163,7 @@ describe('MCP OAuth integration', () => {
     });
     expect(loginPageResponse.status).toBe(200);
     await expect(loginPageResponse.text()).resolves.toContain(
-      'Enter your email to receive the one-time code.',
+      'a one-time code — no password to remember',
     );
 
     const sendOtpResponse = await app.request(`${apiUrl}/login/send`, {
