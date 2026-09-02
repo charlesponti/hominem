@@ -1,5 +1,5 @@
 ---
-name: kernel-hominem-workflow
+name: hominem-workflow
 kind: skill
 tags:
   - hominem
@@ -8,9 +8,9 @@ tags:
   - git
 license: MIT
 description: >
-  Hominem monorepo development workflow: pre-push validation via `just check`
+  Hominem monorepo development workflow: pre-push validation via `pnpm run check`
   with failure triage, and the Conventional Commits message contract with the
-  hominem scope list. Load the relevant reference below; use kernel-git-commit
+  hominem scope list. Load the relevant reference below; use conventional-commit
   for the full generic commit spec.
 compatibility: Hominem monorepo.
 metadata:
@@ -18,7 +18,7 @@ metadata:
   version: "1.0"
   category: Engineering
 when:
-  - running pre-push validation (just check) across the monorepo
+  - running pre-push validation (pnpm run check) across the monorepo
   - triaging typecheck, lint, build, or test failures
   - crafting a commit message for the hominem monorepo
 outputs:
@@ -38,13 +38,13 @@ end-to-end.
 
 | Task | Reference |
 | --- | --- |
-| Pre-push validation across all workspaces (`just check`, per-package filters, triage order) | `references/validation.md` |
+| Pre-push validation across all workspaces (`pnpm run check`, per-package filters, triage order) | `references/validation.md` |
 | Conventional Commits message format + hominem scope list | `references/commit.md` |
 
 ## Cross-cutting rules
 
 - **Validate before commit.** The full validation suite gates pushing to main.
 - **Follow the Conventional Commits spec.** For the generic message format and
-  edge cases, defer to `kernel-git-commit`.
+  edge cases, defer to `conventional-commit`.
 - **Scope from the list.** Use only the scopes in the commit reference; do not
   invent new ones.

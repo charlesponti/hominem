@@ -88,10 +88,10 @@ Temporary execution belongs to the work tracker; promote these to `docs/tasks/` 
 ### Task 3 — Editor watch-builds and dev hygiene — COMPLETE (2026-08-27)
 
 - **Objective:** tsserver always sees fresh declarations during development.
-- **Done:** `scripts/watch-types.sh` runs three TypeScript watch processes (root `tsc -b` for the composite graph plus `tsc -p tsconfig.emit.json` for `services/api` and `packages/rpc`); it is exposed as the root `pnpm dev:types` script, with the tsserver-restart caveat documented in `docs/development.md` for ripples beyond one hop.
+- **Done:** `scripts/watch-types.sh` runs three TypeScript watch processes (root `tsc -b` for the composite graph plus `tsc -p tsconfig.emit.json` for `services/api` and `packages/rpc`); it is exposed as the root `pnpm dev:types` script, with the tsserver-restart caveat documented in the `hominem-development` skill (Development rules) for ripples beyond one hop.
 - **Evidence:** with the watcher running, appending a probe type to `packages/utils/src/text.ts` produced the updated `WatchTypesProbe` export in `packages/utils/build/text.d.ts` within seconds and `services/api` typecheck stayed clean; probe removed afterward and build state verified clean. Runtime (tsx, metro, vite) resolves `default` → src so the declaration rebuilds never touch the running apps.
 - **Steps:** add the `just`/pnpm recipe backed by the root and boundary TypeScript watchers; document the tsserver-restart caveat; confirm the dev loop (tsx watch, metro) is unaffected by declaration-only changes.
-- **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in `docs/development.md`.
+- **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in the `hominem-development` skill.
 - **Note (2026-08-30):** the root `tsc -b --watch` leg was briefly removed on the theory that every consumer gets tsserver's live redirect and doesn't need it — true for consumers _with_ a `references` entry (`packages/db`, `packages/rpc`, `apps/web`, `apps/omiro`), false for `services/api`, which by design has none and resolves `packages/chat` and 8 other composite packages purely via `paths` to `build/*.d.ts`. Restored. See `docs/type-performance.md` for the full investigation.
 
 ### Task 4 — Remove the residual write-only cruft — COMPLETE (2026-08-27)

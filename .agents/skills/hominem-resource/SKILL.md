@@ -1,5 +1,5 @@
 ---
-name: kernel-hominem-resource
+name: hominem-resource
 kind: skill
 tags:
   - api
@@ -66,8 +66,8 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 
 ## Workflow
 
-1. **Schema first.** If the resource needs new tables/columns, run the Goose migration workflow
-   (load the `db-migrate` skill): write the migration, then `just db migrate` + `just db codegen`
+1. **Schema first.** If the resource needs new tables/columns, run the Goose migration workflow:
+   write the migration, then `just db migrate` + `just db codegen`
    (and `just db migrate test` for the test DB). Column names in code are the camelCased
    snake_case columns from `packages/db/src/types/database.ts` (e.g. `owner_userId` →
    `ownerUserid`, `start_date` → `startDate`).
@@ -180,7 +180,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
    pnpm exec oxfmt <changed files> --write      # oxfmt: single quotes, sorted imports
    ```
 
-   Then run `just check` (or the `check-all` skill) before opening a PR.
+   Then run `pnpm run check` before opening a PR.
 
 ## Invariants to enforce in review
 
@@ -200,7 +200,9 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 
 ## Cross-cutting references
 
-- Goose migrations + type regen: load the `db-migrate` skill.
-- Full pre-push validation: load the `check-all` skill.
-- Warehouse (legacy SQLite data source): load the `db-schema-diff` skill when a new resource
-  maps to tables that still exist in `~/Developer/warehouse`.
+- Goose migrations + type regen: `just db migrate` + `just db codegen` (see
+  [packages/db/AGENTS.md](../../../packages/db/AGENTS.md)).
+- Full pre-push validation: `pnpm run check`.
+- Warehouse (legacy SQLite data source): cross-check the warehouse schema
+  directly when a new resource maps to tables that still exist in
+  `~/Developer/warehouse`.

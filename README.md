@@ -34,7 +34,7 @@ Hominem is one product system made up of the API, Omiro, and shared packages.
 
 ### III. Operations
 
-- [Developer](./docs/development.md) — commands, development, and deployment rules
+- [Developer](./.agents/skills/hominem-development/SKILL.md) — commands, development, and deployment rules
 - [Evidence](./docs/evidence.md) — validation standards before calling a change complete
 
 ### App-specific facts
@@ -125,7 +125,7 @@ Consumers that need authentication should configure an npm token outside the com
 
 ## Commands
 
-See [docs/development.md](./docs/development.md) for setup, validation, and command references.
+See the `hominem-development` skill (`.agents/skills/hominem-development/SKILL.md`) for setup, validation, and command references.
 
 ## CI Model
 

@@ -4,13 +4,13 @@ description: Build, run, and screenshot the omiro Expo/React Native app on the i
 ---
 
 Omiro is an Expo (React Native) dev-client app. Drive it with
-`.claude/skills/run-omiro/driver.sh` — it wraps `expo run:ios`,
+`.agents/skills/run-omiro/driver.sh` — it wraps `expo run:ios`,
 `xcrun simctl`, and the Metro bundler into single commands so an agent
 doesn't have to babysit background processes or guess simulator UDIDs.
 
-All paths below are relative to `apps/omiro/` (this skill's grandparent
-directory). macOS + Xcode + a simulator runtime are required — there is
-no Linux/headless path for iOS Simulator builds.
+All paths below are relative to the repo root. macOS + Xcode + a simulator
+runtime are required — there is no Linux/headless path for iOS Simulator
+builds.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ no Linux/headless path for iOS Simulator builds.
 ## Setup
 
 ```bash
-.claude/skills/run-omiro/driver.sh env
+.agents/skills/run-omiro/driver.sh env
 ```
 
 Copies `.env.example` → `.env.development.local` if missing, and strips
@@ -34,21 +34,21 @@ First build (only needed once per native-project reset — Expo dev
 clients don't need rebuilding for JS-only changes):
 
 ```bash
-.claude/skills/run-omiro/driver.sh build      # boots a sim, expo run:ios, installs, launches
+.agents/skills/run-omiro/driver.sh build      # boots a sim, expo run:ios, installs, launches
 ```
 
 Day-to-day (JS-only changes, app already installed):
 
 ```bash
-.claude/skills/run-omiro/driver.sh metro      # idempotent: starts Metro in bg if not already up
-.claude/skills/run-omiro/driver.sh launch     # terminate + relaunch, reconnects to Metro
-.claude/skills/run-omiro/driver.sh screenshot /tmp/omiro.png
+.agents/skills/run-omiro/driver.sh metro      # idempotent: starts Metro in bg if not already up
+.agents/skills/run-omiro/driver.sh launch     # terminate + relaunch, reconnects to Metro
+.agents/skills/run-omiro/driver.sh screenshot /tmp/omiro.png
 ```
 
 Or all at once from a cold start:
 
 ```bash
-.claude/skills/run-omiro/driver.sh all
+.agents/skills/run-omiro/driver.sh all
 ```
 
 | command             | what it does                                                                          |

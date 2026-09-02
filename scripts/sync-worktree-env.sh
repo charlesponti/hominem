@@ -114,7 +114,7 @@ set_env_url() {
 if ! command -v pnpm >/dev/null 2>&1; then
   echo
   echo "pnpm not found — skipping portless URL patching. Review URLs/ports manually" >&2
-  echo "(see docs/development.md)." >&2
+  echo "(see the hominem-development skill: .agents/skills/hominem-development/SKILL.md)." >&2
   exit 0
 fi
 

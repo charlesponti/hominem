@@ -19,7 +19,7 @@ duplicate or contradict it.
 ## Career domain
 
 - `app.career_applications.status` is `NOT NULL` with no column default, and a constraint trigger (`20260810150000_normalize_career_application_pipeline.sql`) rejects any status other than `WISHLIST`, `ACCEPTED`, `REJECTED`, or `WITHDRAWN` unless the application already has a matching active pipeline stage (`APPLIED` needs an `APPLICATION`-kind stage, `SCREENING` needs `SCREEN`, `OFFER` needs `OFFER`). A stage-less create must default to `status: 'WISHLIST'` — see `createCareerApplication` in `src/application/career.service.ts`. Any test or script inserting directly into `app.career_applications` needs an explicit `status` for the same reason.
-- MCP tools and RPC routes for a resource are thin adapters over one `src/application/<domain>.service.ts` implementation and one set of `src/schemas/<domain>.schema.ts` Zod schemas — never fork query logic or validation between the two surfaces. Follow the `kernel-hominem-resource` skill when adding or reviewing a resource.
+- MCP tools and RPC routes for a resource are thin adapters over one `src/application/<domain>.service.ts` implementation and one set of `src/schemas/<domain>.schema.ts` Zod schemas — never fork query logic or validation between the two surfaces. Follow the `hominem-resource` skill when adding or reviewing a resource.
 
 ## Production authentication
 

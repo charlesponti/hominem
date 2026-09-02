@@ -2,7 +2,7 @@
 
 Every commit in the hominem monorepo follows the Conventional Commits
 specification. For the full spec, message format, and edge cases, defer to the
-`kernel-git-commit` skill. This reference covers the hominem scope list and
+`conventional-commit` skill. This reference covers the hominem scope list and
 repo-specific rules.
 
 ## Scopes
@@ -20,7 +20,7 @@ Use the hominem domain scope, lowercase, consistent with recent history:
 
 ## Repo rules
 
-- **A commit may only be made after the change is validated** (`just check`, or
+- **A commit may only be made after the change is validated** (`pnpm run check`, or
   the targeted per-package checks in the validation reference).
 - Commit related work together; do not bundle unrelated changes into one commit.
 - Breaking changes MUST have a `BREAKING CHANGE:` footer.

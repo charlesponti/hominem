@@ -3,10 +3,10 @@
 Run the full validation suite before opening a PR or pushing to main:
 
 ```bash
-just check
+pnpm run check
 ```
 
-This runs `pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test` across all workspaces.
+This runs `pnpm check:dts && pnpm lint && pnpm build && pnpm typecheck && pnpm test` across all workspaces, with `DATABASE_URL`/`AUTH_E2E_SECRET` set (see the root `check` script in `package.json`).
 
 If it fails, triage in this order:
 

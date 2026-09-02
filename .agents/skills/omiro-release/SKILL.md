@@ -111,7 +111,9 @@ pnpm submit                      # ad hoc local submit, gated on the identity gu
 
 ## See also
 
-- `docs/omiro-release-hardening-2026-08-12.md` — full incident writeup this
-  skill was distilled from.
-- `eas-app-stores` / `eas-workflows` plugin skills — general EAS build,
-  submit, and workflow-YAML mechanics not specific to Omiro.
+- The APP_ENV/identity-guard incident (`-19000` dev bundle ID) and the pnpm
+  runner mismatch are captured in this skill's sections above; the original
+  writeup was folded in and the long-form doc removed.
+- General EAS build, submit, and workflow-YAML mechanics (not Omiro-specific)
+  are covered by Expo's own EAS documentation and the workflow files under
+  `apps/omiro/.eas/workflows/`.

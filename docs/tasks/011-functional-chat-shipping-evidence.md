@@ -69,17 +69,24 @@ summary and links to that manifest.
   under `apps/web/playwright-report` and `apps/web/test-results`. Disposable
   records have not been deleted; cleanup still requires the W-006 confirmation
   checkpoint.
-- Omiro evidence is still `Blocked`: the booted iPhone 17 Pro launches the
-  Expo development-client launcher rather than the Omiro route, and opening
-  the Metro URL through the configured `hakumi-dev` development-client link
-  fails with `LSApplicationWorkspaceErrorDomain` code 115. The app bundle is
-  configured for `http://localhost:4040`, which is reachable now, but no
-  authenticated Omiro session reached a chat screen for Maestro.
-- The attempted `maestro test tests/e2e/chat-playbook.yaml` run confirms the
-  same dependency: it stops in `reset-to-home.yaml` at the optional
-  `BackButton` interaction while the development-client launcher is active;
-  it does not reach an Omiro chat flow. Maestro debug output is preserved at
-  `/Users/charlesponti/.maestro/tests/2026-09-02_105213`.
+- Omiro now launches on the booted iPhone 17 Pro after rebuilding the native
+  development client and reaches an authenticated chat through the local API
+  at `http://localhost:4040`. The named `chat-core.yaml` Maestro flow passes
+  B-001–B-005 with screenshots for direct load, send, new chat, navigation,
+  and regeneration.
+- The named `chat-tools.yaml` flow passes B-006 and reaches the B-007
+  confirmation and approval states. B-008 is currently blocked: after the
+  approval result is visible, the confirmation card still exposes its
+  Approve/Reject controls, so the subsequent rejection flow cannot reliably
+  target the new confirmation. Direct inspection of the dev database shows
+  the run remains `awaiting_confirmation` with no `confirmation.approved`
+  event, and the API log contains no confirmation-response request after the
+  tap. A label-based tap also failed because only the accessibility label is
+  exposed to Maestro, not a matching child text node. The failure is captured
+  at `/Users/charlesponti/.maestro/tests/2026-09-02_112832`; the latest
+  screenshot shows the still-pending card. B-008 and later Omiro flows remain
+  unverified until the Omiro confirmation action is made observable and
+  reaches the API.
 
 ## Exit gate
 
