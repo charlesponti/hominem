@@ -35,8 +35,8 @@ For most web changes, the loop is simple:
 `pnpm dev` starts the React Router development server.
 
 Under `pnpm dev`, the web app runs through the portless proxy at
-`https://web.localhost:4200` and talks to the API at
-`https://api.localhost:4200` (see the `hominem-development` skill). The API
+`https://web.lvh.me:4200` and talks to the API at
+`https://api.lvh.me:4200` (see the `hominem-development` skill). The API
 process itself still binds plain `http://localhost:4040` underneath.
 
 ### Builds
@@ -65,7 +65,7 @@ The important web files are:
 
 ### Dev Server Does Not Load Data
 
-Make sure the API is running (`pnpm --filter @hominem/api dev`, reachable at `https://api.localhost:4200` under portless), or let the Playwright config start it for E2E runs.
+Make sure the API is running (`pnpm --filter @hominem/api dev`, reachable at `https://api.lvh.me:4200` under portless), or let the Playwright config start it for E2E runs.
 
 ### Typegen Looks Stale
 

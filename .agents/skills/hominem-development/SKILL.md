@@ -30,7 +30,7 @@ scripts/sync-worktree-env.sh --force    # also overwrite files that already exis
 
 It never overwrites an existing file by default, so it's safe to re-run.
 Copying alone would leave the main checkout's plain portless hostnames
-(`api.localhost`, `career.localhost`, ...) in place, but a linked worktree
+(`api.lvh.me`, `career.lvh.me`, ...) in place, but a linked worktree
 is actually served at a branch-prefixed hostname (see "First-time setup:
 portless proxy" below) — so for every file it just copied, the script also
 resolves this worktree's real URLs via `pnpm exec portless get <name>` and
@@ -48,24 +48,42 @@ skipped) is never rewritten — hand-edited values are left alone.
 [portless](https://github.com/vercel-labs/portless), configured per-package
 (each app's `package.json` has its own `"portless": { "name", "script" }`
 key — see below; there is no root `portless.json`), which gives each service
-a stable `https://<name>.localhost` URL instead of
+a stable `https://<name>.lvh.me` URL instead of
 a fixed port — this is what lets the same app run from multiple worktrees
 without a port collision (portless prefixes the worktree's branch name onto
 the hostname automatically).
+
+The TLD is `lvh.me`, not the `.localhost` default — `lvh.me` is a public
+domain with wildcard DNS to `127.0.0.1` (like `nip.io`), and it has to be a
+real registrable domain for cross-subdomain login to work at all: Chrome
+(confirmed empirically) silently refuses to set any cookie with
+`Domain=localhost` or `Domain=.localhost`, even though the `Set-Cookie`
+response header looks completely correct — there's no client-visible error,
+sign-in just quietly never persists a session. `apps/*/playwright.config.ts`
+already relies on the same `lvh.me` fact for e2e cross-subdomain auth.
+
+Don't reach for `--tld test` as a fix for this — it hits the identical wall.
+Chrome's restriction isn't specific to the literal string "localhost"; it
+covers the whole RFC 2606 reserved special-use-TLD group (`localhost`,
+`test`, `example`, `invalid`), confirmed empirically the same way. Portless
+itself supports any custom `--tld`, and a self-hosted reverse proxy (Caddy,
+etc.) with its own local CA doesn't change this either — the constraint is
+Chrome's cookie policy, not the proxying layer. Only a real, non-reserved
+registrable domain works.
 
 Before the first `pnpm dev`, start the proxy once on an unprivileged port —
 binding the default port 443 needs `sudo`, which can hang when portless's
 elevation prompt isn't attached to an interactive terminal:
 
 ```bash
-pnpm exec portless proxy start --port 4200
+pnpm exec portless proxy start --port 4200 --tld lvh.me
 ```
 
 This trusts a local CA (one-time, may prompt for your password directly —
 that prompt does work) and starts the HTTPS proxy on port 4200. Portless
 remembers this configuration, so subsequent `pnpm dev` runs auto-attach to
 the running proxy instead of trying to start their own. `.env.example`
-defaults already point at `https://<name>.localhost:4200`.
+defaults already point at `https://<name>.lvh.me:4200`.
 
 Each of `api`/`web`/`career`/`finance`'s `package.json` has its own
 `"portless": { "name", "script": "dev:app" }` key — that's what portless
@@ -75,10 +93,10 @@ actually reads when a package's own `"dev": "portless"` script runs (a root
 If you add a new portless-fronted app, give it this key, not a root config
 entry.
 
-Because portless gives each app its own subdomain (`api.localhost`,
-`career.localhost`, `finance.localhost`, `web.localhost`) rather than just a
+Because portless gives each app its own subdomain (`api.lvh.me`,
+`career.lvh.me`, `finance.lvh.me`, `web.lvh.me`) rather than just a
 different port on the same host, the hosted-login session cookie needs
-`services/api`'s `AUTH_COOKIE_DOMAIN=localhost` (see `.env.example`) to be
+`services/api`'s `AUTH_COOKIE_DOMAIN=lvh.me` (see `.env.example`) to be
 shared across them via Better Auth's cross-subdomain cookies — without it,
 login appears to succeed but the other apps never see the session and bounce
 back to `/login`. See [docs/authentication.md](../../../docs/authentication.md)

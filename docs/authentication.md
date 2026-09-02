@@ -17,8 +17,8 @@ no application creates, translates, or stores its own end-user credential.
 ## How it works
 
 Development and production run the identical mechanism. The only difference
-is which env values point the apps and the cookie at `localhost` versus the
-production domain; there is no separate dev auth code path.
+is which env values point the apps and the cookie at the local dev domain
+versus the production domain; there is no separate dev auth code path.
 `getAdvancedOptions()` in
 [services/api/src/auth/better-auth.ts](../services/api/src/auth/better-auth.ts)
 derives every cookie attribute from env config:
@@ -29,13 +29,19 @@ derives every cookie attribute from env config:
 - Cross-subdomain cookies (`Domain=<AUTH_COOKIE_DOMAIN>`) only turn on when
   `AUTH_COOKIE_DOMAIN` is non-empty. Production sets it to the shared parent
   domain, so one cookie is valid across Career, Finance, and the API's own
-  origin. Local development sets it to `localhost` for the same reason:
-  under the [portless](https://github.com/vercel-labs/portless) proxy (see
-  the `hominem-development` skill), api/web/career/finance each get their
-  own `https://<name>.localhost:4200` subdomain rather than sharing one host
-  on different ports, so without `AUTH_COOKIE_DOMAIN=localhost` the cookie
-  set during hosted login stays scoped to `api.localhost` and the other
-  apps never see it.
+  origin. Local development sets it to `lvh.me` for the same reason: under
+  the [portless](https://github.com/vercel-labs/portless) proxy (see the
+  `hominem-development` skill), api/web/career/finance each get their own
+  `https://<name>.lvh.me:4200` subdomain rather than sharing one host on
+  different ports, so without a shared `AUTH_COOKIE_DOMAIN` the cookie set
+  during hosted login stays scoped to `api.lvh.me` and the other apps never
+  see it. This has to be `lvh.me` (a real, ICANN-registered domain with
+  wildcard DNS to `127.0.0.1`) — Chrome silently refuses to set any cookie
+  with `Domain=` pointed at `localhost` or any RFC 2606 reserved special-use
+  TLD (`.test`, `.example`, `.invalid` — confirmed empirically for both
+  `localhost` and `test`), with no console error, so sign-in looks like it
+  works but no session ever persists. A real registrable domain like
+  `lvh.me` isn't subject to that restriction.
 - `sameSite: 'lax'` and `httpOnly: true` are constant in both environments.
 
 ## How the apps talk to the API

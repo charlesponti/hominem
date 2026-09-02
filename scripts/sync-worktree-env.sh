@@ -86,7 +86,7 @@ fi
 echo "Done: $copied copied, $skipped skipped (already present; use --force to overwrite)."
 
 # Files copied verbatim from the main checkout carry its plain portless
-# hostnames (api.localhost, career.localhost, ...). Under portless, a linked
+# hostnames (api.lvh.me, career.lvh.me, ...). Under portless, a linked
 # worktree actually gets served at a branch-prefixed hostname instead (see
 # the hominem-development skill's "Git worktrees" note) — copying the main
 # checkout's URLs as-is means this worktree's apps redirect to origins that
