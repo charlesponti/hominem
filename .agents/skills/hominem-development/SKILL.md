@@ -69,7 +69,9 @@ covers the whole RFC 2606 reserved special-use-TLD group (`localhost`,
 itself supports any custom `--tld`, and a self-hosted reverse proxy (Caddy,
 etc.) with its own local CA doesn't change this either — the constraint is
 Chrome's cookie policy, not the proxying layer. Only a real, non-reserved
-registrable domain works.
+registrable domain works. See
+[ADR 0002](../../../docs/adr/0002-local-dev-tld-lvh-me.md) for the full
+investigation and the alternatives ruled out.
 
 Before the first `pnpm dev`, start the proxy once on an unprivileged port —
 binding the default port 443 needs `sudo`, which can hang when portless's

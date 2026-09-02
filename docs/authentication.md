@@ -41,7 +41,9 @@ derives every cookie attribute from env config:
   TLD (`.test`, `.example`, `.invalid` — confirmed empirically for both
   `localhost` and `test`), with no console error, so sign-in looks like it
   works but no session ever persists. A real registrable domain like
-  `lvh.me` isn't subject to that restriction.
+  `lvh.me` isn't subject to that restriction. See
+  [ADR 0002](adr/0002-local-dev-tld-lvh-me.md) for the full investigation
+  and the alternatives ruled out.
 - `sameSite: 'lax'` and `httpOnly: true` are constant in both environments.
 
 ## How the apps talk to the API
