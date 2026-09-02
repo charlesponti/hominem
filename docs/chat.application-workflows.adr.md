@@ -1,4 +1,4 @@
-# ADR 0003: Put coordinated chat workflows in application services
+# Chat application workflows
 
 ## Status
 
@@ -21,3 +21,8 @@ telemetry coordination has one testable owner. Route files have predictable
 seams and cannot silently grow a second generation lifecycle implementation.
 Application services expose typed operations rather than callback-shaped route
 controls.
+
+Legacy callback loops, generation result aliases, duplicate RPC contracts, and
+persisted compatibility mappers are not retained as a second runtime boundary.
+New behavior belongs in the canonical application operation or shared contract
+and is not added as a compatibility alias.

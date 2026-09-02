@@ -1,6 +1,6 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Task 003 Omiro evidence: loading/error, message actions, viewport, keyboard,
+# Task 011 Omiro evidence: loading/error, message actions, viewport, keyboard,
 # and accessibility labels.
 
 - runFlow: ../subflows/reset-to-home.yaml

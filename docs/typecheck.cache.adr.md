@@ -1,4 +1,4 @@
-# ADR 0001: Clear each package's `.tsbuildinfo` before `typecheck`
+# Typecheck cache invalidation
 
 ## Status
 

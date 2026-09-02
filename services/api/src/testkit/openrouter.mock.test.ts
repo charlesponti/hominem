@@ -109,6 +109,28 @@ describe('scripted OpenRouter provider', () => {
     expect(chunks[0]?.choices[0]?.delta?.toolCalls).toBeUndefined();
   });
 
+  it('starts the Omiro confirmation-rejection scenario with a tool call', async () => {
+    const chunks = await collect(
+      streamChatCompletion({
+        model: 'test-model',
+        messages: [
+          {
+            role: 'user',
+            content: 'B008-OMIRO-CONFIRM-REJECT Create a private collection.',
+          },
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: { name: 'create_collection', description: 'Create a collection.' },
+          },
+        ],
+      }),
+    );
+
+    expect(chunks[0]?.choices[0]?.delta?.toolCalls?.[0]?.function?.name).toBe('create_collection');
+  });
+
   it('returns a rejection acknowledgment after a rejected tool result', async () => {
     const chunks = await collect(
       streamChatCompletion({
@@ -186,12 +208,14 @@ describe('scripted OpenRouter provider', () => {
     await collect(
       streamChatCompletion({
         model: 'test-model',
+        response_format: { type: 'json_object' },
+        stream: true,
         messages: [{ role: 'user', content: 'B011-CANCEL-BEFORE' }],
       }),
     );
 
     expect(Date.now() - startedAt).toBeGreaterThanOrEqual(2_000);
-  });
+  }, 15_000);
 
   it('streams controlled Browser recovery frames with deterministic gaps', async () => {
     const startedAt = Date.now();

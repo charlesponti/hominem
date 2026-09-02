@@ -1,4 +1,4 @@
-# ADR 0004: Treat durable semantic events as the recovery authority
+# Chat durable events
 
 ## Status
 
@@ -23,3 +23,10 @@ Reconnect and fresh-launch behavior can be tested against one authoritative
 history. A failed append cannot be represented as a successful live event.
 Client cursors must never be treated as proof that a durable event exists, and
 live-only deltas must never advance them.
+
+Recovery is owner-scoped and phase-specific: active checkpoints resume or
+terminalize exactly once; awaiting confirmation remains paused; committed,
+cancelled, and failed runs replay their durable history. The first durable
+terminal decision wins races with cancellation or failure. Web and Omiro may
+use separate transports and checkpoints, but their reducers must converge on
+the same semantic state.

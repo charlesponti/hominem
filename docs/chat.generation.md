@@ -25,7 +25,9 @@ histories produce equivalent generation state.
 
 The database stores generation runs, ordered durable events, projections,
 snapshots, idempotency records, and tool effects. Durable event history is
-authoritative; run and client state are projections or recovery aids.
+authoritative; run and client state are projections or recovery aids. The
+deterministic test and evidence contract is documented in
+[`chat.testing.md`](chat.testing.md).
 
 ## Runtime contract
 
@@ -70,21 +72,16 @@ transactional projection updates, terminal exclusivity, replay safety, and
 idempotent tool effects. Confirmation is neither execution nor commitment.
 The first durable terminal decision wins cancellation races.
 
-## Task references
+## Governing records
 
-Implementation work and release evidence are tracked in the task records:
+Stable decisions are recorded in [the canonical contract ADR](chat.canonical-contract.adr.md),
+[the application workflows ADR](chat.application-workflows.adr.md),
+[the durable events ADR](chat.durable-events.adr.md),
+[the typed boundaries ADR](chat.typed-boundaries.adr.md), and
+the [chat testing contract](chat.testing.md).
 
-- [001 — Chat domain contract](tasks/001-chat-domain-contract.md)
-- [002 — Chat tool event round trip](tasks/002-chat-tool-event-round-trip.md)
-- [003 — Chat end-to-end test infrastructure](tasks/003-chat-e2e-test-infrastructure.md)
-- [004 — Typed generation boundaries](tasks/004-typed-generation-boundaries.md)
-- [005 — Generation crash recovery](tasks/005-generation-crash-recovery.md)
-- [006 — Generation cursor recovery](tasks/006-generation-cursor-recovery.md)
-- [007 — Client convergence](tasks/007-client-convergence.md)
-- [008 — Generation observability](tasks/008-generation-observability.md)
-- [009 — Generation runtime consolidation](tasks/009-generation-runtime-consolidation.md)
-- [010 — Remove generation compatibility](tasks/010-remove-generation-compatibility.md)
-- [011 — Functional chat shipping evidence](tasks/011-functional-chat-shipping-evidence.md)
+Active execution work remains in [Task 011](tasks/011-functional-chat-shipping-evidence.md)
+and [Task 012](tasks/012-omiro-generation-cancellation.md).
 
 User-facing capability status is maintained in
 [`chat.capabilities.md`](chat.capabilities.md).

@@ -1,4 +1,4 @@
-# ADR 0002: Use `lvh.me`, not `.localhost`, as the local dev TLD
+# Development auth local TLD
 
 ## Status
 

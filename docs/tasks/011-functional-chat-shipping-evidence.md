@@ -3,7 +3,7 @@ title: 'Complete functional chat shipping evidence'
 status: 'Open'
 priority: 'high'
 labels: [chat, e2e, browser, ios, evidence]
-depends_on: [003-chat-e2e-test-infrastructure.md, 004-typed-generation-boundaries.md, 005-generation-crash-recovery.md, 006-generation-cursor-recovery.md, 007-client-convergence.md, 008-generation-observability.md, 010-remove-generation-compatibility.md]
+depends_on: []
 blocks: []
 estimated_size: 'L'
 ---
@@ -20,13 +20,19 @@ cross-checks, artifacts, final validation, and disposable-data cleanup. Out of
 scope: implementing API test infrastructure or changing product behavior solely
 to make evidence runnable.
 
+The durable chat contract and test infrastructure are governed by
+`docs/chat.generation.md`, `docs/chat.testing.md`, and the chat ADRs. Task 012
+owns Omiro B-011 cancellation investigation and evidence. B-011 is
+therefore deferred from this task's active work sequence and is not counted as
+an accepted result here.
+
 ## Work sequence
 
 | ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
 | --- | --- | --- | --- | --- | --- |
-| W-001 | Prepare the run | local services, auth, Browser, simulator | Tasks 003–008 | environment manifest | Revision, URLs, viewport/device, authenticated session, and run ID are recorded. |
+| W-001 | Prepare the run | local services, auth, Browser, simulator | `docs/chat.generation.md`, `docs/chat.testing.md`, chat ADRs | environment manifest | Revision, URLs, viewport/device, authenticated session, and run ID are recorded. |
 | W-002 | Run Web matrix | Playwright/Web | W-001 | one manifest row per B-001–B-025 | Scenarios run serially; each result has visible, API/durable, artifact, and duplicate evidence. |
-| W-003 | Run Omiro matrix | Maestro/Omiro | W-001 | one artifact row per applicable scenario | Equivalent semantic states and Apple-only layout/accessibility states are recorded. |
+| W-003 | Run Omiro matrix | Maestro/Omiro | W-001 | one artifact row per applicable scenario, excluding deferred B-011 | Equivalent semantic states and Apple-only layout/accessibility states are recorded for this task's scenarios. |
 | W-004 | Resolve confirmed defects | owning Web/Omiro/testkit boundary | W-002 or W-003 | focused regression test + rerun | Only defects required by a failed active scenario are fixed. |
 | W-005 | Reconcile evidence | task record/evidence manifest | W-002–W-004 | reviewed manifest | Implemented, Partial, Open, and Blocked results are explicit; no raw disposable IDs are embedded here. |
 | W-006 | Clean disposable data | testkit/database inspector | W-005 + user confirmation | cleanup receipt | Exact listed records are deleted and absence is verified. |
@@ -39,7 +45,7 @@ silently bypass an earlier failed scenario.
 ## Acceptance criteria
 
 - [ ] AC-001: Every runnable Browser scenario has complete visible and durable evidence.
-- [ ] AC-002: Every applicable Omiro scenario has Maestro and visual evidence.
+- [ ] AC-002: Every applicable Omiro scenario owned by this task has Maestro and visual evidence.
 - [ ] AC-003: Every failed scenario has either a focused fix and rerun or an exact blocker.
 - [ ] AC-004: Cleanup is confirmed, exact, and verified.
 - [ ] AC-005: The final validation set passes at the recorded revision.
@@ -74,22 +80,30 @@ summary and links to that manifest.
   at `http://localhost:4040`. The named `chat-core.yaml` Maestro flow passes
   B-001–B-005 with screenshots for direct load, send, new chat, navigation,
   and regeneration.
-- The named `chat-tools.yaml` flow passes B-006 and reaches the B-007
-  confirmation and approval states. B-008 is currently blocked: after the
-  approval result is visible, the confirmation card still exposes its
-  Approve/Reject controls, so the subsequent rejection flow cannot reliably
-  target the new confirmation. Direct inspection of the dev database shows
-  the run remains `awaiting_confirmation` with no `confirmation.approved`
-  event, and the API log contains no confirmation-response request after the
-  tap. A label-based tap also failed because only the accessibility label is
-  exposed to Maestro, not a matching child text node. The failure is captured
-  at `/Users/charlesponti/.maestro/tests/2026-09-02_112832`; the latest
-  screenshot shows the still-pending card. B-008 and later Omiro flows remain
-  unverified until the Omiro confirmation action is made observable and
-  reaches the API.
+- The named `chat-tools.yaml` flow now passes B-006–B-009 in isolated fresh
+  chats. B-007 approval and B-008 rejection reach the API, produce the
+  expected terminal response, remove the confirmation controls, and leave
+  no pending confirmation card. B-009 preserves the failed-tool card. The
+  scripted provider was corrected so the B-008 marker emits a confirmation
+  tool call initially and only emits the rejection response after the tool
+  result. Screenshots are preserved at `/tmp/omiro-task003-b006-tool-success`,
+  `/tmp/omiro-task003-b007-confirmation-pending`,
+  `/tmp/omiro-task003-b007-approved`,
+  `/tmp/omiro-task003-b008-confirmation-pending`,
+  `/tmp/omiro-task003-b008-rejected`, and
+  `/tmp/omiro-task003-b009-tool-failure`.
+- Omiro B-010 now passes the provider-failure, inline Retry, and successful
+  retry flow. The activity timeline is rendered with the newest chat content,
+-  and the stop control has a stable automation identifier. B-011 has been
+  split into independent follow-up Task 012 because its remaining issue is
+  Omiro native callback delivery, not a prerequisite for the rest of this
+  shipping-evidence matrix. Its reproduction, evidence, attempted fixes, and
+  acceptance criteria are recorded in
+  `012-omiro-generation-cancellation.md`.
 
 ## Exit gate
 
 Mark Implemented only when AC-001–AC-005 pass. Keep Open or Partial when any
-scenario is unverified, blocked, or awaiting cleanup. Do not claim a blocked
-scenario as passing.
+scenario in this task is unverified, blocked, or awaiting cleanup. B-011 is
+owned by Task 012 and must not be counted as passing in this task merely
+because it was removed from this matrix.

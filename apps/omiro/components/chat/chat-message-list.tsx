@@ -7,7 +7,6 @@ import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } fr
 import { useStyles } from '~/components/theme';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 
-import { ChatActivityTimeline } from './chat-activity-timeline';
 import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
@@ -58,8 +57,6 @@ interface ChatMessageListProps {
   // takes up real layout space there.
   bottomInset?: number;
   generation?: ChatGenerationState | null;
-  onCancelGeneration?: () => void;
-  onRetryGeneration?: () => void;
 }
 
 export function ChatMessageList({
@@ -79,8 +76,6 @@ export function ChatMessageList({
   refreshControl,
   bottomInset = 0,
   generation,
-  onCancelGeneration,
-  onRetryGeneration,
 }: ChatMessageListProps) {
   const styles = useStyles((theme) => ({
     emptySearch: { alignItems: 'center', paddingTop: 28 },
@@ -240,16 +235,8 @@ export function ChatMessageList({
     <FlashList
       ref={listRef}
       style={styles.list}
+      pointerEvents={generation ? 'box-none' : 'auto'}
       contentInsetAdjustmentBehavior="automatic"
-      ListHeaderComponent={
-        generation && onCancelGeneration ? (
-          <ChatActivityTimeline
-            generation={generation}
-            onCancel={onCancelGeneration}
-            onRetry={onRetryGeneration}
-          />
-        ) : null
-      }
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
         renderedMessages.length > 0 ? (

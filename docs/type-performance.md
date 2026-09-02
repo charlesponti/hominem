@@ -168,7 +168,7 @@ Worth rerunning `scripts/find-duplicate-shapes.mjs` periodically rather than tru
 
 ## The `tsc --noEmit` incremental cache: a correctness bug we traded away on purpose
 
-Everything above is about making real type-checks faster. This section is about a case where we found the opposite problem — `tsc`'s own incremental cache making a type-check *cheaper than it should be*, by silently skipping work it needed to do — and chose to give back some of that speed on purpose. See [ADR 0001](adr/0001-clear-tsbuildinfo-before-typecheck.md) for the full writeup; this is the summary in context.
+Everything above is about making real type-checks faster. This section is about a case where we found the opposite problem — `tsc`'s own incremental cache making a type-check *cheaper than it should be*, by silently skipping work it needed to do — and chose to give back some of that speed on purpose. See [the typecheck cache ADR](typecheck.cache.adr.md) for the full writeup; this is the summary in context.
 
 Every package on the shared `tsconfig.profiles/package.json` profile (everything except `services/ori` and `services/deepeval`) sets `composite: true`, which forces `incremental: true` and a persisted `./.cache/tsconfig.tsbuildinfo` per package. We hit this directly: after fixing a real type error in `packages/db`, `pnpm -w typecheck` reported all 34 tasks green — including `packages/ai`, which had its own genuine, unrelated type error (`RecordAIUsageEventInput.metadata: Record<string, unknown>` isn't assignable to the `Json` type `packages/db`'s repositories actually expect). Turborepo correctly re-invoked `@hominem/ai`'s `tsc --noEmit` as a cache miss, but `tsc` itself consulted its own stale `.tsbuildinfo` and didn't re-check `ai-usage.ts` against `@hominem/db`'s freshly-rebuilt `build/index.d.ts`. Deleting `packages/ai/.cache` and rerunning surfaced the error immediately — and running `turbo run typecheck --force` after clearing every package's `.cache`/`*.tsbuildinfo` repo-wide reproduced the same result everywhere. That's a real, reproducible false-pass in a check whose entire job is to not do that.
 
@@ -192,7 +192,7 @@ We considered a more surgical fix — hash each package's direct workspace depen
 
 ## DO / DO NOT, distilled from the references
 
-The findings above feed three other documents — `AGENTS.md`, `docs/type-system.md`, and [ADR 0001](adr/0001-clear-tsbuildinfo-before-typecheck.md) — which state the same conclusions as rules rather than investigation narrative. Collected here so they don't get silently re-litigated in either direction.
+The findings above feed three other documents — `AGENTS.md`, `docs/type-system.md`, and [the typecheck cache ADR](typecheck.cache.adr.md) — which state the same conclusions as rules rather than investigation narrative. Collected here so they don't get silently re-litigated in either direction.
 
 **DO**
 
@@ -200,7 +200,7 @@ The findings above feed three other documents — `AGENTS.md`, `docs/type-system
 - Put an `injectWorkspacePackages` `paths` override in a type-check-only config (e.g. `tsconfig.emit.json`), never in a `tsconfig.json` a bundler also reads for runtime resolution.
 - Point a new package's `paths` alias at another package's emitted `.d.ts`, never at its source (`docs/type-system.md` D1/D3).
 - Give your own unannotated callback passed to a generic higher-order function an explicit return-type annotation when a trace shows it's expensive.
-- Clear `.cache`/`tsbuildinfo` before `typecheck` on any package using the shared composite profile — `tsc`'s own incremental cache can silently mask a cross-package type error (ADR 0001).
+- Clear `.cache`/`tsbuildinfo` before `typecheck` on any package using the shared composite profile — `tsc`'s own incremental cache can silently mask a cross-package type error (the typecheck cache ADR).
 - Hardcode declaration emit's `outDir` — never assemble it via CLI flags or a `rootDir` dance.
 - Verify a claimed speedup with `--generateTrace` or a real tsserver session before writing it down. Several plausible-sounding fixes in this document measured to zero.
 

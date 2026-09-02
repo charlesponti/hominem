@@ -1,6 +1,6 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Task 003 Omiro evidence: tool and confirmation states.
+# Task 011 Omiro evidence: tool and confirmation states.
 # Tool names are stable accessibility labels supplied by the chat tool card.
 
 - runFlow: ../subflows/reset-to-home.yaml

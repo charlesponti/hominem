@@ -147,8 +147,11 @@ function responseBody(request: OpenRouterRequest) {
         requiresLookup: /collection/i.test(context.userText),
       })
     : content;
+  const isInitialConfirmationRejection =
+    /B008-OMIRO-CONFIRM-REJECT/i.test(context.userText) && !context.hasToolResult;
+  const isRejectedRequest = /\b(reject|rejected|deny|denied)\b/i.test(context.userText);
   const delta =
-    toolName && !/\b(reject|rejected|deny|denied)\b/i.test(context.userText)
+    toolName && (!isRejectedRequest || isInitialConfirmationRejection)
       ? { tool_calls: [toolCall] }
       : { content };
   const payload = {
@@ -204,8 +207,8 @@ const server = setupServer(
       ['B012-STREAM', 'B013-DISCONNECT', 'B014-REPLAY', 'B017-ACTIVE-RELOAD'].some((control) =>
         hasControl(userText, control),
       );
-    if (!body.response_format && hasControl(userText, 'B011-CANCEL-BEFORE')) {
-      await wait(CONTROLLED_DELAY_MS * 4);
+    if (body.stream && hasControl(userText, 'B011-CANCEL-BEFORE')) {
+      await wait(CONTROLLED_DELAY_MS * 12);
     }
     const frames = response
       .split('\n\n')

@@ -1,15 +1,24 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Task 003 Omiro evidence: failure, retry, cancellation, replay, reload, and
+# Task 011/012 Omiro evidence: failure, retry, cancellation, replay, reload, and
 # authorization boundaries. Use a unique MAESTRO_RUN_ID per run when driving
 # B-010 through a scripted API provider.
 
 - runFlow: ../subflows/reset-to-home.yaml
-- tapOn:
-    id: 'inbox-item-chat-open'
-    index: 0
+- openLink: 'hakumi-dev:///new-chat'
 - waitForAnimationToEnd:
     timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B010 setup chat'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
 - assertVisible:
     id: 'chat-composer-input'
 
@@ -22,6 +31,7 @@ appId: com.pontistudios.hakumi.dev
 - inputText: 'B010-OMIRO-PROVIDER-B010-FAIL-${MAESTRO_RUN_ID || "local"}'
 - tapOn:
     id: 'composer-submit-message'
+- pressKey: BACK
 - waitForAnimationToEnd:
     timeout: 8000
 - assertVisible:
@@ -42,10 +52,11 @@ appId: com.pontistudios.hakumi.dev
 - inputText: 'B011-CANCEL-BEFORE __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
-- waitForAnimationToEnd:
-    timeout: 1000
-- assertVisible: 'Stop reply'
+- pressKey: BACK
+- assertVisible:
+    id: 'chat-generation-stop'
 - tapOn: 'Stop reply'
+- assertVisible: 'Stopping reply'
 - waitForAnimationToEnd:
     timeout: 5000
 - assertVisible: 'Reply stopped'
@@ -57,9 +68,9 @@ appId: com.pontistudios.hakumi.dev
 - inputText: 'B012-STREAM __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
-- waitForAnimationToEnd:
-    timeout: 1000
-- assertVisible: 'Stop reply'
+- pressKey: BACK
+- assertVisible:
+    id: 'chat-generation-stop'
 - takeScreenshot: /tmp/omiro-task003-b012-streaming
 - tapOn: 'Stop reply'
 - waitForAnimationToEnd:
@@ -76,8 +87,7 @@ appId: com.pontistudios.hakumi.dev
 - inputText: 'B014-REPLAY __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
-- waitForAnimationToEnd:
-    timeout: 1000
+- pressKey: BACK
 - stopApp
 - launchApp
 - waitForAnimationToEnd:
@@ -112,6 +122,7 @@ appId: com.pontistudios.hakumi.dev
 - inputText: 'B017-ACTIVE-RELOAD __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
+- pressKey: BACK
 - waitForAnimationToEnd:
     timeout: 1000
 - stopApp

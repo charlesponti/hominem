@@ -120,5 +120,6 @@ describe('useStartChat', () => {
     await expect(result.current.startChat({ title: 'Test', message: 'Hello' })).rejects.toThrow(
       'start failed',
     );
+    expect(mockConsumeSseXhr).toHaveBeenCalledOnce();
   });
 });
