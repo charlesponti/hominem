@@ -14,6 +14,7 @@ duplicate or contradict it.
 - Use `isServiceError` from `src/errors.ts` for known domain failures. Throw typed errors and let the global handler map them to HTTP responses.
 - Job handlers live in `src/workers/` and register in `src/worker.ts`. The worker is a separate process and shares no HTTP-server memory.
 - From `services/api`, build with `node build.mjs`; standard Turbo build is not its build path. Use `pnpm test --filter=@hominem/api...` and `pnpm --filter @hominem/api dev` for its normal lanes.
+- `public/login.css`/`public/login.js` (the hosted login page) are served as static files, not compiled from `pages.tsx`/`browser.ts` at request time. `login.js` is specifically a **committed build artifact** bundled from `src/routes/login/browser.ts` via rolldown (`scripts/login-client-bundle.mjs`) — `pnpm dev`'s `scripts/dev.mjs` rebuilds it live via `rolldown.watch()` alongside `tsx watch`, so local dev picks up `browser.ts` edits automatically. Outside that dev loop (e.g. a one-off build), run `node build.mjs` and commit the regenerated `public/login.js` — a source-only change to `browser.ts` without the rebuilt artifact ships stale client behavior with no error anywhere.
 
 ## Career domain
 

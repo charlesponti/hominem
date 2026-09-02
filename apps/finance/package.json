@@ -9,7 +9,8 @@
     "format:check": "pnpm exec oxfmt ./app --check",
     "build": "react-router build",
     "clean": "rm -rf build",
-    "dev": "react-router dev",
+    "dev": "portless",
+    "dev:app": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && rm -rf .cache && tsc --noEmit",
     "typegen": "react-router typegen",
@@ -59,5 +60,9 @@
     "vite": "catalog:",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "catalog:"
+  },
+  "portless": {
+    "name": "finance",
+    "script": "dev:app"
   }
 }
