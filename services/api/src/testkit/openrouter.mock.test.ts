@@ -208,8 +208,7 @@ describe('scripted OpenRouter provider', () => {
     await collect(
       streamChatCompletion({
         model: 'test-model',
-        response_format: { type: 'json_object' },
-        stream: true,
+        responseFormat: { type: 'json_object' },
         messages: [{ role: 'user', content: 'B011-CANCEL-BEFORE' }],
       }),
     );
