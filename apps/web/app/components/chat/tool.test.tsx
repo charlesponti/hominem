@@ -3,7 +3,15 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Tool, ToolApprovalActions, ToolContent, ToolHeader, ToolInput, ToolPreview } from './tool';
+import {
+  getToolCallStatus,
+  Tool,
+  ToolApprovalActions,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolPreview,
+} from './tool';
 
 afterEach(cleanup);
 
@@ -48,6 +56,20 @@ describe('ToolHeader', () => {
     );
     expect(screen.getByText('Delete a note')).toBeTruthy();
     expect(screen.queryByText('delete_note')).toBeNull();
+  });
+});
+
+describe('getToolCallStatus', () => {
+  it.each(['pending', 'running'] as const)('keeps execution status %s non-terminal', (status) => {
+    expect(
+      getToolCallStatus({
+        args: {},
+        executionStatus: status,
+        toolCallId: 'call-1',
+        toolName: 'search_notes',
+        type: 'tool-call',
+      }),
+    ).toBe('pending');
   });
 });
 
@@ -109,8 +131,8 @@ describe('ToolApprovalActions', () => {
     const onReject = vi.fn();
     render(<ToolApprovalActions onApprove={onApprove} onReject={onReject} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Approve tool action' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reject tool action' }));
 
     expect(onApprove).toHaveBeenCalledOnce();
     expect(onReject).toHaveBeenCalledOnce();
@@ -119,11 +141,11 @@ describe('ToolApprovalActions', () => {
   it('disables both buttons when disabled', () => {
     render(<ToolApprovalActions disabled onApprove={vi.fn()} onReject={vi.fn()} />);
 
-    expect((screen.getByRole('button', { name: 'Approve' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
-    expect((screen.getByRole('button', { name: 'Reject' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(
+      (screen.getByRole('button', { name: 'Approve tool action' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Reject tool action' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 });

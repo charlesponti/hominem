@@ -16,6 +16,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "test": "vitest run --config vitest.config.ts --passWithNoTests",
     "test:coverage": "vitest run --coverage --config vitest.config.ts",
+    "test:e2e": "playwright test --config playwright.config.ts",
     "typecheck": "react-router typegen && rm -rf .cache && tsc --noEmit"
   },
   "dependencies": {
@@ -69,6 +70,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@react-router/dev": "catalog:",
     "@storybook/react-vite": "^10.5.10",
     "@tailwindcss/vite": "^4.1.8",

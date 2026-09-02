@@ -1,0 +1,140 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Task 011/012 Omiro evidence: failure, retry, cancellation, replay, reload, and
+# authorization boundaries. Use a unique MAESTRO_RUN_ID per run when driving
+# B-010 through a scripted API provider.
+
+- runFlow: ../subflows/reset-to-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B010 setup chat'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+
+# B-010: provider failure -> friendly recovery -> retry. The current Omiro
+# copy is captured by the screenshots; durable failed/retry run correlation is
+# checked separately through the API inspector.
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B010-OMIRO-PROVIDER-B010-FAIL-${MAESTRO_RUN_ID || "local"}'
+- tapOn:
+    id: 'composer-submit-message'
+- pressKey: BACK
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-activity'
+- takeScreenshot: /tmp/omiro-task003-b010-failure
+- assertVisible: 'Retry reply'
+- tapOn: 'Retry reply'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b010-retry-complete
+
+# B-011/B-012: stop before execution and while a controlled stream is active.
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B011-CANCEL-BEFORE __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: 'composer-submit-message'
+- pressKey: BACK
+- assertVisible:
+    id: 'chat-generation-stop'
+- tapOn: 'Stop reply'
+- assertVisible: 'Stopping reply'
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: 'Reply stopped'
+- takeScreenshot: /tmp/omiro-task003-b011-cancel-before
+
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B012-STREAM __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: 'composer-submit-message'
+- pressKey: BACK
+- assertVisible:
+    id: 'chat-generation-stop'
+- takeScreenshot: /tmp/omiro-task003-b012-streaming
+- tapOn: 'Stop reply'
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: 'Reply stopped'
+- takeScreenshot: /tmp/omiro-task003-b012-cancelled
+
+# B-013/B-014: relaunch during a controlled stream and verify the durable chat
+# remains available. Maestro cannot sever only one HTTP stream, so the exact
+# transport-disconnect/replay-overlap assertion remains API/testkit evidence.
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B014-REPLAY __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: 'composer-submit-message'
+- pressKey: BACK
+- stopApp
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b013-b014-reconnect-replay
+
+# B-015/B-017: confirmation/reload and active-generation reload.
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B015-OMIRO-CONFIRM reload confirmation check'
+- tapOn:
+    id: 'composer-submit-message'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: 'Approve create_collection'
+- stopApp
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: 'Approve create_collection'
+- takeScreenshot: /tmp/omiro-task003-b015-confirmation-reload
+- tapOn: 'Reject create_collection'
+- waitForAnimationToEnd:
+    timeout: 8000
+
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B017-ACTIVE-RELOAD __MAESTRO_SLOW_STREAM__'
+- tapOn:
+    id: 'composer-submit-message'
+- pressKey: BACK
+- waitForAnimationToEnd:
+    timeout: 1000
+- stopApp
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b017-active-reload
+
+# B-016/B-019 are recorded as explicit harness checkpoints. A second signed-in
+# account and API-side ownership probes cannot be created by this UI-only flow.
+# Do not claim authorization isolation from this file alone.
+- takeScreenshot: /tmp/omiro-task003-b016-fresh-launch-checkpoint
+- takeScreenshot: /tmp/omiro-task003-b019-authorization-checkpoint

@@ -2,18 +2,43 @@ import {
   type AIUsageMetrics,
   type ChatFunctionTool,
   type ChatMessages,
-  type ChatToolCall,
   type ChatRequest,
+  type ChatStreamChunk,
   getChatCompletionUsage,
   streamChatCompletion,
 } from '@hominem/ai';
 import {
+  providerChunkSchema,
+  reconstructProviderToolCalls,
   type ChatModel,
   type GenerationInput,
   type GenerationState,
   type ProviderChunk,
   type ProviderToolCallDelta,
 } from '@hominem/chat';
+import { logger } from '@hominem/telemetry';
+
+export class ProviderInputError extends Error {
+  constructor(
+    readonly diagnostics: {
+      issuePaths: readonly string[];
+      shape: ProviderChunkShape;
+    },
+  ) {
+    super('Provider returned an invalid generation chunk');
+    this.name = 'ProviderInputError';
+  }
+}
+
+type ProviderChunkShape = {
+  choiceCount: number;
+  hasDelta: boolean;
+  contentType: string;
+  reasoningType: string;
+  toolCallsType: string;
+  toolCallIndexes: readonly number[];
+  toolCallFunctionKeys: readonly string[][];
+};
 
 export type OpenRouterChatModelOptions = {
   model: string;
@@ -24,41 +49,39 @@ export type OpenRouterChatModelOptions = {
   requiresToolCall?: boolean;
   requiresConfirmation?: (toolName: string) => boolean;
   maxAttempts?: number;
+  // Usage is provider metadata and may be absent even when the response is valid.
   onUsage?: (usage: AIUsageMetrics | null) => void;
 };
 
-function toProviderChunk(chunk: {
-  choices?: readonly {
-    delta?: {
-      content?: string | null;
-      reasoning?: string | null;
-      toolCalls?: readonly {
-        index: number;
-        id?: string | null;
-        function?: { name?: string | null; arguments?: string | null } | null;
-      }[];
-    };
-  }[];
-}): ProviderChunk {
+function toProviderChunk(chunk: ChatStreamChunk): ProviderChunk {
   const delta = chunk.choices?.[0]?.delta;
-  return {
+  const shape: ProviderChunkShape = {
+    choiceCount: chunk.choices?.length ?? 0,
+    hasDelta: Boolean(delta),
+    contentType: typeof delta?.content,
+    reasoningType: typeof delta?.reasoning,
+    toolCallsType: Array.isArray(delta?.toolCalls) ? 'array' : typeof delta?.toolCalls,
+    toolCallIndexes: (delta?.toolCalls ?? []).map((call) => call.index),
+    toolCallFunctionKeys: (delta?.toolCalls ?? []).map((call) =>
+      call.function ? Object.keys(call.function).sort() : [],
+    ),
+  };
+  const result = providerChunkSchema.safeParse({
     content: delta?.content,
     reasoning: delta?.reasoning,
     toolCalls: delta?.toolCalls,
+  });
+  if (!result.success) {
+    throw new ProviderInputError({
+      issuePaths: result.error.issues.map((issue) => issue.path.join('.') || '<root>'),
+      shape,
+    });
+  }
+  return {
+    content: result.data.content,
+    reasoning: result.data.reasoning,
+    toolCalls: result.data.toolCalls?.map(({ type: _type, ...call }) => call),
   };
-}
-
-function reconstructedCalls(calls: Map<number, ProviderToolCallDelta>): ChatToolCall[] {
-  return [...calls.entries()]
-    .sort(([left], [right]) => left - right)
-    .map(([, call]) => ({
-      id: call.id ?? '',
-      type: 'function',
-      function: {
-        name: call.function?.name ?? '',
-        arguments: call.function?.arguments ?? '',
-      },
-    }));
 }
 
 function isTransient(error: unknown): boolean {
@@ -100,11 +123,21 @@ export class OpenRouterChatModel implements ChatModel {
         if (chunk.error) throw new Error(chunk.error.message);
         this.options.onUsage?.(getChatCompletionUsage(chunk));
         const providerChunk = toProviderChunk(chunk);
-        for (const call of providerChunk.toolCalls ?? []) calls.set(call.index, call);
+        for (const call of providerChunk.toolCalls ?? []) {
+          const previous = calls.get(call.index);
+          calls.set(call.index, {
+            index: call.index,
+            id: call.id ?? previous?.id,
+            function: {
+              name: call.function?.name ?? previous?.function?.name,
+              arguments: `${previous?.function?.arguments ?? ''}${call.function?.arguments ?? ''}`,
+            },
+          });
+        }
         yield { type: 'provider-chunk', chunk: providerChunk };
       }
 
-      const toolCalls = reconstructedCalls(calls);
+      const toolCalls = reconstructProviderToolCalls(calls);
       if (toolCalls.length > 0) {
         this.messages.push({ role: 'assistant', content: null, toolCalls });
       }
@@ -121,9 +154,21 @@ export class OpenRouterChatModel implements ChatModel {
         confirmationCallIds,
       };
     } catch (error) {
+      if (error instanceof ProviderInputError) {
+        logger.warn('provider_chunk_rejected', {
+          model: this.options.model,
+          iteration: generationIteration,
+          ...error.diagnostics,
+        });
+      }
       yield {
         type: 'provider-turn-failed',
-        message: error instanceof Error ? error.message : 'Provider request failed',
+        message:
+          error instanceof ProviderInputError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : 'Provider request failed',
         transient: isTransient(error),
         attempt: Math.max(this.attempt, generationIteration),
         maxAttempts: this.options.maxAttempts ?? 2,

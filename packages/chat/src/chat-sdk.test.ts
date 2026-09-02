@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChatClient, type ChatOptions } from './chat-sdk';
-import type { GenerationInput, GenerationMessageSnapshot, GenerationStartContext } from './index';
+import { messageSnapshot } from './generation-test-fixtures';
+import type {
+  GenerationHistoryMessageSnapshot,
+  GenerationInput,
+  GenerationStartContext,
+} from './index';
 
 const context = {
   chatId: 'chat-1',
@@ -36,12 +41,11 @@ function options(): ChatOptions {
       generation: {
         save: vi.fn(
           async (state) =>
-            ({
+            messageSnapshot({
               id: 'assistant-1',
               chatId: state.generationId,
-              role: 'assistant',
               content: state.assistantText,
-            }) satisfies GenerationMessageSnapshot,
+            }) satisfies GenerationHistoryMessageSnapshot,
         ),
         stop: vi.fn(),
       },

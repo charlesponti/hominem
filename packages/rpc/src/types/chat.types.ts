@@ -46,80 +46,6 @@ export type ChatsCreateOutput = InferResponseType<_ChatsCreateEndpoint, 201>;
 
 type _ChatsStartStreamEndpoint = HonoClient['api']['chats']['start-stream']['$post'];
 export type ChatsStartStreamInput = InferRequestType<_ChatsStartStreamEndpoint>['json'];
-export interface ChatStreamErrorEvent {
-  type: 'error';
-  message: string;
-}
-
-export interface ChatGenerationStatusEvent {
-  type: 'status';
-  generationId: string;
-  status: 'preparing' | 'saving';
-}
-
-export interface ChatGenerationAcceptedEvent {
-  type: 'accepted';
-  generationId: string;
-  chatId: string;
-  chat: Chat;
-  userMessage: ChatMessageDto | null;
-}
-
-export interface ChatGenerationCommittedEvent {
-  type: 'committed';
-  generationId: string;
-  message: ChatMessageDto;
-}
-
-export interface ChatGenerationCancelledEvent {
-  type: 'cancelled';
-  generationId: string;
-}
-
-export interface ChatToolConfirmationRequiredEvent {
-  type: 'tool-confirmation-required';
-  generationId: string;
-  messageId: string;
-  toolCallId: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  preview: Record<string, unknown> | null;
-}
-
-export interface ChatGenerationDeltaEvent {
-  type: 'text-delta' | 'reasoning-delta';
-  generationId: string;
-  text: string;
-}
-
-export interface ChatGenerationToolStepEvent {
-  type: 'tool-step';
-  generationId: string;
-  toolCallId: string;
-  toolName: string;
-  status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-}
-
-export interface ChatGenerationPhaseEvent {
-  type: 'phase';
-  generationId: string;
-  phase: 'generating';
-}
-
-export type ChatStreamEvent =
-  | ChatGenerationStatusEvent
-  | ChatGenerationAcceptedEvent
-  | ChatGenerationCommittedEvent
-  | ChatGenerationCancelledEvent
-  | ChatToolConfirmationRequiredEvent
-  | ChatGenerationDeltaEvent
-  | ChatGenerationToolStepEvent
-  | ChatGenerationPhaseEvent
-  | ChatStreamErrorEvent;
-/** @deprecated Use the versioned generation event contract. */
-export type LegacyChatStreamEvent = ChatStreamEvent;
-/** @deprecated Use the versioned generation event contract. */
-export type ChatsStartStreamEvent = ChatStreamEvent;
 
 // ============================================================================
 // GET (with messages)
@@ -160,16 +86,11 @@ export type ChatsSearchMessagesInput = InferRequestType<_ChatsSearchMessagesEndp
 export type ChatsSearchMessagesOutput = InferResponseType<_ChatsSearchMessagesEndpoint, 200>;
 
 // ============================================================================
-// STREAM (send message) — chatId is a client-side routing concern, not in the route body
+// STREAM (send message)
 // ============================================================================
 
-export type ChatsSendInput = {
-  message: string;
-  fileIds?: string[];
-  chatId?: string;
-  responseModality?: 'text' | 'audio';
-  responseLength?: 'short' | 'medium' | 'long';
-};
+type _ChatsStreamEndpoint = HonoClient['api']['chats'][':id']['stream']['$post'];
+export type ChatsSendInput = InferRequestType<_ChatsStreamEndpoint>['json'];
 
 // ============================================================================
 // SOURCES (chat-level attached notes)

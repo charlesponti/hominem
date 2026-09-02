@@ -18,13 +18,11 @@ export function useToolCallRespond({ chatId }: { chatId: string }) {
           ':toolCallId'
         ].respond.$post({
           param: { id: chatId, messageId: input.messageId, toolCallId: input.toolCallId },
-          json: { approved: input.approved, generationId: crypto.randomUUID() },
+          json: { approved: input.approved },
         });
 
-        // Rejections return a plain JSON message; approvals return an SSE
-        // stream (same shape as /stream) that we don't need to render
-        // incrementally here — just drain it, then let the invalidated
-        // query pick up the final persisted state.
+        // Both outcomes are SSE streams. Drain the response before refreshing
+        // the durable chat and message state.
         const body = res.body;
         if (body) {
           const reader = body.getReader();

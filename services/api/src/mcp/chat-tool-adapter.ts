@@ -1,9 +1,9 @@
 import {
-  createStructuredChatCompletion,
   type AIUsageMetrics,
   type ChatFunctionTool,
   type ChatMessages,
   convertSchemaToJsonSchema,
+  createStructuredChatCompletion,
 } from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
 import { z } from 'zod';
@@ -29,7 +29,7 @@ export type ChatToolPlan = {
   usage: AIUsageMetrics | null;
 };
 
-const ROUTING_PROMPT = `Classify whether the latest user request needs current private Hominem data.\n\nUse requiresLookup=true for requests asking about the user's saved, current, or historical data. Select every relevant capability; when ambiguous, include each plausible capability. Use requiresLookup=false for general knowledge, writing, and conversation. Never select a capability merely because it could be useful.\n\nCapabilities: calendar (events), travel (trips), career (career data), collections (any saved entities), finance, health, media (watching/activity), memory, people, places, social, tags.`;
+const ROUTING_PROMPT = `Classify whether the latest user request needs current private Hominem data.\n\nUse requiresLookup=true for requests asking about the user's saved, current, or historical data. Select every relevant capability; when ambiguous, include each plausible capability. Use requiresLookup=false for general knowledge, writing, and conversation. Never select a capability merely because it could be useful.\n\nCapabilities: ${CHAT_CAPABILITIES.join(', ')}.`;
 
 type ChatFunctionToolDefinition = Extract<ChatFunctionTool, { function: unknown }>;
 
@@ -39,7 +39,7 @@ function toChatTool(tool: CapabilityDefinition): ChatFunctionToolDefinition {
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: convertSchemaToJsonSchema(tool.inputSchema) as Record<string, unknown>,
+      parameters: convertSchemaToJsonSchema(tool.inputSchema),
     },
   };
 }
@@ -61,7 +61,7 @@ function getChatToolProjection(
 
 // All registered MCP tools, converted to the JSON-Schema shape OpenRouter wants.
 // Write tools are included too — anything flagged `requiresConfirmation` gets
-// gated at execution time in chat-completion-loop.ts, not filtered out here.
+// gated at execution time in the chat generation application service, not filtered out here.
 // Registration failures bubble up to the caller instead of failing silently,
 // so a private-data request never quietly turns into an ungrounded answer.
 export async function getChatTools(): Promise<ChatFunctionTool[]> {

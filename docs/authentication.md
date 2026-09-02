@@ -42,7 +42,7 @@ derives every cookie attribute from env config:
   `localhost` and `test`), with no console error, so sign-in looks like it
   works but no session ever persists. A real registrable domain like
   `lvh.me` isn't subject to that restriction. See
-  [ADR 0002](adr/0002-local-dev-tld-lvh-me.md) for the full investigation
+  [local development domain ADR](auth.local-tld.adr.md) for the full investigation
   and the alternatives ruled out.
 - `sameSite: 'lax'` and `httpOnly: true` are constant in both environments.
 

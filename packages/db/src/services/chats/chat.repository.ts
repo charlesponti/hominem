@@ -1,27 +1,27 @@
-import type { ChatGenerationKind, ChatGenerationStatus } from '@hominem/chat';
-import type { Selectable } from 'kysely';
-
-import { NotFoundError, ValidationError } from '../../errors';
 import {
-  parseChatMessageFiles,
-  parseChatMessageToolCalls,
+  chatMessageFilesSchema,
+  chatMessageToolCallsSchema,
+  chatGenerationKindSchema,
+  chatGenerationStatusSchema,
+  type ChatMessageSnapshot,
   type ChatMessageFileRecord,
   type ChatMessageToolCallRecord,
-} from '../../guards';
-import type { DbHandle } from '../../transaction';
-import type {
-  AppChatGenerationRuns,
-  AppChatMessages,
-  AppChatSources,
-  AppChats,
-} from '../../types/database';
+  type ChatGenerationKind,
+  type ChatGenerationStatus,
+} from '@hominem/chat';
+import type { Selectable } from 'kysely';
+import { z, type ZodType } from 'zod';
 
-export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '../../guards';
+import { sql } from '../../db';
+import { NotFoundError, ValidationError } from '../../errors';
+import type { DbHandle } from '../../transaction';
+import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
+
+export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '@hominem/chat';
 
 type ChatRow = Selectable<AppChats>;
 type ChatMessageRow = Selectable<AppChatMessages>;
 type ChatGenerationRunRow = Selectable<AppChatGenerationRuns>;
-type ChatSourceRow = Selectable<AppChatSources>;
 
 export interface ChatRecord {
   id: string;
@@ -38,22 +38,13 @@ export interface ChatPage {
 }
 
 type ChatListCursor = { id: string; lastMessageAt: string };
+const chatListCursorSchema = z.object({
+  id: z.string().min(1),
+  lastMessageAt: z.string().datetime(),
+});
 
-export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
-
-export interface ChatMessageRecord {
-  id: string;
-  chatId: string;
-  userId: string;
-  role: ChatMessageRole;
-  content: string;
-  files: ChatMessageFileRecord[] | null;
-  toolCalls: ChatMessageToolCallRecord[] | null;
-  reasoning: string | null;
-  parentMessageId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ChatMessageRecord = ChatMessageSnapshot;
+export type ChatMessageRole = ChatMessageSnapshot['role'];
 
 export interface ChatSourceRecord {
   id: string;
@@ -116,13 +107,38 @@ function toChatRecord(row: ChatRow): ChatRecord {
   };
 }
 
+function parseChatMessageJson<T>(
+  value: unknown,
+  schema: ZodType<T>,
+  messageId: string,
+  field: 'files' | 'toolCalls',
+): T {
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+
+  throw new ValidationError(`Invalid chat message ${field}`, {
+    messageId,
+    field,
+    issues: result.error.issues.map(({ path, message }) => ({ path, message })),
+  });
+}
+
+function parseChatMessageFiles(value: unknown, messageId: string): ChatMessageFileRecord[] | null {
+  return parseChatMessageJson(value, chatMessageFilesSchema, messageId, 'files');
+}
+
+function parseChatMessageToolCalls(
+  value: unknown,
+  messageId: string,
+): ChatMessageToolCallRecord[] | null {
+  return parseChatMessageJson(value, chatMessageToolCallsSchema, messageId, 'toolCalls');
+}
+
 function decodeChatListCursor(cursor: string): ChatListCursor {
   try {
-    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as ChatListCursor;
-    if (!value.id || !value.lastMessageAt || Number.isNaN(Date.parse(value.lastMessageAt))) {
-      throw new Error('Invalid cursor');
-    }
-    return value;
+    return chatListCursorSchema.parse(
+      JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')),
+    );
   } catch {
     throw new ValidationError('Invalid chat cursor');
   }
@@ -141,11 +157,15 @@ function toChatMessageRecord(row: ChatMessageRow): ChatMessageRecord {
   return {
     id: row.id,
     chatId: row.chatId,
-    userId: row.authorUserid ?? '',
-    role: row.role as ChatMessageRole,
+    userId:
+      row.authorUserid ??
+      (() => {
+        throw new ValidationError('Invalid chat message owner', { messageId: row.id });
+      })(),
+    role: z.enum(['system', 'user', 'assistant', 'tool']).parse(row.role),
     content: row.content,
-    files: parseChatMessageFiles(row.files),
-    toolCalls: parseChatMessageToolCalls(row.toolCalls),
+    files: parseChatMessageFiles(row.files, row.id),
+    toolCalls: parseChatMessageToolCalls(row.toolCalls, row.id),
     reasoning: row.reasoning ?? null,
     parentMessageId: row.parentMessageId,
     createdAt: new Date(row.createdat).toISOString(),
@@ -178,8 +198,8 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
     id: row.id,
     chatId: row.chatId,
     ownerUserId: row.ownerUserId,
-    kind: row.kind as ChatGenerationKind,
-    status: row.status as ChatGenerationStatus,
+    kind: chatGenerationKindSchema.parse(row.kind),
+    status: chatGenerationStatusSchema.parse(row.status),
     userMessageId: row.userMessageId,
     targetAssistantMessageId: row.targetAssistantMessageId,
     assistantMessageId: row.assistantMessageId,
@@ -189,7 +209,7 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
   };
 }
 
-function toJsonColumnValue(value: unknown[] | null | undefined): string | null {
+function toJsonColumnValue(value: readonly unknown[] | null | undefined): string | null {
   return value ? JSON.stringify(value) : null;
 }
 
@@ -200,13 +220,13 @@ export const ChatRepository = {
     generationId: string,
     ownerUserId: string,
   ): Promise<ChatGenerationRunRecord | null> {
-    const row = (await handle
+    const row = await handle
       .selectFrom('app.chatGenerationRuns')
       .selectAll()
       .where('id', '=', generationId)
       .where('chatId', '=', chatId)
       .where('ownerUserId', '=', ownerUserId)
-      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+      .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
   },
@@ -219,12 +239,30 @@ export const ChatRepository = {
     generationId: string,
     ownerUserId: string,
   ): Promise<ChatGenerationRunRecord | null> {
-    const row = (await handle
+    const row = await handle
       .selectFrom('app.chatGenerationRuns')
       .selectAll()
       .where('id', '=', generationId)
       .where('ownerUserId', '=', ownerUserId)
-      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+      .executeTakeFirst();
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  async getAwaitingGenerationRunForAssistantMessage(
+    handle: DbHandle,
+    chatId: string,
+    assistantMessageId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('assistantMessageId', '=', assistantMessageId)
+      .where('ownerUserId', '=', ownerUserId)
+      .where('status', '=', 'awaiting_confirmation')
+      .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
   },
@@ -233,7 +271,7 @@ export const ChatRepository = {
     handle: DbHandle,
     input: CreateChatGenerationRunInput,
   ): Promise<ChatGenerationRunRecord> {
-    const row = (await handle
+    const row = await handle
       .insertInto('app.chatGenerationRuns')
       .values({
         id: input.id,
@@ -245,7 +283,7 @@ export const ChatRepository = {
         targetAssistantMessageId: input.targetAssistantMessageId ?? null,
       })
       .returningAll()
-      .executeTakeFirstOrThrow()) as ChatGenerationRunRow;
+      .executeTakeFirstOrThrow();
 
     return toChatGenerationRunRecord(row);
   },
@@ -260,7 +298,7 @@ export const ChatRepository = {
       errorMessage?: string | null;
     },
   ): Promise<ChatGenerationRunRecord | null> {
-    const row = (await handle
+    const row = await handle
       .updateTable('app.chatGenerationRuns')
       .set({
         status: input.status,
@@ -270,7 +308,7 @@ export const ChatRepository = {
       .where('id', '=', input.id)
       .where('ownerUserId', '=', input.ownerUserId)
       .returningAll()
-      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+      .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
   },
@@ -280,14 +318,14 @@ export const ChatRepository = {
     generationId: string,
     ownerUserId: string,
   ): Promise<ChatGenerationRunRecord | null> {
-    const row = (await handle
+    const row = await handle
       .updateTable('app.chatGenerationRuns')
       .set({ status: 'cancelled' })
       .where('id', '=', generationId)
       .where('ownerUserId', '=', ownerUserId)
       .where('status', 'in', ['preparing', 'saving'])
       .returningAll()
-      .executeTakeFirst()) as ChatGenerationRunRow | undefined;
+      .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
   },
@@ -329,11 +367,11 @@ export const ChatRepository = {
       );
     }
 
-    const chats = (await query
+    const chats = await query
       .orderBy('lastMessageAt', 'desc')
       .orderBy('id', 'desc')
       .limit(limit + 1)
-      .execute()) as ChatRow[];
+      .execute();
 
     const page = chats.slice(0, limit);
     const finalChat = page.at(-1);
@@ -409,14 +447,14 @@ export const ChatRepository = {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
     }
 
-    const updated = (await handle
+    const updated = await handle
       .updateTable('app.chatMessages')
       .set({ content, updatedat: new Date().toISOString() })
       .where('id', '=', messageId)
       .where('chatId', '=', chatId)
       .where('authorUserid', '=', userId)
       .returningAll()
-      .executeTakeFirstOrThrow()) as ChatMessageRow;
+      .executeTakeFirstOrThrow();
 
     return toChatMessageRecord(updated);
   },
@@ -456,7 +494,7 @@ export const ChatRepository = {
 
     const cleanupFileIdsSet = new Set<string>();
     for (const message of messages) {
-      for (const file of parseChatMessageFiles(message.files) ?? []) {
+      for (const file of parseChatMessageFiles(message.files, message.id) ?? []) {
         if (file.type === 'audio' && file.fileId) {
           cleanupFileIdsSet.add(file.fileId);
         }
@@ -493,52 +531,52 @@ export const ChatRepository = {
     chatId: string,
     messageId: string,
   ): Promise<ChatMessageRecord | undefined> {
-    const row = (await handle
+    const row = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('id', '=', messageId)
       .where('chatId', '=', chatId)
-      .executeTakeFirst()) as ChatMessageRow | undefined;
+      .executeTakeFirst();
 
     if (!row) return undefined;
 
     return toChatMessageRecord(row);
   },
 
-  // Updates one entry's status inside a message's toolCalls array, for the
-  // approve/reject flow. Throws if the message or tool call can't be found.
-  async updateToolCallStatus(
+  // Updates lifecycle fields for one entry inside a message's toolCalls array.
+  // Throws if the message or tool call can't be found.
+  async updateToolCallLifecycle(
     handle: DbHandle,
     chatId: string,
     messageId: string,
     toolCallId: string,
-    status: ChatMessageToolCallRecord['status'],
+    lifecycle: Pick<ChatMessageToolCallRecord, 'confirmationStatus' | 'executionStatus'>,
   ): Promise<ChatMessageRecord> {
-    const row = (await handle
+    const row = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('id', '=', messageId)
       .where('chatId', '=', chatId)
-      .executeTakeFirst()) as ChatMessageRow | undefined;
+      .executeTakeFirst();
 
     if (!row) {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
     }
 
-    const toolCalls = parseChatMessageToolCalls(row.toolCalls) ?? [];
+    const toolCalls = parseChatMessageToolCalls(row.toolCalls, row.id) ?? [];
     const index = toolCalls.findIndex((call) => call.toolCallId === toolCallId);
     if (index === -1) {
       throw new NotFoundError('ChatMessageToolCall', { chatId, messageId, toolCallId });
     }
-    toolCalls[index] = { ...toolCalls[index]!, status };
+    toolCalls[index] = { ...toolCalls[index]!, ...lifecycle };
 
-    const updated = (await handle
+    const updated = await handle
       .updateTable('app.chatMessages')
       .set({ toolCalls: toJsonColumnValue(toolCalls), updatedat: new Date().toISOString() })
       .where('id', '=', messageId)
       .where('chatId', '=', chatId)
       .returningAll()
-      .executeTakeFirst()) as ChatMessageRow | undefined;
+      .executeTakeFirst();
 
     if (!updated) {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
@@ -555,14 +593,14 @@ export const ChatRepository = {
     beforeCreatedAt: string,
     limit = 200,
   ): Promise<ChatMessageRecord[]> {
-    const messages = (await handle
+    const messages = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('chatId', '=', chatId)
       .where('createdat', '<', beforeCreatedAt)
       .orderBy('createdat', 'desc')
       .limit(limit)
-      .execute()) as ChatMessageRow[];
+      .execute();
     messages.reverse();
 
     return messages.map(toChatMessageRecord);
@@ -574,13 +612,17 @@ export const ChatRepository = {
     chatId: string,
     messageId: string,
     content: string,
-    options?: { reasoning?: string | null; toolCalls?: ChatMessageToolCallRecord[] | null },
+    options?: {
+      reasoning?: string | null;
+      toolCalls?: ChatMessageToolCallRecord[] | null;
+      files?: ChatMessageFileRecord[] | null;
+    },
   ): Promise<ChatMessageRecord> {
-    const updated = (await handle
+    const updated = await handle
       .updateTable('app.chatMessages')
       .set({
         content,
-        files: null,
+        files: options?.files === undefined ? null : toJsonColumnValue(options.files),
         reasoning: options?.reasoning ?? null,
         toolCalls: toJsonColumnValue(options?.toolCalls ?? null),
         updatedat: new Date().toISOString(),
@@ -589,7 +631,7 @@ export const ChatRepository = {
       .where('chatId', '=', chatId)
       .where('role', '=', 'assistant')
       .returningAll()
-      .executeTakeFirst()) as ChatMessageRow | undefined;
+      .executeTakeFirst();
 
     if (!updated) {
       throw new NotFoundError('ChatMessage', { chatId, messageId });
@@ -601,7 +643,7 @@ export const ChatRepository = {
   async touchLastMessage(handle: DbHandle, chatId: string): Promise<void> {
     await handle
       .updateTable('app.chats')
-      .set({ lastMessageAt: new Date().toISOString() })
+      .set({ lastMessageAt: sql<string>`GREATEST(last_message_at, CURRENT_TIMESTAMP)` })
       .where('id', '=', chatId)
       .execute();
   },
@@ -615,14 +657,14 @@ export const ChatRepository = {
     limit = 100,
     offset = 0,
   ): Promise<ChatMessageRecord[]> {
-    const messages = (await handle
+    const messages = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('chatId', '=', chatId)
       .orderBy('createdat', 'desc')
       .limit(limit)
       .offset(offset)
-      .execute()) as ChatMessageRow[];
+      .execute();
     messages.reverse();
 
     return messages.map(toChatMessageRecord);
@@ -635,7 +677,7 @@ export const ChatRepository = {
     limit = 50,
   ): Promise<ChatMessageRecord[]> {
     const escapedQuery = query.trim().replace(/[\\%_]/g, '\\$&');
-    const messages = (await handle
+    const messages = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
       .where('chatId', '=', chatId)
@@ -643,27 +685,27 @@ export const ChatRepository = {
       .where('content', 'ilike', `%${escapedQuery}%`)
       .orderBy('createdat', 'asc')
       .limit(limit)
-      .execute()) as ChatMessageRow[];
+      .execute();
 
     return messages.map(toChatMessageRecord);
   },
 
   // Returns the raw row (not the mapped record) so callers can compose this into a transaction
   async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRow> {
-    return (await handle
+    return await handle
       .insertInto('app.chatMessages')
       .values({
         chatId: input.chatId,
         authorUserid: input.authorUserId,
         role: input.role,
         content: input.content,
-        files: toJsonColumnValue(input.files as unknown[] | null),
+        files: toJsonColumnValue(input.files),
         reasoning: input.reasoning ?? null,
-        toolCalls: toJsonColumnValue(input.toolCalls as unknown[] | null),
+        toolCalls: toJsonColumnValue(input.toolCalls),
         parentMessageId: input.parentMessageId ?? null,
       })
       .returningAll()
-      .executeTakeFirstOrThrow()) as ChatMessageRow;
+      .executeTakeFirstOrThrow();
   },
 
   // Idempotent — attaching a note that's already attached is a no-op, not an error
@@ -690,12 +732,12 @@ export const ChatRepository = {
       .onConflict((oc) => oc.columns(['chatId', 'noteId']).doNothing())
       .execute();
 
-    const row = (await handle
+    const row = await handle
       .selectFrom('app.chatSources')
       .selectAll()
       .where('chatId', '=', chatId)
       .where('noteId', '=', noteId)
-      .executeTakeFirstOrThrow()) as ChatSourceRow;
+      .executeTakeFirstOrThrow();
 
     return toChatSourceRecord(row, note.title);
   },
@@ -711,7 +753,7 @@ export const ChatRepository = {
   },
 
   async listChatSources(handle: DbHandle, chatId: string): Promise<ChatSourceRecord[]> {
-    const rows = (await handle
+    const rows = await handle
       .selectFrom('app.chatSources as source')
       .innerJoin('app.notes as note', 'note.id', 'source.noteId')
       .select([
@@ -724,31 +766,19 @@ export const ChatRepository = {
       ])
       .where('source.chatId', '=', chatId)
       .orderBy('source.createdAt', 'desc')
-      .execute()) as Array<{
-      id: string;
-      chatId: string;
-      noteId: string;
-      title: string | null;
-      addedByUserid: string | null;
-      createdAt: string | Date;
-    }>;
+      .execute();
 
     return rows.map((row) => toChatSourceRecord(row, row.title));
   },
 
   // Pulls full note content + attached files for every note on this chat — read once per generation turn
   async getChatSourceContext(handle: DbHandle, chatId: string): Promise<NoteContext[]> {
-    const notes = (await handle
+    const notes = await handle
       .selectFrom('app.chatSources as source')
       .innerJoin('app.notes as note', 'note.id', 'source.noteId')
       .select(['note.id', 'note.title', 'note.content', 'note.excerpt'])
       .where('source.chatId', '=', chatId)
-      .execute()) as Array<{
-      id: string;
-      title: string | null;
-      content: string;
-      excerpt: string | null;
-    }>;
+      .execute();
 
     if (notes.length === 0) {
       return [];
@@ -761,7 +791,7 @@ export const ChatRepository = {
       ]),
     );
 
-    const files = (await handle
+    const files = await handle
       .selectFrom('app.noteFiles as noteFile')
       .innerJoin('app.files as file', 'file.id', 'noteFile.fileId')
       .select([
@@ -776,13 +806,7 @@ export const ChatRepository = {
         'in',
         notes.map((note) => note.id),
       )
-      .execute()) as Array<{
-      noteId: string;
-      id: string;
-      originalName: string;
-      content: string | null;
-      textContent: string | null;
-    }>;
+      .execute();
 
     for (const file of files) {
       const note = notesById.get(file.noteId);
@@ -808,19 +832,12 @@ export const ChatRepository = {
     }
 
     const uniqueIds = [...new Set(fileIds)];
-    const files = (await handle
+    const files = await handle
       .selectFrom('app.files')
       .selectAll()
       .where('ownerUserid', '=', userId)
       .where('id', 'in', uniqueIds)
-      .execute()) as Array<{
-      id: string;
-      mimetype: string;
-      originalName: string;
-      size: number;
-      textContent: string | null;
-      url: string;
-    }>;
+      .execute();
 
     if (files.length !== uniqueIds.length) {
       throw new ValidationError('One or more uploaded files are unavailable');

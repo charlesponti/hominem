@@ -43,9 +43,9 @@ enforcement point for this contract.
 
 ## Data rules
 
+- Use `just db codegen` to generate TypeScript types from the database schema. Do not hand-edit generated types.
 - Validate all external input at runtime. Typed client code must still parse API responses before changing application state.
 - Collections are neutral containers for any supported entity type. They have no domain-specific kind or place-list variant; places are simply one entity type that may be added through the collection item contract.
-- Generated database types are checked into the build process. Run `just db codegen` to generate them; CI rejects drift.
 - Omiro's database is the source of truth for tasks and their scheduling intent. Apple Calendar and Reminders are device integrations. Their IDs and sync state are projections; they do not replace the task record.
 - Career engagements store work history and are typed as employment, contract, freelance, volunteer, or other. Portfolio projects are independent records and may optionally link to multiple engagements through `career_project_engagements`; they are not embedded in work history. Companies a user wants to work for are career applications with status `WISHLIST`; they are not engagements. Application status is a PostgreSQL enum: `WISHLIST`, `APPLIED`, `SCREENING`, `OFFER`, `ACCEPTED`, `REJECTED`, or `WITHDRAWN`. Application stages retain company-specific labels and use the broad kinds `APPLICATION`, `SCREEN`, `OFFER`, and `OUTCOME`; `current_stage_id` points to the active stage-history record.
 - All tests must use the test database.

@@ -25,6 +25,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from '~/components/chat
 import { Shimmer } from '~/components/chat/shimmer';
 import { SpeechPlayer } from '~/components/chat/speech-player';
 import {
+  getToolCallStatus,
   Tool,
   ToolApprovalActions,
   ToolContent,
@@ -91,11 +92,12 @@ function ToolCall({
   onApprove?: ChatMessageProps['onApproveTool'];
   onReject?: ChatMessageProps['onRejectTool'];
 }) {
-  const isPending = toolCall.status === 'pending';
+  const status = getToolCallStatus(toolCall);
+  const isPending = toolCall.confirmationStatus === 'pending';
 
   return (
     <Tool defaultOpen={isPending}>
-      <ToolHeader status={toolCall.status} toolName={toolCall.toolName} />
+      <ToolHeader status={status} toolName={toolCall.toolName} />
       <ToolContent>
         {toolCall.preview ? (
           <ToolPreview preview={toolCall.preview} />
@@ -371,7 +373,7 @@ export const ChatMessage = memo(function ChatMessage({
           {canEdit ||
           canDelete ||
           (message.role === 'assistant' && onRegenerate) ||
-          (message.role === 'assistant' && !message.isStreaming && message.content.trim()) ? (
+          (!message.isStreaming && message.content.trim()) ? (
             <MessageActions className="justify-end">
               {canSpeak ? (
                 <SpeechPlayer
@@ -382,18 +384,21 @@ export const ChatMessage = memo(function ChatMessage({
                   src={speechSrc}
                 />
               ) : null}
-              {message.role === 'assistant' &&
-              !message.isStreaming &&
-              !isRegenerationActive &&
-              message.content.trim() ? (
+              {!message.isStreaming && !isRegenerationActive && message.content.trim() ? (
                 <>
                   <MessageAction
                     label={
-                      copyState === 'copied'
-                        ? 'Copied assistant message'
-                        : copyState === 'failed'
-                          ? 'Copy assistant message failed'
-                          : 'Copy assistant message'
+                      message.role === 'user'
+                        ? copyState === 'copied'
+                          ? 'Copied user message'
+                          : copyState === 'failed'
+                            ? 'Copy user message failed'
+                            : 'Copy user message'
+                        : copyState === 'copied'
+                          ? 'Copied assistant message'
+                          : copyState === 'failed'
+                            ? 'Copy assistant message failed'
+                            : 'Copy assistant message'
                     }
                     onClick={() => void copyMessage()}
                     tooltip={
@@ -406,25 +411,27 @@ export const ChatMessage = memo(function ChatMessage({
                   >
                     <Clipboard aria-hidden="true" size={14} />
                   </MessageAction>
-                  <MessageAction
-                    label={
-                      shareState === 'shared'
-                        ? 'Shared assistant message'
-                        : shareState === 'failed'
-                          ? 'Share assistant message failed'
-                          : 'Share assistant message'
-                    }
-                    onClick={() => void shareMessage()}
-                    tooltip={
-                      shareState === 'shared'
-                        ? 'Shared'
-                        : shareState === 'failed'
-                          ? 'Share failed'
-                          : 'Share message'
-                    }
-                  >
-                    <Share2 aria-hidden="true" size={14} />
-                  </MessageAction>
+                  {message.role === 'assistant' ? (
+                    <MessageAction
+                      label={
+                        shareState === 'shared'
+                          ? 'Shared assistant message'
+                          : shareState === 'failed'
+                            ? 'Share assistant message failed'
+                            : 'Share assistant message'
+                      }
+                      onClick={() => void shareMessage()}
+                      tooltip={
+                        shareState === 'shared'
+                          ? 'Shared'
+                          : shareState === 'failed'
+                            ? 'Share failed'
+                            : 'Share message'
+                      }
+                    >
+                      <Share2 aria-hidden="true" size={14} />
+                    </MessageAction>
+                  ) : null}
                 </>
               ) : null}
               {canEdit && !isRegenerationActive ? (

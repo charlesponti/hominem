@@ -6,7 +6,12 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mockClient = vi.hoisted(() => ({
-  api: { chats: { ':id': { $patch: vi.fn(), archive: { $post: vi.fn() } } } },
+  api: {
+    chats: {
+      $post: vi.fn(),
+      ':id': { $patch: vi.fn(), archive: { $post: vi.fn() } },
+    },
+  },
 }));
 
 vi.mock('@hominem/rpc/react', async (importOriginal) => ({
@@ -14,7 +19,7 @@ vi.mock('@hominem/rpc/react', async (importOriginal) => ({
   useApiClient: () => mockClient,
 }));
 
-import { useArchiveChat, useUpdateChatTitle } from './use-chats';
+import { useArchiveChat, useCreateChat, useUpdateChatTitle } from './use-chats';
 
 const chats = [
   { id: 'chat-1', title: 'One', archivedAt: null },
@@ -40,6 +45,29 @@ describe('useArchiveChat', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(queryClient.getQueryData(['chats', 'list'])).toEqual(chats);
+  });
+});
+
+describe('useCreateChat', () => {
+  it('runs the caller success callback without waiting for list invalidation', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    queryClient.setQueryData(['chats', 'list'], chats);
+    mockClient.api.chats.$post.mockResolvedValueOnce({
+      json: () => Promise.resolve({ id: 'chat-3', title: 'Three', archivedAt: null }),
+    });
+    const onSuccess = vi.fn();
+
+    const { result } = renderHook(() => useCreateChat(), {
+      wrapper: createWrapper(queryClient),
+    });
+    result.current.mutate({ title: 'Three' }, { onSuccess });
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(onSuccess.mock.calls[0]?.[0]).toEqual({
+      id: 'chat-3',
+      title: 'Three',
+      archivedAt: null,
+    });
   });
 });
 

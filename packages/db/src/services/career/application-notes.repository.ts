@@ -12,7 +12,7 @@ export const ApplicationNotesRepository = {
       .selectAll()
       .where('applicationId', '=', applicationId)
       .orderBy('createdAt', 'desc')
-      .execute() as Promise<CareerApplicationNoteRecord[]>;
+      .execute();
   },
 
   async create(
@@ -24,7 +24,7 @@ export const ApplicationNotesRepository = {
       .insertInto('app.careerApplicationNotes')
       .values({ applicationId, content })
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerApplicationNoteRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async remove(handle: DbHandle, applicationId: string, id: string): Promise<void> {

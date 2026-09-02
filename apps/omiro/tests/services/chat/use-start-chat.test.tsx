@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import type { Chat, ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/chat';
+import type { Chat, ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -119,5 +120,6 @@ describe('useStartChat', () => {
     await expect(result.current.startChat({ title: 'Test', message: 'Hello' })).rejects.toThrow(
       'start failed',
     );
+    expect(mockConsumeSseXhr).toHaveBeenCalledOnce();
   });
 });

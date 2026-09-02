@@ -1,8 +1,10 @@
 import {
+  createGenerationClientState,
   getGenerationFailureMessage,
   parseGenerationWireEvent,
-} from '@hominem/rpc/generation-events';
-import type { GenerationDomainEvent } from '@hominem/rpc/types';
+  reduceGenerationClientEvent,
+} from '@hominem/chat';
+import type { GenerationHistoryEvent as GenerationDomainEvent } from '@hominem/chat';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -55,6 +57,7 @@ export function useStartChat() {
       const generationId = randomUUID();
       const responseLength = getChatResponseLength();
       const payload = { ...input, generationId, responseLength };
+      let clientState = createGenerationClientState(generationId);
 
       try {
         await consumeGenerationSseXhr({
@@ -65,7 +68,9 @@ export function useStartChat() {
           replayPayload: payload,
           getHeaders: getAuthHeaders,
           parseEvent: parseGenerationWireEvent,
+          getReplayCursor: () => clientState.lastDurableSequence,
           onEvent: (event) => {
+            clientState = reduceGenerationClientEvent(clientState, event);
             const failureMessage = getGenerationFailureMessage(event);
             if (failureMessage) throw new Error(failureMessage);
             if ('payload' in event && event.type === 'generation.accepted') {

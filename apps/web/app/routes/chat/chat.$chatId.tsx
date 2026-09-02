@@ -1,5 +1,6 @@
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@ponti-studios/ui/overlays';
+import { domAnimation, LazyMotion, m } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
@@ -11,7 +12,6 @@ import { ChatResponseSettings } from '~/components/chat/chat-response-settings';
 import { ChatTaskReview } from '~/components/chat/chat-task-review';
 import { preloadPersona } from '~/components/chat/persona';
 import { Shimmer } from '~/components/chat/shimmer';
-import { ErrorState } from '~/components/error-state';
 import { RouteHeader } from '~/components/route-header';
 import { Button } from '~/components/ui/button';
 import {
@@ -116,6 +116,8 @@ export default function ChatPage({
   const {
     messages,
     error: messagesError,
+    isFetching,
+    isLoading,
     isNotFound,
     retry,
     deleteMessage,
@@ -147,6 +149,7 @@ export default function ChatPage({
     transcript.length > 0 && !streamMessage.isStreaming && !regeneration.isRegenerating;
   const visibleMessages =
     isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
+  const showLoadingState = isLoading || (isFetching && messages.length === 0);
   const regenerateMessage = useCallback(
     (messageId: string) => void regeneration.regenerate(messageId, responseLength),
     [regeneration.regenerate, responseLength],
@@ -154,174 +157,48 @@ export default function ChatPage({
   const cancelRegenerate = useCallback(() => void regeneration.cancel(), [regeneration.cancel]);
   const retryRegenerate = useCallback(() => void regeneration.retry(), [regeneration.retry]);
 
-  if (messagesStatus === 404 || isNotFound) {
-    return (
-      <ErrorState
-        actionLabel="Start a new chat"
-        message="This conversation no longer exists or you do not have access to it."
-        onAction={() => navigate('/', { viewTransition: true })}
-        title="Conversation unavailable"
-      />
-    );
-  }
-
-  if (messagesError) {
-    return (
-      <ErrorState
-        actionLabel="Retry loading"
-        message={
-          isOnline
-            ? 'We could not load this conversation. Check your connection and try again.'
-            : 'You are offline. Reconnect and retry loading this conversation.'
-        }
-        onAction={() => void retry()}
-        title="Unable to load conversation"
-      />
-    );
-  }
+  const loadState =
+    messagesStatus === 404 || isNotFound
+      ? 'not-found'
+      : messagesError
+        ? 'error'
+        : showLoadingState
+          ? 'loading'
+          : 'ready';
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <RouteHeader showNewChat={false}>
-        <div className="relative flex min-w-0 flex-1 items-center">
-          <div
-            aria-hidden={isSearchOpen}
-            className={`absolute inset-0 flex min-w-0 items-center justify-between gap-2 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:transform-none ${isSearchOpen ? 'pointer-events-none translate-x-2 opacity-0' : 'translate-x-0 opacity-100'}`}
-            data-chat-actions
-            inert={isSearchOpen ? true : undefined}
-          >
-            <span className="min-w-0 truncate text-sm font-medium text-foreground">
-              {currentChat?.title || 'New chat'}
-            </span>
-            <ChatConversationActions
-              chatId={chatId}
-              isDebugOpen={isDebugOpen}
-              canExtractTasks={canExtractTasks}
-              isExtractingTasks={extractTasks.isPending}
-              isSearchOpen={isSearchOpen}
-              isSettingsOpen={isSettingsOpen}
-              onDebug={() => setIsDebugOpen((open) => !open)}
-              onResponseSettings={() => setIsSettingsOpen(true)}
-              onSearch={() => setIsSearchOpen(true)}
-              onExtractTasks={() => {
-                if (!canExtractTasks) return;
-                setIsTaskDialogOpen(true);
-                setProposedTasks(null);
-                setTaskError(null);
-                extractTasks.mutate(
-                  { transcript },
-                  {
-                    onSuccess: (result) => setProposedTasks(result.tasks),
-                    onError: (error) => setTaskError(error.message),
-                  },
-                );
-              }}
-            />
-          </div>
-          <ChatMessageSearch
-            error={search.error}
-            isOpen={isSearchOpen}
-            onChange={search.setQuery}
-            onClose={() => {
-              search.close();
-              setIsSearchOpen(false);
-            }}
-            query={search.query}
-          />
-        </div>
-      </RouteHeader>
-
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-        <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
-          {isSettingsOpen ? (
-            <SheetContent aria-label="Chat settings">
-              <SheetHeader>
-                <SheetTitle>Chat settings</SheetTitle>
-              </SheetHeader>
-              <ChatResponseSettings
-                onChange={setResponseLength}
-                onClose={() => setIsSettingsOpen(false)}
-                value={responseLength}
-              />
-            </SheetContent>
-          ) : null}
-        </Sheet>
-
-        <ChatConversation
-          activeSpeechMessageId={activeSpeechMessageId}
-          chatId={chatId}
-          display={display}
-          isDebugOpen={isDebugOpen}
-          isSearchOpen={isSearchOpen}
-          regeneration={regeneration}
-          search={search}
-          seedNote={seedNote}
-          streamMessage={streamMessage}
-          toolCallRespond={toolCallRespond}
-          visibleMessages={visibleMessages}
-          onActivateSpeech={activateSpeech}
-          onDeactivateSpeech={deactivateSpeech}
-          onDelete={deleteMessage}
-          onUpdateMessage={updateMessage}
-          isDeleting={isDeleting}
-          onRegenerate={regenerateMessage}
-          onCancelRegenerate={cancelRegenerate}
-          onRetryRegenerate={retryRegenerate}
-        />
-
-        <Dialog
-          onOpenChange={(open) => {
-            setIsTaskDialogOpen(open);
-            if (!open && !extractTasks.isPending && !createTasks.isPending) {
-              setProposedTasks(null);
-              setTaskError(null);
-            }
-          }}
-          open={isTaskDialogOpen}
-        >
-          <DialogContent
-            aria-describedby="task-extraction-description"
-            className="max-h-[min(80vh,42rem)] overflow-y-auto sm:max-w-lg"
-          >
-            <DialogHeader>
-              <DialogTitle>
-                {proposedTasks ? 'Review proposed tasks' : 'Extracting tasks'}
-              </DialogTitle>
-              <DialogDescription id="task-extraction-description">
-                {proposedTasks
-                  ? 'Choose the tasks you want to add to your task list.'
-                  : 'Reading this conversation for actionable tasks.'}
-              </DialogDescription>
-            </DialogHeader>
-            {extractTasks.isPending ? (
-              <div
-                aria-label="Extracting tasks"
-                className="flex min-h-48 items-center justify-center"
-                role="status"
-              >
-                <Shimmer duration={1}>Thinking</Shimmer>
-              </div>
-            ) : proposedTasks ? (
-              <ChatTaskReview
-                error={taskError ?? undefined}
-                isSaving={createTasks.isPending}
-                onAccept={(tasks) => {
-                  setTaskError(null);
-                  createTasks.mutate(
-                    { tasks },
-                    {
-                      onSuccess: () => {
-                        setProposedTasks(null);
-                        setIsTaskDialogOpen(false);
-                      },
-                      onError: (error) => setTaskError(error.message),
-                    },
-                  );
-                }}
-                onReject={(title) =>
-                  setProposedTasks((tasks) => tasks?.filter((task) => task.title !== title) ?? null)
-                }
-                onRetry={() => {
+    <LazyMotion features={domAnimation}>
+      <m.div
+        animate={{ opacity: 1, transform: 'translateY(0)' }}
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+        initial={{ opacity: 0, transform: 'translateY(8px)' }}
+        transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+      >
+        <RouteHeader showNewChat={false}>
+          <div className="relative flex min-w-0 flex-1 items-center">
+            <div
+              aria-hidden={isSearchOpen}
+              className={`absolute inset-0 flex min-w-0 items-center justify-between gap-2 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:transform-none ${isSearchOpen ? 'pointer-events-none translate-x-2 opacity-0' : 'translate-x-0 opacity-100'}`}
+              data-chat-actions
+              inert={isSearchOpen ? true : undefined}
+            >
+              <span className="min-w-0 truncate text-sm font-medium text-foreground">
+                {currentChat?.title || 'New chat'}
+              </span>
+              <ChatConversationActions
+                chatId={chatId}
+                isDebugOpen={isDebugOpen}
+                canExtractTasks={canExtractTasks}
+                isExtractingTasks={extractTasks.isPending}
+                isSearchOpen={isSearchOpen}
+                isSettingsOpen={isSettingsOpen}
+                onDebug={() => setIsDebugOpen((open) => !open)}
+                onResponseSettings={() => setIsSettingsOpen(true)}
+                onSearch={() => setIsSearchOpen(true)}
+                onExtractTasks={() => {
+                  if (!canExtractTasks) return;
+                  setIsTaskDialogOpen(true);
+                  setProposedTasks(null);
                   setTaskError(null);
                   extractTasks.mutate(
                     { transcript },
@@ -331,13 +208,124 @@ export default function ChatPage({
                     },
                   );
                 }}
-                tasks={proposedTasks}
               />
-            ) : taskError ? (
-              <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
-                <p className="text-sm text-destructive">{taskError}</p>
-                <Button
-                  onClick={() => {
+            </div>
+            <ChatMessageSearch
+              error={search.error}
+              isOpen={isSearchOpen}
+              onChange={search.setQuery}
+              onClose={() => {
+                search.close();
+                setIsSearchOpen(false);
+              }}
+              query={search.query}
+            />
+          </div>
+        </RouteHeader>
+
+        <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+          {loadState === 'ready' ? (
+            <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
+              {isSettingsOpen ? (
+                <SheetContent aria-label="Chat settings">
+                  <SheetHeader>
+                    <SheetTitle>Chat settings</SheetTitle>
+                  </SheetHeader>
+                  <ChatResponseSettings
+                    onChange={setResponseLength}
+                    onClose={() => setIsSettingsOpen(false)}
+                    value={responseLength}
+                  />
+                </SheetContent>
+              ) : null}
+            </Sheet>
+          ) : null}
+
+          <ChatConversation
+            activeSpeechMessageId={activeSpeechMessageId}
+            chatId={chatId}
+            display={display}
+            isDebugOpen={isDebugOpen}
+            isSearchOpen={isSearchOpen}
+            regeneration={regeneration}
+            search={search}
+            seedNote={seedNote}
+            streamMessage={streamMessage}
+            toolCallRespond={toolCallRespond}
+            visibleMessages={visibleMessages}
+            onActivateSpeech={activateSpeech}
+            onDeactivateSpeech={deactivateSpeech}
+            onDelete={deleteMessage}
+            onUpdateMessage={updateMessage}
+            isDeleting={isDeleting}
+            onRegenerate={regenerateMessage}
+            onCancelRegenerate={cancelRegenerate}
+            onRetryRegenerate={retryRegenerate}
+            loadErrorMessage={
+              isOnline
+                ? 'We could not load this conversation. Check your connection and try again.'
+                : 'You are offline. Reconnect and retry loading this conversation.'
+            }
+            loadState={loadState}
+            onRetryLoad={() => void retry()}
+            onStartNewChat={() => navigate('/', { viewTransition: true })}
+          />
+
+          <Dialog
+            onOpenChange={(open) => {
+              setIsTaskDialogOpen(open);
+              if (!open && !extractTasks.isPending && !createTasks.isPending) {
+                setProposedTasks(null);
+                setTaskError(null);
+              }
+            }}
+            open={isTaskDialogOpen}
+          >
+            <DialogContent
+              aria-describedby="task-extraction-description"
+              className="max-h-[min(80vh,42rem)] overflow-y-auto sm:max-w-lg"
+            >
+              <DialogHeader>
+                <DialogTitle>
+                  {proposedTasks ? 'Review proposed tasks' : 'Extracting tasks'}
+                </DialogTitle>
+                <DialogDescription id="task-extraction-description">
+                  {proposedTasks
+                    ? 'Choose the tasks you want to add to your task list.'
+                    : 'Reading this conversation for actionable tasks.'}
+                </DialogDescription>
+              </DialogHeader>
+              {extractTasks.isPending ? (
+                <div
+                  aria-label="Extracting tasks"
+                  className="flex min-h-48 items-center justify-center"
+                  role="status"
+                >
+                  <Shimmer duration={1}>Thinking</Shimmer>
+                </div>
+              ) : proposedTasks ? (
+                <ChatTaskReview
+                  error={taskError ?? undefined}
+                  isSaving={createTasks.isPending}
+                  onAccept={(tasks) => {
+                    setTaskError(null);
+                    createTasks.mutate(
+                      { tasks },
+                      {
+                        onSuccess: () => {
+                          setProposedTasks(null);
+                          setIsTaskDialogOpen(false);
+                        },
+                        onError: (error) => setTaskError(error.message),
+                      },
+                    );
+                  }}
+                  onReject={(title) =>
+                    setProposedTasks(
+                      (tasks) => tasks?.filter((task) => task.title !== title) ?? null,
+                    )
+                  }
+                  onRetry={() => {
                     setTaskError(null);
                     extractTasks.mutate(
                       { transcript },
@@ -347,33 +335,52 @@ export default function ChatPage({
                       },
                     );
                   }}
-                  size="sm"
-                  type="button"
-                  variant="secondary"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-          </DialogContent>
-        </Dialog>
+                  tasks={proposedTasks}
+                />
+              ) : taskError ? (
+                <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
+                  <p className="text-sm text-destructive">{taskError}</p>
+                  <Button
+                    onClick={() => {
+                      setTaskError(null);
+                      extractTasks.mutate(
+                        { transcript },
+                        {
+                          onSuccess: (result) => setProposedTasks(result.tasks),
+                          onError: (error) => setTaskError(error.message),
+                        },
+                      );
+                    }}
+                    size="sm"
+                    type="button"
+                    variant="secondary"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
+            </DialogContent>
+          </Dialog>
 
-        <div className="mx-auto w-full max-w-5xl">
-          <ChatComposerPanel
-            chatId={chatId}
-            currentChatTitle={currentChat?.title}
-            display={display}
-            isOnline={isOnline}
-            isRetryable={isRetryable}
-            regeneration={regeneration}
-            responseLength={responseLength}
-            seedNote={seedNote}
-            setIsRetryable={setIsRetryable}
-            streamMessage={streamMessage}
-            updateChatTitle={updateChatTitle}
-          />
+          {loadState === 'ready' ? (
+            <div className="mx-auto w-full max-w-5xl">
+              <ChatComposerPanel
+                chatId={chatId}
+                currentChatTitle={currentChat?.title}
+                display={display}
+                isOnline={isOnline}
+                isRetryable={isRetryable}
+                regeneration={regeneration}
+                responseLength={responseLength}
+                seedNote={seedNote}
+                setIsRetryable={setIsRetryable}
+                streamMessage={streamMessage}
+                updateChatTitle={updateChatTitle}
+              />
+            </div>
+          ) : null}
         </div>
-      </div>
-    </div>
+      </m.div>
+    </LazyMotion>
   );
 }

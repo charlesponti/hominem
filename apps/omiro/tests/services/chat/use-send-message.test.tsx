@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import type { ChatMessageDto, GenerationWireEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/chat';
+import type { ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -228,5 +229,40 @@ describe('useSendMessage', () => {
     });
 
     await waitFor(() => expect(result.current.generation).toMatchObject({ stage: 'cancelled' }));
+  });
+
+  it('refetches persisted messages when a tool requires confirmation', async () => {
+    const { result, queryClient } = renderHookWithQueryClient(() =>
+      useSendMessage({ chatId: CHAT_ID }),
+    );
+    queryClient.setQueryData(chatKeys.messages(CHAT_ID), []);
+
+    act(() => {
+      void result.current.sendChatMessage({ message: 'Create a collection.' });
+    });
+    await waitFor(() => expect(mockConsumeSseXhr).toHaveBeenCalledOnce());
+
+    act(() => {
+      pending?.onEvent({
+        version: 1,
+        generationId: 'uuid-1',
+        sequence: 1,
+        type: 'confirmation.required',
+        payload: {
+          type: 'confirmation.required',
+          call: {
+            id: 'call-1',
+            name: 'create_collection',
+            arguments: '{}',
+            turnId: 'uuid-1:0',
+            iteration: 0,
+          },
+        },
+      });
+    });
+
+    await waitFor(() =>
+      expect(queryClient.getQueryState(chatKeys.messages(CHAT_ID))?.isInvalidated).toBe(true),
+    );
   });
 });

@@ -2,35 +2,23 @@ import { ValidationError } from '@hominem/db';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
-import type { CapabilityDefinition } from '../application/capability';
+import {
+  CAPABILITIES,
+  type Capability,
+  type CapabilityDefinition,
+} from '../application/capability';
 
-export const CHAT_CAPABILITIES = [
-  'calendar',
-  'career',
-  'collections',
-  'finance',
-  'health',
-  'media',
-  'memory',
-  'people',
-  'places',
-  'social',
-  'tags',
-  'travel',
-] as const;
-
-export type ChatCapability = (typeof CHAT_CAPABILITIES)[number];
-
-const chatCapabilities = new Set<string>(CHAT_CAPABILITIES);
+// `Capability`/`CAPABILITIES` in `application/capability.ts` are the single source of
+// truth for capability domains; re-exported here under their long-standing chat-facing
+// names so existing consumers (chat-tool-adapter, tests) don't need to change imports.
+export const CHAT_CAPABILITIES = CAPABILITIES;
+export type ChatCapability = Capability;
 
 export function getToolCapabilities(definition: CapabilityDefinition): ChatCapability[] {
+  // `scope` is typed as `${Capability}:${ScopeAction}`, so the prefix is guaranteed to
+  // be a valid Capability by construction — no runtime membership check needed.
   return [
-    ...new Set(
-      definition.scopes.flatMap((scope) => {
-        const capability = scope.slice(0, scope.indexOf(':'));
-        return chatCapabilities.has(capability) ? [capability as ChatCapability] : [];
-      }),
-    ),
+    ...new Set(definition.scopes.map((scope) => scope.slice(0, scope.indexOf(':')) as Capability)),
   ];
 }
 

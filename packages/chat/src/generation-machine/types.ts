@@ -4,7 +4,7 @@
 
 import type {
   GenerationCheckpoint,
-  GenerationMessageSnapshot,
+  GenerationHistoryMessageSnapshot,
   GenerationRequestContext,
   GenerationRetryMetadata,
   GenerationStartContext,
@@ -44,7 +44,14 @@ export type GenerationToolCall = {
 export type ProviderToolCallDelta = {
   index: number;
   id?: string | null;
+  type?: 'function';
   function?: { name?: string | null; arguments?: string | null } | null;
+};
+
+export type ProviderToolCall = {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
 };
 
 export type ProviderChunk = {
@@ -84,7 +91,8 @@ export type GenerationHistoryEventPayload =
   | {
       type: 'generation.accepted';
       chatId: string;
-      userMessage: GenerationMessageSnapshot | null;
+      chat: import('../generation-schemas').ChatSnapshot;
+      userMessage: GenerationHistoryMessageSnapshot | null;
     }
   | { type: 'generation.phase_changed'; phase: GenerationActivePhase }
   | { type: 'generation.cancel_requested'; requestedAt: string; requestedBy: string }
@@ -103,7 +111,7 @@ export type GenerationHistoryEventPayload =
     }
   | {
       type: 'generation.committed';
-      message: GenerationMessageSnapshot;
+      message: GenerationHistoryMessageSnapshot;
       metadata?: GenerationTerminalMetadata;
     }
   | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
@@ -159,7 +167,7 @@ export type GenerationInput =
   | { type: 'confirmation-rejected'; callId: string; reason: string }
   | { type: 'cancel-requested' }
   | { type: 'effect-stopped' }
-  | { type: 'generation-saved'; message: GenerationMessageSnapshot }
+  | { type: 'generation-saved'; message: GenerationHistoryMessageSnapshot }
   | { type: 'generation-failed'; message: string };
 
 export type GenerationCommand =
@@ -189,4 +197,5 @@ export type RunGenerationInput = {
   effects: GenerationEffectInterpreter;
   startContext: GenerationStartContext;
   initialInput?: GenerationInput;
+  initialState?: GenerationState;
 };

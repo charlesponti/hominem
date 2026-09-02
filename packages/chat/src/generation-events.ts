@@ -1,4 +1,7 @@
+import type { ChatMessageSnapshot } from './generation-schemas';
+
 // JSON values safe to send across the durable event boundary
+
 export type GenerationJsonValue =
   | string
   | number
@@ -18,17 +21,13 @@ export type GenerationStartContext = {
   kind: 'send' | 'start' | 'regenerate';
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
+  retryOfGenerationId?: string;
   requestContext: GenerationRequestContext;
 };
 
-// Minimal message shape needed to reconcile optimistic vs. persisted messages
-export type GenerationMessageSnapshot = {
-  id: string;
-  chatId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  reasoning?: string | null;
-};
+// Generation events carry the complete repository message snapshot. There is
+// no reduced transport-specific message shape.
+export type GenerationHistoryMessageSnapshot = ChatMessageSnapshot;
 
 // Stable identity shared by all provider/tool events within one turn
 export type GenerationTurn = {
@@ -45,12 +44,12 @@ export type GenerationRetryMetadata = GenerationTurn & {
 };
 
 export type GenerationCheckpoint = GenerationTurn & {
-  assistantMessage: GenerationMessageSnapshot;
+  assistantMessage: GenerationHistoryMessageSnapshot;
   pendingToolCallIds: readonly string[];
 };
 
 export type GenerationTerminalMetadata = GenerationTurn & {
-  assistantMessage?: GenerationMessageSnapshot;
+  assistantMessage?: GenerationHistoryMessageSnapshot;
   errorCategory?: string;
   errorMessage?: string;
   cancelledAt?: string;

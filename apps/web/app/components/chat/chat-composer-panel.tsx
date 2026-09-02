@@ -49,6 +49,10 @@ export function ChatComposerPanel({
   const streamStartedAtRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (streamMessage.status === 'failed') setIsRetryable(true);
+  }, [setIsRetryable, streamMessage.status]);
+
+  useEffect(() => {
     if (
       !streamMessage.isStreaming ||
       (!streamMessage.text && !streamMessage.reasoning && streamMessage.toolSteps.length === 0)
@@ -74,6 +78,9 @@ export function ChatComposerPanel({
         type: 'tool-call' as const,
         toolCallId: step.toolCallId,
         args: {},
+        ...(streamMessage.status === 'awaiting_confirmation'
+          ? { confirmationStatus: 'pending' as const, executionStatus: 'pending' as const }
+          : {}),
       })),
       reasoning: streamMessage.reasoning || null,
       parentMessageId: null,
@@ -203,6 +210,13 @@ export function ChatComposerPanel({
             ? composer.uploadState.errors.join(', ')
             : streamMessage.error?.message
       }
+      statusMessage={
+        streamMessage.isRetrying
+          ? 'Trying again…'
+          : streamMessage.status === 'cancelled'
+            ? 'Stopped.'
+            : null
+      }
       hasContext={composer.selectedNotesForSend.length > 0}
       isOffline={!isOnline}
       isSubmitting={
@@ -218,7 +232,19 @@ export function ChatComposerPanel({
       onRemoveAttachment={composer.removeAttachment}
       onStop={() => void streamMessage.cancel()}
       onSubmit={() => void handleSend()}
-      onRetry={isRetryable && isOnline ? () => void handleSend() : undefined}
+      onRetry={
+        isRetryable && isOnline
+          ? () => {
+              setIsRetryable(false);
+              void streamMessage.retry({
+                responseLength,
+                onCommitted: (message) => display.setPendingAssistantMessage(message),
+                onFailed: () => setIsRetryable(true),
+                onSettled: () => display.setPendingAssistantMessage(null),
+              });
+            }
+          : undefined
+      }
       onToggleVoice={() => speech.toggle(composer.draft)}
     />
   );

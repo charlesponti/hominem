@@ -9,6 +9,7 @@ import {
 import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
 import type { Selectable } from 'kysely';
 
+import { ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type {
   AppChatGenerationEvents,
@@ -46,22 +47,26 @@ function isToolResult(value: unknown): value is ToolResult {
   );
 }
 
+function invalidGenerationData(field: string, details?: Record<string, unknown>): ValidationError {
+  return new ValidationError(`Invalid chat generation ${field}`, details);
+}
+
 export function parseGenerationEventPayload(value: unknown): GenerationHistoryEventPayload {
   const result = GenerationHistoryEventPayloadSchema.safeParse(value);
   if (!result.success) {
-    throw new Error('Invalid chat generation event payload');
+    throw invalidGenerationData('event payload');
   }
   return result.data;
 }
 
 export function parseToolResult(value: unknown): ToolResult {
-  if (!isToolResult(value)) throw new Error('Invalid chat generation tool result');
+  if (!isToolResult(value)) throw invalidGenerationData('tool result');
   return value;
 }
 
 export function parseGenerationKind(value: string): GenerationRunIdentity['kind'] {
   if (value === 'send' || value === 'start' || value === 'regenerate') return value;
-  throw new Error('Invalid chat generation kind');
+  throw invalidGenerationData('kind');
 }
 
 export function toJsonValue(value: unknown): Json {
@@ -107,7 +112,10 @@ export interface ChatGenerationToolEffectRecord {
 function toEventRecord(row: GenerationEventRow): ChatGenerationEventRecord {
   const sequence = Number(row.sequence);
   if (!Number.isSafeInteger(sequence) || sequence < 1) {
-    throw new Error('Chat generation event sequence is outside the safe integer range');
+    throw new ValidationError('Chat generation event sequence is outside the safe integer range', {
+      generationId: row.generationId,
+      field: 'sequence',
+    });
   }
   const payload = parseGenerationEventPayload(row.payload);
   return {
@@ -358,6 +366,30 @@ export const ChatGenerationRepository = {
       .executeTakeFirst();
 
     return row ? toToolEffectRecord(row) : null;
+  },
+
+  async listToolEffects(
+    handle: DbHandle,
+    input: { generationId: string; ownerUserId: string },
+  ): Promise<ChatGenerationToolEffectRecord[]> {
+    const rows = await handle
+      .selectFrom('app.chatGenerationToolEffects as effect')
+      .innerJoin('app.chatGenerationRuns as run', 'run.id', 'effect.generationId')
+      .select([
+        'effect.id',
+        'effect.generationId',
+        'effect.idempotencyKey',
+        'effect.toolName',
+        'effect.result',
+        'effect.createdAt',
+      ])
+      .where('effect.generationId', '=', input.generationId)
+      .where('run.ownerUserId', '=', input.ownerUserId)
+      .orderBy('effect.createdAt', 'asc')
+      .orderBy('effect.id', 'asc')
+      .execute();
+
+    return rows.map(toToolEffectRecord);
   },
 
   async saveToolEffect(

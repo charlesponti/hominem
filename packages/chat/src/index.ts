@@ -7,3 +7,5 @@ export * from './dates';
 export * from './generation-machine';
 export * from './generation-interpreter';
 export * from './generation-events';
+export { reconstructProviderToolCalls } from './generation-machine/provider';
+export * from './generation-client';

@@ -58,6 +58,13 @@ limitation — don't improvise a different product behavior.
 Never call work complete, update acceptance tests as though they passed, or
 claim a result based on a check that didn't exercise the changed behavior.
 
+For ordered browser matrices, preserve the distinction between a passed test,
+an explicit harness skip, and an unrun dependent scenario. Keep the screenshot,
+DOM snapshot, console/network capture, and durable API correlation with the
+scenario artifact. If a browser test fails before exercising the intended
+state (for example, an SSR boot failure), fix or classify that runtime problem
+and rerun the scenario before treating its assertion as evidence.
+
 ## Completion report
 
 Use this structure when reporting completed work:

@@ -42,6 +42,16 @@ export interface ChatSpeechUsageHealthRecord {
   oldestPendingAt: string | null;
 }
 
+function parseSpeechRunStatus(value: string): ChatSpeechRunStatus {
+  if (value === 'pending' || value === 'succeeded' || value === 'failed') return value;
+  throw new Error('Invalid chat speech run status');
+}
+
+function parseReconciliationStatus(value: string): ChatSpeechReconciliationStatus {
+  if (value === 'pending' || value === 'succeeded' || value === 'failed') return value;
+  throw new Error('Invalid chat speech reconciliation status');
+}
+
 function toRecord(row: ChatSpeechRunRow): ChatSpeechRunRecord {
   return {
     id: row.id,
@@ -51,8 +61,8 @@ function toRecord(row: ChatSpeechRunRow): ChatSpeechRunRecord {
     provider: row.provider,
     providerGenerationId: row.providerGenerationId,
     characterCount: row.characterCount,
-    status: row.status as ChatSpeechRunStatus,
-    reconciliationStatus: row.reconciliationStatus as ChatSpeechReconciliationStatus,
+    status: parseSpeechRunStatus(row.status),
+    reconciliationStatus: parseReconciliationStatus(row.reconciliationStatus),
     reconciliationAttempts: row.reconciliationAttempts,
     lastReconciliationError: row.lastReconciliationError,
     createdAt: new Date(row.createdAt).toISOString(),
@@ -75,7 +85,7 @@ export const ChatSpeechRunRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toRecord(row as ChatSpeechRunRow);
+    return toRecord(row);
   },
 
   async getById(
@@ -88,7 +98,7 @@ export const ChatSpeechRunRepository = {
       query = query.where('ownerUserId', '=', ownerUserId);
     }
     const row = await query.executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async setProviderGenerationId(
@@ -101,7 +111,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async markComplete(
@@ -114,7 +124,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async markReconciliation(
@@ -135,7 +145,7 @@ export const ChatSpeechRunRepository = {
       .where('id', '=', input.id)
       .returningAll()
       .executeTakeFirst();
-    return row ? toRecord(row as ChatSpeechRunRow) : null;
+    return row ? toRecord(row) : null;
   },
 
   async listPending(handle: DbHandle, limit = 100): Promise<ChatSpeechRunRecord[]> {
@@ -147,7 +157,7 @@ export const ChatSpeechRunRepository = {
       .orderBy('createdAt', 'asc')
       .limit(limit)
       .execute();
-    return rows.map((row) => toRecord(row as ChatSpeechRunRow));
+    return rows.map((row) => toRecord(row));
   },
 
   async getUsageHealth(handle: DbHandle): Promise<ChatSpeechUsageHealthRecord> {

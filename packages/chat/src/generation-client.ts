@@ -3,6 +3,12 @@ import type {
   GenerationPhase,
   GenerationStreamEvent,
 } from './generation-machine';
+import {
+  generationClientCheckpointSchema,
+  type GenerationClientCheckpoint,
+} from './generation-schemas';
+
+export type { GenerationClientCheckpoint } from './generation-schemas';
 
 export type GenerationClientToolStep = {
   toolCallId: string;
@@ -19,6 +25,20 @@ export type GenerationClientState = {
   lastDurableSequence: number;
   error: string | null;
 };
+
+export function toGenerationClientCheckpoint(
+  state: GenerationClientState,
+): GenerationClientCheckpoint {
+  return generationClientCheckpointSchema.parse({
+    generationId: state.generationId,
+    phase: state.phase,
+    lastDurableSequence: state.lastDurableSequence,
+  });
+}
+
+export function parseGenerationClientCheckpoint(input: unknown): GenerationClientCheckpoint {
+  return generationClientCheckpointSchema.parse(input);
+}
 
 export type GenerationClientEvent = GenerationHistoryEvent | GenerationStreamEvent;
 

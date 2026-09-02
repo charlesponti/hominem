@@ -8,6 +8,8 @@
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md); run the `hominem-evidence` skill's checklist before reporting a change complete.
 - **Web auth**: Career and Finance redirect unauthenticated browsers to the API hosted login. Browser traffic uses the public API, while server auth/data calls require the private API URL (Railway-internal in production). Development and production use the same cookie mechanism with different env values. See [docs/authentication.md](docs/authentication.md). After changing auth config or deployment topology, run the `hominem-auth-production-verify` skill.
 - **Runbook skills**: `.agents/skills/` holds operational runbooks alongside app skills — `hominem-evidence`, `hominem-auth-production-verify`, `hominem-observability`, `hominem-development`, and `chatgpt-plugin-submission` pair with their `docs/*.md` decision records; the doc holds the "why", the skill holds the "how".
+- After merging dependency or catalog updates, run `pnpm install --frozen-lockfile` and restart any SSR app before browser verification. A stale running process can load mismatched React versions and fail during SSR even when the installed workspace is correct.
+- For local smoke checks, distinguish fixed-port services (`http://localhost:4040` / `:4445`) from Portless services (`https://api.lvh.me:4200` / `https://web.lvh.me:4200`). Do not treat an unauthenticated Web `302` to hosted login as a service failure.
 
 ## Decision authority
 
@@ -33,7 +35,7 @@ pnpm monorepo orchestrated with Turbo. Key directories:
 
 Use `just` for its domain modules (`db`, `career`, `mcp`, `mobile`, `ui` — run `just --list` for the current set); use `pnpm` for dev/lint/format/typecheck/build/test and the full pre-push gate. Scope any pnpm task with `--filter=@hominem/<package>...`. Package scripts are internal Turbo primitives. `scripts/command` is a Bash command router invoked through `just`; use the `justfile` recipes as the public command interface.
 
-The full pre-push validation gate is `pnpm run check` (lint → typecheck → build → test via turbo, with `DATABASE_URL`/`AUTH_E2E_SECRET` set) — there is no `just check` or `just setup` recipe.
+- `pnpm run check`: Runs full pre-push validation (lint → typecheck → build → test via turbo, with `DATABASE_URL`/`AUTH_E2E_SECRET` set)
 
 ```bash
 pnpm --filter @hominem/api dev
@@ -116,6 +118,7 @@ Full details, methodology, and numbers: `docs/type-performance.md`. Headline fin
 
 - This root file is the primary agent instruction authority for the repository. Nested `AGENTS.md` files in [apps/omiro/](apps/omiro/AGENTS.md), [services/api/](services/api/AGENTS.md), and [packages/db/](packages/db/AGENTS.md) add directory-scoped detail for agents working in those trees; they must not duplicate or contradict these root rules.
 - The work tracker owns temporary execution.
+- **Execute numbered task plans strictly in order.** Use the numbered Markdown files in `docs/tasks/` as the task source of truth; do not require a separate task index. Select the lowest-numbered task whose status is not `Implemented`, using its `depends_on` metadata to confirm ordering. Complete and validate that task before starting any later task. Treat later tasks as locked even when their code appears easy or useful as groundwork. Do not mark a task `Implemented` until its own observable evidence and all required validation are complete. If the next task is `Blocked`, report the blocker and stop rather than skipping ahead; only proceed out of order after the user explicitly changes the plan. When earlier implementation already exists, reconcile its task record and evidence first, then resume at the lowest incomplete task.
 
 ## Directory-scoped agent instructions
 

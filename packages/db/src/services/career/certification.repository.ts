@@ -25,7 +25,7 @@ export const CertificationRepository = {
       .selectAll()
       .where('ownerUserid', '=', ownerUserId)
       .orderBy('sortOrder', 'asc')
-      .execute() as Promise<CareerCertificationRecord[]>;
+      .execute();
   },
 
   async create(
@@ -37,7 +37,7 @@ export const CertificationRepository = {
       .insertInto('app.careerCertifications')
       .values({ ownerUserid: ownerUserId, ...input })
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerCertificationRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async update(
@@ -53,7 +53,7 @@ export const CertificationRepository = {
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
       .executeTakeFirst();
-    return (result ?? null) as CareerCertificationRecord | null;
+    return result ?? null;
   },
 
   async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {

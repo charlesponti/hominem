@@ -20,8 +20,6 @@ type NoteFileSource = Pick<
   | 'createdat'
 >;
 
-type AttachedFileRow = NoteFileSource & { noteId: string };
-
 export interface NoteFileRecord {
   id: string;
   originalName: string;
@@ -167,7 +165,7 @@ export const NoteRepository = {
       return new Map();
     }
 
-    const rows = (await handle
+    const rows = await handle
       .selectFrom('app.noteFiles as noteFile')
       .innerJoin('app.files as file', 'file.id', 'noteFile.fileId')
       .select([
@@ -184,7 +182,7 @@ export const NoteRepository = {
       ])
       .where('noteFile.noteId', 'in', noteIds)
       .orderBy('noteFile.attachedAt', 'asc')
-      .execute()) as AttachedFileRow[];
+      .execute();
 
     const result = new Map<string, NoteFileRecord[]>();
     for (const row of rows) {
@@ -203,7 +201,7 @@ export const NoteRepository = {
       .where('ownerUserid', '=', userId)
       .executeTakeFirst();
 
-    return (note as NoteRow | undefined) ?? null;
+    return note ?? null;
   },
 
   async getOwnedOrThrow(handle: DbHandle, noteId: string, userId: string): Promise<NoteRow> {
@@ -253,7 +251,7 @@ export const NoteRepository = {
     const limit = input.limit ? Math.min(input.limit, 100) : 50;
     const offset = input.offset ?? 0;
 
-    const rows = (await query.limit(limit).offset(offset).execute()) as NoteRow[];
+    const rows = await query.limit(limit).offset(offset).execute();
     const attachedFiles = await NoteRepository.getAttachedFiles(
       handle,
       rows.map((r) => r.id),
@@ -286,11 +284,11 @@ export const NoteRepository = {
       );
     }
 
-    const rows = (await query
+    const rows = await query
       .orderBy('updatedat', 'desc')
       .orderBy('id', 'desc')
       .limit(limit + 1)
-      .execute()) as Array<Pick<NoteRow, 'id' | 'title' | 'excerpt' | 'updatedat'>>;
+      .execute();
 
     const notes = rows.slice(0, limit).map((note) => ({
       id: note.id,
@@ -322,7 +320,7 @@ export const NoteRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toNoteRecord(created as NoteRow, []);
+    return toNoteRecord(created, []);
   },
 
   async update(handle: DbHandle, command: UpdateNoteCommand): Promise<void> {
@@ -368,12 +366,12 @@ export const NoteRepository = {
       return;
     }
 
-    const ownedFiles = (await handle
+    const ownedFiles = await handle
       .selectFrom('app.files')
       .select('id')
       .where('ownerUserid', '=', command.userId)
       .where('id', 'in', uniqueFileIds)
-      .execute()) as Array<{ id: string }>;
+      .execute();
 
     if (ownedFiles.length !== uniqueFileIds.length) {
       throw new ValidationError('One or more files are unavailable for this note');

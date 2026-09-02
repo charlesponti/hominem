@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
-import type { GenerationHistoryEventPayload } from '@hominem/chat';
+import { toolEventRoundTripFixture, type GenerationHistoryEventPayload } from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authDb, db } from '../../db';
+import { ValidationError } from '../../errors';
 import { runInTransaction } from '../../transaction';
 import {
   ChatGenerationRepository,
@@ -70,7 +71,19 @@ describe('ChatGenerationRepository', () => {
   }
 
   it('checks every persisted event and tool-result shape before mapping it', () => {
-    const message = { id: 'message-1', chatId: 'chat-1', role: 'assistant', content: 'Done' };
+    const message = {
+      id: 'message-1',
+      chatId: 'chat-1',
+      userId: 'user-1',
+      role: 'assistant' as const,
+      content: 'Done',
+      files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     const call = { id: 'call-1', name: 'lookup', arguments: '{}', iteration: 0, turnId: 'turn-1' };
     const result = { callId: 'call-1', toolName: 'lookup', content: '{}', error: false };
     const events = [
@@ -84,7 +97,19 @@ describe('ChatGenerationRepository', () => {
           requestContext: {},
         },
       },
-      { type: 'generation.accepted', chatId: 'chat-1', userMessage: { ...message, role: 'user' } },
+      {
+        type: 'generation.accepted',
+        chatId: 'chat-1',
+        chat: {
+          id: 'chat-1',
+          userId: 'user-1',
+          title: 'Chat',
+          archivedAt: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+        userMessage: { ...message, role: 'user' },
+      },
       { type: 'generation.phase_changed', phase: 'running' },
       { type: 'generation.cancel_requested', requestedAt: 'now', requestedBy: 'user-1' },
       {
@@ -116,6 +141,7 @@ describe('ChatGenerationRepository', () => {
   });
 
   it('rejects malformed persisted JSON and unsupported generation kinds', () => {
+    expect(() => parseGenerationEventPayload(null)).toThrow(ValidationError);
     expect(() => parseGenerationEventPayload(null)).toThrow(
       'Invalid chat generation event payload',
     );
@@ -133,9 +159,17 @@ describe('ChatGenerationRepository', () => {
       parseGenerationEventPayload({ type: 'generation.committed', message: {} }),
     ).toThrow();
     expect(() => parseGenerationEventPayload({ type: 'tool.requested', call: null })).toThrow();
-    expect(() => parseToolResult({})).toThrow('Invalid chat generation tool result');
+    expect(() => parseToolResult({})).toThrow(ValidationError);
     expect(() => parseToolResult(null)).toThrow('Invalid chat generation tool result');
-    expect(() => parseGenerationKind('unknown')).toThrow('Invalid chat generation kind');
+    expect(() => parseGenerationKind('unknown')).toThrow(ValidationError);
+    let error: unknown;
+    try {
+      parseGenerationEventPayload({ type: 'generation.started', context: { secret: 'value' } });
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(ValidationError);
+    expect(JSON.stringify(error)).not.toContain('secret');
     expect(() => toJsonValue(Symbol('not-json'))).toThrow('Value is not JSON serializable');
   });
 
@@ -171,6 +205,36 @@ describe('ChatGenerationRepository', () => {
     await expect(
       ChatGenerationRepository.listEvents(db, generationId, randomUUID()),
     ).resolves.toEqual([]);
+  });
+
+  it('round-trips the shared tool event fixture through durable storage and projection rebuild', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const assistantMessageId = await createAssistantMessage(chatId, userId);
+    const fixture = toolEventRoundTripFixture({ chatId, assistantMessageId });
+
+    for (const [index, event] of fixture.entries()) {
+      await runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvent(trx, {
+          generationId,
+          ownerUserId: userId,
+          event,
+          idempotencyKey: `${generationId}:fixture:${index + 1}`,
+        }),
+      );
+    }
+
+    const records = await ChatGenerationRepository.listEvents(db, generationId, userId);
+    expect(records.map((record) => record.payload)).toEqual(fixture);
+
+    const projection = await runInTransaction((trx) =>
+      ChatGenerationRepository.rebuildProjection(trx, generationId, userId),
+    );
+    expect(projection).toMatchObject({
+      generationId,
+      status: 'committed',
+      assistantMessageId,
+      errorMessage: null,
+    });
   });
 
   it('stores private snapshots and reuses a completed tool effect', async () => {
@@ -328,8 +392,15 @@ describe('ChatGenerationRepository', () => {
           message: {
             id: assistantId,
             chatId,
+            userId,
             role: 'assistant',
             content: 'Done',
+            files: null,
+            toolCalls: null,
+            reasoning: null,
+            parentMessageId: null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
           },
         },
       }),
@@ -419,8 +490,15 @@ describe('ChatGenerationRepository', () => {
           message: {
             id: assistantId,
             chatId,
+            userId,
             role: 'assistant',
             content: 'Done',
+            files: null,
+            toolCalls: null,
+            reasoning: null,
+            parentMessageId: null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
           },
         },
       }),
@@ -471,7 +549,19 @@ describe('ChatGenerationRepository', () => {
         ownerUserId: userId,
         event: {
           type: 'generation.committed',
-          message: { id: assistantId, chatId, role: 'assistant', content: 'Done' },
+          message: {
+            id: assistantId,
+            chatId,
+            userId,
+            role: 'assistant',
+            content: 'Done',
+            files: null,
+            toolCalls: null,
+            reasoning: null,
+            parentMessageId: null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
         },
       }),
     );
@@ -516,8 +606,15 @@ describe('ChatGenerationRepository', () => {
             message: {
               id: randomUUID(),
               chatId,
+              userId,
               role: 'assistant',
               content: 'This message was never saved',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
             },
           },
         }),

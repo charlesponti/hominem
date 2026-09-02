@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationWireEvent } from '@hominem/rpc/types';
+import type { GenerationWireEvent } from '@hominem/chat';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

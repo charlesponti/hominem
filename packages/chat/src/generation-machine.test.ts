@@ -4,11 +4,13 @@ import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationState,
   generationEventIdempotencyKey,
+  restoreGenerationState,
   reduceGeneration,
   runGeneration,
   type GenerationState,
   type GenerationInput,
 } from './generation-machine';
+import { chatSnapshot, messageSnapshot } from './generation-test-fixtures';
 
 const startContext = {
   chatId: 'chat-1',
@@ -28,12 +30,76 @@ const call = (overrides: Partial<GenerationState['requestedToolCalls'][number]> 
 });
 
 describe('generation machine', () => {
+  it('restores an awaiting confirmation from durable history', () => {
+    const restored = restoreGenerationState('generation-1', [
+      {
+        version: 1,
+        generationId: 'generation-1',
+        sequence: 1,
+        type: 'generation.started',
+        payload: { type: 'generation.started', context: startContext },
+      },
+      {
+        version: 1,
+        generationId: 'generation-1',
+        sequence: 2,
+        type: 'confirmation.required',
+        payload: {
+          type: 'confirmation.required',
+          call: call({ name: 'forget_memory', messageId: 'assistant-1' }),
+        },
+      },
+    ]);
+
+    expect(restored.phase).toBe('awaiting_confirmation');
+    expect(restored.pendingConfirmation).toMatchObject({ id: 'call-1' });
+    expect(
+      reduceGeneration(restored, { type: 'confirmation-approved', callId: 'call-1' }).commands,
+    ).toContainEqual(expect.objectContaining({ type: 'execute-tool' }));
+  });
+
+  it('does not restore a completed confirmation as awaiting', () => {
+    const required = {
+      version: 1 as const,
+      generationId: 'generation-1',
+      sequence: 1,
+      type: 'confirmation.required' as const,
+      payload: {
+        type: 'confirmation.required' as const,
+        call: call({ name: 'forget_memory' }),
+      },
+    };
+
+    expect(
+      restoreGenerationState('generation-1', [
+        required,
+        {
+          version: 1,
+          generationId: 'generation-1',
+          sequence: 2,
+          type: 'confirmation.rejected',
+          payload: {
+            type: 'confirmation.rejected',
+            callId: 'call-1',
+            reason: 'User rejected tool call',
+          },
+        },
+      ]).pendingConfirmation,
+    ).toBeNull();
+  });
+
   it('creates stable keys for accepted events', () => {
     expect(
       generationEventIdempotencyKey('generation-1', {
         type: 'generation.accepted',
         chatId: 'chat-1',
-        userMessage: { id: 'message-1', chatId: 'chat-1', role: 'user', content: 'Hello' },
+        chat: chatSnapshot(),
+        userMessage: messageSnapshot({
+          id: 'message-1',
+          chatId: 'chat-1',
+          role: 'user',
+          content: 'Hello',
+        }),
       }),
     ).toBe('generation-1:generation.accepted');
   });
@@ -52,7 +118,7 @@ describe('generation machine', () => {
         checkpoint: {
           turnId: 'turn-1',
           iteration: 0,
-          assistantMessage: { id: 'assistant-1', chatId: 'chat-1', role: 'assistant', content: '' },
+          assistantMessage: messageSnapshot({ id: 'assistant-1', chatId: 'chat-1', content: '' }),
           pendingToolCallIds: [],
         },
       }),
@@ -216,12 +282,7 @@ describe('generation machine', () => {
           if (command.type === 'save-generation') {
             return {
               type: 'generation-saved',
-              message: {
-                id: 'assistant-1',
-                chatId: 'chat-1',
-                role: 'assistant',
-                content: 'Done.',
-              },
+              message: messageSnapshot({ id: 'assistant-1', chatId: 'chat-1', content: 'Done.' }),
             };
           }
           return undefined;
@@ -441,12 +502,7 @@ describe('generation machine', () => {
           if (command.type === 'save-generation') {
             return {
               type: 'generation-saved',
-              message: {
-                id: 'assistant-1',
-                chatId: 'chat-1',
-                role: 'assistant',
-                content: 'Done.',
-              },
+              message: messageSnapshot({ id: 'assistant-1', chatId: 'chat-1', content: 'Done.' }),
             };
           }
           if (command.type === 'retry-provider') return { type: 'effect-stopped' };

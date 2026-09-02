@@ -1,9 +1,6 @@
+import { createGenerationEventDeduplicator, parseGenerationWireEvent } from '@hominem/chat';
+import type { GenerationWireEvent } from '@hominem/chat';
 import { createSseDecoder, finishSse, pushSseChunk } from '@hominem/chat/sse';
-import {
-  createGenerationEventDeduplicator,
-  parseGenerationWireEvent,
-} from '@hominem/rpc/generation-events';
-import type { GenerationWireEvent } from '@hominem/rpc/types';
 
 export async function consumeSseResponse(
   response: Response,

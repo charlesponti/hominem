@@ -4,7 +4,12 @@ import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
-import { ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '~/components/chat';
+import {
+  ChatActivityTimeline,
+  ChatMessageList,
+  ChatReviewOverlay,
+  ChatSearchModal,
+} from '~/components/chat';
 import { useChatActionsMenu } from '~/components/chat/chat-actions-menu';
 import { ChatSettingsSheet } from '~/components/chat/chat-settings-sheet';
 import { ChatSourcesSheet } from '~/components/chat/chat-sources-sheet';
@@ -23,6 +28,7 @@ import {
   useEditChatMessage,
   useRegenerateMessage,
   useSendMessage,
+  useToolCallRespond,
 } from '~/services/chat';
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
@@ -105,6 +111,7 @@ export function ChatScreen({ id }: { id: string }) {
     () => ({ sendChatMessage, isChatSending }),
     [sendChatMessage, isChatSending],
   );
+  const toolCallRespond = useToolCallRespond({ chatId });
   const editMessage = useEditChatMessage(chatId);
   const handleEditMessage = useCallback(
     (messageId: string, content: string) => {
@@ -225,11 +232,9 @@ export function ChatScreen({ id }: { id: string }) {
           onEdit={handleEditMessage}
           onRegenerate={regenerateMessage}
           onRetry={retryFailedMessage}
+          onToolCallRespond={toolCallRespond.respond}
+          isRespondingToToolCall={toolCallRespond.isResponding}
           generation={activeGeneration}
-          onCancelGeneration={() => {
-            void cancelActiveGeneration();
-          }}
-          onRetryGeneration={retryActiveGeneration}
           formatTimestamp={formatRelativeAge}
           emptyState={
             isConversationGone ? missingConversationState : messagesError ? errorState : emptyState
@@ -243,6 +248,15 @@ export function ChatScreen({ id }: { id: string }) {
             />
           }
         />
+        {activeGeneration ? (
+          <ChatActivityTimeline
+            generation={activeGeneration}
+            onCancel={() => {
+              void cancelActiveGeneration();
+            }}
+            onRetry={retryActiveGeneration}
+          />
+        ) : null}
         {!isConversationGone ? (
           <>
             <ComposerDock safeAreaBottom={safeAreaBottom} testID="chat-composer-dock">

@@ -31,8 +31,8 @@ import { useState } from 'react';
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
 import { RouteLink } from '~/components/route-link';
 import { createServerHonoClient } from '~/lib/api.server';
-import { requireAuth } from '~/lib/guards';
 import { useAllAccounts } from '~/lib/hooks/use-finance-data';
+import { requireAuth } from '~/lib/require-auth.server';
 import { toast } from '~/lib/toast';
 
 import type { Route } from './+types/accounts';

@@ -24,7 +24,7 @@ export const SkillRepository = {
       .selectAll()
       .where('ownerUserid', '=', ownerUserId)
       .orderBy('sortOrder', 'asc')
-      .execute() as Promise<CareerSkillRecord[]>;
+      .execute();
   },
 
   async create(
@@ -36,7 +36,7 @@ export const SkillRepository = {
       .insertInto('app.careerSkills')
       .values({ ownerUserid: ownerUserId, ...input })
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<CareerSkillRecord>;
+      .executeTakeFirstOrThrow();
   },
 
   async update(
@@ -52,7 +52,7 @@ export const SkillRepository = {
       .where('ownerUserid', '=', ownerUserId)
       .returningAll()
       .executeTakeFirst();
-    return (result ?? null) as CareerSkillRecord | null;
+    return result ?? null;
   },
 
   async remove(handle: DbHandle, ownerUserId: string, id: string): Promise<boolean> {

@@ -1,32 +1,39 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
-import type { ChatMessageToolCallRecord } from '@hominem/db';
+import type {
+  ChatModel,
+  GenerationHistoryEventPayload,
+  GenerationInput,
+  GenerationState,
+} from '@hominem/chat';
+import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
-import type { McpToolResult } from '../mcp/tool-registry';
-import type { CapabilityDefinition } from './capability';
-
-/** Old-format event shape kept around for the route-owned stream. */
-export type ChatGenerationLiveEvent =
-  | { type: 'text-delta'; text: string }
-  | { type: 'reasoning-delta'; text: string }
-  | {
-      type: 'tool-step';
-      toolCallId: string;
-      toolName: string;
-      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-    }
-  | { type: 'phase'; phase: 'generating' };
+import type { callTool, getToolDefinition } from '../mcp/tool-registry';
 
 export type ChatToolRuntime = {
-  callTool: (
-    ownerUserId: string,
-    name: string,
-    input: Record<string, unknown>,
-    context?: { idempotencyKey?: string },
-  ) => Promise<McpToolResult>;
-  getToolDefinition: (name: string) => CapabilityDefinition | undefined;
+  callTool: typeof callTool;
+  getToolDefinition: typeof getToolDefinition;
 };
 
-export interface RunCompletionWithToolsInput {
+export type ChatGenerationModelFactory = (input: {
+  model: string;
+  messages: ChatMessages[];
+  tools: ChatFunctionTool[];
+  maxTokens?: number;
+  reasoning?: ChatRequest['reasoning'];
+  requiresToolCall?: boolean;
+  requiresConfirmation?: (toolName: string) => boolean;
+  // Missing usage must not invalidate otherwise valid generation semantics.
+  onUsage?: (usage: AIUsageMetrics | null) => void;
+}) => ChatModel;
+
+export type ChatGenerationFailureHooks = {
+  beforeEventAppend?: (event: GenerationHistoryEventPayload) => void | Promise<void>;
+  beforeSnapshotCommit?: () => void | Promise<void>;
+  beforeEventPublish?: (event: ChatGenerationEventRecord) => void;
+  beforeCancellationCommit?: () => void | Promise<void>;
+};
+
+export interface GenerationEngineInput {
   userId: string;
   model: string;
   messages: ChatMessages[];
@@ -36,10 +43,12 @@ export interface RunCompletionWithToolsInput {
   maxIterations?: number;
   requiresToolCall?: boolean;
   toolRuntime?: ChatToolRuntime;
-  onEvent?: (event: ChatGenerationLiveEvent) => Promise<void> | void;
+  modelFactory?: ChatGenerationModelFactory;
+  initialState?: GenerationState;
+  initialInput?: GenerationInput;
 }
 
-export interface RunCompletionWithToolsResult {
+export interface GenerationEngineResult {
   assistantText: string;
   reasoningText: string | null;
   toolCallRecords: ChatMessageToolCallRecord[];

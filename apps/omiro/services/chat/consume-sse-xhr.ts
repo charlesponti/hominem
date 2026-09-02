@@ -1,6 +1,6 @@
+import { createGenerationEventDeduplicator } from '@hominem/chat';
+import type { GenerationWireEvent } from '@hominem/chat';
 import { createSseDecoder, finishSse, pushSseChunk, type SseOutput } from '@hominem/chat/sse';
-import { createGenerationEventDeduplicator } from '@hominem/rpc/generation-events';
-import type { GenerationWireEvent } from '@hominem/rpc/types';
 import { logger } from '@hominem/telemetry';
 
 export interface ConsumeSseXhrOptions<TEvent> {
@@ -164,10 +164,12 @@ export interface ConsumeGenerationSseXhrOptions {
   url: string;
   payload: unknown;
   replayUrl: (afterSequence: number) => string;
+  method?: 'GET' | 'POST';
   replayMethod?: 'GET' | 'POST';
   replayPayload?: unknown;
   getHeaders: () => Promise<Record<string, string>>;
   onEvent: (event: GenerationWireEvent) => void;
+  getReplayCursor: () => number;
   onDone?: () => void;
   signal?: AbortSignal;
   parseEvent?: (input: unknown) => GenerationWireEvent;
@@ -183,6 +185,7 @@ export async function consumeGenerationSseXhr({
   url,
   payload,
   replayUrl,
+  method = 'POST',
   replayMethod = 'GET',
   replayPayload = null,
   getHeaders,
@@ -190,9 +193,9 @@ export async function consumeGenerationSseXhr({
   onDone,
   signal,
   parseEvent,
+  getReplayCursor,
 }: ConsumeGenerationSseXhrOptions): Promise<void> {
   const deduplicateEvent = createGenerationEventDeduplicator();
-  let lastDurableSequence = 0;
   let callbackFailed = false;
   const consume = (input: { method: 'GET' | 'POST'; url: string; payload: unknown }) =>
     consumeSseXhr({
@@ -210,18 +213,15 @@ export async function consumeGenerationSseXhr({
       signal,
       parseEvent,
       deduplicateEvent,
-      onDurableSequence: (sequence) => {
-        lastDurableSequence = Math.max(lastDurableSequence, sequence);
-      },
     });
 
   try {
-    await consume({ method: 'POST', url, payload });
+    await consume({ method, url, payload });
   } catch (error) {
     if (callbackFailed || signal?.aborted || isAbortError(error)) throw error;
     await consume({
       method: replayMethod,
-      url: replayUrl(lastDurableSequence),
+      url: replayUrl(getReplayCursor()),
       payload: replayPayload,
     });
   }

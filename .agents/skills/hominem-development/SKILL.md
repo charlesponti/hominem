@@ -5,15 +5,13 @@ description: Run the local development, validation, and production user-data mer
 
 # Hominem development
 
-Deployment-authority rules (one deployment authority per service, what proves
-a deployment succeeded) live in [docs/development.md](../../../docs/development.md)
-and are not repeated here — this skill is the command runbook.
-
-Per the root [AGENTS.md](../../../AGENTS.md), you may start local dev
-services yourself (Expo/Metro, `pnpm dev`, the API, workers, databases,
-Docker) when a task needs one running. Prefer the Browser pane's
-`preview_start` for anything you'll drive or screenshot in a browser. Stop
-services you started once you're done with them, unless the user is
+This skill is the repository's development runbook and also holds the
+development and deployment rules and environment-variable facts that used to
+live in `docs/development.md`. Per the root [AGENTS.md](../../../AGENTS.md), you
+may start local dev services yourself (Expo/Metro, `pnpm dev`, the API,
+workers, databases, Docker) when a task needs one running. Prefer the Browser
+pane's `preview_start` for anything you'll drive or screenshot in a browser.
+Stop services you started once you're done with them, unless the user is
 actively using them.
 
 ## First-time setup: env files in a new worktree
@@ -95,6 +93,39 @@ actually reads when a package's own `"dev": "portless"` script runs (a root
 If you add a new portless-fronted app, give it this key, not a root config
 entry.
 
+## Verifying the local stack
+
+After dependency or React catalog changes, run `pnpm install --frozen-lockfile`
+and restart SSR apps before browser tests. An already-running Vite/React
+Router process can retain an older `react-dom` version and produce a misleading
+SSR `useContext` failure even though the workspace install is now consistent.
+
+Smoke-test the actual origins selected for the run:
+
+```bash
+curl -k -o /dev/null -w '%{http_code}\n' https://api.lvh.me:4200/
+curl -k -o /dev/null -w '%{http_code}\n' https://web.lvh.me:4200/chats
+curl -k -o /dev/null -w '%{http_code}\n' https://career.lvh.me:4200/
+curl -k -o /dev/null -w '%{http_code}\n' https://finance.lvh.me:4200/
+```
+
+The Web `/chats` endpoint returning `302` is expected when the browser is not
+authenticated; it proves the Web server and auth redirect are reachable.
+When using the fixed-port Browser harness, use `http://localhost:4040` and
+`http://localhost:4445` instead and do not mix the two origin sets in one run.
+
+For authenticated Playwright runs, prepare the stable disposable session in
+the same shell that starts Playwright:
+
+```bash
+eval "$(pnpm --filter @hominem/api --silent e2e:setup 2>/dev/null | grep 'export ')"
+pnpm --filter @hominem/web test:e2e --project=chat
+```
+
+The Playwright auth setup requires `E2E_SESSION_COOKIE`; skipped scenarios must
+retain their exact harness limitation in the evidence rather than being
+counted as passing.
+
 Because portless gives each app its own subdomain (`api.lvh.me`,
 `career.lvh.me`, `finance.lvh.me`, `web.lvh.me`) rather than just a
 different port on the same host, the hosted-login session cookie needs
@@ -114,7 +145,7 @@ this automatically (see [services/api/AGENTS.md](../../../services/api/AGENTS.md
 
 ## Smallest loop by default
 
-1. `just setup`
+1. `pnpm install`
 2. `pnpm --filter @hominem/api dev`
 3. `pnpm test --filter=@hominem/api...`
 
@@ -133,8 +164,8 @@ For Omiro work, use the app bootstrap loop in
 
 ## Canonical commands
 
-- `just setup` — install dependencies and prepare the repo toolchain
-- `just check` — read-only format, lint, typecheck, build, and test validation across the whole repo
+- `pnpm install` — install dependencies and prepare the repo toolchain
+- `pnpm run check` — full pre-push validation (lint → typecheck → build → test via turbo)
 - `pnpm dev` / `pnpm typecheck` / `pnpm build` / `pnpm test` — run for every package, or scope with `--filter=@hominem/<pkg>...`
 - `pnpm format` — apply formatting across the repo
 - `pnpm lint` / `pnpm lint:fix` — lint the repo, or lint and apply fixes
@@ -146,7 +177,7 @@ For Omiro work, use the app bootstrap loop in
 - `cd ~/Developer/infra/foundation && just up` / `just health` / `just down` — local infrastructure, including the OTLP Collector and Jaeger
 
 Use the smallest relevant validation command first (`pnpm lint`/`typecheck`/
-`build`/`test`, scoped with `--filter=@hominem/<package>...`), not `just check`
+`build`/`test`, scoped with `--filter=@hominem/<package>...`), not `pnpm run check`
 for every small change.
 
 ## Local OpenTelemetry
@@ -183,3 +214,38 @@ after the command finishes:
 ```bash
 pnpm dlx @railway/cli@5.25.1 connect database --tunnel-only --environment production
 ```
+
+## Development rules
+
+- Use `just` and the root `pnpm` scripts as the repository command interface. Package scripts are Turbo implementation details, not contributor instructions.
+- Start with the smallest relevant validation command: `pnpm lint`, `pnpm typecheck`, `pnpm build`, or `pnpm test`. Scope it with `--filter=@hominem/<package>...`, for example `--filter=@hominem/api...`.
+- The monorepo resolves types through compiled declaration contracts, not source. Package `exports` `types` conditions point at `build/`, and declaration emit is a types-only artifact. Run `pnpm dev:types` alongside `pnpm dev` when editing shared types: composite packages are watched via `tsc -b`, while the API/RPC boundaries use declaration-only emit watchers. Runtime (tsx, metro, vite) runs from source and is unaffected. If a type change ripples further than one hop, restart the TypeScript server. See [docs/type-system.md](../../../docs/type-system.md) for the model and its remaining tasks, and [docs/type-performance.md](../../../docs/type-performance.md) for why the watcher is shaped the way it is and what else was tried to speed up type-checking.
+- Published shared packages expose compiled artifacts. Local development may use source aliases for hot reload, but CI, deployables, EAS, and external consumers must use the same compiled public exports.
+- Keep the shared UI package registry-resolved in manifests and lockfiles. Use `just ui link [path]`, `just ui status`, and `just ui unlink` for a reversible local source link. Never commit the local path.
+- Use the same Node and pnpm versions in local development, CI, Docker, Railway, and EAS. A version mismatch is a defect.
+- `@hominem/env` defines shared environment-variable behavior. Framework prefixes adapt a variable for a runtime; they must not give it a second meaning.
+- Redact secrets from logs. Use a safe identifier instead of a raw third-party URL when one is available.
+
+## Deployment rules
+
+Each production service must have one deployment authority. A Railway service
+managed by GitHub must not also use Railway linked-source auto-deploy.
+
+A deployment target is identified by this set of values:
+
+```text
+repository + logical service + immutable Railway service ID
++ checked-in configuration path + triggering workflow
+```
+
+An accepted upload does not prove that deployment succeeded. Automation must
+verify the resolved target and the final remote deployment state.
+
+Omiro's mobile delivery, release, and app-specific implementation notes are
+documented in [the Omiro README](../../../apps/omiro/README.md). General
+repository and deployment rules remain here.
+
+## Environment variables
+
+- **Dev Database**: `DATABASE_URL="postgresql://postgres:postgres@localhost:5434/hominem"`
+- **Test Database**: `DATABASE_URL_TEST="postgresql://postgres:postgres@localhost:4433/hominem-test"`

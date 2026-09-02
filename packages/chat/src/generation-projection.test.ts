@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GenerationMessageSnapshot, GenerationStartContext } from './generation-events';
+import type { GenerationStartContext } from './generation-events';
 import type { GenerationHistoryEventPayload } from './generation-machine';
 import {
   GenerationProjectionError,
@@ -9,6 +9,7 @@ import {
   type GenerationRunIdentity,
   type GenerationRunProjection,
 } from './generation-projection';
+import { chatSnapshot, messageSnapshot } from './generation-test-fixtures';
 
 const identity: GenerationRunIdentity = {
   generationId: 'generation-1',
@@ -33,10 +34,7 @@ const started = {
 const committed = {
   type: 'generation.committed',
   message: {
-    id: 'assistant-2',
-    chatId: 'chat-1',
-    role: 'assistant',
-    content: 'Done',
+    ...messageSnapshot({ id: 'assistant-2', chatId: 'chat-1', content: 'Done' }),
   },
 } satisfies GenerationHistoryEventPayload;
 
@@ -66,12 +64,11 @@ describe('generation projection', () => {
       checkpoint: {
         turnId: 'turn-1',
         iteration: 0,
-        assistantMessage: {
+        assistantMessage: messageSnapshot({
           id: 'assistant-1',
           chatId: 'chat-1',
-          role: 'assistant',
           content: 'Waiting',
-        },
+        }),
         pendingToolCallIds: ['call-1'],
       },
     } satisfies GenerationHistoryEventPayload;
@@ -86,12 +83,11 @@ describe('generation projection', () => {
 
   it('projects each active lifecycle event without changing immutable identity', () => {
     const running = reduceGenerationProjection(null, identity, started);
-    const assistantMessage = {
+    const assistantMessage = messageSnapshot({
       id: 'assistant-checkpoint',
       chatId: identity.chatId,
-      role: 'assistant',
       content: 'Waiting for confirmation',
-    } satisfies GenerationMessageSnapshot;
+    });
     const toolCall = {
       id: 'call-1',
       name: 'write_memory',
@@ -109,6 +105,7 @@ describe('generation projection', () => {
         event: {
           type: 'generation.accepted',
           chatId: identity.chatId,
+          chat: chatSnapshot({ id: identity.chatId, userId: identity.ownerUserId }),
           userMessage: { ...assistantMessage, role: 'user' },
         },
         status: 'running',

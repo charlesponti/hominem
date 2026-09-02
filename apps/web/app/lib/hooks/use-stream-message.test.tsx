@@ -13,7 +13,9 @@ const mockClient = vi.hoisted(() => ({
         generations: {
           ':generationId': {
             cancel: { $post: vi.fn() },
+            $get: vi.fn(),
             stream: { $get: vi.fn() },
+            retry: { $post: vi.fn() },
           },
         },
       },
@@ -62,6 +64,7 @@ function interruptedStreamResponse(events: string[]) {
 describe('useStreamMessage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     vi.stubGlobal('crypto', { randomUUID: () => 'g1' });
   });
 
@@ -228,7 +231,7 @@ describe('useStreamMessage', () => {
         init: expect.objectContaining({ signal: expect.any(AbortSignal) }),
       }),
     );
-    expect(result.current.status).toBe('committed');
+    await waitFor(() => expect(result.current.status).toBe('committed'));
     expect(onAccepted).toHaveBeenCalledOnce();
     expect(onCommitted).toHaveBeenCalledOnce();
     expect(result.current.text).toBe('Done');
@@ -267,6 +270,37 @@ describe('useStreamMessage', () => {
     await waitFor(() => expect(result.current.status).toBe('cancelled'));
   });
 
+  it('preserves the awaiting-confirmation phase for the live composer', async () => {
+    mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          event: {
+            type: 'tool-step',
+            toolCallId: 'call-1',
+            toolName: 'create_collection',
+            status: 'requested',
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          event: { type: 'phase-changed', phase: 'awaiting_confirmation' },
+        }),
+      ]),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+    await result.current.stream({ message: 'Create a collection' });
+
+    await waitFor(() => expect(result.current.status).toBe('awaiting_confirmation'));
+    expect(result.current.isStreaming).toBe(false);
+    expect(result.current.toolSteps).toEqual([
+      { toolCallId: 'call-1', toolName: 'create_collection', status: 'requested' },
+    ]);
+  });
+
   it('surfaces a durable generation failure as a terminal stream error', async () => {
     mockClient.api.chats[':id'].stream.$post.mockResolvedValueOnce(
       streamResponse([
@@ -284,7 +318,9 @@ describe('useStreamMessage', () => {
     await result.current.stream({ message: 'Hello' });
 
     await waitFor(() => expect(result.current.status).toBe('failed'));
-    expect(result.current.error?.message).toBe('Provider unavailable');
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
   });
 
   it('resumes once from the last durable sequence after a stream interruption', async () => {
@@ -325,6 +361,9 @@ describe('useStreamMessage', () => {
         }),
       ]),
     );
+    mockClient.api.chats[':id'].generations[':generationId'].$get.mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 'committed' })),
+    );
 
     const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
     await result.current.stream({ message: 'Recover me' });
@@ -337,6 +376,64 @@ describe('useStreamMessage', () => {
       { init: expect.objectContaining({ headers: { 'Last-Event-ID': '1' } }) },
     );
     expect(result.current.text).toBe('Recovered');
+  });
+
+  it('restores a failed generation with a friendly retry action after reload', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'failed-1', phase: 'failed', lastDurableSequence: 4 }),
+    );
+    vi.stubGlobal('crypto', { randomUUID: () => 'retry-1' });
+    mockClient.api.chats[':id'].generations[':generationId'].retry.$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'retry-1',
+          sequence: 1,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'assistant-1',
+              chatId: 'chat-1',
+              userId: 'u1',
+              role: 'assistant',
+              content: 'Recovered',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01',
+              updatedAt: '2026-01-01',
+            },
+          },
+        }),
+      ]),
+    );
+
+    const onCommitted = vi.fn();
+    const onSettled = vi.fn();
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('failed'));
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
+
+    await result.current.retry({ responseLength: 'short', onCommitted, onSettled });
+
+    expect(
+      mockClient.api.chats[':id'].generations[':generationId'].retry.$post,
+    ).toHaveBeenCalledWith(
+      {
+        param: { id: 'chat-1', generationId: 'failed-1' },
+        json: { generationId: 'retry-1', responseLength: 'short' },
+      },
+      expect.objectContaining({ init: expect.any(Object) }),
+    );
+    expect(onCommitted).toHaveBeenCalledOnce();
+    expect(onSettled).toHaveBeenCalledOnce();
+    await waitFor(() => expect(result.current.status).toBe('committed'));
   });
 
   it('restores a cancelled terminal state during replay', async () => {
@@ -357,6 +454,69 @@ describe('useStreamMessage', () => {
     await result.current.stream({ message: 'Recover cancellation' });
 
     await waitFor(() => expect(result.current.status).toBe('cancelled'));
+  });
+
+  it('reattaches an active persisted checkpoint from its durable cursor', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'g1', phase: 'running', lastDurableSequence: 5 }),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].stream.$get.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 6,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'm1',
+              chatId: 'chat-1',
+              userId: 'u1',
+              role: 'assistant',
+              content: 'Recovered after launch',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01',
+              updatedAt: '2026-01-01',
+            },
+          },
+        }),
+      ]),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('committed'));
+    expect(mockClient.api.chats[':id'].stream.$post).not.toHaveBeenCalled();
+    expect(
+      mockClient.api.chats[':id'].generations[':generationId'].stream.$get,
+    ).toHaveBeenCalledWith(
+      { param: { id: 'chat-1', generationId: 'g1' } },
+      { init: expect.objectContaining({ headers: { 'Last-Event-ID': '5' } }) },
+    );
+    expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
+  });
+
+  it('reconciles a replay that closes after the durable run already committed', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'g1', phase: 'running', lastDurableSequence: 5 }),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].stream.$get.mockResolvedValueOnce(
+      streamResponse([]),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].$get.mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 'committed' })),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('committed'));
+    expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
   });
 
   it('records a durable cancellation and invokes the cancellation callback', async () => {
@@ -469,6 +629,8 @@ describe('useStreamMessage', () => {
     );
     await result.current.stream({ message: 'Fail me' });
     await waitFor(() => expect(result.current.status).toBe('failed'));
-    expect(result.current.error?.message).toBe('stream failed');
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
   });
 });

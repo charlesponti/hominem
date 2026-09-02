@@ -1,4 +1,4 @@
-import type { GenerationMessageSnapshot } from './generation-events';
+import type { GenerationHistoryMessageSnapshot } from './generation-events';
 import {
   runGeneration,
   type GenerationCommand,
@@ -54,7 +54,7 @@ export type GenerationPorts = {
   generation: {
     save: (
       state: GenerationState,
-    ) => GenerationMessageSnapshot | Promise<GenerationMessageSnapshot>;
+    ) => GenerationHistoryMessageSnapshot | Promise<GenerationHistoryMessageSnapshot>;
     stop: (state: GenerationState) => void | Promise<void>;
   };
 };
@@ -153,6 +153,7 @@ export function runGenerationWithPorts(
     generationId: input.generationId,
     startContext: input.startContext,
     initialInput: input.initialInput,
+    initialState: input.initialState,
     effects: createGenerationInterpreter(input.ports),
   });
 }

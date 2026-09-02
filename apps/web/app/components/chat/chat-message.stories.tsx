@@ -149,7 +149,8 @@ export const ToolApproval: Story = {
             type: 'tool-call',
             args: { noteId: 'note-1' },
             preview: { title: 'Draft note' },
-            status: 'pending',
+            confirmationStatus: 'pending',
+            executionStatus: 'pending',
           },
         ],
       }}

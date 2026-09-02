@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { reduceProviderChunk, reduceProviderTurnFailed } from './provider';
+import {
+  reconstructProviderToolCalls,
+  reduceProviderChunk,
+  reduceProviderTurnFailed,
+} from './provider';
 import type { GenerationState } from './types';
 
 function baseState(overrides: Partial<GenerationState> = {}): GenerationState {
@@ -65,6 +69,28 @@ describe('reduceProviderChunk', () => {
 
     expect(step.state.requestedToolCalls).toEqual([
       { id: '', name: '', arguments: '', iteration: 0, turnId: 'unknown' },
+    ]);
+  });
+});
+
+describe('reconstructProviderToolCalls', () => {
+  it('orders calls by provider index and preserves reconstructed arguments', () => {
+    const calls = new Map([
+      [1, { index: 1, id: 'second', function: { name: 'second', arguments: '{}' } }],
+      [0, { index: 0, id: 'first', function: { name: 'first', arguments: '{"q":"x"}' } }],
+    ]);
+
+    expect(reconstructProviderToolCalls(calls)).toEqual([
+      {
+        id: 'first',
+        type: 'function',
+        function: { name: 'first', arguments: '{"q":"x"}' },
+      },
+      {
+        id: 'second',
+        type: 'function',
+        function: { name: 'second', arguments: '{}' },
+      },
     ]);
   });
 });

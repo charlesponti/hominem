@@ -206,7 +206,7 @@ export const TaskRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toTaskRecord(task as TaskRow, input.artifactType);
+    return toTaskRecord(task, input.artifactType);
   },
 
   // Creates a parent task_list row plus one child task row per item. Wrap
@@ -256,7 +256,7 @@ export const TaskRepository = {
     return rows.map((row) => {
       const childCount = Number(row.child_count ?? 0);
       return {
-        ...toTaskRecord(row as TaskRow, childCount > 0 ? 'task_list' : 'task'),
+        ...toTaskRecord(row, childCount > 0 ? 'task_list' : 'task'),
         childCount,
       };
     });
@@ -274,7 +274,7 @@ export const TaskRepository = {
       .orderBy('createdat', 'asc')
       .execute();
 
-    return (rows as TaskRow[]).map((row) => toTaskRecord(row, 'task'));
+    return rows.map((row) => toTaskRecord(row, 'task'));
   },
 
   async getOwned(handle: DbHandle, id: string, userId: string): Promise<TaskRow | null> {
@@ -285,7 +285,7 @@ export const TaskRepository = {
       .where('ownerUserid', '=', userId)
       .executeTakeFirst();
 
-    return (row as TaskRow | undefined) ?? null;
+    return row ?? null;
   },
 
   async load(handle: DbHandle, id: string, userId: string): Promise<TaskRecord> {
@@ -319,7 +319,7 @@ export const TaskRepository = {
       throw new NotFoundError('Task', { taskId: id });
     }
 
-    return toTaskRecord(row as TaskRow, 'task');
+    return toTaskRecord(row, 'task');
   },
 
   async update(
@@ -371,7 +371,7 @@ export const TaskRepository = {
     }
 
     const children = await TaskRepository.listChildren(handle, { parentId: id, userId });
-    return toTaskRecord(row as TaskRow, children.length > 0 ? 'task_list' : 'task');
+    return toTaskRecord(row, children.length > 0 ? 'task_list' : 'task');
   },
 
   async remove(handle: DbHandle, id: string, userId: string): Promise<TaskRecord> {

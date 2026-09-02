@@ -39,16 +39,16 @@ const CONSUMERS = [
   {
     label: 'apps/web',
     file: path.join(root, 'apps/web/app/lib/hooks/use-stream-message.ts'),
-    line: 8,
-    offset: 31,
+    line: 9,
+    offset: 38,
     symbol: 'GenerationWireEvent',
   },
   {
     label: 'apps/omiro',
-    file: path.join(root, 'apps/omiro/services/chat/use-start-chat.ts'),
-    line: 5,
+    file: path.join(root, 'apps/omiro/services/chat/consume-sse-xhr.ts'),
+    line: 2,
     offset: 15,
-    symbol: 'GenerationDomainEvent',
+    symbol: 'GenerationWireEvent',
   },
   {
     label: 'packages/db',
@@ -59,22 +59,22 @@ const CONSUMERS = [
   },
   {
     label: 'packages/rpc',
-    file: path.join(root, 'packages/rpc/src/generation-client-events.ts'),
-    line: 4,
+    file: path.join(root, 'packages/rpc/src/types/chat.types.ts'),
+    line: 6,
     offset: 3,
-    symbol: 'GenerationHistoryEvent',
+    symbol: 'ChatMessageItem',
   },
   {
     label: 'services/api',
-    file: path.join(root, 'services/api/src/rpc/routes/chats.ts'),
-    line: 11,
+    file: path.join(root, 'services/api/src/application/chat-generation.service.ts'),
+    line: 12,
     offset: 3,
     symbol: 'GenerationHistoryEventPayload',
   },
 ];
 
 const SOURCE_FILE = path.join(root, 'packages/chat/src/generation-machine/types.ts');
-const SOURCE_SYMBOL = { line: 117, offset: 13 }; // GenerationHistoryEvent
+const SOURCE_SYMBOL = { line: 115, offset: 13 }; // GenerationHistoryEvent
 
 function assertSymbol(file, { line, offset }, name) {
   const text = readFileSync(file, 'utf8').split('\n')[line - 1] ?? '';

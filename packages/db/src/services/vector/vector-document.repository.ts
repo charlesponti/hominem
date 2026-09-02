@@ -82,7 +82,7 @@ export const VectorDocumentRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toVectorDocumentRecord(row as VectorDocumentRow);
+    return toVectorDocumentRecord(row);
   },
 
   async deleteForEntity(
@@ -127,8 +127,8 @@ export const VectorDocumentRepository = {
       .execute();
 
     return rows.map((row) => ({
-      ...toVectorDocumentRecord(row as VectorDocumentRow),
-      similarity: (row as VectorDocumentRow & { similarity: number }).similarity,
+      ...toVectorDocumentRecord(row),
+      similarity: row.similarity,
     }));
   },
 };

@@ -1,7 +1,12 @@
 import {
+  createGenerationClientState,
   createGenerationEventDeduplicator,
+  parseGenerationHistoryEvent,
   parseGenerationWireEvent,
-} from '@hominem/rpc/generation-events';
+  reduceGenerationClientEvent,
+  toolEventRoundTripFixture,
+  type GenerationWireEvent,
+} from '@hominem/chat';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { consumeGenerationSseXhr, consumeSseXhr } from '~/services/chat/consume-sse-xhr';
@@ -90,6 +95,47 @@ describe('consumeSseXhr', () => {
   afterEach(() => {
     FakeXMLHttpRequest.current = null;
     globalThis.XMLHttpRequest = originalXMLHttpRequest;
+  });
+
+  it('reduces the shared tool fixture to the same terminal state as Web', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+    let state = createGenerationClientState('generation-1');
+    const events = toolEventRoundTripFixture().map((payload, index) =>
+      parseGenerationHistoryEvent({
+        version: 1,
+        generationId: 'generation-1',
+        sequence: index + 1,
+        type: payload.type,
+        payload,
+      }),
+    );
+    const { promise, xhr } = await startStream<GenerationWireEvent>(
+      (event) => {
+        state = reduceGenerationClientEvent(state, event);
+      },
+      vi.fn(),
+      undefined,
+      {
+        parseEvent: parseGenerationWireEvent,
+        deduplicateEvent: createGenerationEventDeduplicator(),
+      },
+    );
+
+    const frames = [...events, events.at(-1)!]
+      .map((event) => `data: ${JSON.stringify(event)}\n\n`)
+      .join('');
+    xhr.finish(200, `${frames}data: [DONE]\n\n`);
+    await promise;
+
+    expect(state).toMatchObject({
+      phase: 'committed',
+      lastDurableSequence: 11,
+      text: 'Saved',
+      toolSteps: [
+        { toolCallId: 'call-search', toolName: 'search', status: 'completed' },
+        { toolCallId: 'call-write', toolName: 'write_memory', status: 'failed' },
+      ],
+    });
   });
 
   it('parses complete SSE chunks', async () => {
@@ -276,6 +322,7 @@ describe('consumeSseXhr', () => {
         `https://example.test/generations/g1/stream?afterSequence=${afterSequence}`,
       getHeaders: async () => ({}),
       parseEvent: parseGenerationWireEvent,
+      getReplayCursor: () => 9,
       onEvent,
     });
 
@@ -298,7 +345,7 @@ describe('consumeSseXhr', () => {
 
     expect(first.method).toBe('POST');
     expect(replay.method).toBe('GET');
-    expect(replay.url).toContain('afterSequence=1');
+    expect(replay.url).toContain('afterSequence=9');
     expect(onEvent).toHaveBeenCalledTimes(2);
   });
 
@@ -313,6 +360,7 @@ describe('consumeSseXhr', () => {
       onEvent: () => {
         throw new Error('domain failure');
       },
+      getReplayCursor: () => 0,
     });
 
     await Promise.resolve();
@@ -339,6 +387,7 @@ describe('consumeSseXhr', () => {
           throw new DOMException('Aborted', 'AbortError');
         },
         onEvent: vi.fn(),
+        getReplayCursor: () => 0,
       }),
     ).rejects.toMatchObject({ name: 'AbortError' });
 

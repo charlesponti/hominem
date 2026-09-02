@@ -3,7 +3,6 @@ import type { Selectable } from 'kysely';
 import type { DbHandle } from '../../transaction';
 import type {
   AppCareerEngagements,
-  AppCareerProjectEngagements,
   AppCareerProjects,
   AppCareerProjectStatus,
   JsonArray,
@@ -113,7 +112,7 @@ async function syncEngagements(
           projectId,
           engagementId,
           ownerUserid: ownerUserId,
-        })) as Array<Selectable<AppCareerProjectEngagements>>,
+        })),
       )
       .onConflict((oc) => oc.columns(['projectId', 'engagementId']).doNothing())
       .execute();

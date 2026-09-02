@@ -21,13 +21,23 @@ export const Tool = ({ className, ...props }: ToolProps) => (
   />
 );
 
-type ToolCallStatus = NonNullable<ChatMessageToolCall['status']>;
+export type ToolCallStatus = 'pending' | 'completed' | 'rejected' | 'failed';
+
+export function getToolCallStatus(toolCall: ChatMessageToolCall): ToolCallStatus {
+  if (toolCall.confirmationStatus === 'pending') return 'pending';
+  if (toolCall.confirmationStatus === 'rejected') return 'rejected';
+  if (toolCall.executionStatus === 'failed') return 'failed';
+  if (toolCall.executionStatus === 'pending' || toolCall.executionStatus === 'running') {
+    return 'pending';
+  }
+  return 'completed';
+}
 
 export type ToolHeaderProps = {
   title?: string;
   className?: string;
   toolName: string;
-  status: ChatMessageToolCall['status'];
+  status?: ToolCallStatus;
 };
 
 const statusLabels: Record<ToolCallStatus, string> = {
@@ -44,7 +54,7 @@ const statusIcons: Record<ToolCallStatus, ReactNode> = {
   failed: <XCircleIcon className="size-4 text-red-600" />,
 };
 
-export const getStatusBadge = (status: ChatMessageToolCall['status']) => {
+export const getStatusBadge = (status?: ToolCallStatus) => {
   const resolved = status ?? 'completed';
   return (
     <span
@@ -146,11 +156,28 @@ export const ToolApprovalActions = ({
   disabled,
   ...props
 }: ToolApprovalActionsProps) => (
-  <div className={cn('flex items-center gap-2', className)} {...props}>
-    <Button disabled={disabled} onClick={onApprove} size="sm" type="button">
+  <div
+    aria-label="Tool confirmation actions"
+    className={cn('flex items-center gap-2', className)}
+    {...props}
+  >
+    <Button
+      aria-label="Approve tool action"
+      disabled={disabled}
+      onClick={onApprove}
+      size="sm"
+      type="button"
+    >
       Approve
     </Button>
-    <Button disabled={disabled} onClick={onReject} size="sm" type="button" variant="outline">
+    <Button
+      aria-label="Reject tool action"
+      disabled={disabled}
+      onClick={onReject}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
       Reject
     </Button>
   </div>

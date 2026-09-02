@@ -29,6 +29,7 @@ interface ChatComposerProps {
   hasContext?: boolean;
   attachments?: ChatComposerFile[];
   error?: string | null;
+  statusMessage?: string | null;
   contextContent?: ReactNode;
   onChangeDraft: (value: string) => void;
   onSubmit: () => void;
@@ -50,6 +51,7 @@ export function ChatComposer({
   hasContext = false,
   attachments = [],
   error,
+  statusMessage,
   contextContent,
   onChangeDraft,
   onSubmit,
@@ -104,7 +106,7 @@ export function ChatComposer({
               aria-label="Retry sending"
               className="shrink-0"
               onClick={() => {
-                setDismissedError(visibleError);
+                setDismissedError(null);
                 onRetry();
               }}
               size="xs"
@@ -125,6 +127,11 @@ export function ChatComposer({
             <X aria-hidden="true" />
           </Button>
         </Badge>
+      ) : null}
+      {statusMessage ? (
+        <p aria-live="polite" className="mb-2 text-sm text-muted-foreground">
+          {statusMessage}
+        </p>
       ) : null}
       <PromptInput onSubmit={handleSubmit}>
         <PromptInputBody>
@@ -189,7 +196,7 @@ export function ChatComposer({
             ) : null}
           </PromptInputTools>
           <PromptInputSubmit
-            disabled={!hasContent || isSubmitting || isOffline}
+            disabled={!isStreaming && (!hasContent || isSubmitting || isOffline)}
             onStop={isStreaming ? onStop : undefined}
             status={isStreaming ? 'streaming' : isSubmitting ? 'submitted' : 'ready'}
           />

@@ -1,34 +1,43 @@
-# WEB-CHAT-23 — Verify web chat parity and accessibility states
+---
+title: 'Verify web chat parity and accessibility states'
+status: 'Proposed'
+priority: 'high'
+labels: [web, chat, browser, accessibility]
+depends_on: [21-composer-parity.md, 22-motion-and-persistence.md]
+blocks: []
+estimated_size: 'L'
+---
 
-Status: proposed · priority: high · depends on WEB-CHAT-21, WEB-CHAT-22
+## Outcome
 
-Build route, hook, component, and browser acceptance coverage for the completed
-web chat parity work. Use [chat.capabilities.md](../chat.capabilities.md) as
-the source matrix and verify present capabilities as well as newly added gaps.
-This also depends on earlier web-chat-parity phases (`WEB-CHAT-00` through
-`WEB-CHAT-20`); those were completed and their task specs removed, so only the
-two still-tracked tasks above remain listed here.
+The completed Web chat parity work is verified across critical interaction,
+loading, recovery, mutation, accessibility, and responsive states.
 
-## Scenarios
+## Scope
 
-- first chat creation and accepted-message navigation;
-- send, commit, cancel, failure, retry, and regeneration;
-- edit, delete, copy, share, speech playback, and tool approval;
-- search, settings, debug, archive, new chat, and missing-chat recovery;
-- attachments, voice input, offline behavior, draft restoration, and reduced motion;
-- chat-to-note, task extraction, linked note discussion, and responsive layout.
+In scope: route, hook, component, Playwright, keyboard, screen-reader, and
+responsive verification for capabilities documented in chat.capabilities.md.
+Out of scope: implementing missing product behavior discovered during
+verification; those become separate tasks.
+
+## Work sequence
+
+| ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
+| --- | --- | --- | --- | --- | --- |
+| W-001 | Build capability matrix | Web docs/tests | Tasks 21–22 | matrix artifact | Each claimed capability maps to a test and evidence type. |
+| W-002 | Add focused coverage | Web routes/hooks/components | W-001 | Web test output | Critical actions and error/recovery states have focused tests. |
+| W-003 | Run browser verification | Playwright | W-002 | screenshots/DOM/console manifest | Send, cancel, failure, retry, regenerate, actions, tools, navigation, and missing-chat recovery are verified. |
+| W-004 | Verify accessibility/layout | Web browser | W-003 | keyboard/accessibility/viewport artifacts | Names, focus recovery, keyboard behavior, and smallest supported layout pass. |
+| W-005 | Reconcile gaps | task/capability matrix | W-003, W-004 | gap list | Every gap is fixed in a new task or explicitly marked unavailable. |
 
 ## Acceptance criteria
 
-- Every task marked complete has focused automated coverage.
-- Critical user journeys have browser acceptance flows.
-- Keyboard navigation, screen-reader labels, focus recovery, and responsive
-  behavior are verified for each new action surface.
-- The gap map is updated so no feature is marked present without evidence.
+- [ ] AC-001: Every marked-present capability has focused automated coverage.
+- [ ] AC-002: Critical journeys have browser artifacts.
+- [ ] AC-003: Keyboard, accessible names, focus recovery, and responsive layout are verified.
+- [ ] AC-004: No missing capability is represented as present without evidence.
 
-## Verification update — 2026-08-24
+## Exit gate
 
-- Web automated validation passes: 13 test files and 37 tests, lint, typecheck, production build, and Storybook build.
-- Integrated-browser verification covered chat-first new-chat navigation, message submission, preparing/thinking state, streamed response completion, and composer transitions.
-- Component Storybook coverage includes chat home, composer, stream status, and `ChatMessage` states.
-- Full parity verification remains open for the unimplemented mutation, search, settings, offline, transformation, and accessibility scenarios listed above.
+Close only when the matrix, focused tests, browser artifacts, and gap list are
+reviewed. Product fixes discovered here do not get silently added to this task.

@@ -1,0 +1,114 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Task 011 Omiro evidence: tool and confirmation states.
+# Tool names are stable accessibility labels supplied by the chat tool card.
+
+- runFlow: ../subflows/reset-to-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B006-OMIRO-TOOL-READY list my collections'
+- pressKey: BACK
+- assertVisible:
+    id: 'new-chat-submit'
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+
+# B-006: successful tool call.
+- assertVisible: 'list_collections'
+- takeScreenshot: /tmp/omiro-task003-b006-tool-success
+
+# B-007 uses a fresh chat so its approval result cannot match an earlier
+# assistant response or confirmation card.
+- runFlow: ../subflows/reset-to-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B007-OMIRO-CONFIRM Create a private collection named Omiro B007.'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+
+# B-007: confirmation-required tool, then approve.
+- assertVisible: 'Approve create_collection'
+- takeScreenshot: /tmp/omiro-task003-b007-confirmation-pending
+- tapOn:
+    id: 'tool-confirm-approve'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: 'The collection was created successfully.'
+- assertNotVisible:
+    id: 'tool-confirm-approve'
+- takeScreenshot: /tmp/omiro-task003-b007-approved
+
+# B-008 also uses a fresh chat so the rejection targets exactly one pending
+# confirmation.
+- runFlow: ../subflows/reset-to-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B008-OMIRO-CONFIRM-REJECT Create a private collection named Omiro B008.'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+
+# B-008: confirmation-required tool, then reject.
+- assertVisible: 'Reject create_collection'
+- takeScreenshot: /tmp/omiro-task003-b008-confirmation-pending
+- tapOn:
+    id: 'tool-confirm-reject'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: 'The tool request was rejected.'
+- assertNotVisible:
+    id: 'tool-confirm-reject'
+- takeScreenshot: /tmp/omiro-task003-b008-rejected
+
+# B-009 uses a fresh chat for an isolated failed tool card.
+- runFlow: ../subflows/reset-to-home.yaml
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- eraseText: 100
+- inputText: 'B009-OMIRO-TOOL-FAIL'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# B-009: failed tool card remains visible. The scripted provider marks the
+# malformed tool arguments with this marker; no success assertion is allowed.
+- assertVisible: 'B009-OMIRO-TOOL-FAIL'
+- takeScreenshot: /tmp/omiro-task003-b009-tool-failure

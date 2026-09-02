@@ -73,23 +73,23 @@ function toFileRecord(row: FileRow): FileRecord {
 
 export const FileRepository = {
   async listForUser(handle: DbHandle, userId: string): Promise<FileRecord[]> {
-    const files = (await handle
+    const files = await handle
       .selectFrom('app.files')
       .selectAll()
       .where('ownerUserid', '=', userId)
       .orderBy('createdat', 'desc')
-      .execute()) as FileRow[];
+      .execute();
 
     return files.map(toFileRecord);
   },
 
   async getOwned(handle: DbHandle, fileId: string, userId: string): Promise<FileRecord | null> {
-    const file = (await handle
+    const file = await handle
       .selectFrom('app.files')
       .selectAll()
       .where('id', '=', fileId)
       .where('ownerUserid', '=', userId)
-      .executeTakeFirst()) as FileRow | undefined;
+      .executeTakeFirst();
 
     return file ? toFileRecord(file) : null;
   },
@@ -103,12 +103,12 @@ export const FileRepository = {
   },
 
   async getUrl(handle: DbHandle, fileId: string, userId: string): Promise<string> {
-    const file = (await handle
+    const file = await handle
       .selectFrom('app.files')
       .select(['url'])
       .where('id', '=', fileId)
       .where('ownerUserid', '=', userId)
-      .executeTakeFirst()) as { url: string } | undefined;
+      .executeTakeFirst();
 
     if (!file) {
       throw new NotFoundError('File', { fileId });
@@ -118,12 +118,12 @@ export const FileRepository = {
   },
 
   async existsForUser(handle: DbHandle, fileId: string, userId: string): Promise<boolean> {
-    const file = (await handle
+    const file = await handle
       .selectFrom('app.files')
       .select(['id'])
       .where('id', '=', fileId)
       .where('ownerUserid', '=', userId)
-      .executeTakeFirst()) as { id: string } | undefined;
+      .executeTakeFirst();
 
     return Boolean(file);
   },

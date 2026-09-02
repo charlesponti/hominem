@@ -11,7 +11,7 @@ Use this skill when the user asks for a deep code scan, simplification audit, cl
 
 Look for semantic mismatch, not merely long files. An abstraction is suspicious when its implied contract is absent from the surrounding system.
 
-For example, `useMutation` normally implies mutation lifecycle state plus cache reconciliation. A direct Better Auth update with no React Query cache is usually better represented by a small async hook with local pending state.
+For example, `useMutation` implies mutation lifecycle state plus cache reconciliation. A direct Better Auth update with no React Query cache is usually better represented by a small async hook with local pending state.
 
 Do not remove an abstraction only because it is short or indirect. Preserve behavior, error handling, accessibility, platform constraints, and documented product decisions.
 

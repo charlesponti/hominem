@@ -1,6 +1,7 @@
-import { getGenerationFailureMessage } from '@hominem/rpc/generation-events';
+import { getGenerationFailureMessage } from '@hominem/chat';
+import type { GenerationHistoryEvent as GenerationDomainEvent } from '@hominem/chat';
 import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto, GenerationDomainEvent } from '@hominem/rpc/types';
+import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 

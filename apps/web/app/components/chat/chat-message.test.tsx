@@ -58,7 +58,8 @@ describe('ChatMessage', () => {
               toolName: 'delete_note',
               args: { noteId: 'note-1' },
               preview: { title: 'Draft note' },
-              status: 'pending',
+              confirmationStatus: 'pending',
+              executionStatus: 'pending',
             },
           ],
         })}
@@ -67,7 +68,7 @@ describe('ChatMessage', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Approve tool action' }));
     expect(onApproveTool).toHaveBeenCalledWith({ messageId: 'message-1', toolCallId: 'tool-1' });
     expect(screen.getByText('Draft note')).toBeTruthy();
   });
@@ -158,6 +159,20 @@ describe('ChatMessage', () => {
     rerender(<ChatMessage message={message({ content: '' })} />);
     expect(screen.queryByRole('button', { name: 'Copy assistant message' })).toBeNull();
     rerender(<ChatMessage message={message({ isStreaming: true })} />);
+    expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
+  });
+
+  it('copies non-empty user messages', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    render(<ChatMessage message={message({ role: 'user', content: 'Copy this request' })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy user message' }));
+
+    expect(writeText).toHaveBeenCalledWith('Copy this request');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Copied user message' })).toBeTruthy(),
+    );
     expect(screen.queryByRole('button', { name: 'Share assistant message' })).toBeNull();
   });
 

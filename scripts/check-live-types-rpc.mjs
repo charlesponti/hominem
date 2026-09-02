@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 /**
- * Same method as check-live-types.mjs, but for the second hop: does a
- * consumer of packages/rpc's own exported types see a live edit, or is it
- * stuck on whatever build/*.d.ts rpc's own `tsc -p tsconfig.emit.json`
- * last emitted? rpc is deliberately non-composite (Hono AppType inference),
- * so no consumer can ever get a live-source project-reference redirect
- * into it — this tests whether that theory holds and quantifies exactly
- * who depends on the rpc-specific watcher process.
+ * Same method as check-live-types.mjs, but for the second hop: does the RPC
+ * type barrel see a live edit to a canonical chat type, or is it stuck on
+ * whatever declaration packages/rpc last emitted? RPC owns transport and
+ * endpoint types; chat owns the runtime contracts.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -17,22 +14,22 @@ import { TsServerClient } from './lib/tsserver-client.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const p = (...parts) => path.join(root, ...parts);
 
-const SOURCE_FILE = p('packages/rpc/src/types/generation-events.ts');
+const SOURCE_FILE = p('packages/chat/src/chat.types.ts');
 const now = Date.now();
 const MARKER = `LIVE_CHECK_RPC_${now}`;
-const DECLARATION_MATCH = 'export type GenerationDomainEvent = {';
+const DECLARATION_MATCH = 'export interface ChatMessageItem {';
 
 const PROBES = [
   {
-    label: 'apps/web (imports GenerationDomainEvent from @hominem/rpc/types)',
-    file: p('apps/web/app/lib/hooks/use-start-chat.ts'),
-    line: 3,
-    offset: 31,
+    label: 'packages/rpc (re-exports ChatMessageItem from @hominem/chat/types)',
+    file: p('packages/rpc/src/types/chat.types.ts'),
+    line: 6,
+    offset: 3,
   },
   {
-    label: 'apps/omiro (imports GenerationDomainEvent from @hominem/rpc/types)',
-    file: p('apps/omiro/services/chat/use-start-chat.ts'),
-    line: 5,
+    label: 'apps/web (imports canonical chat types directly)',
+    file: p('apps/web/app/lib/hooks/use-start-chat.ts'),
+    line: 2,
     offset: 15,
   },
 ];

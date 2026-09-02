@@ -1,16 +1,13 @@
+import type { ChatMessageToolCallRecord } from './generation-schemas';
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
+export type { ChatMessageFileRecord } from './generation-schemas';
+
 export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
-export interface ChatMessageToolCall {
-  toolName: string;
-  type: 'tool-call';
-  toolCallId: string;
-  args: Record<string, unknown>;
-  status?: 'completed' | 'pending' | 'rejected' | 'failed';
-  preview?: Record<string, unknown> | null;
-}
+export type ChatMessageToolCall = ChatMessageToolCallRecord;
 
 export interface ChatMessageItem {
   id: string;

@@ -1,0 +1,88 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Task 011 Omiro evidence: loading/error, message actions, viewport, keyboard,
+# and accessibility labels.
+
+- runFlow: ../subflows/reset-to-home.yaml
+- tapOn:
+    id: 'inbox-item-chat-open'
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'chat-composer-input'
+
+# B-020: the list and chat entry are loaded without an empty-state crash.
+- assertVisible:
+    id: 'chat-message-list'
+- takeScreenshot: /tmp/omiro-task003-b020-loaded
+
+# B-021: explicit missing-chat route checkpoint. The app should show the
+# recovery screen rather than render a composer for an unowned chat.
+- openLink: 'hakumi-dev:///chats/00000000-0000-0000-0000-000000000000'
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: 'chat-entry-error'
+- takeScreenshot: /tmp/omiro-task003-b021-error-recovery
+- openLink: 'hakumi-dev://'
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'inbox-composer-input'
+
+# Open a real message to expose its action row.
+- tapOn:
+    id: 'inbox-item-chat-open'
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    text: 'B002-OMIRO-NORMAL-SEND'
+- waitForAnimationToEnd:
+    timeout: 500
+
+# B-022: edit/delete controls are named and available on the user message.
+- assertVisible: 'square.and.pencil'
+- assertVisible: 'trash'
+- tapOn: 'square.and.pencil'
+- waitForAnimationToEnd:
+    timeout: 1000
+- assertVisible: 'Edit message'
+- assertVisible: 'Save'
+- takeScreenshot: /tmp/omiro-task003-b022-edit
+- tapOn: 'Cancel'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn: 'trash'
+- waitForAnimationToEnd:
+    timeout: 500
+- takeScreenshot: /tmp/omiro-task003-b022-delete-confirmation
+- pressKey: Escape
+
+# B-023: copy/share/listen action labels are present where supported by the
+# message modality. Copy exists for both roles; share and listen are assistant
+# capabilities and may be absent for text-only replies.
+- assertVisible: 'doc.on.doc'
+- tapOn: 'doc.on.doc'
+- takeScreenshot: /tmp/omiro-task003-b023-copy
+- assertVisible: 'arrow.clockwise'
+- takeScreenshot: /tmp/omiro-task003-b023-regenerate
+
+# B-024: smallest supported device is the booted iPhone 17 Pro simulator. Keep
+# the composer and action row visible in the captured visual artifact.
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b024-smallest-supported-viewport
+
+# B-025: keyboard submission and accessible labels.
+- tapOn:
+    id: 'chat-composer-input'
+- eraseText: 100
+- inputText: 'B025-OMIRO-KEYBOARD'
+- pressKey: ENTER
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: 'B025-OMIRO-KEYBOARD'
+- assertVisible: 'Stop reply'
+- takeScreenshot: /tmp/omiro-task003-b025-keyboard-accessibility

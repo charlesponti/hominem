@@ -7,7 +7,6 @@ import { AccessibilityInfo, Pressable, type RefreshControlProps, Text, View } fr
 import { useStyles } from '~/components/theme';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 
-import { ChatActivityTimeline } from './chat-activity-timeline';
 import { ChatMessage } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 
@@ -48,6 +47,8 @@ interface ChatMessageListProps {
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
   onRetry?: (messageId: string) => void;
+  onToolCallRespond?: (input: { messageId: string; toolCallId: string; approved: boolean }) => void;
+  isRespondingToToolCall?: boolean;
   formatTimestamp: (value: string) => string;
   emptyState?: React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
@@ -56,8 +57,6 @@ interface ChatMessageListProps {
   // takes up real layout space there.
   bottomInset?: number;
   generation?: ChatGenerationState | null;
-  onCancelGeneration?: () => void;
-  onRetryGeneration?: () => void;
 }
 
 export function ChatMessageList({
@@ -70,13 +69,13 @@ export function ChatMessageList({
   onRegenerate,
   onDelete,
   onRetry,
+  onToolCallRespond,
+  isRespondingToToolCall,
   formatTimestamp,
   emptyState,
   refreshControl,
   bottomInset = 0,
   generation,
-  onCancelGeneration,
-  onRetryGeneration,
 }: ChatMessageListProps) {
   const styles = useStyles((theme) => ({
     emptySearch: { alignItems: 'center', paddingTop: 28 },
@@ -190,6 +189,8 @@ export function ChatMessageList({
             onRegenerate: item.isStreaming ? undefined : onRegenerate,
             onDelete: item.isStreaming ? undefined : onDelete,
             onRetry,
+            onToolCallRespond,
+            isRespondingToToolCall,
             showDebug,
           }}
         />
@@ -203,6 +204,8 @@ export function ChatMessageList({
       onEdit,
       onRegenerate,
       onRetry,
+      onToolCallRespond,
+      isRespondingToToolCall,
       showDebug,
     ],
   );
@@ -232,16 +235,8 @@ export function ChatMessageList({
     <FlashList
       ref={listRef}
       style={styles.list}
+      pointerEvents={generation ? 'box-none' : 'auto'}
       contentInsetAdjustmentBehavior="automatic"
-      ListHeaderComponent={
-        generation && onCancelGeneration ? (
-          <ChatActivityTimeline
-            generation={generation}
-            onCancel={onCancelGeneration}
-            onRetry={onRetryGeneration}
-          />
-        ) : null
-      }
       ListEmptyComponent={listEmptyComponent}
       ListFooterComponent={
         renderedMessages.length > 0 ? (

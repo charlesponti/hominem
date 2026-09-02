@@ -31,6 +31,7 @@ export type CreateGenerationInput = {
   id: string;
   context: GenerationStartContext;
   initialInput?: GenerationInput;
+  initialState?: GenerationState;
 };
 
 export type Generation = {
@@ -64,6 +65,7 @@ class GenerationResource implements Generation {
         generationId: this.input.id,
         startContext: this.input.context,
         initialInput: this.input.initialInput,
+        initialState: this.input.initialState,
         ports: {
           provider: this.options.model,
           tools: this.options.tools,

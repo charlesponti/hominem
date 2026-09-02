@@ -10,7 +10,6 @@ import { Link } from 'react-router';
 import { TransactionFilters } from '~/components/finance/transaction-filters';
 import { TransactionsList } from '~/components/transactions/transactions-list';
 import { createServerHonoClient } from '~/lib/api.server';
-import { requireAuth } from '~/lib/guards';
 import {
   type FilterArgs,
   useFinanceAccounts,
@@ -18,6 +17,7 @@ import {
 } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 import { useSort } from '~/lib/hooks/use-sort';
+import { requireAuth } from '~/lib/require-auth.server';
 
 import type { Route } from './+types/finance';
 

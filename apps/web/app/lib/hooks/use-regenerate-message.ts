@@ -1,4 +1,4 @@
-import { getGenerationFailureMessage } from '@hominem/rpc/generation-events';
+import { getGenerationFailureMessage } from '@hominem/chat';
 import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';

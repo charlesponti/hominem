@@ -136,11 +136,15 @@ export function UpdateGuard({ children, logo = '', appName = 'App' }: UpdateGuar
     () => true,
     () => false,
   );
+  const isDev =
+    typeof import.meta !== 'undefined' &&
+    typeof import.meta.env !== 'undefined' &&
+    Boolean(import.meta.env.DEV);
 
   return (
     <>
       {children}
-      {isClient ? <UpdateGuardClient logo={logo} appName={appName} /> : null}
+      {isClient && !isDev ? <UpdateGuardClient logo={logo} appName={appName} /> : null}
     </>
   );
 }

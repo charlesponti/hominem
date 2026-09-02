@@ -1,18 +1,19 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Button, Pressable, Text, View } from 'react-native';
 
 import { useAppTheme, useStyles } from '~/components/theme';
-import { Card, IconButton } from '~/components/ui';
+import { Card } from '~/components/ui';
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
 import t from '~/translations';
 
-import AppIcon from '../ui/icon';
-
 const stageCopy = {
   preparing: t.chat.generation.thinking,
+  running: t.chat.generation.thinking,
+  awaiting_confirmation: t.chat.generation.thinking,
   saving: t.chat.generation.saving,
   stopping: t.chat.generation.stopping,
   failed: t.chat.generation.failed,
   cancelled: t.chat.generation.cancelled,
+  committed: t.chat.generation.saving,
 } as const;
 
 export function ChatActivityTimeline({
@@ -34,20 +35,30 @@ export function ChatActivityTimeline({
       borderRadius: 16,
       paddingHorizontal: 12,
       paddingVertical: 8,
+      zIndex: 10,
     },
     timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     timelineContent: { flexShrink: 1, gap: 4 },
     timelineTitle: { ...theme.textVariants.footnote, color: theme.colors.foreground },
     timelineMeta: { ...theme.textVariants.caption1, color: theme.colors.mutedForeground },
     timelineDescription: { ...theme.textVariants.footnote, color: theme.colors.mutedForeground },
-    timelineAction: { paddingHorizontal: 8, paddingVertical: 4 },
     timelineActionText: { ...theme.textVariants.footnote, color: theme.colors.primary },
   }));
-  const isActive = generation.stage === 'preparing' || generation.stage === 'saving';
+  const isActive =
+    generation.stage === 'preparing' ||
+    generation.stage === 'running' ||
+    generation.stage === 'awaiting_confirmation' ||
+    generation.stage === 'saving';
   const isStopping = generation.stage === 'stopping';
 
   return (
-    <Card accessibilityLiveRegion="polite" style={styles.timeline} testID="chat-activity">
+    <Card
+      accessibilityLiveRegion="polite"
+      onResponderRelease={isActive ? onCancel : undefined}
+      onStartShouldSetResponder={isActive ? () => true : undefined}
+      style={styles.timeline}
+      testID="chat-activity"
+    >
       <View style={styles.timelineRow}>
         <View style={styles.timelineContent}>
           <Text style={styles.timelineTitle}>{stageCopy[generation.stage]}</Text>
@@ -65,13 +76,12 @@ export function ChatActivityTimeline({
           <ActivityIndicator color={primary} size="small" />
         ) : null}
         {isActive ? (
-          <IconButton
+          <Button
             accessibilityLabel={t.chat.generation.stopA11y}
             onPress={onCancel}
-            variant="plain"
-          >
-            <AppIcon name="stop.fill" size={16} />
-          </IconButton>
+            title={t.chat.generation.stop}
+            testID="chat-generation-stop"
+          />
         ) : null}
         {isStopping ? (
           <Text style={styles.timelineDescription}>{t.chat.generation.stopping}</Text>
@@ -80,7 +90,6 @@ export function ChatActivityTimeline({
           <Pressable
             accessibilityLabel={t.chat.generation.retryA11y}
             accessibilityRole="button"
-            style={styles.timelineAction}
             onPress={onRetry}
           >
             <Text style={styles.timelineActionText}>{t.chat.generation.retry}</Text>

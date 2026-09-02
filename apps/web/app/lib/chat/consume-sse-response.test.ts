@@ -1,4 +1,10 @@
-import type { GenerationWireEvent } from '@hominem/rpc/types';
+import {
+  createGenerationClientState,
+  parseGenerationHistoryEvent,
+  reduceGenerationClientEvent,
+  toolEventRoundTripFixture,
+  type GenerationWireEvent,
+} from '@hominem/chat';
 import { describe, expect, it, vi } from 'vitest';
 
 import { consumeSseResponse } from './consume-sse-response';
@@ -16,6 +22,35 @@ function responseFor(chunks: string[]) {
 }
 
 describe('consumeSseResponse', () => {
+  it('reduces the shared tool fixture to canonical terminal state and suppresses replay duplicates', async () => {
+    const events = toolEventRoundTripFixture().map((payload, index) =>
+      parseGenerationHistoryEvent({
+        version: 1,
+        generationId: 'generation-1',
+        sequence: index + 1,
+        type: payload.type,
+        payload,
+      }),
+    );
+    let state = createGenerationClientState('generation-1');
+    await consumeSseResponse(
+      responseFor([...events, events.at(-1)!].map((event) => `data: ${JSON.stringify(event)}\n\n`)),
+      (event) => {
+        state = reduceGenerationClientEvent(state, event);
+      },
+    );
+
+    expect(state).toMatchObject({
+      phase: 'committed',
+      lastDurableSequence: 11,
+      text: 'Saved',
+      toolSteps: [
+        { toolCallId: 'call-search', toolName: 'search', status: 'completed' },
+        { toolCallId: 'call-write', toolName: 'write_memory', status: 'failed' },
+      ],
+    });
+  });
+
   it('parses events split across chunks and ignores malformed lines', async () => {
     const onEvent = vi.fn<(event: GenerationWireEvent) => void>();
     let lastSequence = 0;
