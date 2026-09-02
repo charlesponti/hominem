@@ -39,6 +39,19 @@ Under `pnpm dev`, the web app runs through the portless proxy at
 `https://api.lvh.me:4200` (see the `hominem-development` skill). The API
 process itself still binds plain `http://localhost:4040` underneath.
 
+### Browser E2E
+
+With the API running in scripted mode and the Web app running, prepare the
+disposable authenticated session and run the recovery flows:
+
+```sh
+eval "$(pnpm --filter @hominem/api --silent e2e:setup 2>/dev/null | grep 'export ')"
+pnpm --filter @hominem/web test:e2e
+```
+
+The Playwright suite uses the running services; it does not start or stop
+them. Set `WEB_URL` to target another local Web URL.
+
 ### Builds
 
 `pnpm build` produces the server and client build output.

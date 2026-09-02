@@ -204,6 +204,43 @@ describe('HominemTests', () => {
     expect(inspected.events.at(-1)?.payload.type).toBe('generation.failed');
   });
 
+  it('retries a failed generation without duplicating its user message', async () => {
+    const provider = scriptedProvider([
+      providerFailureTurn('provider unavailable'),
+      textTurn('Recovered reply'),
+    ]);
+    test = await HominemTests.create({ provider });
+
+    const failed = await test.chat.start({ title: 'SDK retry recovery', message: 'Retry this' });
+    expect(failed.clientState.phase).toBe('failed');
+
+    const retried = await test.chat.retry(failed.chatId!, failed.generationId, {
+      generationId: '01a060d0-0000-7000-8000-000000000001',
+    });
+    const duplicateRetry = await test.chat.retry(failed.chatId!, failed.generationId, {
+      generationId: '01a060d0-0000-7000-8000-000000000001',
+    });
+    const failedState = await test.inspect(failed.generationId);
+    const retriedState = await test.inspect(retried.generationId);
+
+    expect(retried.clientState.phase).toBe('committed');
+    expect(retried.clientState.text).toBe('Recovered reply');
+    expect(duplicateRetry.clientState.text).toBe('Recovered reply');
+    expect(provider.calls).toBe(2);
+    expect(failedState.run?.status).toBe('failed');
+    expect(retriedState.run?.status).toBe('committed');
+    expect(retriedState.run?.userMessageId).toBe(failedState.run?.userMessageId);
+    expect(
+      retriedState.events.find(
+        (event) => 'sequence' in event && event.payload.type === 'generation.started',
+      ),
+    ).toMatchObject({
+      payload: { context: { retryOfGenerationId: failed.generationId } },
+    });
+    expect(retriedState.messages.filter((message) => message.role === 'user')).toHaveLength(1);
+    expect(retriedState.messages.filter((message) => message.role === 'assistant')).toHaveLength(1);
+  });
+
   it('checkpoints confirmation and resumes the same generation after approval', async () => {
     const inputSchema = z.object({ value: z.string() }).strict();
     const tool: TestTool = {

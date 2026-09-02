@@ -199,6 +199,7 @@ const startContextSchema = z.object({
   kind: z.enum(['send', 'start', 'regenerate']),
   userMessageId: z.string().min(1).nullable(),
   targetAssistantMessageId: z.string().min(1).nullable(),
+  retryOfGenerationId: z.string().min(1).optional(),
   requestContext: requestContextSchema,
 }) satisfies z.ZodType<GenerationStartContext>;
 

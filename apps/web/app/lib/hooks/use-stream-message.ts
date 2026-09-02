@@ -26,6 +26,8 @@ export type StreamStatus =
   | 'committed'
   | 'failed';
 
+export const PROVIDER_FAILURE_MESSAGE = 'I couldn’t finish that response. Please try again.';
+
 function generationStorageKey(chatId: string) {
   return `chat-generation:${chatId}`;
 }
@@ -53,7 +55,8 @@ function statusFromPhase(phase: GenerationClientState['phase']): StreamStatus {
 }
 
 interface StreamInput {
-  message: string;
+  message?: string;
+  retryOfGenerationId?: string;
   fileIds?: string[];
   responseLength?: ResponseLength;
   onAccepted?: (userMessage: ChatMessageDto | null) => void;
@@ -78,11 +81,17 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   const [status, setStatus] = useState<StreamStatus>(
     restoredCheckpoint ? statusFromPhase(restoredCheckpoint.phase) : 'idle',
   );
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<Error | null>(() =>
+    restoredCheckpoint?.phase === 'failed' ? new Error(PROVIDER_FAILURE_MESSAGE) : null,
+  );
+  const [isRetrying, setIsRetrying] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const generationIdRef = useRef<string | null>(restoredCheckpoint?.generationId ?? null);
   const resumedGenerationRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
+  const failedGenerationIdRef = useRef<string | null>(
+    restoredCheckpoint?.phase === 'failed' ? restoredCheckpoint.generationId : null,
+  );
 
   const persistCheckpoint = useCallback(
     (state: GenerationClientState) => {
@@ -157,6 +166,8 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         if (caught instanceof DOMException && caught.name === 'AbortError') return;
         setError(caught instanceof Error ? caught : new Error(String(caught)));
         setStatus('failed');
+        failedGenerationIdRef.current = restoredCheckpoint.generationId;
+        await invalidateChatQueries(queryClient, chatId);
       } finally {
         if (abortControllerRef.current === controller) abortControllerRef.current = null;
       }
@@ -170,6 +181,8 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       generationIdRef.current = generationId;
+      if (input.retryOfGenerationId) failedGenerationIdRef.current = input.retryOfGenerationId;
+      else failedGenerationIdRef.current = null;
       clearCheckpoint();
       cancelRequestedRef.current = false;
       let terminalStatus: StreamStatus | null = null;
@@ -181,6 +194,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       setToolSteps([]);
       setStatus('preparing');
       setError(null);
+      setIsRetrying(Boolean(input.retryOfGenerationId));
 
       const handleEvent = (event: GenerationWireEvent) => {
         clientState = applyRestoredEvent(clientState, event);
@@ -237,18 +251,29 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         consumeSseResponse(response, handleEvent, undefined, { deduplicateEvent });
 
       try {
-        const streamRes = await client.api.chats[':id'].stream.$post(
-          {
-            param: { id: chatId },
-            json: {
-              generationId,
-              message: input.message,
-              ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
-              ...(input.responseLength ? { responseLength: input.responseLength } : {}),
-            },
-          },
-          { init: { signal: abortController.signal } },
-        );
+        const streamRes = input.retryOfGenerationId
+          ? await client.api.chats[':id'].generations[':generationId'].retry.$post(
+              {
+                param: { id: chatId, generationId: input.retryOfGenerationId },
+                json: {
+                  generationId,
+                  ...(input.responseLength ? { responseLength: input.responseLength } : {}),
+                },
+              },
+              { init: { signal: abortController.signal } },
+            )
+          : await client.api.chats[':id'].stream.$post(
+              {
+                param: { id: chatId },
+                json: {
+                  generationId,
+                  message: input.message ?? '',
+                  ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
+                  ...(input.responseLength ? { responseLength: input.responseLength } : {}),
+                },
+              },
+              { init: { signal: abortController.signal } },
+            );
 
         await consume(streamRes);
 
@@ -291,17 +316,29 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           }
         }
 
-        const nextError =
-          streamError instanceof Error ? streamError : new Error(String(streamError));
+        const nextError = new Error(PROVIDER_FAILURE_MESSAGE, { cause: streamError });
         setError(nextError);
         setStatus('failed');
+        setIsRetrying(false);
+        failedGenerationIdRef.current = generationId;
+        await invalidateChatQueries(queryClient, chatId);
         input.onFailed?.(nextError);
       } finally {
+        setIsRetrying(false);
         abortControllerRef.current = null;
         generationIdRef.current = null;
       }
     },
     [applyRestoredEvent, chatId, client, clearCheckpoint, queryClient],
+  );
+
+  const retry = useCallback(
+    async (input: Pick<StreamInput, 'responseLength' | 'onCommitted' | 'onFailed'> = {}) => {
+      const failedGenerationId = failedGenerationIdRef.current;
+      if (!failedGenerationId || status === 'preparing' || status === 'streaming') return;
+      await stream({ ...input, retryOfGenerationId: failedGenerationId });
+    },
+    [status, stream],
   );
 
   const cancel = useCallback(async () => {
@@ -330,6 +367,8 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
     error,
     generationId: generationIdRef.current,
     isStreaming: status === 'preparing' || status === 'streaming',
+    isRetrying,
+    retry,
     status,
     stream,
     text,

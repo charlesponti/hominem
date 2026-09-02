@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   getAwaitingGenerationRunForAssistantMessage: vi.fn(),
   updateToolCallLifecycle: vi.fn(),
   getMessages: vi.fn(),
+  getChatSourceContext: vi.fn(),
+  createGenerationRun: vi.fn(),
   appendEvent: vi.fn(),
   listEvents: vi.fn(),
   rebuildProjection: vi.fn(),
@@ -30,6 +32,8 @@ vi.mock('@hominem/db', () => ({
     getAwaitingGenerationRunForAssistantMessage: mocks.getAwaitingGenerationRunForAssistantMessage,
     updateToolCallLifecycle: mocks.updateToolCallLifecycle,
     getMessages: mocks.getMessages,
+    getChatSourceContext: mocks.getChatSourceContext,
+    createGenerationRun: mocks.createGenerationRun,
   },
   ChatGenerationRepository: {
     appendEvent: mocks.appendEvent,
@@ -118,6 +122,8 @@ describe('ChatGenerationService.cancel', () => {
     mocks.getMessageById.mockResolvedValue(null);
     mocks.getAwaitingGenerationRunForAssistantMessage.mockResolvedValue(null);
     mocks.getMessages.mockResolvedValue([]);
+    mocks.getChatSourceContext.mockResolvedValue([]);
+    mocks.createGenerationRun.mockResolvedValue(undefined);
     mocks.getToolEffect.mockResolvedValue(null);
     mocks.planChatTools.mockResolvedValue({ tools: [], requiresLookup: false });
     mocks.executeGenerationTurn.mockResolvedValue({
@@ -385,5 +391,127 @@ describe('ChatGenerationService.cancel', () => {
       type: 'generation.failed',
       payload: { message: 'Generation failed' },
     });
+  });
+});
+
+describe('ChatGenerationService.retryMessage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getOwnedOrThrow.mockResolvedValue({
+      id: 'chat-1',
+      userId: 'user-1',
+      title: 'Retry chat',
+      archivedAt: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    mocks.getGenerationRun
+      .mockResolvedValueOnce({
+        id: 'generation-failed',
+        chatId: 'chat-1',
+        ownerUserId: 'user-1',
+        kind: 'send',
+        status: 'failed',
+        userMessageId: 'message-1',
+        targetAssistantMessageId: null,
+      })
+      .mockResolvedValueOnce(null);
+    mocks.getMessages.mockResolvedValue([
+      {
+        id: 'message-1',
+        chatId: 'chat-1',
+        userId: 'user-1',
+        role: 'user',
+        content: 'Try this again',
+        files: null,
+        toolCalls: null,
+        reasoning: null,
+        parentMessageId: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+    mocks.getMessageById.mockResolvedValue({
+      id: 'message-1',
+      chatId: 'chat-1',
+      userId: 'user-1',
+      role: 'user',
+      content: 'Try this again',
+      files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    mocks.getChatSourceContext.mockResolvedValue([]);
+    mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.planChatTools.mockResolvedValue({ tools: [], requiresLookup: false });
+    mocks.executeGenerationTurn.mockResolvedValue({
+      assistantText: 'Recovered',
+      reasoningText: null,
+      toolCallRecords: [],
+      usage: null,
+      pendingToolCall: null,
+    });
+    mocks.appendEvent.mockImplementation(async (_trx: unknown, args: { event: { type: string } }) =>
+      event(args.event.type, mocks.appendEvent.mock.calls.length),
+    );
+  });
+
+  it('creates a linked retry without inserting another user message', async () => {
+    await new ChatGenerationService().retryMessage({
+      userId: 'user-1',
+      chatId: 'chat-1',
+      failedGenerationId: 'generation-failed',
+      generationId: 'generation-retry',
+      responseLength: 'short',
+    });
+
+    expect(mocks.createGenerationRun).toHaveBeenCalledWith(
+      {},
+      {
+        id: 'generation-retry',
+        chatId: 'chat-1',
+        ownerUserId: 'user-1',
+        kind: 'send',
+        userMessageId: 'message-1',
+      },
+    );
+    expect(mocks.appendEvent.mock.calls).toEqual(
+      expect.arrayContaining([
+        [
+          {},
+          expect.objectContaining({
+            generationId: 'generation-retry',
+            event: expect.objectContaining({
+              type: 'generation.started',
+              context: expect.objectContaining({ retryOfGenerationId: 'generation-failed' }),
+            }),
+          }),
+        ],
+      ]),
+    );
+  });
+
+  it('rejects retrying a non-failed generation', async () => {
+    mocks.getGenerationRun.mockReset().mockResolvedValue({
+      id: 'generation-active',
+      chatId: 'chat-1',
+      ownerUserId: 'user-1',
+      kind: 'send',
+      status: 'committed',
+      userMessageId: 'message-1',
+      targetAssistantMessageId: null,
+    });
+
+    await expect(
+      new ChatGenerationService().retryMessage({
+        userId: 'user-1',
+        chatId: 'chat-1',
+        failedGenerationId: 'generation-active',
+        generationId: 'generation-retry',
+      }),
+    ).rejects.toThrow('Only a failed generation');
   });
 });

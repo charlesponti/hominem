@@ -4,12 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   respondToConfirmation: vi.fn(),
+  retryMessage: vi.fn(),
 }));
 
 vi.mock('../../application/chat-generation.service', () => ({
   ChatGenerationInputError: class ChatGenerationInputError extends Error {},
   chatGenerationService: {
     respondToConfirmation: mocks.respondToConfirmation,
+    retryMessage: mocks.retryMessage,
   },
 }));
 
@@ -103,5 +105,62 @@ describe('chat confirmation route', () => {
     expect(body).toContain(`type":"${eventType}`);
     expect(body.match(/id: 1/g)).toHaveLength(1);
     expect(body.match(/data: \[DONE\]/g)).toHaveLength(1);
+  });
+});
+
+describe('chat generation retry route', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('delegates a retry with a new generation id as canonical SSE', async () => {
+    mocks.retryMessage.mockResolvedValueOnce(
+      (async function* () {
+        yield {
+          version: 1,
+          generationId: 'generation-retry',
+          sequence: 1,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'assistant-1',
+              chatId: 'chat-1',
+              userId,
+              role: 'assistant',
+              content: 'Recovered',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          },
+        } satisfies GenerationWireEvent;
+      })(),
+    );
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000005/retry',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          generationId: '00000000-0000-4000-8000-000000000006',
+          responseLength: 'short',
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.retryMessage).toHaveBeenCalledWith({
+      userId,
+      chatId: '00000000-0000-4000-8000-000000000001',
+      failedGenerationId: '00000000-0000-4000-8000-000000000005',
+      generationId: '00000000-0000-4000-8000-000000000006',
+      responseLength: 'short',
+    });
+    expect((await response.text()).match(/data: \[DONE\]/g)).toHaveLength(1);
   });
 });

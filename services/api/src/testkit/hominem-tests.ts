@@ -303,6 +303,15 @@ export class HominemTests {
         responseLength: input.responseLength,
         responseModality: input.responseModality,
       }),
+    retry: (
+      chatId: string,
+      failedGenerationId: string,
+      input: { generationId?: string; responseLength?: 'short' | 'medium' | 'long' },
+    ) =>
+      this.request(`/api/chats/${chatId}/generations/${failedGenerationId}/retry`, {
+        generationId: input.generationId ?? randomUUID(),
+        responseLength: input.responseLength,
+      }),
     regenerate: (chatId: string, messageId: string, input: { generationId?: string }) =>
       this.request(`/api/chats/${chatId}/messages/${messageId}/regenerate`, {
         generationId: input.generationId ?? randomUUID(),

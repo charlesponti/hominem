@@ -56,6 +56,11 @@ export const ChatsRegenerateMessageSchema = z.object({
   responseLength: z.enum(['short', 'medium', 'long']).optional(),
 });
 
+export const ChatsRetryGenerationSchema = z.object({
+  generationId: z.uuid(),
+  responseLength: z.enum(['short', 'medium', 'long']).optional(),
+});
+
 export const ChatsToolCallRespondSchema = z
   .object({
     approved: z.boolean(),

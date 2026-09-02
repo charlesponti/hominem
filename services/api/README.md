@@ -37,8 +37,19 @@ The API listens on `http://localhost:4040`.
 For Browser chat verification, set `HOMINEM_AI_PROVIDER=scripted` in the API
 environment and restart the API. This uses deterministic local responses at
 the OpenRouter HTTP boundary, including collection tool calls and their
-post-approval completion. It is rejected when `NODE_ENV=production`; omit the
-flag or set it to `openrouter` for normal provider traffic.
+post-approval completion. The following exact message markers expose the
+timing needed by the Browser playbook:
+
+- `B011-CANCEL-BEFORE` delays provider response so cancellation can win before
+  execution.
+- `B012-STREAM`, `B013-DISCONNECT`, `B014-REPLAY`, and `B017-ACTIVE-RELOAD`
+  stream response frames with deterministic gaps for cancellation,
+  disconnect, and replay/reload handoff checks.
+
+These controls only exist in the local scripted provider; they do not alter
+production provider behavior. The scripted provider is rejected when
+`NODE_ENV=production`; omit the flag or set it to `openrouter` for normal
+provider traffic.
 
 ### Testing
 

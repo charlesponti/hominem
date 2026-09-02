@@ -1,12 +1,12 @@
 import { streamChatCompletion } from '@hominem/ai';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { installScriptedOpenRouter } from './scripted-openrouter';
+import { installOpenRouterMock } from './openrouter.mock';
 
 let stopMock: (() => void) | undefined;
 
 beforeAll(() => {
-  stopMock = installScriptedOpenRouter();
+  stopMock = installOpenRouterMock();
 });
 afterAll(() => stopMock?.());
 
@@ -154,5 +154,30 @@ describe('scripted OpenRouter provider', () => {
 
     const retry = await collect(streamChatCompletion(request));
     expect(retry[0]?.choices[0]?.delta?.content).toBe('Scripted response: PROVIDER-B010-FAIL');
+  });
+
+  it('delays the cancel-before-execution control', async () => {
+    const startedAt = Date.now();
+    await collect(
+      streamChatCompletion({
+        model: 'test-model',
+        messages: [{ role: 'user', content: 'B011-CANCEL-BEFORE' }],
+      }),
+    );
+
+    expect(Date.now() - startedAt).toBeGreaterThanOrEqual(2_000);
+  });
+
+  it('streams controlled Browser recovery frames with deterministic gaps', async () => {
+    const startedAt = Date.now();
+    const chunks = await collect(
+      streamChatCompletion({
+        model: 'test-model',
+        messages: [{ role: 'user', content: 'B013-DISCONNECT' }],
+      }),
+    );
+
+    expect(chunks).toHaveLength(2);
+    expect(Date.now() - startedAt).toBeGreaterThanOrEqual(700);
   });
 });

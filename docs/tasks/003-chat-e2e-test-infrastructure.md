@@ -336,7 +336,7 @@ the tool.
 
 The scripted provider then needed a matching deterministic response rule. A
 focused provider regression was added in
-`services/api/src/testkit/scripted-openrouter.test.ts`; the provider now returns
+`services/api/src/testkit/openrouter.mock.test.ts`; the provider now returns
 `The tool request was rejected.` when it receives the rejected result. The
 focused service/provider suite passes (11 tests).
 
@@ -365,10 +365,56 @@ B-010 now has a test-only MSW fixture keyed by `PROVIDER-B010-FAIL`: it returns
 one HTTP 400 provider failure, while subsequent requests containing the same
 marker return the normal scripted response. This avoids the OpenRouter SDK's
 transparent 5xx retry and keeps the retry identity stable when prior history
-is included. The focused fixture test passes. Live Browser verification reached
-the expected `Generation failed` alert, but the user-started API process then
-went down before the reload/retry step; the remaining dependency is an API
-restart and a clean rerun of B-010.
+is included. The focused fixture, API route/service, and Web hook tests pass.
+
+The live Browser run reached the failure state while the API remained healthy;
+the API log showed successful auth/chat requests and the scripted provider
+failure, not a process crash. Web now reconstructs the failure after reload as
+“I couldn’t finish that response. Please try again.” with Retry and dismiss.
+Retry uses a dedicated generation attempt, reuses the original user message,
+and the Browser rerun produced one successful scripted assistant response with
+one visible user message.
+
+The clean Browser rerun used chat `01a060d8-fb1b-7df0-8e09-a6f955f7905b`.
+The DOM evidence captured the failure alert, Retry and dismiss controls, the
+preserved composer draft, and after Retry a single user message followed by
+`Scripted response: Provider failure B010 PROVIDER-B010-FAIL-UX`. Visual
+inspection was completed in the Codex In-app Browser; no unexpected Browser
+console error was observed during the successful rerun.
+
+B-010: Implemented. The dev database contains failed run
+`b3ebb7a0-8fcb-4380-8a8c-9a9a38286776` and committed retry run
+`5941ad93-cac4-4b80-8821-1c74f450c302`; both reference user message
+`01a060d9-0ec2-7677-ae52-4a870dcbe982`. The retry event sequence is
+`generation.started` (sequence 1, linked to the failed generation),
+`generation.accepted` (2), four phase changes (3–6), and
+`generation.committed` (7). The original run ends with
+`generation.failed` at sequence 5. A database count confirms exactly one user
+message and one assistant message. Repeating the same retry request was
+idempotent and did not create another provider call or message.
+
+The API-local SDK now exposes the same dedicated retry operation used by Web.
+Its integration coverage passes with 17 scenarios and verifies that the failed
+run remains failed, the retry gets a new generation ID linked through
+`retryOfGenerationId`, the original user message ID is reused, a repeated
+retry request replays the committed result without another provider call, and
+the chat contains exactly one user and one assistant message. Browser-side
+durable inspection for the live B-010 chat is recorded above.
+
+Browser timing controls are now available in the local scripted provider:
+`B011-CANCEL-BEFORE` delays provider response, while `B012-STREAM`,
+`B013-DISCONNECT`, `B014-REPLAY`, and `B017-ACTIVE-RELOAD` emit streamed frames
+with deterministic gaps. They are test-environment-only and are documented
+in `services/api/README.md`; Browser execution of those scenarios is still
+pending.
+
+Environment checkpoint — 2026-09-02: the API health endpoint returned HTTP
+200 and the Web root returned its expected unauthenticated HTTP 302 response.
+The iOS simulator inventory contained no booted device, so Omiro evidence is
+not runnable until a user-started simulator is available. The documented local
+database configuration is now available for live inspection. B-011 and later
+failure/replay scenarios remain unstarted until their supported test-environment
+controls and evidence access are available.
 
 ## Exit gate
 

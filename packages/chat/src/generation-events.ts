@@ -21,6 +21,7 @@ export type GenerationStartContext = {
   kind: 'send' | 'start' | 'regenerate';
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
+  retryOfGenerationId?: string;
   requestContext: GenerationRequestContext;
 };
 

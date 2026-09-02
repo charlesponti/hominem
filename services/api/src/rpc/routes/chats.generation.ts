@@ -10,6 +10,7 @@ import {
 import type { ChatGenerationService } from '../../application/chat-generation.service';
 import {
   ChatsRegenerateMessageSchema,
+  ChatsRetryGenerationSchema,
   ChatsSendSchema,
   ChatsStartStreamSchema,
   ChatsToolCallRespondSchema,
@@ -123,6 +124,32 @@ export function createChatGenerationRoutes(service: ChatGenerationService = chat
       if (!run) throw new ValidationError('Generation cannot be cancelled');
       return c.json(run);
     })
+    .post(
+      '/generations/:generationId/retry',
+      zValidator('json', ChatsRetryGenerationSchema),
+      async (c) => {
+        const userId = c.get('auth')!.userId;
+        const chatId = getChatId(c);
+        const failedGenerationId = getGenerationId(c);
+        const { generationId, responseLength } = c.req.valid('json');
+        let events;
+        try {
+          events = await service.retryMessage({
+            userId,
+            chatId,
+            failedGenerationId,
+            generationId,
+            responseLength,
+          });
+        } catch (error) {
+          if (error instanceof ChatGenerationInputError) {
+            throw new ValidationError(error.message);
+          }
+          throw error;
+        }
+        return streamSSE(c, (stream) => writeGenerationStream(stream, events));
+      },
+    )
     .post(
       '/messages/:messageId/regenerate',
       zValidator('json', ChatsRegenerateMessageSchema),

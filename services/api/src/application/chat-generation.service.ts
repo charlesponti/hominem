@@ -80,6 +80,7 @@ type PreparedGeneration = {
   responseModality?: 'text' | 'audio';
   targetAssistantMessageId?: string | null;
   userMessageId?: string | null;
+  retryOfGenerationId?: string;
 };
 
 type GenerationStartInput = Omit<PreparedGeneration, 'kind'> & {
@@ -560,6 +561,77 @@ export class ChatGenerationService {
     });
   }
 
+  async retryMessage(input: {
+    userId: string;
+    chatId: string;
+    failedGenerationId: string;
+    generationId: string;
+    responseLength?: 'short' | 'medium' | 'long';
+  }): Promise<GenerationStreamQueue> {
+    await assertUnderMonthlyUsageLimit(input.userId);
+    await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
+    const failedRun = await ChatRepository.getGenerationRun(
+      db,
+      input.chatId,
+      input.failedGenerationId,
+      input.userId,
+    );
+    if (!failedRun || failedRun.status !== 'failed' || !failedRun.userMessageId) {
+      throw new ChatGenerationInputError(
+        'Only a failed generation with a user message can be retried',
+      );
+    }
+    const existingRun = await ChatRepository.getGenerationRun(
+      db,
+      input.chatId,
+      input.generationId,
+      input.userId,
+    );
+    if (existingRun) {
+      return this.replay({
+        generationId: input.generationId,
+        ownerUserId: input.userId,
+        terminal: true,
+      });
+    }
+
+    const history = await ChatRepository.getMessages(db, input.chatId, 30, 0);
+    const userMessageIndex = history.findIndex((message) => message.id === failedRun.userMessageId);
+    const userMessage = history[userMessageIndex];
+    if (!userMessage || userMessage.role !== 'user') {
+      throw new ChatGenerationInputError('The failed generation user message was not found');
+    }
+    const [notes] = await Promise.all([ChatRepository.getChatSourceContext(db, input.chatId)]);
+    await ChatRepository.createGenerationRun(db, {
+      id: input.generationId,
+      chatId: input.chatId,
+      ownerUserId: input.userId,
+      kind: 'send',
+      userMessageId: failedRun.userMessageId,
+    });
+    const messages = buildMessages(
+      history.slice(0, userMessageIndex),
+      formatUserContentWithContext(userMessage.content, notes, userMessage.files ?? []),
+      buildChatSystemPrompt(input.responseLength),
+    );
+    const toolPlan = await this.planTools(messages);
+    return this.send({
+      userId: input.userId,
+      generationId: input.generationId,
+      chatId: input.chatId,
+      model: CHAT_MODEL,
+      messages,
+      tools: toolPlan.tools,
+      requiresToolCall: toolPlan.requiresLookup,
+      maxTokens: input.responseLength
+        ? RESPONSE_LENGTH_MAX_TOKENS[input.responseLength]
+        : undefined,
+      reasoning: getReasoningConfig(),
+      userMessageId: failedRun.userMessageId,
+      retryOfGenerationId: failedRun.id,
+    });
+  }
+
   send(input: SendGenerationInput): Promise<GenerationStreamQueue> {
     return this.execute({ ...input, kind: 'send' });
   }
@@ -858,6 +930,7 @@ export class ChatGenerationService {
         kind: input.kind,
         userMessageId: input.userMessageId ?? null,
         targetAssistantMessageId: input.targetAssistantMessageId ?? null,
+        ...(input.retryOfGenerationId ? { retryOfGenerationId: input.retryOfGenerationId } : {}),
         requestContext: {},
       };
       const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);

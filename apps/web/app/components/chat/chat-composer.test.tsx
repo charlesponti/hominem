@@ -113,11 +113,44 @@ describe('ChatComposer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry sending' }));
 
     expect(onRetry).toHaveBeenCalledOnce();
-    expect(screen.queryByText('Unable to send')).toBeNull();
+    expect(screen.getByText('Unable to send')).toBeTruthy();
     expect(screen.getByRole('textbox', { name: 'Chat message' })).toHaveProperty(
       'value',
       'Try again',
     );
+  });
+
+  it('renders cancellation as a neutral status message', () => {
+    render(
+      <ChatComposer
+        draft=""
+        onChangeDraft={() => undefined}
+        onSubmit={() => undefined}
+        statusMessage="Stopped."
+      />,
+    );
+
+    expect(screen.getByText('Stopped.').getAttribute('aria-live')).toBe('polite');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('keeps the stop control enabled while a response is streaming', () => {
+    const onStop = vi.fn();
+    render(
+      <ChatComposer
+        draft=""
+        isStreaming
+        isSubmitting
+        onChangeDraft={() => undefined}
+        onStop={onStop}
+        onSubmit={() => undefined}
+      />,
+    );
+
+    const stop = screen.getByRole('button', { name: 'Stop' });
+    expect(stop.getAttribute('disabled')).toBeNull();
+    fireEvent.click(stop);
+    expect(onStop).toHaveBeenCalledOnce();
   });
 
   it('removes an attachment through its accessible chip', () => {

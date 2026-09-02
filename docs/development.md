@@ -35,3 +35,7 @@ repository + logical service + immutable Railway service ID
 An accepted upload does not prove that deployment succeeded. Automation must verify the resolved target and the final remote deployment state.
 
 Omiro's mobile delivery, release, and app-specific implementation notes are documented in [the Omiro README](../apps/omiro/README.md). General repository and deployment rules remain here.
+
+## Environment variables
+- **Dev Database**: `DATABASE_URL="postgresql://postgres:postgres@localhost:5434/hominem"`
+- **Test Database**: `DATABASE_URL_TEST="postgresql://postgres:postgres@localhost:4433/hominem-test"`

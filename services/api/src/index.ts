@@ -10,8 +10,8 @@ if (env.HOMINEM_AI_PROVIDER === 'scripted') {
   if (env.NODE_ENV === 'production') {
     throw new Error('HOMINEM_AI_PROVIDER=scripted is not allowed in production');
   }
-  const { installScriptedOpenRouter } = await import('./testkit/scripted-openrouter');
-  installScriptedOpenRouter();
+  const { installOpenRouterMock } = await import('./testkit/openrouter.mock');
+  installOpenRouterMock();
 }
 
 const app = createServer();

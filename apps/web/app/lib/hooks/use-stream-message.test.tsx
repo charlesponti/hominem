@@ -14,6 +14,7 @@ const mockClient = vi.hoisted(() => ({
           ':generationId': {
             cancel: { $post: vi.fn() },
             stream: { $get: vi.fn() },
+            retry: { $post: vi.fn() },
           },
         },
       },
@@ -229,7 +230,7 @@ describe('useStreamMessage', () => {
         init: expect.objectContaining({ signal: expect.any(AbortSignal) }),
       }),
     );
-    expect(result.current.status).toBe('committed');
+    await waitFor(() => expect(result.current.status).toBe('committed'));
     expect(onAccepted).toHaveBeenCalledOnce();
     expect(onCommitted).toHaveBeenCalledOnce();
     expect(result.current.text).toBe('Done');
@@ -316,7 +317,9 @@ describe('useStreamMessage', () => {
     await result.current.stream({ message: 'Hello' });
 
     await waitFor(() => expect(result.current.status).toBe('failed'));
-    expect(result.current.error?.message).toBe('Provider unavailable');
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
   });
 
   it('resumes once from the last durable sequence after a stream interruption', async () => {
@@ -369,6 +372,62 @@ describe('useStreamMessage', () => {
       { init: expect.objectContaining({ headers: { 'Last-Event-ID': '1' } }) },
     );
     expect(result.current.text).toBe('Recovered');
+  });
+
+  it('restores a failed generation with a friendly retry action after reload', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'failed-1', phase: 'failed', lastDurableSequence: 4 }),
+    );
+    vi.stubGlobal('crypto', { randomUUID: () => 'retry-1' });
+    mockClient.api.chats[':id'].generations[':generationId'].retry.$post.mockResolvedValueOnce(
+      streamResponse([
+        JSON.stringify({
+          version: 1,
+          generationId: 'retry-1',
+          sequence: 1,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'assistant-1',
+              chatId: 'chat-1',
+              userId: 'u1',
+              role: 'assistant',
+              content: 'Recovered',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01',
+              updatedAt: '2026-01-01',
+            },
+          },
+        }),
+      ]),
+    );
+
+    const onCommitted = vi.fn();
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    expect(result.current.status).toBe('failed');
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
+
+    await result.current.retry({ responseLength: 'short', onCommitted });
+
+    expect(
+      mockClient.api.chats[':id'].generations[':generationId'].retry.$post,
+    ).toHaveBeenCalledWith(
+      {
+        param: { id: 'chat-1', generationId: 'failed-1' },
+        json: { generationId: 'retry-1', responseLength: 'short' },
+      },
+      expect.objectContaining({ init: expect.any(Object) }),
+    );
+    expect(onCommitted).toHaveBeenCalledOnce();
+    await waitFor(() => expect(result.current.status).toBe('committed'));
   });
 
   it('restores a cancelled terminal state during replay', async () => {
@@ -546,6 +605,8 @@ describe('useStreamMessage', () => {
     );
     await result.current.stream({ message: 'Fail me' });
     await waitFor(() => expect(result.current.status).toBe('failed'));
-    expect(result.current.error?.message).toBe('stream failed');
+    expect(result.current.error?.message).toBe(
+      'I couldn’t finish that response. Please try again.',
+    );
   });
 });
