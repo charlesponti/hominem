@@ -43,7 +43,7 @@ export function useCreateChat() {
         .$post({ json: { title: variables.title } })
         .then((r) => r.json() as Promise<Chat>),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: chatQueryKeys.list });
+      void queryClient.invalidateQueries({ queryKey: chatQueryKeys.list });
     },
   });
 }

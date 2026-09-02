@@ -529,5 +529,7 @@ test('B-025 exposes keyboard-reachable named chat controls', async ({ page }) =>
   await composer.focus();
   await composer.fill('B025-KEYBOARD');
   await composer.press('ControlOrMeta+Enter');
-  await waitForResponse(page, 'Scripted response: B025-ACCESSIBILITY B025-KEYBOARD');
+  await waitForResponse(page, 'Scripted response: B025-KEYBOARD');
+  await expectSingleMessage(page, 'B025-ACCESSIBILITY', 'user');
+  await expectSingleMessage(page, 'B025-KEYBOARD', 'user');
 });
