@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@vitest/expect": "4.1.0",
+    "@vitest/expect": "4.1.11",
     "deepeval": "0.9.9",
     "jiti": "catalog:",
     "vitest": "catalog:",
