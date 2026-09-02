@@ -30,7 +30,7 @@ catalog:
   '@types/react-dom': 19.2.4
   '@ponti-studios/ui': 1.7.0
   typescript: 6.0.3
-  vite: 8.1.5
+  vite: 8.2.2
   vitest: 4.1.0
   zod: 4.4.3
 
