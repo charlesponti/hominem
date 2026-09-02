@@ -70,7 +70,7 @@
     "@types/react-dom": "catalog:",
     "@vitest/coverage-v8": "4.1.2",
     "jiti": "catalog:",
-    "jsdom": "^30.0.0",
+    "jsdom": "^30.0.1",
     "msw": "^2.12.13",
     "playwright": "^1.62.1",
     "tailwindcss": "^4.1.8",
