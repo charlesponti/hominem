@@ -10,7 +10,7 @@ not whether the original plan was once written.
 
 1. [001 — Canonical chat domain contract](001-chat-domain-contract.md) — Implemented
 2. [002 — Chat tool event round trips](002-chat-tool-event-round-trip.md) — Implemented
-3. [003 — Chat end-to-end test infrastructure](003-chat-e2e-test-infrastructure.md) — Open
+3. [003 — Chat end-to-end test infrastructure](003-chat-e2e-test-infrastructure.md) — Partial
 4. [004 — Typed generation boundaries](004-typed-generation-boundaries.md) — Partial
 5. [005 — Deterministic generation crash recovery](005-generation-crash-recovery.md) — Open
 6. [006 — Generation cursor recovery](006-generation-cursor-recovery.md) — Partial

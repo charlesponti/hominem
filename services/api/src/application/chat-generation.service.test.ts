@@ -254,6 +254,76 @@ describe('ChatGenerationService.cancel', () => {
     expect(mocks.callTool).not.toHaveBeenCalled();
   });
 
+  it('feeds a rejected tool result back to the provider instead of reopening confirmation', async () => {
+    const pendingMessage = {
+      id: 'assistant-1',
+      role: 'assistant' as const,
+      content: 'I need approval',
+      toolCalls: [
+        {
+          type: 'tool-call' as const,
+          toolName: 'write_memory',
+          toolCallId: 'call-1',
+          args: { value: 'secret' },
+          confirmationStatus: 'pending' as const,
+          executionStatus: 'pending' as const,
+        },
+      ],
+    };
+    mocks.getMessageById.mockResolvedValue(pendingMessage);
+    mocks.getAwaitingGenerationRunForAssistantMessage.mockResolvedValue({
+      id: input.generationId,
+      chatId: input.chatId,
+    });
+    mocks.getMessages.mockResolvedValue([pendingMessage]);
+    mocks.listEvents.mockResolvedValue([
+      { ...event('generation.started', 1) },
+      {
+        ...event('confirmation.required', 2),
+        payload: {
+          type: 'confirmation.required',
+          call: {
+            id: 'call-1',
+            name: 'write_memory',
+            arguments: JSON.stringify({ value: 'secret' }),
+            iteration: 0,
+            turnId: input.generationId,
+            messageId: pendingMessage.id,
+            preview: null,
+          },
+        },
+      },
+    ]);
+
+    await new ChatGenerationService().respondToConfirmation({
+      userId: input.ownerUserId,
+      chatId: input.chatId,
+      messageId: pendingMessage.id,
+      toolCallId: 'call-1',
+      approved: false,
+    });
+
+    await vi.waitFor(() =>
+      expect(mocks.executeGenerationTurn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialInput: {
+            type: 'confirmation-rejected',
+            callId: 'call-1',
+            reason: 'User rejected tool call',
+          },
+          messages: expect.arrayContaining([
+            expect.objectContaining({
+              role: 'tool',
+              toolCallId: 'call-1',
+              content: JSON.stringify({ error: 'User rejected tool call' }),
+            }),
+          ]),
+        }),
+      ),
+    );
+    expect(mocks.callTool).not.toHaveBeenCalled();
+  });
+
   it('persists and publishes a safe terminal failure when provider execution fails', async () => {
     mocks.getOwnedOrThrow.mockResolvedValue({
       id: input.chatId,

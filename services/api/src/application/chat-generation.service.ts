@@ -617,6 +617,15 @@ export class ChatGenerationService {
           },
         ],
       },
+      ...(input.approved
+        ? []
+        : [
+            {
+              role: 'tool' as const,
+              toolCallId: input.toolCallId,
+              content: JSON.stringify({ error: 'User rejected tool call' }),
+            },
+          ]),
     ];
     const toolPlan = await this.planTools(messages);
     const events = await ChatGenerationRepository.listEvents(db, run.id, input.userId, 0);

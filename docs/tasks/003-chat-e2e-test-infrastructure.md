@@ -48,6 +48,16 @@ browser procedure is documented in
 module-mocked generation E2E file has been removed; the SDK is now the
 API-local integration entry point.
 
+The Web blocker work has also landed on the current branch. The local scripted
+provider uses MSW at the OpenRouter SDK boundary, returns deterministic streamed
+tool calls and post-tool completions, and is rejected in production mode. Web
+confirmation state now survives the stream boundary, pending tool calls render
+approval controls, rejected confirmations do not become persisted execution
+failures, and resumed confirmation replaces the awaiting message instead of
+creating a duplicate assistant message. Omiro clears restored terminal
+generations and invalidates the chat query after replay. Legacy generation and
+tool-call records are covered by applied database backfill/repair migrations.
+
 ## SDK contract
 
 The public test entry point is `HominemTests.create({ provider })` and returns a
@@ -125,6 +135,13 @@ Implemented evidence currently includes:
   passing; lint reports existing warnings but no errors.
 - Web and Omiro focused reducer/transport tests pass as part of `pnpm run
 check`; these are app-local fixtures, not yet SDK-backed route flows.
+- Web validation: 179 tests passed and Web typecheck passed.
+- Omiro validation: 480 tests passed and Omiro typecheck passed.
+- API validation: 270 tests passed; database migrations and codegen completed.
+- `git diff --check` passed. React Doctor completed with existing project
+  warnings only; no new warning was attributed to this change set.
+- PR 300 review follow-up: all seven inline review threads were replied to and
+  resolved; current CI checks are green. No commit was created by this task.
 - Browser playbook runs: B-001 direct-load/reload passed with no browser
   warnings or errors; B-002 send/stream/reload passed with a completed
   tool-backed response and no browser warnings or errors. B-002 intentionally
@@ -236,6 +253,122 @@ the Browser surface for this run and remains unverified.
   reply. A fresh Browser rerun was not completed because the local Vite route
   manifest intermittently returned `Failed to fetch` while navigating to a new
   chat.
+
+### Review follow-up — 2026-09-01
+
+The seven PR comments were addressed and resolved:
+
+- Removed the unused Omiro `renderHook` import.
+- Corrected Web tool status mapping so pending/running executions are not shown
+  as completed, with regression coverage.
+- Renamed the schema test to match the behavior it verifies.
+- Added legacy generation snapshot and terminal metadata backfills.
+- Confirmed the existing tool lifecycle repair handles legacy tool-call status.
+- Kept rejected confirmations out of execution-failure state.
+- Cleared restored Omiro generations after terminal replay and invalidated the
+  affected chat query.
+
+### Remaining work
+
+Task 003 remains `Partial` because implementation and automated coverage are
+ahead of the required end-to-end evidence. The next pass must:
+
+- Rerun B-005 and B-007 in a clean Browser session with the scripted provider,
+  proving regeneration and confirmation resume without duplicate visible or
+  durable messages.
+- Run and record B-008–B-015, B-017, B-020–B-021, and B-024, or record the exact
+  harness dependency when a state cannot be produced.
+- Finish the partial assertions for B-019, B-022, B-023, and B-025.
+- Capture clean DOM/screenshot, Browser console, API correlation, durable
+  cursor/sequence, terminal-state, and duplicate-check evidence for each
+  runnable scenario.
+- Complete SDK-backed Web/Omiro convergence, cancellation, disconnect,
+  replay-overlap, queue, and cleanup evidence, plus iOS simulator flows when a
+  user-started simulator is available.
+- Preserve the evidence record, obtain action-time confirmation, then delete
+  and verify all disposable users, chats, messages, runs, events, snapshots,
+  and tool effects.
+
+Do not advance to Task 004 until the exit gate below has passing artifacts.
+
+### Live Browser continuation — 2026-09-02
+
+The Web service was restarted and the Browser was connected through a fresh
+tab. B-001 passed on disposable chat
+`01a06087-8888-7887-a939-422e62b584a9` with the expected empty initial state.
+B-002 passed on that chat after sending one message: the scripted response
+rendered once and remained single after reload. B-003 and B-004 passed on
+`01a06088-fae6-7a7a-9869-980cfb84ab63`; the new chat persisted its first
+response and survived list/detail/back/detail navigation. B-005 regenerated
+the assistant response on that chat; the API recorded one committed
+regeneration run and the chat still contained one assistant projection.
+
+B-006 initially exposed an over-broad scripted-provider matcher that selected
+`create_collection` for a list request. The matcher now prioritizes list/show
+intent, returns `list_collections`, and returns the `TOOL-B006-READY`
+continuation. The focused scripted OpenRouter tests pass (4 tests), and the
+Browser rerun passed on `01a0608b-e6db-726e-94cd-d721cc6cc26c` with a visible
+pending → completed `list_collections` card.
+
+B-007 passed on `01a0608c-3369-7282-b7f8-d09d0f15a731`: confirmation controls
+were visible, approval completed the `create_collection` call, and the
+durable chat contained one user and one assistant message with a committed
+run. B-008 exposed the corresponding stale-provider issue: the Browser still
+received the old repeated-tool behavior after the provider rejection branch
+was added. The API process must be restarted before B-008 is rerun; no further
+ordered scenarios will be treated as started until that rerun passes.
+
+The old chat `01a05efe-1d3a-7117-9c09-e435721ad066` contains three separate
+historical send runs, which explains its repeated user/assistant blocks. It is
+not evidence of duplicate messages within one current generation. Its data,
+along with the new disposable chats above, remains pending cleanup confirmation.
+
+### Live Browser continuation — 2026-09-02 (after API restart)
+
+B-008 was rerun on `01a060a0-cecb-797f-b4fb-ec707fe14263` after the API was
+restarted with `HOMINEM_AI_PROVIDER=scripted` and the Web app was reloaded.
+The first rerun exposed a real Web/API seam defect: rejection was recorded, but
+the resumed provider transcript did not contain a rejected tool result, so the
+provider reopened the same confirmation. A focused service regression was added
+in `services/api/src/application/chat-generation.service.test.ts`; the minimal
+fix adds one rejected tool result to the resumed transcript without executing
+the tool.
+
+The scripted provider then needed a matching deterministic response rule. A
+focused provider regression was added in
+`services/api/src/testkit/scripted-openrouter.test.ts`; the provider now returns
+`The tool request was rejected.` when it receives the rejected result. The
+focused service/provider suite passes (11 tests).
+
+B-008 passed on fresh chat `01a060a0-cecb-797f-b4fb-ec707fe14263`: the Browser
+showed one `Denied create_collection` card, the rejection text, no approval
+controls, and no execution-success state. The API database showed one
+`committed` send run, two messages (one user and one assistant), a rejected
+`create_collection` tool call with no execution status, and ordered durable
+events ending in `generation.committed` (sequence 14). No tool effect or
+collection was created.
+
+B-009 was then unblocked with a test-only scripted-provider trigger: the exact
+`TOOL-B009-FAIL` phrase emits malformed arguments for the read-only
+`list_collections` call, exercising the real tool-parser failure path. The
+focused provider suite passes (7 tests). On fresh chat
+`01a060a5-6a23-7f89-b515-0220e11faa35`, the Browser showed `Error
+list_collections`, `The tool request failed.`, and a usable regenerate control.
+The database showed one committed run (`a144dad4-6e3d-4db8-814d-43f4c72e4935`),
+one failed tool call, one user message, one assistant message, and ordered
+events `generation.started`, `generation.accepted`, `generation.phase_changed`,
+`generation.phase_changed`, `tool.requested`, `tool.failed`,
+`generation.phase_changed`, `generation.phase_changed`,
+`generation.committed`. No duplicate message or tool effect was present.
+
+B-010 now has a test-only MSW fixture keyed by `PROVIDER-B010-FAIL`: it returns
+one HTTP 400 provider failure, while subsequent requests containing the same
+marker return the normal scripted response. This avoids the OpenRouter SDK's
+transparent 5xx retry and keeps the retry identity stable when prior history
+is included. The focused fixture test passes. Live Browser verification reached
+the expected `Generation failed` alert, but the user-started API process then
+went down before the reload/retry step; the remaining dependency is an API
+restart and a clean rerun of B-010.
 
 ## Exit gate
 
