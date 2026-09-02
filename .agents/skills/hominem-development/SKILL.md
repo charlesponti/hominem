@@ -9,9 +9,12 @@ Deployment-authority rules (one deployment authority per service, what proves
 a deployment succeeded) live in [docs/development.md](../../../docs/development.md)
 and are not repeated here — this skill is the command runbook.
 
-Never start long-running services yourself (Expo/Metro, `pnpm dev`, the API,
-workers, databases, Docker) — the user starts them. This skill's commands
-assume the user has already started whatever the task needs.
+Per the root [AGENTS.md](../../../AGENTS.md), you may start local dev
+services yourself (Expo/Metro, `pnpm dev`, the API, workers, databases,
+Docker) when a task needs one running. Prefer the Browser pane's
+`preview_start` for anything you'll drive or screenshot in a browser. Stop
+services you started once you're done with them, unless the user is
+actively using them.
 
 ## First-time setup: env files in a new worktree
 
