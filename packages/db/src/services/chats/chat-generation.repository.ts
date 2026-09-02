@@ -368,6 +368,30 @@ export const ChatGenerationRepository = {
     return row ? toToolEffectRecord(row) : null;
   },
 
+  async listToolEffects(
+    handle: DbHandle,
+    input: { generationId: string; ownerUserId: string },
+  ): Promise<ChatGenerationToolEffectRecord[]> {
+    const rows = await handle
+      .selectFrom('app.chatGenerationToolEffects as effect')
+      .innerJoin('app.chatGenerationRuns as run', 'run.id', 'effect.generationId')
+      .select([
+        'effect.id',
+        'effect.generationId',
+        'effect.idempotencyKey',
+        'effect.toolName',
+        'effect.result',
+        'effect.createdAt',
+      ])
+      .where('effect.generationId', '=', input.generationId)
+      .where('run.ownerUserId', '=', input.ownerUserId)
+      .orderBy('effect.createdAt', 'asc')
+      .orderBy('effect.id', 'asc')
+      .execute();
+
+    return rows.map(toToolEffectRecord);
+  },
+
   async saveToolEffect(
     handle: DbHandle,
     input: {

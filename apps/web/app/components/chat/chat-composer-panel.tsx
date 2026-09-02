@@ -240,6 +240,7 @@ export function ChatComposerPanel({
                 responseLength,
                 onCommitted: (message) => display.setPendingAssistantMessage(message),
                 onFailed: () => setIsRetryable(true),
+                onSettled: () => display.setPendingAssistantMessage(null),
               });
             }
           : undefined

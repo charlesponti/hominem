@@ -3,6 +3,7 @@ import {
   type ChatFunctionTool,
   type ChatMessages,
   type ChatRequest,
+  type ChatStreamChunk,
   getChatCompletionUsage,
   streamChatCompletion,
 } from '@hominem/ai';
@@ -52,20 +53,7 @@ export type OpenRouterChatModelOptions = {
   onUsage?: (usage: AIUsageMetrics | null) => void;
 };
 
-function toProviderChunk(chunk: {
-  choices?: readonly {
-    delta?: {
-      content?: string | null;
-      reasoning?: string | null;
-      toolCalls?: readonly {
-        index: number;
-        id?: string | null;
-        type?: 'function';
-        function?: { name?: string | null; arguments?: string | null } | null;
-      }[];
-    };
-  }[];
-}): ProviderChunk {
+function toProviderChunk(chunk: ChatStreamChunk): ProviderChunk {
   const delta = chunk.choices?.[0]?.delta;
   const shape: ProviderChunkShape = {
     choiceCount: chunk.choices?.length ?? 0,

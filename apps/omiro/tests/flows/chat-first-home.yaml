@@ -8,6 +8,7 @@ appId: com.pontistudios.hakumi.dev
     id: 'new-chat-composer-input'
 - tapOn:
     id: 'new-chat-composer-input'
+- eraseText: 100
 - inputText: 'Start a new chat from the chat-first home'
 - pressKey: BACK
 - assertVisible:

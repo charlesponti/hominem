@@ -63,6 +63,7 @@ interface StreamInput {
   onCommitted?: (message: ChatMessageDto) => void;
   onCancelled?: () => void;
   onFailed?: (error: Error) => void;
+  onSettled?: () => void;
 }
 
 export function useStreamMessage({ chatId }: { chatId: string }) {
@@ -353,6 +354,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         await invalidateChatQueries(queryClient, chatId);
         input.onFailed?.(nextError);
       } finally {
+        input.onSettled?.();
         setIsRetrying(false);
         abortControllerRef.current = null;
         generationIdRef.current = null;
@@ -362,7 +364,9 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   );
 
   const retry = useCallback(
-    async (input: Pick<StreamInput, 'responseLength' | 'onCommitted' | 'onFailed'> = {}) => {
+    async (
+      input: Pick<StreamInput, 'responseLength' | 'onCommitted' | 'onFailed' | 'onSettled'> = {},
+    ) => {
       const failedGenerationId = failedGenerationIdRef.current;
       if (!failedGenerationId || status === 'preparing' || status === 'streaming') return;
       await stream({ ...input, retryOfGenerationId: failedGenerationId });

@@ -1,38 +1,52 @@
 ---
 title: 'Make generation recovery observable'
-status: 'Partial'
+status: 'Implemented'
 priority: 'medium'
 labels: [chat, observability, tracing]
 depends_on: [007-client-convergence.md]
-blocks: [009-generation-runtime-consolidation.md, 011-functional-chat-shipping-evidence.md]
+blocks: [011-functional-chat-shipping-evidence.md]
 estimated_size: 'M'
 ---
 
-## Outcome so far
+## Outcome
 
-Telemetry helpers exist for event delivery, deduplication, tool effects, and
-recovery decisions. AI usage recording remains in the existing telemetry
-boundary. Safe diagnostics do not include provider chunks, message content,
-tool arguments, or tool results.
+A redacted diagnostic record correlates generation attempts, durable events,
+replay, recovery decisions, terminal outcomes, and tool-effect outcomes without
+including user or provider payloads.
 
-## Remaining change
+## Scope
 
-Boundary: application generation/replay/effect operations → telemetry.
+In scope: telemetry fields, correlation, error categories, effect outcomes,
+redaction, and tests. Out of scope: new product behavior and runtime
+consolidation.
 
-Complete correlation for generation ID, attempt/turn, durable sequence, replay
-cursor, delivery mode, recovery decision, terminal outcome, error category, and
-tool-effect result (`executed`, `reused`, `failed`). Add redaction assertions
-and make the correlation usable without exposing sensitive payloads.
+## Work sequence
+
+| ID    | Work item                  | Owner boundary              | Depends on | Validation / artifact | Done when                                                                        |
+| ----- | -------------------------- | --------------------------- | ---------- | --------------------- | -------------------------------------------------------------------------------- |
+| W-001 | Define correlation record  | generation/replay telemetry | Task 007   | field contract        | Required IDs, cursor, mode, decision, outcome, and error category are named.     |
+| W-002 | Emit lifecycle correlation | application operations      | W-001      | telemetry tests       | Send, replay, reconnect, recovery, deduplication, and terminalization correlate. |
+| W-003 | Protect diagnostics        | telemetry/error boundary    | W-002      | redaction tests       | Content, chunks, arguments, and results never enter safe diagnostics.            |
+
+## Acceptance criteria
+
+- [x] AC-001: One record correlates generation ID, attempt/turn, durable sequence, replay cursor, delivery mode, recovery decision, terminal outcome, error category, and effect outcome.
+- [x] AC-002: Redaction tests pass without weakening useful correlation.
+
+## Validation record
+
+- Added `GenerationDiagnosticRecord` and `recordGenerationDiagnostic` at the
+  API telemetry boundary. It accepts only scalar correlation fields and builds
+  the logged object explicitly, so provider content, chunks, tool arguments,
+  and results cannot enter the diagnostic record through object spreading.
+- Existing lifecycle emitters continue to record delivery, deduplication, tool
+  effect, and recovery outcomes; the focused telemetry suite covers their safe
+  fields and the complete diagnostic contract.
+- Validation run: focused API telemetry tests passed, full uncached
+  `TURBO_FORCE=true pnpm run check` passed (26/26 tasks), and `git diff --check`
+  passed.
 
 ## Exit gate
 
-Task 008 is complete only when telemetry tests produce one correlated redacted
-record spanning generation, replay, reconnect, deduplication, recovery,
-tool-effect reuse, and terminalization. The record must include generation and
-attempt identity, event/cursor data, delivery mode, recovery decision, error
-category, terminal outcome, and effect outcome without message content,
-provider chunks, arguments, or results. Redaction tests and focused API tests
-must pass.
-
-Task 009 may be treated as already implemented, but no new runtime-consolidation
-work may be started until this gate is satisfied.
+Closed. The redacted diagnostic contract and focused API tests are present.
+Runtime-consolidation work remains in Task 009 and is not expanded here.

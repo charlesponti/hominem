@@ -1,3 +1,7 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -16,7 +20,7 @@ describe('HominemTests', () => {
   let otherTest: HominemTests | undefined;
 
   afterEach(async () => {
-    await test?.close();
+    if (test) expect((await test.close()).remainingChats).toBe(0);
     await otherTest?.close();
     test = undefined;
     otherTest = undefined;
@@ -56,6 +60,61 @@ describe('HominemTests', () => {
       totalTokens: 10,
       completionTokens: 6,
     });
+  });
+
+  it('publishes redacted evidence with durable duplicate checks', async () => {
+    test = await HominemTests.create({
+      provider: scriptedProvider([textTurn('Evidence reply')]),
+    });
+
+    const result = await test.chat.start({ title: 'SDK evidence', message: 'Capture this' });
+    const evidence = await test.evidence(result.generationId, {
+      scenarioId: 'SDK-001',
+      chatId: result.chatId,
+    });
+
+    expect(evidence).toMatchObject({
+      schemaVersion: 1,
+      scenarioId: 'SDK-001',
+      correlation: {
+        generationId: result.generationId,
+        requestId: result.generationId,
+      },
+      terminalState: 'committed',
+      durableSequence: expect.any(Number),
+      messageIds: {
+        user: [expect.any(String)],
+        assistant: [expect.any(String)],
+      },
+      duplicateChecks: {
+        userMessages: true,
+        assistantMessages: true,
+        toolCalls: true,
+        terminalEvents: true,
+      },
+    });
+    expect(JSON.stringify(evidence)).not.toContain('Capture this');
+  });
+
+  it('writes a manifest artifact for browser and mobile evidence consumers', async () => {
+    test = await HominemTests.create({
+      provider: scriptedProvider([textTurn('Persisted evidence')]),
+    });
+    const result = await test.chat.start({ title: 'SDK artifact', message: 'Write evidence' });
+    const directory = await mkdtemp(join(tmpdir(), 'hominem-testkit-'));
+    const outputPath = join(directory, 'SDK-002.json');
+
+    try {
+      const manifest = await test.writeEvidence(result.generationId, {
+        scenarioId: 'SDK-002',
+        outputPath,
+        chatId: result.chatId,
+      });
+      expect(JSON.parse(await readFile(outputPath, 'utf8'))).toEqual(manifest);
+      expect(manifest.artifactPaths).toEqual([outputPath]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it('commits a valid response when the provider omits usage metadata', async () => {

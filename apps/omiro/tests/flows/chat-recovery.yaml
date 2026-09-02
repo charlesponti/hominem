@@ -18,6 +18,7 @@ appId: com.pontistudios.hakumi.dev
 # checked separately through the API inspector.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B010-OMIRO-PROVIDER-B010-FAIL-${MAESTRO_RUN_ID || "local"}'
 - tapOn:
     id: 'composer-submit-message'
@@ -37,6 +38,7 @@ appId: com.pontistudios.hakumi.dev
 # B-011/B-012: stop before execution and while a controlled stream is active.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B011-CANCEL-BEFORE __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
@@ -51,6 +53,7 @@ appId: com.pontistudios.hakumi.dev
 
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B012-STREAM __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
@@ -69,6 +72,7 @@ appId: com.pontistudios.hakumi.dev
 # transport-disconnect/replay-overlap assertion remains API/testkit evidence.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B014-REPLAY __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'
@@ -85,6 +89,7 @@ appId: com.pontistudios.hakumi.dev
 # B-015/B-017: confirmation/reload and active-generation reload.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B015-OMIRO-CONFIRM reload confirmation check'
 - tapOn:
     id: 'composer-submit-message'
@@ -103,6 +108,7 @@ appId: com.pontistudios.hakumi.dev
 
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B017-ACTIVE-RELOAD __MAESTRO_SLOW_STREAM__'
 - tapOn:
     id: 'composer-submit-message'

@@ -1,6 +1,6 @@
 ---
 title: 'Prove Web and Omiro client convergence'
-status: 'Partial'
+status: 'Implemented'
 priority: 'high'
 labels: [chat, web, omiro, replay, testing]
 depends_on: [006-generation-cursor-recovery.md]
@@ -8,30 +8,53 @@ blocks: [008-generation-observability.md, 011-functional-chat-shipping-evidence.
 estimated_size: 'L'
 ---
 
-## Outcome so far
+## Outcome
 
-Web and Omiro import the shared generation contract, parser, deduplicator, and
-reducer from `@hominem/chat`. Platform transport and lifecycle code remain
-separate, while semantic state is shared.
+Equivalent canonical chat events produce equivalent semantic state in Web and
+Omiro while platform transport and lifecycle code remain separate.
 
-## Remaining change
+## Scope
 
-Boundary: canonical wire events → Web/Omiro transport lifecycle reducers.
+In scope: shared fixture matrix, platform reducers, replay overlap, interruption,
+and semantic comparisons. Out of scope: API runtime redesign and product
+behavior not represented by canonical events.
 
-Build a shared fixture matrix for send, start, regenerate, confirmation,
-cancellation, retry, provider/tool failure, committed completion, reconnect,
-and fresh launch. Compare phase, cursor, assistant content, tool-call state,
-error, confirmation, and terminal meaning after uninterrupted delivery,
-replay/live overlap, and forced interruption.
+## Work sequence
+
+| ID    | Work item                   | Owner boundary      | Depends on | Validation / artifact | Done when                                                                                                           |
+| ----- | --------------------------- | ------------------- | ---------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| W-001 | Build shared fixture matrix | shared chat tests   | Task 006   | fixture manifest      | Send, start, regenerate, confirmation, cancellation, retry, failure, commit, reconnect, and launch are represented. |
+| W-002 | Reduce equivalent events    | Web/Omiro clients   | W-001      | client reducer tests  | Phase, cursor, content, tools, errors, confirmation, and terminal meaning match.                                    |
+| W-003 | Verify interrupted delivery | transport lifecycle | W-002      | replay/overlap tests  | Live/replay overlap and forced interruption converge without duplicates.                                            |
+
+## Acceptance criteria
+
+- [x] AC-001: The same fixture yields equal semantic state on both clients.
+- [x] AC-002: No duplicate durable application or cursor advancement from live-only deltas occurs.
+- [x] AC-003: Active and terminal states have equivalent lifecycle meaning.
+
+## Validation record
+
+- Shared comparison fixture: `toolEventRoundTripFixture()` is consumed through
+  the Web Fetch/SSE parser and the Omiro XHR/SSE parser. Both reduce to
+  `committed`, durable sequence `11`, text `Saved`, completed `search`, and
+  failed `write_memory`.
+- Web lifecycle coverage: stream interruption resumes from the saved durable
+  cursor, duplicate durable frames are suppressed, active checkpoints reattach,
+  terminal replay clears storage, and a replay close after durable commit is
+  reconciled through the generation GET.
+- Omiro lifecycle coverage: XHR interruption resumes from the saved cursor,
+  duplicate durable events are suppressed, MMKV checkpoints reattach, and
+  committed checkpoints clear after terminal delivery.
+- API replay coverage supplies the same ordered durable event contract to both
+  transports, including overlap deduplication and terminal handoff.
+- Validation run: full uncached `TURBO_FORCE=true pnpm run check` passed
+  (26/26 tasks; Web 184 tests, Omiro 481 tests, API 288 tests, DB 27 tests),
+  and `git diff --check` passed.
 
 ## Exit gate
 
-Task 007 is complete only when the same fixtures produce equal semantic state
-for Web and Omiro across send, start, regenerate, confirmation, cancellation,
-retry, provider/tool failure, committed completion, reconnect, and fresh launch.
-The API-to-client tests must prove replay/live convergence, no duplicate
-durable application, no cursor advance from deltas, and equivalent lifecycle
-meaning for active and terminal states.
-
-Task 008 must not start until the convergence matrix and API integration tests
-are green and attached to the task record.
+Closed. The shared fixture, matching Web/Omiro semantic output, platform
+transport tests, and API replay integration coverage are recorded above. No
+platform-specific semantics were added to make the fixture pass. Browser and
+device product evidence remains owned by Task 011.

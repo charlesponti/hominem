@@ -78,6 +78,7 @@ appId: com.pontistudios.hakumi.dev
 # B-025: keyboard submission and accessible labels.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B025-OMIRO-KEYBOARD'
 - pressKey: ENTER
 - waitForAnimationToEnd:

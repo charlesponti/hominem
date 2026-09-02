@@ -22,6 +22,7 @@ appId: com.pontistudios.hakumi.dev
 # B-002: send one message and verify the response appears once.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B002-OMIRO-NORMAL-SEND'
 - tapOn:
     id: 'composer-submit-message'
@@ -30,7 +31,9 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible: 'B002-OMIRO-NORMAL-SEND'
 - takeScreenshot: /tmp/omiro-task003-b002-send-complete
 
-# B-003: create a chat through the normal new-chat entry point.
+# B-003: create a chat through the normal new-chat entry point. Reset to the
+# inbox first so this scenario does not depend on B-002's detail route.
+- runFlow: ../subflows/open-dev-home.yaml
 - openLink: 'hakumi-dev:///new-chat'
 - waitForAnimationToEnd:
     timeout: 3000
@@ -38,6 +41,7 @@ appId: com.pontistudios.hakumi.dev
     id: 'new-chat-composer-input'
 - tapOn:
     id: 'new-chat-composer-input'
+- eraseText: 100
 - inputText: 'B003-OMIRO-NEW-CHAT'
 - pressKey: BACK
 - tapOn:
@@ -49,15 +53,7 @@ appId: com.pontistudios.hakumi.dev
 - assertVisible: 'B003-OMIRO-NEW-CHAT'
 - takeScreenshot: /tmp/omiro-task003-b003-new-chat
 
-# B-004: unwind the real stack to the list, then open the new chat again. The
-# New Chat route was pushed over the prior detail route, so one Back reveals
-# that prior detail and the second Back returns to the inbox.
-- tapOn:
-    text: 'BackButton'
-- waitForAnimationToEnd:
-    timeout: 1500
-- assertVisible:
-    id: 'chat-composer-input'
+# B-004: return from the new chat detail to the inbox, then open the chat again.
 - tapOn:
     text: 'BackButton'
 - waitForAnimationToEnd:

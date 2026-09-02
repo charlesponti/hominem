@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 import { type AIUsageMetrics, convertSchemaToJsonSchema, type ChatFunctionTool } from '@hominem/ai';
 import {
@@ -197,6 +199,29 @@ export type ChatRouteResult = {
   durableEvents: GenerationWireEvent[];
   liveEvents: GenerationWireEvent[];
 };
+
+export type TestEvidenceManifest = {
+  schemaVersion: 1;
+  scenarioId: string;
+  userId: string;
+  chatId: string | null;
+  correlation: { requestId: string; generationId: string };
+  terminalState: string | null;
+  durableSequence: number;
+  durableEventTypes: string[];
+  messageIds: { user: string[]; assistant: string[] };
+  toolCallIds: string[];
+  toolEffectCount: number;
+  artifactPaths: string[];
+  duplicateChecks: {
+    userMessages: boolean;
+    assistantMessages: boolean;
+    toolCalls: boolean;
+    terminalEvents: boolean;
+  };
+};
+
+export type TestCleanupReceipt = { userId: string; remainingChats: number };
 
 export type ChatGenerationInput = {
   generationId?: string;
@@ -431,11 +456,79 @@ export class HominemTests {
       run,
       events: await ChatGenerationRepository.listEvents(db, generationId, this.userId),
       messages: run ? await ChatRepository.getMessages(db, run.chatId) : [],
+      toolEffects: run
+        ? await ChatGenerationRepository.listToolEffects(db, {
+            generationId,
+            ownerUserId: this.userId,
+          })
+        : [],
       usage: await AIUsageEventRepository.getSummary(db, { userId: this.userId }),
     };
   }
 
-  async close(): Promise<void> {
+  async evidence(
+    generationId: string,
+    options: { scenarioId: string; chatId?: string | null; artifactPaths?: string[] },
+  ): Promise<TestEvidenceManifest> {
+    const inspected = await this.inspect(generationId);
+    const terminalTypes = new Set([
+      'generation.committed',
+      'generation.cancelled',
+      'generation.failed',
+    ]);
+    const terminalEvents = inspected.events.filter((event) => terminalTypes.has(event.type));
+    const userMessages = inspected.messages.filter((message) => message.role === 'user');
+    const assistantMessages = inspected.messages.filter((message) => message.role === 'assistant');
+    const toolCallIds = assistantMessages.flatMap(
+      (message) => message.toolCalls?.map((call) => call.toolCallId) ?? [],
+    );
+
+    return {
+      schemaVersion: 1,
+      scenarioId: options.scenarioId,
+      userId: this.userId,
+      chatId: options.chatId ?? inspected.run?.chatId ?? null,
+      correlation: { requestId: generationId, generationId },
+      terminalState: inspected.run?.status ?? null,
+      durableSequence: inspected.events.at(-1)?.sequence ?? 0,
+      durableEventTypes: inspected.events.map((event) => event.type),
+      messageIds: {
+        user: userMessages.map((message) => message.id),
+        assistant: assistantMessages.map((message) => message.id),
+      },
+      toolCallIds,
+      toolEffectCount: inspected.toolEffects.length,
+      artifactPaths: options.artifactPaths ?? [],
+      duplicateChecks: {
+        userMessages:
+          new Set(userMessages.map((message) => message.id)).size === userMessages.length,
+        assistantMessages:
+          new Set(assistantMessages.map((message) => message.id)).size === assistantMessages.length,
+        toolCalls: new Set(toolCallIds).size === toolCallIds.length,
+        terminalEvents: terminalEvents.length <= 1,
+      },
+    };
+  }
+
+  async writeEvidence(
+    generationId: string,
+    options: { scenarioId: string; outputPath: string; chatId?: string | null },
+  ): Promise<TestEvidenceManifest> {
+    const manifest = await this.evidence(generationId, {
+      scenarioId: options.scenarioId,
+      chatId: options.chatId,
+      artifactPaths: [options.outputPath],
+    });
+    await mkdir(dirname(options.outputPath), { recursive: true });
+    await writeFile(options.outputPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+    return manifest;
+  }
+
+  async close(): Promise<TestCleanupReceipt> {
     await authDb.deleteFrom('user').where('id', '=', this.userId).execute();
+    return {
+      userId: this.userId,
+      remainingChats: (await ChatRepository.listForUser(db, this.userId)).chats.length,
+    };
   }
 }

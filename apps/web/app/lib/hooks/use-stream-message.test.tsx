@@ -412,6 +412,7 @@ describe('useStreamMessage', () => {
     );
 
     const onCommitted = vi.fn();
+    const onSettled = vi.fn();
     const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
 
     await waitFor(() => expect(result.current.status).toBe('failed'));
@@ -419,7 +420,7 @@ describe('useStreamMessage', () => {
       'I couldn’t finish that response. Please try again.',
     );
 
-    await result.current.retry({ responseLength: 'short', onCommitted });
+    await result.current.retry({ responseLength: 'short', onCommitted, onSettled });
 
     expect(
       mockClient.api.chats[':id'].generations[':generationId'].retry.$post,
@@ -431,6 +432,7 @@ describe('useStreamMessage', () => {
       expect.objectContaining({ init: expect.any(Object) }),
     );
     expect(onCommitted).toHaveBeenCalledOnce();
+    expect(onSettled).toHaveBeenCalledOnce();
     await waitFor(() => expect(result.current.status).toBe('committed'));
   });
 

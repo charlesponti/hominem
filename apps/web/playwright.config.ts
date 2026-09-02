@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
-const webUrl = process.env.WEB_URL ?? 'http://localhost:4445';
+const webUrl = process.env.WEB_URL ?? 'https://web.lvh.me:4200';
 
 export default defineConfig({
   testDir: './tests/e2e',

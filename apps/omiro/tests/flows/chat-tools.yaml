@@ -15,6 +15,7 @@ appId: com.pontistudios.hakumi.dev
 # B-006: successful tool call.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B006-OMIRO-TOOL-READY list my collections'
 - tapOn:
     id: 'composer-submit-message'
@@ -26,6 +27,7 @@ appId: com.pontistudios.hakumi.dev
 # B-007: confirmation-required tool, then approve.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B007-OMIRO-CONFIRM Create a private collection named Omiro B007.'
 - tapOn:
     id: 'composer-submit-message'
@@ -43,6 +45,7 @@ appId: com.pontistudios.hakumi.dev
 # B-008: confirmation-required tool, then reject.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B008-OMIRO-CONFIRM-REJECT Create a private collection named Omiro B008.'
 - tapOn:
     id: 'composer-submit-message'
@@ -61,6 +64,7 @@ appId: com.pontistudios.hakumi.dev
 # malformed tool arguments with this marker; no success assertion is allowed.
 - tapOn:
     id: 'chat-composer-input'
+- eraseText: 100
 - inputText: 'B009-OMIRO-TOOL-FAIL'
 - tapOn:
     id: 'composer-submit-message'

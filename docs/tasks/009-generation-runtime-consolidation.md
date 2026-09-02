@@ -10,28 +10,38 @@ estimated_size: 'XL'
 
 ## Outcome
 
-`ChatGenerationService` owns send, start, regenerate, confirmation response,
-replay, and cancellation. Its prepared-generation engine owns provider/tool
+ChatGenerationService owns send, start, regenerate, confirmation response,
+replay, and cancellation. The prepared-generation engine owns provider/tool
 execution, event persistence/publication, message commits, usage, embeddings,
-cancellation, and terminal handling. Speech and message deletion have
-application services for coordinated workflows.
+cancellation, and terminal handling.
 
-Generation RPC handlers authenticate, validate, invoke one service operation,
-and adapt the canonical iterable through shared SSE behavior. Resource CRUD
-routes remain direct repository adapters where no multi-resource workflow is
-coordinated.
+## Scope
+
+In scope: application-service ownership and RPC adapters. Out of scope:
+recovery policy, client convergence, observability completion, and release
+evidence.
+
+## Work sequence
+
+| ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
+| --- | --- | --- | --- | --- | --- |
+| W-001 | Move generation orchestration | API application services | Task 008 | service tests | All generation operations run through ChatGenerationService. |
+| W-002 | Simplify RPC adapters | chat RPC routes | W-001 | route tests | Handlers authenticate, validate, invoke one operation, and adapt canonical SSE. |
+| W-003 | Extract adjacent workflows | speech/message services | W-002 | focused service tests | Speech and message deletion use application services where coordination is required. |
+| W-004 | Verify ownership boundary | API production code | W-003 | exact search + full validation | Routes contain no provider, repository, MCP, bus, or lifecycle orchestration. |
+
+## Acceptance criteria
+
+- [x] AC-001: Service and route ownership matches the canonical runtime boundary.
+- [x] AC-002: Focused API tests and the production ownership search pass.
+- [x] AC-003: Recovery, convergence, observability, and release evidence are not claimed by this task.
 
 ## Evidence
 
-- `services/api/src/application/chat-generation.service.ts` and its tests.
-- `chat-speech.service.ts` and `chat-message.service.ts` with focused tests.
-- Split chat RPC route family and route tests.
-- Latest focused API run: 50 files, 250 tests passed.
+The service/route tests and production ownership search are the authoritative
+artifacts. Current runtime evidence is summarized in the change record.
 
 ## Exit gate
 
-This task is recorded as implemented from earlier work. Its gate is the
-application-service and route evidence above plus a clean production search
-showing no route-owned provider, repository, MCP, bus, or generation lifecycle
-orchestration. Recovery, convergence, observability, and shipping evidence do
-not count as satisfied by this extraction.
+Implemented. Do not reopen this task for later recovery or release evidence;
+those belong to their named tasks.

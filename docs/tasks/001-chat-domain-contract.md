@@ -1,36 +1,45 @@
 ---
-title: 'Canonical chat domain contract'
+title: 'Define the canonical chat domain contract'
 status: 'Implemented'
 priority: 'high'
 labels: [chat, domain, schema]
 depends_on: []
-blocks: []
+blocks: [002-chat-tool-event-round-trip.md]
 estimated_size: 'L'
 ---
 
 ## Outcome
 
-`@hominem/chat` owns chat snapshots, attachments, tool-call records, lifecycle
-fields, and generation event schemas. The schemas are strict and inferred, and
-are shared by the database, API application, Web, and Omiro.
+The shared chat package is the single runtime owner of chat snapshots,
+attachments, tool-call records, lifecycle fields, and generation events shared
+by DB, API, Web, and Omiro.
 
-Confirmation status and execution outcome are separate fields. Waiting for
-confirmation is not commitment or execution. Invalid lifecycle combinations,
-unknown legacy `status` fields, non-object JSON values, empty identifiers, and
-invalid file sizes are rejected.
+## Scope
+
+In scope: strict schemas, inferred types, lifecycle invariants, and contract
+tests. Out of scope: route behavior, UI behavior, persistence migrations, and
+provider implementation.
+
+## Work sequence
+
+| ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
+| --- | --- | --- | --- | --- | --- |
+| W-001 | Define shared records | packages/chat schemas | — | Chat contract tests | All shared records have one runtime schema owner. |
+| W-002 | Enforce lifecycle invariants | packages/chat | W-001 | Valid and malformed fixture tests | Confirmation, execution, commitment, IDs, JSON, and file sizes reject invalid combinations. |
+| W-003 | Remove duplicate contracts | DB/API/Web/Omiro consumers | W-002 | Production search + package tests | Consumers import the canonical contract without duplicate schemas. |
+
+## Acceptance criteria
+
+- [x] AC-001: Valid records parse and infer shared types.
+- [x] AC-002: Invalid lifecycle combinations, unknown legacy fields, invalid JSON, empty IDs, and invalid file sizes are rejected.
+- [x] AC-003: Focused Chat, DB, RPC, Web, and Omiro checks pass.
+
+## Evidence
+
+Focused test output and the production symbol search are the authoritative
+evidence. Volatile run IDs belong in generated artifacts.
 
 ## Exit gate
 
-Task 001 is complete only when `packages/chat/src/generation-schemas.ts` and
-`packages/chat/src/chat-record-schemas.ts` are the sole shared runtime schema
-owners; Chat schema, generation, DB, RPC, Web, and Omiro contract tests cover
-valid and malformed records; and the exact production search finds no duplicate
-chat lifecycle schema, reducer, or DTO conversion outside the domain owner.
-
-The gate must also record the focused Chat, DB, RPC, Web, and Omiro validation
-commands and results.
-
-## Remaining work
-
-None. New shared chat behavior must be added to `@hominem/chat` with contract
-tests before consumers are changed.
+Implemented. New shared chat behavior must be added to the shared package with
+contract tests before consumers change. No remaining work belongs here.
