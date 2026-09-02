@@ -51,7 +51,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.0",
+    "@vitest/coverage-v8": "4.1.11",
     "react": "catalog:"
   },
   "peerDependencies": {
