@@ -95,6 +95,39 @@ actually reads when a package's own `"dev": "portless"` script runs (a root
 If you add a new portless-fronted app, give it this key, not a root config
 entry.
 
+## Verifying the local stack
+
+After dependency or React catalog changes, run `pnpm install --frozen-lockfile`
+and restart SSR apps before browser tests. An already-running Vite/React
+Router process can retain an older `react-dom` version and produce a misleading
+SSR `useContext` failure even though the workspace install is now consistent.
+
+Smoke-test the actual origins selected for the run:
+
+```bash
+curl -k -o /dev/null -w '%{http_code}\n' https://api.lvh.me:4200/
+curl -k -o /dev/null -w '%{http_code}\n' https://web.lvh.me:4200/chats
+curl -k -o /dev/null -w '%{http_code}\n' https://career.lvh.me:4200/
+curl -k -o /dev/null -w '%{http_code}\n' https://finance.lvh.me:4200/
+```
+
+The Web `/chats` endpoint returning `302` is expected when the browser is not
+authenticated; it proves the Web server and auth redirect are reachable.
+When using the fixed-port Browser harness, use `http://localhost:4040` and
+`http://localhost:4445` instead and do not mix the two origin sets in one run.
+
+For authenticated Playwright runs, prepare the stable disposable session in
+the same shell that starts Playwright:
+
+```bash
+eval "$(pnpm --filter @hominem/api --silent e2e:setup 2>/dev/null | grep 'export ')"
+pnpm --filter @hominem/web test:e2e --project=chat
+```
+
+The Playwright auth setup requires `E2E_SESSION_COOKIE`; skipped scenarios must
+retain their exact harness limitation in the evidence rather than being
+counted as passing.
+
 Because portless gives each app its own subdomain (`api.lvh.me`,
 `career.lvh.me`, `finance.lvh.me`, `web.lvh.me`) rather than just a
 different port on the same host, the hosted-login session cookie needs

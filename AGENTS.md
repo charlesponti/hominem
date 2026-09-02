@@ -8,6 +8,8 @@
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md); run the `hominem-evidence` skill's checklist before reporting a change complete.
 - **Web auth**: Career and Finance redirect unauthenticated browsers to the API hosted login. Browser traffic uses the public API, while server auth/data calls require the private API URL (Railway-internal in production). Development and production use the same cookie mechanism with different env values. See [docs/authentication.md](docs/authentication.md). After changing auth config or deployment topology, run the `hominem-auth-production-verify` skill.
 - **Runbook skills**: `.agents/skills/` holds operational runbooks alongside app skills — `hominem-evidence`, `hominem-auth-production-verify`, `hominem-observability`, `hominem-development`, and `chatgpt-plugin-submission` pair with their `docs/*.md` decision records; the doc holds the "why", the skill holds the "how".
+- After merging dependency or catalog updates, run `pnpm install --frozen-lockfile` and restart any SSR app before browser verification. A stale running process can load mismatched React versions and fail during SSR even when the installed workspace is correct.
+- For local smoke checks, distinguish fixed-port services (`http://localhost:4040` / `:4445`) from Portless services (`https://api.lvh.me:4200` / `https://web.lvh.me:4200`). Do not treat an unauthenticated Web `302` to hosted login as a service failure.
 
 ## Decision authority
 
