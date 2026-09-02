@@ -13,6 +13,7 @@ const mockClient = vi.hoisted(() => ({
         generations: {
           ':generationId': {
             cancel: { $post: vi.fn() },
+            $get: vi.fn(),
             stream: { $get: vi.fn() },
             retry: { $post: vi.fn() },
           },
@@ -360,6 +361,9 @@ describe('useStreamMessage', () => {
         }),
       ]),
     );
+    mockClient.api.chats[':id'].generations[':generationId'].$get.mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 'committed' })),
+    );
 
     const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
     await result.current.stream({ message: 'Recover me' });
@@ -410,7 +414,7 @@ describe('useStreamMessage', () => {
     const onCommitted = vi.fn();
     const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
 
-    expect(result.current.status).toBe('failed');
+    await waitFor(() => expect(result.current.status).toBe('failed'));
     expect(result.current.error?.message).toBe(
       'I couldn’t finish that response. Please try again.',
     );
@@ -492,6 +496,24 @@ describe('useStreamMessage', () => {
       { param: { id: 'chat-1', generationId: 'g1' } },
       { init: expect.objectContaining({ headers: { 'Last-Event-ID': '5' } }) },
     );
+    expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
+  });
+
+  it('reconciles a replay that closes after the durable run already committed', async () => {
+    window.localStorage.setItem(
+      'chat-generation:chat-1',
+      JSON.stringify({ generationId: 'g1', phase: 'running', lastDurableSequence: 5 }),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].stream.$get.mockResolvedValueOnce(
+      streamResponse([]),
+    );
+    mockClient.api.chats[':id'].generations[':generationId'].$get.mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 'committed' })),
+    );
+
+    const { result } = renderHook(() => useStreamMessage({ chatId: 'chat-1' }), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('committed'));
     expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
   });
 

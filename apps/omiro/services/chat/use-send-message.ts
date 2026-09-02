@@ -149,6 +149,10 @@ export function useSendMessage({ chatId }: { chatId: string }) {
           if ('payload' in event && event.type === 'generation.phase_changed') {
             return;
           }
+          if ('payload' in event && event.type === 'confirmation.required') {
+            void invalidateChatQueries(queryClient, chatId);
+            return;
+          }
           if ('payload' in event && event.type === 'generation.committed') {
             const committed = toMessageOutput(event.payload.message);
             if (committed) {

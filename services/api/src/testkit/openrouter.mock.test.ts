@@ -51,6 +51,31 @@ describe('scripted OpenRouter provider', () => {
     expect(chunks[0]?.choices[0]?.delta?.toolCalls?.[0]?.function?.name).toBe('list_collections');
   });
 
+  it('routes from the latest user request when earlier history mentions another tool', async () => {
+    const chunks = await collect(
+      streamChatCompletion({
+        model: 'test-model',
+        messages: [
+          { role: 'user', content: 'List my collections.' },
+          { role: 'assistant', content: 'Here are your collections.' },
+          { role: 'user', content: 'Create a private collection.' },
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: { name: 'create_collection', description: 'Create a collection.' },
+          },
+          {
+            type: 'function',
+            function: { name: 'list_collections', description: 'List collections.' },
+          },
+        ],
+      }),
+    );
+
+    expect(chunks[0]?.choices[0]?.delta?.toolCalls?.[0]?.function?.name).toBe('create_collection');
+  });
+
   it('returns a deterministic completion after a tool result', async () => {
     const chunks = await collect(
       streamChatCompletion({

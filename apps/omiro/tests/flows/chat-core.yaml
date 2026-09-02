@@ -1,0 +1,90 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Task 003 Omiro evidence: B-001 through B-005.
+# Run this file before the tools/recovery/action groups. Each scenario leaves a
+# screenshot behind so the visual state can be reviewed alongside API evidence.
+
+- runFlow: ../subflows/reset-to-home.yaml
+- assertVisible:
+    id: 'inbox-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b001-home
+
+# B-001: open the most recent completed chat directly.
+- tapOn:
+    id: 'inbox-item-chat-open'
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b001-direct-load
+
+# B-002: send one message and verify the response appears once.
+- tapOn:
+    id: 'chat-composer-input'
+- inputText: 'B002-OMIRO-NORMAL-SEND'
+- tapOn:
+    id: 'composer-submit-message'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: 'B002-OMIRO-NORMAL-SEND'
+- takeScreenshot: /tmp/omiro-task003-b002-send-complete
+
+# B-003: create a chat through the normal new-chat entry point.
+- openLink: 'hakumi-dev:///new-chat'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: 'new-chat-composer-input'
+- tapOn:
+    id: 'new-chat-composer-input'
+- inputText: 'B003-OMIRO-NEW-CHAT'
+- pressKey: BACK
+- tapOn:
+    id: 'new-chat-submit'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+- assertVisible: 'B003-OMIRO-NEW-CHAT'
+- takeScreenshot: /tmp/omiro-task003-b003-new-chat
+
+# B-004: unwind the real stack to the list, then open the new chat again. The
+# New Chat route was pushed over the prior detail route, so one Back reveals
+# that prior detail and the second Back returns to the inbox.
+- tapOn:
+    text: 'BackButton'
+- waitForAnimationToEnd:
+    timeout: 1500
+- assertVisible:
+    id: 'chat-composer-input'
+- tapOn:
+    text: 'BackButton'
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: 'inbox-composer-input'
+- tapOn:
+    id: 'inbox-item-chat-open'
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible:
+    id: 'chat-composer-input'
+- assertVisible: 'B003-OMIRO-NEW-CHAT'
+- takeScreenshot: /tmp/omiro-task003-b004-navigation
+
+# B-005: activate the latest assistant message, regenerate it, and verify the
+# chat remains usable. The durable generation/message duplicate check belongs in
+# the API evidence record for the chat opened by this flow.
+- tapOn:
+    text: 'Scripted response: B003-OMIRO-NEW-CHAT'
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    text: 'arrow.clockwise'
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: 'chat-composer-input'
+- takeScreenshot: /tmp/omiro-task003-b005-regeneration

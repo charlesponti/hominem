@@ -224,20 +224,22 @@ export default function ChatPage({
         </RouteHeader>
 
         <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
-            {isSettingsOpen ? (
-              <SheetContent aria-label="Chat settings">
-                <SheetHeader>
-                  <SheetTitle>Chat settings</SheetTitle>
-                </SheetHeader>
-                <ChatResponseSettings
-                  onChange={setResponseLength}
-                  onClose={() => setIsSettingsOpen(false)}
-                  value={responseLength}
-                />
-              </SheetContent>
-            ) : null}
-          </Sheet>
+          {loadState === 'ready' ? (
+            <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
+              {isSettingsOpen ? (
+                <SheetContent aria-label="Chat settings">
+                  <SheetHeader>
+                    <SheetTitle>Chat settings</SheetTitle>
+                  </SheetHeader>
+                  <ChatResponseSettings
+                    onChange={setResponseLength}
+                    onClose={() => setIsSettingsOpen(false)}
+                    value={responseLength}
+                  />
+                </SheetContent>
+              ) : null}
+            </Sheet>
+          ) : null}
 
           <ChatConversation
             activeSpeechMessageId={activeSpeechMessageId}
@@ -360,21 +362,23 @@ export default function ChatPage({
             </DialogContent>
           </Dialog>
 
-          <div className="mx-auto w-full max-w-5xl">
-            <ChatComposerPanel
-              chatId={chatId}
-              currentChatTitle={currentChat?.title}
-              display={display}
-              isOnline={isOnline}
-              isRetryable={isRetryable}
-              regeneration={regeneration}
-              responseLength={responseLength}
-              seedNote={seedNote}
-              setIsRetryable={setIsRetryable}
-              streamMessage={streamMessage}
-              updateChatTitle={updateChatTitle}
-            />
-          </div>
+          {loadState === 'ready' ? (
+            <div className="mx-auto w-full max-w-5xl">
+              <ChatComposerPanel
+                chatId={chatId}
+                currentChatTitle={currentChat?.title}
+                display={display}
+                isOnline={isOnline}
+                isRetryable={isRetryable}
+                regeneration={regeneration}
+                responseLength={responseLength}
+                seedNote={seedNote}
+                setIsRetryable={setIsRetryable}
+                streamMessage={streamMessage}
+                updateChatTitle={updateChatTitle}
+              />
+            </div>
+          ) : null}
         </div>
       </m.div>
     </LazyMotion>

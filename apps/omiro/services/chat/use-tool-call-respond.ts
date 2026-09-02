@@ -1,11 +1,13 @@
-import { useApiClient } from '@hominem/rpc/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
+
+import { API_BASE_URL } from '~/constants';
+import { useAuth } from '~/services/auth/auth-provider';
 
 import { chatKeys } from '../notes/query-keys';
 
 export function useToolCallRespond({ chatId }: { chatId: string }) {
-  const client = useApiClient();
+  const { getAuthHeaders } = useAuth();
   const queryClient = useQueryClient();
   const [isResponding, setIsResponding] = useState(false);
 
@@ -13,12 +15,22 @@ export function useToolCallRespond({ chatId }: { chatId: string }) {
     async (input: { messageId: string; toolCallId: string; approved: boolean }) => {
       setIsResponding(true);
       try {
-        const response = await client.api.chats[':id'].messages[':messageId']['tool-calls'][
-          ':toolCallId'
-        ].respond.$post({
-          param: { id: chatId, messageId: input.messageId, toolCallId: input.toolCallId },
-          json: { approved: input.approved },
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/api/chats/${chatId}/messages/${input.messageId}/tool-calls/${input.toolCallId}/respond`,
+          {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              ...(await getAuthHeaders()),
+            },
+            credentials: 'include',
+            body: JSON.stringify({ approved: input.approved }),
+          },
+        );
+        if (!response.ok) {
+          const message = await response.text().catch(() => '');
+          throw new Error(message || `Request failed with status ${response.status}`);
+        }
         await response.text();
       } finally {
         setIsResponding(false);
@@ -26,7 +38,7 @@ export function useToolCallRespond({ chatId }: { chatId: string }) {
         await queryClient.invalidateQueries({ queryKey: chatKeys.activeChat(chatId) });
       }
     },
-    [chatId, client, queryClient],
+    [chatId, getAuthHeaders, queryClient],
   );
 
   return { isResponding, respond };

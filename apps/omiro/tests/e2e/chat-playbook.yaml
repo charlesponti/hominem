@@ -1,0 +1,10 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Complete ordered Omiro chat playbook runner.
+# It never starts/stops the API, Metro, or simulator. The user must provide the
+# running app and API/test provider before invoking this flow.
+
+- runFlow: ../flows/chat-core.yaml
+- runFlow: ../flows/chat-tools.yaml
+- runFlow: ../flows/chat-recovery.yaml
+- runFlow: ../flows/chat-actions.yaml

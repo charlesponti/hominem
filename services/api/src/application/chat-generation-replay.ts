@@ -58,6 +58,28 @@ export async function* replayGenerationEvents(
     }
     if (source.stopAfterLoad) return;
 
+    // The terminal event can be committed between the initial load and the
+    // subscription becoming observable. Recheck durable history once before
+    // waiting so a reload cannot get stuck on a missed live publication.
+    const handoffHistory = await source.load();
+    for (const record of handoffHistory) {
+      if (record.sequence <= cursor) continue;
+      cursor = record.sequence;
+      source.onDelivery?.({
+        generationId: record.generationId,
+        sequence: record.sequence,
+        delivery: 'replayed',
+      });
+      yield parseGenerationHistoryEvent({
+        version: 1,
+        generationId: record.generationId,
+        sequence: record.sequence,
+        type: record.type,
+        payload: record.payload,
+      });
+      if (isTerminal(record.type)) return;
+    }
+
     for await (const record of subscription) {
       if (record.sequence <= cursor) {
         source.onDeduplicated?.({ generationId: record.generationId, sequence: record.sequence });

@@ -67,22 +67,28 @@ export function MessageToolCalls({
           {toolCall.confirmationStatus === 'pending' && onRespond ? (
             <View style={styles.actions}>
               <Pressable
+                accessible
                 accessibilityLabel={`Approve ${toolCall.toolName}`}
+                accessibilityRole="button"
                 disabled={responding}
-                onPress={() =>
-                  onRespond({ messageId, toolCallId: toolCall.toolCallId, approved: true })
-                }
+                onPress={() => {
+                  void onRespond({ messageId, toolCallId: toolCall.toolCallId, approved: true });
+                }}
                 style={styles.action}
+                testID="tool-confirm-approve"
               >
                 <Text style={styles.actionText}>Approve</Text>
               </Pressable>
               <Pressable
+                accessible
                 accessibilityLabel={`Reject ${toolCall.toolName}`}
+                accessibilityRole="button"
                 disabled={responding}
-                onPress={() =>
-                  onRespond({ messageId, toolCallId: toolCall.toolCallId, approved: false })
-                }
+                onPress={() => {
+                  void onRespond({ messageId, toolCallId: toolCall.toolCallId, approved: false });
+                }}
                 style={styles.action}
+                testID="tool-confirm-reject"
               >
                 <Text style={styles.actionText}>Reject</Text>
               </Pressable>

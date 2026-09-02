@@ -68,7 +68,10 @@ interface StreamInput {
 export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
   const client = useApiClient();
-  const [restoredCheckpoint] = useState(() => readGenerationCheckpoint(chatId));
+  // Read browser-only recovery state after hydration so SSR and the first
+  // client render produce the same composer controls.
+  const [restoredCheckpoint, setRestoredCheckpoint] =
+    useState<ReturnType<typeof readGenerationCheckpoint>>(null);
   const [text, setText] = useState('');
   const [reasoning, setReasoning] = useState('');
   const [toolSteps, setToolSteps] = useState<
@@ -81,17 +84,23 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   const [status, setStatus] = useState<StreamStatus>(
     restoredCheckpoint ? statusFromPhase(restoredCheckpoint.phase) : 'idle',
   );
-  const [error, setError] = useState<Error | null>(() =>
-    restoredCheckpoint?.phase === 'failed' ? new Error(PROVIDER_FAILURE_MESSAGE) : null,
-  );
+  const [error, setError] = useState<Error | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const generationIdRef = useRef<string | null>(restoredCheckpoint?.generationId ?? null);
+  const generationIdRef = useRef<string | null>(null);
   const resumedGenerationRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
-  const failedGenerationIdRef = useRef<string | null>(
-    restoredCheckpoint?.phase === 'failed' ? restoredCheckpoint.generationId : null,
-  );
+  const failedGenerationIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const checkpoint = readGenerationCheckpoint(chatId);
+    setRestoredCheckpoint(checkpoint);
+    if (checkpoint?.phase === 'failed') {
+      setError(new Error(PROVIDER_FAILURE_MESSAGE));
+      setStatus('failed');
+      failedGenerationIdRef.current = checkpoint.generationId;
+    }
+  }, [chatId]);
 
   const persistCheckpoint = useCallback(
     (state: GenerationClientState) => {
@@ -161,7 +170,27 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
             void invalidateChatQueries(queryClient, chatId);
           }
         });
-        if (clientState.phase !== 'cancelled') await invalidateChatQueries(queryClient, chatId);
+        if (clientState.phase !== 'cancelled') {
+          // A reconnect can receive [DONE] without the terminal event when
+          // the event was committed between the initial status read and the
+          // replay subscription. Ask durable state what actually happened.
+          const runResponse = await client.api.chats[':id'].generations[':generationId'].$get({
+            param: { id: chatId, generationId: restoredCheckpoint.generationId },
+          });
+          const run = await runResponse.json();
+          if (run.status === 'committed') {
+            clearCheckpoint();
+            setStatus('committed');
+          } else if (run.status === 'cancelled') {
+            clearCheckpoint();
+            setStatus('cancelled');
+          } else if (run.status === 'failed') {
+            setError(new Error(PROVIDER_FAILURE_MESSAGE));
+            setStatus('failed');
+            failedGenerationIdRef.current = restoredCheckpoint.generationId;
+          }
+          await invalidateChatQueries(queryClient, chatId);
+        }
       } catch (caught) {
         if (caught instanceof DOMException && caught.name === 'AbortError') return;
         setError(caught instanceof Error ? caught : new Error(String(caught)));
@@ -173,7 +202,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       }
     })();
     return () => controller.abort();
-  }, [applyRestoredEvent, chatId, client, queryClient, restoredCheckpoint]);
+  }, [applyRestoredEvent, chatId, clearCheckpoint, client, queryClient, restoredCheckpoint]);
 
   const stream = useCallback(
     async (input: StreamInput) => {

@@ -11,15 +11,15 @@ pnpm dev
 
 ## How To Think About The Commands
 
-| Need                       | Run                 | When to use it                                   |
-| -------------------------- | ------------------- | ------------------------------------------------ |
-| Start local development    | `pnpm dev`       | Normal day-to-day work                           |
-| Build the app              | `pnpm build`     | Before deployment or to verify production output |
-| Run the app after a build  | `pnpm start`     | Smoke test the built server locally              |
-| Check code style           | `pnpm lint`      | Before commits and PRs                           |
-| Format code                | `pnpm format`    | Fix formatting issues quickly                    |
-| Check TypeScript           | `pnpm typecheck` | Before commits and PRs                           |
-| Run tests                  | `pnpm test`      | Placeholder until the non-Storybook suite returns |
+| Need                      | Run              | When to use it                                    |
+| ------------------------- | ---------------- | ------------------------------------------------- |
+| Start local development   | `pnpm dev`       | Normal day-to-day work                            |
+| Build the app             | `pnpm build`     | Before deployment or to verify production output  |
+| Run the app after a build | `pnpm start`     | Smoke test the built server locally               |
+| Check code style          | `pnpm lint`      | Before commits and PRs                            |
+| Format code               | `pnpm format`    | Fix formatting issues quickly                     |
+| Check TypeScript          | `pnpm typecheck` | Before commits and PRs                            |
+| Run tests                 | `pnpm test`      | Placeholder until the non-Storybook suite returns |
 
 ## Daily Workflow
 
@@ -49,8 +49,18 @@ eval "$(pnpm --filter @hominem/api --silent e2e:setup 2>/dev/null | grep 'export
 pnpm --filter @hominem/web test:e2e
 ```
 
-The Playwright suite uses the running services; it does not start or stop
-them. Set `WEB_URL` to target another local Web URL.
+The Playwright suite runs B-001 through B-025 in playbook order using the
+running services; it does not start or stop them. Set `WEB_URL` to target
+another local Web URL. To rerun one scenario while debugging, use for example:
+
+```sh
+pnpm --filter @hominem/web test:e2e --project=chat -g 'B-013'
+```
+
+The suite attaches one JSON evidence record and a full-page DOM/screenshot
+artifact for every scenario. Traces and videos are retained for failures.
+B-020 and B-021 are reported as skipped when the server-side chat loader cannot
+be intercepted by Playwright; the skip includes that exact harness limitation.
 
 ### Builds
 

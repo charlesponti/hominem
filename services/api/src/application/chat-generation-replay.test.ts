@@ -126,6 +126,33 @@ describe('replayGenerationEvents', () => {
     expect(deduplicated).toEqual([1]);
     expect(subscription.subscribe().close).toHaveBeenCalled();
   });
+
+  it('reloads history before waiting when a terminal event races the replay handoff', async () => {
+    let loadCount = 0;
+    const subscription: AsyncIterable<ReplayEventRecord> & { close: () => void } = {
+      close: vi.fn(),
+      [Symbol.asyncIterator]() {
+        return {
+          next: async () => ({ done: true, value: undefined }) as const,
+        };
+      },
+    };
+    const replaySource: GenerationReplaySource = {
+      load: async () => {
+        loadCount += 1;
+        return loadCount === 1
+          ? [event(1, 'generation.phase_changed')]
+          : [event(1, 'generation.phase_changed'), event(2, 'generation.committed')];
+      },
+      subscribe: () => subscription,
+    };
+    const replayed: GenerationEventType[] = [];
+
+    for await (const value of replayGenerationEvents(replaySource, 0)) replayed.push(value.type);
+
+    expect(replayed).toEqual(['generation.phase_changed', 'generation.committed']);
+    expect(loadCount).toBe(2);
+  });
 });
 
 type GenerationEventType = ReplayEventRecord['type'];

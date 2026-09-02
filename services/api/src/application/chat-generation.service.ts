@@ -1029,6 +1029,13 @@ export class ChatGenerationService {
       usage = result.usage;
       toolCallCount = result.toolCallRecords.length;
 
+      const currentRun = await ChatRepository.getGenerationRunById(
+        db,
+        input.generationId,
+        input.userId,
+      );
+      if (currentRun?.status === 'cancelled') return;
+
       if (!result.assistantText.trim() && !result.pendingToolCall) {
         throw new Error('No reply was generated');
       }

@@ -392,6 +392,52 @@ describe('ChatGenerationService.cancel', () => {
       payload: { message: 'Generation failed' },
     });
   });
+
+  it('does not commit provider output after cancellation wins during execution', async () => {
+    mocks.getOwnedOrThrow.mockResolvedValue({
+      id: input.chatId,
+      userId: input.ownerUserId,
+      title: 'Chat',
+      archivedAt: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    mocks.getMessageById.mockResolvedValue(null);
+    mocks.getGenerationRunById.mockResolvedValue({ ...preparingRun, status: 'cancelled' });
+    mocks.executeGenerationTurn.mockResolvedValue({
+      assistantText: 'late provider output',
+      reasoningText: null,
+      toolCallRecords: [],
+      usage: null,
+      pendingToolCall: null,
+    });
+    mocks.appendEvent.mockImplementation(
+      async (_trx: unknown, args: { event: Record<string, unknown> }) => ({
+        ...event(String(args.event.type), mocks.appendEvent.mock.calls.length),
+        payload: args.event,
+      }),
+    );
+
+    const stream = await new ChatGenerationService().send({
+      userId: input.ownerUserId,
+      generationId: input.generationId,
+      chatId: input.chatId,
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'hello' }],
+      tools: [],
+      userMessageId: null,
+    });
+    const events = [];
+    for await (const value of stream) events.push(value);
+
+    expect(events).not.toContainEqual(expect.objectContaining({ type: 'generation.committed' }));
+    expect(mocks.executeGenerationTurn).toHaveBeenCalledOnce();
+    expect(mocks.appendEvent.mock.calls.map(([, args]) => args.event.type)).toEqual([
+      'generation.started',
+      'generation.accepted',
+      'generation.phase_changed',
+    ]);
+  });
 });
 
 describe('ChatGenerationService.retryMessage', () => {

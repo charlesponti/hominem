@@ -276,7 +276,7 @@ ahead of the required end-to-end evidence. The next pass must:
 - Rerun B-005 and B-007 in a clean Browser session with the scripted provider,
   proving regeneration and confirmation resume without duplicate visible or
   durable messages.
-- Run and record B-008–B-015, B-017, B-020–B-021, and B-024, or record the exact
+- Run and record B-014–B-015, B-017, B-020–B-021, and B-024, or record the exact
   harness dependency when a state cannot be produced.
 - Finish the partial assertions for B-019, B-022, B-023, and B-025.
 - Capture clean DOM/screenshot, Browser console, API correlation, durable
@@ -405,8 +405,67 @@ Browser timing controls are now available in the local scripted provider:
 `B011-CANCEL-BEFORE` delays provider response, while `B012-STREAM`,
 `B013-DISCONNECT`, `B014-REPLAY`, and `B017-ACTIVE-RELOAD` emit streamed frames
 with deterministic gaps. They are test-environment-only and are documented
-in `services/api/README.md`; Browser execution of those scenarios is still
-pending.
+in `services/api/README.md`; B-011 through B-013 now have Browser evidence
+below.
+
+B-011 was then run against fresh disposable chat
+`01a06123-2b1a-74a0-b057-02ae0ed348e7`. The exact
+`B011-CANCEL-BEFORE` marker was submitted and Stop was clicked before the
+scripted provider response. The Browser showed the neutral `Stopped.` state,
+kept the original composer text, and rendered no assistant success. A clean
+full-page screenshot and DOM snapshot were captured; the Browser console had
+no warnings or errors. Durable inspection showed one cancelled send run
+(`f889959d-35a1-44d2-b58b-da49da172507`), one user message, no assistant
+message, and ordered events `generation.started`, `generation.accepted`, two
+phase changes, `generation.cancel_requested`, and `generation.cancelled`.
+
+This run exposed a race where late provider output could continue into the
+saving path after cancellation had already committed. A focused service
+regression now checks the run status immediately after generation execution;
+cancelled runs return before snapshot or committed-event persistence. The
+focused service test passes, and the Web typecheck passed after refreshing the
+API declaration output. B-011: Implemented.
+
+B-012 was run against fresh disposable chat
+`01a06124-70b6-76f3-b1a6-06b9547e1e35` with the `B012-STREAM` marker. Submit
+and Stop were issued in one Browser operation while the scripted provider was
+streaming. The UI ended in neutral `Stopped.` state, retained the single user
+message/draft, and showed no assistant success. A clean full-page screenshot
+and DOM snapshot were captured; the Browser console had no warnings or errors.
+Durable inspection showed one cancelled send run
+(`88c86e81-68c3-49b5-9ebf-b2d627860550`), one user message, no assistant
+message, and ordered events `generation.started`, `generation.accepted`, two
+phase changes, `generation.cancel_requested`, and `generation.cancelled`.
+B-012: Implemented.
+
+B-013 initially exposed a hydration/replay handoff bug: the Web hook read the
+browser-only generation checkpoint during render, while the server rendered
+the idle composer, and a reconnect could finish with `[DONE]` after the durable
+terminal event had already been committed. The Web hook now restores the
+checkpoint after hydration and reconciles a closed replay against the durable
+generation status. Focused Web coverage verifies both paths; Vitest excludes
+the Playwright suite from the unit-test configuration so the focused command
+does not load browser tests as Vitest modules.
+
+B-013 was rerun on fresh disposable chat
+`01a06139-eb9b-786e-a57b-e0ed5b481158` with `B013-DISCONNECT`. The page was
+reloaded during the delayed stream and rendered the original user message plus
+`Scripted response: B013-DISCONNECT`; the composer returned to the idle Submit
+state. The Browser DOM and full-page screenshot were captured, and the Browser
+console had no warnings or errors. Durable inspection showed committed run
+`ad63fb87-0867-40ed-90ea-741c2f017af6`, exactly one user message
+(`01a06139-f8a8-7e8b-9247-d4054c25e036`), exactly one assistant message
+(`01a0613a-04fc-781b-9e60-91a20c4b7f28`), and seven ordered events ending in
+`generation.committed`. B-013: Implemented.
+
+The repeatable Web harness now lives in
+`apps/web/tests/e2e/chat-playbook.spec.ts`. It contains one serial Playwright
+test for every B-001–B-025 scenario, shares deterministic chat/stream/status
+helpers, and can run the whole matrix or a single scenario with
+`pnpm --filter @hominem/web test:e2e --project=chat -g 'B-013'`. The suite uses
+the authenticated state produced by `api e2e:setup` and never starts or stops
+the running services. A full run still requires `E2E_SESSION_COOKIE` in the
+shell that launches Playwright.
 
 Environment checkpoint — 2026-09-02: the API health endpoint returned HTTP
 200 and the Web root returned its expected unauthenticated HTTP 302 response.
@@ -415,6 +474,93 @@ not runnable until a user-started simulator is available. The documented local
 database configuration is now available for live inspection. B-011 and later
 failure/replay scenarios remain unstarted until their supported test-environment
 controls and evidence access are available.
+
+### Playwright evidence continuation — 2026-09-02
+
+The repeatable Playwright suite now captures a per-scenario JSON attachment,
+full-page screenshot, DOM snapshot, API response status/request IDs, durable
+generation/message state, and duplicate checks. It uses the direct local API
+URL for durable inspection and a unique provider-failure marker per run.
+
+Targeted and ordered runs passed B-001–B-017, B-018, B-019, B-022–B-025,
+including regeneration, retry correlation, cancellation, replay/reload,
+authorization isolation, message actions, clipboard permission, smallest
+viewport, and keyboard submission. B-020 and B-021 are explicitly skipped with
+the harness blocker: the chat loader fetches messages during server-side route
+rendering, outside Playwright browser request interception. The final full run
+also encountered an intermittent Web dev-server SSR error (`DialogRoot` calling
+`useContext` across mixed React runtime instances) before B-001 rendered; a
+clean Web restart is required before the final ordered matrix can be accepted.
+
+### Omiro Maestro evidence — 2026-09-02
+
+Added an ordered, iPhone-only Maestro evidence harness for the mobile side of
+Task 003:
+
+- `apps/omiro/tests/flows/chat-core.yaml`
+- `apps/omiro/tests/flows/chat-tools.yaml`
+- `apps/omiro/tests/flows/chat-recovery.yaml`
+- `apps/omiro/tests/flows/chat-actions.yaml`
+- `apps/omiro/tests/e2e/chat-playbook.yaml` (ordered runner)
+
+Run it against the user-started app/API with Java 17 and the installed Maestro
+binary:
+
+```bash
+export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+/Users/charlesponti/.maestro/bin/maestro test \
+  -e MAESTRO_RUN_ID="$(date +%s)" \
+  apps/omiro/tests/e2e/chat-playbook.yaml
+```
+
+The flows capture screenshots for each acceptance state and use stable Omiro
+test IDs for navigation, composer, chat list, loading, and error surfaces.
+Tool confirmation uses the app's accessibility labels. B-013/B-014 transport
+sever/replay overlap and B-016/B-019 cross-account authorization remain
+explicit API/testkit checkpoints: Maestro can relaunch the app and inspect the
+recovered UI, but it cannot sever one HTTP stream or create the second owned
+session without an additional supported runtime control. These flows therefore
+do not claim those assertions by themselves.
+
+The first live smoke run was blocked before B-001 because the running app did
+not return to the inbox for `hakumi-dev://`; it remained on an existing chat,
+so `inbox-composer-input` was not visible. The app was not restarted or
+modified. This is a harness/runtime navigation blocker to resolve before
+recording Omiro scenarios as passing.
+
+Follow-up smoke verification resolved B-004's navigation-stack blocker. The
+core flow successfully unwinds the new-chat route to the inbox, reopens the
+same chat, and captures `/tmp/omiro-task003-b004-navigation`. A subsequent
+ordered run reached B-005 and initially exposed an incorrect ID selector. The
+flow now targets the existing native accessibility label `arrow.clockwise`; the
+rerun completed B-005 and captured `/tmp/omiro-task003-b005-regeneration`. This
+proves the Omiro interaction path and screenshot artifact, but does not by
+itself prove the required durable generation/message duplicate assertions,
+which remain API/testkit evidence requirements.
+
+The next Omiro tool-group run passed B-006 but stopped at B-007. The captured
+screen showed `list_collections` for the B-007 request because the live API
+process had not reloaded the updated scripted-provider matcher and was still
+using all prior user messages when selecting a tool. The matcher now uses the
+latest user request, with a regression test covering B-006 history followed by
+B-007 creation. Focused API tests (286 passing) and API typecheck pass. The
+live rerun after the API watcher loaded the change first showed the B-007 user
+message without any confirmation/tool card; durable inspection showed the API
+had persisted `awaiting_confirmation` and a pending `create_collection` call.
+Omiro was not refetching messages on `confirmation.required`, so that cache
+refresh defect was fixed and covered by the Omiro hook test. The next run
+displayed the confirmation card and captured
+`/tmp/omiro-task003-b007-confirmation-pending`, but approval did not reach the
+API: the run remained `awaiting_confirmation`. Stable IDs were added to the
+approve/reject controls and the flow now uses them. B-007 remains partial until
+approval produces the durable resumed/committed state; the latest failure
+artifact is under `/tmp/omiro-task003-b006-009-approved/2026-09-02_025038`.
+The confirmation buttons now also expose `accessibilityRole="button"`; a
+follow-up run still left the latest generation in `awaiting_confirmation`, so
+the remaining seam is the authenticated Omiro RPC callback rather than native
+button discovery. That artifact is under
+`/tmp/omiro-task003-b006-009-role/2026-09-02_025658`.
 
 ## Exit gate
 

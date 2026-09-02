@@ -51,6 +51,7 @@ function firstMatchingRule<T>(rules: readonly ScriptedRule<T>[], context: Script
 
 function createContext(request: OpenRouterRequest): ScriptedContext {
   const messages = request.messages ?? [];
+  const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user');
   return {
     request,
     toolNames: new Set(
@@ -65,10 +66,7 @@ function createContext(request: OpenRouterRequest): ScriptedContext {
     hasFailedToolResult: messages.some(
       (message) => message.role === 'tool' && /error/i.test(String(message.content ?? '')),
     ),
-    userText: messages
-      .filter((message) => message.role === 'user')
-      .map((message) => (typeof message.content === 'string' ? message.content : ''))
-      .join('\n'),
+    userText: typeof latestUserMessage?.content === 'string' ? latestUserMessage.content : '',
   };
 }
 
