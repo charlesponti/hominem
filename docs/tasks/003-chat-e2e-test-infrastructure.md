@@ -529,6 +529,18 @@ so `inbox-composer-input` was not visible. The app was not restarted or
 modified. This is a harness/runtime navigation blocker to resolve before
 recording Omiro scenarios as passing.
 
+### Playwright rerun — 2026-09-02
+
+After refreshing the workspace install to the merged lockfile and restarting
+the Web runtime, the ordered authenticated run produced 23 passing scenarios,
+two explicit skips, and one test assertion failure. The initial B-001 failure
+was the stale mixed React runtime (`react@19.2.8` with `react-dom@19.2.3`),
+which was resolved by reinstalling dependencies and restarting Web. B-001
+through B-024 then passed, except B-020 and B-021, which remain skipped because
+their server-side loader requests cannot be intercepted from the browser.
+B-025 was corrected to assert the second keyboard-submitted exchange rather
+than a concatenated assistant response and passed in a focused rerun.
+
 Follow-up smoke verification resolved B-004's navigation-stack blocker. The
 core flow successfully unwinds the new-chat route to the inbox, reopens the
 same chat, and captures `/tmp/omiro-task003-b004-navigation`. A subsequent
