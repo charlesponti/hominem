@@ -55,6 +55,7 @@ fi
 
 copied=0
 skipped=0
+copied_rel=()
 for rel in "${files[@]}"; do
   src="$main_root/$rel"
   dst="$dest_root/$rel"
@@ -74,13 +75,88 @@ for rel in "${files[@]}"; do
   cp "$src" "$dst"
   echo "copied:         $rel"
   copied=$((copied + 1))
+  copied_rel+=("$rel")
 done
 
 echo
 if [[ $dry_run -eq 1 ]]; then
   echo "Dry run — no files were changed."
-else
-  echo "Done: $copied copied, $skipped skipped (already present; use --force to overwrite)."
-  echo "Review URLs/ports in the copied files — a worktree running its own portless-proxied"
-  echo "instance may need different values than the main checkout (see docs/development.md)."
+  exit 0
 fi
+echo "Done: $copied copied, $skipped skipped (already present; use --force to overwrite)."
+
+# Files copied verbatim from the main checkout carry its plain portless
+# hostnames (api.localhost, career.localhost, ...). Under portless, a linked
+# worktree actually gets served at a branch-prefixed hostname instead (see
+# the hominem-development skill's "Git worktrees" note) — copying the main
+# checkout's URLs as-is means this worktree's apps redirect to origins that
+# aren't the ones portless proxies for it. Patch just-copied files to the
+# URLs portless actually resolves for this worktree.
+was_copied() {
+  local needle="$1"
+  local rel
+  for rel in "${copied_rel[@]}"; do
+    if [[ "$rel" == "$needle" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+set_env_url() {
+  local file="$1" key="$2" value="$3"
+  [[ -f "$file" ]] || return 0
+  grep -q "^${key}=" "$file" || return 0
+  awk -v k="$key" -v v="$value" -F= 'BEGIN{OFS="="} $1==k{$0=k"=\""v"\""} {print}' "$file" > "$file.tmp"
+  mv "$file.tmp" "$file"
+}
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo
+  echo "pnpm not found — skipping portless URL patching. Review URLs/ports manually" >&2
+  echo "(see docs/development.md)." >&2
+  exit 0
+fi
+
+declare -A portless_urls=()
+for app in api web career finance; do
+  url="$(cd "$dest_root" && pnpm exec portless get "$app" 2>/dev/null)" || url=""
+  if [[ -n "$url" ]]; then
+    portless_urls["$app"]="$url"
+  fi
+done
+
+if [[ ${#portless_urls[@]} -eq 0 ]]; then
+  echo
+  echo "Couldn't resolve this worktree's portless URLs (proxy not started yet?) —" >&2
+  echo "leaving *_URL values as copied from the main checkout. Start the proxy" >&2
+  echo "(see the hominem-development skill) then re-run with --force." >&2
+  exit 0
+fi
+
+echo
+echo "Patching portless URLs for this worktree's branch prefix:"
+for app in "${!portless_urls[@]}"; do
+  echo "  $app -> ${portless_urls[$app]}"
+done
+
+if [[ -n "${portless_urls[api]:-}" ]]; then
+  api_url="${portless_urls[api]}"
+  if was_copied "services/api/.env"; then
+    set_env_url "$dest_root/services/api/.env" API_URL "$api_url"
+  fi
+  for app_dir in apps/web apps/career apps/finance; do
+    was_copied "$app_dir/.env" || continue
+    set_env_url "$dest_root/$app_dir/.env" VITE_PUBLIC_API_URL "$api_url"
+    set_env_url "$dest_root/$app_dir/.env" HOMINEM_INTERNAL_API_URL "$api_url"
+  done
+fi
+for app in web career finance; do
+  [[ -n "${portless_urls[$app]:-}" ]] || continue
+  if was_copied "services/api/.env"; then
+    set_env_url "$dest_root/services/api/.env" "$(echo "$app" | tr '[:lower:]' '[:upper:]')_URL" "${portless_urls[$app]}"
+  fi
+  if was_copied "apps/$app/.env"; then
+    set_env_url "$dest_root/apps/$app/.env" PUBLIC_APP_URL "${portless_urls[$app]}"
+  fi
+done

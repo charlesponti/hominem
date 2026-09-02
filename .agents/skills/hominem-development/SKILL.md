@@ -26,10 +26,18 @@ scripts/sync-worktree-env.sh --force    # also overwrite files that already exis
 ```
 
 It never overwrites an existing file by default, so it's safe to re-run.
-After copying, review the `*_URL` / `VITE_PUBLIC_API_URL` /
-`HOMINEM_INTERNAL_API_URL` values in the copied files — a worktree running
-its own portless-proxied instance (see below) needs the `:4200` portless
-URLs, not the plain-port ones the main checkout may still use.
+Copying alone would leave the main checkout's plain portless hostnames
+(`api.localhost`, `career.localhost`, ...) in place, but a linked worktree
+is actually served at a branch-prefixed hostname (see "First-time setup:
+portless proxy" below) — so for every file it just copied, the script also
+resolves this worktree's real URLs via `pnpm exec portless get <name>` and
+patches the `API_URL`/`WEB_URL`/`CAREER_URL`/`FINANCE_URL`/
+`VITE_PUBLIC_API_URL`/`HOMINEM_INTERNAL_API_URL`/`PUBLIC_APP_URL` values in
+place. This needs the portless proxy already running (see below) — if it
+isn't, the script leaves the copied URLs as-is and says so; start the proxy
+and re-run with `--force` to patch them. It only ever touches files it just
+copied in that same run, so a file that already existed (and was therefore
+skipped) is never rewritten — hand-edited values are left alone.
 
 ## First-time setup: portless proxy
 
