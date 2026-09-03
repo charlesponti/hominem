@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-set -euo pipefail
+set -eu
 
 if git rev-parse --git-dir >/dev/null 2>&1; then
   git config core.hooksPath .githooks
