@@ -29,6 +29,9 @@ export type GenerationActivePhase =
   | 'cancel_requested';
 
 export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
+// 'queued' is part of the DB CHECK constraint and wire schema for
+// forward-compat but no reducer currently produces it — not a bug, just
+// currently unused.
 export type ChatGenerationStatus = GenerationPhase | 'queued';
 
 export type GenerationToolCall = {

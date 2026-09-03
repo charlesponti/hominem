@@ -93,6 +93,10 @@ export async function executeGenerationTurn(
     durableEvents?: { accept: (event: ChatGenerationEventRecord) => Promise<void> | void };
     liveEvents?: { accept: (event: GenerationStreamEventPayload) => Promise<void> | void };
     cancellation?: { isRequested: () => boolean | Promise<boolean> };
+    // Overrides the interpreter's default per-command timeouts. Production
+    // callers should leave this unset; it exists so tests can make a hung
+    // port fail fast instead of waiting out the real defaults.
+    effectTimeoutsMs?: ConstructorParameters<typeof ChatClient>[0]['effectTimeoutsMs'];
   },
 ): Promise<GenerationEngineResult> {
   let usage: AIUsageMetrics | null = null;
@@ -119,6 +123,7 @@ export async function executeGenerationTurn(
 
   const chat = new ChatClient({
     model,
+    effectTimeoutsMs: input.effectTimeoutsMs,
     tools: {
       execute: async ({ call, idempotencyKey }) => {
         calls.set(call.id, call);

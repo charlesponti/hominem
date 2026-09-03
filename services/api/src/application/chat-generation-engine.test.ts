@@ -2,6 +2,7 @@ import { streamChatCompletion } from '@hominem/ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import type { McpToolResult } from '../mcp/tool-registry';
 import type { CapabilityDefinition } from './capability';
 import { executeGenerationTurn, ToolInputError } from './chat-generation-engine';
 
@@ -93,7 +94,52 @@ describe('chat generation service', () => {
           { role: 'tool', toolCallId: 'call-1', content: 'result' },
         ]),
       }),
+      expect.anything(),
     );
+  });
+
+  it('fails the turn instead of hanging forever when a tool call never resolves', async () => {
+    mockedStream.mockReturnValueOnce(
+      chunks([
+        {
+          created: 0,
+          id: 'chunk-1',
+          model: 'model-1',
+          object: 'chat.completion.chunk',
+          choices: [
+            {
+              index: 0,
+              finishReason: 'tool_calls',
+              delta: {
+                toolCalls: [
+                  { index: 0, id: 'call-1', function: { name: 'lookup', arguments: '{}' } },
+                ],
+              },
+            },
+          ],
+        },
+      ]),
+    );
+
+    const callTool = vi.fn(() => new Promise<McpToolResult>(() => {}));
+
+    await expect(
+      executeGenerationTurn({
+        userId: 'user-1',
+        generationId: 'generation-1',
+        chatId: 'chat-1',
+        model: 'model-1',
+        messages: [{ role: 'user', content: 'question' }],
+        tools: [
+          { type: 'function', function: { name: 'lookup', description: 'lookup', parameters: {} } },
+        ],
+        toolRuntime: {
+          callTool,
+          getToolDefinition: vi.fn(() => undefined),
+        },
+        effectTimeoutsMs: { 'execute-tool': 5 },
+      }),
+    ).rejects.toThrow('Effect command "execute-tool" did not complete within 5ms');
   });
 
   it('stops before consuming provider output when cancellation is already requested', async () => {

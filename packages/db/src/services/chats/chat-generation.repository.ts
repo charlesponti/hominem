@@ -292,6 +292,27 @@ export const ChatGenerationRepository = {
       .executeTakeFirstOrThrow();
   },
 
+  // Last-resort direct status write, bypassing the event-append/projection
+  // path entirely. Used only when appending a `generation.failed` event
+  // itself throws (e.g. DB hiccup) — without this, that run's status row is
+  // left non-terminal forever, since status otherwise only ever changes as a
+  // side effect of a successful appendEvent. The `status not in (...)` guard
+  // makes this safe against racing a concurrent successful completion: it
+  // only ever moves a still-in-flight row to `failed`, never clobbers an
+  // already-terminal one.
+  async forceFail(
+    handle: DbHandle,
+    input: { generationId: string; ownerUserId: string; errorMessage: string },
+  ): Promise<void> {
+    await handle
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'failed', errorMessage: input.errorMessage })
+      .where('id', '=', input.generationId)
+      .where('ownerUserId', '=', input.ownerUserId)
+      .where('status', 'not in', ['committed', 'cancelled', 'failed'])
+      .executeTakeFirst();
+  },
+
   async getSnapshot(
     handle: DbHandle,
     generationId: string,

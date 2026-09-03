@@ -21,6 +21,7 @@ import { getChatId, getGenerationId, getMessageId } from './chats.route-helpers'
 
 type GenerationStream = {
   writeSSE: (input: { data: string; id?: string }) => Promise<void>;
+  write: (input: string) => Promise<unknown>;
 };
 
 function writeGenerationWireEvent(stream: GenerationStream, event: GenerationWireEvent) {
@@ -30,11 +31,47 @@ function writeGenerationWireEvent(stream: GenerationStream, event: GenerationWir
   });
 }
 
+// Well under the frontend's idle timeout (see DEFAULT_SSE_IDLE_TIMEOUT_MS in
+// apps/web/app/lib/chat/consume-sse-response.ts) and typical proxy/LB idle
+// connection limits. A raw `:heartbeat` comment line is valid SSE and is
+// already silently dropped by the frontend's frame decoder (no `data:`
+// line), so it resets the client's idle timer without being mistaken for a
+// real event.
+const SSE_HEARTBEAT_INTERVAL_MS = 15_000;
+
+async function writeWithHeartbeat<T>(
+  stream: GenerationStream,
+  events: AsyncIterable<T>,
+  onEvent: (event: T) => Promise<void>,
+): Promise<void> {
+  const iterator = events[Symbol.asyncIterator]();
+  // One `.next()` call stays in flight across as many heartbeat ticks as it
+  // takes to resolve — a fresh call per tick would queue up concurrently on
+  // the same generator instead of replacing the pending one, consuming
+  // extra steps it was never meant to.
+  let pending = iterator.next();
+  while (true) {
+    let timer: ReturnType<typeof setTimeout>;
+    const heartbeat = new Promise<'heartbeat'>((resolve) => {
+      timer = setTimeout(() => resolve('heartbeat'), SSE_HEARTBEAT_INTERVAL_MS);
+    });
+    const step = await Promise.race([pending, heartbeat]);
+    clearTimeout(timer!);
+    if (step === 'heartbeat') {
+      await stream.write(':heartbeat\n\n');
+      continue;
+    }
+    if (step.done) return;
+    await onEvent(step.value);
+    pending = iterator.next();
+  }
+}
+
 async function writeGenerationStream(
   stream: GenerationStream,
   events: AsyncIterable<GenerationWireEvent>,
 ): Promise<void> {
-  for await (const event of events) await writeGenerationWireEvent(stream, event);
+  await writeWithHeartbeat(stream, events, (event) => writeGenerationWireEvent(stream, event));
   await stream.writeSSE({ data: '[DONE]' });
 }
 
@@ -61,14 +98,13 @@ async function writeGenerationReplay(
   afterSequence: number,
   terminal: boolean,
 ): Promise<void> {
-  for await (const event of await service.replay({
+  const events = await service.replay({
     generationId,
     ownerUserId,
     afterSequence,
     terminal,
-  })) {
-    await writeGenerationWireEvent(stream, event);
-  }
+  });
+  await writeWithHeartbeat(stream, events, (event) => writeGenerationWireEvent(stream, event));
 }
 
 export function createChatGenerationRoutes(service: ChatGenerationService = chatGenerationService) {

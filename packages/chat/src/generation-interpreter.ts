@@ -59,6 +59,44 @@ export type GenerationPorts = {
   };
 };
 
+export class EffectCommandTimeoutError extends Error {
+  constructor(
+    readonly commandType: GenerationCommand['type'],
+    ms: number,
+  ) {
+    super(`Effect command "${commandType}" did not complete within ${ms}ms`);
+    this.name = 'EffectCommandTimeoutError';
+  }
+}
+
+// Only the I/O-bound branches that can genuinely hang forever with nothing
+// left to emit are timed — `open-provider-turn`/`retry-provider` are already
+// covered by the OpenRouter provider's own idle timeout, and `emit`/
+// `stop-effects` are in-process, not arbitrary I/O, today.
+export const DEFAULT_EFFECT_TIMEOUTS_MS: Partial<Record<GenerationCommand['type'], number>> = {
+  persist: 15_000,
+  'execute-tool': 60_000,
+  'preview-tool': 15_000,
+  'save-generation': 15_000,
+};
+
+async function withEffectTimeout<T>(
+  commandType: GenerationCommand['type'],
+  ms: number | undefined,
+  run: () => T | Promise<T>,
+): Promise<T> {
+  if (!ms) return run();
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new EffectCommandTimeoutError(commandType, ms)), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(run()), timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 async function isCancelled(ports: GenerationPorts, state: GenerationState): Promise<boolean> {
   return (await ports.control?.isCancelled?.(state)) ?? false;
 }
@@ -90,12 +128,18 @@ function isAsyncIterable(value: object): value is AsyncIterable<GenerationInput>
   return Symbol.asyncIterator in value && typeof value[Symbol.asyncIterator] === 'function';
 }
 
-export function createGenerationInterpreter(ports: GenerationPorts): GenerationEffectInterpreter {
+export function createGenerationInterpreter(
+  ports: GenerationPorts,
+  options?: { effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>> },
+): GenerationEffectInterpreter {
+  const timeouts = { ...DEFAULT_EFFECT_TIMEOUTS_MS, ...options?.effectTimeoutsMs };
   return {
     async execute(command, state) {
       switch (command.type) {
         case 'persist':
-          await ports.events.persist(command, state);
+          await withEffectTimeout('persist', timeouts.persist, () =>
+            ports.events.persist(command, state),
+          );
           return;
         case 'emit':
           await ports.events.emit(command.event, state);
@@ -119,25 +163,34 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
           );
         case 'execute-tool': {
           if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
-          const result = await ports.tools.execute({
-            call: command.call,
-            idempotencyKey: command.idempotencyKey,
-            state,
-          });
+          const result = await withEffectTimeout('execute-tool', timeouts['execute-tool'], () =>
+            ports.tools.execute({
+              call: command.call,
+              idempotencyKey: command.idempotencyKey,
+              state,
+            }),
+          );
           await ports.provider.appendToolResult?.({ call: command.call, result, state });
           return { type: 'tool-result', result };
         }
         case 'preview-tool':
           if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
-          await ports.tools.preview({
-            call: command.call,
-            idempotencyKey: command.idempotencyKey,
-            state,
-          });
+          await withEffectTimeout('preview-tool', timeouts['preview-tool'], () =>
+            ports.tools.preview({
+              call: command.call,
+              idempotencyKey: command.idempotencyKey,
+              state,
+            }),
+          );
           return;
         case 'save-generation':
           if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
-          return { type: 'generation-saved', message: await ports.generation.save(state) };
+          return {
+            type: 'generation-saved',
+            message: await withEffectTimeout('save-generation', timeouts['save-generation'], () =>
+              ports.generation.save(state),
+            ),
+          };
         case 'stop-effects':
           await ports.generation.stop(state);
           return { type: 'effect-stopped' };
@@ -147,13 +200,18 @@ export function createGenerationInterpreter(ports: GenerationPorts): GenerationE
 }
 
 export function runGenerationWithPorts(
-  input: Omit<RunGenerationInput, 'effects'> & { ports: GenerationPorts },
+  input: Omit<RunGenerationInput, 'effects'> & {
+    ports: GenerationPorts;
+    effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>>;
+  },
 ): Promise<GenerationState> {
   return runGeneration({
     generationId: input.generationId,
     startContext: input.startContext,
     initialInput: input.initialInput,
     initialState: input.initialState,
-    effects: createGenerationInterpreter(input.ports),
+    effects: createGenerationInterpreter(input.ports, {
+      effectTimeoutsMs: input.effectTimeoutsMs,
+    }),
   });
 }

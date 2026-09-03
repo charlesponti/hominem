@@ -9,6 +9,7 @@ const mockedLogger = vi.hoisted(() => ({ warn: vi.fn() }));
 
 vi.mock('@hominem/ai', () => ({
   streamChatCompletion: vi.fn(),
+  getChatCompletionUsage: vi.fn((response: { usage?: unknown }) => response.usage ?? null),
 }));
 
 vi.mock('@hominem/telemetry', () => ({ logger: mockedLogger }));
@@ -31,6 +32,17 @@ function chunk(
   };
 }
 
+function usageTrailer(usage: NonNullable<ChatStreamChunk['usage']>): StreamChunk {
+  return {
+    choices: [],
+    created: 0,
+    id: 'trailer',
+    model: 'test-model',
+    object: 'chat.completion.chunk',
+    usage,
+  };
+}
+
 async function* chunks(values: readonly StreamChunk[]): AsyncGenerator<StreamChunk> {
   yield* values;
 }
@@ -39,6 +51,32 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
   const collected: T[] = [];
   for await (const value of values) collected.push(value);
   return collected;
+}
+
+// Delivers `values` immediately, then hangs forever on the next `.next()`
+// call — simulating OpenRouter delivering a complete response and then
+// leaving the connection open with no more bytes and no close. `.return()`
+// hangs too, matching a real async generator suspended on that same stalled
+// read: cancelling it doesn't settle until the inner await does. Any code
+// that awaits `.return()` here will hang right along with it — which is the
+// point of modeling it this faithfully.
+function stallingAfter(values: readonly StreamChunk[]): AsyncGenerator<StreamChunk> {
+  let index = 0;
+  const generator: AsyncGenerator<StreamChunk> = {
+    next: (): Promise<IteratorResult<StreamChunk>> => {
+      if (index < values.length) {
+        return Promise.resolve({ done: false, value: values[index++]! });
+      }
+      return new Promise(() => {});
+    },
+    return: (): Promise<IteratorResult<StreamChunk>> => new Promise(() => {}),
+    throw: (error: unknown) => Promise.reject(error),
+    [Symbol.asyncIterator]() {
+      return generator;
+    },
+    [Symbol.asyncDispose]: async () => {},
+  };
+  return generator;
 }
 
 describe('OpenRouter generation provider', () => {
@@ -132,6 +170,7 @@ describe('OpenRouter generation provider', () => {
 
     expect(mockedStream).toHaveBeenCalledWith(
       expect.objectContaining({ toolChoice: 'required', parallelToolCalls: false }),
+      expect.anything(),
     );
     expect(mockedStream.mock.calls[0]?.[0].messages).toEqual([
       {
@@ -183,10 +222,12 @@ describe('OpenRouter generation provider', () => {
     expect(mockedStream).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ toolChoice: 'required' }),
+      expect.anything(),
     );
     expect(mockedStream).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({ toolChoice: 'auto' }),
+      expect.anything(),
     );
     expect(mockedStream.mock.calls[1]?.[0].messages).toEqual([
       { role: 'tool', toolCallId: 'call-1', content: 'result' },
@@ -235,6 +276,208 @@ describe('OpenRouter generation provider', () => {
       requiredToolCall: false,
       confirmationCallIds: [],
     });
+  });
+
+  it('passes an AbortSignal to streamChatCompletion', async () => {
+    mockedStream.mockReturnValueOnce(chunks([]));
+    const provider = new OpenRouterChatModel({ model: 'test-model', messages: [], tools: [] });
+
+    await collect(
+      provider.open({
+        turnId: 'turn-1',
+        iteration: 0,
+        state: createGenerationState('generation-1'),
+      }),
+    );
+
+    const options = mockedStream.mock.calls[0]?.[1];
+    expect(options).toMatchObject({ signal: expect.any(AbortSignal) });
+  });
+
+  it('completes as soon as a chunk reports a finish reason, without waiting on the stream to close', async () => {
+    // `stallingAfter` hangs forever past its given chunks — if the provider
+    // stalls waiting for this to resolve after the finish-reason chunk, the
+    // test times out. Resolving quickly is the proof the loop broke early.
+    mockedStream.mockReturnValueOnce(
+      stallingAfter([chunk([{ index: 0, finishReason: 'stop', delta: { content: 'hi' } }])]),
+    );
+    const provider = new OpenRouterChatModel({ model: 'test-model', messages: [], tools: [] });
+
+    await expect(
+      collect(
+        provider.open({
+          turnId: 'turn-1',
+          iteration: 0,
+          state: createGenerationState('generation-1'),
+        }),
+      ),
+    ).resolves.toEqual([
+      {
+        type: 'provider-chunk',
+        chunk: { content: 'hi', reasoning: undefined, toolCalls: undefined },
+      },
+      {
+        type: 'provider-turn-completed',
+        requiredToolCall: false,
+        confirmationCallIds: [],
+      },
+    ]);
+  });
+
+  it('captures a usage-only trailer chunk sent after the finish-reason chunk', async () => {
+    const usage = { promptTokens: 1, completionTokens: 2, totalTokens: 3, cost: 0.01 };
+    mockedStream.mockReturnValueOnce(
+      chunks([
+        chunk([{ index: 0, finishReason: 'stop', delta: { content: 'hi' } }]),
+        usageTrailer(usage),
+      ]),
+    );
+    const onUsage = vi.fn();
+    const provider = new OpenRouterChatModel({
+      model: 'test-model',
+      messages: [],
+      tools: [],
+      onUsage,
+    });
+
+    await collect(
+      provider.open({
+        turnId: 'turn-1',
+        iteration: 0,
+        state: createGenerationState('generation-1'),
+      }),
+    );
+
+    expect(onUsage).toHaveBeenLastCalledWith(usage);
+  });
+
+  it('does not wait past the grace window for a trailer chunk that never arrives', async () => {
+    mockedStream.mockReturnValueOnce(
+      stallingAfter([chunk([{ index: 0, finishReason: 'stop', delta: { content: 'hi' } }])]),
+    );
+    const onUsage = vi.fn();
+    const provider = new OpenRouterChatModel({
+      model: 'test-model',
+      messages: [],
+      tools: [],
+      onUsage,
+    });
+
+    vi.useFakeTimers();
+    try {
+      const resultPromise = collect(
+        provider.open({
+          turnId: 'turn-1',
+          iteration: 0,
+          state: createGenerationState('generation-1'),
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(500);
+      await expect(resultPromise).resolves.toEqual([
+        {
+          type: 'provider-chunk',
+          chunk: { content: 'hi', reasoning: undefined, toolCalls: undefined },
+        },
+        {
+          type: 'provider-turn-completed',
+          requiredToolCall: false,
+          confirmationCallIds: [],
+        },
+      ]);
+      expect(onUsage).toHaveBeenCalledTimes(1);
+      expect(onUsage).toHaveBeenCalledWith(null);
+      expect(mockedStream.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retries a stream that goes idle before ever reporting a finish reason', async () => {
+    mockedStream.mockReturnValueOnce(
+      stallingAfter([chunk([{ index: 0, finishReason: null, delta: { content: 'partial' } }])]),
+    );
+    const provider = new OpenRouterChatModel({ model: 'test-model', messages: [], tools: [] });
+
+    vi.useFakeTimers();
+    try {
+      const resultPromise = collect(
+        provider.open({
+          turnId: 'turn-1',
+          iteration: 0,
+          state: createGenerationState('generation-1'),
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(10_000);
+      await expect(resultPromise).resolves.toEqual([
+        {
+          type: 'provider-chunk',
+          chunk: { content: 'partial', reasoning: undefined, toolCalls: undefined },
+        },
+        {
+          type: 'provider-turn-failed',
+          message: 'No provider chunk received for 10000ms',
+          transient: true,
+          attempt: 0,
+          maxAttempts: 2,
+        },
+      ]);
+      expect(mockedStream.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('classifies a timed-out or dropped connection as transient', async () => {
+    const timeoutError = Object.assign(new Error('Request timed out'), { code: 'timeout' });
+    mockedStream.mockImplementationOnce(() => {
+      throw timeoutError;
+    });
+    const provider = new OpenRouterChatModel({
+      model: 'test-model',
+      messages: [],
+      tools: [],
+    });
+
+    await expect(
+      collect(
+        provider.open({
+          turnId: 'turn-1',
+          iteration: 0,
+          state: createGenerationState('generation-1'),
+        }),
+      ),
+    ).resolves.toEqual([
+      {
+        type: 'provider-turn-failed',
+        message: 'Request timed out',
+        transient: true,
+        attempt: 0,
+        maxAttempts: 2,
+      },
+    ]);
+
+    const connectionError = Object.assign(new Error('Unable to make request'), {
+      code: 'connection_error',
+    });
+    mockedStream.mockImplementationOnce(() => {
+      throw connectionError;
+    });
+    await expect(
+      collect(
+        provider.retry({
+          attempt: 1,
+          state: { ...createGenerationState('generation-1'), iteration: 1 },
+        }),
+      ),
+    ).resolves.toEqual([
+      {
+        type: 'provider-turn-failed',
+        message: 'Unable to make request',
+        transient: true,
+        attempt: 1,
+        maxAttempts: 2,
+      },
+    ]);
   });
 
   it('normalizes sparse chunks and provider errors without assuming Error instances', async () => {

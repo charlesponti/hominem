@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import {
   createStructuredChatCompletion,
   getStructuredOutputUsage,
+  streamChatCompletion,
   StructuredOutputError,
 } from './text';
 
@@ -77,6 +78,47 @@ describe('createStructuredChatCompletion', () => {
         costUsd: 0,
       }),
     });
+  });
+});
+
+describe('streamChatCompletion', () => {
+  beforeEach(() => {
+    createChatSend.mockReset();
+  });
+
+  it('passes a signal instead of timeoutMs to the SDK', async () => {
+    async function* emptyStream() {}
+    createChatSend.mockResolvedValueOnce(emptyStream());
+
+    const generator = streamChatCompletion({
+      model: 'model',
+      messages: [{ role: 'user', content: 'hello' }],
+    });
+    await generator.next();
+
+    expect(createChatSend).toHaveBeenCalledOnce();
+    const options = createChatSend.mock.calls[0]?.[1];
+    expect(options).toMatchObject({ signal: expect.any(AbortSignal) });
+    expect(options.timeoutMs).toBeUndefined();
+  });
+
+  it('aborts the composed signal when the caller-supplied signal aborts', async () => {
+    async function* emptyStream() {}
+    createChatSend.mockResolvedValueOnce(emptyStream());
+
+    const controller = new AbortController();
+    const generator = streamChatCompletion(
+      { model: 'model', messages: [{ role: 'user', content: 'hello' }] },
+      { signal: controller.signal },
+    );
+    await generator.next();
+
+    const options = createChatSend.mock.calls[0]?.[1];
+    const composedSignal: AbortSignal = options.signal;
+    expect(composedSignal.aborted).toBe(false);
+
+    controller.abort(new Error('caller cancelled'));
+    expect(composedSignal.aborted).toBe(true);
   });
 });
 

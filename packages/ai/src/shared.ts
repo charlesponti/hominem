@@ -22,6 +22,13 @@ export type OpenRouterClientOptions = {
   appCategories?: string;
   client?: OpenRouterClientLike;
   responseHook?: (response: Response) => void;
+  // Composed with the request's own absolute deadline (see
+  // CHAT_REQUEST_TIMEOUT_MS in text.ts) via AbortSignal.any — passing a
+  // signal makes the OpenRouter SDK skip its own internal
+  // timeoutMs-derived AbortSignal.timeout(), so callers who want to cancel a
+  // stalled stream (e.g. an idle-chunk timeout) need this to still keep the
+  // absolute deadline.
+  signal?: AbortSignal;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -166,6 +173,16 @@ function parseOpenRouterErrorDetails(body: unknown) {
   }
 }
 
+// The SDK maps a client-side `AbortSignal.timeout()` firing (or a failed
+// connection) to one of these error names before it ever reaches us — there's
+// no HTTP status code to read in that case, since no response was received.
+// We surface them as a `code` so callers (e.g. retry classification) can
+// treat a hung/dropped request as transient the same way they treat 429/503.
+const CLIENT_ERROR_CODES: Record<string, string> = {
+  RequestTimeoutError: 'timeout',
+  ConnectionError: 'connection_error',
+};
+
 export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError {
   if (error instanceof OpenRouterRequestError) {
     return error;
@@ -191,13 +208,18 @@ export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError
         : typeof statusCodeValue === 'number'
           ? statusCodeValue
           : undefined;
+    const errorName = Reflect.get(error, 'name');
+    const clientErrorCode =
+      typeof errorName === 'string' ? CLIENT_ERROR_CODES[errorName] : undefined;
 
     return new OpenRouterRequestError(
       providerMessage ?? (typeof message === 'string' ? message : 'OpenRouter request failed'),
       {
         status,
         code:
-          providerError && typeof providerError.code === 'string' ? providerError.code : undefined,
+          (providerError && typeof providerError.code === 'string'
+            ? providerError.code
+            : undefined) ?? clientErrorCode,
         providerMessage,
         details: providerError ?? details,
       },

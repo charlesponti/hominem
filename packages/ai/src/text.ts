@@ -18,6 +18,22 @@ type StructuredChatCompletionResult<T> = {
   usage: AIUsageMetrics | null;
 };
 
+// Bounds how long a chat completion request can hang with no response before
+// the SDK aborts it. Without this, a stalled OpenRouter connection (no error,
+// no bytes) blocks the request forever — the generation state machine's retry
+// logic never runs because nothing ever rejects. Generous because a long,
+// reasoning-heavy response can legitimately take a while to fully stream.
+// Composed with a caller-supplied signal (see chat-generation-provider.ts's
+// per-chunk idle timeout, which fires much sooner than this on a genuinely
+// stalled stream) via AbortSignal.any, since passing any signal makes the
+// SDK skip its own timeoutMs handling entirely.
+const CHAT_REQUEST_TIMEOUT_MS = 120_000;
+
+function withRequestTimeout(signal?: AbortSignal): { signal: AbortSignal } {
+  const deadline = AbortSignal.timeout(CHAT_REQUEST_TIMEOUT_MS);
+  return { signal: signal ? AbortSignal.any([signal, deadline]) : deadline };
+}
+
 function isAIUsageMetrics(value: unknown): value is AIUsageMetrics {
   if (!value || typeof value !== 'object') return false;
   return (
@@ -62,12 +78,15 @@ export async function createChatCompletion(
 ): Promise<ChatResult> {
   try {
     const client = createOpenRouterClient(options);
-    return await client.chat.send({
-      httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
-      appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
-      appCategories: options.appCategories,
-      chatRequest: { ...request, stream: false },
-    });
+    return await client.chat.send(
+      {
+        httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
+        appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
+        appCategories: options.appCategories,
+        chatRequest: { ...request, stream: false },
+      },
+      withRequestTimeout(options.signal),
+    );
   } catch (error) {
     throw normalizeOpenRouterError(error);
   }
@@ -79,12 +98,15 @@ export async function* streamChatCompletion(
 ): AsyncGenerator<ChatStreamChunk> {
   try {
     const client = createOpenRouterClient(options);
-    const stream = await client.chat.send({
-      httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
-      appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
-      appCategories: options.appCategories,
-      chatRequest: { ...request, stream: true },
-    });
+    const stream = await client.chat.send(
+      {
+        httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
+        appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
+        appCategories: options.appCategories,
+        chatRequest: { ...request, stream: true },
+      },
+      withRequestTimeout(options.signal),
+    );
 
     yield* stream;
   } catch (error) {

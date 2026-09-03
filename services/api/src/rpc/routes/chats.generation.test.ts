@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   respondToConfirmation: vi.fn(),
   retryMessage: vi.fn(),
+  sendMessage: vi.fn(),
 }));
 
 vi.mock('../../application/chat-generation.service', () => ({
@@ -12,6 +13,7 @@ vi.mock('../../application/chat-generation.service', () => ({
   chatGenerationService: {
     respondToConfirmation: mocks.respondToConfirmation,
     retryMessage: mocks.retryMessage,
+    sendMessage: mocks.sendMessage,
   },
 }));
 
@@ -105,6 +107,73 @@ describe('chat confirmation route', () => {
     expect(body).toContain(`type":"${eventType}`);
     expect(body.match(/id: 1/g)).toHaveLength(1);
     expect(body.match(/data: \[DONE\]/g)).toHaveLength(1);
+  });
+});
+
+describe('chat generation stream heartbeat', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('writes heartbeat comment frames while waiting on a slow generation stream', async () => {
+    let releaseGate: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      releaseGate = resolve;
+    });
+    mocks.sendMessage.mockResolvedValueOnce(
+      (async function* () {
+        await gate;
+        yield {
+          version: 1,
+          generationId: 'generation-1',
+          sequence: 1,
+          type: 'generation.committed',
+          payload: {
+            type: 'generation.committed',
+            message: {
+              id: 'assistant-1',
+              chatId: 'chat-1',
+              userId,
+              role: 'assistant',
+              content: 'Done',
+              files: null,
+              toolCalls: null,
+              reasoning: null,
+              parentMessageId: null,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          },
+        } satisfies GenerationWireEvent;
+      })(),
+    );
+
+    vi.useFakeTimers();
+    try {
+      const responsePromise = createApp().request(
+        '/api/chats/00000000-0000-4000-8000-000000000001/stream',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            generationId: '00000000-0000-4000-8000-000000000006',
+            message: 'hello',
+          }),
+        },
+      );
+
+      await vi.advanceTimersByTimeAsync(31_000);
+      releaseGate();
+
+      const response = await responsePromise;
+      const body = await response.text();
+
+      expect(body.match(/:heartbeat/g)?.length).toBeGreaterThanOrEqual(2);
+      expect(body).toContain('generation.committed');
+      expect(body.match(/data: \[DONE\]/g)).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

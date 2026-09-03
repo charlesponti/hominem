@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeOpenRouterChatUsage, normalizeOpenRouterEmbeddingUsage } from './shared';
+import {
+  normalizeOpenRouterChatUsage,
+  normalizeOpenRouterEmbeddingUsage,
+  normalizeOpenRouterError,
+} from './shared';
 
 describe('normalizeOpenRouterChatUsage', () => {
   it('returns null when usage is missing', () => {
@@ -80,5 +84,45 @@ describe('normalizeOpenRouterEmbeddingUsage', () => {
       totalTokens: 12,
       reportedTotalTokens: 18,
     });
+  });
+});
+
+describe('normalizeOpenRouterError', () => {
+  it('maps an SDK request-timeout error to code "timeout"', () => {
+    const error = normalizeOpenRouterError(
+      Object.assign(new Error('Request timed out: the operation was aborted'), {
+        name: 'RequestTimeoutError',
+      }),
+    );
+
+    expect(error.code).toBe('timeout');
+    expect(error.status).toBeUndefined();
+  });
+
+  it('maps an SDK connection error to code "connection_error"', () => {
+    const error = normalizeOpenRouterError(
+      Object.assign(new Error('Unable to make request'), { name: 'ConnectionError' }),
+    );
+
+    expect(error.code).toBe('connection_error');
+  });
+
+  it('prefers a provider-reported error code over the client error name', () => {
+    const error = normalizeOpenRouterError(
+      Object.assign(new Error('Request timed out'), {
+        name: 'RequestTimeoutError',
+        body: JSON.stringify({ error: { message: 'rate limited', code: 'rate_limit_exceeded' } }),
+      }),
+    );
+
+    expect(error.code).toBe('rate_limit_exceeded');
+  });
+
+  it('leaves code undefined for an unrelated error name', () => {
+    const error = normalizeOpenRouterError(
+      Object.assign(new Error('boom'), { name: 'UnexpectedClientError' }),
+    );
+
+    expect(error.code).toBeUndefined();
   });
 });

@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getChatSourceContext: vi.fn(),
   createGenerationRun: vi.fn(),
   appendEvent: vi.fn(),
+  forceFail: vi.fn(),
   listEvents: vi.fn(),
   rebuildProjection: vi.fn(),
   getToolEffect: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock('@hominem/db', () => ({
   },
   ChatGenerationRepository: {
     appendEvent: mocks.appendEvent,
+    forceFail: mocks.forceFail,
     listEvents: mocks.listEvents,
     rebuildProjection: mocks.rebuildProjection,
     getToolEffect: mocks.getToolEffect,
@@ -391,6 +393,58 @@ describe('ChatGenerationService.cancel', () => {
       type: 'generation.failed',
       payload: { message: 'Generation failed' },
     });
+  });
+
+  it('force-fails the run row directly when even the failure-event append throws', async () => {
+    mocks.getOwnedOrThrow.mockResolvedValue({
+      id: input.chatId,
+      userId: input.ownerUserId,
+      title: 'Chat',
+      archivedAt: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    mocks.executeGenerationTurn.mockRejectedValueOnce(new Error('provider payload secret'));
+    mocks.appendEvent.mockImplementation(
+      async (_trx: unknown, args: { event: { type: string } }) => {
+        if (args.event.type === 'generation.failed') {
+          throw new Error('DB unavailable while recording the failure');
+        }
+        return event(args.event.type, mocks.appendEvent.mock.calls.length);
+      },
+    );
+
+    const stream = await new ChatGenerationService().send({
+      userId: input.ownerUserId,
+      generationId: input.generationId,
+      chatId: input.chatId,
+      model: 'test-model',
+      messages: [{ role: 'user', content: 'hello' }],
+      tools: [],
+      userMessageId: null,
+    });
+
+    await expect(async () => {
+      for await (const _value of stream) {
+        // draining the stream surfaces queue.fail(failureDeliveryError)
+      }
+    }).rejects.toThrow('DB unavailable while recording the failure');
+
+    expect(mocks.forceFail).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        generationId: input.generationId,
+        ownerUserId: input.ownerUserId,
+        errorMessage: 'Generation failed',
+      }),
+    );
+
+    // mockRejectedValueOnce/custom mockImplementation calls above aren't
+    // undone by the next test's beforeEach (vi.clearAllMocks() clears call
+    // history, not queued once-behavior or a replaced implementation) —
+    // reset explicitly so later tests get their own mocks' defaults back.
+    mocks.executeGenerationTurn.mockReset();
+    mocks.appendEvent.mockReset();
   });
 
   it('does not commit provider output after cancellation wins during execution', async () => {

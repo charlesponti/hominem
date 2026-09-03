@@ -7,7 +7,7 @@ import {
 } from '@hominem/chat';
 import { describe, expect, it, vi } from 'vitest';
 
-import { consumeSseResponse } from './consume-sse-response';
+import { consumeSseResponse, SseIdleTimeoutError } from './consume-sse-response';
 
 function responseFor(chunks: string[]) {
   const encoder = new TextEncoder();
@@ -98,6 +98,31 @@ describe('consumeSseResponse', () => {
     await consumeSseResponse(responseFor(['data: [DONE]\n\n']), vi.fn(), onDone);
 
     expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it('times out and cancels the reader when the stream goes idle', async () => {
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start() {
+        // never enqueue anything and never close — simulates a stalled
+        // server-to-client leg with no heartbeat reaching the client
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    vi.useFakeTimers();
+    try {
+      const assertion = expect(
+        consumeSseResponse(new Response(stream), vi.fn(), undefined, { idleTimeoutMs: 1_000 }),
+      ).rejects.toThrow(SseIdleTimeoutError);
+      await vi.advanceTimersByTimeAsync(1_000);
+      await assertion;
+      expect(cancelled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('rejects when a response has no body', async () => {

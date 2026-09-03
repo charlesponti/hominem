@@ -3,12 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationInterpreter as createPortsInterpreter,
+  EffectCommandTimeoutError,
   runGenerationWithPorts,
 } from './generation-interpreter';
 import {
   createGenerationState,
   type GenerationInput,
   type GenerationState,
+  type ToolResult,
 } from './generation-machine';
 import { messageSnapshot } from './generation-test-fixtures';
 
@@ -107,6 +109,89 @@ describe('generation interpreter', () => {
       state,
     });
     expect(ports.tools.preview).toHaveBeenCalledOnce();
+  });
+
+  it('times out a persist that never resolves instead of hanging forever', async () => {
+    const ports = {
+      provider: { open: vi.fn(), retry: vi.fn() },
+      tools: { execute: vi.fn(), preview: vi.fn() },
+      events: {
+        persist: vi.fn(() => new Promise<void>(() => {})),
+        emit: vi.fn(),
+      },
+      generation: { save: vi.fn(), stop: vi.fn() },
+    };
+    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { persist: 5 } });
+    const state = createGenerationState('generation-1');
+
+    await expect(
+      interpreter.execute(
+        {
+          type: 'persist',
+          event: { type: 'generation.started', context: startContext },
+          idempotencyKey: 'generation-1:generation.started',
+        },
+        state,
+      ),
+    ).rejects.toThrow(EffectCommandTimeoutError);
+  });
+
+  it('times out a tool execute that never resolves instead of hanging forever', async () => {
+    const ports = {
+      provider: { open: vi.fn(), retry: vi.fn() },
+      tools: {
+        execute: vi.fn(() => new Promise<ToolResult>(() => {})),
+        preview: vi.fn(),
+      },
+      events: { persist: vi.fn(), emit: vi.fn() },
+      generation: { save: vi.fn(), stop: vi.fn() },
+    };
+    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { 'execute-tool': 5 } });
+    const state = createGenerationState('generation-1');
+    const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
+
+    await expect(
+      interpreter.execute({ type: 'execute-tool', call, idempotencyKey: 'key' }, state),
+    ).rejects.toThrow(EffectCommandTimeoutError);
+  });
+
+  it('times out a tool preview that never resolves instead of hanging forever', async () => {
+    const ports = {
+      provider: { open: vi.fn(), retry: vi.fn() },
+      tools: {
+        execute: vi.fn(),
+        preview: vi.fn(() => new Promise<ToolResult>(() => {})),
+      },
+      events: { persist: vi.fn(), emit: vi.fn() },
+      generation: { save: vi.fn(), stop: vi.fn() },
+    };
+    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { 'preview-tool': 5 } });
+    const state = createGenerationState('generation-1');
+    const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
+
+    await expect(
+      interpreter.execute({ type: 'preview-tool', call, idempotencyKey: 'key' }, state),
+    ).rejects.toThrow(EffectCommandTimeoutError);
+  });
+
+  it('times out a save that never resolves instead of hanging forever', async () => {
+    const ports = {
+      provider: { open: vi.fn(), retry: vi.fn() },
+      tools: { execute: vi.fn(), preview: vi.fn() },
+      events: { persist: vi.fn(), emit: vi.fn() },
+      generation: {
+        save: vi.fn(() => new Promise<typeof savedMessage>(() => {})),
+        stop: vi.fn(),
+      },
+    };
+    const interpreter = createPortsInterpreter(ports, {
+      effectTimeoutsMs: { 'save-generation': 5 },
+    });
+    const state = createGenerationState('generation-1');
+
+    await expect(interpreter.execute({ type: 'save-generation' }, state)).rejects.toThrow(
+      EffectCommandTimeoutError,
+    );
   });
 
   it('runs a generation through the port interpreter', async () => {

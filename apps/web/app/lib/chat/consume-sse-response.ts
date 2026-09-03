@@ -2,6 +2,39 @@ import { createGenerationEventDeduplicator, parseGenerationWireEvent } from '@ho
 import type { GenerationWireEvent } from '@hominem/chat';
 import { createSseDecoder, finishSse, pushSseChunk } from '@hominem/chat/sse';
 
+export class SseIdleTimeoutError extends Error {
+  constructor(idleMs: number) {
+    super(`No SSE data received for ${idleMs}ms`);
+    this.name = 'SseIdleTimeoutError';
+  }
+}
+
+// services/api writes a `:heartbeat` comment frame roughly every 15s while a
+// generation is in progress (see SSE_HEARTBEAT_INTERVAL_MS in
+// chats.generation.ts) specifically so this timer has something to reset
+// against even when no real event has arrived yet. Comfortably above that,
+// with margin for one missed tick.
+const DEFAULT_SSE_IDLE_TIMEOUT_MS = 35_000;
+
+function readWithIdleTimeout(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  idleMs: number,
+): Promise<ReadableStreamReadResult<Uint8Array>> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new SseIdleTimeoutError(idleMs)), idleMs);
+    reader.read().then(
+      (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export async function consumeSseResponse(
   response: Response,
   onEvent: (event: GenerationWireEvent) => void,
@@ -9,6 +42,7 @@ export async function consumeSseResponse(
   options?: {
     deduplicateEvent?: (event: GenerationWireEvent) => GenerationWireEvent | null;
     onDurableSequence?: (sequence: number) => void;
+    idleTimeoutMs?: number;
   },
 ): Promise<void> {
   const body = response.body;
@@ -19,6 +53,7 @@ export async function consumeSseResponse(
   const reader = body.getReader();
   const decoder = new TextDecoder();
   const deduplicate = options?.deduplicateEvent ?? createGenerationEventDeduplicator();
+  const idleTimeoutMs = options?.idleTimeoutMs ?? DEFAULT_SSE_IDLE_TIMEOUT_MS;
   let state = createSseDecoder();
   const parseEvent = (data: string) => parseGenerationWireEvent(JSON.parse(data));
 
@@ -38,7 +73,14 @@ export async function consumeSseResponse(
   };
 
   while (true) {
-    const { done, value } = await reader.read();
+    let step: ReadableStreamReadResult<Uint8Array>;
+    try {
+      step = await readWithIdleTimeout(reader, idleTimeoutMs);
+    } catch (error) {
+      await reader.cancel().catch(() => undefined);
+      throw error;
+    }
+    const { done, value } = step;
     if (done) break;
 
     const decoded = decoder.decode(value, { stream: true });

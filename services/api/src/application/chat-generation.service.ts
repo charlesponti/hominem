@@ -1090,6 +1090,24 @@ export class ChatGenerationService {
         });
       } catch (failureError) {
         failureDeliveryError = failureError;
+        // The event-append path (persist generation.failed + recompute
+        // projected status) just failed too, so the run row would otherwise
+        // be stuck at its last non-terminal status forever — even a
+        // reconnect/replay reads that same stuck row. Force it directly,
+        // bypassing the event log entirely. Best-effort: if this also
+        // throws (e.g. DB fully down), there's nothing further this process
+        // can do.
+        try {
+          await runInTransaction((trx) =>
+            ChatGenerationRepository.forceFail(trx, {
+              generationId: input.generationId,
+              ownerUserId: input.userId,
+              errorMessage: toGenerationFailureMessage(error),
+            }),
+          );
+        } catch {
+          // best-effort, see comment above
+        }
       }
     } finally {
       await recordAIUsageEvent({

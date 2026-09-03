@@ -1,6 +1,7 @@
 import type { GenerationStartContext } from './generation-events';
 import { runGenerationWithPorts, type GenerationPorts } from './generation-interpreter';
 import type {
+  GenerationCommand,
   GenerationInput,
   GenerationState,
   GenerationToolCall,
@@ -25,6 +26,11 @@ export type ChatOptions = {
   model: ChatModel;
   tools: ChatTools;
   lifecycle: ChatGenerationLifecycle;
+  // Overrides the interpreter's default per-command timeouts (see
+  // DEFAULT_EFFECT_TIMEOUTS_MS in generation-interpreter.ts). Mainly for
+  // tests that want a hung port to fail fast instead of waiting out the
+  // production defaults.
+  effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>>;
 };
 
 export type CreateGenerationInput = {
@@ -66,6 +72,7 @@ class GenerationResource implements Generation {
         startContext: this.input.context,
         initialInput: this.input.initialInput,
         initialState: this.input.initialState,
+        effectTimeoutsMs: this.options.effectTimeoutsMs,
         ports: {
           provider: this.options.model,
           tools: this.options.tools,

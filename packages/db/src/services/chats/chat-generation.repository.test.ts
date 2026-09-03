@@ -281,6 +281,45 @@ describe('ChatGenerationRepository', () => {
     ).toMatchObject({ result: toolResult });
   });
 
+  it('force-fails a still-in-flight run but never clobbers an already-terminal one', async () => {
+    const { userId, generationId } = await createGeneration();
+
+    await ChatGenerationRepository.forceFail(db, {
+      generationId,
+      ownerUserId: userId,
+      errorMessage: 'DB was unavailable while recording the real failure',
+    });
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select(['status', 'errorMessage'])
+        .where('id', '=', generationId)
+        .executeTakeFirstOrThrow(),
+    ).resolves.toEqual({
+      status: 'failed',
+      errorMessage: 'DB was unavailable while recording the real failure',
+    });
+
+    await db
+      .updateTable('app.chatGenerationRuns')
+      .set({ status: 'committed', errorMessage: null })
+      .where('id', '=', generationId)
+      .execute();
+
+    await ChatGenerationRepository.forceFail(db, {
+      generationId,
+      ownerUserId: userId,
+      errorMessage: 'should not apply',
+    });
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select(['status', 'errorMessage'])
+        .where('id', '=', generationId)
+        .executeTakeFirstOrThrow(),
+    ).resolves.toEqual({ status: 'committed', errorMessage: null });
+  });
+
   it('rejects snapshot writes for another owner and terminal generations', async () => {
     const { userId, chatId, generationId } = await createGeneration();
 
