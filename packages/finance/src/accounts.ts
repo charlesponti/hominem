@@ -116,9 +116,7 @@ export async function getAccountById(
   return result ? withBalance(result) : null;
 }
 
-export async function updateAccount(
-  input: UpdateAccountInput,
-): Promise<AccountWithBalance | null> {
+export async function updateAccount(input: UpdateAccountInput): Promise<AccountWithBalance | null> {
   const existing = await getAccountById(input.id, input.userId);
   if (!existing) {
     return null;

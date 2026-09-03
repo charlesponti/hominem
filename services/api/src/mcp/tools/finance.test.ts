@@ -174,9 +174,7 @@ describe('finance_net_worth', () => {
       name: 'Checking',
       balanceCents: 181_500,
     });
-    expect(data.totals).toEqual([
-      { currencyCode: 'USD', totalCents: 181_500, accountCount: 1 },
-    ]);
+    expect(data.totals).toEqual([{ currencyCode: 'USD', totalCents: 181_500, accountCount: 1 }]);
   });
 
   it('excludes closed accounts unless requested', async () => {
