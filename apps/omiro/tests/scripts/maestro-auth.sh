@@ -13,12 +13,15 @@
 # re-send: a fresh send invalidates the captured code.
 #
 # Prerequisites: local dev API (scripted capture is the default; explicit
-# HOMINEM_EMAIL_PROVIDER=resend disables it), app installed on the booted simulator, app LOGGED OUT (phase 1 no-ops when the
-# auth screen isn't visible, and then no new OTP will ever arrive — the
-# timeout error says exactly that).
+# HOMINEM_EMAIL_PROVIDER=resend disables it), app installed on the booted
+# simulator. The wrapper force-resets the app to a clean signed-out state
+# first (terminate + wipe Documents/mmkv + clear keychain) so a stale
+# query cache or resume target can't strand the login on a 404'd detail
+# screen. No manual log-out needed.
 #
 # Usage: ./maestro-auth.sh [email]   (default: e2e@test.hakumi.io)
 # Env:   E2E_USER_EMAIL, HOMINEM_SCRIPTED_MAILBOX (same default as the API)
+#        APP_ID (default: com.pontistudios.hakumi.dev)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,9 +35,19 @@ export MAESTRO_DISABLE_UPDATE_CHECK=true
 
 EMAIL="${1:-${E2E_USER_EMAIL:-e2e@test.hakumi.io}}"
 MAILBOX="${HOMINEM_SCRIPTED_MAILBOX:-$HOME/.hominem/scripted-mailbox.jsonl}"
+APP_ID="${APP_ID:-com.pontistudios.hakumi.dev}"
 
 command -v maestro >/dev/null || { echo "maestro not found (expected at ~/.maestro/bin/maestro)" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq not found" >&2; exit 1; }
+
+# Pre-flight: kill any stale Maestro/XCTest driver sessions leaked by aborted
+# runs (MCP aborts, Ctrl-C, timeouts). Each one holds a socket to the
+# simulator's XCUITest runner; a second driver then times out with
+# Net.java pollConnect errors. Every run must start from a clean driver state.
+pkill -f "\.maestro/lib" 2>/dev/null || true
+pkill -f "test-without-building" 2>/dev/null || true
+pkill -f "maestro-driver-iosUITests-Runner" 2>/dev/null || true
+sleep 1
 
 read_otp() {
   [ -f "$MAILBOX" ] || return 0
@@ -43,10 +56,20 @@ read_otp() {
     "$MAILBOX" 2>/dev/null | sort | tail -n 1 | awk '{print $2}'
 }
 
-echo "== phase 1: requesting OTP for $EMAIL (app must be logged out) =="
-maestro test --config "$TESTS_DIR/config.yaml" -e "E2E_USER_EMAIL=$EMAIL" "$SUBFLOWS_DIR/auth-send-otp.yaml"
+echo "== reset: wiping persisted app state (mmkv) + keychain =="
+xcrun simctl terminate booted "$APP_ID" 2>/dev/null || true
+APP_DATA="$(xcrun simctl get_app_container booted "$APP_ID" data 2>/dev/null || true)"
+if [ -n "$APP_DATA" ] && [ -d "$APP_DATA/Documents/mmkv" ]; then
+  rm -rf "$APP_DATA/Documents/mmkv"
+fi
+maestro test --config "$TESTS_DIR/config.yaml" "$SUBFLOWS_DIR/reset-app-state.yaml"
 
+echo "== phase 1: requesting OTP for $EMAIL (fresh signed-out state) =="
+# Snapshot the mailbox BEFORE the send: the capture is near-instant, so
+# reading "before" after phase 1 would already include the new code and the
+# poll below would never find a *different* one.
 before="$(read_otp)"
+maestro test --config "$TESTS_DIR/config.yaml" -e "E2E_USER_EMAIL=$EMAIL" "$SUBFLOWS_DIR/auth-send-otp.yaml"
 otp=""
 deadline=$(( $(date +%s) + 60 ))
 while [ -z "$otp" ] && [ "$(date +%s)" -lt "$deadline" ]; do

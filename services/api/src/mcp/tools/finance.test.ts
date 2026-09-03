@@ -27,7 +27,6 @@ type FinanceAccountInsert = {
   currencyCode: string;
   lifecycleStatus: string;
   includeInNetWorth: boolean;
-  isActive: boolean;
   metadata: Record<string, never>;
 };
 
@@ -35,17 +34,6 @@ type FinanceCategoryInsert = {
   id: string;
   userId: string;
   name: string;
-};
-
-type FinanceStatementPeriodInsert = {
-  id: string;
-  userId: string;
-  accountId: string;
-  periodStartOn: string;
-  periodEndOn: string;
-  openingBalance: number;
-  closingBalance: number;
-  certificationStatus: string;
 };
 
 type FinanceTransactionInsert = {
@@ -60,7 +48,6 @@ type FinanceTransactionInsert = {
   pending: boolean;
   externalId: string;
   categoryId: string | null;
-  categoryAssignmentSource: string;
   excluded: boolean;
   providerPayload: Record<string, never>;
 };
@@ -83,14 +70,9 @@ const savingsId = 'f1000003-0000-4000-8000-000000000002';
 const excludedCardId = 'f1000003-0000-4000-8000-000000000003';
 const foodId = 'f1000002-0000-4000-8000-000000000101';
 const transportId = 'f1000002-0000-4000-8000-000000000102';
-const statementId = 'f1000006-0000-4000-8000-000000000001';
 
 beforeAll(async () => {
-  // finance_statement_periods.account_id has no ON DELETE CASCADE to finance_accounts,
-  // so a plain `DELETE FROM "user"` fails mid-cascade. Delete the finance tables
-  // ourselves (children first) before the user row so each run starts clean.
   await pool.query(`DELETE FROM app.finance_transactions WHERE user_id = $1`, [userId]);
-  await pool.query(`DELETE FROM app.finance_statement_periods WHERE user_id = $1`, [userId]);
   await pool.query(`DELETE FROM app.finance_accounts WHERE user_id = $1`, [userId]);
   await pool.query(`DELETE FROM "user" WHERE id = $1`, [userId]);
   await pool.query(
@@ -109,7 +91,6 @@ beforeAll(async () => {
         currencyCode: 'USD',
         lifecycleStatus: 'open',
         includeInNetWorth: true,
-        isActive: true,
         metadata: {},
       },
       {
@@ -120,7 +101,6 @@ beforeAll(async () => {
         currencyCode: 'USD',
         lifecycleStatus: 'closed',
         includeInNetWorth: true,
-        isActive: false,
         metadata: {},
       },
       {
@@ -131,7 +111,6 @@ beforeAll(async () => {
         currencyCode: 'USD',
         lifecycleStatus: 'open',
         includeInNetWorth: false,
-        isActive: true,
         metadata: {},
       },
     ] satisfies FinanceAccountInsert[])
@@ -144,23 +123,6 @@ beforeAll(async () => {
       { id: foodId, userId, name: 'Food & Drink' },
       { id: transportId, userId, name: 'Transport' },
     ] satisfies FinanceCategoryInsert[])
-    .onConflict((oc) => oc.column('id').doNothing())
-    .execute();
-
-  await db
-    .insertInto('app.financeStatementPeriods')
-    .values([
-      {
-        id: statementId,
-        userId,
-        accountId: checkingId,
-        periodStartOn: '0001-01-01',
-        periodEndOn: '2026-06-30',
-        openingBalance: 0,
-        closingBalance: 1000.0,
-        certificationStatus: 'uncertified',
-      },
-    ] satisfies FinanceStatementPeriodInsert[])
     .onConflict((oc) => oc.column('id').doNothing())
     .execute();
 
@@ -189,7 +151,6 @@ beforeAll(async () => {
         pending: desc === 'Pending Coffee',
         externalId: extId,
         categoryId: catId,
-        categoryAssignmentSource: 'source',
         excluded: excl,
         providerPayload: {},
       } satisfies FinanceTransactionInsert)
@@ -199,7 +160,7 @@ beforeAll(async () => {
 });
 
 describe('finance_net_worth', () => {
-  it('adds posted transaction activity since the latest statement to compute balances', async () => {
+  it('sums posted, non-pending transaction activity to compute balances', async () => {
     const result = await callTool(userId, 'finance_net_worth', {
       includeClosed: false,
     });
@@ -211,10 +172,10 @@ describe('finance_net_worth', () => {
     expect(data.accounts).toHaveLength(1);
     expect(data.accounts?.[0]).toMatchObject({
       name: 'Checking',
-      balanceSource: 'statement+ledger',
+      balanceCents: 181_500,
     });
     expect(data.totals).toEqual([
-      { currencyCode: 'USD', totalCents: expect.any(Number), accountCount: 1 },
+      { currencyCode: 'USD', totalCents: 181_500, accountCount: 1 },
     ]);
   });
 

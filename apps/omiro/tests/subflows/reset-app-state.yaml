@@ -1,0 +1,39 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Programmatic clean bootstrap for the two-phase login (see maestro-auth.sh).
+# Relaunches the app with the keychain cleared so SecureStore's session token
+# is gone and the app lands signed out on the auth screen.
+#
+# The wrapper wipes Documents/mmkv (the persisted react-query cache in
+# app-storage plus the resume-target local store) via simctl BEFORE this
+# flow, so a stale, possibly wrong-account cache and a dead resume target
+# can't survive into the new session — that combination is what strands a
+# fresh login on a 404'd chat detail instead of the inbox.
+- launchApp:
+    clearKeychain: true
+    stopApp: true
+# The simulator's iCloud account throws an "Apple Account Verification"
+# system alert whenever the app's keychain is cleared (the wrapper wipes
+# mmkv and relaunches with clearKeychain). It covers the whole screen and
+# can appear at any point during the cold boot, so poll for it and dismiss
+# it between auth-screen waits instead of checking once. The loop runs while
+# the auth screen has not appeared (capped at 10 iterations), re-dismissing
+# the alert each pass and dwelling up to 5s for the email field.
+- repeat:
+    times: 10
+    while:
+      notVisible:
+        id: auth-email-input
+    commands:
+      - runFlow:
+          when:
+            visible: 'Apple Account Verification'
+          commands:
+            - tapOn: 'Not Now'
+      - extendedWaitUntil:
+          visible:
+            id: auth-email-input
+          optional: true
+          timeout: 5000
+- assertVisible:
+    id: auth-email-input

@@ -67,14 +67,20 @@ export PATH="$HOME/.maestro/bin:/opt/homebrew/opt/openjdk@17/bin:$PATH" && expor
 
 (The Maestro CLI lives at `~/.maestro/bin`, not on a default PATH.)
 
-**E2E login (logged-out app only):** OTPs are real random codes captured to
-the scripted mailbox — never hardcoded. Use the two-phase wrapper (the local
-dev API captures OTPs by default; explicit `HOMINEM_EMAIL_PROVIDER=resend`
-disables capture):
+**E2E login:** OTPs are real random codes captured to the scripted mailbox —
+never hardcoded. Use the two-phase wrapper (the local dev API captures OTPs
+by default; explicit `HOMINEM_EMAIL_PROVIDER=resend` disables capture). The
+wrapper force-resets the app first — terminates it, wipes `Documents/mmkv`
+(the persisted react-query cache + resume-target local store) and relaunches
+with `clearKeychain: true` — so every login starts from a clean signed-out
+state and a stale cache can't strand the session on a 404'd detail screen:
 
 ```bash
 apps/omiro/tests/scripts/maestro-auth.sh [email]  # default e2e@test.hakumi.io
 ```
+
+The reset lives in `tests/subflows/reset-app-state.yaml`; only the bootstrap
+resets — the flows themselves still assume an authenticated session.
 
 **Suite layout:** `tests/config.yaml` covers `flows/**` + `e2e/**` (never run
 `subflows/**` standalone — most have no `launchApp`); `.maestro/config.yaml`

@@ -58,7 +58,6 @@ const financeAccountBalanceSchema = z.object({
   currencyCode: z.string(),
   balanceCents: z.number().int(),
   balanceAsOf: z.string().nullable(),
-  balanceSource: z.enum(['statement+ledger', 'ledger_only']),
 });
 
 export const financeNetWorthInputSchema = z.object({

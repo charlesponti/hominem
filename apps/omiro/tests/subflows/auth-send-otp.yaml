@@ -9,6 +9,11 @@ appId: com.pontistudios.hakumi.dev
 # No-op when the app is already authenticated (auth screen not visible).
 - runFlow:
     when:
+      visible: 'Apple Account Verification'
+    commands:
+      - tapOn: 'Not Now'
+- runFlow:
+    when:
       visible:
         id: auth-email-input
     commands:

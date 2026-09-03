@@ -17,6 +17,15 @@ appId: com.pontistudios.hakumi.dev
     id: auth-verify-otp
 - waitForAnimationToEnd:
     timeout: 5000
+# The simulator's iCloud account can re-prompt its "Apple Account
+# Verification" alert during/after sign-in (a keychain write on session
+# creation triggers it). Dismiss before the inbox assertion so it can't
+# block the check.
+- runFlow:
+    when:
+      visible: 'Apple Account Verification'
+    commands:
+      - tapOn: 'Not Now'
 - runFlow:
     when:
       visible: 'Continue without name'

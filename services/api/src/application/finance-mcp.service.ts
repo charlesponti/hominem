@@ -41,21 +41,7 @@ export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boo
   const warnings: string[] = [];
   const balances = await Promise.all(
     accounts.map(async (account) => {
-      const latestStatement = (await db
-        .selectFrom('app.financeStatementPeriods')
-        .select(['closingBalance', 'periodEndOn'])
-        .where('accountId', '=', account.id)
-        .where('userId', '=', ownerUserId)
-        .orderBy('periodEndOn', 'desc')
-        .limit(1)
-        .executeTakeFirst()) as
-        | {
-            closingBalance: number | string | null;
-            periodEndOn: string | null;
-          }
-        | undefined;
-
-      let ledgerQuery = db
+      const ledgerDelta = (await db
         .selectFrom('app.financeTransactions')
         .select((eb) => [
           eb.fn.sum<number>('amount').as('delta'),
@@ -63,23 +49,14 @@ export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boo
         ])
         .where('accountId', '=', account.id)
         .where('userId', '=', ownerUserId)
-        .where('pending', '=', false);
+        .where('pending', '=', false)
+        .executeTakeFirst()) as { delta: number | null; latestPostedOn: string | null } | undefined;
 
-      if (latestStatement && latestStatement.periodEndOn) {
-        ledgerQuery = ledgerQuery.where('postedOn', '>', latestStatement.periodEndOn);
-      }
+      const balanceCents = toCents(ledgerDelta?.delta ?? 0);
+      const balanceAsOf = ledgerDelta?.latestPostedOn ?? null;
 
-      const ledgerDelta = (await ledgerQuery.executeTakeFirst()) as
-        | { delta: number | null; latestPostedOn: string | null }
-        | undefined;
-
-      const deltaCents = toCents(ledgerDelta?.delta ?? 0);
-      const statementCents = toCents(latestStatement?.closingBalance ?? 0);
-      const balanceCents = statementCents + deltaCents;
-      const balanceAsOf = ledgerDelta?.latestPostedOn ?? latestStatement?.periodEndOn ?? null;
-
-      if (!latestStatement && !ledgerDelta?.latestPostedOn) {
-        warnings.push(`Account "${account.name}" has no statement periods or transactions.`);
+      if (!ledgerDelta?.latestPostedOn) {
+        warnings.push(`Account "${account.name}" has no transactions.`);
       }
 
       return {
@@ -90,9 +67,6 @@ export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boo
         currencyCode: account.currencyCode,
         balanceCents,
         balanceAsOf,
-        balanceSource: (latestStatement ? 'statement+ledger' : 'ledger_only') as
-          | 'statement+ledger'
-          | 'ledger_only',
       };
     }),
   );
