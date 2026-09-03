@@ -1,7 +1,6 @@
-import { z } from 'zod';
-
 import { databaseSchema } from '@hominem/env/database';
 import { runtimeSchema } from '@hominem/env/runtime';
+import { z } from 'zod';
 
 export const careerSchema = runtimeSchema.extend({
   ...databaseSchema.shape,

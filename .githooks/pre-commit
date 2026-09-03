@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+git_dir=$(git rev-parse --git-dir)
+legacy_hook="$git_dir/hooks/pre-commit"
+current_hook="$PWD/.githooks/pre-commit"
+
+if [[ -f "$legacy_hook" && "$legacy_hook" != "$current_hook" ]]; then
+  bash "$legacy_hook"
+fi
+
+while IFS= read -r -d '' file; do
+  case "$file" in
+    *.cjs|*.cts|*.js|*.jsx|*.json|*.jsonc|*.mjs|*.mts|*.ts|*.tsx)
+      pnpm exec oxfmt "$file" --write
+      git add -- "$file"
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACM -z)

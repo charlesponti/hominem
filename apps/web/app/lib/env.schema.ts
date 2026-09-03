@@ -1,6 +1,5 @@
-import { z } from 'zod';
-
 import { runtimeSchema } from '@hominem/env/runtime';
+import { z } from 'zod';
 
 const blankAsUndefined = (value: unknown) => (value === '' ? undefined : value);
 
@@ -22,7 +21,10 @@ export const webSchema = runtimeSchema.extend({
   VITE_OTEL_DEPLOYMENT_ENVIRONMENT: z.string().optional().default('development'),
   VITE_OTEL_EXPORTER_OTLP_ENDPOINT: z.preprocess(
     blankAsUndefined,
-    z.union([z.literal('none'), z.url()]).optional().default('none'),
+    z
+      .union([z.literal('none'), z.url()])
+      .optional()
+      .default('none'),
   ),
   VITE_OTEL_TRACES_SAMPLER_ARG: z.string().optional().default('1.0'),
 });

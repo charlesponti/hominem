@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   FadeIn,
   FadeInDown,
@@ -8,14 +9,16 @@ import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  type WithTimingConfig,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
-import { useAppTheme } from '~/components/theme';
+import { useAppTheme, useStyles } from '~/components/theme';
 import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
 import { useChatArchive } from '~/services/chat/use-chat-archive';
-import { nativeMotionContracts, nativeMotionTiming } from '~/services/motion/native-motion';
+import { nativeMotionTiming } from '~/services/motion/native-motion';
 import { useNoteDelete } from '~/services/notes/use-note-delete';
 import t from '~/translations';
 
@@ -27,21 +30,33 @@ interface InboxStreamItemProps {
   item: InboxStreamItemData;
 }
 
-// iOS Mail-style swipe-out distance for the deferred exit. The row fades and
-// slides while still mounted, then the already-invisible row is removed from
-// the cache so siblings close the gap via layout -- this sidesteps FlashList
-// view recycling, which unreliably plays Reanimated `exiting` props.
-const EXIT_SLIDE_PX = 24;
-const EXIT_COMMIT_DELAY_MS = nativeMotionContracts.duration.quick + 10;
+// Width of the revealed swipe action button, and how far past it a fast/far
+// swipe must travel to auto-commit without a second tap (iOS Mail-style).
+const ACTION_WIDTH = 88;
+const COMMIT_DISTANCE = 160;
+const COMMIT_VELOCITY = 900;
+const REVEAL_VELOCITY = 500;
+
+// How far the row continues off-screen once the action is committed, so the
+// swipe motion and the row's removal read as one continuous gesture rather
+// than a drag followed by a separate exit animation.
+const EXIT_FLY_DISTANCE = 400;
+
+const EXIT_COMMIT_DELAY_MS = nativeMotionTiming.exit.duration + 10;
 
 // iOS drops a new Alert.alert presented synchronously from inside another
 // alert's button onPress -- the second alert races the first alert's dismiss
 // animation and intermittently never appears (observed repeatedly in the
-// Maestro delete flow: long-press a row, tap Delete, and the "Delete note"
+// Maestro delete flow: swipe a row, tap Delete, and the "Delete note"
 // confirmation is sometimes missing entirely). Defer the confirmation until
 // the dismissal has settled. Long enough to clear the ~300ms dismiss
 // animation, short enough to feel immediate.
 const ALERT_CONFIRM_DEFER_MS = 350;
+
+function instantOr(config: WithTimingConfig, reducedMotion: boolean): WithTimingConfig {
+  'worklet';
+  return reducedMotion ? { duration: 0 } : config;
+}
 
 export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemProps) => {
   const router = useRouter();
@@ -50,8 +65,29 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
   const previewText = cleanText(item.preview ? stripPreviewMarkdown(item.preview) : item.preview);
   const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
   const isChat = item.kind === 'chat';
-  const { mutedForeground: mutedForegroundColor } = useAppTheme().colors;
+  const { destructive, destructiveForeground, primary, primaryForeground } = useAppTheme().colors;
+  const styles = useStyles((theme) => ({
+    row: { paddingHorizontal: theme.spacing.xl, paddingVertical: theme.spacing.lg },
+    wrapper: { position: 'relative', overflow: 'hidden' },
+    actionPanel: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: ACTION_WIDTH,
+    },
+    actionButton: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.xs,
+    },
+    actionLabel: { ...theme.textVariants.caption1, fontWeight: '600' },
+  }));
+
   const leaving = useSharedValue(1);
+  const dragX = useSharedValue(0);
+  const startOffset = useSharedValue(0);
   const [isLeaving, setIsLeaving] = useState(false);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +112,16 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
     [],
   );
 
+  // A different item can land in this recycled row (FlashList reuses cells),
+  // so any leftover reveal offset from the previous occupant must not show.
+  useEffect(() => {
+    dragX.value = 0;
+  }, [dragX, item.id]);
+
+  const closeSwipe = useCallback(() => {
+    dragX.value = withTiming(0, instantOr(nativeMotionTiming.enter, reducedMotion));
+  }, [dragX, reducedMotion]);
+
   // Plays the exit while the row is still mounted, then commits the mutation
   // (whose optimistic cache removal unmounts the now-invisible row).
   const beginExit = useCallback(
@@ -91,31 +137,33 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
   );
 
   // Mutation failed and the cache rolled back, so the row is still in the
-  // list -- fade it back in instead of leaving it stuck invisible.
+  // list -- fade and slide it back in instead of leaving it stuck invisible.
   const cancelExit = useCallback(() => {
     if (exitTimerRef.current) {
       clearTimeout(exitTimerRef.current);
       exitTimerRef.current = null;
     }
     leaving.value = withTiming(1, nativeMotionTiming.enter);
+    closeSwipe();
     setIsLeaving(false);
-  }, [leaving]);
+  }, [closeSwipe, leaving]);
 
-  const leavingStyle = useAnimatedStyle(() => ({
-    opacity: leaving.value,
-    transform: [{ translateX: (1 - leaving.value) * (reducedMotion ? 0 : EXIT_SLIDE_PX) }],
+  const leavingStyle = useAnimatedStyle(() => ({ opacity: leaving.value }));
+  const dragStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.value }] }));
+  const actionPanelStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(1, Math.abs(dragX.value) / ACTION_WIDTH),
   }));
 
   // Only rows that arrived after the first paint slide in; historical rows,
   // pagination appends, and filter switches mount static.
   const entering = isNew
     ? reducedMotion
-      ? FadeIn.duration(nativeMotionContracts.duration.quick)
-      : FadeInDown.duration(nativeMotionContracts.duration.quick)
+      ? FadeIn.duration(nativeMotionTiming.quick.duration)
+      : FadeInDown.duration(nativeMotionTiming.quick.duration)
     : undefined;
   const layout = reducedMotion
     ? undefined
-    : LinearTransition.duration(nativeMotionContracts.duration.quick);
+    : LinearTransition.duration(nativeMotionTiming.quick.duration);
 
   const handleDelete = useCallback(() => {
     if (alertTimerRef.current) {
@@ -123,7 +171,7 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
     }
     alertTimerRef.current = setTimeout(() => {
       Alert.alert(t.inbox.item.deleteNote.title, t.inbox.item.deleteNote.message, [
-        { text: t.inbox.item.deleteNote.cancel, style: 'cancel' },
+        { text: t.inbox.item.deleteNote.cancel, style: 'cancel', onPress: closeSwipe },
         {
           text: t.inbox.item.deleteNote.confirm,
           style: 'destructive',
@@ -131,34 +179,82 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
             if (isLeaving) {
               return;
             }
+            dragX.value = withTiming(
+              -EXIT_FLY_DISTANCE,
+              instantOr(nativeMotionTiming.exit, reducedMotion),
+            );
             beginExit(() => deleteNote(undefined, { onError: cancelExit }));
           },
         },
       ]);
     }, ALERT_CONFIRM_DEFER_MS);
-  }, [beginExit, cancelExit, deleteNote, isLeaving]);
+  }, [beginExit, cancelExit, closeSwipe, deleteNote, dragX, isLeaving, reducedMotion]);
 
   const handleArchive = useCallback(() => {
     if (isLeaving || isPending) {
       return;
     }
+    dragX.value = withTiming(-EXIT_FLY_DISTANCE, instantOr(nativeMotionTiming.exit, reducedMotion));
     beginExit(() => archiveChat(undefined, { onError: cancelExit }));
-  }, [archiveChat, beginExit, cancelExit, isLeaving, isPending]);
+  }, [archiveChat, beginExit, cancelExit, dragX, isLeaving, isPending, reducedMotion]);
 
-  const onOpen = useCallback(() => router.push(item.route), [router, item.route]);
-
-  const handleLongPress = useCallback(() => {
+  // The revealed action button and an over-swipe both commit the same way;
+  // delete keeps its confirmation, archive is immediate (matching the prior
+  // long-press menu's behavior).
+  const commitAction = useCallback(() => {
     if (isPending || isLeaving) {
       return;
     }
-    Alert.alert(primaryText, undefined, [
-      { text: t.inbox.item.open, onPress: onOpen },
-      isChat
-        ? { text: t.inbox.item.archiveChat, onPress: handleArchive }
-        : { text: t.inbox.item.deleteNote.menu, style: 'destructive', onPress: handleDelete },
-      { text: t.inbox.item.deleteNote.cancel, style: 'cancel' },
-    ]);
-  }, [handleArchive, handleDelete, isChat, isLeaving, isPending, onOpen, primaryText]);
+    if (isChat) {
+      handleArchive();
+      return;
+    }
+    dragX.value = withTiming(-ACTION_WIDTH, instantOr(nativeMotionTiming.enter, reducedMotion));
+    handleDelete();
+  }, [dragX, handleArchive, handleDelete, isChat, isLeaving, isPending, reducedMotion]);
+
+  const onOpen = useCallback(() => {
+    if (dragX.value !== 0) {
+      closeSwipe();
+      return;
+    }
+    router.push(item.route);
+  }, [closeSwipe, dragX, item.route, router]);
+
+  const swipe = Gesture.Pan()
+    .enabled(!isPending && !isLeaving)
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-10, 10])
+    .onStart(() => {
+      'worklet';
+      startOffset.value = dragX.value;
+    })
+    .onUpdate((event) => {
+      'worklet';
+      const next = startOffset.value + event.translationX;
+      dragX.value = Math.min(0, Math.max(next, -ACTION_WIDTH * 1.3));
+    })
+    .onEnd((event) => {
+      'worklet';
+      const shouldCommit = dragX.value <= -COMMIT_DISTANCE || event.velocityX <= -COMMIT_VELOCITY;
+      if (shouldCommit) {
+        scheduleOnRN(commitAction);
+        return;
+      }
+      const shouldReveal = dragX.value <= -ACTION_WIDTH / 2 || event.velocityX <= -REVEAL_VELOCITY;
+      dragX.value = withTiming(
+        shouldReveal ? -ACTION_WIDTH : 0,
+        instantOr(nativeMotionTiming.enter, reducedMotion),
+      );
+    });
+
+  const handleAccessibilityAction = useCallback(() => {
+    if (isChat) {
+      handleArchive();
+    } else {
+      handleDelete();
+    }
+  }, [handleArchive, handleDelete, isChat]);
 
   return (
     <Reanimated.View
@@ -167,20 +263,57 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
       style={leavingStyle}
       testID={`inbox-item-${item.kind}`}
     >
-      <ListRow
-        accessibilityLabel={primaryText}
-        actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
-        leading=<AppIcon
-          name={isChat ? 'bubble.left.fill' : 'note.text'}
-          size={14}
-          tintColor={mutedForegroundColor}
-          style={{ opacity: 0.35 }}
-        />
-        onLongPress={handleLongPress}
-        onPress={onOpen}
-        subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
-        title={primaryText}
-      />
+      <View style={styles.wrapper}>
+        <Reanimated.View
+          style={[
+            styles.actionPanel,
+            { backgroundColor: isChat ? primary : destructive },
+            actionPanelStyle,
+          ]}
+        >
+          <Pressable
+            accessibilityLabel={isChat ? t.inbox.item.archiveChat : t.inbox.item.deleteNote.menu}
+            accessibilityRole="button"
+            onPress={commitAction}
+            style={styles.actionButton}
+            testID={`inbox-item-${isChat ? 'chat' : 'note'}-${isChat ? 'archive' : 'delete'}`}
+          >
+            <AppIcon
+              name={isChat ? 'archivebox' : 'trash'}
+              size={20}
+              tintColor={isChat ? primaryForeground : destructiveForeground}
+            />
+            <Text
+              style={[
+                styles.actionLabel,
+                { color: isChat ? primaryForeground : destructiveForeground },
+              ]}
+            >
+              {isChat ? t.inbox.item.archiveChat : t.inbox.item.deleteNote.menu}
+            </Text>
+          </Pressable>
+        </Reanimated.View>
+        <GestureDetector gesture={swipe}>
+          <Reanimated.View style={dragStyle}>
+            <ListRow
+              accessibilityActions={[
+                {
+                  name: isChat ? 'archive' : 'delete',
+                  label: isChat ? t.inbox.item.archiveChat : t.inbox.item.deleteNote.menu,
+                },
+              ]}
+              accessibilityLabel={primaryText}
+              actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
+              divider={false}
+              onAccessibilityAction={handleAccessibilityAction}
+              onPress={onOpen}
+              style={styles.row}
+              subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
+              title={primaryText}
+            />
+          </Reanimated.View>
+        </GestureDetector>
+      </View>
     </Reanimated.View>
   );
 });

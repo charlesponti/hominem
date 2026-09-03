@@ -62,12 +62,12 @@ export function StreamScreen({ filter }: StreamScreenProps) {
     dayLabel: {
       ...theme.textVariants.caption1,
       color: theme.colors.tertiary,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      paddingTop: 4,
-      fontWeight: '600',
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.md,
+      paddingTop: theme.spacing['3xl'],
+      fontWeight: '500',
       textTransform: 'uppercase',
-      letterSpacing: 0,
+      letterSpacing: 0.4,
     },
     emptyText: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
   }));

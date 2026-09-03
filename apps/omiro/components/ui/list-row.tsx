@@ -3,6 +3,8 @@ import {
   Pressable,
   Text,
   View,
+  type AccessibilityActionEvent,
+  type AccessibilityActionInfo,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -11,11 +13,17 @@ import {
 import { useStyles } from '~/components/theme';
 
 interface ListRowProps {
+  accessibilityActions?: AccessibilityActionInfo[];
   accessibilityLabel: string;
   actionTestID?: string;
+  // Off for a fluid, whitespace-separated list (e.g. the stream) instead of
+  // the default hairline-divided table row.
+  divider?: boolean;
   leading?: ReactNode;
+  onAccessibilityAction?: (event: AccessibilityActionEvent) => void;
   onLongPress?: () => void;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
   subtitle?: string | null;
   testID?: string;
   title: string;
@@ -24,11 +32,15 @@ interface ListRowProps {
 }
 
 export function ListRow({
+  accessibilityActions,
   accessibilityLabel,
   actionTestID,
+  divider = true,
   leading,
+  onAccessibilityAction,
   onLongPress,
   onPress,
+  style,
   subtitle,
   testID,
   title,
@@ -46,6 +58,7 @@ export function ListRow({
       paddingHorizontal: 2,
       paddingVertical: 8,
     } satisfies ViewStyle,
+    rowFlat: { borderBottomWidth: 0 } satisfies ViewStyle,
     pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
     leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
     content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
@@ -61,11 +74,18 @@ export function ListRow({
   }));
   return (
     <Pressable
+      accessibilityActions={accessibilityActions}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      onAccessibilityAction={onAccessibilityAction}
       onLongPress={onLongPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.row,
+        !divider && styles.rowFlat,
+        style,
+        pressed && styles.pressed,
+      ]}
       testID={testID ?? actionTestID}
     >
       {leading ? <View style={styles.leading}>{leading}</View> : null}
