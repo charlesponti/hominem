@@ -22,12 +22,14 @@ interface ChatComposerPanelProps {
   display: ReturnType<typeof useChatDisplayMessages>;
   isOnline: boolean;
   isRetryable: boolean;
+  onRequestAutoSpeak: (messageId: string) => void;
   regeneration: ReturnType<typeof useRegenerateMessage>;
   responseLength: ReturnType<typeof useResponseLength>['responseLength'];
   seedNote: SeedNote | null;
   setIsRetryable: (value: boolean) => void;
   streamMessage: ReturnType<typeof useStreamMessage>;
   updateChatTitle: { mutate: (input: { chatId: string; title: string }) => void };
+  walkieTalkieMode: boolean;
 }
 
 export function ChatComposerPanel({
@@ -36,12 +38,14 @@ export function ChatComposerPanel({
   display,
   isOnline,
   isRetryable,
+  onRequestAutoSpeak,
   regeneration,
   responseLength,
   seedNote,
   setIsRetryable,
   streamMessage,
   updateChatTitle,
+  walkieTalkieMode,
 }: ChatComposerPanelProps) {
   const composer = useChatComposerState({ chatId, seedNote });
   const speech = useSpeechToText({ onTranscript: composer.setDraft });
@@ -109,6 +113,7 @@ export function ChatComposerPanel({
     ) {
       return;
     }
+    const shouldAutoSpeak = speech.isListening || walkieTalkieMode;
     if (speech.isListening) speech.stop();
 
     const messageToSend = composer.draftWithSeed;
@@ -146,7 +151,10 @@ export function ChatComposerPanel({
           updateChatTitle.mutate({ chatId, title });
         }
       },
-      onCommitted: (message) => display.setPendingAssistantMessage(message),
+      onCommitted: (message) => {
+        display.setPendingAssistantMessage(message);
+        if (shouldAutoSpeak) onRequestAutoSpeak(message.id);
+      },
       onCancelled: () => {
         composer.setDraft(messageToSend);
         if (!accepted) setIsRetryable(true);
@@ -165,12 +173,14 @@ export function ChatComposerPanel({
     currentChatTitle,
     display,
     isOnline,
+    onRequestAutoSpeak,
     regeneration.isRegenerating,
     responseLength,
     setIsRetryable,
     speech,
     streamMessage,
     updateChatTitle,
+    walkieTalkieMode,
   ]);
 
   return (

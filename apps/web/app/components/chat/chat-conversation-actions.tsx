@@ -85,7 +85,7 @@ export function ChatConversationActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel>Chat</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs color-muted-foreground/25">Chat</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={!canExtractTasks || isExtractingTasks}
             onClick={onExtractTasks}
@@ -102,7 +102,7 @@ export function ChatConversationActions({
             {isDebugOpen ? 'Disable debug mode' : 'Enable debug mode'}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Manage</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs color-muted-foreground">Manage</DropdownMenuLabel>
           <DropdownMenuItem disabled={createChat.isPending} onClick={onNewChat}>
             <Plus aria-hidden="true" />
             {createChat.isPending ? 'Creating new chat…' : 'New chat'}

@@ -36,6 +36,7 @@ import { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import { useResponseLength } from '~/lib/hooks/use-response-length';
 import { useStreamMessage } from '~/lib/hooks/use-stream-message';
 import { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
+import { useWalkieTalkieMode } from '~/lib/hooks/use-walkie-talkie-mode';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -98,9 +99,12 @@ export default function ChatPage({
   const [proposedTasks, setProposedTasks] = useState<ProposedChatTask[] | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
+  const [autoSpeakMessageId, setAutoSpeakMessageId] = useState<string | null>(null);
+  const { walkieTalkieMode, setWalkieTalkieMode } = useWalkieTalkieMode();
 
   const activateSpeech = useCallback((messageId: string) => {
     setActiveSpeechMessageId(messageId);
+    setAutoSpeakMessageId((id) => (id === messageId ? null : id));
   }, []);
 
   const deactivateSpeech = useCallback((messageId: string) => {
@@ -227,14 +231,19 @@ export default function ChatPage({
           {loadState === 'ready' ? (
             <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
               {isSettingsOpen ? (
-                <SheetContent aria-label="Chat settings">
+                <SheetContent
+                  aria-label="Response settings"
+                  closeClassName="!inset-auto !top-4 !right-4 !bottom-auto !left-auto"
+                >
                   <SheetHeader>
-                    <SheetTitle>Chat settings</SheetTitle>
+                    <SheetTitle>Response settings</SheetTitle>
                   </SheetHeader>
                   <ChatResponseSettings
                     onChange={setResponseLength}
+                    onChangeWalkieTalkieMode={setWalkieTalkieMode}
                     onClose={() => setIsSettingsOpen(false)}
                     value={responseLength}
+                    walkieTalkieMode={walkieTalkieMode}
                   />
                 </SheetContent>
               ) : null}
@@ -243,6 +252,7 @@ export default function ChatPage({
 
           <ChatConversation
             activeSpeechMessageId={activeSpeechMessageId}
+            autoSpeakMessageId={autoSpeakMessageId}
             chatId={chatId}
             display={display}
             isDebugOpen={isDebugOpen}
@@ -370,12 +380,14 @@ export default function ChatPage({
                 display={display}
                 isOnline={isOnline}
                 isRetryable={isRetryable}
+                onRequestAutoSpeak={setAutoSpeakMessageId}
                 regeneration={regeneration}
                 responseLength={responseLength}
                 seedNote={seedNote}
                 setIsRetryable={setIsRetryable}
                 streamMessage={streamMessage}
                 updateChatTitle={updateChatTitle}
+                walkieTalkieMode={walkieTalkieMode}
               />
             </div>
           ) : null}

@@ -6,7 +6,13 @@ const meta = {
   title: 'Chat/Response Settings',
   component: ChatResponseSettings,
   parameters: { layout: 'centered' },
-  args: { onChange: () => undefined, onClose: () => undefined, value: 'medium' },
+  args: {
+    onChange: () => undefined,
+    onChangeWalkieTalkieMode: () => undefined,
+    onClose: () => undefined,
+    value: 'medium',
+    walkieTalkieMode: false,
+  },
 } satisfies Meta<typeof ChatResponseSettings>;
 
 export default meta;

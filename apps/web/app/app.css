@@ -47,6 +47,21 @@
   box-shadow: 0 20px 45px rgb(0 0 0 / 35%);
 }
 
+/* @ponti-studios/ui's Switch styles itself with bare `data-checked:`/
+ * `data-unchecked:` Tailwind variants, which aren't real variants unless
+ * something registers them — this app only registers `data-open`/
+ * `data-closed` (via tw-animate-css), so the switch renders functionally
+ * but visually inert without this override. */
+[data-slot='switch'][data-unchecked] {
+  background: var(--border-default);
+  justify-content: flex-start;
+}
+
+[data-slot='switch'][data-checked] {
+  background: var(--primary);
+  justify-content: flex-end;
+}
+
 [data-slot='range'] {
   appearance: none;
   background: transparent;

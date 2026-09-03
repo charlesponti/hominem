@@ -30,6 +30,7 @@ interface ChatConversationProps {
   streamMessage: { isStreaming: boolean; status: string };
   toolCallRespond: ReturnType<typeof useToolCallRespond>;
   activeSpeechMessageId: string | null;
+  autoSpeakMessageId: string | null;
   visibleMessages: ChatMessage[];
   onActivateSpeech: (messageId: string) => void;
   onDeactivateSpeech: (messageId: string) => void;
@@ -110,6 +111,7 @@ function ChatConversationState({
 
 export const ChatConversation = memo(function ChatConversation({
   activeSpeechMessageId,
+  autoSpeakMessageId,
   chatId,
   display,
   isDebugOpen,
@@ -187,6 +189,7 @@ export const ChatConversation = memo(function ChatConversation({
                 <ChatMessageView
                   key={message.id}
                   isSpeechActive={activeSpeechMessageId === message.id}
+                  shouldAutoSpeak={autoSpeakMessageId === message.id}
                   isGenerationActive={
                     streamMessage.isStreaming ||
                     streamMessage.status === 'awaiting_confirmation' ||

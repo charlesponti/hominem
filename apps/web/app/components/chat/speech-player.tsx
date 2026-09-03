@@ -14,6 +14,7 @@ type SpeechState = 'idle' | 'loading' | 'playing' | 'paused' | 'stopping' | 'err
 const personaTransitionMs = 200;
 
 export interface SpeechPlayerProps {
+  autoPlay?: boolean;
   isActive: boolean;
   messageId: string;
   onActivate: (messageId: string) => void;
@@ -22,6 +23,7 @@ export interface SpeechPlayerProps {
 }
 
 export function SpeechPlayer({
+  autoPlay = false,
   isActive,
   messageId,
   onActivate,
@@ -131,6 +133,11 @@ export function SpeechPlayer({
     },
     [],
   );
+
+  useEffect(() => {
+    if (autoPlay) void handleListen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay]);
 
   function scheduleDeactivation() {
     if (deactivateTimerRef.current !== null) {

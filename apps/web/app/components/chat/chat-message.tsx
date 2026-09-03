@@ -58,6 +58,7 @@ export interface ChatMessageProps {
   formatTimestamp?: (value: string) => string;
   speechSrc?: string;
   isSpeechActive?: boolean;
+  shouldAutoSpeak?: boolean;
   isToolResponding?: boolean;
   isRegenerating?: boolean;
   regenerationStatus?: RegenerationStatus;
@@ -122,6 +123,7 @@ export const ChatMessage = memo(function ChatMessage({
   formatTimestamp = formatMessageTimestamp,
   speechSrc,
   isSpeechActive = false,
+  shouldAutoSpeak = false,
   isToolResponding = false,
   isRegenerating = false,
   regenerationStatus = 'idle',
@@ -377,6 +379,7 @@ export const ChatMessage = memo(function ChatMessage({
             <MessageActions className="justify-end">
               {canSpeak ? (
                 <SpeechPlayer
+                  autoPlay={shouldAutoSpeak}
                   isActive={isSpeechActive}
                   messageId={message.id}
                   onActivate={onActivateSpeech}
