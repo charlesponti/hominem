@@ -34,6 +34,15 @@ interface InboxStreamItemProps {
 const EXIT_SLIDE_PX = 24;
 const EXIT_COMMIT_DELAY_MS = nativeMotionContracts.duration.quick + 10;
 
+// iOS drops a new Alert.alert presented synchronously from inside another
+// alert's button onPress -- the second alert races the first alert's dismiss
+// animation and intermittently never appears (observed repeatedly in the
+// Maestro delete flow: long-press a row, tap Delete, and the "Delete note"
+// confirmation is sometimes missing entirely). Defer the confirmation until
+// the dismissal has settled. Long enough to clear the ~300ms dismiss
+// animation, short enough to feel immediate.
+const ALERT_CONFIRM_DEFER_MS = 350;
+
 export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemProps) => {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
@@ -45,6 +54,7 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
   const leaving = useSharedValue(1);
   const [isLeaving, setIsLeaving] = useState(false);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { mutate: deleteNote, isPending: isDeletingNote } = useNoteDelete({
     noteId: item.entityId,
@@ -58,6 +68,9 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
     () => () => {
       if (exitTimerRef.current) {
         clearTimeout(exitTimerRef.current);
+      }
+      if (alertTimerRef.current) {
+        clearTimeout(alertTimerRef.current);
       }
     },
     [],
@@ -105,19 +118,24 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
     : LinearTransition.duration(nativeMotionContracts.duration.quick);
 
   const handleDelete = useCallback(() => {
-    Alert.alert(t.inbox.item.deleteNote.title, t.inbox.item.deleteNote.message, [
-      { text: t.inbox.item.deleteNote.cancel, style: 'cancel' },
-      {
-        text: t.inbox.item.deleteNote.confirm,
-        style: 'destructive',
-        onPress: () => {
-          if (isLeaving) {
-            return;
-          }
-          beginExit(() => deleteNote(undefined, { onError: cancelExit }));
+    if (alertTimerRef.current) {
+      clearTimeout(alertTimerRef.current);
+    }
+    alertTimerRef.current = setTimeout(() => {
+      Alert.alert(t.inbox.item.deleteNote.title, t.inbox.item.deleteNote.message, [
+        { text: t.inbox.item.deleteNote.cancel, style: 'cancel' },
+        {
+          text: t.inbox.item.deleteNote.confirm,
+          style: 'destructive',
+          onPress: () => {
+            if (isLeaving) {
+              return;
+            }
+            beginExit(() => deleteNote(undefined, { onError: cancelExit }));
+          },
         },
-      },
-    ]);
+      ]);
+    }, ALERT_CONFIRM_DEFER_MS);
   }, [beginExit, cancelExit, deleteNote, isLeaving]);
 
   const handleArchive = useCallback(() => {
