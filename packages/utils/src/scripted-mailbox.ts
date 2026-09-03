@@ -74,7 +74,10 @@ export function readLatestScriptedOtp(
     if (!line.trim()) continue;
     const record = parseMailboxLine(line);
     if (!record || record.to !== email || !record.otp) continue;
-    if (!latest || record.capturedAt > latest.capturedAt) latest = record;
+    // >= (not >): capturedAt only has millisecond resolution, so two records
+    // appended in the same tick tie — the later one in file order (append
+    // order) must still win over the earlier one seen first in this loop.
+    if (!latest || record.capturedAt >= latest.capturedAt) latest = record;
   }
   return latest;
 }
