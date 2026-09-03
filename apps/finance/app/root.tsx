@@ -17,7 +17,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import type { Route } from './+types/root';
 import { FinanceHonoProvider } from './lib/api';
 import { getServerSession } from './lib/auth.server';
-import { serverEnv } from './lib/env';
+import { serverEnv } from './lib/env.server';
 
 import './globals.css';
 

@@ -20,6 +20,14 @@
       "types": "./build/web.d.ts",
       "default": "./src/web.ts"
     },
+    "./career": {
+      "types": "./build/career.d.ts",
+      "default": "./src/career.ts"
+    },
+    "./finance": {
+      "types": "./build/finance.d.ts",
+      "default": "./src/finance.ts"
+    },
     "./brand": {
       "types": "./build/brand.d.ts",
       "default": "./src/brand.ts"

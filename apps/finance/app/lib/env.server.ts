@@ -1,9 +1,4 @@
-import { z } from 'zod';
+import { createServerEnv } from '@hominem/env';
+import { financeSchema } from '@hominem/env/finance';
 
-const serverEnvSchema = z.object({
-  HOMINEM_INTERNAL_API_URL: z.url(),
-  PUBLIC_APP_URL: z.url(),
-  VITE_PUBLIC_API_URL: z.url(),
-});
-
-export const serverEnv = serverEnvSchema.parse(process.env);
+export const serverEnv = createServerEnv(financeSchema, 'financeServer');

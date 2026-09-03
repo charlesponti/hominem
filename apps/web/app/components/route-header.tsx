@@ -14,7 +14,7 @@ export function RouteHeader({
   children?: ReactNode;
   showNewChat?: boolean;
 }) {
-  const layoutData = useRouteLoaderData('routes/layout') as AuthenticatedLayoutData | undefined;
+  const layoutData = useRouteLoaderData<AuthenticatedLayoutData>('routes/layout');
   if (!layoutData?.user) return null;
 
   return (

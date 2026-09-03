@@ -6,6 +6,6 @@ type RootLoaderData = {
 
 /** Authenticated user from the root loader — available immediately on SSR. */
 export const useUser = () => {
-  const rootData = useRouteLoaderData('root') as RootLoaderData | undefined;
+  const rootData = useRouteLoaderData<RootLoaderData>('root');
   return rootData?.user ?? null;
 };

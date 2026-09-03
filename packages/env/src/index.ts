@@ -1,12 +1,29 @@
 import { z } from 'zod';
 
-type EnvSource = Record<string, string | undefined>;
+// Consuming apps declare the real `ImportMetaEnv` shape (see each app's
+// vite/client-referencing env.d.ts); this package only needs `env` to exist
+// on `ImportMeta` so a literal `import.meta.env` access typechecks here
+// without taking a hard dependency on `vite/client`'s ambient types.
+declare global {
+  interface ImportMeta {
+    readonly env?: Record<string, string | boolean | undefined>;
+  }
+}
+
+// Vite's own `import.meta.env` mixes real env strings with native booleans
+// for its built-ins (DEV/PROD/SSR); Node's `process.env` is string-only. This
+// guard accepts either shape and defers actual value validation to the
+// caller's Zod schema — it only needs to confirm "this looks like an env
+// object", not pre-validate every property.
+type EnvSource = Record<string, string | boolean | undefined>;
 
 function isEnvSource(value: unknown): value is EnvSource {
   return (
     typeof value === 'object' &&
     value !== null &&
-    Object.values(value).every((item) => typeof item === 'string' || item === undefined)
+    Object.values(value).every(
+      (item) => typeof item === 'string' || typeof item === 'boolean' || item === undefined,
+    )
   );
 }
 
@@ -55,7 +72,10 @@ export function createClientEnv<T extends z.ZodObject<z.ZodRawShape>>(
     );
   }
 
-  const source = Reflect.get(import.meta, 'env');
+  // Vite's dev-mode transform only inlines real values for a literal
+  // `import.meta.env` access; a Reflect.get indirection is invisible to that
+  // static analysis and always resolves to an empty object in the browser.
+  const source = import.meta.env;
   return parseEnv(schema, isEnvSource(source) ? source : {}, context);
 }
 
@@ -83,5 +103,9 @@ export { baseSchema } from './base';
 export type { BaseEnv } from './base';
 export { BRAND } from './brand';
 export type { Brand } from './brand';
+export { careerClientSchema, careerSchema } from './career';
+export type { CareerClientEnv, CareerEnv } from './career';
+export { financeClientSchema, financeSchema } from './finance';
+export type { FinanceClientEnv, FinanceEnv } from './finance';
 export { webClientSchema, webSchema } from './web';
 export type { WebClientEnv, WebEnv } from './web';

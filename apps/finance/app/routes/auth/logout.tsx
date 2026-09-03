@@ -1,6 +1,6 @@
 import { redirect } from 'react-router';
 
-import { serverEnv } from '~/lib/env';
+import { serverEnv } from '~/lib/env.server';
 
 const logoutUrl = new URL('/logout', serverEnv.VITE_PUBLIC_API_URL).toString();
 

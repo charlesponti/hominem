@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Form, Link, redirect } from 'react-router';
 
-import { serverEnv } from '~/lib/env';
+import { useApiBaseUrl } from '~/hooks/useAuth';
 import { logger } from '~/lib/logger';
 import { userContext } from '~/lib/middleware';
 import { JobApplicationsService } from '~/lib/services/job-applications.service';
@@ -194,6 +194,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 }
 
 export default function CreateJobApplication() {
+  const apiBaseUrl = useApiBaseUrl();
   const [inputMethod, setInputMethod] = useState<'manual' | 'url' | 'paste'>('url');
   const [scrapedData, setScrapedData] = useState<JobPosting | null>(null);
   const [pastedDescription, setPastedDescription] = useState('');
@@ -244,13 +245,14 @@ export default function CreateJobApplication() {
 
   useEffect(() => {
     if (
+      !apiBaseUrl ||
       !importJob ||
       !importId ||
       ['ready', 'failed', 'dismissed', 'resolved'].includes(importJob.status)
     ) {
       return;
     }
-    const apiUrl = new URL('/api/finance/import/ws', serverEnv.VITE_PUBLIC_API_URL);
+    const apiUrl = new URL('/api/finance/import/ws', apiBaseUrl);
     apiUrl.protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new WebSocket(apiUrl);
     socket.onopen = () => socket.send(JSON.stringify({ type: 'subscribe' }));
@@ -292,7 +294,7 @@ export default function CreateJobApplication() {
       }
     };
     return () => socket.close();
-  }, [importId, importJob]);
+  }, [apiBaseUrl, importId, importJob]);
 
   const handleScrape = async () => {
     if (!url.trim()) return;
