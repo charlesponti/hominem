@@ -21,7 +21,9 @@ export function ChatEntryScreen() {
   }));
 
   useEffect(() => {
-    if (redirected.current || latestChat.isPending) return;
+    if (redirected.current || latestChat.isPending) {
+      return;
+    }
 
     if (latestChat.data) {
       redirected.current = true;

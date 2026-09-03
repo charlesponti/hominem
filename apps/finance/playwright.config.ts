@@ -6,6 +6,10 @@ const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const reuseExistingServer = process.env.REUSE_SERVERS === 'true'
 const apiBaseUrl = 'http://localhost:4040'
 const financeBaseUrl = 'http://localhost:4444'
+const authStorageState = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  'tests/.auth/finance-user.json',
+)
 
 export default defineConfig({
   testDir: './tests',
@@ -13,14 +17,24 @@ export default defineConfig({
   workers: 1,
   retries: 1,
   globalSetup: './tests/global-setup.ts',
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: financeBaseUrl,
     trace: 'on-first-retry',
     ...devices['Desktop Chrome'],
   },
+  projects: [
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    {
+      name: 'app',
+      dependencies: ['setup'],
+      testIgnore: /auth\.setup\.ts/,
+      use: { storageState: authStorageState },
+    },
+  ],
   webServer: [
     {
-      command: 'pnpm --filter @hominem/api dev',
+      command: 'pnpm --filter @hominem/api dev:app',
       cwd: workspaceRoot,
       url: `${apiBaseUrl}/`,
       reuseExistingServer,
@@ -29,14 +43,27 @@ export default defineConfig({
         NODE_ENV: 'test',
         PORT: '4040',
         API_URL: apiBaseUrl,
-        AUTH_COOKIE_DOMAIN: 'lvh.me',
+        // finance and the API both run on plain "localhost" here (different
+        // ports, same host), so a host-only cookie already reaches both —
+        // no Domain attribute needed. Setting one to "lvh.me" would be
+        // invalid for a response coming from "localhost" (RFC 6265
+        // domain-match failure) and the browser would silently drop the
+        // session cookie, breaking sign-in with no visible error.
+        AUTH_COOKIE_DOMAIN: '',
         FINANCE_URL: financeBaseUrl,
         NOTES_URL: 'http://notes.lvh.me:4445',
         ROCCO_URL: 'http://rocco.lvh.me:4446',
         DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test',
-        BETTER_AUTH_SECRET: 'e2e-better-auth-secret-32-characters',
+        // Must match vitest.config.ts / test-helpers/auth.ts's secret: this
+        // webServer and `pnpm test` both point at the same persistent local
+        // Postgres `hominem-test` database, and Better Auth's JWKS private
+        // key row is encrypted under whichever secret last wrote it — a
+        // mismatched secret here makes JWT-plugin requests from whichever
+        // suite runs second fail with "Failed to decrypt private key".
+        BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
         AUTH_E2E_SECRET: 'otp-secret',
         AUTH_E2E_ENABLED: 'true',
+        HOMINEM_EMAIL_PROVIDER: 'scripted',
         AUTH_EMAIL_OTP_EXPIRES_SECONDS: '60',
         OPENAI_API_KEY: 'test-openai-key',
         RESEND_API_KEY: 'test-resend-key',
@@ -54,7 +81,13 @@ export default defineConfig({
         HOMINEM_INTERNAL_API_URL: apiBaseUrl,
         PUBLIC_APP_URL: financeBaseUrl,
         VITE_PUBLIC_API_URL: apiBaseUrl,
-        AUTH_COOKIE_DOMAIN: 'lvh.me',
+        // Must match the API webServer's DATABASE_URL above: the API creates
+        // the e2e user in this DB during login, and finance writes directly
+        // to Postgres via packages/db in its own routes — without this
+        // override it falls back to whatever DATABASE_URL apps/finance's own
+        // local .env resolves to, a different database where that user
+        // doesn't exist, causing a foreign-key violation on every write.
+        DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:4433/hominem-test',
       },
     },
   ],

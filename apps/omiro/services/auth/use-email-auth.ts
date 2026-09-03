@@ -23,10 +23,14 @@ export function useEmailAuth(ops: EmailAuthOperations) {
         setBusy(true);
         setError(null);
         await action();
-        if (opts.clearOtpOnSuccess) setOtp('');
+        if (opts.clearOtpOnSuccess) {
+          setOtp('');
+        }
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : t.auth.verify.authFailedError);
-        if (opts.clearOtpOnError) setOtp('');
+        if (opts.clearOtpOnError) {
+          setOtp('');
+        }
       } finally {
         setBusy(false);
       }

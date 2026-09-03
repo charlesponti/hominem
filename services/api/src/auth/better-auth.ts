@@ -6,6 +6,7 @@ import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { mcp } from '@better-auth/mcp';
 import { authDb } from '@hominem/db';
+import type { ApiEnv } from '@hominem/env';
 import { logger } from '@hominem/telemetry';
 import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
@@ -15,21 +16,16 @@ import { activatePendingInvitesForUser } from '../application/collections.servic
 import { API_BRAND } from '../brand';
 import { env } from '../env';
 import { MCP_SCOPES } from '../scopes';
-import { enableTestOtpStore, recordTestOtp } from './test-otp-store';
 
-if (env.NODE_ENV !== 'production') {
-  enableTestOtpStore();
-}
-
-export function getTrustedOrigins() {
+export function getTrustedOrigins(inputEnv = env) {
   const origins = new Set([
-    env.API_URL,
-    env.CAREER_URL,
-    env.FINANCE_URL,
-    env.WEB_URL,
-    env.LABS_URL,
-    ...(env.LABS_APEX_URL ? [env.LABS_APEX_URL] : []),
-    env.WHAT_URL,
+    inputEnv.API_URL,
+    inputEnv.CAREER_URL,
+    inputEnv.FINANCE_URL,
+    inputEnv.WEB_URL,
+    inputEnv.LABS_URL,
+    ...(inputEnv.LABS_APEX_URL ? [inputEnv.LABS_APEX_URL] : []),
+    inputEnv.WHAT_URL,
     'hakumi://',
     'hakumi-dev://',
     'hakumi-e2e://',
@@ -39,11 +35,11 @@ export function getTrustedOrigins() {
   return [...origins];
 }
 
-function getAdvancedOptions() {
-  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
+function getAdvancedOptions(inputEnv: ApiEnv) {
+  const cookieDomain = inputEnv.AUTH_COOKIE_DOMAIN.trim();
   const crossSubDomainEnabled = cookieDomain.length > 0;
   const useSecureCookies =
-    env.NODE_ENV === 'production' || new URL(env.API_URL).protocol === 'https:';
+    inputEnv.NODE_ENV === 'production' || new URL(inputEnv.API_URL).protocol === 'https:';
 
   return {
     database: {
@@ -81,20 +77,7 @@ const verificationOtpSubjectByType = {
   'forget-password': 'Reset your password',
 } as const satisfies Record<string, string>;
 
-export const TEST_OTP = '000000';
-
-function generateNumericOtp({ length, isTest }: { length: number; isTest?: boolean }): string {
-  if (isTest) return TEST_OTP;
-  return randomInt(0, 10 ** length)
-    .toString()
-    .padStart(length, '0');
-}
-
-// Only production actually sends OTP emails - everywhere else we use the
-// fixed 000000 code and stash it in the test OTP store instead.
-function shouldSendEmails(): boolean {
-  return env.NODE_ENV === 'production';
-}
+const OTP_LENGTH = 6;
 
 // Lets us tie log lines to the same recipient without logging a raw email.
 // The logger auto-redacts any key with "email" in the name (case insensitive),
@@ -107,17 +90,20 @@ function emailLogContext(email: string): { recipientHash: string; recipientDomai
   };
 }
 
-async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<void> {
-  const from = env.RESEND_FROM_NAME
-    ? `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`
-    : env.RESEND_FROM_EMAIL;
+async function sendEmail(
+  inputEnv: ApiEnv,
+  { to, subject, text, html }: SendEmailParams,
+): Promise<void> {
+  const from = inputEnv.RESEND_FROM_NAME
+    ? `${inputEnv.RESEND_FROM_NAME} <${inputEnv.RESEND_FROM_EMAIL}>`
+    : inputEnv.RESEND_FROM_EMAIL;
 
   if (!from) {
     throw new Error('RESEND_FROM_EMAIL is not set');
   }
 
   const { Resend } = await import('resend');
-  const resend = new Resend(env.RESEND_API_KEY);
+  const resend = new Resend(inputEnv.RESEND_API_KEY);
 
   const { data, error } = await resend.emails.send({
     to,
@@ -181,27 +167,19 @@ function buildVerificationOtpEmail(input: {
   };
 }
 
-function getAuthPlugins() {
+function getAuthPlugins(inputEnv: ApiEnv) {
   const plugins: BetterAuthPlugin[] = [
     expo(),
     emailOTP({
-      expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
+      expiresIn: inputEnv.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
       resendStrategy: 'reuse',
-      generateOTP: () => generateNumericOtp({ length: 6, isTest: !shouldSendEmails() }),
+      generateOTP: () =>
+        randomInt(0, 10 ** OTP_LENGTH)
+          .toString()
+          .padStart(OTP_LENGTH, '0'),
       sendVerificationOTP: async ({ email, otp, type }) => {
-        if (!shouldSendEmails()) {
-          logger.info('[auth:email-otp] routed to test OTP store, not sent', {
-            ...emailLogContext(email),
-            type,
-            nodeEnv: env.NODE_ENV,
-          });
-          enableTestOtpStore();
-          recordTestOtp(email, otp, type);
-          return;
-        }
-
         try {
-          await sendEmail(buildVerificationOtpEmail({ to: email, otp, type }));
+          await sendEmail(inputEnv, buildVerificationOtpEmail({ to: email, otp, type }));
         } catch (error) {
           logger.error('[auth:email-otp] failed to deliver verification email', {
             ...emailLogContext(email),
@@ -214,13 +192,13 @@ function getAuthPlugins() {
     }),
     jwt(),
     mcp({
-      loginPage: new URL('/login', env.API_URL).toString(),
-      consentPage: new URL('/consent', env.API_URL).toString(),
-      resource: new URL('/api/mcp', env.API_URL).toString(),
+      loginPage: new URL('/login', inputEnv.API_URL).toString(),
+      consentPage: new URL('/consent', inputEnv.API_URL).toString(),
+      resource: new URL('/api/mcp', inputEnv.API_URL).toString(),
       scopes: ['openid', 'profile', 'email', 'offline_access', ...MCP_SCOPES],
-      resources: [new URL('/api/mcp', env.API_URL).toString()],
-      clientRegistrationDefaultResources: [new URL('/api/mcp', env.API_URL).toString()],
-      clientRegistrationAllowedResources: [new URL('/api/mcp', env.API_URL).toString()],
+      resources: [new URL('/api/mcp', inputEnv.API_URL).toString()],
+      clientRegistrationDefaultResources: [new URL('/api/mcp', inputEnv.API_URL).toString()],
+      clientRegistrationAllowedResources: [new URL('/api/mcp', inputEnv.API_URL).toString()],
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
     }),
@@ -241,36 +219,38 @@ function getAuthPlugins() {
 // Email OTP is the only auth surface we actually use. Password auth, device
 // authorization, JWT/JWKS, and one-time tokens are turned off on purpose
 // until something actually needs them.
-const betterAuthOptions: BetterAuthOptions = {
-  secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.API_URL,
-  trustedOrigins: getTrustedOrigins(),
-  advanced: getAdvancedOptions(),
-  emailAndPassword: {
-    enabled: false,
-  },
-  session: {
-    freshAge: 60 * 60 * 24, // 24 hours
-    cookieCache: { enabled: true, maxAge: 60 * 5 },
-  },
-  rateLimit: {
-    storage: 'database',
-  },
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          await activatePendingInvitesForUser(user.id, user.email);
+export function createBetterAuthServer(inputEnv: ApiEnv) {
+  const betterAuthOptions: BetterAuthOptions = {
+    secret: inputEnv.BETTER_AUTH_SECRET,
+    baseURL: inputEnv.API_URL,
+    trustedOrigins: getTrustedOrigins(inputEnv),
+    advanced: getAdvancedOptions(inputEnv),
+    emailAndPassword: {
+      enabled: false,
+    },
+    session: {
+      freshAge: 60 * 60 * 24, // 24 hours
+      cookieCache: { enabled: true, maxAge: 60 * 5 },
+    },
+    rateLimit: {
+      storage: 'database',
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            await activatePendingInvitesForUser(user.id, user.email);
+          },
         },
       },
     },
-  },
-  plugins: getAuthPlugins(),
-};
+    plugins: getAuthPlugins(inputEnv),
+  };
 
-const inferredBetterAuthServer = betterAuth({
-  ...betterAuthOptions,
-  database: kyselyAdapter(authDb),
-});
+  return betterAuth({
+    ...betterAuthOptions,
+    database: kyselyAdapter(authDb),
+  });
+}
 
-export const betterAuthServer = inferredBetterAuthServer;
+export const betterAuthServer = createBetterAuthServer(env);

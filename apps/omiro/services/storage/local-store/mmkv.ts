@@ -18,7 +18,9 @@ const toISO = (value: string | Date | null | undefined) =>
 
 function parseJSON<T>(key: string): T | null {
   const raw = storage.getString(key);
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
 
   try {
     return JSON.parse(raw) as T;
@@ -85,7 +87,9 @@ export const createMMKVStore = async () => {
       const mediaItems = parseJSON<Media[]>(KEYS.media) ?? [];
       const nextItems = mediaItems.reduce<Media[]>(
         (items, item) => {
-          if (item.id !== nextMedia.id) items.push(normalizeMedia(item));
+          if (item.id !== nextMedia.id) {
+            items.push(normalizeMedia(item));
+          }
           return items;
         },
         [nextMedia],

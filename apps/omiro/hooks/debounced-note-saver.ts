@@ -27,7 +27,9 @@ export function createDebouncedNoteSaver({
   let version = 0;
 
   const clearTimer = () => {
-    if (timer === null) return;
+    if (timer === null) {
+      return;
+    }
     clearTimeout(timer);
     timer = null;
   };
@@ -46,7 +48,9 @@ export function createDebouncedNoteSaver({
   };
 
   const flush = () => {
-    if (!pending) return;
+    if (!pending) {
+      return;
+    }
     const next = pending;
     pending = null;
     clearTimer();

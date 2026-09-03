@@ -8,7 +8,9 @@ import { Share } from 'react-native';
 
 export async function copyMessage(message: ChatMessageItem): Promise<void> {
   const text = message.message;
-  if (!text) return;
+  if (!text) {
+    return;
+  }
 
   await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   try {
@@ -20,7 +22,9 @@ export async function copyMessage(message: ChatMessageItem): Promise<void> {
 
 export async function shareMessage(message: ChatMessageItem): Promise<void> {
   const text = message.message;
-  if (!text) return;
+  if (!text) {
+    return;
+  }
 
   const uri = `${FileSystem.cacheDirectory}message_${message.id}.txt`;
   await FileSystem.writeAsStringAsync(uri, text, { encoding: FileSystem.EncodingType.UTF8 });

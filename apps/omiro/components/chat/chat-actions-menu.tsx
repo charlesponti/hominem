@@ -9,14 +9,30 @@ import { useChatArchiveAction } from '~/hooks/use-chat-archive-action';
 import t from '~/translations';
 
 function getConversationActionIcon(kind: string, type?: string) {
-  if (kind === 'search') return 'magnifyingglass';
-  if (kind === 'toggle-debug') return 'ladybug';
-  if (kind === 'settings') return 'slider.horizontal.3';
-  if (kind === 'sources') return 'doc.text.magnifyingglass';
-  if (kind === 'archive') return 'archivebox';
-  if (type === 'note') return 'doc.text';
-  if (type === 'task') return 'checkmark.circle';
-  if (type === 'task_list') return 'checklist';
+  if (kind === 'search') {
+    return 'magnifyingglass';
+  }
+  if (kind === 'toggle-debug') {
+    return 'ladybug';
+  }
+  if (kind === 'settings') {
+    return 'slider.horizontal.3';
+  }
+  if (kind === 'sources') {
+    return 'doc.text.magnifyingglass';
+  }
+  if (kind === 'archive') {
+    return 'archivebox';
+  }
+  if (type === 'note') {
+    return 'doc.text';
+  }
+  if (type === 'task') {
+    return 'checkmark.circle';
+  }
+  if (type === 'task_list') {
+    return 'checklist';
+  }
   return 'ellipsis.circle';
 }
 

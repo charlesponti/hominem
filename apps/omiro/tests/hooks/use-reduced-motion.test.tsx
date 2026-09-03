@@ -13,7 +13,9 @@ vi.mock('react-native', async (importOriginal) => {
     AccessibilityInfo: {
       isReduceMotionEnabled: mockIsReduceMotionEnabled,
       addEventListener: (event: string, listener: (value: boolean) => void) => {
-        if (event !== 'reduceMotionChanged') return { remove: () => {} };
+        if (event !== 'reduceMotionChanged') {
+          return { remove: () => {} };
+        }
         changeListener = listener;
         return { remove: mockRemove };
       },

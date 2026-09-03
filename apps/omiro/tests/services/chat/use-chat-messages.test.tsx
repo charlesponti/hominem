@@ -110,7 +110,9 @@ describe('useChatMessages', () => {
       isStreaming: false,
     };
     const next = toMessageOutput(messageFixture({ id: 'server-assistant', content: 'hi' }));
-    if (!next) throw new Error('Expected assistant message output');
+    if (!next) {
+      throw new Error('Expected assistant message output');
+    }
 
     expect(preserveRenderKeys([next], [previous])).toMatchObject([
       {

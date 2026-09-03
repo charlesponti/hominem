@@ -19,25 +19,28 @@ export function getFormValue(form: Record<string, string | File>, name: string) 
   return typeof value === 'string' ? value : '';
 }
 
-export function resolveResume(query: string): Resume | null {
+export function resolveResume(query: string, inputEnv = env): Resume | null {
   const params = new URLSearchParams(query);
   const next = params.get('next');
   if (next !== null) {
-    const url = resolveAppRedirectUrl(next, getTrustedOrigins());
+    const url = resolveAppRedirectUrl(next, getTrustedOrigins(inputEnv));
     return url ? { mode: 'app', url } : null;
   }
 
-  const url = resolveOAuthResumeUrl(query, env.API_URL);
+  const url = resolveOAuthResumeUrl(query, inputEnv.API_URL);
   return url ? { mode: 'oauth', url } : null;
 }
 
-export function loginUrl(input: {
-  email?: string;
-  error?: string;
-  resumeQuery: string;
-  step: 'email' | 'otp';
-}) {
-  const url = new URL('/login', env.API_URL);
+export function loginUrl(
+  input: {
+    email?: string;
+    error?: string;
+    resumeQuery: string;
+    step: 'email' | 'otp';
+  },
+  inputEnv = env,
+) {
+  const url = new URL('/login', inputEnv.API_URL);
   const query = new URLSearchParams(input.resumeQuery);
   query.set('step', input.step);
   if (input.email) query.set('email', input.email);

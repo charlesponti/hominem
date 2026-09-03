@@ -104,7 +104,9 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
   }));
 
   const handleCapture = async () => {
-    if (isTakingPhoto || !device) return;
+    if (isTakingPhoto || !device) {
+      return;
+    }
 
     setIsTakingPhoto(true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

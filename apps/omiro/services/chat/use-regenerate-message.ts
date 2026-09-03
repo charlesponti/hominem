@@ -52,7 +52,9 @@ export function useRegenerateMessage(chatId: string) {
         getReplayCursor: () => clientState.lastDurableSequence,
         onEvent: (event) => {
           const current = generationRef.current;
-          if (!current || event.generationId !== current.id) return;
+          if (!current || event.generationId !== current.id) {
+            return;
+          }
           clientState = reduceGenerationClientEvent(clientState, event);
           const stage = clientState.phase === 'cancel_requested' ? 'stopping' : clientState.phase;
           setGeneration({
@@ -61,7 +63,9 @@ export function useRegenerateMessage(chatId: string) {
             lastDurableSequence: clientState.lastDurableSequence,
           });
           const failureMessage = getGenerationFailureMessage(event);
-          if (failureMessage) throw new Error(failureMessage);
+          if (failureMessage) {
+            throw new Error(failureMessage);
+          }
           if ('payload' in event && event.type === 'generation.phase_changed') {
             return;
           }
@@ -85,9 +89,13 @@ export function useRegenerateMessage(chatId: string) {
       });
     },
     onError: (error) => {
-      if (error.name === 'AbortError') return;
+      if (error.name === 'AbortError') {
+        return;
+      }
       const current = generationRef.current;
-      if (current) setGeneration({ ...current, stage: 'failed', error: error.message });
+      if (current) {
+        setGeneration({ ...current, stage: 'failed', error: error.message });
+      }
     },
     onSettled: () => {
       abortControllerRef.current = null;
@@ -111,7 +119,9 @@ export function useRegenerateMessage(chatId: string) {
   );
 
   const retryGeneration = useCallback(() => {
-    if (lastMessageIdRef.current) regenerateMessage(lastMessageIdRef.current);
+    if (lastMessageIdRef.current) {
+      regenerateMessage(lastMessageIdRef.current);
+    }
   }, [regenerateMessage]);
 
   return { cancelGeneration, generation, regenerateMessage, retryGeneration };

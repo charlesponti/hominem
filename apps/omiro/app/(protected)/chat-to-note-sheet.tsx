@@ -90,7 +90,9 @@ export default function ChatToNoteSheetScreen() {
 
   const runGeneration = useCallback(
     async (preset: NotePreset, customText: string) => {
-      if (isGenerating) return;
+      if (isGenerating) {
+        return;
+      }
       setSaveError(null);
       setPhase({ kind: 'loading' });
       const trimmedCustom = customText.trim();
@@ -114,12 +116,16 @@ export default function ChatToNoteSheetScreen() {
   );
 
   const handleSelectPreset = (event: NativeActionEvent) => {
-    if (isLoading) return;
+    if (isLoading) {
+      return;
+    }
     setSelectedPreset(event.nativeEvent.event as NotePreset);
   };
 
   const handleSubmit = () => {
-    if (isLoading) return;
+    if (isLoading) {
+      return;
+    }
     void runGeneration(selectedPreset, instruction);
   };
 
@@ -129,7 +135,9 @@ export default function ChatToNoteSheetScreen() {
   };
 
   const handleAccept = async () => {
-    if (phase.kind !== 'preview') return;
+    if (phase.kind !== 'preview') {
+      return;
+    }
 
     setSaveError(null);
     try {

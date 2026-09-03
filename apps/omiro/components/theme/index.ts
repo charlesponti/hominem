@@ -39,7 +39,9 @@ export function useStyles<T extends NamedStyles>(factory: (theme: Theme) => T): 
 }
 
 export function withAlpha(color: ColorValue, alpha: number): string {
-  if (typeof color !== 'string') return String(color);
+  if (typeof color !== 'string') {
+    return String(color);
+  }
   return `${color}${Math.round(alpha * 255)
     .toString(16)
     .padStart(2, '0')}`;

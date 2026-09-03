@@ -96,7 +96,7 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
               <ListRow
                 accessibilityLabel={source.title ?? t.notes.editor.titleFallback}
                 key={source.id}
-                leading={<AppIcon name="doc.text" size={18} tintColor={textSecondary} />}
+                leading=<AppIcon name="doc.text" size={18} tintColor={textSecondary} />
                 onPress={() => {}}
                 title={source.title ?? t.notes.editor.titleFallback}
                 trailing={
@@ -123,7 +123,7 @@ export function ChatSourcesSheet({ chatId, visible, onClose }: ChatSourcesSheetP
               <ListRow
                 accessibilityLabel={note.title ?? t.notes.editor.titleFallback}
                 key={note.entityId}
-                leading={<AppIcon name="plus.circle" size={18} tintColor={textSecondary} />}
+                leading=<AppIcon name="plus.circle" size={18} tintColor={textSecondary} />
                 onPress={() => addSource({ chatId, noteId: note.entityId })}
                 title={note.title ?? t.notes.editor.titleFallback}
               />

@@ -46,7 +46,9 @@ export function preserveRenderKeys(
         previous.message === message.message,
     );
 
-    if (previousIndex === -1) return message;
+    if (previousIndex === -1) {
+      return message;
+    }
 
     usedPreviousIndexes.add(previousIndex);
     return { ...message, renderKey: previousMessages[previousIndex]?.renderKey };

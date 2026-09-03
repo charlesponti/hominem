@@ -123,7 +123,9 @@ export function useTaskCreate({ parentId }: UseTaskCreateOptions = {}) {
       return { optimisticId, previousAll, previousDetail };
     },
     onError: (_error, _input, context) => {
-      if (!context) return;
+      if (!context) {
+        return;
+      }
       queryClient.setQueryData(taskKeys.all, context.previousAll);
       if (parentId) {
         queryClient.setQueryData(taskKeys.detail(parentId), context.previousDetail);

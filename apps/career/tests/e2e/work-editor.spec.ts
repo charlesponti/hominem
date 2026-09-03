@@ -36,7 +36,10 @@ async function deleteEngagement(page: Page, id: string) {
 
 async function openEditor(page: Page) {
   await page.getByRole('button', { name: 'Edit' }).click();
-  await expect(page.getByRole('button', { name: 'Dates' })).toBeVisible();
+  // The date range is a pair of native <input type="date"> fields (see
+  // @ponti-studios/ui's DatePicker) rather than a single trigger button —
+  // there's no calendar popover to open, so wait on the field itself.
+  await expect(page.locator('input[name="startDate"]')).toBeVisible();
 }
 
 test('stores and shows dates without a UTC date shift', async ({ page }) => {
@@ -46,34 +49,19 @@ test('stores and shows dates without a UTC date shift', async ({ page }) => {
   // In a negative-UTC timezone these used to render as Jan 14 / Jun 29.
   await expect(page.locator('input[name="startDate"]')).toHaveValue('2020-01-15');
   await expect(page.locator('input[name="endDate"]')).toHaveValue('2020-06-30');
-  const trigger = page.getByRole('button', { name: 'Dates' });
-  await expect(trigger).toHaveText(/Jan 15, 2020/);
-  await expect(trigger).toHaveText(/Jun 30, 2020/);
 
   await deleteEngagement(page, id);
 });
 
-test('calendar opens on the start month and a picked range persists after save', async ({
-  page,
-}) => {
+test('a picked range persists after save', async ({ page }) => {
   const id = await createEngagement(page, { startDate: '2020-01-15', endDate: '2020-06-30' });
   await openEditor(page);
 
-  const trigger = page.getByRole('button', { name: 'Dates' });
-  await trigger.click();
-
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  // The picker must open on the range's start month, not the current month.
-  await expect(dialog.getByRole('button', { name: /January 10th, 2020/ })).toBeVisible();
-
-  await dialog.getByRole('button', { name: /January 10th, 2020/ }).click();
-  await dialog.getByRole('button', { name: /January 20th, 2020/ }).click();
+  await page.locator('input[name="startDate"]').fill('2020-01-10');
+  await page.locator('input[name="endDate"]').fill('2020-01-20');
   await expect(page.locator('input[name="startDate"]')).toHaveValue('2020-01-10');
   await expect(page.locator('input[name="endDate"]')).toHaveValue('2020-01-20');
 
-  // Close the popover, then save and wait for the form POST to actually fire.
-  await page.keyboard.press('Escape');
   const save = page.getByRole('button', { name: 'Save position' });
   await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes(`/work/${id}`)),
@@ -85,8 +73,6 @@ test('calendar opens on the start month and a picked range persists after save',
   await openEditor(page);
   await expect(page.locator('input[name="startDate"]')).toHaveValue('2020-01-10');
   await expect(page.locator('input[name="endDate"]')).toHaveValue('2020-01-20');
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/Jan 10, 2020/);
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/Jan 20, 2020/);
 
   await deleteEngagement(page, id);
 });
@@ -97,7 +83,6 @@ test('current role clears the end date and persists isCurrent', async ({ page })
 
   await page.getByRole('switch').click();
   await expect(page.locator('input[name="endDate"]')).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/From Jan 15, 2020/);
 
   const save = page.getByRole('button', { name: 'Save position' });
   await Promise.all([
@@ -111,7 +96,6 @@ test('current role clears the end date and persists isCurrent', async ({ page })
   await openEditor(page);
   await expect(page.locator('input[name="startDate"]')).toHaveValue('2020-01-15');
   await expect(page.locator('input[name="endDate"]')).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/From Jan 15, 2020/);
 
   await deleteEngagement(page, id);
 });

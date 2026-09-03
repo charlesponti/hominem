@@ -69,7 +69,9 @@ export function TaskPeoplePicker({
 
   const create = async () => {
     const name = displayName.trim();
-    if (!name) return;
+    if (!name) {
+      return;
+    }
     try {
       const person = await createPerson.mutateAsync({
         displayName: name,

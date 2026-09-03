@@ -116,7 +116,9 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
   const isParsing = state.kind === 'parsing';
 
   useEffect(() => {
-    if (isIdle && value) inputRef.current?.focus();
+    if (isIdle && value) {
+      inputRef.current?.focus();
+    }
   }, [isIdle, value]);
 
   const voiceErrorBanner =

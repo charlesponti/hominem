@@ -9,6 +9,8 @@ export default defineConfig({
     hookTimeout: 30_000,
     env: {
       AUTH_E2E_SECRET: 'otp-secret',
+      AUTH_E2E_ENABLED: 'true',
+      HOMINEM_EMAIL_PROVIDER: 'scripted',
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
       DATABASE_URL: TEST_DATABASE_URL,
       NODE_ENV: 'test',

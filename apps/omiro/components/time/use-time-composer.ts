@@ -49,7 +49,9 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
 
   const ask = useCallback(async () => {
     const submittedPrompt = prompt.trim();
-    if (!submittedPrompt || interaction.kind === 'parsing' || isSaving) return;
+    if (!submittedPrompt || interaction.kind === 'parsing' || isSaving) {
+      return;
+    }
 
     setInteraction({ kind: 'parsing', submittedPrompt });
     const result = await resolveTimeRequest({
@@ -89,7 +91,9 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
 
   const chooseOpening = useCallback((opening: TimeOpening) => {
     setInteraction((current) => {
-      if (current.kind !== 'availability') return current;
+      if (current.kind !== 'availability') {
+        return current;
+      }
       return {
         block: {
           ...current.block,
@@ -105,9 +109,13 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
 
   const chooseEvent = useCallback(
     (id: string) => {
-      if (interaction.kind !== 'event-choice') return;
+      if (interaction.kind !== 'event-choice') {
+        return;
+      }
       const event = interaction.candidates.find((candidate) => candidate.id === id);
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       onOpenEvent(event);
       setInteraction({ kind: 'idle' });
     },
@@ -123,7 +131,9 @@ export function useTimeComposer({ onError, onOpenEvent }: UseTimeComposerOptions
   }, []);
 
   const submitDraft = useCallback(async () => {
-    if (interaction.kind !== 'draft' || isSaving) return;
+    if (interaction.kind !== 'draft' || isSaving) {
+      return;
+    }
     const { block, submittedPrompt } = interaction;
     const title = block.title?.trim();
     if (!title) {

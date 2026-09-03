@@ -20,8 +20,12 @@ export function createE2eEmail(prefix: string) {
  * The hosted login is a plain HTML form: email step ("Continue") then a
  * six-digit OTP step ("Verify"). Landing URL after success is the career
  * fallback, /work.
+ *
+ * The hosted login is shared across every app (career, finance, web, WH?T —
+ * see docs/authentication.md), so its own behavior — including the invalid
+ * code error state — only needs covering here, not duplicated per app.
  */
-async function startEmailOtpFlow(page: Page, email: string) {
+export async function startEmailOtpFlow(page: Page, email: string) {
   await page.goto('/auth');
 
   // Wait for full React hydration: in Vite dev mode, React may still be
@@ -60,10 +64,8 @@ async function fetchLatestSignInOtp(email: string) {
   throw new Error(`Timed out waiting for sign-in OTP for ${email}`);
 }
 
-export async function signInWithOtp(page: Page, email: string) {
-  await startEmailOtpFlow(page, email);
-  const otp = await fetchLatestSignInOtp(email);
-
+/** Fills the six-digit OTP step and submits it, without asserting the outcome. */
+export async function submitOtpCode(page: Page, otp: string) {
   const digits = page.locator('input[data-otp-digit]');
   await expect(digits).toHaveCount(6, { timeout: 15_000 });
   for (let i = 0; i < 6; i++) {
@@ -84,5 +86,11 @@ export async function signInWithOtp(page: Page, email: string) {
   }, otp);
 
   await page.getByRole('button', { name: 'Verify' }).click();
+}
+
+export async function signInWithOtp(page: Page, email: string) {
+  await startEmailOtpFlow(page, email);
+  const otp = await fetchLatestSignInOtp(email);
+  await submitOtpCode(page, otp);
   await expect(page).toHaveURL(/\/work/, { timeout: 30_000 });
 }

@@ -190,14 +190,12 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
         <ScrollView
           style={styles.errorContainer}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={() => {
-                void refetch();
-              }}
-            />
-          }
+          refreshControl=<RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => {
+              void refetch();
+            }}
+          />
           showsVerticalScrollIndicator={false}
         >
           <EmptyState
@@ -344,7 +342,9 @@ function NoteEditorBody({
   );
 
   const handleStartChat = useCallback(async () => {
-    if (isStartingChat) return;
+    if (isStartingChat) {
+      return;
+    }
 
     closeEnhance();
 
@@ -404,14 +404,12 @@ function NoteEditorBody({
         style={styles.editorContainer}
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
         keyboardDismissMode="interactive"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => {
-              void refetch();
-            }}
-          />
-        }
+        refreshControl=<RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => {
+            void refetch();
+          }}
+        />
         showsVerticalScrollIndicator={false}
       >
         <TextField

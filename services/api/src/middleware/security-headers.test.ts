@@ -1,25 +1,17 @@
 import { Hono } from 'hono';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import { env } from '../env';
 
 async function createApp(nodeEnv: 'production' | 'test') {
-  vi.resetModules();
-  vi.doMock('../env', async () => {
-    const actual = await vi.importActual<typeof import('../env')>('../env');
-    return { env: { ...actual.env, NODE_ENV: nodeEnv } };
-  });
-
   const { securityHeadersMiddleware } = await import('./security-headers');
   return new Hono()
-    .use('*', securityHeadersMiddleware())
+    .use('*', securityHeadersMiddleware({ ...env, NODE_ENV: nodeEnv }))
     .get('/api/status', (c) => c.json({ ok: true }))
     .get('/docs', (c) => c.html('<html><body>docs</body></html>'));
 }
 
 describe('security headers middleware', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('adds API security headers and production HSTS', async () => {
     const app = await createApp('production');
     const response = await app.request('/api/status');

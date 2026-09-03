@@ -126,7 +126,7 @@ function Settings() {
           icon="archivebox"
           label={t.settings.archivedChats}
           onPress={onArchivedChatsPress}
-          accessory={<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />}
+          accessory=<AppIcon name="chevron.right" size={12} tintColor={tertiaryColor} />
         />
       </View>
 

@@ -4,20 +4,22 @@
  *
  * Usage: pnpm e2e:setup
  *
- * Sends an OTP to e2e@test.hakumi.io (creating the user if needed), signs in
- * with the fixed test OTP, then prints export statements for
- * E2E_SESSION_COOKIE, E2E_USER_ID, and E2E_USER_EMAIL.
+ * Sends an OTP to e2e@test.hakumi.io (creating the user if needed), reads the
+ * real OTP back from the server's scripted-email test route, signs in with
+ * it, then prints export statements for E2E_SESSION_COOKIE, E2E_USER_ID, and
+ * E2E_USER_EMAIL.
  *
- * Needs NODE_ENV != production on the server, since that's what makes it use
- * the fixed test OTP instead of a random one.
+ * Needs the server running with NODE_ENV != production,
+ * HOMINEM_EMAIL_PROVIDER=scripted, and AUTH_E2E_ENABLED=true — that's what
+ * exposes GET /api/auth/test/otp/latest.
  */
 
 import 'dotenv/config';
-import { TEST_OTP } from '../src/auth/better-auth';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:4040').replace(/\/$/, '');
 const ORIGIN = process.env.E2E_ORIGIN ?? process.env.WEB_URL ?? 'http://localhost:4445';
 const TEST_EMAIL = 'e2e@test.hakumi.io';
+const AUTH_E2E_SECRET = process.env.AUTH_E2E_SECRET ?? '';
 
 function die(message: string): never {
   console.error(`\n✗ ${message}`);
@@ -48,16 +50,29 @@ async function sendOTP(): Promise<void> {
   }
 }
 
+async function fetchOTP(): Promise<string> {
+  const url = `${API_URL}/api/auth/test/otp/latest?email=${encodeURIComponent(TEST_EMAIL)}&type=sign-in`;
+  const res = await fetch(url, { headers: { 'x-e2e-auth-secret': AUTH_E2E_SECRET } });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `HTTP ${res.status}: ${body}\nIs the server running with HOMINEM_EMAIL_PROVIDER=scripted and AUTH_E2E_ENABLED=true?`,
+    );
+  }
+  const body = (await res.json()) as { otp: string };
+  return body.otp;
+}
+
 interface SignInResult {
   sessionCookie: string;
   user: { id: string; email: string; name: string | null };
 }
 
-async function signIn(): Promise<SignInResult> {
+async function signIn(otp: string): Promise<SignInResult> {
   const res = await fetch(`${API_URL}/api/auth/sign-in/email-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
-    body: JSON.stringify({ email: TEST_EMAIL, otp: TEST_OTP }),
+    body: JSON.stringify({ email: TEST_EMAIL, otp }),
   });
 
   if (!res.ok) {
@@ -96,7 +111,8 @@ async function main() {
 
   try {
     await step('Sending OTP', sendOTP);
-    result = await step('Signing in', signIn);
+    const otp = await step('Reading OTP', fetchOTP);
+    result = await step('Signing in', () => signIn(otp));
   } catch (err) {
     die((err as Error).message);
   }

@@ -63,9 +63,8 @@ describe('Inbox entity index', () => {
     removeInboxEntity(queryClient, { kind: 'note', entityId: 'note-1' });
 
     expect(
-      queryClient.getQueryData<{ pages: Array<{ itemIds: string[] }> }>(
-        inboxKeys.page({ limit: 50 }),
-      )?.pages[0]?.itemIds,
+      queryClient.getQueryData<{ pages: { itemIds: string[] }[] }>(inboxKeys.page({ limit: 50 }))
+        ?.pages[0]?.itemIds,
     ).toEqual([]);
   });
 });

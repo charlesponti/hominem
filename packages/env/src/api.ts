@@ -19,13 +19,16 @@ export const apiSchema = baseSchema.extend({
   // labs (ponti-studios/labs, labs.ponti.io in prod) is a separate repo, not
   // one of this monorepo's apps. It's trusted so the Realitea game there can
   // use the shared hosted /login page's app-redirect mode.
-  LABS_URL: z.url().default('http://localhost:3001'),
+  // Under portless (pnpm exec portless proxy start --port 4200 --tld lvh.me),
+  // labyrinth runs at https://labyrinth.lvh.me:4200.
+  LABS_URL: z.url().default('https://labyrinth.lvh.me:4200'),
   // labs also serves at the apex domain (ponti.io) alongside labs.ponti.io —
   // this is the optional second trusted origin for that redirect.
   LABS_APEX_URL: z.url().optional(),
   // WH?T is another separate game that uses the shared Hominem session
-  // cookie and hosted login redirect.
-  WHAT_URL: z.url().default('http://localhost:3000'),
+  // cookie and hosted login redirect. Under portless it runs at
+  // https://what.lvh.me:4200.
+  WHAT_URL: z.url().default('https://what.lvh.me:4200'),
   DATABASE_URL: z.url(),
   // No default on purpose — a missing secret should fail loudly at boot, not
   // silently fall back to a hardcoded value everyone can see in the repo.

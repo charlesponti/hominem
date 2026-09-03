@@ -41,7 +41,9 @@ export function StreamList<T>({
   const hasRestoredRef = useRef(false);
 
   useEffect(() => {
-    if (hasRestoredRef.current || restoredScrollOffset <= 0) return;
+    if (hasRestoredRef.current || restoredScrollOffset <= 0) {
+      return;
+    }
     const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToOffset({ animated: false, offset: restoredScrollOffset });
       hasRestoredRef.current = true;

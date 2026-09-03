@@ -29,7 +29,9 @@ function useMarkdownComponent(): MarkdownComponent | null {
   useEffect(() => {
     let active = true;
     void getMarkdownComponent().then((component) => {
-      if (active) setMarkdown(component);
+      if (active) {
+        setMarkdown(component);
+      }
     });
     return () => {
       active = false;

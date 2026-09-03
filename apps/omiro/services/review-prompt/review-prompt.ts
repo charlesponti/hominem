@@ -15,13 +15,19 @@ function todayKey() {
 }
 
 export async function recordActiveDay() {
-  if (E2E_TESTING) return;
+  if (E2E_TESTING) {
+    return;
+  }
 
   const alreadyPrompted = storage.getBoolean(PROMPTED_KEY) ?? false;
-  if (alreadyPrompted) return;
+  if (alreadyPrompted) {
+    return;
+  }
 
   const isAvailable = await StoreReview.isAvailableAsync();
-  if (!isAvailable) return;
+  if (!isAvailable) {
+    return;
+  }
 
   const raw = storage.getString(ACTIVE_DAYS_KEY) ?? '[]';
   const days: string[] = JSON.parse(raw);

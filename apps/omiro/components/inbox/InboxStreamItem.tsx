@@ -89,7 +89,9 @@ export const InboxStreamItem = memo(
     const onOpen = useCallback(() => router.push(item.route), [router, item.route]);
 
     const handleLongPress = useCallback(() => {
-      if (isPending) return;
+      if (isPending) {
+        return;
+      }
       Alert.alert(primaryText, undefined, [
         { text: t.inbox.item.open, onPress: onOpen },
         isChat
@@ -104,14 +106,12 @@ export const InboxStreamItem = memo(
         <ListRow
           accessibilityLabel={primaryText}
           actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
-          leading={
-            <AppIcon
-              name={isChat ? 'bubble.left.fill' : 'note.text'}
-              size={14}
-              tintColor={mutedForegroundColor}
-              style={{ opacity: 0.35 }}
-            />
-          }
+          leading=<AppIcon
+            name={isChat ? 'bubble.left.fill' : 'note.text'}
+            size={14}
+            tintColor={mutedForegroundColor}
+            style={{ opacity: 0.35 }}
+          />
           onLongPress={handleLongPress}
           onPress={onOpen}
           subtitle={titleText && previewText && previewText !== titleText ? previewText : null}

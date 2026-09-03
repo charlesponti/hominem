@@ -40,7 +40,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
   return ctx;
 };
 
@@ -80,13 +82,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const runSignOut = useSignOut(currentUser?.email);
 
   useEffect(() => {
-    if (hasRunLegacyMigrationRef.current) return;
+    if (hasRunLegacyMigrationRef.current) {
+      return;
+    }
     hasRunLegacyMigrationRef.current = true;
     void clearLegacyDataOnce();
   }, []);
 
   useEffect(() => {
-    if (!E2E_TESTING || hasRunE2EResetRef.current) return;
+    if (!E2E_TESTING || hasRunE2EResetRef.current) {
+      return;
+    }
     hasRunE2EResetRef.current = true;
     void resetAuthForE2E();
   }, [resetAuthForE2E]);

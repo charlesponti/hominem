@@ -6,7 +6,7 @@ const AUTH_E2E_SECRET = 'otp-secret';
 const OTP_FETCH_TIMEOUT_MS = 15_000;
 const OTP_FETCH_RETRY_DELAY_MS = 500;
 
-export interface OtpResponse {
+interface OtpResponse {
   otp: string;
 }
 
@@ -14,7 +14,7 @@ export function createAuthTestEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}@hominem.test`;
 }
 
-export async function startEmailOtpFlow(page: Page, email: string) {
+async function startEmailOtpFlow(page: Page, email: string) {
   await page.goto('/auth');
 
   // in dev mode the page can look ready before React finishes hydrating, and a fill
@@ -67,41 +67,32 @@ export async function signInWithEmailOtp(page: Page, email: string) {
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 });
 }
 
-export async function enterOtpCode(page: Page, otp: string) {
+async function enterOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6);
 
-  const digitInputs = page.locator('input[inputmode="numeric"]');
-  const hasDigitInputs = await digitInputs.count();
-
-  if (hasDigitInputs > 0) {
-    for (let i = 0; i < 6; i++) {
-      await digitInputs.nth(i).fill(normalized[i] ?? '');
-    }
-
-    await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '', { timeout: 5000 });
+  // The hosted login's visible digit inputs are marked with data-otp-digit
+  // (see services/api/src/routes/login/pages.tsx) — not inputmode="numeric".
+  const digitInputs = page.locator('input[data-otp-digit]');
+  await expect(digitInputs).toHaveCount(6, { timeout: 15_000 });
+  for (let i = 0; i < 6; i++) {
+    await digitInputs.nth(i).fill(normalized[i] ?? '');
   }
+  await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '');
 
-  // The hosted login keeps the submitted OTP in a hidden form field.
+  // The hosted login keeps the submitted OTP in a hidden form field; its own
+  // JS syncs it from the digit inputs. Set it via evaluate — Playwright's
+  // fill() refuses hidden inputs (retries until timeout instead of erroring)
+  // — so the value is correct even if the client-side sync lags.
   const otpField = page.locator('input[name="otp"]');
-  const hasOtpField = await otpField.count();
-
-  if (hasOtpField > 0) {
-    await otpField.fill(normalized);
-    await expect(otpField).toHaveValue(normalized, { timeout: 5000 });
-
-    // fire these manually so React's controlled-input listeners pick up the change
-    await otpField.evaluate((input, value) => {
-      if (!(input instanceof HTMLInputElement)) return;
-      input.value = value;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }, normalized);
-
-    await expect(otpField).toHaveValue(normalized, { timeout: 5000 });
-  }
+  await otpField.evaluate((input, value) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, normalized);
 }
 
-export async function submitOtpCode(page: Page, otp: string) {
+async function submitOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6);
   expect(normalized.length).toBeGreaterThan(3);
   await enterOtpCode(page, normalized);

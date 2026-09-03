@@ -26,7 +26,9 @@ type StreamRow =
   | { type: 'row'; key: string; item: InboxStreamItemData };
 
 function filterItems(items: InboxStreamItemData[], filter: StreamFilter): InboxStreamItemData[] {
-  if (filter === 'all') return items;
+  if (filter === 'all') {
+    return items;
+  }
   const kind = filter === 'chats' ? 'chat' : 'note';
   return items.filter((item) => item.kind === kind);
 }
@@ -101,18 +103,18 @@ export function StreamScreen({ filter }: StreamScreenProps) {
           ) : null
         }
         onEndReached={() => {
-          if (inbox.hasNextPage && !inbox.isFetchingNextPage) void inbox.fetchNextPage();
+          if (inbox.hasNextPage && !inbox.isFetchingNextPage) {
+            void inbox.fetchNextPage();
+          }
         }}
         onEndReachedThreshold={0.4}
-        refreshControl={
-          <RefreshControl
-            refreshing={inbox.isRefreshing || isFetchingTasks}
-            onRefresh={() => {
-              void inbox.refetch();
-              void refetchTasks();
-            }}
-          />
-        }
+        refreshControl=<RefreshControl
+          refreshing={inbox.isRefreshing || isFetchingTasks}
+          onRefresh={() => {
+            void inbox.refetch();
+            void refetchTasks();
+          }}
+        />
         renderItem={renderItem}
         scrollIndicatorInsets={inset}
         showsVerticalScrollIndicator={false}

@@ -26,8 +26,11 @@ export function ComposerAttachButton({ disabled }: ComposerAttachButtonProps) {
         cancelButtonIndex: 0,
       },
       (i) => {
-        if (i === 1) setIsCameraOpen(true);
-        else if (i === 2) void pickAttachment();
+        if (i === 1) {
+          setIsCameraOpen(true);
+        } else if (i === 2) {
+          void pickAttachment();
+        }
       },
     );
   }, [pickAttachment]);

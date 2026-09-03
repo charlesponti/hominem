@@ -42,13 +42,23 @@ function AuthScreen() {
   }));
 
   const getEmailProgress = () => {
-    if (!email) return { stage: 0, message: 'Enter your email' };
-    if (!email.includes('@')) return { stage: 1, message: 'Add the @ symbol' };
-    const [_local, domain] = email.split('@');
-    if (!domain) return { stage: 2, message: 'Almost there! Add the domain' };
-    if (!domain.includes('.')) return { stage: 3, message: "Don't forget the domain extension" };
-    const [_domainName, ext] = domain.split('.');
-    if (!ext || ext.length < 2) return { stage: 4, message: 'Complete the domain extension' };
+    if (!email) {
+      return { stage: 0, message: 'Enter your email' };
+    }
+    if (!email.includes('@')) {
+      return { stage: 1, message: 'Add the @ symbol' };
+    }
+    const domain = email.split('@')[1];
+    if (!domain) {
+      return { stage: 2, message: 'Almost there! Add the domain' };
+    }
+    if (!domain.includes('.')) {
+      return { stage: 3, message: "Don't forget the domain extension" };
+    }
+    const ext = domain.split('.')[1];
+    if (!ext || ext.length < 2) {
+      return { stage: 4, message: 'Complete the domain extension' };
+    }
     return { stage: 5, message: 'Ready to go!' };
   };
 

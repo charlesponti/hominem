@@ -25,7 +25,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getDurableSequence(value: unknown): number | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!isRecord(value)) {
+    return undefined;
+  }
   const sequence = value.sequence;
   return typeof sequence === 'number' && Number.isSafeInteger(sequence) ? sequence : undefined;
 }
@@ -46,10 +48,14 @@ export async function consumeSseXhr<TEvent>({
   deduplicateEvent,
   onDurableSequence,
 }: ConsumeSseXhrOptions<TEvent>): Promise<void> {
-  if (signal?.aborted) throw getAbortError();
+  if (signal?.aborted) {
+    throw getAbortError();
+  }
 
   const authHeaders = await getHeaders();
-  if (signal?.aborted) throw getAbortError();
+  if (signal?.aborted) {
+    throw getAbortError();
+  }
 
   return new Promise<void>((resolve, reject) => {
     let decoder = createSseDecoder();
@@ -67,7 +73,9 @@ export async function consumeSseXhr<TEvent>({
 
     const cleanup = () => signal?.removeEventListener('abort', onAbort);
     const rejectOnce = (error: Error) => {
-      if (settled) return;
+      if (settled) {
+        return;
+      }
       settled = true;
       cleanup();
       reject(error);
@@ -90,7 +98,9 @@ export async function consumeSseXhr<TEvent>({
           });
           continue;
         }
-        if (output.kind !== 'event') continue;
+        if (output.kind !== 'event') {
+          continue;
+        }
 
         const event = isRecord(output.event) ? output.event : null;
         const eventType = typeof event?.type === 'string' ? event.type : undefined;
@@ -127,22 +137,30 @@ export async function consumeSseXhr<TEvent>({
     signal?.addEventListener('abort', onAbort, { once: true });
 
     xhr.onreadystatechange = () => {
-      if (settled) return;
+      if (settled) {
+        return;
+      }
       // 3 = LOADING (data arriving), 4 = DONE
-      if (xhr.readyState < 3) return;
+      if (xhr.readyState < 3) {
+        return;
+      }
 
       const newText = xhr.responseText.slice(offset);
       offset = xhr.responseText.length;
       const result = pushSseChunk<TEvent>(decoder, newText);
       decoder = result.state;
       processOutputs(result.outputs);
-      if (settled) return;
+      if (settled) {
+        return;
+      }
 
       if (xhr.readyState === 4) {
         const finalResult = finishSse<TEvent>(decoder);
         processOutputs(finalResult.outputs);
         decoder = finalResult.state;
-        if (settled) return;
+        if (settled) {
+          return;
+        }
 
         if (xhr.status >= 200 && xhr.status < 300) {
           resolveOnce();
@@ -218,7 +236,9 @@ export async function consumeGenerationSseXhr({
   try {
     await consume({ method, url, payload });
   } catch (error) {
-    if (callbackFailed || signal?.aborted || isAbortError(error)) throw error;
+    if (callbackFailed || signal?.aborted || isAbortError(error)) {
+      throw error;
+    }
     await consume({
       method: replayMethod,
       url: replayUrl(getReplayCursor()),

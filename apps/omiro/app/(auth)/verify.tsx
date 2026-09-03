@@ -28,8 +28,12 @@ function countdownColor(
   warning: string,
   textSecondary: string,
 ) {
-  if (secondsLeft === 0 || secondsLeft < 20) return destructive;
-  if (secondsLeft < 60) return warning;
+  if (secondsLeft === 0 || secondsLeft < 20) {
+    return destructive;
+  }
+  if (secondsLeft < 60) {
+    return warning;
+  }
   return textSecondary;
 }
 
@@ -122,14 +126,18 @@ function VerifyScreen() {
     const id = setInterval(() => {
       const left = resolveSecondsLeft(tokenSentAt);
       setSecondsLeft(left);
-      if (left === 0) clearInterval(id);
+      if (left === 0) {
+        clearInterval(id);
+      }
     }, 1000);
     return () => clearInterval(id);
   }, [tokenSentAt]);
 
   // Wait a beat before redirecting so the success state is actually visible
   React.useEffect(() => {
-    if (!verifySucceeded) return;
+    if (!verifySucceeded) {
+      return;
+    }
     const id = setTimeout(() => {
       router.replace(CHAT_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString);
     }, 900);

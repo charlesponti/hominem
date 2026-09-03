@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const mockPlayAudioReply = vi.fn();
 type TestPlaybackSnapshot = { activeMessageId: string | null; playing: boolean };
 
-let listeners: Array<(snapshot: TestPlaybackSnapshot) => void> = [];
+let listeners: ((snapshot: TestPlaybackSnapshot) => void)[] = [];
 let snapshot: TestPlaybackSnapshot = {
   activeMessageId: null,
   playing: false,
@@ -26,7 +26,9 @@ const { useAudioPlayback } = await import('~/components/media/useAudioPlayback')
 
 function emitSnapshot(next: TestPlaybackSnapshot) {
   snapshot = next;
-  for (const listener of listeners) listener(next);
+  for (const listener of listeners) {
+    listener(next);
+  }
 }
 
 describe('useAudioPlayback', () => {

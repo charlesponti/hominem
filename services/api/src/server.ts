@@ -1,3 +1,4 @@
+import type { ApiEnv } from '@hominem/env';
 import { LOG_MESSAGES, logger } from '@hominem/telemetry';
 import { Scalar } from '@scalar/hono-api-reference';
 import * as Sentry from '@sentry/node';
@@ -6,21 +7,20 @@ import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
-import { betterAuthServer } from './auth/better-auth';
+import { betterAuthServer, createBetterAuthServer } from './auth/better-auth';
 import type { AuthContext } from './auth/types';
 import { API_BRAND } from './brand';
 import { env } from './env';
 import { isServiceError } from './errors';
-import { mcpRoutes, oauthDiscoveryRoutes } from './mcp/routes';
-import { authMiddleware } from './middleware/auth';
-import { authRateLimitMiddleware } from './middleware/auth-rate-limit';
+import { createMcpRoutes } from './mcp/routes';
+import { createAuthMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
 import { securityHeadersMiddleware } from './middleware/security-headers';
-import { authRoutes } from './routes/auth';
+import { createAuthRoutes } from './routes/auth';
 import { imagesRoutes } from './routes/images';
 import { legalRoutes } from './routes/legal';
-import { loginRoutes } from './routes/login';
+import { createLoginRoutes } from './routes/login';
 import { statusRoutes } from './routes/status';
 import { rpcApp } from './rpc/app';
 
@@ -32,13 +32,13 @@ export type AppEnv = {
 
 const ALLOWED_CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
 const CHATGPT_ORIGINS = ['https://chatgpt.com', 'https://chat.openai.com'];
-function createAllowedOrigins() {
+function createAllowedOrigins(inputEnv = env) {
   return new Set([
-    env.API_URL,
-    env.WEB_URL,
-    env.FINANCE_URL,
-    env.CAREER_URL,
-    env.WHAT_URL,
+    inputEnv.API_URL,
+    inputEnv.WEB_URL,
+    inputEnv.FINANCE_URL,
+    inputEnv.CAREER_URL,
+    inputEnv.WHAT_URL,
     ...CHATGPT_ORIGINS,
   ]);
 }
@@ -55,8 +55,8 @@ function isPublicMcpAuthPath(path: string) {
   );
 }
 
-function createCorsMiddleware(): MiddlewareHandler {
-  const allowedOrigins = createAllowedOrigins();
+function createCorsMiddleware(inputEnv = env): MiddlewareHandler {
+  const allowedOrigins = createAllowedOrigins(inputEnv);
 
   return cors({
     origin: (origin, c) =>
@@ -70,8 +70,8 @@ function createCorsMiddleware(): MiddlewareHandler {
   });
 }
 
-function createAuthHandler() {
-  return (c: { req: { raw: Request } }) => betterAuthServer.handler(c.req.raw);
+function createAuthHandler(auth: typeof betterAuthServer) {
+  return (c: { req: { raw: Request } }) => auth.handler(c.req.raw);
 }
 
 function createRootStatusPayload() {
@@ -82,17 +82,25 @@ function createRootStatusPayload() {
   };
 }
 
-function registerBaseMiddleware(app: Hono<AppEnv>) {
+export type ServerDependencies = {
+  env: ApiEnv;
+  auth: typeof betterAuthServer;
+};
+
+function registerBaseMiddleware(app: Hono<AppEnv>, dependencies: ServerDependencies) {
   app.use('*', blockMaliciousProbes());
   app.use('*', requestLogger());
   app.use('*', prettyJSON());
-  app.use('*', createCorsMiddleware());
-  app.use('*', securityHeadersMiddleware());
-  app.use('*', authMiddleware());
+  app.use('*', createCorsMiddleware(dependencies.env));
+  app.use('*', securityHeadersMiddleware(dependencies.env));
+  app.use('*', createAuthMiddleware(dependencies.auth));
 }
 
-function registerApiRoutes(app: Hono<AppEnv>) {
-  const authHandler = createAuthHandler();
+function registerApiRoutes(app: Hono<AppEnv>, dependencies: ServerDependencies) {
+  const authHandler = createAuthHandler(dependencies.auth);
+  const { mcpRoutes, oauthDiscoveryRoutes } = createMcpRoutes(dependencies);
+  const authRoutes = createAuthRoutes(dependencies);
+  const loginRoutes = createLoginRoutes(dependencies);
 
   app.route('/', rpcApp);
   // MCP stays outside the client-facing RPC contract - it's server-only and
@@ -105,7 +113,6 @@ function registerApiRoutes(app: Hono<AppEnv>) {
   // Our own auth extras go first (session/logout reshape for apps/finance, e2e helpers).
   // Anything under /api/auth/* that doesn't match falls through to Better Auth's catch-all.
   app.route('/api/auth', authRoutes);
-  app.use('/api/auth/*', authRateLimitMiddleware());
   app.route('/api/status', statusRoutes);
   app.on(['GET', 'POST'], '/api/auth', authHandler);
   app.on(['GET', 'POST'], '/api/auth/*', authHandler);
@@ -130,9 +137,9 @@ function registerDocumentationRoutes(app: Hono<AppEnv>) {
   );
 }
 
-function registerErrorHandlers(app: Hono<AppEnv>) {
+function registerErrorHandlers(app: Hono<AppEnv>, inputEnv: ApiEnv) {
   app.onError((err, c) => {
-    if (env.SENTRY_DSN && env.NODE_ENV !== 'development') {
+    if (inputEnv.SENTRY_DSN && inputEnv.NODE_ENV !== 'development') {
       Sentry.captureException(err);
     }
     logger.error('[services/api] Error', { error: err });
@@ -169,14 +176,19 @@ function registerErrorHandlers(app: Hono<AppEnv>) {
   });
 }
 
-export function createServer() {
+export function createServer(overrides: Partial<ServerDependencies> = {}) {
+  const inputEnv = overrides.env ?? env;
+  const dependencies: ServerDependencies = {
+    env: inputEnv,
+    auth: overrides.auth ?? (overrides.env ? createBetterAuthServer(inputEnv) : betterAuthServer),
+  };
   const app = new Hono<AppEnv>();
 
-  registerBaseMiddleware(app);
-  registerApiRoutes(app);
+  registerBaseMiddleware(app, dependencies);
+  registerApiRoutes(app, dependencies);
   app.get('/', (c) => c.json(createRootStatusPayload()));
   registerDocumentationRoutes(app);
-  registerErrorHandlers(app);
+  registerErrorHandlers(app, dependencies.env);
 
   return app;
 }

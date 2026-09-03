@@ -21,7 +21,9 @@ function createPlaybackController() {
   let audioModeReady = false;
 
   const ensureAudioMode = () => {
-    if (audioModeReady) return;
+    if (audioModeReady) {
+      return;
+    }
     audioModeReady = true;
     // playsInSilentMode already defaults to true in this SDK, and
     // audio.service.ts's recording session may have set allowsRecording --
@@ -32,7 +34,9 @@ function createPlaybackController() {
   };
 
   const teardownPlayer = () => {
-    if (!player) return;
+    if (!player) {
+      return;
+    }
     try {
       player.remove();
     } catch (error) {

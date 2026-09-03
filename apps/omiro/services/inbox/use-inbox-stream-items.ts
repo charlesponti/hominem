@@ -42,7 +42,9 @@ export function useInboxStreamItems({ enabled = true }: UseInboxStreamItemsOptio
     initialPageParam: null,
     queryFn: async ({ pageParam }) => {
       const query: { limit: string; cursor?: string } = { limit: '50' };
-      if (pageParam) query.cursor = pageParam;
+      if (pageParam) {
+        query.cursor = pageParam;
+      }
       const res = await client.api.inbox.$get({ query });
       const page = (await res.json()) as InboxOutput;
       return indexInboxPage(queryClient, page);

@@ -20,7 +20,7 @@ function TaskRow({
   return (
     <ListRow
       accessibilityLabel={item.title}
-      leading={<AppIcon name="circle" size={20} tintColor={successColor} />}
+      leading=<AppIcon name="circle" size={20} tintColor={successColor} />
       onPress={() => router.push(getTaskDetailRoute(item.id))}
       subtitle={item.durationMinutes ? `${item.durationMinutes} min` : null}
       testID={`unscheduled-task-${item.id}`}
@@ -58,7 +58,7 @@ export function TasksScreen() {
             <Text style={styles.emptyStateText}>Every open task has a time or deadline.</Text>
           ) : null
         }
-        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />}
+        refreshControl=<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />
         renderItem={TaskRow}
         testID="unscheduled-task-list"
       />

@@ -1,7 +1,7 @@
 import DateTimePicker from '@expo/ui/community/datetime-picker';
 import { Stack } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { TaskPeoplePicker } from '~/components/tasks/TaskPeoplePicker';
@@ -157,7 +157,6 @@ export function TimeBlockDetail({
     saveChanges,
     saving,
     task,
-    title,
     toggleTask,
   } = useTimeBlockEditorState({ id, initialActiveField, onClose, source });
   const {
@@ -254,7 +253,9 @@ export function TimeBlockDetail({
                 readOnlyEvent
                   ? undefined
                   : () => {
-                      if (isTask) isSchedulingRef.current = true;
+                      if (isTask) {
+                        isSchedulingRef.current = true;
+                      }
                       setActiveField('time');
                     }
               }

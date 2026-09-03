@@ -19,7 +19,9 @@ const { fakeAppState } = vi.hoisted(() => {
         current = value;
       },
       addEventListener: (event: string, listener: Listener) => {
-        if (event !== 'change') return { remove: () => {} };
+        if (event !== 'change') {
+          return { remove: () => {} };
+        }
         listeners.push(listener);
         return {
           remove: () => {
@@ -29,7 +31,9 @@ const { fakeAppState } = vi.hoisted(() => {
       },
       emit: (status: AppStateStatus) => {
         current = status;
-        for (const listener of listeners) listener(status);
+        for (const listener of listeners) {
+          listener(status);
+        }
       },
       reset: () => {
         listeners = [];

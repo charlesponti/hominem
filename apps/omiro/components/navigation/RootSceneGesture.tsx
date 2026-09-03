@@ -17,8 +17,12 @@ const COMMIT_VELOCITY = 900;
 type Scene = 'stream' | 'time';
 
 function sceneFromPathname(pathname: string): Scene | null {
-  if (pathname === '/(protected)/stream' || pathname === '/stream') return 'stream';
-  if (pathname === '/(protected)/time' || pathname === '/time') return 'time';
+  if (pathname === '/(protected)/stream' || pathname === '/stream') {
+    return 'stream';
+  }
+  if (pathname === '/(protected)/time' || pathname === '/time') {
+    return 'time';
+  }
   return null;
 }
 
@@ -63,7 +67,9 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
   );
 
   const gesture = useMemo(() => {
-    if (!scene || isSettling) return Gesture.Pan();
+    if (!scene || isSettling) {
+      return Gesture.Pan();
+    }
 
     const pan = Gesture.Pan()
       .activeOffsetX([-12, 12])
@@ -71,7 +77,9 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
       .onTouchesDown((event) => {
         'worklet';
         const touch = event.allTouches[0];
-        if (!touch) return;
+        if (!touch) {
+          return;
+        }
         const fromStream = scene === 'stream';
         const fromEdge = fromStream
           ? touch.absoluteX >= width - EDGE_SIZE
@@ -85,7 +93,9 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
       })
       .onUpdate((event) => {
         'worklet';
-        if (startX.value < 0 || direction.value === 0) return;
+        if (startX.value < 0 || direction.value === 0) {
+          return;
+        }
         const intendedDistance = event.translationX * direction.value;
         progress.value = Math.max(0, Math.min(1, intendedDistance / width));
       })
@@ -110,7 +120,9 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
           return;
         }
         progress.value = withTiming(1, nativeMotionTiming.enter, (finished) => {
-          if (finished) scheduleOnRN(commitRoute, target);
+          if (finished) {
+            scheduleOnRN(commitRoute, target);
+          }
         });
         scheduleOnRN(setIsSettling, true);
       });
@@ -130,7 +142,9 @@ export function RootSceneGesture({ children }: { children: React.ReactNode }) {
     ],
   }));
 
-  if (!scene) return children;
+  if (!scene) {
+    return children;
+  }
 
   const adjacentScene = scene === 'stream' ? 'Time' : 'Stream';
   return (

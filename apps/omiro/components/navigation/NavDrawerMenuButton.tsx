@@ -25,10 +25,18 @@ const settingsDestination: { key: Destination; label: string; icon: MenuAction['
 
 function getActiveDestination(segments: readonly string[]): Destination | null {
   const [root, section] = segments;
-  if (root !== '(protected)') return null;
-  if (section === 'chats' || section === 'notes' || section === 'stream') return 'stream';
-  if (section === 'time') return 'time';
-  if (section === 'settings') return 'settings';
+  if (root !== '(protected)') {
+    return null;
+  }
+  if (section === 'chats' || section === 'notes' || section === 'stream') {
+    return 'stream';
+  }
+  if (section === 'time') {
+    return 'time';
+  }
+  if (section === 'settings') {
+    return 'settings';
+  }
   return null;
 }
 

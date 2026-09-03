@@ -14,7 +14,9 @@ function startOfToday() {
 }
 
 export function itemDate(item: TimeItem | TimeStreamRow) {
-  if (item.kind !== 'task' && item.kind !== 'event') return null;
+  if (item.kind !== 'task' && item.kind !== 'event') {
+    return null;
+  }
   return item.kind === 'task'
     ? (item.value.scheduledStartAt ?? item.value.dueAt)
     : item.value.startDate;
@@ -31,8 +33,12 @@ export function dayLabel(item: TimeItem) {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  if (date.toDateString() === today.toDateString()) return 'Today';
-  if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+  if (date.toDateString() === today.toDateString()) {
+    return 'Today';
+  }
+  if (date.toDateString() === tomorrow.toDateString()) {
+    return 'Tomorrow';
+  }
   return date.toLocaleDateString(undefined, { weekday: 'long' });
 }
 
@@ -42,7 +48,9 @@ export interface TimeColumnParts {
 }
 
 export function eventTimeParts(event: CalendarEvent): TimeColumnParts {
-  if (event.isAllDay) return { primary: 'All day' };
+  if (event.isAllDay) {
+    return { primary: 'All day' };
+  }
   return {
     primary: formatClockTime(event.startDate),
     secondary: formatClockTime(event.endDate),
@@ -51,7 +59,9 @@ export function eventTimeParts(event: CalendarEvent): TimeColumnParts {
 
 export function taskTimeParts(task: TaskListItem): TimeColumnParts {
   const date = task.scheduledStartAt ?? task.dueAt;
-  if (!date) return { primary: '—' };
+  if (!date) {
+    return { primary: '—' };
+  }
   return {
     primary: formatClockTime(date),
   };
@@ -78,7 +88,9 @@ function getScheduledTimeItems({
 }): TimeItem[] {
   const items: TimeItem[] = events.map((value) => ({ kind: 'event' as const, value }));
   for (const value of tasks) {
-    if (value.scheduledStartAt ?? value.dueAt) items.push({ kind: 'task', value });
+    if (value.scheduledStartAt ?? value.dueAt) {
+      items.push({ kind: 'task', value });
+    }
   }
   return items
     .filter((item) => {
@@ -105,8 +117,12 @@ export function buildTimeStreamRows({
   const scheduledItems = getScheduledTimeItems({ events, loadedUntil, tasks });
   const isPast = (item: TimeItem) => {
     const date = itemDate(item);
-    if (!date) return false;
-    if (item.kind === 'event') return new Date(item.value.endDate) <= now;
+    if (!date) {
+      return false;
+    }
+    if (item.kind === 'event') {
+      return new Date(item.value.endDate) <= now;
+    }
     return item.value.status === 'completed' || new Date(date) < now;
   };
   return scheduledItems.filter((item) => !isPast(item));
@@ -143,9 +159,13 @@ export function findOpenings({
   const addBusyInterval = (start: Date, end: Date) => {
     const clippedStart = new Date(Math.max(start.getTime(), range.start.getTime()));
     const clippedEnd = new Date(Math.min(end.getTime(), range.end.getTime()));
-    if (clippedEnd > clippedStart) busy.push({ end: clippedEnd, start: clippedStart });
+    if (clippedEnd > clippedStart) {
+      busy.push({ end: clippedEnd, start: clippedStart });
+    }
   };
-  for (const event of events) addBusyInterval(new Date(event.startDate), new Date(event.endDate));
+  for (const event of events) {
+    addBusyInterval(new Date(event.startDate), new Date(event.endDate));
+  }
   for (const task of tasks) {
     if (task.scheduledStartAt && task.scheduledEndAt) {
       addBusyInterval(new Date(task.scheduledStartAt), new Date(task.scheduledEndAt));
@@ -163,8 +183,12 @@ export function findOpenings({
         end: new Date(cursor.getTime() + durationMs).toISOString(),
       });
     }
-    if (interval.end > cursor) cursor = interval.end;
-    if (openings.length === 3) return openings;
+    if (interval.end > cursor) {
+      cursor = interval.end;
+    }
+    if (openings.length === 3) {
+      return openings;
+    }
   }
 
   if (range.end.getTime() - cursor.getTime() >= durationMs) {
@@ -182,7 +206,9 @@ export function findEventCandidates(
   now: Date = new Date(),
 ) {
   const normalizedTitle = targetTitle?.trim().toLocaleLowerCase();
-  if (!normalizedTitle) return [];
+  if (!normalizedTitle) {
+    return [];
+  }
   const nowMs = now.getTime();
   return events.filter(
     (event) =>
@@ -192,7 +218,9 @@ export function findEventCandidates(
 }
 
 export function formatDraftDetails(timeBlock: TimeBlock | null) {
-  if (!timeBlock) return '';
+  if (!timeBlock) {
+    return '';
+  }
   return [
     timeBlock.start_time && timeBlock.end_time
       ? `${new Date(timeBlock.start_time).toLocaleString(undefined, {

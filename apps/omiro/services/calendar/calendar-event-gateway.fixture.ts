@@ -54,14 +54,22 @@ const fixtureEvents: CalendarEvent[] = [
 let scenario: TimeFixtureScenario = 'authorized';
 
 function permission(): CalendarPermissionStatus {
-  if (scenario === 'denied') return 'denied';
-  if (scenario === 'notDetermined') return 'notDetermined';
+  if (scenario === 'denied') {
+    return 'denied';
+  }
+  if (scenario === 'notDetermined') {
+    return 'notDetermined';
+  }
   return 'authorized';
 }
 
 async function maybeFail() {
-  if (scenario === 'error') throw new Error('Fixture Calendar request failed.');
-  if (scenario === 'loading') await new Promise((resolve) => setTimeout(resolve, 750));
+  if (scenario === 'error') {
+    throw new Error('Fixture Calendar request failed.');
+  }
+  if (scenario === 'loading') {
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
 }
 
 export const timeFixtureGateway: CalendarEventGateway = {
@@ -90,12 +98,16 @@ export const timeFixtureGateway: CalendarEventGateway = {
   deleteEvent: async (id: string, _scope: CalendarRecurrenceScope): Promise<void> => {
     await maybeFail();
     const index = fixtureEvents.findIndex((event) => event.id === id);
-    if (index >= 0) fixtureEvents.splice(index, 1);
+    if (index >= 0) {
+      fixtureEvents.splice(index, 1);
+    }
   },
   getEvent: async (id: string): Promise<CalendarEvent> => {
     await maybeFail();
     const event = fixtureEvents.find((candidate) => candidate.id === id);
-    if (!event) throw new Error('Fixture event not found.');
+    if (!event) {
+      throw new Error('Fixture event not found.');
+    }
     return event;
   },
   getPermission: async () => permission(),
@@ -114,7 +126,9 @@ export const timeFixtureGateway: CalendarEventGateway = {
   ): Promise<CalendarEvent> => {
     await maybeFail();
     const index = fixtureEvents.findIndex((event) => event.id === id);
-    if (index < 0) throw new Error('Fixture event not found.');
+    if (index < 0) {
+      throw new Error('Fixture event not found.');
+    }
     fixtureEvents[index] = { ...fixtureEvents[index], ...patch };
     return fixtureEvents[index];
   },

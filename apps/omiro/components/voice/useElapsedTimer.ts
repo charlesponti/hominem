@@ -19,12 +19,16 @@ export function useElapsedTimer(startedAt: number | null): string {
   }
 
   useEffect(() => {
-    if (startedAt === null) return;
+    if (startedAt === null) {
+      return;
+    }
 
     const interval = setInterval(() => setElapsedMs(Date.now() - startedAt), 1000);
     return () => clearInterval(interval);
   }, [startedAt]);
 
-  if (startedAt === null) return '0:00';
+  if (startedAt === null) {
+    return '0:00';
+  }
   return formatElapsed(elapsedMs);
 }

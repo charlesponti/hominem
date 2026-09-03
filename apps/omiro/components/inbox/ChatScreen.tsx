@@ -239,14 +239,12 @@ export function ChatScreen({ id }: { id: string }) {
           emptyState={
             isConversationGone ? missingConversationState : messagesError ? errorState : emptyState
           }
-          refreshControl={
-            <RefreshControl
-              refreshing={isMessagesRefreshing}
-              onRefresh={() => {
-                void refetchMessages();
-              }}
-            />
-          }
+          refreshControl=<RefreshControl
+            refreshing={isMessagesRefreshing}
+            onRefresh={() => {
+              void refetchMessages();
+            }}
+          />
         />
         {activeGeneration ? (
           <ChatActivityTimeline

@@ -19,7 +19,9 @@ function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[
   return chats
     .reduce<ChatWithActivity[]>((resumable, chat) => {
       const chatWithActivity = { ...chat, activityAt: getChatActivityAt(chat) };
-      if (isChatResumable(chatWithActivity, now)) resumable.push(chatWithActivity);
+      if (isChatResumable(chatWithActivity, now)) {
+        resumable.push(chatWithActivity);
+      }
       return resumable;
     }, [])
     .sort(

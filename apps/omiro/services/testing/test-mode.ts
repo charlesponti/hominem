@@ -52,7 +52,9 @@ const failOnceAttempts = new Map<string, number>();
 const ATTEMPTS_TO_FAIL = 2;
 
 export function shouldFailOnce(message: string): boolean {
-  if (!message.includes(MAESTRO_TRIGGERS.failOnce)) return false;
+  if (!message.includes(MAESTRO_TRIGGERS.failOnce)) {
+    return false;
+  }
   const attempts = (failOnceAttempts.get(message) ?? 0) + 1;
   failOnceAttempts.set(message, attempts);
   return attempts <= ATTEMPTS_TO_FAIL;

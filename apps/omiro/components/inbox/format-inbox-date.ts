@@ -10,7 +10,9 @@ const PG_TZ_OFFSET = /([+-]\d{2})(?::?(\d{2}))?$/;
 function parsePgDate(value: string): Date {
   const isoish = value.trim().replace(' ', 'T');
   const match = isoish.match(PG_TZ_OFFSET);
-  if (!match) return new Date(isoish);
+  if (!match) {
+    return new Date(isoish);
+  }
   const [offset, , minutes = '00'] = match;
   return new Date(`${isoish.slice(0, -offset.length)}${offset}:${minutes}`);
 }
@@ -29,24 +31,38 @@ function isValidDate(date: Date): boolean {
 
 export function inboxDayGroupKey(rawDate: string): string {
   const date = parsePgDate(rawDate);
-  if (!isValidDate(date)) return 'unknown';
+  if (!isValidDate(date)) {
+    return 'unknown';
+  }
   const now = new Date();
   const diff = daysAgo(date, now);
 
-  if (diff === 0) return 'today';
-  if (diff === 1) return 'yesterday';
+  if (diff === 0) {
+    return 'today';
+  }
+  if (diff === 1) {
+    return 'yesterday';
+  }
   return startOfDay(date).toISOString();
 }
 
 export function inboxDayGroupLabel(rawDate: string): string {
   const date = parsePgDate(rawDate);
-  if (!isValidDate(date)) return t.inbox.item.earlier;
+  if (!isValidDate(date)) {
+    return t.inbox.item.earlier;
+  }
   const now = new Date();
   const diff = daysAgo(date, now);
 
-  if (diff === 0) return t.inbox.item.today;
-  if (diff === 1) return t.inbox.item.yesterday;
-  if (diff > 1 && diff < 7) return date.toLocaleDateString(undefined, { weekday: 'long' });
+  if (diff === 0) {
+    return t.inbox.item.today;
+  }
+  if (diff === 1) {
+    return t.inbox.item.yesterday;
+  }
+  if (diff > 1 && diff < 7) {
+    return date.toLocaleDateString(undefined, { weekday: 'long' });
+  }
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
   }

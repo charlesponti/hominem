@@ -46,7 +46,9 @@ export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
 
   useEffect(() => {
     return () => {
-      if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
+      if (focusTimerRef.current !== null) {
+        clearTimeout(focusTimerRef.current);
+      }
     };
   }, []);
 
@@ -75,7 +77,9 @@ export function useChatSearch(messages: ChatMessageItem[], chatId: string) {
 
   const handleOpenSearch = useCallback(() => {
     dispatch({ type: 'open-search' });
-    if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
+    if (focusTimerRef.current !== null) {
+      clearTimeout(focusTimerRef.current);
+    }
     focusTimerRef.current = setTimeout(() => {
       focusTimerRef.current = null;
       searchInputRef.current?.focus();

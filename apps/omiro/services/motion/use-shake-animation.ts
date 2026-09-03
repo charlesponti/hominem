@@ -14,7 +14,9 @@ export function useShakeAnimation(trigger: boolean) {
   const shakeX = useSharedValue(0);
 
   useEffect(() => {
-    if (!trigger) return;
+    if (!trigger) {
+      return;
+    }
     shakeX.value = withSequence(
       withTiming(10, { duration: 50, easing: Easing.linear }),
       withTiming(-10, { duration: 50, easing: Easing.linear }),

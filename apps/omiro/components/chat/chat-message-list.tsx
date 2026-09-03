@@ -141,7 +141,9 @@ export function ChatMessageList({
     prevCountRef.current = renderedMessages.length;
     prevLastMessageIdRef.current = lastMessage?.id ?? null;
 
-    if (showSearch || !shouldScrollForNewUserMessage) return;
+    if (showSearch || !shouldScrollForNewUserMessage) {
+      return;
+    }
 
     const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: true });
@@ -151,7 +153,9 @@ export function ChatMessageList({
   }, [renderedMessages, showSearch]);
 
   useEffect(() => {
-    if (hasSearchQuery || didInitialScrollRef.current || renderedMessages.length === 0) return;
+    if (hasSearchQuery || didInitialScrollRef.current || renderedMessages.length === 0) {
+      return;
+    }
 
     const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: false });

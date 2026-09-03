@@ -49,7 +49,9 @@ export function patchInboxEntity(
   patch: Partial<Pick<InboxStreamItemData, 'preview' | 'title' | 'updatedAt'>>,
 ) {
   queryClient.setQueryData<InboxEntityMap>(inboxEntityKeys.all, (current) => {
-    if (!current) return current;
+    if (!current) {
+      return current;
+    }
     const id = Object.keys(current).find((key) => {
       const item = current[key];
       return item.kind === identity.kind && item.entityId === identity.entityId;

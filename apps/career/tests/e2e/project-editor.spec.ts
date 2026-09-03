@@ -1,35 +1,15 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 const ID_RE = /\/projects\/([0-9a-f-]{36})$/;
 
-function calendarDayLabel(dateInput: string) {
-  const [year, month, day] = dateInput.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  const ordinal =
-    day % 10 === 1 && day !== 11
-      ? 'st'
-      : day % 10 === 2 && day !== 12
-        ? 'nd'
-        : day % 10 === 3 && day !== 13
-          ? 'rd'
-          : 'th';
-  return `${date.toLocaleString('en-US', { month: 'long' })} ${day}${ordinal}, ${year}`;
-}
-
-async function selectCalendarDate(dialog: Locator, dateInput: string) {
-  const day = dialog.getByRole('button', { name: new RegExp(calendarDayLabel(dateInput)) });
-  await expect(day).toBeVisible();
-  await day.click();
-}
-
+// The date range is a pair of native <input type="date"> fields (see
+// @ponti-studios/ui's DatePicker) rather than a "Dates" trigger button with
+// a calendar popover — there's no calendar UI to drive, so set values
+// directly on the fields.
 async function fillDateRange(page: Page, startDate: string, endDate: string) {
-  await page.getByRole('button', { name: 'Dates' }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  await selectCalendarDate(dialog, startDate);
-  await selectCalendarDate(dialog, endDate);
-  await page.keyboard.press('Escape');
+  await page.locator('input[name="startDate"]').fill(startDate);
+  await page.locator('input[name="endDate"]').fill(endDate);
 }
 
 function dateInputForDay(day: number) {
@@ -43,7 +23,19 @@ function dateInputForDay(day: number) {
 async function createProject(page: Page) {
   const projectTitle = `Playwright E2E Project ${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
   await page.goto('/projects/new');
-  await page.getByLabel('Title').fill(projectTitle);
+
+  // Wait for full React hydration: in Vite dev mode, React may still be
+  // reconciling the SSR HTML when the page appears ready. A fill before
+  // hydration is complete gets wiped when React takes over the DOM. Retry
+  // until the fill value sticks — this is the reliable hydration signal
+  // (same race already worked around in tests/auth.flow-helpers.ts).
+  const titleInput = page.getByLabel('Title');
+  await titleInput.waitFor({ state: 'visible' });
+  await expect(async () => {
+    await titleInput.fill(projectTitle);
+    await expect(titleInput).toHaveValue(projectTitle);
+  }).toPass({ timeout: 20_000 });
+
   await Promise.all([
     page.waitForURL(/\/projects$/),
     page.getByRole('button', { name: 'Add project' }).click(),
@@ -72,9 +64,6 @@ test('project range picker shows stored dates and persists a picked range', asyn
 
   await page.goto(`/projects/${id}`);
   await page.getByRole('button', { name: 'Edit' }).click();
-  const trigger = page.getByRole('button', { name: 'Dates' });
-  await expect(trigger).toHaveText(/\w+ 5, \d{4}/);
-  await expect(trigger).toHaveText(/\w+ 15, \d{4}/);
   await expect(page.locator('input[name="startDate"]')).toHaveValue(initialDates.startDate);
   await expect(page.locator('input[name="endDate"]')).toHaveValue(initialDates.endDate);
 
@@ -82,7 +71,6 @@ test('project range picker shows stored dates and persists a picked range', asyn
   await expect(page.locator('input[name="startDate"]')).toHaveValue(updatedDates.startDate);
   await expect(page.locator('input[name="endDate"]')).toHaveValue(updatedDates.endDate);
 
-  await page.keyboard.press('Escape');
   const save = page.getByRole('button', { name: 'Save project' });
   await Promise.all([
     page.waitForResponse(
@@ -95,8 +83,6 @@ test('project range picker shows stored dates and persists a picked range', asyn
   await page.getByRole('button', { name: 'Edit' }).click();
   await expect(page.locator('input[name="startDate"]')).toHaveValue(updatedDates.startDate);
   await expect(page.locator('input[name="endDate"]')).toHaveValue(updatedDates.endDate);
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/\w+ 10, \d{4}/);
-  await expect(page.getByRole('button', { name: 'Dates' })).toHaveText(/\w+ 20, \d{4}/);
 
   await page.evaluate(async (pid) => {
     const fd = new FormData();

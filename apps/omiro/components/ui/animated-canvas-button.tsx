@@ -31,7 +31,9 @@ export function AnimatedCanvasButton({
   const [width, setWidth] = React.useState(0);
   const clampedProgress = Math.max(0, Math.min(1, progress));
   const borderPath = React.useMemo(() => {
-    if (width === 0) return null;
+    if (width === 0) {
+      return null;
+    }
     const path = Skia.Path.Make();
     path.addRRect(
       {

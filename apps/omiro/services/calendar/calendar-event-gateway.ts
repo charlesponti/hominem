@@ -47,7 +47,9 @@ let resolvedGateway: CalendarEventGateway | null = null;
 // fixture lazily instead of importing it at module scope, so it stays out of
 // the production bundle.
 async function resolveGateway(): Promise<CalendarEventGateway> {
-  if (resolvedGateway) return resolvedGateway;
+  if (resolvedGateway) {
+    return resolvedGateway;
+  }
   if (E2E_TESTING) {
     const { timeFixtureGateway } = await import('./calendar-event-gateway.fixture');
     resolvedGateway = timeFixtureGateway;

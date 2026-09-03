@@ -9,7 +9,9 @@ import { clearLocalSessionState } from '~/services/auth/clear-local-session-stat
 export function useResetAuthForE2E() {
   const queryClient = useQueryClient();
   return useCallback(async () => {
-    if (!E2E_TESTING) return;
+    if (!E2E_TESTING) {
+      return;
+    }
     // Best-effort: even if the server-side sign-out fails, still wipe local
     // state so a stale cache from a prior account can't leak in.
     await authClient

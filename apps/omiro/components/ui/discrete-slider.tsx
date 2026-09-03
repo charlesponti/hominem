@@ -65,7 +65,9 @@ export function DiscreteSlider({
 
   const pan = Gesture.Pan()
     .onChange((event) => {
-      if (trackWidth.value <= 0) return;
+      if (trackWidth.value <= 0) {
+        return;
+      }
       const next = position.value + event.changeX / trackWidth.value;
       position.value = Math.min(1, Math.max(0, next));
     })

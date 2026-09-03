@@ -188,7 +188,11 @@ function responseBody(request: OpenRouterRequest) {
 
 const server = setupServer(
   http.post('https://openrouter.ai/api/v1/chat/completions', async ({ request }) => {
-    const body = (await request.json()) as OpenRouterRequest;
+    // .clone() first: with OpenTelemetry's fetch/undici auto-instrumentation
+    // active (as it is on a real server boot), the instrumentation reads the
+    // request body for span capture before this handler runs, so a direct
+    // request.json() throws "Body has already been read".
+    const body = (await request.clone().json()) as OpenRouterRequest;
     const userText = (body.messages ?? [])
       .filter((message) => message.role === 'user')
       .map((message) => (typeof message.content === 'string' ? message.content : ''))

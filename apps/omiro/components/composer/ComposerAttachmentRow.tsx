@@ -115,7 +115,9 @@ export function ComposerAttachmentRow() {
     [onRemove, primaryForeground, progressByAssetId],
   );
 
-  if (attachments.length === 0 && errors.length === 0 && !isUploading) return null;
+  if (attachments.length === 0 && errors.length === 0 && !isUploading) {
+    return null;
+  }
 
   return (
     <Animated.View

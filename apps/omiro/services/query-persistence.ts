@@ -7,10 +7,14 @@ import { storage } from '~/services/storage/mmkv';
 const QUERY_CACHE_KEY = 'omiro-react-query-v3';
 
 export function shouldPersistQuery(query: Query<unknown, Error, unknown, QueryKey>) {
-  if (query.state.status !== 'success') return false;
+  if (query.state.status !== 'success') {
+    return false;
+  }
 
   const [namespace] = query.queryKey;
-  if (!['inbox', 'notes', 'chats', 'tasks'].includes(String(namespace))) return false;
+  if (!['inbox', 'notes', 'chats', 'tasks'].includes(String(namespace))) {
+    return false;
+  }
 
   return true;
 }

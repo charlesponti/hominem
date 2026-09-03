@@ -119,7 +119,7 @@ function ArchivedChatsSwiftUI({
       keyExtractor={(chat) => chat.id}
       ListEmptyComponent={empty}
       ListHeaderComponent={header}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      refreshControl=<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
       renderItem={renderItem}
       showsVerticalScrollIndicator={false}
     />

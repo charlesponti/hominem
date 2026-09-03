@@ -36,6 +36,7 @@ Hominem is one product system made up of the API, Omiro, and shared packages.
 
 - [Developer](./.agents/skills/hominem-development/SKILL.md) — commands, development, and deployment rules
 - [Evidence](./docs/evidence.md) — validation standards before calling a change complete
+- [Testing](./docs/testing.md) — test-level selection, MSW boundaries, and when E2E evidence is required
 
 ### App-specific facts
 

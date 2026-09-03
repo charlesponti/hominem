@@ -16,6 +16,7 @@ export const baseSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_FROM_NAME: z.string().optional(),
+  HOMINEM_EMAIL_PROVIDER: z.enum(['resend', 'scripted']).default('resend'),
   R2_ENDPOINT: z.url().default('http://localhost:9000'),
   R2_BUCKET_NAME: z.string().min(1).default('storage'),
   R2_ACCESS_KEY_ID: z.string().min(1).default('minioadmin'),

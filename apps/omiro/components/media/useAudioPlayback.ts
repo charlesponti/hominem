@@ -7,7 +7,9 @@ export function useAudioPlayback(messageId: string, url: string | null | undefin
   const isSpeaking = snapshot.activeMessageId === messageId && snapshot.playing;
 
   const toggle = useCallback(() => {
-    if (!url) return;
+    if (!url) {
+      return;
+    }
     playAudioReply(messageId, url);
   }, [messageId, url]);
 

@@ -85,7 +85,9 @@ async function startStream<TEvent = unknown>(
   });
   await Promise.resolve();
   const xhr = FakeXMLHttpRequest.current;
-  if (!xhr) throw new Error('Expected stream to create an XHR instance');
+  if (!xhr) {
+    throw new Error('Expected stream to create an XHR instance');
+  }
   return { onDone, onEvent, promise, xhr };
 }
 
@@ -328,7 +330,9 @@ describe('consumeSseXhr', () => {
 
     await Promise.resolve();
     const first = FakeXMLHttpRequest.current;
-    if (!first) throw new Error('Expected initial XHR');
+    if (!first) {
+      throw new Error('Expected initial XHR');
+    }
     first.push(
       'data: {"version":1,"generationId":"g1","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',
     );
@@ -336,7 +340,9 @@ describe('consumeSseXhr', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     const replay = FakeXMLHttpRequest.current;
-    if (!replay || replay === first) throw new Error('Expected replay XHR');
+    if (!replay || replay === first) {
+      throw new Error('Expected replay XHR');
+    }
     replay.finish(
       200,
       'data: {"version":1,"generationId":"g1","sequence":2,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"saving"}}\n\n',
@@ -365,7 +371,9 @@ describe('consumeSseXhr', () => {
 
     await Promise.resolve();
     const first = FakeXMLHttpRequest.current;
-    if (!first) throw new Error('Expected initial XHR');
+    if (!first) {
+      throw new Error('Expected initial XHR');
+    }
     first.finish(
       200,
       'data: {"version":1,"generationId":"g1","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',

@@ -46,7 +46,9 @@ export function useComposerSubmission(props: ComposerProps) {
       { canSubmit, clearComposer, fileIds, message, responseModality }: ComposerSubmitInput,
       kind: ComposerSubmitKind,
     ) => {
-      if (!canSubmit) return;
+      if (!canSubmit) {
+        return;
+      }
 
       if (kind === 'note') {
         await submitNote({ clearComposer, fileIds, message });
@@ -64,8 +66,12 @@ export function useComposerSubmission(props: ComposerProps) {
         return;
       }
 
-      if (isChatSending) return;
-      if (!sendChatMessage) return;
+      if (isChatSending) {
+        return;
+      }
+      if (!sendChatMessage) {
+        return;
+      }
 
       const trimmedMessage = message.trim();
       const sendPromise = sendChatMessage({

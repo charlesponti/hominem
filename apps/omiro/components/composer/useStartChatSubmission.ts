@@ -26,7 +26,9 @@ export function useStartChatSubmission() {
       onComplete,
       onStartChatAccepted,
     }: StartChatSubmissionInput) => {
-      if (isStartingChat) return;
+      if (isStartingChat) {
+        return;
+      }
 
       try {
         await startChat({

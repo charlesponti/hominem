@@ -21,6 +21,7 @@ vi.mock('../auth/better-auth', () => ({
 }));
 
 import type { AuthContext } from '../auth/types';
+import { createAuthMiddleware, setMcpAuthContext } from './auth';
 
 const user = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -32,19 +33,18 @@ const user = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-// The auth middleware reads env vars once at import time, so vi.stubEnv after
-// import does nothing. Instead we mock ../env and re-import fresh each time
-// to test different NODE_ENV / AUTH_E2E_* combos.
-async function createApp(envOverrides: Record<string, string | boolean> = {}) {
-  vi.resetModules();
-  vi.doMock('../env', async () => {
-    const actual = await vi.importActual<typeof import('../env')>('../env');
-    return { env: { ...actual.env, ...envOverrides } };
-  });
-
-  const { authMiddleware } = await import('./auth');
-
-  return new Hono().use('*', authMiddleware()).get('*', (c) => c.json(c.get('auth') ?? null));
+function createApp() {
+  return new Hono()
+    .use(
+      '*',
+      createAuthMiddleware({
+        api: {
+          getSession:
+            mocks.getSession as unknown as typeof import('../auth/better-auth').betterAuthServer.api.getSession,
+        },
+      }),
+    )
+    .get('*', (c) => c.json(c.get('auth') ?? null));
 }
 
 describe('auth middleware', () => {
@@ -60,7 +60,7 @@ describe('auth middleware', () => {
       session: { id: 'session-123' },
     });
 
-    const app = await createApp();
+    const app = createApp();
     const response = await app.request('/api/mcp', {
       headers: { 'x-mcp-scopes': 'admin:write' },
     });
@@ -75,8 +75,6 @@ describe('auth middleware', () => {
   });
 
   it('adapts verified JWT claims into the MCP auth context', async () => {
-    vi.resetModules();
-    const { setMcpAuthContext } = await import('./auth');
     const contextApp = new Hono().get('*', async (c) => {
       const resolved = await setMcpAuthContext(c, {
         sub: user.id,
@@ -101,7 +99,7 @@ describe('auth middleware', () => {
   it('does not treat an unrecognized bearer token as a Better Auth session', async () => {
     mocks.getSession.mockResolvedValue(null);
 
-    const app = await createApp();
+    const app = createApp();
     const response = await app.request('/api/mcp', {
       headers: { authorization: 'Bearer better-auth-session-token' },
     });

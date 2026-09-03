@@ -21,7 +21,9 @@ function generationStorageKey(chatId: string) {
 
 function restoreGeneration(chatId: string): ChatGenerationState | null {
   const raw = storage.getString(generationStorageKey(chatId));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     const checkpoint = parseGenerationClientCheckpoint(JSON.parse(raw));
     return {
@@ -113,7 +115,9 @@ export function useChatGeneration({
         onEvent: (event) => {
           clientState = reduceGenerationClientEvent(clientState, event);
           const latest = generationRef.current;
-          if (!latest || latest.id !== current.id) return;
+          if (!latest || latest.id !== current.id) {
+            return;
+          }
           if (['committed', 'cancelled', 'failed'].includes(clientState.phase)) {
             setGeneration(null);
             void onGenerationTerminal?.();
@@ -128,18 +132,24 @@ export function useChatGeneration({
       });
     } finally {
       resumingGenerationIds.delete(current.id);
-      if (abortControllerRef.current === controller) abortControllerRef.current = null;
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [chatId, getAuthHeaders, onGenerationTerminal, setGeneration]);
 
   useEffect(() => {
-    if (!generationRef.current) return;
+    if (!generationRef.current) {
+      return;
+    }
     void resumeGeneration().catch(() => undefined);
   }, [resumeGeneration]);
 
   const cancelGeneration = useCallback(async () => {
     const current = generationRef.current;
-    if (!current || current.stage === 'stopping') return;
+    if (!current || current.stage === 'stopping') {
+      return;
+    }
 
     setGeneration({ ...current, stage: 'stopping' });
     const response = await fetch(

@@ -153,7 +153,9 @@ export const ChatMessage = memo(function ChatMessage({
 
   const saveEdit = () => {
     const trimmedContent = draftMessage.trim();
-    if (!trimmedContent) return;
+    if (!trimmedContent) {
+      return;
+    }
     onEdit?.(message.id, trimmedContent);
     setIsEditing(false);
   };

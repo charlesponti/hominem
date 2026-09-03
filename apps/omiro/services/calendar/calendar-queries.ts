@@ -53,7 +53,9 @@ function replaceCachedEvent(
   data: InfiniteData<CalendarPage> | undefined,
   event: CalendarEvent,
 ): InfiniteData<CalendarPage> | undefined {
-  if (!data) return data;
+  if (!data) {
+    return data;
+  }
   return {
     ...data,
     pages: data.pages.map((page) => ({
@@ -127,7 +129,9 @@ export function useConnectCalendar() {
       return calendarEventGateway.requestPermission();
     },
     onSuccess: (permission) => {
-      if (!permission) return;
+      if (!permission) {
+        return;
+      }
       queryClient.setQueryData(calendarKeys.permission, permission);
       if (permission === 'authorized') {
         void queryClient.invalidateQueries({ queryKey: calendarKeys.events });
@@ -203,7 +207,9 @@ export function useDeleteCalendarEvent() {
     }) => calendarEventGateway.deleteEvent(id, recurrenceScope),
     onSuccess: (_value, { id }) => {
       queryClient.setQueryData<InfiniteData<CalendarPage>>(calendarKeys.events, (data) => {
-        if (!data) return data;
+        if (!data) {
+          return data;
+        }
         return {
           ...data,
           pages: data.pages.map((page) => ({

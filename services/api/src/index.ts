@@ -14,6 +14,14 @@ if (env.HOMINEM_AI_PROVIDER === 'scripted') {
   installOpenRouterMock();
 }
 
+if (env.HOMINEM_EMAIL_PROVIDER === 'scripted') {
+  if (env.NODE_ENV === 'production') {
+    throw new Error('HOMINEM_EMAIL_PROVIDER=scripted is not allowed in production');
+  }
+  const { installResendMock } = await import('./testkit/resend.mock');
+  installResendMock();
+}
+
 const app = createServer();
 const port = env.PORT ?? 4040;
 const host = '0.0.0.0';

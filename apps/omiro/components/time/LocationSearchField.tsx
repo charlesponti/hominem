@@ -63,19 +63,29 @@ export function LocationSearchField({
           const addresses = await Promise.all(
             matches.slice(0, MAX_SUGGESTIONS).map((match) => Location.reverseGeocodeAsync(match)),
           );
-          if (requestId.current !== thisRequest) return;
+          if (requestId.current !== thisRequest) {
+            return;
+          }
           const labels = addresses.reduce<string[]>((uniqueLabels, results) => {
             const address = results[0];
-            if (!address) return uniqueLabels;
+            if (!address) {
+              return uniqueLabels;
+            }
             const label = formatAddress(address);
-            if (label && !uniqueLabels.includes(label)) uniqueLabels.push(label);
+            if (label && !uniqueLabels.includes(label)) {
+              uniqueLabels.push(label);
+            }
             return uniqueLabels;
           }, []);
           setSuggestions(labels);
         } catch {
-          if (requestId.current === thisRequest) setSuggestions([]);
+          if (requestId.current === thisRequest) {
+            setSuggestions([]);
+          }
         } finally {
-          if (requestId.current === thisRequest) setIsSearching(false);
+          if (requestId.current === thisRequest) {
+            setIsSearching(false);
+          }
         }
       })();
     }, SEARCH_DEBOUNCE_MS);

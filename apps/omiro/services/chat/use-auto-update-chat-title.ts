@@ -12,13 +12,19 @@ export function useAutoUpdateChatTitle(chatId: string) {
 
   return useCallback(
     async (message: string) => {
-      if (!message) return;
+      if (!message) {
+        return;
+      }
       const currentChat = queryClient.getQueryData<{ title: string } | null>(
         chatKeys.activeChat(chatId),
       );
-      if (!currentChat || !isDefaultChatTitle(currentChat.title)) return;
+      if (!currentChat || !isDefaultChatTitle(currentChat.title)) {
+        return;
+      }
       const nextTitle = normalizeChatTitle(message);
-      if (isDefaultChatTitle(nextTitle)) return;
+      if (isDefaultChatTitle(nextTitle)) {
+        return;
+      }
 
       const updatedAt = new Date().toISOString();
       updateChatTitleCaches(queryClient, { chatId, title: nextTitle, updatedAt });

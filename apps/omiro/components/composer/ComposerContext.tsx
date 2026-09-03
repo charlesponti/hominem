@@ -95,7 +95,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
   const onRemove = useCallback(
     (id: string) => {
       const target = attachmentsRef.current.find((attachment) => attachment.id === id);
-      if (target?.uploadedFile?.id) deleteUploadedFile(target.uploadedFile.id);
+      if (target?.uploadedFile?.id) {
+        deleteUploadedFile(target.uploadedFile.id);
+      }
       setAttachments((prev) => prev.filter((attachment) => attachment.id !== id));
     },
     [deleteUploadedFile, setAttachments],
@@ -120,7 +122,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
       }[],
     ): Promise<ComposerAttachment[]> => {
       const uploaded = await uploadAssets(assets);
-      if (uploaded.length === 0) return [];
+      if (uploaded.length === 0) {
+        return [];
+      }
       const next = uploaded.map((asset) => ({
         id: asset.uploadedFile.id,
         name: asset.uploadedFile.originalName,
@@ -141,7 +145,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
       mediaTypes: 'images',
       quality: 0.8,
     });
-    if (result.canceled) return [];
+    if (result.canceled) {
+      return [];
+    }
     if (attachments.length + result.assets.length > UPLOAD_MAX_FILE_COUNT) {
       Alert.alert(`You can upload up to ${UPLOAD_MAX_FILE_COUNT} files`);
       return [];
@@ -227,7 +233,9 @@ export function ComposerProvider({ children, initialAttachments = [] }: Composer
 
 export function useComposerContext() {
   const context = useContext(ComposerContext);
-  if (!context) throw new Error('useComposerContext must be used within a ComposerProvider');
+  if (!context) {
+    throw new Error('useComposerContext must be used within a ComposerProvider');
+  }
   return context;
 }
 

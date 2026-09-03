@@ -50,7 +50,9 @@ export function useInterruptibleMotion(): InterruptibleMotion {
     }
 
     progress.value = withTiming(1, nativeMotionTiming.enter, (finished) => {
-      if (finished) scheduleOnRN(setPhase, 'done');
+      if (finished) {
+        scheduleOnRN(setPhase, 'done');
+      }
     });
   }, [progress, reducedMotion]);
 
@@ -69,7 +71,9 @@ export function useInterruptibleMotion(): InterruptibleMotion {
       progress.value = withTiming(1, nativeMotionTiming.quick, (finished) => {
         if (finished) {
           scheduleOnRN(setPhase, 'done');
-          if (onDone) scheduleOnRN(onDone);
+          if (onDone) {
+            scheduleOnRN(onDone);
+          }
         }
       });
     },

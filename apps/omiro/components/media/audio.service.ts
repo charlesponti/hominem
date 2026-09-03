@@ -68,7 +68,9 @@ function createRecordingController() {
   };
 
   const sync = () => {
-    if (!recorder) return;
+    if (!recorder) {
+      return;
+    }
 
     const status = recorder.getStatus();
     const metering = status.metering;
@@ -83,14 +85,18 @@ function createRecordingController() {
   };
 
   const startPolling = () => {
-    if (pollHandle) return;
+    if (pollHandle) {
+      return;
+    }
 
     pollHandle = setInterval(sync, 100);
     sync();
   };
 
   const stopPolling = () => {
-    if (!pollHandle) return;
+    if (!pollHandle) {
+      return;
+    }
 
     clearInterval(pollHandle);
     pollHandle = null;
@@ -129,13 +135,17 @@ function createRecordingController() {
       });
     },
     pauseRecording: () => {
-      if (store.getSnapshot().state !== 'RECORDING') return;
+      if (store.getSnapshot().state !== 'RECORDING') {
+        return;
+      }
 
       recorder?.pause();
       setState('PAUSED');
     },
     resumeRecording: () => {
-      if (store.getSnapshot().state !== 'PAUSED') return;
+      if (store.getSnapshot().state !== 'PAUSED') {
+        return;
+      }
 
       recorder?.record();
       setState('RECORDING');

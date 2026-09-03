@@ -10,7 +10,9 @@ let store: Awaited<ReturnType<typeof createMMKVStore>> | null = null;
 let initializationPromise: Promise<boolean> | null = null;
 
 async function getStore() {
-  if (store) return store;
+  if (store) {
+    return store;
+  }
 
   if (!initializationPromise) {
     initializationPromise = initializeStore();
@@ -21,7 +23,9 @@ async function getStore() {
 }
 
 async function initializeStore(): Promise<boolean> {
-  if (store) return true;
+  if (store) {
+    return true;
+  }
 
   store = await createMMKVStore();
   return true;

@@ -75,7 +75,8 @@ export function convertSchemaToJsonSchema(
   schema: z.ZodTypeAny,
   options: { forStructuredOutput?: boolean } = {},
 ): Record<string, unknown> {
-  const { $schema, ...jsonSchema } = z.toJSONSchema(schema, { target: 'draft-07' });
+  const jsonSchema = z.toJSONSchema(schema, { target: 'draft-07' });
+  delete jsonSchema.$schema;
 
   if (!options.forStructuredOutput) {
     return jsonSchema;

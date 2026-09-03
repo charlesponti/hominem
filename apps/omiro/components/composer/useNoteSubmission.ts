@@ -17,7 +17,9 @@ export function useNoteSubmission() {
 
   const submitNote = useCallback(
     async ({ clearComposer, fileIds, message }: NoteSubmissionInput) => {
-      if (isSaving) return;
+      if (isSaving) {
+        return;
+      }
 
       await createNote({ text: message.trim(), fileIds });
       donateAddNoteIntent();

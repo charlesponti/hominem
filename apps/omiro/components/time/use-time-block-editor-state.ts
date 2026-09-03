@@ -34,7 +34,9 @@ function timeBlockDraftReducer(
   state: TimeBlockDraft,
   action: TimeBlockDraftAction,
 ): TimeBlockDraft {
-  if (action.type === 'initialize') return action.draft;
+  if (action.type === 'initialize') {
+    return action.draft;
+  }
   return { ...state, [action.field]: action.value } as TimeBlockDraft;
 }
 
@@ -128,9 +130,13 @@ export function useTimeBlockEditorState({
   const originalPeople = taskQuery.data?.participants ?? [];
 
   useEffect(() => {
-    if (!block) return;
+    if (!block) {
+      return;
+    }
     const blockKey = `${source}:${id}`;
-    if (initializedBlockKeyRef.current === blockKey) return;
+    if (initializedBlockKeyRef.current === blockKey) {
+      return;
+    }
     initializedBlockKeyRef.current = blockKey;
 
     const { start, end, duration } = computeOriginalSchedule(isTask, task, event);
@@ -268,7 +274,9 @@ export function useTimeBlockEditorState({
           startDate: draftStart.toISOString(),
           title: draftTitle.trim() || title,
         });
-        if (!didSave) return;
+        if (!didSave) {
+          return;
+        }
       }
       setEventError('');
       setActiveField(null);

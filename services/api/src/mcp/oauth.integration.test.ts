@@ -2,16 +2,14 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { importServerWithEnv } from '../routes/test-helpers/auth';
+import { createBetterAuthServer } from '../auth/better-auth';
+import { createServer } from '../server';
+import * as resendMock from '../testkit/resend.mock';
+import { createTestEnv } from '../testkit/server';
 
 const apiUrl = 'http://localhost:4040';
 const redirectUri = `http://127.0.0.1:60693/callback/${randomUUID()}`;
 const userEmail = 'mcp-oauth-integration@hominem.test';
-const otp = '000000';
-
-type CreateServer = (options?: { middleware?: unknown[] }) => {
-  request: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
-};
 
 function createCookieJar() {
   const cookies = new Map<string, string>();
@@ -40,7 +38,7 @@ function formBody(values: Record<string, string>) {
 }
 
 async function readJson<T>(response: Response): Promise<T> {
-  return (await response.json()) as T;
+  return await response.json();
 }
 
 async function readMcpJson(response: Response): Promise<Record<string, unknown>> {
@@ -60,28 +58,39 @@ async function readMcpJson(response: Response): Promise<Record<string, unknown>>
 }
 
 describe('MCP OAuth integration', () => {
-  let app: ReturnType<CreateServer>;
+  let app: ReturnType<typeof createServer>;
   const cookies = createCookieJar();
+  // Mocks Resend (an external vendor) at its outbound HTTP boundary, so the
+  // real Better Auth OTP flow runs end-to-end and this test reads back the
+  // real, randomly generated OTP a user would have received by email.
+  let stopResendMock: () => void;
 
   beforeAll(async () => {
-    const createServer = (await importServerWithEnv({
-      NODE_ENV: 'test',
-      AUTH_E2E_ENABLED: 'true',
-      AUTH_E2E_SECRET: 'otp-secret',
+    const testEnv = createTestEnv({
       // Pin this instead of inheriting the real env.API_URL — a local .env
       // pointed at a portless URL (see docs) would otherwise silently
       // desync this from the `apiUrl` constant this file asserts against.
       API_URL: apiUrl,
-    })) as CreateServer;
-    app = createServer();
-    vi.stubGlobal('fetch', (input: string | URL | Request, init?: RequestInit) =>
-      app.request(new Request(input, init)),
-    );
+    });
+    stopResendMock = resendMock.installResendMock();
+    const auth = createBetterAuthServer(testEnv);
+    app = createServer({ env: testEnv, auth });
+    // Route only requests aimed at this test's own API back into the local
+    // app; anything else (e.g. the Better Auth OTP flow's outbound call to
+    // Resend) must keep going through the real global fetch so MSW's
+    // interception of it still applies.
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', (input: string | URL | Request, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.startsWith(apiUrl)) return app.request(new Request(input, init));
+      return realFetch(input, init);
+    });
   });
 
   afterAll(() => {
     cookies.clear();
     vi.unstubAllGlobals();
+    stopResendMock();
   });
 
   it('completes discovery, API-hosted OTP login, PKCE, MCP access, and refresh', async () => {
@@ -123,17 +132,33 @@ describe('MCP OAuth integration', () => {
     const registration = await readJson<{ client_id: string }>(registrationResponse);
     expect(registration.client_id).toBeTruthy();
 
-    // Create the test user with the same Better Auth test helper the mobile e2e tests use.
-    const e2eLoginResponse = await app.request(`${apiUrl}/api/auth/mobile/e2e/login`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-e2e-auth-secret': 'otp-secret',
+    // Pre-create the test user by completing a real OTP sign-in through
+    // Better Auth's own endpoints (Resend is mocked at the network boundary,
+    // see beforeAll). The resulting session isn't needed — the authorization
+    // flow below establishes its own via the hosted login — so it's discarded.
+    const precreateSendResponse = await app.request(
+      `${apiUrl}/api/auth/email-otp/send-verification-otp`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, type: 'sign-in' }),
       },
-      body: JSON.stringify({ email: userEmail, name: 'MCP OAuth Integration User' }),
+    );
+    expect(precreateSendResponse.status).toBe(200);
+
+    const precreateOtp = resendMock.getScriptedEmail(userEmail)?.otp;
+    expect(precreateOtp).toBeTruthy();
+
+    const precreateSignInResponse = await app.request(`${apiUrl}/api/auth/sign-in/email-otp`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        otp: precreateOtp,
+        name: 'MCP OAuth Integration User',
+      }),
     });
-    expect(e2eLoginResponse.status).toBe(200);
-    cookies.update(e2eLoginResponse);
+    expect(precreateSignInResponse.status).toBe(200);
     cookies.clear();
 
     const codeVerifier = randomUUID().replaceAll('-', '') + randomUUID().replaceAll('-', '');
@@ -177,13 +202,16 @@ describe('MCP OAuth integration', () => {
     expect(sendOtpResponse.status).toBe(303);
     cookies.update(sendOtpResponse);
 
+    const otp = resendMock.getScriptedEmail(userEmail)?.otp;
+    expect(otp).toBeTruthy();
+
     const verifyOtpResponse = await app.request(`${apiUrl}/login/verify`, {
       method: 'POST',
       headers: {
         cookie: cookies.header(),
         'content-type': 'application/x-www-form-urlencoded',
       },
-      body: formBody({ email: userEmail, resume: authorizationQuery, otp }),
+      body: formBody({ email: userEmail, resume: authorizationQuery, otp: otp! }),
     });
     expect(verifyOtpResponse.status).toBe(303);
     cookies.update(verifyOtpResponse);

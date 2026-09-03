@@ -56,7 +56,7 @@ function wrapSelection(
   const end = sel.end + prefix.length + suffix.length;
   return {
     text: before + prefix + selected + suffix + after,
-    selection: { start: end, end: end },
+    selection: { start: end, end },
   };
 }
 
@@ -96,7 +96,9 @@ function outdentLine(text: string, sel: TextSelection): FormatCommandResult {
   const start = lineStart(text, sel.start);
   const slice = text.slice(start);
   const match = slice.match(/^( {1,2})/);
-  if (!match) return { text, selection: sel };
+  if (!match) {
+    return { text, selection: sel };
+  }
   const removed = match[1].length;
   const next = text.slice(0, start) + text.slice(start + removed);
   return {

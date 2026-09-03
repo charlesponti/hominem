@@ -97,7 +97,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     },
     mutationFn: async ({ generationId, message, fileIds, responseModality }) => {
       const net = await NetInfo.fetch();
-      if (net.isConnected === false) throw new Error(OFFLINE_UNAVAILABLE_ERROR);
+      if (net.isConnected === false) {
+        throw new Error(OFFLINE_UNAVAILABLE_ERROR);
+      }
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -120,7 +122,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
         onEvent: (event) => {
           clientState = reduceGenerationClientEvent(clientState, event);
           const current = generationRef.current;
-          if (!current || current.id !== generationId) return;
+          if (!current || current.id !== generationId) {
+            return;
+          }
           const stage = clientState.phase === 'cancel_requested' ? 'stopping' : clientState.phase;
           setGeneration({
             ...current,
@@ -128,7 +132,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             lastDurableSequence: clientState.lastDurableSequence,
           });
           const failureMessage = getGenerationFailureMessage(event);
-          if (failureMessage) throw new Error(failureMessage);
+          if (failureMessage) {
+            throw new Error(failureMessage);
+          }
           if (
             'payload' in event &&
             event.type === 'generation.accepted' &&
@@ -163,7 +169,9 @@ export function useSendMessage({ chatId }: { chatId: string }) {
                   committed,
                 ],
               );
-              if (committed.audio?.url) playAudioReply(committed.id, committed.audio.url);
+              if (committed.audio?.url) {
+                playAudioReply(committed.id, committed.audio.url);
+              }
             }
             setGeneration(null);
             triggerAssistantCompletionHaptic();
@@ -179,10 +187,16 @@ export function useSendMessage({ chatId }: { chatId: string }) {
     },
     onError: (error, _input, context) => {
       abortControllerRef.current = null;
-      if (generationRef.current?.stage === 'stopping' || error.name === 'AbortError') return;
+      if (generationRef.current?.stage === 'stopping' || error.name === 'AbortError') {
+        return;
+      }
       const current = generationRef.current;
-      if (current) setGeneration({ ...current, stage: 'failed', error: error.message });
-      if (!context) return;
+      if (current) {
+        setGeneration({ ...current, stage: 'failed', error: error.message });
+      }
+      if (!context) {
+        return;
+      }
       queryClient.setQueryData<ChatMessageItem[]>(chatKeys.messages(chatId), (messages = []) =>
         messages.filter(
           (item) => item.id !== context.userMessageId || item.message.trim().length > 0,

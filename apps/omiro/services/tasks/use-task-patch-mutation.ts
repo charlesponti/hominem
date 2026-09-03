@@ -59,7 +59,9 @@ export function useTaskPatchMutation<TVariables>({
       return { taskId, previousAll, previousDetail, previousParentDetail };
     },
     onError: (_error, _variables, context) => {
-      if (!context) return;
+      if (!context) {
+        return;
+      }
       queryClient.setQueryData(taskKeys.all, context.previousAll);
       queryClient.setQueryData(taskKeys.detail(context.taskId), context.previousDetail);
       if (parentId) {
@@ -78,7 +80,9 @@ export function useTaskPatchMutation<TVariables>({
 
       if (alwaysUpdateOwnDetailOnSuccess) {
         applyDetail(updatedTask.id);
-        if (parentId) applyDetail(parentId);
+        if (parentId) {
+          applyDetail(parentId);
+        }
       } else {
         applyDetail(parentId ?? updatedTask.id);
       }

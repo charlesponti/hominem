@@ -72,7 +72,9 @@ export function useStartChat() {
           onEvent: (event) => {
             clientState = reduceGenerationClientEvent(clientState, event);
             const failureMessage = getGenerationFailureMessage(event);
-            if (failureMessage) throw new Error(failureMessage);
+            if (failureMessage) {
+              throw new Error(failureMessage);
+            }
             if ('payload' in event && event.type === 'generation.accepted') {
               startedChatIdRef.current = event.payload.chatId;
               const userMessage = event.payload.userMessage
@@ -94,7 +96,9 @@ export function useStartChat() {
 
             if ('payload' in event && event.type === 'generation.committed') {
               const assistantMessage = toMessageOutput(event.payload.message);
-              if (!assistantMessage || !startedChatIdRef.current) return;
+              if (!assistantMessage || !startedChatIdRef.current) {
+                return;
+              }
               queryClient.setQueryData<ChatMessageItem[]>(
                 chatKeys.messages(startedChatIdRef.current),
                 (messages = []) => [...messages, assistantMessage],

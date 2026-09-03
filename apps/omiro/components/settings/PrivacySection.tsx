@@ -20,12 +20,12 @@ export function PrivacySection({
       <SettingsRow
         icon="faceid"
         label={t.settings.lockWithFaceId}
-        accessory={<Switch value={appLock} onValueChange={onAppLockChange} />}
+        accessory=<Switch value={appLock} onValueChange={onAppLockChange} />
       />
       <SettingsRow
         icon="eye.slash"
         label={t.settings.preventScreenshots}
-        accessory={<Switch value={preventScreenshots} onValueChange={onPreventScreenshotsChange} />}
+        accessory=<Switch value={preventScreenshots} onValueChange={onPreventScreenshotsChange} />
       />
     </View>
   );

@@ -71,14 +71,18 @@ export function useVoiceRecorder<TError>({
 
   const ensureSpeechRecognitionPermission = useCallback(async () => {
     const currentStatus = await VoiceTranscriberModule.getPermissions();
-    if (currentStatus === 'authorized') return true;
+    if (currentStatus === 'authorized') {
+      return true;
+    }
 
     const nextStatus = await VoiceTranscriberModule.requestPermissions();
     return nextStatus === 'authorized';
   }, []);
 
   const startVoiceRecording = useCallback(async () => {
-    if (isStartingRef.current) return;
+    if (isStartingRef.current) {
+      return;
+    }
     isStartingRef.current = true;
     setError(null);
 
@@ -100,7 +104,9 @@ export function useVoiceRecorder<TError>({
       // A duplicate tap racing this async permission check isn't a real
       // failure -- the recorder singleton correctly rejected the second
       // caller, nothing to surface to the user.
-      if (result.ok || result.reason === 'busy') return;
+      if (result.ok || result.reason === 'busy') {
+        return;
+      }
 
       reportError(
         result.reason === 'permission-denied'
@@ -129,7 +135,9 @@ export function useVoiceRecorder<TError>({
 
   const stopAndProcessRecording = useCallback(async () => {
     const result = await stopRecording(ownerId);
-    if (!result.ok || !result.fileUri) return;
+    if (!result.ok || !result.fileUri) {
+      return;
+    }
     await onRecordingStoppedRef.current(result.fileUri);
   }, [ownerId]);
 
@@ -142,7 +150,9 @@ export function useVoiceRecorder<TError>({
   );
 
   const handleMicPress = useCallback(async () => {
-    if (isRecordingElsewhere) return;
+    if (isRecordingElsewhere) {
+      return;
+    }
 
     if (
       isOwnedByThis &&
@@ -152,7 +162,9 @@ export function useVoiceRecorder<TError>({
       return;
     }
 
-    if (recordingSnapshot.state !== 'IDLE') return;
+    if (recordingSnapshot.state !== 'IDLE') {
+      return;
+    }
 
     await startVoiceRecording();
   }, [

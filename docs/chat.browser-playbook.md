@@ -2,9 +2,11 @@
 
 This playbook defines repeatable browser evidence for the functional chat
 release gate. It tests the running Web application against the running API and
-real persistence. Provider permutations and failure injection belong in the
-API-local `HominemTests` SDK; browser runs prove that real responses become
-correct user-visible state and survive lifecycle transitions.
+real persistence. Provider permutations and deterministic dependency failure
+injection belong in focused Vitest/MSW or API-local `HominemTests` tests.
+Browser runs prove that real responses become correct user-visible state and
+survive lifecycle transitions where browser or device behavior is part of the
+contract.
 
 ## Preconditions
 
@@ -103,8 +105,8 @@ provider behavior.
 
 | ID | Action | Observable evidence |
 | --- | --- | --- |
-| B-020 | Load a slow or empty chat | Loading state enters, remains visible, exits cleanly, then messages/error state animates in |
-| B-021 | Force a load/generation error | Error is centered in the messages container, transitions cleanly, and exposes recovery |
+| B-020 | Load a slow or empty chat | Vitest/MSW proves loading/empty transitions; optional browser smoke confirms presentation |
+| B-021 | Force a load/generation error | Vitest/MSW proves error mapping and recovery; optional browser smoke confirms presentation |
 | B-022 | Edit and delete a user message | Edit persists; delete confirmation is visible; deletion updates the conversation and chat list |
 | B-023 | Use copy, share, listen, and regenerate actions | Each action has correct enabled/loading/error state and does not alter unrelated messages |
 | B-024 | Resize to the smallest supported viewport | Composer, tool cards, confirmation, error, and long messages remain usable |
@@ -118,6 +120,11 @@ If the API result is correct but browser state is unverified, mark it
 `Partial`. If the environment cannot produce the required state, mark it
 `Blocked` and record the exact dependency. Do not infer browser proof from a
 unit test or SDK test.
+
+For B-020 and B-021, the authoritative behavioral result is focused
+Vitest/MSW evidence because the failure is induced at the Web client or SSR
+dependency boundary. A browser smoke artifact is supplementary and is not a
+reason to build server-side request interception into Playwright.
 
 Run B-001 through B-005 first, then B-006 through B-009, then B-010 through
 B-019, and finally B-020 through B-025. A later scenario may be run only after

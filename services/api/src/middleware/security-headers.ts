@@ -1,3 +1,4 @@
+import type { ApiEnv } from '@hominem/env';
 import type { MiddlewareHandler } from 'hono';
 
 import { env } from '../env';
@@ -8,7 +9,7 @@ function isApiResponse(path: string) {
   return path.startsWith('/api/') || path === '/openapi.json';
 }
 
-export function securityHeadersMiddleware(): MiddlewareHandler {
+export function securityHeadersMiddleware(inputEnv: ApiEnv = env): MiddlewareHandler {
   return async (c, next) => {
     await next();
 
@@ -19,7 +20,7 @@ export function securityHeadersMiddleware(): MiddlewareHandler {
     c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     c.header('X-Content-Type-Options', 'nosniff');
 
-    if (env.NODE_ENV === 'production') {
+    if (inputEnv.NODE_ENV === 'production') {
       c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     }
   };

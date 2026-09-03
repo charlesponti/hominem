@@ -46,7 +46,9 @@ function ComposerContent(props: ComposerProps) {
   const clearComposerRef = useRef<() => void>(() => {});
   const handleWalkieTalkieTranscript = useCallback(
     (rawText: string) => {
-      if (!rawText.trim()) return;
+      if (!rawText.trim()) {
+        return;
+      }
       void submission.submit(
         {
           canSubmit: true,

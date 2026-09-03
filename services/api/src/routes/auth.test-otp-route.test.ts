@@ -1,15 +1,20 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { clearTestOtpStore, recordTestOtp } from '../auth/test-otp-store';
 import { createServer } from '../server';
+import { clearScriptedEmails, setScriptedEmailForTest } from '../testkit/resend.mock';
 
 describe('auth test otp route', () => {
   beforeEach(() => {
-    clearTestOtpStore();
+    clearScriptedEmails();
   });
 
   test('returns latest otp with valid secret', async () => {
-    recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
+    setScriptedEmailForTest({
+      to: 'route-test@example.com',
+      subject: 'Your sign-in code',
+      text: 'Your verification code is: 555111. This code will expire in 5 minutes.',
+      otp: '555111',
+    });
 
     const app = createServer();
     const response = await app.request(
@@ -29,7 +34,12 @@ describe('auth test otp route', () => {
   }, 15000);
 
   test('returns forbidden with wrong secret', async () => {
-    recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
+    setScriptedEmailForTest({
+      to: 'route-test@example.com',
+      subject: 'Your sign-in code',
+      text: 'Your verification code is: 555111. This code will expire in 5 minutes.',
+      otp: '555111',
+    });
 
     const app = createServer();
     const response = await app.request(

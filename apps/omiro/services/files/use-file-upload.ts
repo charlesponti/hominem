@@ -75,9 +75,15 @@ function resolveMobileUploadMimeType(asset: MobileUploadAsset): string {
     }
   }
 
-  if (asset.type === 'image') return 'image/jpeg';
-  if (asset.type === 'audio') return 'audio/mpeg';
-  if (asset.type === 'video') return 'video/mp4';
+  if (asset.type === 'image') {
+    return 'image/jpeg';
+  }
+  if (asset.type === 'audio') {
+    return 'audio/mpeg';
+  }
+  if (asset.type === 'video') {
+    return 'video/mp4';
+  }
 
   return 'application/octet-stream';
 }

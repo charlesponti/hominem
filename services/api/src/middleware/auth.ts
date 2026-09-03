@@ -52,13 +52,15 @@ function setAuthContext(c: Parameters<MiddlewareHandler>[0], input: AuthContext)
 
 // Figures out who's calling, once, at the API boundary. Route middleware can
 // authorize based on this, but shouldn't set up a second identity of its own.
-export const authMiddleware = (): MiddlewareHandler => {
+export function createAuthMiddleware(
+  auth: { api: Pick<typeof betterAuthServer.api, 'getSession'> } = betterAuthServer,
+): MiddlewareHandler {
   return async (c, next) => {
     if (c.req.path.startsWith('/api/auth')) {
       return await next();
     }
 
-    const betterAuthSession = await betterAuthServer.api.getSession({
+    const betterAuthSession = await auth.api.getSession({
       headers: c.req.raw.headers,
     });
 
@@ -78,7 +80,9 @@ export const authMiddleware = (): MiddlewareHandler => {
 
     return await next();
   };
-};
+}
+
+export const authMiddleware = createAuthMiddleware();
 
 export async function setMcpAuthContext(
   c: Parameters<MiddlewareHandler>[0],

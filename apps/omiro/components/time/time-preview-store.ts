@@ -22,7 +22,9 @@ function getSnapshot() {
 
 export function setTimePreviewScenario(id: string | null) {
   const scenario = scenarios.find((candidate) => candidate.id === id) ?? null;
-  if (scenario === snapshot.scenario) return;
+  if (scenario === snapshot.scenario) {
+    return;
+  }
   snapshot = { scenario, scenarios };
   listeners.forEach((listener) => listener());
 }

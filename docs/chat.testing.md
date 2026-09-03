@@ -10,8 +10,10 @@ Chat lifecycle behavior spans API services, persistence, event publication,
 replay, Web, and Omiro. Use an API-local test SDK with named scripted-provider,
 in-process-tool, timing, failure, durable-inspection, evidence, and cleanup
 controls. The SDK exercises real application and transport boundaries and
-replaces only external effects. Controls are available only in the test
-environment; production rejects them.
+replaces only external provider and tool effects. These API-local controls are
+for chat API/application behavior and durable lifecycle races; they are not a
+substitute for the client/MSW boundary defined by [`docs/testing.md`](testing.md).
+Controls are available only in the test environment; production rejects them.
 
 The evidence manifest is authoritative for scenario results. A result is
 `Implemented` only when visible client evidence, corresponding durable/API
@@ -23,8 +25,10 @@ states are recorded as `Blocked` with their exact dependency.
 API-local tests use the real chat routes, application services, generation
 runtime, repositories, PostgreSQL, durable event publication, replay, SSE, and
 client reduction. The test SDK may replace only external provider and tool
-effects with named deterministic fixtures. It must never mock the boundaries
-under test.
+effects with named deterministic fixtures. Failure and timing seams may
+control an API-owned race only when the API/application behavior is under test;
+they must not replace the API boundary for a client behavior test. It must
+never mock the chat boundaries under test.
 
 The test context provides typed chat operations, a scripted OpenRouter/MSW
 provider, in-process tools, durable inspectors, evidence output, and
@@ -39,10 +43,13 @@ failure, cancellation timing, reconnect, replay overlap, publication and
 persistence failures, authorization isolation, repeated generation IDs, and
 fresh-launch recovery.
 
-Each fixture must assert visible semantic state and durable state: event
-ordering, generation/request correlation, terminal exclusivity, persisted
-messages and tool calls, usage availability, idempotency, SSE framing, cursor
-behavior, duplicate counts, and tool-effect reuse.
+Each API-local fixture must assert the applicable visible semantic state and
+durable state: event ordering, generation/request correlation, terminal
+exclusivity, persisted messages and tool calls, usage availability, idempotency,
+SSE framing, cursor behavior, duplicate counts, and tool-effect reuse. Client
+component and transport fixtures assert the client-visible state and wire
+contract at their own boundary; they do not require a database or durable
+inspector unless that boundary is explicitly under test.
 
 ## Evidence manifest
 
@@ -70,9 +77,11 @@ correctness alone is not a passing cross-client result.
 
 ## Cleanup and validation
 
-Every test context owns its records and exposes `close()` cleanup. Cleanup is
-exact and inspectable. Evidence is preserved before deletion, and destructive
-cleanup requires action-time confirmation for manual or browser verification.
+Every chat test context that creates durable records owns those records and
+exposes `close()` cleanup. Isolated client/MSW tests do not require durable
+records. Cleanup is exact and inspectable. Evidence is preserved before
+deletion, and destructive cleanup requires action-time confirmation for manual
+or browser verification.
 
 The standard gate is focused package suites plus typecheck, lint, build,
 formatting, `pnpm run check`, and `git diff --check`. Unsupported states are

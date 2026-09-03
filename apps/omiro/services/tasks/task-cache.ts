@@ -13,8 +13,12 @@ export function mapTaskDetail(
   taskId: string,
   update: (task: Task) => Task,
 ): TaskDetailOutput | undefined {
-  if (!detail) return detail;
-  if (detail.task.id === taskId) return { ...detail, task: update(detail.task) };
+  if (!detail) {
+    return detail;
+  }
+  if (detail.task.id === taskId) {
+    return { ...detail, task: update(detail.task) };
+  }
   return {
     ...detail,
     children: detail.children.map((child) => (child.id === taskId ? update(child) : child)),

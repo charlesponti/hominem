@@ -21,6 +21,8 @@ export function mergeCalendarEvents(
   incoming: CalendarEvent[],
 ): CalendarEvent[] {
   const events = new Map(current.map((event) => [`${event.id}:${event.startDate}`, event]));
-  for (const event of incoming) events.set(`${event.id}:${event.startDate}`, event);
+  for (const event of incoming) {
+    events.set(`${event.id}:${event.startDate}`, event);
+  }
   return [...events.values()].sort((left, right) => left.startDate.localeCompare(right.startDate));
 }
