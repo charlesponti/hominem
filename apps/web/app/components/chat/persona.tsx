@@ -1,7 +1,7 @@
 'use client';
 
 import { useRive, useStateMachineInput, type RiveParameters } from '@rive-app/react-webgl2';
-import { RuntimeLoader } from '@rive-app/webgl2';
+import RiveWebGL2 from '@rive-app/webgl2';
 import { useEffect, useState } from 'react';
 
 import { cn } from '~/lib/utils';
@@ -11,6 +11,7 @@ export type PersonaState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'asl
 const source = '/rive/mana-2.0.riv';
 const wasmSource = '/rive/rive-webgl2-2.40.1.wasm';
 const stateMachine = 'default';
+const { RuntimeLoader } = RiveWebGL2;
 let preloadPromise: Promise<void> | undefined;
 
 export function preloadPersona(): Promise<void> | undefined {

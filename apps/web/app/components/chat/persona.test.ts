@@ -8,7 +8,7 @@ const runtimeLoader = vi.hoisted(() => ({
   setWasmUrl: vi.fn(),
 }));
 
-vi.mock('@rive-app/webgl2', () => ({ RuntimeLoader: runtimeLoader }));
+vi.mock('@rive-app/webgl2', () => ({ default: { RuntimeLoader: runtimeLoader } }));
 vi.mock('@rive-app/react-webgl2', () => ({
   useRive: () => ({ RiveComponent: () => null, rive: null }),
   useStateMachineInput: () => null,
