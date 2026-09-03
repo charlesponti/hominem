@@ -46,7 +46,6 @@ describeIntegration('finance budget integration', () => {
       userId: ownerId,
       name: 'Budget Checking',
       accountType: 'depository',
-      currentBalance: 4000,
     });
     ownerAccountId = account.id;
   });

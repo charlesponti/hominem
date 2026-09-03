@@ -1,13 +1,8 @@
 import { db } from '@hominem/db';
-import type {
-  AppFinanceAccounts,
-  AppFinanceTransactions,
-  AppPlaidItems,
-  AppTags,
-  Selectable,
-} from '@hominem/db';
+import type { AppFinanceTransactions, AppPlaidItems, AppTags, Selectable } from '@hominem/db';
 import { sql } from 'kysely';
 
+import type { AccountWithBalance } from './accounts';
 import { listAccounts } from './accounts';
 import { getTransactionTags } from './categories';
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';
@@ -58,7 +53,7 @@ export async function deleteUserFinanceData(userId: string): Promise<{
 }
 
 export async function exportFinanceData(userId: string): Promise<{
-  accounts: Selectable<AppFinanceAccounts>[];
+  accounts: AccountWithBalance[];
   transactions: Selectable<AppFinanceTransactions>[];
   tags: Selectable<AppTags>[];
   plaidItems: Selectable<AppPlaidItems>[];

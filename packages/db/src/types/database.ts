@@ -507,10 +507,8 @@ export interface AppFinanceAccounts {
   createdAt: Generated<ColumnType<string, Date | string, Date | string>>;
   csvImportKey: string | null;
   currencyCode: Generated<string>;
-  currentBalance: Numeric | null;
   id: Generated<string>;
   includeInNetWorth: Generated<boolean>;
-  institution: string | null;
   institutionId: string | null;
   lifecycleStatus: Generated<string>;
   mask: string | null;

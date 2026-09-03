@@ -42,7 +42,6 @@ describeIntegration('finance transactions integration', () => {
       userId: ownerId,
       name: 'Checking',
       accountType: 'depository',
-      currentBalance: 1000,
     });
     ownerAccountId = account.id;
   });

@@ -42,7 +42,6 @@ describeIntegration('finance data ops integration', () => {
       userId: ownerId,
       name: 'Owner Checking',
       accountType: 'depository',
-      currentBalance: 1500,
     });
     ownerAccountId = ownerAccount.id;
 
@@ -50,7 +49,6 @@ describeIntegration('finance data ops integration', () => {
       userId: otherUserId,
       name: 'Other Checking',
       accountType: 'depository',
-      currentBalance: 2000,
     });
     otherAccountId = otherAccount.id;
   });

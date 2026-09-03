@@ -8,5 +8,6 @@ export * from './plaid';
 export * from './institutions';
 export * from './monthly-summary';
 export * from './analytics';
+export * from './reports';
 export * from './data-ops';
 export * from './import';

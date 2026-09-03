@@ -1,6 +1,6 @@
 import { db, sql } from '@hominem/db';
 
-import { toCents } from './money.utils';
+import { toCents } from './utils';
 
 function fallbackDate(daysAgo: number, now: Date): string {
   return new Date(now.getTime() - daysAgo * 86_400_000).toISOString().slice(0, 10);
@@ -9,34 +9,23 @@ function fallbackDate(daysAgo: number, now: Date): string {
 export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boolean) {
   const now = new Date();
 
-  let accountsQuery = db
-    .selectFrom('app.financeAccounts')
+  const accounts = await db
+    .selectFrom('app.financeAccounts as account')
+    .leftJoin('app.financeInstitutions as institution', 'institution.id', 'account.institutionId')
     .select([
-      'id',
-      'name',
-      'accountType',
-      'currencyCode',
-      'lifecycleStatus',
-      'institution',
-      'includeInNetWorth',
+      'account.id',
+      'account.name',
+      'account.accountType',
+      'account.currencyCode',
+      'account.lifecycleStatus',
+      'institution.name as institution',
+      'account.includeInNetWorth',
     ])
-    .where('userId', '=', ownerUserId)
-    .where('includeInNetWorth', '=', true) as ReturnType<
-    typeof db.selectFrom<'app.financeAccounts'>
-  >;
-
-  if (!includeClosed) {
-    accountsQuery = accountsQuery.where('lifecycleStatus', '!=', 'closed') as typeof accountsQuery;
-  }
-
-  const accounts = (await accountsQuery.orderBy('name', 'asc').execute()) as Array<{
-    id: string;
-    name: string;
-    accountType: string;
-    currencyCode: string;
-    lifecycleStatus: string;
-    institution: string | null;
-  }>;
+    .where('account.userId', '=', ownerUserId)
+    .where('account.includeInNetWorth', '=', true)
+    .$if(!includeClosed, (qb) => qb.where('account.lifecycleStatus', '!=', 'closed'))
+    .orderBy('account.name', 'asc')
+    .execute();
 
   const warnings: string[] = [];
   const balances = await Promise.all(

@@ -20,18 +20,14 @@ const accountGetSchema = z.object({
 const accountCreateSchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1).optional(),
-  balance: z.union([z.number(), z.string()]).optional(),
   institutionId: z.string().optional(),
-  institution: z.string().optional(),
 });
 
 const accountUpdateSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).optional(),
   type: z.string().min(1).optional(),
-  balance: z.union([z.number(), z.string()]).optional(),
   institutionId: z.string().optional(),
-  institution: z.string().optional(),
 });
 
 const accountDeleteSchema = z.object({
@@ -41,6 +37,27 @@ const accountDeleteSchema = z.object({
 const institutionAccountsSchema = z.object({
   institutionId: z.string(),
 });
+
+async function getAccountBalances(accountIds: string[]): Promise<Map<string, number>> {
+  if (accountIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .selectFrom('app.financeTransactions')
+    .select((eb) => ['accountId', eb.fn.sum<number>('amount').as('balance')])
+    .where('accountId', 'in', accountIds)
+    .where('pending', '=', false)
+    .groupBy('accountId')
+    .execute();
+
+  return new Map(rows.map((row) => [row.accountId, Number(row.balance ?? 0)]));
+}
+
+async function getAccountBalance(accountId: string): Promise<number> {
+  const balances = await getAccountBalances([accountId]);
+  return balances.get(accountId) ?? 0;
+}
 
 async function getAccountWithOwnershipCheck(accountId: string, userId: string) {
   const account = await db
@@ -72,22 +89,24 @@ async function getTransactionsForAccount(
 
 type TransactionRow = Awaited<ReturnType<typeof getTransactionsForAccount>>[number];
 
-function normalizeAccountRow(account: {
-  id: string;
-  userId: string;
-  name: string;
-  accountType: string;
-  currentBalance: number | string | null;
-  plaidAccountId?: string | null;
-  plaidItemId?: string | null;
-  institutionName?: string | null;
-}) {
+function normalizeAccountRow(
+  account: {
+    id: string;
+    userId: string;
+    name: string;
+    accountType: string;
+    plaidAccountId?: string | null;
+    plaidItemId?: string | null;
+    institutionName?: string | null;
+  },
+  currentBalance: number,
+) {
   return {
     id: String(account.id),
     userId: account.userId,
     name: account.name,
     accountType: account.accountType,
-    currentBalance: account.currentBalance === null ? null : Number(account.currentBalance),
+    currentBalance,
     institutionName: account.institutionName ?? null,
     plaidAccountId: account.plaidAccountId ? String(account.plaidAccountId) : null,
     plaidItemId: account.plaidItemId ? String(account.plaidItemId) : null,
@@ -152,13 +171,15 @@ export const accountsRoutes = new Hono<AppContext>()
       .orderBy('createdAt', 'desc')
       .execute();
 
+    const balances = await getAccountBalances(accounts.map((account) => account.id));
+
     return c.json(
       accounts.map((account) => ({
         id: String(account.id),
         userId: account.userId,
         name: account.name,
         accountType: account.accountType,
-        currentBalance: account.currentBalance === null ? null : Number(account.currentBalance),
+        currentBalance: balances.get(account.id) ?? 0,
       })),
       200,
     );
@@ -167,10 +188,13 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const input = c.req.valid('query');
     const account = await getAccountWithOwnershipCheck(input.id, userId);
-    const transactions = await getTransactionsForAccount(input.id, 200, 0);
+    const [transactions, balance] = await Promise.all([
+      getTransactionsForAccount(input.id, 200, 0),
+      getAccountBalance(input.id),
+    ]);
 
     return c.json({
-      ...normalizeAccountRow(account),
+      ...normalizeAccountRow(account, balance),
       transactions: transactions.map(normalizeTransactionRow),
     });
   })
@@ -187,7 +211,6 @@ export const accountsRoutes = new Hono<AppContext>()
         userId,
         name: input.name,
         accountType: input.type ?? 'other',
-        currentBalance: input.balance === undefined ? null : Number(input.balance),
         createdAt: now,
         updatedAt: now,
       })
@@ -207,7 +230,7 @@ export const accountsRoutes = new Hono<AppContext>()
         userId: created.userId,
         name: created.name,
         accountType: created.accountType,
-        currentBalance: created.currentBalance === null ? null : Number(created.currentBalance),
+        currentBalance: 0,
       },
       201,
     );
@@ -223,7 +246,6 @@ export const accountsRoutes = new Hono<AppContext>()
 
     if (input.name !== undefined) updateValues.name = input.name;
     if (input.type !== undefined) updateValues.accountType = input.type;
-    if (input.balance !== undefined) updateValues.currentBalance = Number(input.balance);
 
     await db
       .updateTable('app.financeAccounts')
@@ -231,11 +253,14 @@ export const accountsRoutes = new Hono<AppContext>()
       .where('id', '=', input.id)
       .execute();
 
-    const updated = await db
-      .selectFrom('app.financeAccounts')
-      .selectAll()
-      .where('id', '=', input.id)
-      .executeTakeFirst();
+    const [updated, balance] = await Promise.all([
+      db
+        .selectFrom('app.financeAccounts')
+        .selectAll()
+        .where('id', '=', input.id)
+        .executeTakeFirst(),
+      getAccountBalance(input.id),
+    ]);
 
     if (!updated) throw new NotFoundError('Account not found after update');
 
@@ -245,7 +270,7 @@ export const accountsRoutes = new Hono<AppContext>()
         userId: updated.userId,
         name: updated.name,
         accountType: updated.accountType,
-        currentBalance: updated.currentBalance === null ? null : Number(updated.currentBalance),
+        currentBalance: balance,
       },
       200,
     );
@@ -270,9 +295,11 @@ export const accountsRoutes = new Hono<AppContext>()
       .orderBy('createdAt', 'desc')
       .execute();
 
+    const balances = await getAccountBalances(accounts.map((account) => account.id));
+
     return c.json(
       accounts.map((account) => ({
-        ...normalizeAccountRow(account),
+        ...normalizeAccountRow(account, balances.get(account.id) ?? 0),
         institutionName: null,
       })),
       200,
@@ -304,9 +331,11 @@ export const accountsRoutes = new Hono<AppContext>()
         )
         .execute();
 
+      const balances = await getAccountBalances(accounts.map((account) => account.id));
+
       return c.json(
         accounts.map((account) => ({
-          ...normalizeAccountRow(account),
+          ...normalizeAccountRow(account, balances.get(account.id) ?? 0),
           institutionName: null,
         })),
         200,
@@ -338,11 +367,12 @@ export const accountsRoutes = new Hono<AppContext>()
     const institutionMap = new Map(
       institutions.map((institution) => [institution.id, institution]),
     );
+    const balances = await getAccountBalances(accounts.map((account) => account.id));
 
     return c.json(
       {
         accounts: accounts.map((account) => ({
-          ...normalizeAccountRow(account),
+          ...normalizeAccountRow(account, balances.get(account.id) ?? 0),
           transactions: [],
         })),
         connections: connections.map((connection) =>

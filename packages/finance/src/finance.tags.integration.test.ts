@@ -62,7 +62,6 @@ describeIntegration('finance tags integration', () => {
       userId: ownerId,
       name: 'Tag Checking',
       accountType: 'depository',
-      currentBalance: 1000,
     });
     ownerAccountId = account.id;
 

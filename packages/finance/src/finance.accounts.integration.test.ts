@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createAccount,
+  createTransaction,
   deleteAccount,
   getAccountById,
   getAccountByPlaidId,
@@ -35,25 +36,32 @@ describeIntegration('finance accounts integration', () => {
     ]);
   });
 
-  it('creates, lists, and fetches accounts for owner', async () => {
+  it('creates, lists, and fetches accounts, deriving balance from posted transactions', async () => {
     const created = await createAccount({
       userId: ownerId,
       name: 'Checking',
       accountType: 'depository',
-      currentBalance: 2500.55,
     });
 
     expect(created.userId).toBe(ownerId);
     expect(created.name).toBe('Checking');
     expect(created.accountType).toBe('depository');
-    expect(Number(created.currentBalance)).toBe(2500.55);
+    expect(created.currentBalance).toBe(0);
+
+    await createTransaction({
+      userId: ownerId,
+      accountId: created.id,
+      amount: 2500.55,
+    });
 
     const listed = await listAccounts(ownerId);
     expect(listed).toHaveLength(1);
     expect(listed[0]?.id).toBe(created.id);
+    expect(Number(listed[0]?.currentBalance)).toBe(2500.55);
 
     const fetched = await getAccountById(created.id, ownerId);
     expect(fetched?.id).toBe(created.id);
+    expect(Number(fetched?.currentBalance)).toBe(2500.55);
   });
 
   it('enforces owner scope for update and delete', async () => {
@@ -61,7 +69,6 @@ describeIntegration('finance accounts integration', () => {
       userId: ownerId,
       name: 'Protected',
       accountType: 'depository',
-      currentBalance: 100,
     });
 
     const deniedUpdate = await updateAccount({
@@ -83,7 +90,6 @@ describeIntegration('finance accounts integration', () => {
       userId: ownerId,
       name: 'Plaid Account',
       accountType: 'credit',
-      currentBalance: 10,
       plaidAccountId: 'plaid-acc-1',
     });
 
@@ -91,15 +97,20 @@ describeIntegration('finance accounts integration', () => {
       userId: ownerId,
       name: 'Plaid Account Updated',
       accountType: 'credit',
-      currentBalance: 20,
       plaidAccountId: 'plaid-acc-1',
     });
 
     expect(first.id).toBe(second.id);
     expect(second.name).toBe('Plaid Account Updated');
-    expect(Number(second.currentBalance)).toBe(20);
+
+    await createTransaction({
+      userId: ownerId,
+      accountId: second.id,
+      amount: 20,
+    });
 
     const byPlaid = await getAccountByPlaidId('plaid-acc-1', ownerId);
     expect(byPlaid?.id).toBe(first.id);
+    expect(Number(byPlaid?.currentBalance)).toBe(20);
   });
 });

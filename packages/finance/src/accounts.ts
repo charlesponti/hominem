@@ -6,6 +6,8 @@ import type { Insertable, Selectable, Updateable } from 'kysely';
 
 import { getAffectedRows } from './utils';
 
+export type AccountWithBalance = Selectable<AppFinanceAccounts> & { currentBalance: number };
+
 type CreateAccountInput = Partial<Insertable<AppFinanceAccounts>> & {
   userId: string;
   name: string;
@@ -20,12 +22,42 @@ type UpsertAccountInput = Partial<Insertable<AppFinanceAccounts>> & {
   userId: string;
 };
 
-export async function createAccount(
-  input: CreateAccountInput,
-): Promise<Selectable<AppFinanceAccounts>> {
+async function getBalances(accountIds: string[]): Promise<Map<string, number>> {
+  if (accountIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .selectFrom('app.financeTransactions')
+    .select((eb) => ['accountId', eb.fn.sum<number>('amount').as('balance')])
+    .where('accountId', 'in', accountIds)
+    .where('pending', '=', false)
+    .groupBy('accountId')
+    .execute();
+
+  return new Map(rows.map((row) => [row.accountId, Number(row.balance ?? 0)]));
+}
+
+async function withBalance<T extends Selectable<AppFinanceAccounts>>(
+  account: T,
+): Promise<T & { currentBalance: number }> {
+  const balances = await getBalances([account.id]);
+  return { ...account, currentBalance: balances.get(account.id) ?? 0 };
+}
+
+async function withBalances<T extends Selectable<AppFinanceAccounts>>(
+  accounts: T[],
+): Promise<(T & { currentBalance: number })[]> {
+  const balances = await getBalances(accounts.map((account) => account.id));
+  return accounts.map((account) => ({
+    ...account,
+    currentBalance: balances.get(account.id) ?? 0,
+  }));
+}
+
+export async function createAccount(input: CreateAccountInput): Promise<AccountWithBalance> {
   const id = input.id ?? crypto.randomUUID();
   const accountType = input.accountType ?? 'checking';
-  const currentBalance = input.currentBalance ?? 0;
 
   const result = await db
     .insertInto('app.financeAccounts')
@@ -34,7 +66,6 @@ export async function createAccount(
       userId: input.userId,
       name: input.name,
       accountType,
-      currentBalance,
       metadata: input.metadata ?? {},
       ...(input.plaidAccountId ? { plaidAccountId: input.plaidAccountId } : {}),
       ...(input.plaidItemId ? { plaidItemId: input.plaidItemId } : {}),
@@ -46,23 +77,25 @@ export async function createAccount(
     throw new Error('Failed to create account');
   }
 
-  return result;
+  return withBalance(result);
 }
 
-export async function listAccounts(userId: string): Promise<Selectable<AppFinanceAccounts>[]> {
-  return db
+export async function listAccounts(userId: string): Promise<AccountWithBalance[]> {
+  const accounts = await db
     .selectFrom('app.financeAccounts')
     .selectAll()
     .where('userId', '=', userId)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
+
+  return withBalances(accounts);
 }
 
 export async function getAccountById(
   accountId: string,
   userId?: string,
-): Promise<Selectable<AppFinanceAccounts> | null> {
+): Promise<AccountWithBalance | null> {
   if (userId) {
     const result = await db
       .selectFrom('app.financeAccounts')
@@ -71,7 +104,7 @@ export async function getAccountById(
       .where('userId', '=', userId)
       .limit(1)
       .executeTakeFirst();
-    return result ?? null;
+    return result ? withBalance(result) : null;
   }
 
   const result = await db
@@ -80,12 +113,12 @@ export async function getAccountById(
     .where('id', '=', accountId)
     .limit(1)
     .executeTakeFirst();
-  return result ?? null;
+  return result ? withBalance(result) : null;
 }
 
 export async function updateAccount(
   input: UpdateAccountInput,
-): Promise<Selectable<AppFinanceAccounts> | null> {
+): Promise<AccountWithBalance | null> {
   const existing = await getAccountById(input.id, input.userId);
   if (!existing) {
     return null;
@@ -93,14 +126,12 @@ export async function updateAccount(
 
   const nextName = input.name ?? existing.name;
   const nextType = input.accountType ?? existing.accountType;
-  const nextBalance = input.currentBalance ?? existing.currentBalance;
 
   const result = await db
     .updateTable('app.financeAccounts')
     .set({
       name: nextName,
       accountType: nextType,
-      currentBalance: nextBalance,
       metadata: input.metadata ?? existing.metadata,
       updatedAt: new Date(),
     })
@@ -109,7 +140,7 @@ export async function updateAccount(
     .returningAll()
     .executeTakeFirst();
 
-  return result ?? null;
+  return result ? withBalance(result) : null;
 }
 
 export async function deleteAccount(accountId: string, userId?: string): Promise<boolean> {
@@ -138,8 +169,8 @@ export const listAccountsWithPlaidInfo = listAccounts;
 export async function getAccountsForInstitution(
   institutionId: string,
   userId: string,
-): Promise<Selectable<AppFinanceAccounts>[]> {
-  return db
+): Promise<AccountWithBalance[]> {
+  const accounts = await db
     .selectFrom('app.financeAccounts')
     .selectAll()
     .where('userId', '=', userId)
@@ -147,11 +178,11 @@ export async function getAccountsForInstitution(
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
+
+  return withBalances(accounts);
 }
 
-export async function upsertAccount(
-  input: UpsertAccountInput,
-): Promise<Selectable<AppFinanceAccounts>> {
+export async function upsertAccount(input: UpsertAccountInput): Promise<AccountWithBalance> {
   if (!input.name) {
     throw new Error('upsertAccount requires name');
   }
@@ -171,7 +202,6 @@ export async function upsertAccount(
         userId: input.userId,
         name: input.name,
         ...(input.accountType ? { accountType: input.accountType } : {}),
-        ...(input.currentBalance !== undefined ? { currentBalance: input.currentBalance } : {}),
         metadata: input.metadata,
       });
       if (!updated) {
@@ -186,7 +216,6 @@ export async function upsertAccount(
     name: input.name,
     ...(input.id !== undefined ? { id: input.id } : {}),
     ...(input.accountType ? { accountType: input.accountType } : {}),
-    ...(input.currentBalance !== undefined ? { currentBalance: input.currentBalance } : {}),
     ...(input.metadata ? { metadata: input.metadata } : {}),
     ...(input.plaidAccountId ? { plaidAccountId: input.plaidAccountId } : {}),
     ...(input.plaidItemId ? { plaidItemId: input.plaidItemId } : {}),
@@ -196,12 +225,12 @@ export async function upsertAccount(
 export async function getUserAccounts(
   userId: string,
   itemId?: string,
-): Promise<Selectable<AppFinanceAccounts>[]> {
+): Promise<AccountWithBalance[]> {
   if (!itemId) {
     return listAccounts(userId);
   }
 
-  return db
+  const accounts = await db
     .selectFrom('app.financeAccounts')
     .selectAll()
     .where('userId', '=', userId)
@@ -209,12 +238,14 @@ export async function getUserAccounts(
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
+
+  return withBalances(accounts);
 }
 
 export async function getAccountByPlaidId(
   plaidAccountId: string,
   userId?: string,
-): Promise<Selectable<AppFinanceAccounts> | null> {
+): Promise<AccountWithBalance | null> {
   if (userId) {
     const result = await db
       .selectFrom('app.financeAccounts')
@@ -223,7 +254,7 @@ export async function getAccountByPlaidId(
       .where('plaidAccountId', '=', plaidAccountId)
       .limit(1)
       .executeTakeFirst();
-    return result ?? null;
+    return result ? withBalance(result) : null;
   }
 
   const result = await db
@@ -234,5 +265,5 @@ export async function getAccountByPlaidId(
     .orderBy('id', 'asc')
     .limit(1)
     .executeTakeFirst();
-  return result ?? null;
+  return result ? withBalance(result) : null;
 }

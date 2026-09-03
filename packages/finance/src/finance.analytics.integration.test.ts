@@ -54,7 +54,6 @@ describeIntegration('finance analytics integration', () => {
       userId: ownerId,
       name: 'Analytics Checking',
       accountType: 'depository',
-      currentBalance: 1000,
     });
     accountId = account.id;
   });

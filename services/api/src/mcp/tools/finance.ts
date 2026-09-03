@@ -2,7 +2,7 @@ import {
   getFinanceNetWorth,
   getFinanceRecentTransactions,
   getFinanceSpendingByCategory,
-} from '../../application/finance-mcp.service';
+} from '@hominem/finance-services';
 import {
   financeNetWorthInputSchema,
   financeNetWorthOutputSchema,
@@ -18,7 +18,7 @@ registerTool(
     name: 'finance_net_worth',
     title: 'Finance Net Worth',
     description:
-      'Compute current net worth from finance accounts included in net-worth totals, using the latest certified statement balance plus posted transaction activity since. Returns per-account balances grouped by currency.',
+      'Compute current net worth from finance accounts included in net-worth totals, summing posted transaction activity per account. Returns per-account balances grouped by currency.',
     inputSchema: financeNetWorthInputSchema,
     outputSchema: financeNetWorthOutputSchema,
     readOnly: true,

@@ -97,7 +97,6 @@ async function findOrCreateAccount(
         provider: COPILOT_PROVIDER,
         csvImportKey: draft.importKey,
         accountType: draft.accountType,
-        currentBalance: 0,
         metadata: {},
       })
       .returning('id')

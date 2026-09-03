@@ -28,7 +28,6 @@ describeIntegration('finance monthly summary integration', () => {
       userId: ownerUserId,
       name: 'Personal Checking',
       accountType: 'checking',
-      currentBalance: 0,
     });
 
     await Promise.all([
