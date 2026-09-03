@@ -13,6 +13,9 @@ lint:
 test:
     pnpm --filter @hominem/omiro test
 
+maestro *flows:
+    pnpm --filter @hominem/omiro run test:maestro -- {{ flows }}
+
 test-watch:
     pnpm --filter @hominem/omiro test:watch
 

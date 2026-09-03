@@ -1,0 +1,7 @@
+appId: com.pontistudios.hakumi.dev
+---
+# The canonical runner clears MMKV before launch, so no resume target can
+# obscure the signed-in root state. This is the final authority for whether a
+# reused keychain session is usable; do not infer it from OTP mailbox output.
+- assertVisible:
+    id: inbox-composer-input

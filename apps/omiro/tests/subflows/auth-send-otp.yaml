@@ -9,9 +9,10 @@ appId: com.pontistudios.hakumi.dev
 # No-op when the app is already authenticated (auth screen not visible).
 - runFlow:
     when:
-      visible: 'Apple Account Verification'
+      visible: 'Apple[\s\u00A0]+Account Verification'
     commands:
       - tapOn: 'Not Now'
+      - launchApp
 - runFlow:
     when:
       visible:

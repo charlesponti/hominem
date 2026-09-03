@@ -23,9 +23,10 @@ appId: com.pontistudios.hakumi.dev
 # block the check.
 - runFlow:
     when:
-      visible: 'Apple Account Verification'
+      visible: 'Apple[\s\u00A0]+Account Verification'
     commands:
       - tapOn: 'Not Now'
+      - launchApp
 - runFlow:
     when:
       visible: 'Continue without name'

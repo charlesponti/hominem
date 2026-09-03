@@ -18,4 +18,3 @@ appId: com.pontistudios.hakumi.dev
     optional: true
 - waitForAnimationToEnd:
     timeout: 1500
-- runFlow: ensure-authenticated.yaml

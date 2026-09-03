@@ -67,13 +67,20 @@ export PATH="$HOME/.maestro/bin:/opt/homebrew/opt/openjdk@17/bin:$PATH" && expor
 
 (The Maestro CLI lives at `~/.maestro/bin`, not on a default PATH.)
 
+**Canonical local run:** use `just mobile maestro [flow-or-directory]`. It
+checks Java 17, the booted simulator, installed dev app, and local API;
+cleans a stale Maestro/XCTest bridge; then authenticates once before running
+the requested evidence flow(s). Individual flows assume that authenticated
+baseline and should not be launched directly.
+
 **E2E login:** OTPs are real random codes captured to the scripted mailbox —
-never hardcoded. Use the two-phase wrapper (the local dev API captures OTPs
-by default; explicit `HOMINEM_EMAIL_PROVIDER=resend` disables capture). The
-wrapper force-resets the app first — terminates it, wipes `Documents/mmkv`
-(the persisted react-query cache + resume-target local store) and relaunches
-with `clearKeychain: true` — so every login starts from a clean signed-out
-state and a stale cache can't strand the session on a 404'd detail screen:
+never hardcoded. The runner uses the two-phase wrapper (the local dev API
+captures OTPs by default; explicit `HOMINEM_EMAIL_PROVIDER=resend` disables
+capture). The wrapper force-resets the app first — terminates it, wipes
+`Documents/mmkv` (the persisted react-query cache + resume-target local
+store) and relaunches with `clearKeychain: true` — so every login starts from
+a clean signed-out state and a stale cache can't strand the session on a 404'd
+detail screen:
 
 ```bash
 apps/omiro/tests/scripts/maestro-auth.sh [email]  # default e2e@test.hakumi.io

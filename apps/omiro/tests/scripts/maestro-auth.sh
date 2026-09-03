@@ -40,10 +40,8 @@ APP_ID="${APP_ID:-com.pontistudios.hakumi.dev}"
 command -v maestro >/dev/null || { echo "maestro not found (expected at ~/.maestro/bin/maestro)" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq not found" >&2; exit 1; }
 
-# Pre-flight: kill any stale Maestro/XCTest driver sessions leaked by aborted
-# runs (MCP aborts, Ctrl-C, timeouts). Each one holds a socket to the
-# simulator's XCUITest runner; a second driver then times out with
-# Net.java pollConnect errors. Every run must start from a clean driver state.
+# Keep direct use of this documented bootstrap safe too. The canonical runner
+# performs the same cleanup before its broader preflight.
 pkill -f "\.maestro/lib" 2>/dev/null || true
 pkill -f "test-without-building" 2>/dev/null || true
 pkill -f "maestro-driver-iosUITests-Runner" 2>/dev/null || true
@@ -81,11 +79,12 @@ while [ -z "$otp" ] && [ "$(date +%s)" -lt "$deadline" ]; do
   fi
 done
 if [ -z "$otp" ]; then
-  echo "no NEW otp for $EMAIL in $MAILBOX after phase 1." >&2
-  echo "Likely causes: app was already logged in (phase 1 no-ops), or local email capture is off (explicit HOMINEM_EMAIL_PROVIDER=resend disables it)." >&2
+  echo "no NEW OTP for $EMAIL in $MAILBOX after phase 1." >&2
+  echo "Local email capture may be disabled (HOMINEM_EMAIL_PROVIDER=resend), or the auth screen did not load." >&2
   exit 1
 fi
 
 echo "== phase 2: verifying OTP (code masked, never printed) =="
 maestro test --config "$TESTS_DIR/config.yaml" -e "E2E_USER_EMAIL=$EMAIL" -e "OTP=$otp" "$SUBFLOWS_DIR/auth-verify-otp.yaml"
+maestro test --config "$TESTS_DIR/config.yaml" "$SUBFLOWS_DIR/assert-authenticated.yaml"
 echo "authenticated as $EMAIL"

@@ -12,13 +12,10 @@ appId: com.pontistudios.hakumi.dev
 - launchApp:
     clearKeychain: true
     stopApp: true
-# The simulator's iCloud account throws an "Apple Account Verification"
-# system alert whenever the app's keychain is cleared (the wrapper wipes
-# mmkv and relaunches with clearKeychain). It covers the whole screen and
-# can appear at any point during the cold boot, so poll for it and dismiss
-# it between auth-screen waits instead of checking once. The loop runs while
-# the auth screen has not appeared (capped at 10 iterations), re-dismissing
-# the alert each pass and dwelling up to 5s for the email field.
+# The simulator's iCloud account can throw an "Apple Account Verification"
+# system alert whenever the app's keychain is cleared. It covers the screen,
+# so dismiss it between auth-screen waits rather than allowing a stale session
+# fallback to hide a failed login.
 - repeat:
     times: 10
     while:
@@ -27,7 +24,7 @@ appId: com.pontistudios.hakumi.dev
     commands:
       - runFlow:
           when:
-            visible: 'Apple Account Verification'
+            visible: 'Apple[\s\u00A0]+Account Verification'
           commands:
             - tapOn: 'Not Now'
       - extendedWaitUntil:
