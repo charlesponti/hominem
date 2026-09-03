@@ -9,10 +9,9 @@ import { useInboxStreamItems } from '~/services/inbox/use-inbox-stream-items';
 import { clearAllDraft, readAllDraft, writeAllDraft } from '~/services/navigation/launch-state';
 import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 
-import { inboxDayGroupKey, inboxDayGroupLabel } from './format-inbox-date';
 import { InboxStreamItem } from './InboxStreamItem';
 import type { InboxStreamItemData } from './InboxStreamItem.types';
-import { getEnteringItemIds, type StreamRow } from './stream-rows';
+import { getEnteringItemIds } from './stream-rows';
 
 export type StreamFilter = 'all' | 'chats' | 'notes';
 
@@ -30,24 +29,6 @@ function filterItems(items: InboxStreamItemData[], filter: StreamFilter): InboxS
   return items.filter((item) => item.kind === kind);
 }
 
-function buildRows(items: InboxStreamItemData[]): StreamRow[] {
-  const rows: StreamRow[] = [];
-  let lastGroupKey: string | null = null;
-  for (const item of items) {
-    const groupKey = inboxDayGroupKey(item.updatedAt);
-    if (groupKey !== lastGroupKey) {
-      rows.push({
-        type: 'header',
-        key: `header-${groupKey}`,
-        label: inboxDayGroupLabel(item.updatedAt),
-      });
-      lastGroupKey = groupKey;
-    }
-    rows.push({ type: 'row', key: item.id, item });
-  }
-  return rows;
-}
-
 interface StreamScreenProps {
   filter: StreamFilter;
 }
@@ -59,20 +40,10 @@ export function StreamScreen({ filter }: StreamScreenProps) {
   const styles = useStyles((theme) => ({
     container: { flex: 1, backgroundColor: theme.colors.background },
     content: { paddingBottom: 16 },
-    dayLabel: {
-      ...theme.textVariants.caption1,
-      color: theme.colors.tertiary,
-      paddingHorizontal: theme.spacing.xl,
-      paddingBottom: theme.spacing.md,
-      paddingTop: theme.spacing['3xl'],
-      fontWeight: '500',
-      textTransform: 'uppercase',
-      letterSpacing: 0.4,
-    },
     emptyText: { paddingHorizontal: 16, color: theme.colors.mutedForeground },
   }));
 
-  const rows = useMemo(() => buildRows(filterItems(inbox.items, filter)), [inbox.items, filter]);
+  const items = useMemo(() => filterItems(inbox.items, filter), [inbox.items, filter]);
   const inset = useMemo(() => ({ bottom: composerInset }), [composerInset]);
 
   // Seeded with whatever the first settled render holds (including empty),
@@ -91,18 +62,13 @@ export function StreamScreen({ filter }: StreamScreenProps) {
   }, [inbox.isInitialLoading, inbox.items]);
 
   const enteringIds = useMemo(
-    () => getEnteringItemIds(rows, seenIdsRef.current ?? new Set<string>()),
-    [rows],
+    () => getEnteringItemIds(items, seenIdsRef.current ?? new Set<string>()),
+    [items],
   );
 
-  const renderItem = useCallback<ListRenderItem<StreamRow>>(
-    ({ item: row }) => {
-      if (row.type === 'header') {
-        return <Text style={styles.dayLabel}>{row.label}</Text>;
-      }
-      return <InboxStreamItem isNew={enteringIds.has(row.item.id)} item={row.item} />;
-    },
-    [enteringIds, styles],
+  const renderItem = useCallback<ListRenderItem<InboxStreamItemData>>(
+    ({ item }) => <InboxStreamItem isNew={enteringIds.has(item.id)} item={item} />,
+    [enteringIds],
   );
 
   return (
@@ -111,9 +77,8 @@ export function StreamScreen({ filter }: StreamScreenProps) {
         contentContainerStyle={styles.content}
         contentInset={inset}
         contentInsetAdjustmentBehavior="automatic"
-        data={rows}
-        getItemType={(row) => row.type}
-        keyExtractor={(row) => row.key}
+        data={items}
+        keyExtractor={(item) => item.id}
         ListEmptyComponent={
           !inbox.isInitialLoading ? (
             <Text style={styles.emptyText}>Capture a thought to start your inbox.</Text>

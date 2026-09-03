@@ -13,7 +13,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { useAppTheme, useStyles } from '~/components/theme';
+import { fontFamilies, useAppTheme, useStyles } from '~/components/theme';
 import { ListRow } from '~/components/ui';
 import AppIcon from '~/components/ui/icon';
 import { useReducedMotion } from '~/hooks/use-reduced-motion';
@@ -65,7 +65,8 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
   const previewText = cleanText(item.preview ? stripPreviewMarkdown(item.preview) : item.preview);
   const primaryText = titleText ?? previewText ?? t.inbox.item.untitled;
   const isChat = item.kind === 'chat';
-  const { destructive, destructiveForeground, primary, primaryForeground } = useAppTheme().colors;
+  const { destructive, destructiveForeground, mutedForeground, primary, primaryForeground } =
+    useAppTheme().colors;
   const styles = useStyles((theme) => ({
     row: { paddingHorizontal: theme.spacing.xl, paddingVertical: theme.spacing.lg },
     wrapper: { position: 'relative', overflow: 'hidden' },
@@ -83,6 +84,15 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
       gap: theme.spacing.xs,
     },
     actionLabel: { ...theme.textVariants.caption1, fontWeight: '600' },
+    title: {
+      fontFamily: fontFamilies.sans,
+      fontWeight: '700' as const,
+      fontSize: 17,
+      lineHeight: 22,
+    },
+    // Aligns the icon to the title's own line instead of the vertical center
+    // of the whole title+subtitle block.
+    leading: { alignSelf: 'flex-start' as const, paddingTop: 3 },
   }));
 
   const leaving = useSharedValue(1);
@@ -305,11 +315,18 @@ export const InboxStreamItem = memo(({ isNew = false, item }: InboxStreamItemPro
               accessibilityLabel={primaryText}
               actionTestID={`inbox-item-${isChat ? 'chat' : 'note'}-open`}
               divider={false}
+              leading=<AppIcon
+                name={isChat ? 'bubble.left' : 'note.text'}
+                size={18}
+                tintColor={mutedForeground}
+              />
+              leadingStyle={styles.leading}
               onAccessibilityAction={handleAccessibilityAction}
               onPress={onOpen}
               style={styles.row}
-              subtitle={titleText && previewText && previewText !== titleText ? previewText : null}
+              subtitle={previewText !== titleText ? previewText : null}
               title={primaryText}
+              titleStyle={styles.title}
             />
           </Reanimated.View>
         </GestureDetector>

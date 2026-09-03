@@ -20,6 +20,7 @@ interface ListRowProps {
   // the default hairline-divided table row.
   divider?: boolean;
   leading?: ReactNode;
+  leadingStyle?: StyleProp<ViewStyle>;
   onAccessibilityAction?: (event: AccessibilityActionEvent) => void;
   onLongPress?: () => void;
   onPress: () => void;
@@ -37,6 +38,7 @@ export function ListRow({
   actionTestID,
   divider = true,
   leading,
+  leadingStyle,
   onAccessibilityAction,
   onLongPress,
   onPress,
@@ -60,7 +62,7 @@ export function ListRow({
     } satisfies ViewStyle,
     rowFlat: { borderBottomWidth: 0 } satisfies ViewStyle,
     pressed: { backgroundColor: currentTheme.colors.muted } satisfies ViewStyle,
-    leading: { alignItems: 'center', justifyContent: 'center', width: 24 } satisfies ViewStyle,
+    leading: { width: 24 } satisfies ViewStyle,
     content: { flex: 1, gap: 2, minWidth: 0 } satisfies ViewStyle,
     title: {
       ...currentTheme.textVariants.body,
@@ -88,7 +90,7 @@ export function ListRow({
       ]}
       testID={testID ?? actionTestID}
     >
-      {leading ? <View style={styles.leading}>{leading}</View> : null}
+      {leading ? <View style={[styles.leading, leadingStyle]}>{leading}</View> : null}
       <View style={styles.content}>
         <Text numberOfLines={2} style={[styles.title, titleStyle]}>
           {title}

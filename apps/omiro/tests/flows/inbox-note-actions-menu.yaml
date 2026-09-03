@@ -1,13 +1,23 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# Flow: Inbox note actions menu
-# Opens the note row overflow menu and captures the native menu presentation.
+# Flow: Inbox note swipe-to-delete
+# Swipes the note row open and captures the confirmation Alert for the
+# revealed Delete action.
 
 - runFlow: ../subflows/reset-to-home.yaml
+- tapOn: 'Notes'
+- waitForAnimationToEnd:
+    timeout: 500
 - assertVisible:
     id: 'inbox-item-note'
-- longPressOn:
-    id: 'inbox-item-note'
-    index: 0
+- swipe:
+    from:
+      id: 'inbox-item-note'
+      index: 0
+    direction: LEFT
+- tapOn:
+    id: 'inbox-item-note-delete'
+- waitForAnimationToEnd:
+    timeout: 1000
 - assertVisible: 'Delete'
 - takeScreenshot: /tmp/omiro_inbox_note_actions_menu

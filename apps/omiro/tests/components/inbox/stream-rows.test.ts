@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { InboxStreamItemData } from '~/components/inbox/InboxStreamItem.types';
-import { getEnteringItemIds, type StreamRow } from '~/components/inbox/stream-rows';
+import { getEnteringItemIds } from '~/components/inbox/stream-rows';
 
 function item(id: string): InboxStreamItemData {
   return {
@@ -16,48 +16,34 @@ function item(id: string): InboxStreamItemData {
   };
 }
 
-function row(id: string): StreamRow {
-  return { type: 'row', key: id, item: item(id) };
-}
-
-function header(key: string): StreamRow {
-  return { type: 'header', key, label: key };
-}
-
 describe('getEnteringItemIds', () => {
   it('returns the leading run of unseen ids for a new capture at the top', () => {
-    const rows = [header('header-today'), row('new-1'), row('old-1'), row('old-2')];
+    const items = [item('new-1'), item('old-1'), item('old-2')];
 
-    expect(getEnteringItemIds(rows, new Set(['old-1', 'old-2']))).toEqual(new Set(['new-1']));
+    expect(getEnteringItemIds(items, new Set(['old-1', 'old-2']))).toEqual(new Set(['new-1']));
   });
 
   it('returns every id in a multi-item unseen run at the top', () => {
-    const rows = [row('new-1'), row('new-2'), row('old-1')];
+    const items = [item('new-1'), item('new-2'), item('old-1')];
 
-    expect(getEnteringItemIds(rows, new Set(['old-1']))).toEqual(new Set(['new-1', 'new-2']));
+    expect(getEnteringItemIds(items, new Set(['old-1']))).toEqual(new Set(['new-1', 'new-2']));
   });
 
-  it('ignores pagination appends below already-seen rows', () => {
-    const rows = [row('old-1'), row('old-2'), row('page-2-a'), row('page-2-b')];
+  it('ignores pagination appends below already-seen items', () => {
+    const items = [item('old-1'), item('old-2'), item('page-2-a'), item('page-2-b')];
 
-    expect(getEnteringItemIds(rows, new Set(['old-1', 'old-2']))).toEqual(new Set());
+    expect(getEnteringItemIds(items, new Set(['old-1', 'old-2']))).toEqual(new Set());
   });
 
   it('returns empty when everything was seen, so filter switches mount static', () => {
-    const rows = [header('header-today'), row('a'), row('b')];
+    const items = [item('a'), item('b')];
 
-    expect(getEnteringItemIds(rows, new Set(['a', 'b']))).toEqual(new Set());
+    expect(getEnteringItemIds(items, new Set(['a', 'b']))).toEqual(new Set());
   });
 
   it('returns empty when a seen item reorders to the top', () => {
-    const rows = [row('bumped'), row('other')];
+    const items = [item('bumped'), item('other')];
 
-    expect(getEnteringItemIds(rows, new Set(['bumped', 'other']))).toEqual(new Set());
-  });
-
-  it('skips headers without breaking the leading run', () => {
-    const rows = [header('header-today'), row('new-1'), header('header-old'), row('old-1')];
-
-    expect(getEnteringItemIds(rows, new Set(['old-1']))).toEqual(new Set(['new-1']));
+    expect(getEnteringItemIds(items, new Set(['bumped', 'other']))).toEqual(new Set());
   });
 });

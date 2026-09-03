@@ -275,7 +275,6 @@ const t = {
       actionsLabel: 'Item actions',
       chatLabel: 'Chat',
       noteLabel: 'Note',
-      open: 'Open',
       archiveChat: 'Archive chat',
       deleteNote: {
         title: 'Delete note',
@@ -284,10 +283,6 @@ const t = {
         cancel: 'Cancel',
         confirm: 'Delete',
       },
-      archive: 'Archive',
-      today: 'Today',
-      yesterday: 'Yesterday',
-      earlier: 'Earlier',
     },
   },
   tasks: {
