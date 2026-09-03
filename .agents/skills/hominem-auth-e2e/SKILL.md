@@ -92,12 +92,32 @@ hominem_delete_user "invitee-e2e@test.hominem.dev"       # teardown (disposable 
 `hominem-auth-e2e/driver.sh signup ...` for every account pays a curl +
 bash-startup round trip it doesn't need to.
 
+## How test OTPs work
+
+The OTP is always the real randomly generated code — verification is a
+strict compare against the stored code, with no bypass anywhere. In local
+dev and CI the server captures outbound OTP email to a same-host JSONL
+mailbox (`~/.hominem/scripted-mailbox.jsonl` by default,
+`HOMINEM_SCRIPTED_MAILBOX` overrides) instead of sending it — scripted is
+the default outside production, the API refuses to boot scripted in
+production, and `HOMINEM_EMAIL_PROVIDER=resend` forces real sending (for
+testing delivery locally). Test helpers read that file — `hominem_read_otp <email>` / `driver.sh otp <email>` in
+shell, `readLatestScriptedOtp` from `@hominem/utils/scripted-mailbox` in
+TypeScript. OTPs are single-use: always request a fresh code before signing
+in (the helpers always send first).
+
+OTPs are never retrievable over the API, by design — there is no endpoint
+that returns them, so there is nothing to misconfigure into a leak.
+
 ## Using it standalone
 
 ```bash
 D=.agents/skills/hominem-auth-e2e/driver.sh
 $D signin-default
 $D whoami test@hominem.local
+
+# read the latest captured OTP for an email (empty when none captured yet):
+$D otp test@hominem.local
 
 # second identity, only when needed:
 $D signup owner-e2e@test.hominem.dev
@@ -110,16 +130,14 @@ $D delete-user owner-e2e@test.hominem.dev
    hosted login if signed out.
 2. Click the email field, `type` the test email, click Continue.
 3. The OTP screen is 6 separate single-char boxes, not one field.
-   **Bulk `type("000000")` only fills the first box** — click the first
-   box once, then issue six separate single-character `type("0")` calls;
-   focus auto-advances between boxes. `000000` works because the dev API
-   *generates* that exact code (better-auth 1.7+ removed the old hardcoded
-   `000000` verification bypass — verification is a strict compare against
-   the stored code). It is also single-use: the stored code is consumed on
-   the first attempt, so always request a fresh code before signing in
-   (the curl helpers always send first; a browser session that verifies
-   once then signs out must walk the flow again, not re-type the same
-   code — it would fail with INVALID_OTP).
+   **Bulk-typing the code only fills the first box** — click the first
+   box once, then issue six separate single-character `type` calls with
+   the digits from `driver.sh otp <email>` (requested in step 2);
+   focus auto-advances between boxes. The code is single-use: the stored
+   code is consumed on the first attempt, so always request a fresh code
+   before signing in (the curl helpers always send first; a browser
+   session that verifies once then signs out must walk the flow again,
+   not re-type the same code — it would fail with INVALID_OTP).
 4. Click Verify — redirects back to `:4445`, signed in.
 
 ## Logging the browser out
@@ -139,8 +157,8 @@ prints the exact string.)
 ## Restoring the real user's session afterward
 
 If you signed the browser out to test as someone else, sign back in as
-the real user via the same OTP walk (step 4 above still applies — dev
-OTP is always `000000` even for real accounts) before ending the
+the real user via the same OTP walk (request a fresh code first — codes
+are single-use even for real accounts) before ending the
 session. Never leave the browser authenticated as a disposable test
 account.
 
@@ -152,6 +170,6 @@ plugin (wired in `services/api/src/auth/better-auth.ts`):
 | Method | Path | Notes |
 | --- | --- | --- |
 | POST | `/auth/email-otp/send-verification-otp` | `{email, type:"sign-in"}` |
-| POST | `/auth/sign-in/email-otp` | `{email, otp}` — dev otp is always `000000` |
+| POST | `/auth/sign-in/email-otp` | `{email, otp}` — the real code from the scripted-provider mailbox (see above) |
 | GET | `/auth/get-session` | current session for the cookie jar |
 | POST | `/auth/logout` | browser-side, via `credentials:'include'` fetch |

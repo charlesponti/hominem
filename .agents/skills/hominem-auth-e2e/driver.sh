@@ -8,6 +8,7 @@ source ./lib.sh
 case "${1:-}" in
   signup) shift; id="$(hominem_signup "$1")"; echo "signed up $1 -> userId=$id (cookiejar: $(hominem_cookiejar_for "$1"))" ;;
   signin-default) id="$(hominem_signin_default)"; echo "signed in $HOMINEM_STABLE_TEST_USER -> userId=$id (cookiejar: $(hominem_cookiejar_for "$HOMINEM_STABLE_TEST_USER"))" ;;
+  otp) shift; hominem_read_otp "$1"; echo ;;
   whoami) shift; hominem_whoami "$1"; echo ;;
   cookiejar) shift; hominem_cookiejar_for "$1" ;;
   logout-snippet) hominem_print_browser_logout_snippet ;;
@@ -17,7 +18,8 @@ case "${1:-}" in
 usage: driver.sh <command> [args]
 
   signin-default          sign in as the stable default test user ($HOMINEM_STABLE_TEST_USER), creating it if needed
-  signup <email>          OTP sign-up/sign-in as a disposable @test.hominem.dev email (dev OTP is always 000000)
+  signup <email>          OTP sign-up/sign-in as a disposable @test.hominem.dev email (reads the real code from the scripted-provider mailbox)
+  otp <email>             print the latest captured OTP for email (empty when none captured yet)
   whoami <email>          print the Better Auth session for email
   cookiejar <email>       print the cookie jar path for email (for use with curl -b)
   logout-snippet          print the JS to run via javascript_tool to log the browser out

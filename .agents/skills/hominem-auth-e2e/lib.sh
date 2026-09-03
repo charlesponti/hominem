@@ -51,9 +51,31 @@ hominem_cookiejar_for() {
   echo "$HOMINEM_E2E_STATE_DIR/$(echo "$1" | tr -c 'a-zA-Z0-9._-' '_').cookies"
 }
 
-# Sign up or sign in as a test email over curl. Dev mode routes every OTP to
-# a fixed 000000 (NODE_ENV=development in services/api), so this needs no
-# inbox access and works identically for brand-new or existing accounts.
+# Mailbox file the scripted email provider appends captured OTPs to (JSONL).
+# Same default as @hominem/utils/scripted-mailbox — keep the two in sync.
+hominem_scripted_mailbox() {
+  echo "${HOMINEM_SCRIPTED_MAILBOX:-$HOME/.hominem/scripted-mailbox.jsonl}"
+}
+
+# Latest captured OTP for an exact recipient address, or empty when nothing
+# was captured yet. The send runs as a server background task, so callers
+# poll this after requesting a code.
+hominem_read_otp() {
+  local email="$1"
+  hominem_require_test_email "$email"
+  local mailbox; mailbox="$(hominem_scripted_mailbox)"
+  [ -f "$mailbox" ] || return 0
+  jq -R -r --arg email "$email" \
+    'fromjson? | select(.to == $email and (.otp | type) == "string") | "\(.capturedAt) \(.otp)"' \
+    "$mailbox" 2>/dev/null | sort | tail -n 1 | awk '{print $2}'
+}
+
+# Sign up or sign in as a test email over curl. The OTP is the real randomly
+# generated code: in local dev the server captures it to a same-host mailbox
+# file instead of emailing it (explicit HOMINEM_EMAIL_PROVIDER=resend
+# disables capture), and this polls that file. OTPs are never served over HTTP — there is no endpoint that returns
+# them, by design. Needs no inbox access and works identically for brand-new
+# or existing accounts.
 hominem_signup() {
   local email="$1"
   hominem_require_test_email "$email"
@@ -64,10 +86,22 @@ hominem_signup() {
     -H 'content-type: application/json' \
     -d "$(jq -nc --arg email "$email" '{email: $email, type: "sign-in"}')"
 
+  # The send runs as a server background task, so the capture lands after the
+  # send request already responded — poll the mailbox.
+  local otp="" deadline=$(( $(date +%s) + 15 ))
+  while [ -z "$otp" ] && [ "$(date +%s)" -lt "$deadline" ]; do
+    otp="$(hominem_read_otp "$email")"
+    [ -n "$otp" ] || sleep 0.5
+  done
+  if [ -z "$otp" ]; then
+    echo "signup failed for $email: no OTP captured in $(hominem_scripted_mailbox) (is local email capture active? explicit HOMINEM_EMAIL_PROVIDER=resend disables it)" >&2
+    exit 1
+  fi
+
   local resp
   resp="$(curl -sS -c "$jar" -X POST "$HOMINEM_API_URL/api/auth/sign-in/email-otp" \
     -H 'content-type: application/json' \
-    -d "$(jq -nc --arg email "$email" '{email: $email, otp: "000000"}')")"
+    -d "$(jq -nc --arg email "$email" --arg otp "$otp" '{email: $email, otp: $otp}')")"
 
   local user_id
   user_id="$(echo "$resp" | jq -r '.user.id // empty')"
