@@ -34,8 +34,9 @@ For most API changes, the loop is simple:
 
 The API listens on `http://localhost:4040`.
 
-For Browser chat verification, set `HOMINEM_AI_PROVIDER=scripted` in the API
-environment and restart the API. This uses deterministic local responses at
+For local Browser chat and auth verification, set `ENV=scripted` in the API
+environment and restart the API. This mocks both the AI and email providers;
+captured OTPs are written to the scripted mailbox. Scripted AI uses deterministic local responses at
 the OpenRouter HTTP boundary, including collection tool calls and their
 post-approval completion. The following exact message markers expose the
 timing needed by the Browser playbook:

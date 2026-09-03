@@ -8,25 +8,29 @@
       "types": "./build/index.d.ts",
       "default": "./src/index.ts"
     },
-    "./base": {
-      "types": "./build/base.d.ts",
-      "default": "./src/base.ts"
+    "./runtime": {
+      "types": "./build/runtime.d.ts",
+      "default": "./src/runtime.ts"
     },
-    "./api": {
-      "types": "./build/api.d.ts",
-      "default": "./src/api.ts"
+    "./database": {
+      "types": "./build/database.d.ts",
+      "default": "./src/database.ts"
     },
-    "./web": {
-      "types": "./build/web.d.ts",
-      "default": "./src/web.ts"
+    "./ai": {
+      "types": "./build/ai.d.ts",
+      "default": "./src/ai.ts"
     },
-    "./career": {
-      "types": "./build/career.d.ts",
-      "default": "./src/career.ts"
+    "./email": {
+      "types": "./build/email.d.ts",
+      "default": "./src/email.ts"
     },
-    "./finance": {
-      "types": "./build/finance.d.ts",
-      "default": "./src/finance.ts"
+    "./storage": {
+      "types": "./build/storage.d.ts",
+      "default": "./src/storage.ts"
+    },
+    "./redis": {
+      "types": "./build/redis.d.ts",
+      "default": "./src/redis.ts"
     },
     "./brand": {
       "types": "./build/brand.d.ts",
@@ -37,6 +41,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc --watch --preserveWatchOutput",
+    "test": "vitest run src",
     "typecheck": "rm -rf .cache && tsc --noEmit",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
@@ -46,5 +51,7 @@
   "dependencies": {
     "zod": "catalog:"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
 }

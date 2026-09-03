@@ -1,9 +1,9 @@
 import { authDb } from '@hominem/db';
-import type { ApiEnv } from '@hominem/env';
 import type { Context } from 'hono';
 
 import { betterAuthServer } from '../../auth/better-auth';
 import { env } from '../../env';
+import type { ApiEnv } from '../../env.schema';
 import type { AppEnv } from '../../server';
 
 export interface AppSessionResponse {

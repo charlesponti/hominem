@@ -6,7 +6,6 @@ import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { mcp } from '@better-auth/mcp';
 import { authDb } from '@hominem/db';
-import type { ApiEnv } from '@hominem/env';
 import { logger } from '@hominem/telemetry';
 import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
@@ -15,6 +14,7 @@ import { emailOTP, jwt, multiSession, openAPI } from 'better-auth/plugins';
 import { activatePendingInvitesForUser } from '../application/collections.service';
 import { API_BRAND } from '../brand';
 import { env } from '../env';
+import type { ApiEnv } from '../env.schema';
 import { MCP_SCOPES } from '../scopes';
 
 export function getTrustedOrigins(inputEnv = env) {
@@ -71,11 +71,11 @@ type SendEmailParams = {
 
 type VerificationOtpType = 'sign-in' | 'email-verification' | 'forget-password' | string;
 
-const verificationOtpSubjectByType = {
+const verificationOtpSubjectByType: Record<VerificationOtpType, string> = {
   'sign-in': 'Your sign-in code',
   'email-verification': 'Verify your email',
   'forget-password': 'Reset your password',
-} as const satisfies Record<string, string>;
+};
 
 const OTP_LENGTH = 6;
 
@@ -132,7 +132,7 @@ async function sendEmail(
 }
 
 function getVerificationOtpSubject(type: VerificationOtpType) {
-  return (verificationOtpSubjectByType as Record<string, string>)[type] ?? 'Your verification code';
+  return verificationOtpSubjectByType[type] ?? 'Your verification code';
 }
 
 function buildVerificationOtpEmail(input: {

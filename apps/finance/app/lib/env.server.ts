@@ -1,4 +1,4 @@
 import { createServerEnv } from '@hominem/env';
-import { financeSchema } from '@hominem/env/finance';
+import { financeSchema } from './env.schema';
 
 export const serverEnv = createServerEnv(financeSchema, 'financeServer');

@@ -1,5 +1,6 @@
 const { z } = require('zod');
 const withPrivacyManifest = require('./plugins/withPrivacyManifest');
+const withSceneLifecycle = require('./plugins/withSceneLifecycle');
 
 // Keeping this schema local (instead of importing env.ts's) because Expo
 // evaluates this config during native builds, before that module is usable.
@@ -127,11 +128,12 @@ function createConfig({ config }) {
     ],
     '@sentry/react-native',
     withPrivacyManifest,
+    withSceneLifecycle,
     [
       'expo-build-properties',
       {
         ios: {
-          deploymentTarget: '26.0',
+          deploymentTarget: '26.5',
           infoPlist: {
             NSAppTransportSecurity: {
               NSAllowsArbitraryLoads: false,

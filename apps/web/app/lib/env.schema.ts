@@ -1,19 +1,12 @@
 import { z } from 'zod';
 
-import { baseSchema } from './base';
+import { runtimeSchema } from '@hominem/env/runtime';
 
 const blankAsUndefined = (value: unknown) => (value === '' ? undefined : value);
 
-export const webSchema = baseSchema.extend({
-  // Public API origin the browser talks to (hosted login redirects, Better
-  // Auth's browser client, browser RPC/file calls). See docs/authentication.md.
+export const webSchema = runtimeSchema.extend({
   VITE_PUBLIC_API_URL: z.url(),
-  // Server-only API origin for SSR session checks and server-side data
-  // calls. Required — don't fall back to VITE_PUBLIC_API_URL here, since a
-  // missing prod value should crash the app rather than route SSR through
-  // Cloudflare.
   HOMINEM_INTERNAL_API_URL: z.url(),
-  // This app's own public origin, used to build hosted-login return URLs.
   PUBLIC_APP_URL: z.url(),
   VITE_POSTHOG_PUBLIC_KEY: z.preprocess(blankAsUndefined, z.string().optional()),
   VITE_POSTHOG_HOST: z.preprocess(
@@ -29,18 +22,11 @@ export const webSchema = baseSchema.extend({
   VITE_OTEL_DEPLOYMENT_ENVIRONMENT: z.string().optional().default('development'),
   VITE_OTEL_EXPORTER_OTLP_ENDPOINT: z.preprocess(
     blankAsUndefined,
-    z
-      .union([z.literal('none'), z.url()])
-      .optional()
-      .default('none'),
+    z.union([z.literal('none'), z.url()]).optional().default('none'),
   ),
   VITE_OTEL_TRACES_SAMPLER_ARG: z.string().optional().default('1.0'),
 });
 
-export type WebEnv = z.infer<typeof webSchema>;
-
-// Browser-safe subset — only VITE_* vars actually exist in import.meta.env,
-// so client validation can't require the server-only auth URLs above.
 export const webClientSchema = webSchema.pick({
   VITE_PUBLIC_API_URL: true,
   VITE_POSTHOG_PUBLIC_KEY: true,
@@ -53,4 +39,5 @@ export const webClientSchema = webSchema.pick({
   VITE_OTEL_TRACES_SAMPLER_ARG: true,
 });
 
+export type WebEnv = z.infer<typeof webSchema>;
 export type WebClientEnv = z.infer<typeof webClientSchema>;

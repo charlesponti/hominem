@@ -5,6 +5,9 @@ set positional-arguments := true
 
 ROOT_DIR := justfile_directory()
 
+otp email:
+    pnpm --filter @hominem/api exec tsx scripts/otp.ts "{{ email }}"
+
 mod db 'just/db.just'
 mod deploy 'just/deploy.just'
 mod diagnostics 'just/diagnostics.just'

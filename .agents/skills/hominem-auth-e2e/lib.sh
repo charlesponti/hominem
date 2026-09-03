@@ -72,8 +72,8 @@ hominem_read_otp() {
 
 # Sign up or sign in as a test email over curl. The OTP is the real randomly
 # generated code: in local dev the server captures it to a same-host mailbox
-# file instead of emailing it (explicit HOMINEM_EMAIL_PROVIDER=resend
-# disables capture), and this polls that file. OTPs are never served over HTTP — there is no endpoint that returns
+# file instead of emailing it (set ENV=scripted to force capture), and this
+# polls that file. OTPs are never served over HTTP — there is no endpoint that returns
 # them, by design. Needs no inbox access and works identically for brand-new
 # or existing accounts.
 hominem_signup() {
@@ -94,7 +94,7 @@ hominem_signup() {
     [ -n "$otp" ] || sleep 0.5
   done
   if [ -z "$otp" ]; then
-    echo "signup failed for $email: no OTP captured in $(hominem_scripted_mailbox) (is local email capture active? explicit HOMINEM_EMAIL_PROVIDER=resend disables it)" >&2
+    echo "signup failed for $email: no OTP captured in $(hominem_scripted_mailbox) (is local email capture active? set ENV=scripted to force it)" >&2
     exit 1
   fi
 

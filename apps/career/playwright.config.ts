@@ -61,7 +61,7 @@ export default defineConfig({
         // mismatched secret here makes JWT-plugin requests from whichever
         // suite runs second fail with "Failed to decrypt private key".
         BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
-        HOMINEM_EMAIL_PROVIDER: 'scripted',
+        ENV: 'scripted',
         AUTH_EMAIL_OTP_EXPIRES_SECONDS: '60',
         OPENAI_API_KEY: 'test-openai-key',
         RESEND_API_KEY: 'test-resend-key',

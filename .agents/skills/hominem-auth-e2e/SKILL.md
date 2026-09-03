@@ -100,8 +100,7 @@ dev and CI the server captures outbound OTP email to a same-host JSONL
 mailbox (`~/.hominem/scripted-mailbox.jsonl` by default,
 `HOMINEM_SCRIPTED_MAILBOX` overrides) instead of sending it — scripted is
 the default outside production, the API refuses to boot scripted in
-production, and `HOMINEM_EMAIL_PROVIDER=resend` forces real sending (for
-testing delivery locally). Test helpers read that file — `hominem_read_otp <email>` / `driver.sh otp <email>` in
+production, and `ENV=scripted` forces scripted AI and email mode. Test helpers read that file — `hominem_read_otp <email>` / `driver.sh otp <email>` in
 shell, `readLatestScriptedOtp` from `@hominem/utils/scripted-mailbox` in
 TypeScript. OTPs are single-use: always request a fresh code before signing
 in (the helpers always send first).

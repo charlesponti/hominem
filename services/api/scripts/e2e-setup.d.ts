@@ -11,7 +11,7 @@
  *
  * Needs the server running with NODE_ENV != production — local dev captures
  * outbound OTP email to the mailbox by default (explicit
- * HOMINEM_EMAIL_PROVIDER=resend disables capture). OTPs are never exposed over the API; this script reads the
+ * ENV=scripted enables capture). OTPs are never exposed over the API; this script reads the
  * same-host file directly.
  */
 import 'dotenv/config';

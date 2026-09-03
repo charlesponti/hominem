@@ -1,4 +1,3 @@
-import type { ApiEnv } from '@hominem/env';
 import { LOG_MESSAGES, logger } from '@hominem/telemetry';
 import { Scalar } from '@scalar/hono-api-reference';
 import * as Sentry from '@sentry/node';
@@ -11,6 +10,7 @@ import { betterAuthServer, createBetterAuthServer } from './auth/better-auth';
 import type { AuthContext } from './auth/types';
 import { API_BRAND } from './brand';
 import { env } from './env';
+import type { ApiEnv } from './env.schema';
 import { isServiceError } from './errors';
 import { createMcpRoutes } from './mcp/routes';
 import { createAuthMiddleware } from './middleware/auth';

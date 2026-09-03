@@ -1,9 +1,11 @@
 import { createServerEnv } from '@hominem/env';
-import { baseSchema } from '@hominem/env/base';
+import { databaseSchema } from '@hominem/env/database';
+import { runtimeSchema } from '@hominem/env/runtime';
 import 'dotenv/config';
 import { z } from 'zod';
 
-const dbSchema = baseSchema.extend({
+const dbSchema = runtimeSchema.extend({
+  ...databaseSchema.shape,
   DATABASE_URL: z.url(),
 });
 

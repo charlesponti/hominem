@@ -8,7 +8,7 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     hookTimeout: 30_000,
     env: {
-      HOMINEM_EMAIL_PROVIDER: 'scripted',
+      ENV: 'scripted',
       BETTER_AUTH_SECRET: 'ci-test-better-auth-secret-32-characters',
       DATABASE_URL: TEST_DATABASE_URL,
       NODE_ENV: 'test',

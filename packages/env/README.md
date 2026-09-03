@@ -19,13 +19,13 @@ This package provides factory functions that create lazy-validated environment p
 1. **`createClientEnv()`** - Creates a client env proxy that validates on first property access
 2. **`createServerEnv()`** - Creates a server env proxy that validates on first property access
 
-Apps can import the shared schemas from this package or define their own. The package provides the validation mechanics plus the canonical base, API, and web env schemas.
+Apps define their own schemas next to their env loaders and compose the focused domain fragments exported by this package.
 
 ## Installation
 
 ```bash
 # Already included in workspace via workspace:*
-import { createClientEnv, createServerEnv, apiSchema, baseSchema, webSchema } from '@hominem/env';
+import { createClientEnv, createServerEnv } from '@hominem/env';
 ```
 
 ## Usage
@@ -204,12 +204,14 @@ const baseUrl = serverEnv.VITE_API_BASE_URL;
 ```
 packages/env/
 ├── src/
-│   ├── base.ts
-│   ├── api.ts
-│   ├── web.ts
+│   ├── runtime.ts
+│   ├── database.ts
+│   ├── ai.ts
+│   ├── email.ts
+│   ├── storage.ts
+│   ├── redis.ts
 │   ├── brand.ts
 │   └── index.ts
-├── tests/
 ├── package.json
 └── README.md
 ```
@@ -219,13 +221,12 @@ packages/env/
 **Goals:**
 
 - Single responsibility - package handles validation mechanics only
-- Apps own their schemas - no coordination needed
+- Domain fragments keep unrelated infrastructure out of app schemas
 - Lazy validation - no import-time crashes
 - Type-safe - full TypeScript support via Zod
 
 **Benefits:**
 
-- No schema conflicts between apps
-- Each app defines exactly the vars it needs
+- Each app and package composes exactly the domains it needs
 - Easy to add/remove vars without affecting others
 - Tests pass without mocking process.env

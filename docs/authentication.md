@@ -122,11 +122,21 @@ the only credential surface.
   there is nothing to misconfigure into a leak. E2E tests read the real
   generated code from the scripted email provider's same-host mailbox file
   (`~/.hominem/scripted-mailbox.jsonl` by default; see
-  `@hominem/utils/scripted-mailbox`). An explicit HOMINEM_EMAIL_PROVIDER
+  `@hominem/utils/scripted-mailbox`). `ENV=scripted`
   wins; otherwise production sends via Resend and every other NODE_ENV
   captures instead of sending. The scripted provider is refused at boot in
   production, and the mailbox sink is additionally gated on
   non-production.
+- **Getting the OTP by hand in local development:** trigger sign-in as usual
+  (web, career, finance, or the Omiro app), then run
+  `just otp <email>` — it prints the latest captured code for that address,
+  polling for up to 15s if the send hasn't landed in the mailbox yet. This
+  wraps `readLatestScriptedOtp`/`resolveScriptedMailboxPath` from
+  `@hominem/utils/scripted-mailbox` (see `services/api/scripts/otp.ts`), the
+  same helper E2E setup uses, so it respects `HOMINEM_SCRIPTED_MAILBOX` if
+  you've overridden the mailbox path. Reading the JSONL file directly
+  (`tail -1 ~/.hominem/scripted-mailbox.jsonl`) also works if you just want
+  the raw record.
 - Do not rotate `BETTER_AUTH_SECRET` casually. It signs live session cookies.
 
 ## MCP OAuth

@@ -3,35 +3,30 @@ import { serve } from '@hono/node-server';
 import { WebSocketServer } from 'ws';
 
 import { env } from './env';
+import { resolveAiProvider, resolveEmailProvider } from './provider-mode';
 import { initRuntime } from './runtime';
 import { createServer } from './server';
 
-if (env.HOMINEM_AI_PROVIDER === 'scripted') {
+const aiProvider = resolveAiProvider(env);
+if (aiProvider === 'scripted') {
   if (env.NODE_ENV === 'production') {
-    throw new Error('HOMINEM_AI_PROVIDER=scripted is not allowed in production');
+    throw new Error('Scripted providers are not allowed in production');
   }
   const { installOpenRouterMock } = await import('./testkit/openrouter.mock');
   installOpenRouterMock();
 }
 
-if (env.HOMINEM_EMAIL_PROVIDER === 'scripted') {
-  if (env.NODE_ENV === 'production') {
-    throw new Error('HOMINEM_EMAIL_PROVIDER=scripted is not allowed in production');
-  }
-}
+// Production always sends real email while other environments capture to the
+// scripted mailbox. ENV=scripted forces scripted AI and email together.
+const emailProvider = resolveEmailProvider(env);
 
-// Explicit HOMINEM_EMAIL_PROVIDER wins. Otherwise production always sends
-// real email (the Dockerfile bakes NODE_ENV=production on every deployed
-// host, including previews) while any other NODE_ENV captures to the
-// scripted mailbox instead of sending — local dev never sends real email by
-// accident. Set HOMINEM_EMAIL_PROVIDER=resend explicitly to test real
-// delivery locally.
-const emailProvider =
-  env.HOMINEM_EMAIL_PROVIDER ?? (env.NODE_ENV === 'production' ? 'resend' : 'scripted');
+if (emailProvider === 'scripted' && env.NODE_ENV === 'production') {
+  throw new Error('Scripted providers are not allowed in production');
+}
 
 logger.info(LOG_MESSAGES.EMAIL_PROVIDER, {
   provider: emailProvider,
-  source: env.HOMINEM_EMAIL_PROVIDER ? 'explicit' : 'inferred',
+  source: env.ENV === 'scripted' ? 'scripted-mode' : 'inferred',
 });
 
 if (emailProvider === 'scripted') {

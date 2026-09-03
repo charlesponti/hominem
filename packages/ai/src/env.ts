@@ -1,4 +1,4 @@
 import { createServerEnv } from '@hominem/env';
-import { baseSchema } from '@hominem/env/base';
+import { aiSchema } from '@hominem/env/ai';
 
-export const env = createServerEnv(baseSchema, 'ai');
+export const env = createServerEnv(aiSchema, 'ai');

@@ -3,6 +3,7 @@
   "globalDependencies": ["package.json", "pnpm-lock.yaml", ".env", ".env.*"],
   "globalEnv": [
     "NODE_ENV",
+    "ENV",
     "API_URL",
     "WEB_URL",
     "FINANCE_URL",
@@ -18,7 +19,6 @@
     "RESEND_API_KEY",
     "RESEND_FROM_EMAIL",
     "RESEND_FROM_NAME",
-    "HOMINEM_EMAIL_PROVIDER",
     "OPENROUTER_API_KEY",
     "CHAT_MODEL",
     "AUDIO_TTS_MODEL",

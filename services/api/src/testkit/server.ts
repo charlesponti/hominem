@@ -1,12 +1,11 @@
-import type { ApiEnv } from '@hominem/env';
-
 import { env } from '../env';
+import type { ApiEnv } from '../env.schema';
 
 export function createTestEnv(overrides: Partial<ApiEnv> = {}): ApiEnv {
   return {
     ...env,
     NODE_ENV: 'test',
-    HOMINEM_EMAIL_PROVIDER: 'scripted',
+    ENV: 'scripted',
     ...overrides,
   };
 }

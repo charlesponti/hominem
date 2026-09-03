@@ -1,7 +1,7 @@
-import type { ApiEnv } from '@hominem/env';
 import type { MiddlewareHandler } from 'hono';
 
 import { env } from '../env';
+import type { ApiEnv } from '../env.schema';
 
 const API_CONTENT_SECURITY_POLICY = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
 

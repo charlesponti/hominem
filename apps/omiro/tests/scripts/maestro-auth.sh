@@ -13,7 +13,7 @@
 # re-send: a fresh send invalidates the captured code.
 #
 # Prerequisites: local dev API (scripted capture is the default; explicit
-# HOMINEM_EMAIL_PROVIDER=resend disables it), app installed on the booted
+# ENV=scripted enables it explicitly), app installed on the booted
 # simulator. The wrapper force-resets the app to a clean signed-out state
 # first (terminate + wipe Documents/mmkv + clear keychain) so a stale
 # query cache or resume target can't strand the login on a 404'd detail
@@ -80,7 +80,7 @@ while [ -z "$otp" ] && [ "$(date +%s)" -lt "$deadline" ]; do
 done
 if [ -z "$otp" ]; then
   echo "no NEW OTP for $EMAIL in $MAILBOX after phase 1." >&2
-  echo "Local email capture may be disabled (HOMINEM_EMAIL_PROVIDER=resend), or the auth screen did not load." >&2
+  echo "Local email capture may be disabled, or the auth screen did not load." >&2
   exit 1
 fi
 

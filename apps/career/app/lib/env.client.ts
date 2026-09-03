@@ -1,5 +1,5 @@
 import { createClientEnv } from '@hominem/env';
-import { careerClientSchema } from '@hominem/env/career';
+import { careerClientSchema } from './env.schema';
 
 let cachedEnv: ReturnType<typeof createClientEnv<typeof careerClientSchema>> | null = null;
 

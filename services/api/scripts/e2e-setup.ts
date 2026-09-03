@@ -10,9 +10,8 @@
  * and E2E_USER_EMAIL.
  *
  * Needs the server running with NODE_ENV != production — local dev captures
- * outbound OTP email to the mailbox by default (explicit
- * HOMINEM_EMAIL_PROVIDER=resend disables capture). OTPs are never exposed over the API; this script reads the
- * same-host file directly.
+ * outbound OTP email to the mailbox by default (explicit ENV=scripted enables capture).
+ * OTPs are never exposed over the API; this script reads the same-host file directly.
  */
 
 import { readLatestScriptedOtp, resolveScriptedMailboxPath } from '@hominem/utils/scripted-mailbox';
@@ -64,7 +63,7 @@ async function fetchOTP(): Promise<string> {
     if (record?.otp) return record.otp;
     if (Date.now() >= deadline) {
       throw new Error(
-        `No OTP captured for ${TEST_EMAIL} in ${mailboxFile}\nIs local email capture active? Explicit HOMINEM_EMAIL_PROVIDER=resend disables it.`,
+        `No OTP captured for ${TEST_EMAIL} in ${mailboxFile}\nIs local email capture active? Set ENV=scripted to force scripted mode.`,
       );
     }
     await new Promise((resolve) => setTimeout(resolve, OTP_POLL_INTERVAL_MS));
