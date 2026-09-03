@@ -1,8 +1,13 @@
 appId: com.pontistudios.hakumi.dev
+tags:
+  - smoke
 ---
 # Creates a throwaway note from the inbox composer (self-contained, no seed
 # data assumption), deletes it via the row's long-press menu, and confirms
 # it disappears.
+#
+# The note title carries a per-run timestamp suffix so a re-run never matches
+# a previous run's leftover row.
 #
 # Delete lives behind a native long-press Alert.alert on the row
 # (InboxStreamItem.tsx handleLongPress) followed by a second confirmation
@@ -26,6 +31,10 @@ appId: com.pontistudios.hakumi.dev
 # is the same repeat/while resilience pattern startup.yaml and
 # time-composer-interactions.yaml already use for other flaky transitions.
 #
+# Alert-adjacent taps also carry retryTapIfNoChange + waitToSettleTimeoutMs:
+# taps landing while an alert is still animating in/out silently no-op, which
+# reads exactly like the "inter-command pacing" stall documented below.
+#
 # KNOWN FLAKE, same spirit as the one documented in
 # time-composer-interactions.yaml: in interactive testing this exact
 # create -> long-press -> Delete -> "Delete note" sequence intermittently
@@ -37,15 +46,18 @@ appId: com.pontistudios.hakumi.dev
 # a normal `maestro test` CLI run (not the same execution path) before
 # trusting a single failure from it as a real regression.
 - runFlow: startup.yaml
+- evalScript: ${output.noteTitle = 'Maestro delete test note ' + new Date().getTime()}
 - tapOn:
     id: inbox-composer-input
-- inputText: Maestro delete test note
+- inputText: ${output.noteTitle}
 - tapOn:
     id: composer-kind-note
 - assertVisible:
     id: composer-submit-note
 - tapOn:
     id: composer-submit-note
+    retryTapIfNoChange: true
+    waitToSettleTimeoutMs: 2000
 - assertVisible:
     id: inbox-item-note-open
     index: 0
@@ -56,18 +68,23 @@ appId: com.pontistudios.hakumi.dev
       notVisible: Delete
     times: 3
     commands:
-      - longPressOn: Maestro delete test note
+      - longPressOn: ${output.noteTitle}
       - extendedWaitUntil:
           visible: Delete
           timeout: 2000
           optional: true
 - assertVisible: Delete
-- tapOn: Delete
+- tapOn:
+    text: Delete
+    retryTapIfNoChange: true
+    waitToSettleTimeoutMs: 2000
 - extendedWaitUntil:
     visible: Delete note
     timeout: 8000
 - tapOn:
     text: '^Delete$'
-- assertNotVisible: Maestro delete test note
+    retryTapIfNoChange: true
+    waitToSettleTimeoutMs: 2000
+- assertNotVisible: ${output.noteTitle}
 - assertVisible:
     id: inbox-composer-input

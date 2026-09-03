@@ -1,0 +1,11 @@
+# Maestro workspace for the task-evidence suite (tests/flows, tests/e2e).
+# Run from apps/omiro:  maestro test --config tests/config.yaml tests/flows/
+# Subflows are helpers, never standalone flows (most have no launchApp and
+# would tap at whatever is on screen) — the negation below keeps directory
+# runs from executing them. Select subsets with --include-tags / --exclude-tags.
+appId: com.pontistudios.hakumi.dev
+flows:
+  - 'flows/**'
+  - 'e2e/**'
+  - '!subflows/**'
+testOutputDir: /tmp/omiro-maestro-tests

@@ -1,4 +1,6 @@
 appId: com.pontistudios.hakumi.dev
+tags:
+  - a11y
 ---
 # Runs the ordinary send/stream/complete path while the simulator's system
 # Reduce Motion setting is on. Must be launched via

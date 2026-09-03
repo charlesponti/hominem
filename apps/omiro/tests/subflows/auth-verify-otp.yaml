@@ -1,0 +1,48 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Phase 2 of the two-phase E2E login (see maestro-auth.sh wrapper).
+# Types the OTP captured from the scripted mailbox and completes sign-in.
+# Expects the app to already be on the OTP screen (phase 1 ran first and the
+# app was NOT relaunched since — relaunching is fine, re-sending is not: a
+# fresh send invalidates the code phase 1 captured).
+#
+# OTP arrives via `-e OTP=...` and is label-masked so the code never appears
+# in console output or test reports.
+- tapOn:
+    id: auth-otp-input-container
+- inputText:
+    text: ${OTP}
+    label: Enter the one-time code from the scripted mailbox
+- tapOn:
+    id: auth-verify-otp
+- waitForAnimationToEnd:
+    timeout: 5000
+- runFlow:
+    when:
+      visible: 'Continue without name'
+    commands:
+      - tapOn: 'Continue without name'
+      - waitForAnimationToEnd:
+          timeout: 3000
+# A stale client-side resume target can land a fresh login on a detail screen
+# instead of the inbox (observed: post-login ChatScreen with no matching
+# resource-id on its back chevron). Back out if that happened — id, then
+# text, then Inbox — then assert strictly.
+- runFlow:
+    when:
+      notVisible:
+        id: inbox-composer-input
+    commands:
+      - tapOn:
+          id: BackButton
+          optional: true
+      - tapOn:
+          text: BackButton
+          optional: true
+      - tapOn:
+          text: Inbox
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 3000
+- assertVisible:
+    id: inbox-composer-input

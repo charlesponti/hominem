@@ -1,8 +1,13 @@
 appId: com.pontistudios.hakumi.dev
+tags:
+  - smoke
 ---
 # Task 011 Omiro evidence: B-001 through B-005.
 # Run this file before the tools/recovery/action groups. Each scenario leaves a
 # screenshot behind so the visual state can be reviewed alongside API evidence.
+#
+# Message texts carry a per-run timestamp suffix (output.b002/b003) so a
+# re-run never matches a previous run's rows with assertVisible.
 
 - runFlow: ../subflows/reset-to-home.yaml
 - assertVisible:
@@ -19,20 +24,26 @@ appId: com.pontistudios.hakumi.dev
     id: 'chat-composer-input'
 - takeScreenshot: /tmp/omiro-task003-b001-direct-load
 
-# B-002: send one message and verify the response appears once.
+# B-002: send one message and verify the response appears once. The composer
+# on an existing chat can hold a draft, so it is cleared first. extendedWaitUntil
+# covers generation latency AND asserts the content (a settle-wait would pass
+# on a stuck spinner).
 - tapOn:
     id: 'chat-composer-input'
 - eraseText: 100
-- inputText: 'B002-OMIRO-NORMAL-SEND'
+- evalScript: ${output.b002 = 'B002-OMIRO-NORMAL-SEND-' + new Date().getTime()}
+- inputText: ${output.b002}
 - tapOn:
     id: 'composer-submit-message'
-- waitForAnimationToEnd:
-    timeout: 8000
-- assertVisible: 'B002-OMIRO-NORMAL-SEND'
+- extendedWaitUntil:
+    visible: ${output.b002}
+    timeout: 30000
 - takeScreenshot: /tmp/omiro-task003-b002-send-complete
 
 # B-003: create a chat through the normal new-chat entry point. Reset to the
-# inbox first so this scenario does not depend on B-002's detail route.
+# inbox first so this scenario does not depend on B-002's detail route. The
+# new-chat composer is always empty (fresh screen), so no eraseText: clearing
+# it would burn up to 100 blind backspaces on iOS for nothing.
 - runFlow: ../subflows/open-dev-home.yaml
 - openLink: 'hakumi-dev:///new-chat'
 - waitForAnimationToEnd:
@@ -41,21 +52,21 @@ appId: com.pontistudios.hakumi.dev
     id: 'new-chat-composer-input'
 - tapOn:
     id: 'new-chat-composer-input'
-- eraseText: 100
-- inputText: 'B003-OMIRO-NEW-CHAT'
-- pressKey: BACK
+- evalScript: ${output.b003 = 'B003-OMIRO-NEW-CHAT-' + new Date().getTime()}
+- inputText: ${output.b003}
+- hideKeyboard
 - tapOn:
     id: 'new-chat-submit'
-- waitForAnimationToEnd:
-    timeout: 8000
+- extendedWaitUntil:
+    visible: ${output.b003}
+    timeout: 30000
 - assertVisible:
     id: 'chat-composer-input'
-- assertVisible: 'B003-OMIRO-NEW-CHAT'
 - takeScreenshot: /tmp/omiro-task003-b003-new-chat
 
 # B-004: return from the new chat detail to the inbox, then open the chat again.
 - tapOn:
-    text: 'BackButton'
+    id: 'BackButton'
 - waitForAnimationToEnd:
     timeout: 3000
 - assertVisible:
@@ -67,20 +78,21 @@ appId: com.pontistudios.hakumi.dev
     timeout: 4000
 - assertVisible:
     id: 'chat-composer-input'
-- assertVisible: 'B003-OMIRO-NEW-CHAT'
+- assertVisible: ${output.b003}
 - takeScreenshot: /tmp/omiro-task003-b004-navigation
 
 # B-005: activate the latest assistant message, regenerate it, and verify the
 # chat remains usable. The durable generation/message duplicate check belongs in
 # the API evidence record for the chat opened by this flow.
 - tapOn:
-    text: 'Scripted response: B003-OMIRO-NEW-CHAT'
+    text: 'Scripted response: ${output.b003}'
 - waitForAnimationToEnd:
     timeout: 500
 - tapOn:
     text: 'arrow.clockwise'
-- waitForAnimationToEnd:
-    timeout: 8000
+- extendedWaitUntil:
+    visible: 'Scripted response: ${output.b003}'
+    timeout: 30000
 - assertVisible:
     id: 'chat-composer-input'
 - takeScreenshot: /tmp/omiro-task003-b005-regeneration

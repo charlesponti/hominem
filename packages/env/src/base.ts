@@ -16,7 +16,14 @@ export const baseSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_FROM_NAME: z.string().optional(),
-  HOMINEM_EMAIL_PROVIDER: z.enum(['resend', 'scripted']).default('resend'),
+  // Unset (or blank) means "infer": production sends real email, every other
+  // NODE_ENV captures to the scripted mailbox instead of sending. Explicit
+  // always wins — set resend to test real delivery locally. The inference
+  // lives in services/api/src/index.ts.
+  HOMINEM_EMAIL_PROVIDER: z.preprocess(
+    (value: unknown) => (value === '' ? undefined : value),
+    z.enum(['resend', 'scripted']).optional(),
+  ),
   R2_ENDPOINT: z.url().default('http://localhost:9000'),
   R2_BUCKET_NAME: z.string().min(1).default('storage'),
   R2_ACCESS_KEY_ID: z.string().min(1).default('minioadmin'),

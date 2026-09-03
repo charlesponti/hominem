@@ -11,7 +11,6 @@ import {
   jsonWithHeaders,
   type AuthDependencies,
 } from './shared';
-import { createTestAuthRoutes } from './test-routes';
 
 export function createAuthRoutes(dependencies: AuthDependencies) {
   const { auth } = dependencies;
@@ -56,7 +55,6 @@ export function createAuthRoutes(dependencies: AuthDependencies) {
     return jsonWithHeaders({ success: true }, 200, headers);
   });
 
-  authRoutes.route('/', createTestAuthRoutes(dependencies));
   return authRoutes;
 }
 

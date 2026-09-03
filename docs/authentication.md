@@ -118,8 +118,15 @@ the only credential surface.
 
 - Better Auth stores OTP rate-limit state in its database-backed `rateLimit`
   table so limits survive restarts and apply across API instances.
-- The test OTP store is enabled when `NODE_ENV !== 'production'`. Do not add
-  another environment-variable switch for it.
+- OTPs are never retrievable over the API — no endpoint returns them, so
+  there is nothing to misconfigure into a leak. E2E tests read the real
+  generated code from the scripted email provider's same-host mailbox file
+  (`~/.hominem/scripted-mailbox.jsonl` by default; see
+  `@hominem/utils/scripted-mailbox`). An explicit HOMINEM_EMAIL_PROVIDER
+  wins; otherwise production sends via Resend and every other NODE_ENV
+  captures instead of sending. The scripted provider is refused at boot in
+  production, and the mailbox sink is additionally gated on
+  non-production.
 - Do not rotate `BETTER_AUTH_SECRET` casually. It signs live session cookies.
 
 ## MCP OAuth

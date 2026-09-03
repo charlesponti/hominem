@@ -2,12 +2,6 @@ export function nullToUndefined(value: string | null | undefined): string | unde
   return value === null ? undefined : value;
 }
 
-export function nullArrayToUndefined(value: unknown): string[] | undefined {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string')
-    ? value
-    : undefined;
-}
-
 export function toNullableNumber(value: unknown): number | null {
   if (typeof value !== 'number' && typeof value !== 'string') {
     return null;

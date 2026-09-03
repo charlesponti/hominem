@@ -1,10 +1,4 @@
-export {
-  normalizeOtp,
-  nullArrayToUndefined,
-  nullToUndefined,
-  toNullableNumber,
-  toRequiredNumber,
-} from './coerce';
+export { normalizeOtp, nullToUndefined, toNullableNumber, toRequiredNumber } from './coerce';
 export {
   adjustDateRange,
   formatDateForInput,

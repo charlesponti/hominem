@@ -1,32 +1,16 @@
 appId: com.pontistudios.hakumi.dev
 ---
-# The API's non-production OTP provider uses 000000 for the E2E account.
-# Override E2E_USER_EMAIL with `maestro test -e E2E_USER_EMAIL=...` when needed.
-- runFlow:
-    when:
-      visible:
-        id: auth-email-input
-    commands:
-      - tapOn:
-          id: auth-email-input
-      - inputText: ${E2E_USER_EMAIL || "e2e@test.hakumi.io"}
-      - tapOn:
-          id: auth-send-otp
-      - assertVisible:
-          id: auth-otp-input-container
-      - tapOn:
-          id: auth-otp-input-container
-      - inputText: '000000'
-      - tapOn:
-          id: auth-verify-otp
-      - waitForAnimationToEnd:
-          timeout: 5000
-      - runFlow:
-          when:
-            visible: 'Continue without name'
-          commands:
-            - tapOn: 'Continue without name'
-            - waitForAnimationToEnd:
-                timeout: 3000
-      - assertVisible:
-          id: inbox-composer-input
+# Full E2E login, composed of the two phases. The OTP must be injected
+# upfront (`maestro test -e OTP=...`), which means the code has to exist
+# BEFORE this flow sends it — that only works when some earlier step already
+# triggered a send for the same email without completing it.
+#
+# Normal path: use the tests/scripts/maestro-auth.sh wrapper instead. It runs
+# phase 1 (send), reads the fresh code from the scripted mailbox, then runs
+# phase 2 (verify). OTPs are real random codes, never served over HTTP —
+# Maestro's JS sandbox has no filesystem access, so `-e` injection from a
+# shell wrapper is the only way the code enters a flow.
+#
+# No-op when the app is already authenticated.
+- runFlow: auth-send-otp.yaml
+- runFlow: auth-verify-otp.yaml

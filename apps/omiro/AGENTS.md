@@ -62,8 +62,24 @@ xcrun simctl io booted screenshot /tmp/omiro_screen.png
 **Run a Maestro flow:**
 
 ```bash
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH" && export JAVA_HOME="/opt/homebrew/opt/openjdk@17" && maestro test my_flow.yaml
+export PATH="$HOME/.maestro/bin:/opt/homebrew/opt/openjdk@17/bin:$PATH" && export JAVA_HOME="/opt/homebrew/opt/openjdk@17" && maestro test my_flow.yaml
 ```
+
+(The Maestro CLI lives at `~/.maestro/bin`, not on a default PATH.)
+
+**E2E login (logged-out app only):** OTPs are real random codes captured to
+the scripted mailbox — never hardcoded. Use the two-phase wrapper (the local
+dev API captures OTPs by default; explicit `HOMINEM_EMAIL_PROVIDER=resend`
+disables capture):
+
+```bash
+apps/omiro/tests/scripts/maestro-auth.sh [email]  # default e2e@test.hakumi.io
+```
+
+**Suite layout:** `tests/config.yaml` covers `flows/**` + `e2e/**` (never run
+`subflows/**` standalone — most have no `launchApp`); `.maestro/config.yaml`
+covers the exploratory suite minus `startup.yaml`. Run subsets with
+`maestro test --config <config> --include-tags=smoke|a11y ...`.
 
 **Maestro flow skeleton:**
 

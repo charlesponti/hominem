@@ -15,6 +15,12 @@
 # Usage: ./run-accessibility-flows.sh [device-udid-or-booted]
 set -euo pipefail
 
+# Maestro CLI + the Java 17 it needs are not on a default PATH.
+export PATH="$HOME/.maestro/bin:/opt/homebrew/opt/openjdk@17/bin:$PATH"
+export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
+export MAESTRO_CLI_NO_ANALYTICS=true
+export MAESTRO_DISABLE_UPDATE_CHECK=true
+
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 DEVICE="${1:-booted}"

@@ -1,5 +1,5 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
 import { Composer } from '~/components/composer/Composer';
@@ -12,6 +12,7 @@ import { useTasksQuery } from '~/services/tasks/use-tasks-query';
 import { inboxDayGroupKey, inboxDayGroupLabel } from './format-inbox-date';
 import { InboxStreamItem } from './InboxStreamItem';
 import type { InboxStreamItemData } from './InboxStreamItem.types';
+import { getEnteringItemIds, type StreamRow } from './stream-rows';
 
 export type StreamFilter = 'all' | 'chats' | 'notes';
 
@@ -20,10 +21,6 @@ export const streamFilterOptions: { key: StreamFilter; label: string }[] = [
   { key: 'chats', label: 'Chats' },
   { key: 'notes', label: 'Notes' },
 ];
-
-type StreamRow =
-  | { type: 'header'; key: string; label: string }
-  | { type: 'row'; key: string; item: InboxStreamItemData };
 
 function filterItems(items: InboxStreamItemData[], filter: StreamFilter): InboxStreamItemData[] {
   if (filter === 'all') {
@@ -78,14 +75,34 @@ export function StreamScreen({ filter }: StreamScreenProps) {
   const rows = useMemo(() => buildRows(filterItems(inbox.items, filter)), [inbox.items, filter]);
   const inset = useMemo(() => ({ bottom: composerInset }), [composerInset]);
 
+  // Seeded with whatever the first settled render holds (including empty),
+  // then grows with every commit -- the same gating ChatMessageList uses so
+  // historical rows never count as new.
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (inbox.isInitialLoading) {
+      return;
+    }
+    const seen = seenIdsRef.current ?? new Set<string>();
+    for (const item of inbox.items) {
+      seen.add(item.id);
+    }
+    seenIdsRef.current = seen;
+  }, [inbox.isInitialLoading, inbox.items]);
+
+  const enteringIds = useMemo(
+    () => getEnteringItemIds(rows, seenIdsRef.current ?? new Set<string>()),
+    [rows],
+  );
+
   const renderItem = useCallback<ListRenderItem<StreamRow>>(
     ({ item: row }) => {
       if (row.type === 'header') {
         return <Text style={styles.dayLabel}>{row.label}</Text>;
       }
-      return <InboxStreamItem item={row.item} />;
+      return <InboxStreamItem isNew={enteringIds.has(row.item.id)} item={row.item} />;
     },
-    [styles],
+    [enteringIds, styles],
   );
 
   return (

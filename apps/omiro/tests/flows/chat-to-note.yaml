@@ -1,4 +1,6 @@
 appId: com.pontistudios.hakumi.dev
+tags:
+  - smoke
 ---
 # Flow: Chat → Note
 # Opens a conversation, sends a message (mocked locally via the MMKV test-mode
@@ -7,6 +9,10 @@ appId: com.pontistudios.hakumi.dev
 #
 # Test mode only mocks the chat-detail send path (useSendMessage), not the
 # inbox start-chat path, so this flow starts from an existing conversation.
+#
+# Content waits are extendedWaitUntil on the expected state (covers mock
+# latency and fails on stuck spinners); plain settle-waits remain only after
+# navigation gestures. One screenshot per acceptance state.
 
 # Write the test-mode flag to MMKV and land on the inbox.
 - openLink: 'hakumi-dev:///enable-test-mode'
@@ -31,16 +37,17 @@ appId: com.pontistudios.hakumi.dev
 - takeScreenshot: /tmp/omiro_flow_2_chat_opened
 
 # Send a message through the chat composer; the mock streams 'mock AI response'.
+# The composer is NOT cleared first blindly: this opens an existing chat whose
+# composer can hold a draft.
 - tapOn:
     id: 'chat-composer-input'
 - eraseText: 100
 - inputText: 'What are the key principles of good product design?'
-- takeScreenshot: /tmp/omiro_flow_3_typed
 - tapOn:
     id: 'composer-submit-message'
-- waitForAnimationToEnd:
-    timeout: 8000
-- assertVisible: 'mock AI response'
+- extendedWaitUntil:
+    visible: 'mock AI response'
+    timeout: 30000
 - takeScreenshot: /tmp/omiro_flow_4_ai_responded
 
 # Open the conversation actions menu from the header.
@@ -49,10 +56,13 @@ appId: com.pontistudios.hakumi.dev
     timeout: 2000
 - takeScreenshot: /tmp/omiro_flow_5_menu_open
 
-# Tap "Create note" in the native menu.
+# Tap "Create note" in the native menu, then wait for the review screen itself
+# rather than a fixed pause.
 - tapOn: 'Create note'
-- waitForAnimationToEnd:
-    timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: 'classification-review-accept'
+    timeout: 15000
 - takeScreenshot: /tmp/omiro_flow_6_review_shown
 
 # Accept the classification review.

@@ -5,13 +5,16 @@ appId: com.pontistudios.hakumi.dev
 - openLink: hakumi-dev:///stream
 - waitForAnimationToEnd:
     timeout: 10000
+# BackButton is a resource-id (testID), not text: tap by id. Tapping by text
+# mis-resolves when iOS merges unfocused subtrees into one node (see
+# apps/omiro/AGENTS.md).
 - tapOn:
-    text: 'BackButton'
+    id: 'BackButton'
     optional: true
 - waitForAnimationToEnd:
     timeout: 1500
 - tapOn:
-    text: 'BackButton'
+    id: 'BackButton'
     optional: true
 - waitForAnimationToEnd:
     timeout: 1500

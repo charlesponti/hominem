@@ -1,6 +1,7 @@
 export const LOG_MESSAGES = {
   SERVER_STARTED: 'server_started',
   SERVER_SHUTDOWN: 'server_shutdown',
+  EMAIL_PROVIDER: 'email_provider',
   ROUTE_NOT_FOUND: 'route_not_found',
   FILE_PROCESS_ERROR: 'file_process_error',
   IMAGE_ANALYZE_ERROR: 'image_analyze_error',

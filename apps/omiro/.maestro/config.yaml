@@ -1,0 +1,8 @@
+# Maestro workspace for the exploratory .maestro suite.
+# Run from this directory:  maestro test .
+# startup.yaml is a helper (launch + resume-target handling), not a test.
+appId: com.pontistudios.hakumi.dev
+flows:
+  - '*.yaml'
+  - '!startup.yaml'
+testOutputDir: /tmp/omiro-maestro

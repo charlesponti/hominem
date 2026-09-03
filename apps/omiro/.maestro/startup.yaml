@@ -42,10 +42,13 @@ appId: com.pontistudios.hakumi.dev
     timeout: 5000
     optional: true
 # Both ChatScreen and the note screen show the native back
-# chevron (resource-id BackButton) only when canGoBack is true; when opened
+# chevron (accessibility label BackButton) only when canGoBack is true; when opened
 # via replace (no back stack), each renders its own "Inbox" toolbar button
-# instead with no testID. Try both so this works regardless of how the
-# screen was reached.
+# instead with no testID. Try id, then text, then Inbox so this works
+# regardless of how the screen was reached: the chevron has been observed
+# with a label but no resource-id, where an id-only tap silently no-ops.
+# Text taps are safe here — these are detail screens, not modals, so the
+# unfocused-subtree merge that makes text taps risky does not apply).
 #
 # Wrapped in `when` (not a bare optional tapOn): a one-shot optional tap can
 # fire before the screen has settled from the extendedWaitUntil above and
@@ -60,6 +63,9 @@ appId: com.pontistudios.hakumi.dev
           id: BackButton
           optional: true
       - tapOn:
+          text: BackButton
+          optional: true
+      - tapOn:
           text: Inbox
           optional: true
 - runFlow:
@@ -69,6 +75,9 @@ appId: com.pontistudios.hakumi.dev
     commands:
       - tapOn:
           id: BackButton
+          optional: true
+      - tapOn:
+          text: BackButton
           optional: true
       - tapOn:
           text: Inbox
@@ -89,6 +98,9 @@ appId: com.pontistudios.hakumi.dev
     commands:
       - tapOn:
           id: BackButton
+          optional: true
+      - tapOn:
+          text: BackButton
           optional: true
 # If we're on the Time root (nav-drawer-menu-button visible, but not yet on
 # the inbox), use the nav drawer to get to "All" -- the same menu the

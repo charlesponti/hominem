@@ -34,12 +34,11 @@ export const apiSchema = baseSchema.extend({
   // silently fall back to a hardcoded value everyone can see in the repo.
   BETTER_AUTH_SECRET: z.string().min(32),
   AUTH_COOKIE_DOMAIN: z.string().default(''),
-  // z.coerce.boolean() just does Boolean(value), so Boolean("false") is
-  // still true — any non-empty string is truthy. z.stringbool() actually
-  // parses "true"/"false" correctly.
-  AUTH_E2E_ENABLED: z.stringbool().default(false),
-  AUTH_E2E_SECRET: z.string().default(''),
-  AUTH_TEST_OTP_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+  // Where the scripted email provider appends captured OTPs as JSONL for
+  // same-host E2E helpers (see @hominem/utils/scripted-mailbox). Empty means
+  // the ~/.hominem default. Never an HTTP surface: OTPs are unreadable over
+  // the API by design.
+  HOMINEM_SCRIPTED_MAILBOX: z.string().default(''),
   AUTH_EMAIL_OTP_EXPIRES_SECONDS: z.coerce.number().int().positive().default(300),
   RESEND_API_KEY: z.string(),
   RESEND_FROM_EMAIL: z.string(),

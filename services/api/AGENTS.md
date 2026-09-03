@@ -25,7 +25,7 @@ duplicate or contradict it.
 
 - Better Auth is the sole authentication authority. Preserve its session database, signed cookies, and native client storage contract.
 - Do not add custom token or session storage when the Better Auth surface already exists.
-- The test OTP store is enabled by `NODE_ENV !== 'production'`. A duplicate env-var gate is unnecessary and harmful. When enabled, the API records OTPs in the test store and returns success without sending through Resend.
+- Email OTP delivery is scripted outside production: an explicit `HOMINEM_EMAIL_PROVIDER` wins, otherwise production sends via Resend and any other `NODE_ENV` captures outbound mail to the same-host scripted mailbox (`src/testkit/resend.mock.ts`, `@hominem/utils/scripted-mailbox`) instead of sending. Scripted boot is refused in production and the mailbox sink is additionally gated on non-production. OTPs are never retrievable over HTTP — E2E helpers read the mailbox file. Set `HOMINEM_EMAIL_PROVIDER=resend` explicitly to test real delivery locally.
 - A `200` response from the OTP request endpoint does not prove delivery. Check the email provider path without logging OTPs, tokens, cookies, or credentials.
 - Never rotate `BETTER_AUTH_SECRET` casually. Better Auth signs session cookies with it; changing it can invalidate every stored client session even when the database session rows still exist.
-- When investigating a production auth incident, check the API deployment status, `/api/status`, auth HTTP status patterns, the presence of the OTP flag, and aggregate session counts/expiry through an approved Railway database tunnel. Do not retrieve session tokens or user records.
+- When investigating a production auth incident, check the API deployment status, `/api/status`, auth HTTP status patterns, the active email provider (logged at boot), and aggregate session counts/expiry through an approved Railway database tunnel. Do not retrieve session tokens or user records.

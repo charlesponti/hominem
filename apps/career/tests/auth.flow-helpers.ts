@@ -1,15 +1,9 @@
+import { readLatestScriptedOtp, resolveScriptedMailboxPath } from '@hominem/utils/scripted-mailbox';
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-const AUTH_API_BASE_URL = 'http://localhost:4040';
-const AUTH_TEST_OTP_URL = `${AUTH_API_BASE_URL}/api/auth/test/otp/latest`;
-const AUTH_E2E_SECRET = 'otp-secret';
 const OTP_FETCH_TIMEOUT_MS = 15_000;
 const OTP_FETCH_RETRY_DELAY_MS = 500;
-
-interface OtpResponse {
-  otp: string;
-}
 
 export function createE2eEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}@hominem.test`;
@@ -44,24 +38,24 @@ export async function startEmailOtpFlow(page: Page, email: string) {
 }
 
 async function fetchLatestSignInOtp(email: string) {
+  // OTPs are never exposed over the API: the scripted provider appends them
+  // to a same-host mailbox file, which this polls — the OTP send runs as a
+  // server background task, so the capture lands after the request responds.
+  const mailboxFile = resolveScriptedMailboxPath();
   const deadline = Date.now() + OTP_FETCH_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
-    const response = await fetch(
-      `${AUTH_TEST_OTP_URL}?email=${encodeURIComponent(email)}&type=sign-in`,
-      { headers: { 'x-e2e-auth-secret': AUTH_E2E_SECRET } },
-    );
+    const record = readLatestScriptedOtp(mailboxFile, email);
 
-    if (response.ok) {
-      const payload = (await response.json()) as OtpResponse;
-      expect(payload.otp.length).toBeGreaterThan(3);
-      return payload.otp;
+    if (record?.otp) {
+      expect(record.otp.length).toBeGreaterThan(3);
+      return record.otp;
     }
 
     await new Promise((resolve) => setTimeout(resolve, OTP_FETCH_RETRY_DELAY_MS));
   }
 
-  throw new Error(`Timed out waiting for sign-in OTP for ${email}`);
+  throw new Error(`Timed out waiting for sign-in OTP for ${email} in ${mailboxFile}`);
 }
 
 /** Fills the six-digit OTP step and submits it, without asserting the outcome. */

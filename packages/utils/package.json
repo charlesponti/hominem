@@ -34,6 +34,10 @@
       "types": "./build/numbers.d.ts",
       "default": "./src/numbers.ts"
     },
+    "./scripted-mailbox": {
+      "types": "./build/scripted-mailbox.d.ts",
+      "default": "./src/scripted-mailbox.ts"
+    },
     "./coerce": {
       "types": "./build/coerce.d.ts",
       "default": "./src/coerce.ts"
@@ -45,7 +49,8 @@
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
     "lint": "oxlint src",
-    "lint:fix": "oxlint src --fix"
+    "lint:fix": "oxlint src --fix",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {},
   "devDependencies": {}

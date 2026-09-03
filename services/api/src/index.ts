@@ -18,8 +18,26 @@ if (env.HOMINEM_EMAIL_PROVIDER === 'scripted') {
   if (env.NODE_ENV === 'production') {
     throw new Error('HOMINEM_EMAIL_PROVIDER=scripted is not allowed in production');
   }
+}
+
+// Explicit HOMINEM_EMAIL_PROVIDER wins. Otherwise production always sends
+// real email (the Dockerfile bakes NODE_ENV=production on every deployed
+// host, including previews) while any other NODE_ENV captures to the
+// scripted mailbox instead of sending — local dev never sends real email by
+// accident. Set HOMINEM_EMAIL_PROVIDER=resend explicitly to test real
+// delivery locally.
+const emailProvider =
+  env.HOMINEM_EMAIL_PROVIDER ?? (env.NODE_ENV === 'production' ? 'resend' : 'scripted');
+
+logger.info(LOG_MESSAGES.EMAIL_PROVIDER, {
+  provider: emailProvider,
+  source: env.HOMINEM_EMAIL_PROVIDER ? 'explicit' : 'inferred',
+});
+
+if (emailProvider === 'scripted') {
   const { installResendMock } = await import('./testkit/resend.mock');
-  installResendMock();
+  const { resolveScriptedMailboxPath } = await import('@hominem/utils/scripted-mailbox');
+  installResendMock({ mailboxFile: resolveScriptedMailboxPath(env.HOMINEM_SCRIPTED_MAILBOX) });
 }
 
 const app = createServer();

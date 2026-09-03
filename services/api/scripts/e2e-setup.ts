@@ -5,21 +5,25 @@
  * Usage: pnpm e2e:setup
  *
  * Sends an OTP to e2e@test.hakumi.io (creating the user if needed), reads the
- * real OTP back from the server's scripted-email test route, signs in with
- * it, then prints export statements for E2E_SESSION_COOKIE, E2E_USER_ID, and
- * E2E_USER_EMAIL.
+ * real OTP back from the scripted provider's local mailbox file, signs in
+ * with it, then prints export statements for E2E_SESSION_COOKIE, E2E_USER_ID,
+ * and E2E_USER_EMAIL.
  *
- * Needs the server running with NODE_ENV != production,
- * HOMINEM_EMAIL_PROVIDER=scripted, and AUTH_E2E_ENABLED=true — that's what
- * exposes GET /api/auth/test/otp/latest.
+ * Needs the server running with NODE_ENV != production — local dev captures
+ * outbound OTP email to the mailbox by default (explicit
+ * HOMINEM_EMAIL_PROVIDER=resend disables capture). OTPs are never exposed over the API; this script reads the
+ * same-host file directly.
  */
 
+import { readLatestScriptedOtp, resolveScriptedMailboxPath } from '@hominem/utils/scripted-mailbox';
 import 'dotenv/config';
+import z from 'zod';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:4040').replace(/\/$/, '');
 const ORIGIN = process.env.E2E_ORIGIN ?? process.env.WEB_URL ?? 'http://localhost:4445';
 const TEST_EMAIL = 'e2e@test.hakumi.io';
-const AUTH_E2E_SECRET = process.env.AUTH_E2E_SECRET ?? '';
+const OTP_POLL_TIMEOUT_MS = 15_000;
+const OTP_POLL_INTERVAL_MS = 500;
 
 function die(message: string): never {
   console.error(`\n✗ ${message}`);
@@ -51,16 +55,20 @@ async function sendOTP(): Promise<void> {
 }
 
 async function fetchOTP(): Promise<string> {
-  const url = `${API_URL}/api/auth/test/otp/latest?email=${encodeURIComponent(TEST_EMAIL)}&type=sign-in`;
-  const res = await fetch(url, { headers: { 'x-e2e-auth-secret': AUTH_E2E_SECRET } });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `HTTP ${res.status}: ${body}\nIs the server running with HOMINEM_EMAIL_PROVIDER=scripted and AUTH_E2E_ENABLED=true?`,
-    );
+  // The OTP send runs as a server background task, so the capture lands
+  // after the send request already responded — poll the mailbox.
+  const mailboxFile = resolveScriptedMailboxPath();
+  const deadline = Date.now() + OTP_POLL_TIMEOUT_MS;
+  for (;;) {
+    const record = readLatestScriptedOtp(mailboxFile, TEST_EMAIL);
+    if (record?.otp) return record.otp;
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `No OTP captured for ${TEST_EMAIL} in ${mailboxFile}\nIs local email capture active? Explicit HOMINEM_EMAIL_PROVIDER=resend disables it.`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, OTP_POLL_INTERVAL_MS));
   }
-  const body = (await res.json()) as { otp: string };
-  return body.otp;
 }
 
 interface SignInResult {
@@ -90,9 +98,23 @@ async function signIn(otp: string): Promise<SignInResult> {
   const sessionCookie = setCookie.split(';')[0]?.trim() ?? '';
   if (!sessionCookie) throw new Error('Could not parse session cookie value');
 
-  const body = (await res.json()) as {
-    user?: { id: string; email: string; name?: string | null };
-  };
+  const json = await res.json();
+  const body = z
+    .object({
+      user: z
+        .object({
+          id: z.string(),
+          email: z.string(),
+          name: z.string().nullable().optional(),
+        })
+        .optional(),
+    })
+    .parse(json);
+
+  if (!body.user) {
+    throw new Error('Sign-in response missing user object');
+  }
+
   const user = body.user;
   if (!user?.id || !user?.email) {
     throw new Error('Sign-in response missing user data');
@@ -114,7 +136,7 @@ async function main() {
     const otp = await step('Reading OTP', fetchOTP);
     result = await step('Signing in', () => signIn(otp));
   } catch (err) {
-    die((err as Error).message);
+    die(err instanceof Error ? err.message : 'Unknown error');
   }
 
   const { sessionCookie, user } = result!;

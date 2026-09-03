@@ -1,0 +1,21 @@
+appId: com.pontistudios.hakumi.dev
+---
+# Phase 1 of the two-phase E2E login (see maestro-auth.sh wrapper).
+# Enters the email and requests an OTP, landing on the OTP screen. Does NOT
+# type the code: the OTP is generated server-side on send, so the wrapper
+# reads it from the scripted mailbox only after this flow completes, then
+# runs auth-verify-otp.yaml with it injected via `-e OTP=...`.
+#
+# No-op when the app is already authenticated (auth screen not visible).
+- runFlow:
+    when:
+      visible:
+        id: auth-email-input
+    commands:
+      - tapOn:
+          id: auth-email-input
+      - inputText: ${E2E_USER_EMAIL}
+      - tapOn:
+          id: auth-send-otp
+      - assertVisible:
+          id: auth-otp-input-container

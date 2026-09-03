@@ -1,4 +1,6 @@
 appId: com.pontistudios.hakumi.dev
+tags:
+  - a11y
 ---
 # Runs the ordinary send/stream/complete path at a large accessibility text
 # size. Must be launched via scripts/run-accessibility-flows.sh (or an
