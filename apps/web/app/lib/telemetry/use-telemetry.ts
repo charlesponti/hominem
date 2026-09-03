@@ -15,16 +15,16 @@ export function useTelemetry() {
 
     if (typeof window === 'undefined') return;
 
-    const clientEnv = getClientEnv();
-
-    if (
-      clientEnv.VITE_OTEL_EXPORTER_OTLP_ENDPOINT === 'none' ||
-      clientEnv.VITE_OTEL_DISABLED === 'true'
-    ) {
-      return;
-    }
-
     try {
+      const clientEnv = getClientEnv();
+
+      if (
+        clientEnv.VITE_OTEL_EXPORTER_OTLP_ENDPOINT === 'none' ||
+        clientEnv.VITE_OTEL_DISABLED === 'true'
+      ) {
+        return;
+      }
+
       const telemetry = initTelemetry({
         serviceName: clientEnv.VITE_OTEL_SERVICE_NAME,
         serviceVersion: clientEnv.VITE_OTEL_SERVICE_VERSION,
