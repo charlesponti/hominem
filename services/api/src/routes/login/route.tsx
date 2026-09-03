@@ -13,6 +13,7 @@ import {
   loginUrl,
   otpSchema,
   resolveConsentQuery,
+  resolvePostAuthResume,
   resolveResume,
 } from './helpers';
 import { AuthErrorPage, ConsentPage, LoginPage, LogoutPage } from './pages';
@@ -63,6 +64,7 @@ function copySetCookieHeaders(headers: Headers) {
 export function createLoginRoutes(dependencies: AuthDependencies) {
   const { env: inputEnv, auth } = dependencies;
   const resolveResumeWithEnv = (query: string) => resolveResume(query, inputEnv);
+  const resolvePostAuthResumeWithEnv = (query: string) => resolvePostAuthResume(query, inputEnv);
   const loginUrlWithEnv = (value: Parameters<typeof loginUrl>[0]) => loginUrl(value, inputEnv);
 
   const loginRoutes = new Hono()
@@ -230,8 +232,9 @@ export function createLoginRoutes(dependencies: AuthDependencies) {
           }),
           303,
         );
+      const postAuthResume = resolvePostAuthResumeWithEnv(resumeQuery) ?? resume;
       const headers = new Headers(response.headers);
-      headers.set('location', resume.url);
+      headers.set('location', postAuthResume.url);
       return new Response(null, { headers, status: 303 });
     });
 

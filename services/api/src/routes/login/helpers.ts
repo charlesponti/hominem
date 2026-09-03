@@ -31,6 +31,38 @@ export function resolveResume(query: string, inputEnv = env): Resume | null {
   return url ? { mode: 'oauth', url } : null;
 }
 
+// The OAuth authorize endpoint (`@better-auth/oauth-provider`) unconditionally
+// bounces back to `loginPage` whenever the original request carried
+// `prompt=login`/`prompt=create` or an unsatisfiable `max_age` (0 is defined
+// by the OIDC spec to never be satisfied) — it re-checks those raw query
+// params on every hit, with no session-freshness exemption on this direct
+// entry point (that exemption only lives inside the plugin's own
+// `/oauth2/consent` and `/oauth2/continue` endpoints, which this app's OTP
+// login form never calls). Since we just authenticated the user, those
+// constraints are satisfied; strip them so resuming into `/oauth2/authorize`
+// doesn't immediately redirect back to `/login` and loop forever.
+function clearSatisfiedLoginConstraints(url: string): string {
+  const parsed = new URL(url);
+  const remainingPrompts = parsed.searchParams
+    .get('prompt')
+    ?.split(' ')
+    .filter((prompt) => prompt !== 'login' && prompt !== 'create');
+  if (remainingPrompts?.length) parsed.searchParams.set('prompt', remainingPrompts.join(' '));
+  else parsed.searchParams.delete('prompt');
+  parsed.searchParams.delete('max_age');
+  return parsed.toString();
+}
+
+// Use after a successful sign-in, instead of resolveResume, to build the
+// redirect target: an 'oauth' resume needs the just-satisfied login
+// constraints cleared first (see clearSatisfiedLoginConstraints); an 'app'
+// resume points at another origin entirely and carries no such params.
+export function resolvePostAuthResume(query: string, inputEnv = env): Resume | null {
+  const resume = resolveResume(query, inputEnv);
+  if (!resume || resume.mode !== 'oauth') return resume;
+  return { mode: 'oauth', url: clearSatisfiedLoginConstraints(resume.url) };
+}
+
 export function loginUrl(
   input: {
     email?: string;
