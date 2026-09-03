@@ -217,7 +217,7 @@ describe('consumeSseXhr', () => {
   it('normalizes non-Error event handler failures', async () => {
     vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
     const { promise, xhr } = await startStream(() => {
-      throw 'handler failed';
+      throw new Error('handler failed');
     });
 
     xhr.finish(200, 'data: {"type":"chunk"}\n\n');

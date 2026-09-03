@@ -44,10 +44,22 @@ export type ScriptedProvider = {
   readonly usage: readonly (AIUsageMetrics | null)[];
 };
 
+const DEFAULT_TEST_USAGE: AIUsageMetrics = {
+  provider: 'openrouter',
+  model: 'scripted-model',
+  promptTokens: 1,
+  completionTokens: 1,
+  totalTokens: 2,
+  reportedTotalTokens: 2,
+  costUsd: 0,
+  cachedPromptTokens: null,
+  reasoningTokens: null,
+};
+
 export function scriptedProvider(
   turns: readonly ScriptedProviderTurn[],
   plan: ChatToolPlan = { capabilities: [], requiresLookup: false, tools: [], usage: null },
-  usage: readonly (AIUsageMetrics | null)[] = [],
+  usage: readonly (AIUsageMetrics | null)[] = turns.map(() => DEFAULT_TEST_USAGE),
 ): ScriptedProvider {
   return {
     turns,

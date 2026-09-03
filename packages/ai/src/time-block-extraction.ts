@@ -84,7 +84,8 @@ function nextWeekdayDate(referenceDate: string, timezone: string | undefined, we
   if (!year || !month || !day) return null;
 
   const referenceDay = new Date(Date.UTC(year, month - 1, day));
-  const targetDay = WEEKDAYS.indexOf(weekday as (typeof WEEKDAYS)[number]);
+  const targetDay = WEEKDAYS.findIndex((day) => day === weekday);
+  if (targetDay === -1) return null;
   const delta = (targetDay - referenceDay.getUTCDay() + 7) % 7 || 7;
   const resolved = new Date(referenceDay.getTime() + delta * 24 * 60 * 60 * 1000);
   return resolved.toISOString().slice(0, 10);

@@ -41,7 +41,12 @@ export function ChatEntryScreen() {
     return (
       <View style={styles.container} testID="chat-entry-error">
         <EmptyState
-          action={{ label: 'Retry', onPress: () => void latestChat.refetch() }}
+          action={{
+            label: 'Retry',
+            onPress: () => {
+              void latestChat.refetch();
+            },
+          }}
           description="Your chats could not be loaded."
           sfSymbol="arrow.clockwise.circle"
           title="Chats unavailable"

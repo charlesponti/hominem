@@ -57,16 +57,18 @@ export function getAIUsageFailureDetails(error: unknown): AIUsageFailureDetails 
     return { errorCode: null, errorStatus: null };
   }
 
-  const candidate = error as { code?: unknown; status?: unknown; statusCode?: unknown };
+  const code = Reflect.get(error, 'code');
+  const statusValue = Reflect.get(error, 'status');
+  const statusCodeValue = Reflect.get(error, 'statusCode');
   const status =
-    typeof candidate.status === 'number'
-      ? candidate.status
-      : typeof candidate.statusCode === 'number'
-        ? candidate.statusCode
+    typeof statusValue === 'number'
+      ? statusValue
+      : typeof statusCodeValue === 'number'
+        ? statusCodeValue
         : null;
 
   return {
-    errorCode: sanitizeErrorCode(candidate.code),
+    errorCode: sanitizeErrorCode(code),
     errorStatus:
       status !== null && Number.isInteger(status) && status >= 100 && status <= 599 ? status : null,
   };

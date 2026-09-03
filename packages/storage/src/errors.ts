@@ -1,15 +1,21 @@
-export const STORAGE_ERROR_CODES = [
+export type StorageErrorCode =
+  | 'storage.config.missing'
+  | 'storage.credentials.invalid'
+  | 'storage.bucket.access_denied'
+  | 'storage.bucket.missing'
+  | 'storage.network.unreachable'
+  | 'storage.bucket.access_unknown';
+
+export const STORAGE_ERROR_CODES: readonly StorageErrorCode[] = [
   'storage.config.missing',
   'storage.credentials.invalid',
   'storage.bucket.access_denied',
   'storage.bucket.missing',
   'storage.network.unreachable',
   'storage.bucket.access_unknown',
-] as const;
+];
 
-export type StorageErrorCode = (typeof STORAGE_ERROR_CODES)[number];
-
-const STORAGE_ERROR_CODE_SET: ReadonlySet<StorageErrorCode> = new Set(STORAGE_ERROR_CODES);
+const STORAGE_ERROR_CODE_SET: ReadonlySet<string> = new Set(STORAGE_ERROR_CODES);
 
 export class StorageServiceError extends Error {
   public readonly code: StorageErrorCode;
@@ -33,15 +39,10 @@ export function isStorageServiceError(value: unknown): value is StorageServiceEr
     return false;
   }
 
-  const candidate = value as {
-    code?: string;
-    message?: string;
-    details?: Record<string, unknown> | undefined;
-  };
+  const code = Reflect.get(value, 'code');
+  const message = Reflect.get(value, 'message');
 
   return (
-    typeof candidate.code === 'string' &&
-    STORAGE_ERROR_CODE_SET.has(candidate.code as StorageErrorCode) &&
-    typeof candidate.message === 'string'
+    typeof code === 'string' && STORAGE_ERROR_CODE_SET.has(code) && typeof message === 'string'
   );
 }

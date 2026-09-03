@@ -100,7 +100,9 @@ function Settings() {
           setSaveError(null);
           setSaveStatus('idle');
         }}
-        onSavePress={() => void onSavePress()}
+        onSavePress={() => {
+          void onSavePress();
+        }}
         saveError={saveError}
         saveStatus={saveStatus}
       />

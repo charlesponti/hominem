@@ -400,7 +400,9 @@ export function TimeBlockDetail({
                 <Button
                   label="Save changes"
                   loading={saving}
-                  onPress={() => void saveChanges()}
+                  onPress={() => {
+                    void saveChanges();
+                  }}
                   style={{ borderRadius: 999 }}
                   testID="time-block-save"
                 />

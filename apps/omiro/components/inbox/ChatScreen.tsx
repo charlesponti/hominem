@@ -160,14 +160,21 @@ export function ChatScreen({ id }: { id: string }) {
     onOpenSettings: () => setShowChatSettings(true),
     onOpenSources: () => setShowChatSources(true),
     onToggleDebug: handleToggleDebug,
-    onTransform: (type) => void extraction.handleTransform(type),
+    onTransform: (type) => {
+      void extraction.handleTransform(type);
+    },
     showDebug,
   });
 
   const emptyState = <EmptyState sfSymbol="bubble.left" title={t.chat.emptyState.title} />;
   const errorState = (
     <EmptyState
-      action={{ label: t.chat.loadErrorRetry, onPress: () => void refetchMessages() }}
+      action={{
+        label: t.chat.loadErrorRetry,
+        onPress: () => {
+          void refetchMessages();
+        },
+      }}
       sfSymbol="arrow.clockwise.circle"
       title={t.chat.loadErrorTitle}
     />

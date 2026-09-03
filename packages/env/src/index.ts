@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 type EnvSource = Record<string, string | undefined>;
 
+function isEnvSource(value: unknown): value is EnvSource {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Object.values(value).every((item) => typeof item === 'string' || item === undefined)
+  );
+}
+
 export class EnvValidationError extends Error {
   constructor(
     message: string,
@@ -40,21 +48,24 @@ export function createClientEnv<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
   context = 'clientEnv',
 ): z.infer<T> {
-  if (typeof (globalThis as { window?: unknown }).window === 'undefined') {
+  if (typeof Reflect.get(globalThis, 'window') === 'undefined') {
     throw new EnvValidationError(
       'createClientEnv can only be used in browser context. Use createServerEnv for server-side code.',
       context,
     );
   }
 
-  return parseEnv(schema, (import.meta as { env?: EnvSource }).env ?? {}, context);
+  const source = Reflect.get(import.meta, 'env');
+  return parseEnv(schema, isEnvSource(source) ? source : {}, context);
 }
 
 export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
   context = 'serverEnv',
 ): z.infer<T> {
-  const proc = (globalThis as { process?: { env?: EnvSource } }).process;
+  const proc = Reflect.get(globalThis, 'process');
+  const candidateSource = proc && typeof proc === 'object' ? Reflect.get(proc, 'env') : undefined;
+  const source = isEnvSource(candidateSource) ? candidateSource : {};
 
   if (typeof proc === 'undefined') {
     throw new EnvValidationError(
@@ -63,7 +74,7 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
     );
   }
 
-  return parseEnv(schema, proc.env ?? {}, context);
+  return parseEnv(schema, source, context);
 }
 
 export { apiSchema } from './api';

@@ -169,8 +169,12 @@ function ComposerContent(props: ComposerProps) {
           >
             <VoiceRecordingPanel
               startedAt={controller.voice.recordingStartedAt}
-              onCancel={() => void controller.voice.cancelVoiceRecording()}
-              onDone={() => void controller.voice.handleVoicePress()}
+              onCancel={() => {
+                void controller.voice.cancelVoiceRecording();
+              }}
+              onDone={() => {
+                void controller.voice.handleVoicePress();
+              }}
               phase={isRecording ? 'recording' : 'sending'}
             />
           </Animated.View>

@@ -193,7 +193,9 @@ function AuthScreen() {
                       <Button
                         testID="auth-send-otp"
                         label={t.auth.emailEntry.submitButton}
-                        onPress={() => void handleSendCode()}
+                        onPress={() => {
+                          void handleSendCode();
+                        }}
                         disabled={isSubmitting}
                         variant="primary"
                       />

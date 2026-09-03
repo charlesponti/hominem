@@ -11,7 +11,10 @@ vi.mock('./speech-player', () => ({
 
 import { ChatMessage } from './chat-message';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function message(overrides: Partial<ChatMessageView> = {}): ChatMessageView {
   return {
@@ -196,6 +199,7 @@ describe('ChatMessage', () => {
 
   it('uses the download fallback when native share is unavailable', async () => {
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
       value: vi.fn().mockReturnValue('blob:message'),

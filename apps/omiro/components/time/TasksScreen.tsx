@@ -58,7 +58,14 @@ export function TasksScreen() {
             <Text style={styles.emptyStateText}>Every open task has a time or deadline.</Text>
           ) : null
         }
-        refreshControl=<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()} />
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={() => {
+              void refetch();
+            }}
+          />
+        }
         renderItem={TaskRow}
         testID="unscheduled-task-list"
       />

@@ -13,7 +13,8 @@ export const JOB_EXPIRATION_TIME = 60 * 60; // 1 hour
 export async function getJobStatus<T>(jobId: string): Promise<T | null> {
   try {
     const job = await redis.get(`${IMPORT_JOB_PREFIX}${jobId}`);
-    return job ? (JSON.parse(job) as T) : null;
+    const parsed: T | null = job ? JSON.parse(job) : null;
+    return parsed;
   } catch (error) {
     logger.error(`Failed to get job status for ${jobId}:`, { error });
     return null;
@@ -118,7 +119,7 @@ export async function getPreflight(
 ): Promise<import('./types').ImportPreflight | null> {
   const value = await redis.get(`${IMPORT_PREFLIGHT_PREFIX}${preflightId}`);
   if (!value) return null;
-  const preflight = JSON.parse(value) as import('./types').ImportPreflight;
+  const preflight: import('./types').ImportPreflight = JSON.parse(value);
   return preflight.userId === userId ? preflight : null;
 }
 

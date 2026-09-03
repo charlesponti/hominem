@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 type JsonSchemaObject = Record<string, unknown>;
 
+function isJsonSchemaObject(value: unknown): value is JsonSchemaObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
 /**
  * OpenAI-style strict structured outputs require every property to be listed in
  * `required` (optional fields become nullable instead of omitted) and
@@ -14,7 +22,11 @@ function makeStructuredOutputCompatible(
   const result: JsonSchemaObject = { ...schema };
 
   if (result.type === 'object' && result.properties) {
-    const properties = { ...(result.properties as Record<string, JsonSchemaObject>) };
+    const properties = Object.fromEntries(
+      Object.entries(result.properties).filter((entry): entry is [string, JsonSchemaObject] =>
+        isJsonSchemaObject(entry[1]),
+      ),
+    );
     const allPropertyNames = Object.keys(properties);
 
     for (const propName of allPropertyNames) {
@@ -25,7 +37,7 @@ function makeStructuredOutputCompatible(
       if (prop.type === 'object' && prop.properties) {
         const transformed = makeStructuredOutputCompatible(
           prop,
-          (prop.required as string[] | undefined) ?? [],
+          isStringArray(prop.required) ? prop.required : [],
         );
         properties[propName] = wasOptional
           ? { ...transformed, type: ['object', 'null'] }
@@ -36,8 +48,8 @@ function makeStructuredOutputCompatible(
           ...prop,
           items: items
             ? makeStructuredOutputCompatible(
-                items as JsonSchemaObject,
-                ((items as JsonSchemaObject).required as string[] | undefined) ?? [],
+                items,
+                isJsonSchemaObject(items) && isStringArray(items.required) ? items.required : [],
               )
             : prop.items,
         };
@@ -62,8 +74,8 @@ function makeStructuredOutputCompatible(
     const items = Array.isArray(result.items) ? result.items[0] : result.items;
     if (items) {
       result.items = makeStructuredOutputCompatible(
-        items as JsonSchemaObject,
-        ((items as JsonSchemaObject).required as string[] | undefined) ?? [],
+        items,
+        isJsonSchemaObject(items) && isStringArray(items.required) ? items.required : [],
       );
     }
   }
@@ -84,6 +96,6 @@ export function convertSchemaToJsonSchema(
 
   return makeStructuredOutputCompatible(
     jsonSchema,
-    (jsonSchema.required as string[] | undefined) ?? [],
+    isStringArray(jsonSchema.required) ? jsonSchema.required : [],
   );
 }

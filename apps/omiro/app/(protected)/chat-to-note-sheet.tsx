@@ -234,7 +234,9 @@ export default function ChatToNoteSheetScreen() {
                 icon="checkmark"
                 disabled={createNote.isPending}
                 testID="note-draft-accept"
-                onPress={() => void handleAccept()}
+                onPress={() => {
+                  void handleAccept();
+                }}
               />
             </View>
           ) : null}

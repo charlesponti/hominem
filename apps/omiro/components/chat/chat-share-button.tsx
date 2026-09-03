@@ -14,5 +14,12 @@ export function ChatShareButton({ message }: { message: ChatMessageItem }) {
     return null;
   }
 
-  return <ActionIconButton icon="square.and.arrow.up" onPress={() => void shareMessage(message)} />;
+  return (
+    <ActionIconButton
+      icon="square.and.arrow.up"
+      onPress={() => {
+        void shareMessage(message);
+      }}
+    />
+  );
 }

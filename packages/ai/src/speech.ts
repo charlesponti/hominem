@@ -19,14 +19,6 @@ type SynthesizeSpeechResult = {
   generationId: string | null;
 };
 
-type SpeechRequestInspection = {
-  response?: Response;
-};
-
-type SpeechRequestPromise = Promise<ReadableStream<Uint8Array>> & {
-  $inspect: () => Promise<[ReadableStream<Uint8Array>, SpeechRequestInspection]>;
-};
-
 export type SynthesizeSpeechStreamResult = {
   stream: ReadableStream<Uint8Array>;
   mimeType: string;
@@ -136,11 +128,12 @@ export async function synthesizeSpeechStream(
         },
       },
       { timeoutMs: SPEECH_REQUEST_TIMEOUT_MS },
-    ) as SpeechRequestPromise;
+    );
     stream = await request;
 
-    if (!generationId && typeof request.$inspect === 'function') {
-      const [, call] = await request.$inspect();
+    const inspect = Reflect.get(request, '$inspect');
+    if (!generationId && typeof inspect === 'function') {
+      const [, call] = await inspect.call(request);
       generationId = call.response?.headers.get('X-Generation-Id') ?? null;
     }
 

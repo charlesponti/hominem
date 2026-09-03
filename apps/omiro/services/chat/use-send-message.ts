@@ -177,10 +177,6 @@ export function useSendMessage({ chatId }: { chatId: string }) {
             triggerAssistantCompletionHaptic();
             void queryClient.invalidateQueries({ queryKey: inboxKeys.pages() });
             void invalidateChatQueries(queryClient, chatId);
-            return;
-          }
-          if ('payload' in event && event.type === 'generation.cancelled') {
-            return;
           }
         },
       });

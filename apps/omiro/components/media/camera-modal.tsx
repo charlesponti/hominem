@@ -194,7 +194,9 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
               </Pressable>
 
               <Pressable
-                onPress={() => void handleCapture()}
+                onPress={() => {
+                  void handleCapture();
+                }}
                 disabled={isTakingPhoto}
                 style={[styles.captureButton, isTakingPhoto && styles.captureButtonDisabled]}
                 accessibilityLabel={t.camera.takePhotoA11y}
@@ -218,7 +220,12 @@ export function CameraModal({ visible, onCapture, onClose }: CameraModalProps) {
                 ? t.camera.permission.message
                 : t.camera.permission.deniedMessage}
             </Text>
-            <Pressable onPress={() => void handleRequestPermissions()} style={styles.grantButton}>
+            <Pressable
+              onPress={() => {
+                void handleRequestPermissions();
+              }}
+              style={styles.grantButton}
+            >
               <Text style={styles.grantButtonText}>
                 {canRequestPermission
                   ? t.camera.permission.grant

@@ -318,6 +318,7 @@ describe('mcp server transport', () => {
   });
 
   it('does not return internal tool errors to the client', async () => {
+    const warningSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     registerTool(
       {
         name: 'failing_tool',
@@ -346,8 +347,12 @@ describe('mcp server transport', () => {
         { type: 'text', text: 'Unable to complete the MCP tool request.' },
       ]);
       expect(JSON.stringify(result)).not.toContain('secret database detail');
+      expect(warningSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[mcp] tool invocation failed'),
+      );
     } finally {
       await client.close();
+      warningSpy.mockRestore();
     }
   });
 

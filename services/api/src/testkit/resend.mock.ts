@@ -21,6 +21,19 @@ function extractOtp(text: string): string | null {
   return text.match(/verification code is: (\d{6})/i)?.[1] ?? null;
 }
 
+function isResendEmailBody(
+  value: unknown,
+): value is { to: string | string[]; subject: string; text: string } {
+  if (!value || typeof value !== 'object') return false;
+  const to = Reflect.get(value, 'to');
+  return (
+    (typeof to === 'string' ||
+      (Array.isArray(to) && to.every((item) => typeof item === 'string'))) &&
+    typeof Reflect.get(value, 'subject') === 'string' &&
+    typeof Reflect.get(value, 'text') === 'string'
+  );
+}
+
 const server = setupServer(
   http.post('https://api.resend.com/emails', async ({ request }) => {
     // .clone() first: with OpenTelemetry's fetch/undici auto-instrumentation
@@ -28,11 +41,10 @@ const server = setupServer(
     // instrumentation reads the request body for span capture before this
     // handler runs, so a direct request.json() throws "Body has already
     // been read".
-    const body = (await request.clone().json()) as {
-      to: string | string[];
-      subject: string;
-      text: string;
-    };
+    const body: unknown = await request.clone().json();
+    if (!isResendEmailBody(body)) {
+      return HttpResponse.json({ error: 'Invalid scripted email body' }, { status: 400 });
+    }
     const to = Array.isArray(body.to) ? body.to[0] : body.to;
     if (to) {
       capturedEmails.set(to, {

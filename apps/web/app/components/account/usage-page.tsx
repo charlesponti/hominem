@@ -90,13 +90,9 @@ function UsageTable({
         </thead>
         <tbody className="divide-y divide-border">
           {rows.map((row) => {
-            const feature = row as UsageFeatureBreakdown;
-            const model = row as UsageModelBreakdown;
             const label =
-              kind === 'feature'
-                ? formatFeature(feature.feature)
-                : (model.model ?? 'Unknown model');
-            const key = kind === 'feature' ? feature.feature : (model.model ?? 'unknown');
+              'feature' in row ? formatFeature(row.feature) : (row.model ?? 'Unknown model');
+            const key = 'feature' in row ? row.feature : (row.model ?? 'unknown');
             return (
               <tr key={key}>
                 <th className="px-3 py-3 font-medium">{label}</th>

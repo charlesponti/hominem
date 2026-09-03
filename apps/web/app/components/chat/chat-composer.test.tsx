@@ -23,9 +23,14 @@ vi.mock('~/components/chat/prompt-input', () => ({
     </form>
   ),
   PromptInputBody: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PromptInputButton: ({ children, ...props }: React.ComponentProps<'button'>) => (
-    <button {...props}>{children}</button>
-  ),
+  PromptInputButton: ({
+    children,
+    ...props
+  }: React.ComponentProps<'button'> & { asChild?: boolean }) => {
+    const buttonProps = { ...props };
+    delete buttonProps.asChild;
+    return <button {...buttonProps}>{children}</button>;
+  },
   PromptInputFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PromptInputSubmit: ({
     disabled,

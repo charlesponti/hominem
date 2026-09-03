@@ -35,13 +35,19 @@ const useUsageTimeseries = vi.hoisted(() =>
 );
 
 vi.mock('react-router', () => ({
-  Link: ({ children }: { children: ReactNode }) => <a href="/settings">{children}</a>,
+  Link: ({ children, to }: { children: ReactNode; to: string }) => (
+    <a href={to} onClick={(event) => event.preventDefault()}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock('~/components/ui/button', () => ({
-  Button: ({ children, ...props }: ComponentProps<'button'>) => (
-    <button {...props}>{children}</button>
-  ),
+  Button: ({ children, ...props }: ComponentProps<'button'> & { asChild?: boolean }) => {
+    const buttonProps = { ...props };
+    delete buttonProps.asChild;
+    return <button {...buttonProps}>{children}</button>;
+  },
 }));
 
 vi.mock('~/hooks/use-usage', () => ({

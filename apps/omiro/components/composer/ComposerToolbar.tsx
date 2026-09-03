@@ -160,7 +160,9 @@ function ComposerToolbarComponent({
           disabled={!capabilities.canToggleVoice}
           testID="composer-mic-button"
           variant="plain"
-          onPress={() => void voice.handleVoicePress()}
+          onPress={() => {
+            void voice.handleVoicePress();
+          }}
         >
           <AppIcon name="mic.fill" size={20} />
         </IconButton>

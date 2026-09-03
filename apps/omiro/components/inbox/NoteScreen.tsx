@@ -199,7 +199,12 @@ function NoteDetailEditor({ noteId }: { noteId: string }) {
           showsVerticalScrollIndicator={false}
         >
           <EmptyState
-            action={{ label: t.notes.editor.loadErrorRetry, onPress: () => void refetch() }}
+            action={{
+              label: t.notes.editor.loadErrorRetry,
+              onPress: () => {
+                void refetch();
+              },
+            }}
             sfSymbol="arrow.clockwise.circle"
             title={error ? t.notes.editor.loadErrorTitle : t.notes.editor.missingNoteTitle}
           />
@@ -390,7 +395,9 @@ function NoteEditorBody({
           <Stack.Toolbar.MenuAction
             disabled={isStartingChat}
             icon="bubble.left"
-            onPress={() => void handleStartChat()}
+            onPress={() => {
+              void handleStartChat();
+            }}
           >
             {t.notes.editor.startChat}
           </Stack.Toolbar.MenuAction>
@@ -495,7 +502,9 @@ function NoteEditorBody({
                     accessibilityLabel={t.notes.editor.removeFile(file.originalName)}
                     accessibilityRole="button"
                     hitSlop={6}
-                    onPress={() => void handleDetach(file.id)}
+                    onPress={() => {
+                      void handleDetach(file.id);
+                    }}
                     style={styles.removeButton}
                   >
                     <AppIcon name="xmark" size={12} tintColor={tertiary} />
@@ -512,11 +521,13 @@ function NoteEditorBody({
           <InlineEnhanceTray
             instruction={enhanceInstruction}
             onInstructionChange={setEnhanceInstruction}
-            onPresetSelect={(instruction) =>
-              void runEnhance({ instruction, text: draft.content, onEnhanced: handleEnhanced })
-            }
+            onPresetSelect={(instruction) => {
+              void runEnhance({ instruction, text: draft.content, onEnhanced: handleEnhanced });
+            }}
             onCancel={handleToggleEnhance}
-            onConfirm={() => void runEnhance({ text: draft.content, onEnhanced: handleEnhanced })}
+            onConfirm={() => {
+              void runEnhance({ text: draft.content, onEnhanced: handleEnhanced });
+            }}
             isEnhancing={isEnhancing}
             error={enhanceError}
           />

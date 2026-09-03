@@ -346,7 +346,9 @@ function VerifyScreen() {
                   <Button
                     testID="auth-verify-otp"
                     label={t.auth.verify.verifyButton}
-                    onPress={() => void handleVerifyPress()}
+                    onPress={() => {
+                      void handleVerifyPress();
+                    }}
                     disabled={isSubmitting || normalizedOtp.length !== 6}
                     variant="primary"
                   />
@@ -355,7 +357,9 @@ function VerifyScreen() {
 
               <Pressable
                 testID="auth-resend-otp"
-                onPress={() => void handleResendPress()}
+                onPress={() => {
+                  void handleResendPress();
+                }}
                 disabled={isBusy || secondsLeft > 0}
                 hitSlop={8}
                 style={({ pressed }) => [

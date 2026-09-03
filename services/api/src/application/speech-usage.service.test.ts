@@ -85,9 +85,17 @@ describe('reconcileSpeechUsage', () => {
   });
 
   it('keeps temporary pricing failures retryable', async () => {
+    const warningSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     mocks.getSpeechUsageEstimate.mockRejectedValue(new Error('catalog not ready'));
 
-    await expect(reconcileSpeechUsage('speech-run-id')).rejects.toThrow('catalog not ready');
+    try {
+      await expect(reconcileSpeechUsage('speech-run-id')).rejects.toThrow('catalog not ready');
+      expect(warningSpy).toHaveBeenCalledWith(
+        expect.stringContaining('speech_usage_reconciliation_failed'),
+      );
+    } finally {
+      warningSpy.mockRestore();
+    }
 
     expect(mocks.markReconciliation).toHaveBeenCalledWith(
       {},

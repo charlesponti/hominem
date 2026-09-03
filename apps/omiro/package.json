@@ -101,10 +101,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.11",
     "@expo/plist": "^0.8.1",
     "@sentry/cli": "3.6.2",
     "@testing-library/react": "^16.3.0",
+    "@vitest/coverage-v8": "4.1.11",
     "babel-preset-expo": "57.0.4",
     "jsdom": "^30.0.1",
     "oxlint-config-universe": "^0.0.3",

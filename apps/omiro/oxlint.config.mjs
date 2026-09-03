@@ -5,6 +5,7 @@ export default defineConfig({
   extends: [native],
   rules: {
     'typescript/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
+    'no-void': ['warn', { allowAsStatement: true }],
     'no-restricted-imports': [
       'error',
       {

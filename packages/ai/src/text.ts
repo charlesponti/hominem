@@ -18,6 +18,17 @@ type StructuredChatCompletionResult<T> = {
   usage: AIUsageMetrics | null;
 };
 
+function isAIUsageMetrics(value: unknown): value is AIUsageMetrics {
+  if (!value || typeof value !== 'object') return false;
+  return (
+    Reflect.get(value, 'provider') === 'openrouter' &&
+    typeof Reflect.get(value, 'model') === 'string' &&
+    typeof Reflect.get(value, 'promptTokens') === 'number' &&
+    typeof Reflect.get(value, 'completionTokens') === 'number' &&
+    typeof Reflect.get(value, 'totalTokens') === 'number'
+  );
+}
+
 export class StructuredOutputError extends Error {
   usage: AIUsageMetrics | null;
   cause?: unknown;
@@ -92,7 +103,8 @@ function parseStructuredOutputText(response: ChatResult) {
   }
 
   try {
-    return JSON.parse(content) as unknown;
+    const parsed: unknown = JSON.parse(content);
+    return parsed;
   } catch (error) {
     throw new Error(
       error instanceof Error
@@ -103,15 +115,12 @@ function parseStructuredOutputText(response: ChatResult) {
 }
 
 export function getStructuredOutputUsage(value: unknown) {
-  if (
-    value &&
-    typeof value === 'object' &&
-    'usage' in value &&
-    ((value as { usage?: unknown }).usage === null ||
-      (typeof (value as { usage?: unknown }).usage === 'object' &&
-        (value as { usage?: unknown }).usage !== undefined))
-  ) {
-    return (value as { usage: AIUsageMetrics | null }).usage;
+  if (value && typeof value === 'object' && 'usage' in value) {
+    const usage = Reflect.get(value, 'usage');
+    if (usage === null) return null;
+    if (isAIUsageMetrics(usage)) {
+      return usage;
+    }
   }
 
   if (value instanceof StructuredOutputError) {
@@ -142,9 +151,7 @@ export async function createStructuredChatCompletion<TSchema extends z.ZodTypeAn
         jsonSchema: {
           name: input.schemaName,
           ...(input.schemaDescription ? { description: input.schemaDescription } : {}),
-          schema: convertSchemaToJsonSchema(input.schema, {
-            forStructuredOutput: true,
-          }) as Record<string, unknown>,
+          schema: convertSchemaToJsonSchema(input.schema, { forStructuredOutput: true }),
           strict: true,
         },
       },

@@ -3,7 +3,9 @@ export function nullToUndefined(value: string | null | undefined): string | unde
 }
 
 export function nullArrayToUndefined(value: unknown): string[] | undefined {
-  return Array.isArray(value) ? (value as string[]) : undefined;
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+    ? value
+    : undefined;
 }
 
 export function toNullableNumber(value: unknown): number | null {

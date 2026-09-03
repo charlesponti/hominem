@@ -72,7 +72,9 @@ function ProtectedShell() {
         <View style={styles.unlockButtonContainer}>
           <Button
             label={t.auth.unlockButton}
-            onPress={() => void authenticate()}
+            onPress={() => {
+              void authenticate();
+            }}
             variant="primary"
           />
         </View>

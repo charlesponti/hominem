@@ -80,10 +80,6 @@ export function useRegenerateMessage(chatId: string) {
             }
             setGeneration(null);
             void invalidateChatQueries(queryClient, chatId);
-            return;
-          }
-          if ('payload' in event && event.type === 'generation.cancelled') {
-            return;
           }
         },
       });

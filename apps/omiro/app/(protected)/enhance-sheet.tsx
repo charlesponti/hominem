@@ -50,9 +50,13 @@ export default function EnhanceSheetScreen() {
       <InlineEnhanceTray
         instruction={instruction}
         onInstructionChange={setInstruction}
-        onPresetSelect={(preset) => void runEnhance(preset)}
+        onPresetSelect={(preset) => {
+          void runEnhance(preset);
+        }}
         onCancel={() => router.back()}
-        onConfirm={() => void runEnhance()}
+        onConfirm={() => {
+          void runEnhance();
+        }}
         isEnhancing={isEnhancing}
         error={error}
       />

@@ -165,8 +165,12 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
             {voice.isRecording ? (
               <VoiceRecordingPanel
                 startedAt={voice.recordingStartedAt}
-                onCancel={() => void voice.cancelVoiceRecording()}
-                onDone={() => void voice.handleVoicePress()}
+                onCancel={() => {
+                  void voice.cancelVoiceRecording();
+                }}
+                onDone={() => {
+                  void voice.handleVoicePress();
+                }}
               />
             ) : (
               <View style={styles.fieldEditor}>
@@ -200,7 +204,9 @@ export function TimeComposer({ onOpenEvent }: TimeComposerProps) {
                     accessibilityLabel="Start voice input"
                     disabled={voice.isRecordingElsewhere}
                     testID="time-composer-mic-button"
-                    onPress={() => void voice.handleVoicePress()}
+                    onPress={() => {
+                      void voice.handleVoicePress();
+                    }}
                   >
                     <AppIcon name="mic.fill" size={20} />
                   </IconButton>

@@ -159,7 +159,7 @@ function parseOpenRouterErrorDetails(body: unknown) {
   }
 
   try {
-    const parsed = JSON.parse(body) as unknown;
+    const parsed: unknown = JSON.parse(body);
     return isJsonObject(parsed) ? parsed : undefined;
   } catch {
     return undefined;
@@ -172,13 +172,10 @@ export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError
   }
 
   if (typeof error === 'object' && error !== null) {
-    const candidate = error as {
-      message?: unknown;
-      status?: unknown;
-      statusCode?: unknown;
-      body?: unknown;
-    };
-    const details = parseOpenRouterErrorDetails(candidate.body);
+    const message = Reflect.get(error, 'message');
+    const statusValue = Reflect.get(error, 'status');
+    const statusCodeValue = Reflect.get(error, 'statusCode');
+    const details = parseOpenRouterErrorDetails(Reflect.get(error, 'body'));
     const nestedError = details?.error;
     const providerError =
       isJsonObject(nestedError) && typeof nestedError.message === 'string'
@@ -189,15 +186,14 @@ export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError
         ? providerError.message
         : undefined;
     const status =
-      typeof candidate.status === 'number'
-        ? candidate.status
-        : typeof candidate.statusCode === 'number'
-          ? candidate.statusCode
+      typeof statusValue === 'number'
+        ? statusValue
+        : typeof statusCodeValue === 'number'
+          ? statusCodeValue
           : undefined;
 
     return new OpenRouterRequestError(
-      providerMessage ??
-        (typeof candidate.message === 'string' ? candidate.message : 'OpenRouter request failed'),
+      providerMessage ?? (typeof message === 'string' ? message : 'OpenRouter request failed'),
       {
         status,
         code:

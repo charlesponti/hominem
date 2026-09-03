@@ -36,7 +36,7 @@ export async function getServerAuth(request: Request, config: AuthConfig) {
     return { user: null, headers: new Headers() };
   }
 
-  const payload = (await response.json().catch(() => null)) as BetterAuthGetSessionPayload | null;
+  const payload: BetterAuthGetSessionPayload | null = await response.json().catch(() => null);
   return {
     user: payload?.session ? (payload.user ?? null) : null,
     headers: copySetCookieHeaders(response.headers),

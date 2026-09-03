@@ -267,12 +267,7 @@ class InMemoryStorageBackend {
 
     const key = this.getKey(userId, file.name);
     const buffer = this.files.get(key);
-    return buffer
-      ? (buffer.buffer.slice(
-          buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength,
-        ) as ArrayBuffer)
-      : null;
+    return buffer ? Uint8Array.from(buffer).buffer : null;
   }
 
   async deleteFile(fileId: string, userId: string): Promise<boolean> {
@@ -593,10 +588,7 @@ export class R2StorageService {
       }
 
       const bytes = await response.Body.transformToByteArray();
-      return bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      ) as ArrayBuffer;
+      return Uint8Array.from(bytes).buffer;
     } catch {
       return null;
     }

@@ -18,6 +18,7 @@ export const UPLOAD_ALLOWED_MIME_TYPES = [
 
 export const UPLOAD_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 export const UPLOAD_MAX_FILE_COUNT = 5;
+const UPLOAD_ALLOWED_MIME_TYPE_SET = new Set<string>(UPLOAD_ALLOWED_MIME_TYPES);
 
 export type UploadPolicyFile = {
   name: string;
@@ -36,7 +37,7 @@ export type FileValidationResult = {
 };
 
 export function isSupportedUploadMimeType(mimetype: string): boolean {
-  return UPLOAD_ALLOWED_MIME_TYPES.includes(mimetype as (typeof UPLOAD_ALLOWED_MIME_TYPES)[number]);
+  return UPLOAD_ALLOWED_MIME_TYPE_SET.has(mimetype);
 }
 
 export function normalizeMissingUploadMimeType(

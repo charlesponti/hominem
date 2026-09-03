@@ -69,7 +69,9 @@ export function TimeScreen() {
             </Text>
             <IconButton
               accessibilityLabel="Copy error"
-              onPress={() => void Clipboard.setStringAsync(errorToast)}
+              onPress={() => {
+                void Clipboard.setStringAsync(errorToast);
+              }}
             >
               <AppIcon name="doc.on.doc" size={20} />
             </IconButton>

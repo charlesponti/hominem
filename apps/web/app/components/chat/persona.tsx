@@ -1,6 +1,7 @@
 'use client';
 
 import { useRive, useStateMachineInput, type RiveParameters } from '@rive-app/react-webgl2';
+import { RuntimeLoader } from '@rive-app/webgl2';
 import { useEffect, useState } from 'react';
 
 import { cn } from '~/lib/utils';
@@ -15,17 +16,14 @@ let preloadPromise: Promise<void> | undefined;
 export function preloadPersona(): Promise<void> | undefined {
   if (typeof window === 'undefined') return undefined;
   preloadPromise ??= (() => {
-    return import('@rive-app/webgl2')
-      .then(({ RuntimeLoader }) => {
-        RuntimeLoader.setWasmUrl(wasmSource);
-        RuntimeLoader.setWasmFallbackUrl(null);
-        return Promise.all([
-          RuntimeLoader.awaitInstance(),
-          fetch(source, { cache: 'force-cache' }).then((response) => {
-            if (!response.ok) throw new Error(`Persona asset failed: ${response.status}`);
-          }),
-        ]);
-      })
+    RuntimeLoader.setWasmUrl(wasmSource);
+    RuntimeLoader.setWasmFallbackUrl(null);
+    return Promise.all([
+      RuntimeLoader.awaitInstance(),
+      fetch(source, { cache: 'force-cache' }).then((response) => {
+        if (!response.ok) throw new Error(`Persona asset failed: ${response.status}`);
+      }),
+    ])
       .then(() => undefined)
       .catch(() => undefined);
   })();

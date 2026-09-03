@@ -166,7 +166,9 @@ export function TaskPeoplePicker({
                 disabled={!displayName.trim() || createPerson.isPending}
                 label="Create person"
                 loading={createPerson.isPending}
-                onPress={() => void create()}
+                onPress={() => {
+                  void create();
+                }}
                 testID="task-person-create-submit"
               />
             </View>

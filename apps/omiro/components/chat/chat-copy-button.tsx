@@ -11,7 +11,9 @@ export function ChatCopyButton({ message }: { message: ChatMessageItem }) {
     <ActionIconButton
       disabled={message.isStreaming}
       icon="doc.on.doc"
-      onPress={() => void copyMessage(message)}
+      onPress={() => {
+        void copyMessage(message);
+      }}
     />
   );
 }

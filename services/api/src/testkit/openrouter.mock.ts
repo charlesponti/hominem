@@ -159,6 +159,12 @@ function responseBody(request: OpenRouterRequest) {
     object: 'chat.completion.chunk',
     created: Math.floor(Date.now() / 1000),
     model: 'hominem/scripted-chat',
+    usage: {
+      prompt_tokens: 1,
+      completion_tokens: 1,
+      total_tokens: 2,
+      cost: 0,
+    },
     choices: [{ index: 0, delta, finish_reason: null }],
   };
 

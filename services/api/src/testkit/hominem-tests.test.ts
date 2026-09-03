@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import {
@@ -18,10 +18,29 @@ import {
 describe('HominemTests', () => {
   let test: HominemTests | undefined;
   let otherTest: HominemTests | undefined;
+  let warningSpy: { mock: { calls: unknown[][] }; mockRestore: () => void };
+  let expectedWarnings: string[];
+
+  const expectWarning = (message: string) => {
+    expectedWarnings.push(message);
+  };
+
+  beforeEach(() => {
+    expectedWarnings = [];
+    warningSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
 
   afterEach(async () => {
     if (test) expect((await test.close()).remainingChats).toBe(0);
     await otherTest?.close();
+    const warnings = warningSpy.mock.calls.map((args) => String(args[0]));
+    expect(
+      warnings.every((warning) => expectedWarnings.some((expected) => warning.includes(expected))),
+    ).toBe(true);
+    for (const expected of expectedWarnings) {
+      expect(warnings.some((warning) => warning.includes(expected))).toBe(true);
+    }
+    warningSpy.mockRestore();
     test = undefined;
     otherTest = undefined;
   });
@@ -118,8 +137,9 @@ describe('HominemTests', () => {
   });
 
   it('commits a valid response when the provider omits usage metadata', async () => {
+    expectWarning('[ai-usage] provider response missing usage');
     test = await HominemTests.create({
-      provider: scriptedProvider([textTurn('Valid response without usage')]),
+      provider: scriptedProvider([textTurn('Valid response without usage')], undefined, []),
     });
 
     const result = await test.chat.start({ title: 'SDK missing usage', message: 'No usage' });
@@ -252,6 +272,7 @@ describe('HominemTests', () => {
   });
 
   it('scripts a permanent provider failure and preserves a durable terminal failure', async () => {
+    expectWarning('[ai-usage] provider response missing usage');
     const provider = scriptedProvider([providerFailureTurn('provider unavailable')]);
     test = await HominemTests.create({ provider });
 
@@ -264,6 +285,7 @@ describe('HominemTests', () => {
   });
 
   it('retries a failed generation without duplicating its user message', async () => {
+    expectWarning('[ai-usage] provider response missing usage');
     const provider = scriptedProvider([
       providerFailureTurn('provider unavailable'),
       textTurn('Recovered reply'),
@@ -358,6 +380,7 @@ describe('HominemTests', () => {
   });
 
   it('turns an append failure into a durable terminal failure', async () => {
+    expectWarning('[ai-usage] provider response missing usage');
     test = await HominemTests.create({
       provider: scriptedProvider([textTurn('Should not commit')]),
     });
@@ -388,6 +411,7 @@ describe('HominemTests', () => {
   });
 
   it('keeps the durable event when live publication fails', async () => {
+    expectWarning('[ai-usage] provider response missing usage');
     test = await HominemTests.create({
       provider: scriptedProvider([textTurn('Publication failed')]),
     });
