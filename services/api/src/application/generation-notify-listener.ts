@@ -76,8 +76,15 @@ export function startGenerationNotifyListener(): GenerationNotifyListener {
     if (closed) return;
     const next = new pg.Client({ connectionString });
     client = next;
+    // Postgres delivers NOTIFYs on this connection in commit order, and the
+    // 'notification' event fires in that same order — but handling one is
+    // itself async (a DB round-trip to resolve the pointer), so without
+    // serializing them here, a later notification's query could resolve
+    // before an earlier one's and publish out of order. Chaining onto one
+    // running promise processes them one at a time, in arrival order.
+    let notificationQueue: Promise<void> = Promise.resolve();
     next.on('notification', (msg) => {
-      void handleNotification(msg.payload);
+      notificationQueue = notificationQueue.then(() => handleNotification(msg.payload));
     });
     next.on('error', (error) => {
       logger.warn('generation_notify_connection_error', { error: error.message });
