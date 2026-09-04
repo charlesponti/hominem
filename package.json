@@ -18,7 +18,7 @@
     "url": "git+https://github.com/hackefeller/hominem.git"
   },
   "scripts": {
-    "prepare": "bash scripts/install-git-hooks.sh",
+    "prepare": "sh scripts/install-git-hooks.sh",
     "build": "turbo run build",
     "check": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:4433/hominem-test pnpm run check:all",
     "check:all": "pnpm run check:dts && pnpm run lint && pnpm run build && pnpm run typecheck && pnpm run test",
