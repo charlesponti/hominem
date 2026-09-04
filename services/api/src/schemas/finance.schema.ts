@@ -84,7 +84,7 @@ const financeTransactionSchema = z.object({
   accountId: z.string(),
   accountName: z.string(),
   postedOn: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   amountCents: z.number().int(),
   currencyCode: z.string(),
   categoryId: z.string().nullable(),

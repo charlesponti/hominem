@@ -22,9 +22,12 @@ export function getToolCapabilities(definition: CapabilityDefinition): ChatCapab
   ];
 }
 
-export type McpToolResult = Omit<CallToolResult, 'structuredContent'> & {
+export type McpToolResult<T = Record<string, unknown>> = Omit<
+  CallToolResult,
+  'structuredContent'
+> & {
   content: Array<{ type: 'text'; text: string }>;
-  structuredContent: Record<string, unknown> | null;
+  structuredContent: T | Record<string, unknown> | null;
 };
 
 type RegisteredTool = {

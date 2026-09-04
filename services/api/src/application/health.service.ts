@@ -10,6 +10,14 @@ function endOfDay(value: string): string {
   return `${value}T23:59:59.999Z`;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function metricsRecord(metrics: unknown): Record<string, unknown> {
+  return isRecord(metrics) ? metrics : {};
+}
+
 // ── health_daily_summary ────────────────────────────────────────────
 
 export async function listHealthDailySummary(
@@ -41,14 +49,14 @@ export async function listHealthDailySummary(
     { steps: number; distanceM: number; caloriesTotal: number; elevationM: number; source: string }
   >();
   for (const r of rows) {
-    const date = (r.startsAt as string).slice(0, 10);
-    const m = r.metrics as Record<string, unknown>;
+    const date = r.startsAt.slice(0, 10);
+    const m = metricsRecord(r.metrics);
     const existing = grouped.get(date) ?? {
       steps: 0,
       distanceM: 0,
       caloriesTotal: 0,
       elevationM: 0,
-      source: (r.source as string) ?? '',
+      source: r.source ?? '',
     };
     existing.steps += numberOr(m.steps, 0);
     existing.distanceM += numberOr(m.distance_m, 0);
@@ -101,10 +109,10 @@ export async function listHealthRecentWorkouts(
   const rows = await query.orderBy('ha.startsAt', 'desc').limit(limit).execute();
 
   const workouts = rows.map((r) => {
-    const m = r.metrics as Record<string, unknown>;
+    const m = metricsRecord(r.metrics);
     return {
       id: r.id,
-      activityType: r.activityType as string,
+      activityType: r.activityType,
       startedAt: toIso(r.startsAt)!,
       endedAt: toIso(r.endsAt),
       durationS: intOrNull(m.duration_s),
@@ -114,7 +122,7 @@ export async function listHealthRecentWorkouts(
       minHeartRate: numOrNull(m.min_heart_rate),
       maxHeartRate: numOrNull(m.max_heart_rate),
       steps: intOrNull(m.steps),
-      source: (r.source as string) ?? '',
+      source: r.source ?? '',
     };
   });
 
@@ -145,7 +153,7 @@ export async function listHealthSleepSummary(
   const rows = await query.orderBy('ha.startsAt', 'desc').limit(limit).execute();
 
   const sessions = rows.map((r) => {
-    const m = r.metrics as Record<string, unknown>;
+    const m = metricsRecord(r.metrics);
     const deep = intOrNull(m.deep_sleep_s) ?? 0;
     const light = intOrNull(m.light_sleep_s) ?? 0;
     const rem = intOrNull(m.rem_sleep_s) ?? 0;
@@ -164,7 +172,7 @@ export async function listHealthSleepSummary(
       minHeartRate: numOrNull(m.min_heart_rate),
       maxHeartRate: numOrNull(m.max_heart_rate),
       wakeUpCount: intOrNull(m.wake_up_count),
-      source: (r.source as string) ?? '',
+      source: r.source ?? '',
     };
   });
 
@@ -173,10 +181,10 @@ export async function listHealthSleepSummary(
 
 // ── helpers ──────────────────────────────────────────────────────────
 
-function toIso(value: unknown): string | null {
+function toIso(value: string | Date | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   if (value instanceof Date) return value.toISOString();
-  return new Date(value as string).toISOString();
+  return new Date(value).toISOString();
 }
 
 function numberOr(value: unknown, fallback: number): number {

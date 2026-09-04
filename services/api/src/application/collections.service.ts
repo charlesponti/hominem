@@ -20,6 +20,44 @@ function toIso(value: string | Date | null): string | null {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
+type MemberRole = CollectionMember['role'];
+
+function toMemberRole(value: string): MemberRole {
+  switch (value) {
+    case 'owner':
+    case 'editor':
+    case 'viewer':
+      return value;
+    default:
+      throw new Error(`Unexpected collection member role: ${value}`);
+  }
+}
+
+function entityTypeForTable(table: string): EntityType | undefined {
+  switch (table) {
+    case ENTITY_TABLE_MAP.people:
+      return 'people';
+    case ENTITY_TABLE_MAP.places:
+      return 'places';
+    case ENTITY_TABLE_MAP.possessions:
+      return 'possessions';
+    case ENTITY_TABLE_MAP.notes:
+      return 'notes';
+    default:
+      return undefined;
+  }
+}
+
+function toVisibility(value: string): 'private' | 'shared' {
+  switch (value) {
+    case 'private':
+    case 'shared':
+      return value;
+    default:
+      throw new Error(`Unexpected collection visibility: ${value}`);
+  }
+}
+
 const ROLE_RANK: Record<'owner' | 'editor' | 'viewer', number> = {
   viewer: 0,
   editor: 1,
@@ -53,7 +91,7 @@ async function getAccessRole(
     .executeTakeFirst();
 
   if (!member) return null;
-  return member.role as 'owner' | 'editor' | 'viewer';
+  return toMemberRole(member.role);
 }
 
 function hasAtLeast(
@@ -83,7 +121,7 @@ async function loadCollectionSummary(collectionId: string): Promise<CollectionSu
     id: row.id,
     name: row.name,
     description: row.description,
-    visibility: row.visibility as 'private' | 'shared',
+    visibility: toVisibility(row.visibility),
     itemCount: Number(count),
     createdAt: toIso(row.createdat)!,
     updatedAt: toIso(row.updatedat)!,
@@ -119,7 +157,7 @@ export async function createCollection(ownerUserId: string, input: CreateCollect
 }
 
 export async function addCollectionItem(ownerUserId: string, input: AddCollectionItemInput) {
-  const entityTable = ENTITY_TABLE_MAP[input.entityType as EntityType];
+  const entityTable = ENTITY_TABLE_MAP[input.entityType];
   if (!entityTable) {
     throw new Error(`Unknown entity type: ${input.entityType}`);
   }
@@ -164,7 +202,7 @@ export async function addCollectionItem(ownerUserId: string, input: AddCollectio
 }
 
 export async function removeCollectionItem(ownerUserId: string, input: RemoveCollectionItemInput) {
-  const entityTable = ENTITY_TABLE_MAP[input.entityType as EntityType];
+  const entityTable = ENTITY_TABLE_MAP[input.entityType];
   if (!entityTable) {
     throw new Error(`Unknown entity type: ${input.entityType}`);
   }
@@ -192,7 +230,7 @@ function mapMemberRow(row: {
   return {
     userId: row.userId,
     invitedEmail: row.invitedEmail,
-    role: row.role as 'editor' | 'owner' | 'viewer',
+    role: toMemberRole(row.role),
     invitedAt: toIso(row.invitedAt)!,
     acceptedAt: toIso(row.acceptedAt),
   };
@@ -358,7 +396,7 @@ export async function listPendingInvites(ownerUserId: string, input: ListPending
     if (collection) {
       invites.push({
         collection,
-        role: row.role as 'editor' | 'owner' | 'viewer',
+        role: toMemberRole(row.role),
         invitedAt: toIso(row.invitedAt)!,
       });
     }
@@ -391,17 +429,14 @@ export async function collectionDetail(
     .execute();
 
   const items: CollectionItem[] = itemRows.map((row) => {
-    let entityType: string | null = null;
-    for (const [key, table] of Object.entries(ENTITY_TABLE_MAP)) {
-      if (table === row.entityTable) {
-        entityType = key;
-        break;
-      }
+    const entityType = entityTypeForTable(row.entityTable);
+    if (!entityType) {
+      throw new Error(`Unknown collection item entity table: ${row.entityTable}`);
     }
 
     return {
       id: row.id,
-      entityType: (entityType ?? 'unknown') as EntityType,
+      entityType,
       entityId: row.entityId,
       note: row.note,
       sortOrder: row.sortOrder,

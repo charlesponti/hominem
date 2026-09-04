@@ -1,6 +1,5 @@
-import { z } from 'zod';
-
 import { runtimeSchema } from '@hominem/env/runtime';
+import { z } from 'zod';
 
 export const financeSchema = runtimeSchema.extend({
   VITE_PUBLIC_API_URL: z.url(),

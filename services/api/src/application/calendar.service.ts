@@ -48,8 +48,8 @@ export async function searchCalendarEvents(
     .$if(!input.includeCancelled, (qb) =>
       qb.where(sql<boolean>`lower(coalesce(e.status, '')) != 'cancelled'`),
     )
-    .$if(input.from !== undefined, (qb) => qb.where('e.startsAt', '>=', input.from as string))
-    .$if(input.to !== undefined, (qb) => qb.where('e.startsAt', '<=', endOfDay(input.to as string)))
+    .$if(input.from !== undefined, (qb) => qb.where('e.startsAt', '>=', input.from!))
+    .$if(input.to !== undefined, (qb) => qb.where('e.startsAt', '<=', endOfDay(input.to!)))
     .orderBy('e.startsAt', 'asc')
     .limit(input.limit)
     .execute();
@@ -84,8 +84,8 @@ export async function listTripHistory(
     .selectFrom('app.travelTrips')
     .select(['id', 'city', 'state', 'country', 'startDate', 'endDate'])
     .where('ownerUserid', '=', ownerUserId)
-    .$if(input.from !== undefined, (qb) => qb.where('startDate', '>=', input.from as string))
-    .$if(input.to !== undefined, (qb) => qb.where('startDate', '<=', input.to as string))
+    .$if(input.from !== undefined, (qb) => qb.where('startDate', '>=', input.from!))
+    .$if(input.to !== undefined, (qb) => qb.where('startDate', '<=', input.to!))
     .orderBy('startDate', 'desc')
     .limit(input.limit)
     .execute();

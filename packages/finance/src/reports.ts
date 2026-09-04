@@ -30,16 +30,17 @@ export async function getFinanceNetWorth(ownerUserId: string, includeClosed: boo
   const warnings: string[] = [];
   const balances = await Promise.all(
     accounts.map(async (account) => {
-      const ledgerDelta = (await db
-        .selectFrom('app.financeTransactions')
-        .select((eb) => [
-          eb.fn.sum<number>('amount').as('delta'),
-          eb.fn.max('postedOn').as('latestPostedOn'),
-        ])
-        .where('accountId', '=', account.id)
-        .where('userId', '=', ownerUserId)
-        .where('pending', '=', false)
-        .executeTakeFirst()) as { delta: number | null; latestPostedOn: string | null } | undefined;
+      const ledgerDelta: { delta: number | null; latestPostedOn: string | null } | undefined =
+        await db
+          .selectFrom('app.financeTransactions')
+          .select((eb) => [
+            eb.fn.sum<number>('amount').as('delta'),
+            eb.fn.max('postedOn').as('latestPostedOn'),
+          ])
+          .where('accountId', '=', account.id)
+          .where('userId', '=', ownerUserId)
+          .where('pending', '=', false)
+          .executeTakeFirst();
 
       const balanceCents = toCents(ledgerDelta?.delta ?? 0);
       const balanceAsOf = ledgerDelta?.latestPostedOn ?? null;
@@ -118,30 +119,26 @@ export async function getFinanceRecentTransactions(
     query = query.where('t.postedOn', '<=', to);
   }
 
-  const rows = (await query
-    .orderBy('t.postedOn', 'desc')
-    .orderBy('t.id', 'desc')
-    .limit(limit)
-    .execute()) as Array<{
+  const rows: Array<{
     id: string;
     accountId: string;
     accountName: string;
     postedOn: string;
-    description: string;
+    description: string | null;
     amount: number | string;
     currencyCode: string;
     categoryId: string | null;
     categoryName: string | null;
     excluded: boolean;
     transactionType: string;
-  }>;
+  }> = await query.orderBy('t.postedOn', 'desc').orderBy('t.id', 'desc').limit(limit).execute();
 
   const transactions = rows.map((row) => ({
     id: row.id,
     accountId: row.accountId,
     accountName: row.accountName,
     postedOn: row.postedOn,
-    description: row.description,
+    description: row.description ?? null,
     amountCents: toCents(row.amount),
     currencyCode: row.currencyCode,
     categoryId: row.categoryId ?? null,
@@ -162,7 +159,7 @@ export async function getFinanceSpendingByCategory(
   const fromDate = from ?? fallbackDate(30, now);
   const toDate = to ?? now.toISOString().slice(0, 10);
 
-  const currencyRows = (await db
+  const currencyRows: Array<{ currencyCode: string }> = await db
     .selectFrom('app.financeTransactions')
     .select('currencyCode')
     .distinct()
@@ -173,7 +170,7 @@ export async function getFinanceSpendingByCategory(
     .where('transactionType', '!=', 'transfer')
     .where('postedOn', '>=', fromDate)
     .where('postedOn', '<=', toDate)
-    .execute()) as Array<{ currencyCode: string }>;
+    .execute();
 
   const warnings: string[] = [];
   let currencyCode: string | null = null;
@@ -185,7 +182,12 @@ export async function getFinanceSpendingByCategory(
     );
   }
 
-  const rows = (await db
+  const rows: Array<{
+    categoryId: string;
+    categoryName: string;
+    netAmount: number | null;
+    transactionCount: number;
+  }> = await db
     .selectFrom('app.financeTransactions as t')
     .innerJoin('app.financeCategories as c', 'c.id', 't.categoryId')
     .select((eb) => [
@@ -204,12 +206,7 @@ export async function getFinanceSpendingByCategory(
     .groupBy(['c.id', 'c.name'])
     .orderBy('netAmount', 'asc')
     .limit(limit)
-    .execute()) as Array<{
-    categoryId: string;
-    categoryName: string;
-    netAmount: number | null;
-    transactionCount: number;
-  }>;
+    .execute();
 
   const categories = rows.map((row) => ({
     categoryId: row.categoryId,

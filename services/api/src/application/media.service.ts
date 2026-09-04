@@ -15,14 +15,30 @@ type MediaWantToWatchOutput = z.output<typeof mediaWantToWatchOutputSchema>;
 type MusicPurchaseHistoryOutput = z.output<typeof musicPurchaseHistoryOutputSchema>;
 type MediaItemHistoryOutput = z.output<typeof mediaItemHistoryOutputSchema>;
 
-function toIso(value: unknown): string | null {
+function toIso(value: string | Date | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   if (value instanceof Date) return value.toISOString();
-  return new Date(value as string).toISOString();
+  return new Date(value).toISOString();
 }
 
 function endOfDay(isoDate: string): string {
   return `${isoDate}T23:59:59.999Z`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function metaRecord(metadata: unknown): Record<string, unknown> {
+  return isRecord(metadata) ? metadata : {};
+}
+
+function stringOr(value: unknown, fallback: string): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function numOrNull(value: unknown): number | null {
+  return typeof value === 'number' ? value : null;
 }
 
 export async function listMediaRecentActivity(
@@ -80,13 +96,13 @@ export async function listMusicRecentPlays(
   const plays = rows
     .filter((row) => row.trackName || row.artistName)
     .map((row) => {
-      const meta = (row.metadata ?? {}) as Record<string, unknown>;
+      const meta = metaRecord(row.metadata);
       return {
         playedAt: toIso(row.playedAt) ?? '',
         platform: row.platform,
-        trackName: (row.trackName ?? meta.trackName ?? '') as string,
-        artistName: (row.artistName ?? meta.artistName ?? '') as string,
-        msPlayed: (meta.msPlayed as number) ?? null,
+        trackName: row.trackName ?? stringOr(meta.trackName, ''),
+        artistName: row.artistName ?? stringOr(meta.artistName, ''),
+        msPlayed: numOrNull(meta.msPlayed),
       };
     });
   return { plays, count: plays.length };
@@ -139,10 +155,10 @@ export async function listMusicPurchaseHistory(
   if (to) query = query.where('mia.occurredAt', '<=', endOfDay(to));
   const rows = await query.orderBy('mia.occurredAt', 'desc').limit(limit).execute();
   const purchases = rows.map((row) => {
-    const meta = (row.metadata ?? {}) as Record<string, unknown>;
+    const meta = metaRecord(row.metadata);
     return {
-      title: (meta.title ?? row.trackTitle ?? '') as string,
-      seller: (meta.seller ?? null) as string | null,
+      title: stringOr(meta.title, row.trackTitle ?? ''),
+      seller: typeof meta.seller === 'string' ? meta.seller : null,
       purchasedAt: toIso(row.purchasedAt) ?? '',
       trackId: row.trackId ?? null,
       trackTitle: row.trackTitle ?? null,

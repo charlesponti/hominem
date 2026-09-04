@@ -35,6 +35,10 @@ import {
   previewPlan,
 } from './finance.import.shared';
 
+function parseImportPlan(planContent: string): ImportPlan {
+  return JSON.parse(planContent);
+}
+
 export const importPreflightRoutes = new Hono<AppContext>()
   .post('/preflight', async (c) => {
     const userId = c.get('auth')?.userId;
@@ -114,7 +118,7 @@ export const importPreflightRoutes = new Hono<AppContext>()
       .execute();
     return c.json({
       preflight,
-      plan: previewPlan(JSON.parse(planContent) as ImportPlan),
+      plan: previewPlan(parseImportPlan(planContent)),
       accounts,
     });
   })
@@ -138,7 +142,7 @@ export const importPreflightRoutes = new Hono<AppContext>()
     const parsedBody = confirmationSchema.safeParse(await c.req.json());
     if (!parsedBody.success) throw new ValidationError('Invalid Copilot import confirmation');
     const body = parsedBody.data;
-    const plan = JSON.parse(planContent) as ImportPlan;
+    const plan = parseImportPlan(planContent);
     const planRowIds = new Set(plan.transactions.map((transaction) => transaction.rowId));
     if (body.selectedRowIds.some((rowId) => !planRowIds.has(rowId))) {
       throw new ValidationError('Selected rows do not belong to this preflight');
@@ -160,7 +164,7 @@ export const importPreflightRoutes = new Hono<AppContext>()
       }
     }
 
-    const mappedPlan = applyAccountMappingsToPlan(plan, body.mappings as AccountMapping[]);
+    const mappedPlan = applyAccountMappingsToPlan(plan, body.mappings);
     if (!(await claimPreflight(preflightId, userId))) {
       throw new ValidationError('Preflight was already confirmed');
     }

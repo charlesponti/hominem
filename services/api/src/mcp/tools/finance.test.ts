@@ -1,8 +1,8 @@
 import { db, pool } from '@hominem/db';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import './finance';
 import { callTool, type McpToolResult } from '../tool-registry';
+import './finance';
 
 const userId = 'f1000000-0000-4000-8000-000000000001';
 
@@ -63,9 +63,10 @@ type FinanceTransactionEntry = [
   excluded: boolean,
 ];
 
-function resultContent(res: McpToolResult): TestResultContent {
-  return res.structuredContent as TestResultContent;
+function resultContent(res: McpToolResult<TestResultContent>): TestResultContent {
+  return res.structuredContent ?? {};
 }
+
 const savingsId = 'f1000003-0000-4000-8000-000000000002';
 const excludedCardId = 'f1000003-0000-4000-8000-000000000003';
 const foodId = 'f1000002-0000-4000-8000-000000000101';
