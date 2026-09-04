@@ -6,22 +6,18 @@ recovery. MCP HTTP behavior is outside this document.
 
 ## Architecture
 
-`@hominem/chat` is the domain owner. It contains the generation machine and
-interpreter, provider-chunk normalization and fragmented tool-call
-reconstruction, event schemas and parsers, projections, client reduction, and
-SSE primitives. It does not perform database, HTTP, provider, MCP, or platform
-I/O.
+`@hominem/chat` is the domain and runtime owner. Its server runtime contains
+generation orchestration, provider-chunk normalization, fragmented tool-call
+reconstruction, tool idempotency, durable event sequencing, persistence before
+publication, cancellation, retry, and final context accounting. Its client
+runtime owns the canonical HTTP/SSE protocol, parsing, projections,
+deduplication, checkpoints, replay, and reconnect recovery.
 
-The API application boundary supplies those effects through repositories,
-OpenRouter and MCP adapters, cancellation, event publication, and route
-composition. Application services own coordinated workflows; RPC validates
-transport input, invokes an application operation, and adapts its result to
-HTTP/SSE.
-
-Web uses fetch/readable-stream transport and Omiro uses Apple-only XHR
-transport. Both consume the canonical `@hominem/chat` events and reducer.
-Their transports and presentation may differ, but equivalent semantic event
-histories produce equivalent generation state.
+The API application boundary supplies those effects through adapters for
+repositories, OpenRouter, MCP, cancellation, publication, and context cache.
+RPC authenticates and delegates to the package runtime. Web and Omiro supply
+only authentication, platform transport/storage, and product-specific typed
+event reactions; equivalent semantic event histories produce equivalent state.
 
 The database stores generation runs, ordered durable events, projections,
 snapshots, idempotency records, and tool effects. Durable event history is

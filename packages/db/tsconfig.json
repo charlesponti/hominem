@@ -6,6 +6,7 @@
     "tsBuildInfoFile": "./.cache/tsconfig.tsbuildinfo",
     "paths": {
       "@hominem/chat": ["../chat/build/public.d.ts"],
+      "@hominem/chat/projection": ["../chat/build/projection.d.ts"],
       "@hominem/db/schema/*": ["./src/migrations/schema.ts"],
       "@hominem/db/services/*": ["./src/services/*"]
     }

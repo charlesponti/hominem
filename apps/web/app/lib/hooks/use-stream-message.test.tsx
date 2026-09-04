@@ -23,10 +23,68 @@ const mockClient = vi.hoisted(() => ({
   },
 }));
 
+const mockChatTransport = vi.hoisted(() => ({
+  request: vi.fn(),
+}));
+
+vi.mock('@hominem/chat/transport/fetch', () => ({
+  fetchChatTransport: () => mockChatTransport,
+}));
+
 vi.mock('@hominem/rpc/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@hominem/rpc/react')>()),
   useApiClient: () => mockClient,
 }));
+
+function routeChatTransportRequest({
+  url,
+  init,
+  signal,
+}: {
+  url: string;
+  init: RequestInit;
+  signal?: AbortSignal;
+}) {
+  const parsed = new URL(url, 'https://web.lvh.me');
+  const segments = parsed.pathname.split('/').filter(Boolean);
+  if (segments.at(-1) === 'stream' && init.method === 'POST') {
+    return mockClient.api.chats[':id'].stream.$post(
+      { json: JSON.parse(String(init.body ?? '{}')) },
+      { init: { ...init, signal } },
+    );
+  }
+  if (segments.at(-1) === 'cancel') {
+    return mockClient.api.chats[':id'].generations[':generationId'].cancel.$post({
+      param: { id: segments[2], generationId: segments[4] },
+    });
+  }
+  if (segments.at(-1) === 'retry') {
+    return mockClient.api.chats[':id'].generations[':generationId'].retry.$post(
+      {
+        param: { id: segments[2], generationId: segments[4] },
+        json: JSON.parse(String(init.body ?? '{}')),
+      },
+      { init: { ...init, signal } },
+    );
+  }
+  if (
+    segments[0] === 'api' &&
+    segments[1] === 'chats' &&
+    segments[3] === 'generations' &&
+    segments.at(-1) !== 'stream'
+  ) {
+    return mockClient.api.chats[':id'].generations[':generationId'].$get({
+      param: { id: segments[2], generationId: segments[4] },
+    });
+  }
+  if (segments.at(-1) === 'stream' && init.method !== 'POST') {
+    return mockClient.api.chats[':id'].generations[':generationId'].stream.$get(
+      { param: { id: segments[2], generationId: segments[4] } },
+      { init: { ...init, signal } },
+    );
+  }
+  return Promise.reject(new Error(`Unhandled chat transport request: ${url}`));
+}
 
 import { useStreamMessage } from './use-stream-message';
 
@@ -64,6 +122,7 @@ function interruptedStreamResponse(events: string[]) {
 describe('useStreamMessage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockChatTransport.request.mockImplementation(routeChatTransportRequest);
     window.localStorage.clear();
     vi.stubGlobal('crypto', { randomUUID: () => 'g1' });
   });
@@ -386,11 +445,10 @@ describe('useStreamMessage', () => {
     await result.current.stream({ message: 'Recover me' });
 
     await waitFor(() => expect(result.current.status).toBe('committed'));
-    expect(
-      mockClient.api.chats[':id'].generations[':generationId'].stream.$get,
-    ).toHaveBeenCalledWith(
-      { param: { id: 'chat-1', generationId: expect.any(String) } },
-      { init: expect.objectContaining({ headers: { 'Last-Event-ID': '1' } }) },
+    expect(mockChatTransport.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringContaining('/generations/g1/stream?afterSequence=1'),
+      }),
     );
     expect(result.current.text).toBe('Recovered');
   });
@@ -509,11 +567,10 @@ describe('useStreamMessage', () => {
 
     await waitFor(() => expect(result.current.status).toBe('committed'));
     expect(mockClient.api.chats[':id'].stream.$post).not.toHaveBeenCalled();
-    expect(
-      mockClient.api.chats[':id'].generations[':generationId'].stream.$get,
-    ).toHaveBeenCalledWith(
-      { param: { id: 'chat-1', generationId: 'g1' } },
-      { init: expect.objectContaining({ headers: { 'Last-Event-ID': '5' } }) },
+    expect(mockChatTransport.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringContaining('/api/chats/chat-1/generations/g1/stream?afterSequence=5'),
+      }),
     );
     expect(window.localStorage.getItem('chat-generation:chat-1')).toBeNull();
   });

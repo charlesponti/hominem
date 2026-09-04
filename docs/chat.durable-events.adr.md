@@ -27,6 +27,7 @@ live-only deltas must never advance them.
 Recovery is owner-scoped and phase-specific: active checkpoints resume or
 terminalize exactly once; awaiting confirmation remains paused; committed,
 cancelled, and failed runs replay their durable history. The first durable
-terminal decision wins races with cancellation or failure. Web and Omiro may
-use separate transports and checkpoints, but their reducers must converge on
-the same semantic state.
+terminal decision wins races with cancellation or failure. The shared
+`@hominem/chat` client runtime owns replay, checkpoints, and deduplication;
+Web and Omiro may use separate transport implementations and storage adapters,
+but their controllers must converge on the same semantic state.

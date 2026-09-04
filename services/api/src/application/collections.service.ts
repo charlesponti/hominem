@@ -13,7 +13,7 @@ import type {
   ListPendingInvitesInput,
   RemoveCollectionItemInput,
 } from '../schemas/collections.schema';
-import { ENTITY_TABLE_MAP, type EntityType } from './tags.service';
+import { ENTITY_TABLE_MAP, getEntityDisplayName, type EntityType } from './tags.service';
 
 function toIso(value: string | Date | null): string | null {
   if (value === null) return null;
@@ -193,6 +193,7 @@ export async function addCollectionItem(ownerUserId: string, input: AddCollectio
     id: item.id,
     entityType: input.entityType,
     entityId: item.entityId,
+    entityName: await getEntityDisplayName(ownerUserId, input.entityType, item.entityId),
     note: item.note,
     sortOrder: item.sortOrder,
     addedAt: toIso(item.createdat)!,
@@ -428,21 +429,24 @@ export async function collectionDetail(
     .where('collectionId', '=', collectionId)
     .execute();
 
-  const items: CollectionItem[] = itemRows.map((row) => {
-    const entityType = entityTypeForTable(row.entityTable);
-    if (!entityType) {
-      throw new Error(`Unknown collection item entity table: ${row.entityTable}`);
-    }
+  const items: CollectionItem[] = await Promise.all(
+    itemRows.map(async (row): Promise<CollectionItem> => {
+      const entityType = entityTypeForTable(row.entityTable);
+      if (!entityType) {
+        throw new Error(`Unknown collection item entity table: ${row.entityTable}`);
+      }
 
-    return {
-      id: row.id,
-      entityType,
-      entityId: row.entityId,
-      note: row.note,
-      sortOrder: row.sortOrder,
-      addedAt: toIso(row.createdat)!,
-    };
-  });
+      return {
+        id: row.id,
+        entityType,
+        entityId: row.entityId,
+        entityName: await getEntityDisplayName(ownerUserId, entityType, row.entityId),
+        note: row.note,
+        sortOrder: row.sortOrder,
+        addedAt: toIso(row.createdat)!,
+      };
+    }),
+  );
 
   const members: CollectionMember[] = memberRows.map(mapMemberRow);
 

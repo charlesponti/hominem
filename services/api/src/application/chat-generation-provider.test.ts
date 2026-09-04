@@ -1,6 +1,6 @@
 import { streamChatCompletion } from '@hominem/ai';
 import type { ChatStreamChunk } from '@hominem/ai';
-import { createGenerationState } from '@hominem/chat';
+import { createGenerationState } from '@hominem/chat/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OpenRouterChatModel } from './chat-generation-provider';

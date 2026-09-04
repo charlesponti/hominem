@@ -378,7 +378,6 @@ describe('HominemTests', () => {
   });
 
   it('turns an append failure into a durable terminal failure', async () => {
-    expectWarning('[ai-usage] provider response missing usage');
     test = await HominemTests.create({
       provider: scriptedProvider([textTurn('Should not commit')]),
     });

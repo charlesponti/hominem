@@ -1,12 +1,14 @@
 import {
-  rebuildGenerationProjection,
-  reduceGenerationProjection,
   type ChatGenerationStatus,
   type GenerationHistoryEventPayload,
-  type GenerationRunIdentity,
-  type GenerationRunProjection,
   type ToolResult,
 } from '@hominem/chat';
+import {
+  rebuildGenerationProjection,
+  reduceGenerationProjection,
+  type GenerationRunIdentity,
+  type GenerationRunProjection,
+} from '@hominem/chat/projection';
 import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
 import type { Selectable } from 'kysely';
 

@@ -76,11 +76,14 @@ export async function planChatTools(input: {
   await ensureMcpToolsRegistered();
   const definitions = listTools();
   const projectedTools = getChatToolProjection(definitions);
+  const latestUserMessage = [...input.messages]
+    .reverse()
+    .find((message) => message.role === 'user');
   const { output, usage } = await createStructuredChatCompletion({
     model: input.model,
     messages: [
       { role: 'system', content: ROUTING_PROMPT },
-      ...input.messages.filter((message) => message.role !== 'tool'),
+      ...(latestUserMessage ? [latestUserMessage] : []),
     ],
     schema: chatToolPlanSchema,
     schemaName: 'chat_tool_plan',

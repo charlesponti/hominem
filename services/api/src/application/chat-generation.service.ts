@@ -6,7 +6,6 @@ import {
   type ChatMessages,
   getChatCompletionUsage,
 } from '@hominem/ai';
-import { restoreGenerationState } from '@hominem/chat';
 import type {
   GenerationDeltaEventPayload,
   GenerationEvent,
@@ -22,9 +21,10 @@ import {
   chatMessageJsonObjectSchema,
   chatMessageSnapshotSchema,
   chatSnapshotSchema,
-  GenerationProjectionError,
   parseGenerationHistoryEvent,
 } from '@hominem/chat';
+import { GenerationProjectionError } from '@hominem/chat/projection';
+import { restoreGenerationState } from '@hominem/chat/server';
 import type {
   ChatGenerationEventRecord,
   ChatGenerationRunRecord,
@@ -38,6 +38,7 @@ import { embeddingQueue } from '@hominem/queues';
 import { planChatTools } from '../mcp/chat-tool-adapter';
 import { recordAIUsageEvent, startAIUsageTimer } from './ai-usage.service';
 import { assertUnderMonthlyUsageLimit } from './ai-usage.service';
+import { cacheCompletedChatContext } from './chat-context-cache';
 import { executeGenerationTurn } from './chat-generation-engine';
 import { replayGenerationEvents } from './chat-generation-replay';
 import {
@@ -1035,6 +1036,10 @@ export class ChatGenerationService {
           accept: (event) => {
             queue.push(toLiveEvent(input.generationId, event));
           },
+        },
+        context: {
+          recordCompletion: ({ chatId, usage }) =>
+            cacheCompletedChatContext({ chatId, model: CHAT_MODEL, usage }).catch(() => undefined),
         },
       });
       usage = result.usage;

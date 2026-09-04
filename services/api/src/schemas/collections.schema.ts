@@ -24,6 +24,7 @@ const collectionItemSchema = z.object({
   id: z.string(),
   entityType: entityTypeSchema,
   entityId: z.string(),
+  entityName: z.string().nullable(),
   note: z.string().nullable(),
   sortOrder: z.number().int().nullable(),
   addedAt: z.string(),

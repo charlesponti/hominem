@@ -1,10 +1,10 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
 import type {
-  ChatModel,
   GenerationHistoryEventPayload,
   GenerationInput,
   GenerationState,
 } from '@hominem/chat';
+import type { ChatModel } from '@hominem/chat/server';
 import type { ChatMessageToolCallRecord } from '@hominem/db';
 
 import type { callTool, getToolDefinition } from '../mcp/tool-registry';
@@ -45,6 +45,14 @@ export interface GenerationEngineInput {
   modelFactory?: ChatGenerationModelFactory;
   initialState?: GenerationState;
   initialInput?: GenerationInput;
+  context?: {
+    recordCompletion: (input: {
+      generationId: string;
+      chatId: string;
+      userId: string;
+      usage: AIUsageMetrics;
+    }) => Promise<void> | void;
+  };
 }
 
 export interface GenerationEngineResult {

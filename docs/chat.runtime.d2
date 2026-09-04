@@ -1,0 +1,20 @@
+direction: right
+
+apps: {
+  web
+  omiro
+  services
+}
+
+client: "@hominem/chat/client"
+protocol: "Canonical HTTP + SSE"
+server: "@hominem/chat/server"
+
+apps -> client: typed commands / typed lifecycle events
+client -> protocol: send, retry, replay, cancel, confirm
+protocol -> server
+server -> provider
+server -> tool_registry
+server -> chat_store
+server -> event_publisher
+server -> context_cache

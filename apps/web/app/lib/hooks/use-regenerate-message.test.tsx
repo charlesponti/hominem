@@ -21,6 +21,33 @@ vi.mock('@hominem/rpc/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@hominem/rpc/react')>()),
   useApiClient: () => mockClient,
 }));
+vi.mock('@hominem/chat/transport/fetch', () => ({
+  fetchChatTransport: () => ({
+    request: ({ url, init }: { url: string; init: RequestInit }) => {
+      const match = url.match(/\/api\/chats\/([^/]+)\/messages\/([^/]+)\/regenerate$/);
+      if (match) {
+        return mockClient.api.chats[':id'].messages[':messageId'].regenerate.$post(
+          {
+            param: { id: match[1], messageId: match[2] },
+            json: JSON.parse(String(init.body ?? '{}')),
+          },
+          { init },
+        );
+      }
+      const cancel = url.match(/\/api\/chats\/([^/]+)\/generations\/([^/]+)\/cancel$/);
+      if (cancel) {
+        return mockClient.api.chats[':id'].generations[':generationId'].cancel.$post(
+          { param: { id: cancel[1], generationId: cancel[2] } },
+          { init },
+        );
+      }
+      if (url.includes('/generations/') && url.includes('/stream?afterSequence=')) {
+        return Promise.reject('transport failed');
+      }
+      return Promise.reject(new Error(`Unexpected chat URL: ${url}`));
+    },
+  }),
+}));
 
 import { useRegenerateMessage } from './use-regenerate-message';
 
@@ -86,6 +113,7 @@ describe('useRegenerateMessage', () => {
       mockClient.api.chats[':id'].generations[':generationId'].cancel.$post,
     ).toHaveBeenCalledWith(
       expect.objectContaining({ param: expect.objectContaining({ id: 'chat-1' }) }),
+      expect.objectContaining({ init: expect.objectContaining({ method: 'POST' }) }),
     );
     await waitFor(() => expect(result.current.isRegenerating).toBe(false));
   });
@@ -130,7 +158,7 @@ describe('useRegenerateMessage', () => {
         json: expect.objectContaining({ responseLength: 'long' }),
       }),
       expect.objectContaining({
-        init: expect.objectContaining({ signal: expect.any(AbortSignal) }),
+        init: expect.objectContaining({ method: 'POST' }),
       }),
     );
     await waitFor(() => expect(result.current.error).toBeNull());

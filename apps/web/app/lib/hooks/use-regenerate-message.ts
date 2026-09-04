@@ -1,11 +1,8 @@
-import { getGenerationFailureMessage } from '@hominem/chat';
-import { useApiClient } from '@hominem/rpc/react';
-import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 
 import { invalidateChatQueries } from '../chat/chat-cache';
-import { consumeSseResponse } from '../chat/consume-sse-response';
+import { useChatClient } from './use-chat-client';
 import type { ResponseLength } from './use-response-length';
 
 export type RegenerationStatus =
@@ -18,96 +15,83 @@ export type RegenerationStatus =
   | 'failed';
 
 export function useRegenerateMessage({ chatId }: { chatId: string }) {
-  const client = useApiClient();
+  const chatClient = useChatClient();
   const queryClient = useQueryClient();
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [status, setStatus] = useState<RegenerationStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const generationIdRef = useRef<string | null>(null);
+  const generationRef = useRef<ReturnType<typeof chatClient.createGeneration> | null>(null);
   const lastRequestRef = useRef<{ messageId: string; responseLength?: ResponseLength } | null>(
     null,
   );
-  const cancelRequestedRef = useRef(false);
 
   const regenerate = useCallback(
     async (messageId: string, responseLength?: ResponseLength) => {
       if (activeMessageId) return;
-
-      const generationId = crypto.randomUUID();
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-      generationIdRef.current = generationId;
-      cancelRequestedRef.current = false;
+      const generation = chatClient.regenerate({
+        chatId,
+        messageId,
+        body: {
+          ...(responseLength ? { responseLength } : {}),
+        },
+      });
+      generationRef.current = generation;
       lastRequestRef.current = { messageId, ...(responseLength ? { responseLength } : {}) };
       setActiveMessageId(messageId);
       setStatus('preparing');
       setError(null);
+      const unsubscribe = generation.subscribe((_state, event) => {
+        if ('event' in event) {
+          setStatus('failed');
+          setError(new Error(event.event.message));
+          return;
+        }
+        if (event.type === 'generation.failed') {
+          setStatus('failed');
+          setError(new Error(event.payload.message));
+          return;
+        }
+        if (event.type === 'generation.phase_changed') {
+          setStatus(event.payload.phase === 'preparing' ? 'preparing' : 'streaming');
+        }
+        if (event.type === 'generation.cancelled') setStatus('cancelled');
+        if (event.type === 'generation.committed') setStatus('committed');
+      });
       try {
-        const response = await client.api.chats[':id'].messages[':messageId'].regenerate.$post(
-          {
-            param: { id: chatId, messageId },
-            json: {
-              generationId,
-              ...(responseLength ? { responseLength } : {}),
-            },
-          },
-          { init: { signal: abortController.signal } },
-        );
-        await consumeSseResponse(response, (event) => {
-          const failureMessage = getGenerationFailureMessage(event);
-          if (failureMessage) throw new Error(failureMessage);
-          if ('payload' in event && event.type === 'generation.phase_changed') {
-            setStatus(event.payload.phase === 'preparing' ? 'preparing' : 'streaming');
-          }
-          if ('payload' in event && event.type === 'generation.committed') setStatus('committed');
-          if ('payload' in event && event.type === 'generation.cancelled') setStatus('cancelled');
-        });
+        const completed = await generation.done;
+        if (completed.phase === 'failed') {
+          throw new Error(completed.error ?? 'Generation failed.');
+        }
         await invalidateChatQueries(queryClient, chatId);
       } catch (caught) {
-        if (
-          cancelRequestedRef.current ||
-          (caught instanceof DOMException && caught.name === 'AbortError')
-        ) {
-          setStatus('cancelled');
-          await invalidateChatQueries(queryClient, chatId);
-        } else {
-          setStatus('failed');
-          setError(caught instanceof Error ? caught : new Error(String(caught)));
-          await invalidateChatQueries(queryClient, chatId);
-        }
+        setStatus(generation.state.phase === 'cancelled' ? 'cancelled' : 'failed');
+        setError(caught instanceof Error ? caught : new Error(String(caught)));
+        await invalidateChatQueries(queryClient, chatId);
       } finally {
-        abortControllerRef.current = null;
-        generationIdRef.current = null;
+        unsubscribe();
+        generationRef.current = null;
         setActiveMessageId(null);
       }
     },
-    [activeMessageId, chatId, client, queryClient],
+    [activeMessageId, chatClient, chatId, queryClient],
   );
 
   const cancel = useCallback(async () => {
-    const generationId = generationIdRef.current;
-    const abortController = abortControllerRef.current;
-    if (!generationId || !abortController) return;
-
-    cancelRequestedRef.current = true;
+    const generation = generationRef.current;
+    if (!generation) return;
     setStatus('stopping');
     try {
-      await client.api.chats[':id'].generations[':generationId'].cancel.$post({
-        param: { id: chatId, generationId },
-      });
-      abortController.abort();
+      await chatClient.cancel({ chatId, generationId: generation.state.generationId });
+      generation.cancel();
     } catch (caught) {
-      cancelRequestedRef.current = false;
       setStatus('failed');
       setError(caught instanceof Error ? caught : new Error(String(caught)));
     }
-  }, [chatId, client]);
+  }, [chatClient, chatId]);
 
   const retry = useCallback(async () => {
     const request = lastRequestRef.current;
-    if (!request) return;
-    await regenerate(request.messageId, request.responseLength);
+    if (request) await regenerate(request.messageId, request.responseLength);
   }, [regenerate]);
 
   return {
@@ -123,4 +107,4 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
   };
 }
 
-export type RegeneratingMessage = Pick<ChatMessageDto, 'id'>;
+export type RegeneratingMessage = { id: string };

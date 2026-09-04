@@ -4,25 +4,27 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { renderHookWithQueryClient } from '../../utils/render-hook';
 
-const mockFetch = vi.fn();
+const mockTransport = { request: vi.fn() };
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({ cookie: 'session=test' });
 
-vi.stubGlobal('fetch', mockFetch);
 vi.mock('~/services/auth/auth-provider', () => ({
   useAuth: () => ({ getAuthHeaders: mockGetAuthHeaders }),
 }));
 vi.mock('~/constants', () => ({ API_BASE_URL: 'http://localhost:4040' }));
+vi.mock('@hominem/chat/transport/xhr', () => ({
+  xhrChatTransport: () => mockTransport,
+}));
 
 const { useToolCallRespond } = await import('~/services/chat/use-tool-call-respond');
 
 afterEach(() => {
   vi.clearAllMocks();
+  mockTransport.request.mockReset();
 });
 
 describe('useToolCallRespond', () => {
   it('posts the decision, drains the SSE response, and invalidates chat data', async () => {
-    const text = vi.fn().mockResolvedValue('event: generation.committed\n\n');
-    mockFetch.mockResolvedValueOnce({ ok: true, text });
+    mockTransport.request.mockResolvedValueOnce(new Response('data: [DONE]\n\n'));
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useToolCallRespond({ chatId: 'chat-1' }),
     );
@@ -36,14 +38,15 @@ describe('useToolCallRespond', () => {
       });
     });
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:4040/api/chats/chat-1/messages/message-1/tool-calls/call-1/respond',
+    expect(mockTransport.request).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ approved: true }),
+        url: 'http://localhost:4040/api/chats/chat-1/messages/message-1/tool-calls/call-1/respond',
+        init: expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"approved":true'),
+        }),
       }),
     );
-    expect(text).toHaveBeenCalledOnce();
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['chats', 'messages', { chatId: 'chat-1', limit: 50 }],
     });
@@ -54,7 +57,7 @@ describe('useToolCallRespond', () => {
   });
 
   it('resets responding state and invalidates data when the response fails', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('network error'));
+    mockTransport.request.mockRejectedValue(new Error('network error'));
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useToolCallRespond({ chatId: 'chat-1' }),
     );

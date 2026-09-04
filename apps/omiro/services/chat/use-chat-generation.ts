@@ -1,35 +1,28 @@
-import {
-  createGenerationClientState,
-  parseGenerationClientCheckpoint,
-  parseGenerationWireEvent,
-  reduceGenerationClientEvent,
-  type GenerationClientState,
-} from '@hominem/chat';
+import { ChatClient, parseGenerationClientCheckpoint } from '@hominem/chat/client';
+import type { ChatGenerationController, GenerationClientState } from '@hominem/chat/client';
+import { xhrChatTransport } from '@hominem/chat/transport/xhr';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { API_BASE_URL } from '~/constants';
 import { storage } from '~/services/storage/mmkv';
 
 import type { ChatGenerationState } from './chat-generation';
-import { consumeGenerationSseXhr } from './consume-sse-xhr';
 
 const resumingGenerationIds = new Set<string>();
 
-function generationStorageKey(chatId: string) {
-  return `chat-generation:${chatId}`;
+function generationStorageKey(id: string) {
+  return `chat-generation:${id}`;
 }
 
 function restoreGeneration(chatId: string): ChatGenerationState | null {
   const raw = storage.getString(generationStorageKey(chatId));
-  if (!raw) {
-    return null;
-  }
+  if (!raw) return null;
   try {
     const checkpoint = parseGenerationClientCheckpoint(JSON.parse(raw));
     return {
       id: checkpoint.generationId,
       chatId,
-      stage: toStageFromPhase(checkpoint.phase),
+      stage: checkpoint.phase === 'cancel_requested' ? 'stopping' : checkpoint.phase,
       lastDurableSequence: checkpoint.lastDurableSequence,
     };
   } catch {
@@ -38,14 +31,18 @@ function restoreGeneration(chatId: string): ChatGenerationState | null {
   }
 }
 
-function toStageFromPhase(
-  phase: ReturnType<typeof parseGenerationClientCheckpoint>['phase'],
-): ChatGenerationState['stage'] {
-  return phase === 'cancel_requested' ? 'stopping' : phase;
-}
-
-function toClientPhase(stage: ChatGenerationState['stage']): GenerationClientState['phase'] {
-  return stage === 'stopping' ? 'cancel_requested' : stage;
+function checkpointStore(chatId: string) {
+  return {
+    get: (_id: string) => {
+      const raw = storage.getString(generationStorageKey(chatId));
+      return raw ? (JSON.parse(raw) as GenerationClientState) : null;
+    },
+    set: (state: GenerationClientState) =>
+      storage.set(generationStorageKey(chatId), JSON.stringify(state)),
+    remove: (_id: string) => {
+      storage.remove(generationStorageKey(chatId));
+    },
+  };
 }
 
 interface UseChatGenerationOptions {
@@ -59,29 +56,80 @@ export function useChatGeneration({
   getAuthHeaders,
   onGenerationTerminal,
 }: UseChatGenerationOptions) {
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const clientRef = useRef<ChatClient | null>(null);
+  const controllerRef = useRef<ChatGenerationController | null>(null);
   const generationRef = useRef<ChatGenerationState | null>(restoreGeneration(chatId));
-  const [generation, setGenerationState] = useState<ChatGenerationState | null>(
-    generationRef.current,
-  );
+  const [generation, setGenerationState] = useState(generationRef.current);
+  if (!clientRef.current) {
+    clientRef.current = new ChatClient({
+      baseUrl: API_BASE_URL,
+      headers: getAuthHeaders,
+      transport: xhrChatTransport(),
+      checkpointStore: checkpointStore(chatId),
+    });
+  }
 
   const setGeneration = useCallback(
     (next: ChatGenerationState | null) => {
       generationRef.current = next;
       setGenerationState(next);
-      const key = generationStorageKey(chatId);
       if (!next) {
-        storage.remove(key);
+        storage.remove(generationStorageKey(chatId));
         return;
       }
-      const checkpoint = parseGenerationClientCheckpoint({
-        generationId: next.id,
-        phase: next.stage === 'stopping' ? 'cancel_requested' : next.stage,
-        lastDurableSequence: next.lastDurableSequence,
-      });
-      storage.set(key, JSON.stringify(checkpoint));
+      storage.set(
+        generationStorageKey(chatId),
+        JSON.stringify({
+          generationId: next.id,
+          phase: next.stage === 'stopping' ? 'cancel_requested' : next.stage,
+          lastDurableSequence: next.lastDurableSequence,
+        }),
+      );
     },
     [chatId],
+  );
+
+  const bindController = useCallback(
+    (controller: ChatGenerationController, initial: ChatGenerationState) => {
+      controllerRef.current = controller;
+      setGeneration(initial);
+      return controller.subscribe((state) => {
+        const current = generationRef.current;
+        if (!current || current.id !== state.generationId) return;
+        if (state.phase === 'committed' || state.phase === 'cancelled') {
+          queueMicrotask(() => {
+            if (generationRef.current?.id !== state.generationId) return;
+            setGeneration(null);
+            void onGenerationTerminal?.();
+          });
+          return;
+        }
+        setGeneration({
+          ...current,
+          stage: state.phase === 'cancel_requested' ? 'stopping' : state.phase,
+          lastDurableSequence: state.lastDurableSequence,
+        });
+      });
+    },
+    [onGenerationTerminal, setGeneration],
+  );
+
+  const sendGeneration = useCallback(
+    (input: Parameters<ChatClient['send']>[0], initial: ChatGenerationState) => {
+      const controller = clientRef.current!.send(input);
+      bindController(controller, initial);
+      return controller;
+    },
+    [bindController],
+  );
+
+  const regenerateGeneration = useCallback(
+    (input: Parameters<ChatClient['regenerate']>[0], initial: ChatGenerationState) => {
+      const controller = clientRef.current!.regenerate(input);
+      bindController(controller, initial);
+      return controller;
+    },
+    [bindController],
   );
 
   const resumeGeneration = useCallback(async () => {
@@ -90,88 +138,45 @@ export function useChatGeneration({
       !current ||
       ['committed', 'cancelled', 'failed'].includes(current.stage) ||
       resumingGenerationIds.has(current.id)
-    ) {
+    )
       return;
-    }
     resumingGenerationIds.add(current.id);
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    let clientState: GenerationClientState = {
-      ...createGenerationClientState(current.id),
-      phase: toClientPhase(current.stage),
-      lastDurableSequence: current.lastDurableSequence,
-    };
+    const controller = clientRef.current!.resumeGeneration({
+      chatId,
+      generationId: current.id,
+    });
+    const unsubscribe = bindController(controller, current);
     try {
-      await consumeGenerationSseXhr({
-        url: `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/stream?afterSequence=${current.lastDurableSequence}`,
-        payload: null,
-        method: 'GET',
-        replayUrl: (afterSequence) =>
-          `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/stream?afterSequence=${afterSequence}`,
-        getHeaders: getAuthHeaders,
-        signal: controller.signal,
-        parseEvent: parseGenerationWireEvent,
-        getReplayCursor: () => clientState.lastDurableSequence,
-        onEvent: (event) => {
-          clientState = reduceGenerationClientEvent(clientState, event);
-          const latest = generationRef.current;
-          if (!latest || latest.id !== current.id) {
-            return;
-          }
-          if (['committed', 'cancelled', 'failed'].includes(clientState.phase)) {
-            setGeneration(null);
-            void onGenerationTerminal?.();
-            return;
-          }
-          setGeneration({
-            ...latest,
-            stage: toStageFromPhase(clientState.phase),
-            lastDurableSequence: clientState.lastDurableSequence,
-          });
-        },
-      });
+      await controller.done;
     } finally {
+      unsubscribe();
       resumingGenerationIds.delete(current.id);
-      if (abortControllerRef.current === controller) {
-        abortControllerRef.current = null;
-      }
+      if (controllerRef.current === controller) controllerRef.current = null;
     }
-  }, [chatId, getAuthHeaders, onGenerationTerminal, setGeneration]);
+  }, [bindController, chatId]);
 
   useEffect(() => {
-    if (!generationRef.current) {
-      return;
-    }
-    void resumeGeneration().catch(() => undefined);
+    if (generationRef.current) void resumeGeneration().catch(() => undefined);
   }, [resumeGeneration]);
 
   const cancelGeneration = useCallback(async () => {
     const current = generationRef.current;
-    if (!current || current.stage === 'stopping') {
-      return;
-    }
-
+    const controller = controllerRef.current;
+    if (!current || !controller || current.stage === 'stopping') return;
     setGeneration({ ...current, stage: 'stopping' });
-    const response = await fetch(
-      `${API_BASE_URL}/api/chats/${chatId}/generations/${current.id}/cancel`,
-      {
-        method: 'POST',
-        headers: await getAuthHeaders(),
-      },
-    );
-
+    const response = await clientRef.current!.cancel({ chatId, generationId: current.id });
     if (!response.ok) {
       setGeneration({ ...current, stage: 'failed', error: 'Unable to stop reply.' });
       return;
     }
-
-    abortControllerRef.current?.abort();
+    controller.cancel();
     setGeneration({ ...current, stage: 'cancelled' });
-  }, [chatId, getAuthHeaders, setGeneration]);
+  }, [chatId, setGeneration]);
 
   return {
-    abortControllerRef,
     cancelGeneration,
+    regenerateGeneration,
+    sendGeneration,
     generation,
     generationRef,
     resumeGeneration,

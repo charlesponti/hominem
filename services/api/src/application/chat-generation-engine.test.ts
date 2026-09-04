@@ -323,12 +323,17 @@ describe('chat generation service', () => {
     expect(result.assistantText).toBe('answer');
     expect(result.reasoningText).toBe('thinking');
     expect(result.usage?.totalTokens).toBe(6);
-    expect(appendEvent).toHaveBeenCalled();
-    expect(durableEvents.length).toBeGreaterThan(0);
+    // A plain text-only turn (no tool calls) never reaches eventStore.append:
+    // the only phase transitions the machine would persist for it —
+    // phase_changed:running (on start) and phase_changed:saving (on save) —
+    // are skipped in the persist handler because chat-generation.service.ts's
+    // executeGeneration already durably appends both of those itself.
+    expect(appendEvent).not.toHaveBeenCalled();
+    expect(durableEvents).toHaveLength(0);
     expect(liveEvents).toEqual(expect.arrayContaining(['text-delta', 'reasoning-delta']));
   });
 
-  it('skips configured start and terminal persistence', async () => {
+  it('skips configured start, terminal, and running/saving phase persistence', async () => {
     mockedStream.mockReturnValueOnce(
       chunks([
         {
@@ -352,11 +357,11 @@ describe('chat generation service', () => {
       eventStore: { append: appendEvent },
     });
 
-    expect(appendEvent).toHaveBeenCalledTimes(2);
-    expect(appendEvent.mock.calls.map(([call]) => call.event.type)).toEqual([
-      'generation.phase_changed',
-      'generation.phase_changed',
-    ]);
+    // generation.started/committed, and phase_changed:running/saving, are
+    // all durably appended by chat-generation.service.ts's executeGeneration
+    // itself — a plain text-only turn has nothing left for the engine's own
+    // eventStore to persist.
+    expect(appendEvent).not.toHaveBeenCalled();
   });
 
   it('returns failed tool results for malformed arguments and non-Error failures', async () => {

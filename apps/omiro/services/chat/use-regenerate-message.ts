@@ -1,21 +1,13 @@
-import {
-  createGenerationClientState,
-  getGenerationFailureMessage,
-  parseGenerationWireEvent,
-  reduceGenerationClientEvent,
-} from '@hominem/chat';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useRef } from 'react';
 
 import type { ChatMessageItem } from '~/components/chat';
-import { API_BASE_URL } from '~/constants';
 import { getChatResponseLength } from '~/hooks/use-chat-response-length';
 import { useAuth } from '~/services/auth/auth-provider';
 import { chatKeys } from '~/services/notes/query-keys';
 
 import { invalidateChatQueries } from './chat-cache';
-import { consumeGenerationSseXhr } from './consume-sse-xhr';
 import { useChatGeneration } from './use-chat-generation';
 import { toMessageOutput } from './use-chat-messages';
 
@@ -28,7 +20,7 @@ export function useRegenerateMessage(chatId: string) {
   const handleGenerationTerminal = useCallback(async () => {
     await invalidateChatQueries(queryClient, chatId);
   }, [chatId, queryClient]);
-  const { abortControllerRef, cancelGeneration, generation, generationRef, setGeneration } =
+  const { cancelGeneration, generation, generationRef, regenerateGeneration, setGeneration } =
     useChatGeneration({
       chatId,
       getAuthHeaders,
@@ -38,51 +30,58 @@ export function useRegenerateMessage(chatId: string) {
   const mutation = useMutation<void, Error, RegenerateInput>({
     retry: false,
     mutationFn: async ({ messageId, generationId }) => {
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-      let clientState = createGenerationClientState(generationId);
-      await consumeGenerationSseXhr({
-        url: `${API_BASE_URL}/api/chats/${chatId}/messages/${messageId}/regenerate`,
-        payload: { generationId, responseLength: getChatResponseLength() },
-        replayUrl: (afterSequence) =>
-          `${API_BASE_URL}/api/chats/${chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
-        getHeaders: getAuthHeaders,
-        signal: controller.signal,
-        parseEvent: parseGenerationWireEvent,
-        getReplayCursor: () => clientState.lastDurableSequence,
-        onEvent: (event) => {
-          const current = generationRef.current;
-          if (!current || event.generationId !== current.id) {
-            return;
-          }
-          clientState = reduceGenerationClientEvent(clientState, event);
-          const stage = clientState.phase === 'cancel_requested' ? 'stopping' : clientState.phase;
-          setGeneration({
-            ...current,
-            stage,
-            lastDurableSequence: clientState.lastDurableSequence,
-          });
-          const failureMessage = getGenerationFailureMessage(event);
-          if (failureMessage) {
-            throw new Error(failureMessage);
-          }
-          if ('payload' in event && event.type === 'generation.phase_changed') {
-            return;
-          }
-          if ('payload' in event && event.type === 'generation.committed') {
-            const message = toMessageOutput(event.payload.message);
-            if (message) {
-              queryClient.setQueryData<ChatMessageItem[]>(
-                chatKeys.messages(chatId),
-                (messages = []) =>
-                  messages.map((item) => (item.id === current.targetMessageId ? message : item)),
-              );
-            }
-            setGeneration(null);
-            void invalidateChatQueries(queryClient, chatId);
-          }
+      const controller = regenerateGeneration(
+        {
+          chatId,
+          messageId,
+          body: { generationId, responseLength: getChatResponseLength() },
         },
+        {
+          id: generationId,
+          chatId,
+          stage: 'preparing',
+          lastDurableSequence: 0,
+          targetMessageId: messageId,
+        },
+      );
+      const unsubscribe = controller.subscribe((state, event) => {
+        const current = generationRef.current;
+        if (!current || event.generationId !== current.id) return;
+        setGeneration({
+          ...current,
+          stage: state.phase === 'cancel_requested' ? 'stopping' : state.phase,
+          lastDurableSequence: state.lastDurableSequence,
+        });
+        if ('event' in event) {
+          setGeneration({ ...current, stage: 'failed', error: event.event.message });
+          return;
+        }
+        if (event.type === 'generation.failed') {
+          setGeneration({ ...current, stage: 'failed', error: event.payload.message });
+          return;
+        }
+        if (event.type === 'generation.cancelled') {
+          setGeneration({ ...current, stage: 'cancelled' });
+          return;
+        }
+        if (event.type === 'generation.committed') {
+          const message = toMessageOutput(event.payload.message);
+          if (message) {
+            queryClient.setQueryData<ChatMessageItem[]>(
+              chatKeys.messages(chatId),
+              (messages = []) =>
+                messages.map((item) => (item.id === current.targetMessageId ? message : item)),
+            );
+          }
+          void invalidateChatQueries(queryClient, chatId);
+          setGeneration(null);
+        }
       });
+      const completed = await controller.done;
+      if (completed.phase === 'failed') {
+        throw new Error(completed.error ?? 'Generation failed.');
+      }
+      unsubscribe();
     },
     onError: (error) => {
       if (error.name === 'AbortError') {
@@ -93,9 +92,7 @@ export function useRegenerateMessage(chatId: string) {
         setGeneration({ ...current, stage: 'failed', error: error.message });
       }
     },
-    onSettled: () => {
-      abortControllerRef.current = null;
-    },
+    onSettled: () => {},
   });
 
   const regenerateMessage = useCallback(

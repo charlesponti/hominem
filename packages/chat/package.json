@@ -33,6 +33,30 @@
     "./schemas": {
       "types": "./build/generation-schemas.d.ts",
       "default": "./src/generation-schemas.ts"
+    },
+    "./projection": {
+      "types": "./build/projection.d.ts",
+      "default": "./src/projection.ts"
+    },
+    "./server": {
+      "types": "./build/server.d.ts",
+      "default": "./src/server.ts"
+    },
+    "./client": {
+      "types": "./build/client.d.ts",
+      "default": "./src/client.ts"
+    },
+    "./transport/fetch": {
+      "types": "./build/client-transport-fetch.d.ts",
+      "default": "./src/client-transport-fetch.ts"
+    },
+    "./transport/xhr": {
+      "types": "./build/client-transport-xhr.d.ts",
+      "default": "./src/client-transport-xhr.ts"
+    },
+    "./adapters/redis": {
+      "types": "./build/redis-adapters.d.ts",
+      "default": "./src/redis-adapters.ts"
     }
   },
   "scripts": {

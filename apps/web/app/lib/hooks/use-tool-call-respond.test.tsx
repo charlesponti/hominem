@@ -5,23 +5,10 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockClient = vi.hoisted(() => ({
-  api: {
-    chats: {
-      ':id': {
-        messages: {
-          ':messageId': {
-            'tool-calls': { ':toolCallId': { respond: { $post: vi.fn() } } },
-          },
-        },
-      },
-    },
-  },
-}));
+const mockTransport = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@hominem/rpc/react', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@hominem/rpc/react')>()),
-  useApiClient: () => mockClient,
+vi.mock('@hominem/chat/transport/fetch', () => ({
+  fetchChatTransport: () => mockTransport,
 }));
 
 import { useToolCallRespond } from './use-tool-call-respond';
@@ -35,6 +22,11 @@ function createWrapper(queryClient: QueryClient) {
 describe('useToolCallRespond', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTransport.request.mockResolvedValue(
+      new Response('data: [DONE]\n\n', {
+        headers: { 'content-type': 'text/event-stream' },
+      }),
+    );
   });
 
   it.each([
@@ -43,14 +35,6 @@ describe('useToolCallRespond', () => {
   ])('drains the %s SSE response and refreshes durable state', async (_label, approved) => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
-    mockClient.api.chats[':id'].messages[':messageId']['tool-calls'][
-      ':toolCallId'
-    ].respond.$post.mockResolvedValueOnce(
-      new Response('data: [DONE]\n\n', {
-        headers: { 'content-type': 'text/event-stream' },
-      }),
-    );
-
     const { result } = renderHook(() => useToolCallRespond({ chatId: 'chat-1' }), {
       wrapper: createWrapper(queryClient),
     });
@@ -63,12 +47,17 @@ describe('useToolCallRespond', () => {
       });
     });
 
-    expect(
-      mockClient.api.chats[':id'].messages[':messageId']['tool-calls'][':toolCallId'].respond.$post,
-    ).toHaveBeenCalledWith({
-      param: { id: 'chat-1', messageId: 'message-1', toolCallId: 'tool-1' },
-      json: { approved },
-    });
+    expect(mockTransport.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringContaining(
+          '/api/chats/chat-1/messages/message-1/tool-calls/tool-1/respond',
+        ),
+        init: expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining(`"approved":${approved}`),
+        }),
+      }),
+    );
     expect(invalidateQueries).toHaveBeenCalledTimes(2);
     expect(result.current.isResponding).toBe(false);
   });
@@ -77,9 +66,7 @@ describe('useToolCallRespond', () => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
     const error = new Error('request failed');
-    mockClient.api.chats[':id'].messages[':messageId']['tool-calls'][
-      ':toolCallId'
-    ].respond.$post.mockRejectedValueOnce(error);
+    mockTransport.request.mockRejectedValue(error);
 
     const { result } = renderHook(() => useToolCallRespond({ chatId: 'chat-1' }), {
       wrapper: createWrapper(queryClient),

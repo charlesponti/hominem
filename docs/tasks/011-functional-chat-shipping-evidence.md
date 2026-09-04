@@ -1,9 +1,9 @@
 ---
 title: 'Complete functional chat shipping evidence'
-status: 'Open'
+status: 'Implemented'
 priority: 'high'
 labels: [chat, e2e, browser, ios, evidence]
-depends_on: []
+depends_on: [010-chat-runtime-consolidation.md]
 blocks: []
 estimated_size: 'L'
 ---
@@ -32,15 +32,15 @@ an accepted result here.
 
 ## Work sequence
 
-| ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
-| --- | --- | --- | --- | --- | --- |
-| W-001 | Prepare the run | local services, auth, Browser, simulator | `docs/chat.generation.md`, `docs/chat.testing.md`, chat ADRs | environment manifest | Revision, URLs, viewport/device, authenticated session, and run ID are recorded. |
-| W-002 | Run Web matrix | Vitest/MSW + Playwright/Web | Web test setup; W-001 for the Playwright subset | one manifest row per B-001–B-025 with boundary-specific evidence | B-001–B-019 and B-022–B-025 have Playwright evidence; B-020/B-021 have focused Vitest/MSW evidence and optional browser smoke; each result records only the assertions and artifacts owned by its tested boundary. |
-| W-003 | Run Omiro matrix | Maestro/Omiro | W-001 | one artifact row per applicable scenario, excluding deferred B-011 | Equivalent semantic states and Apple-only layout/accessibility states are recorded for this task's scenarios. |
-| W-004 | Resolve confirmed defects | owning Web/Omiro/testkit boundary | W-002 or W-003 | focused regression test + rerun | Only defects required by a failed active scenario are fixed. |
-| W-005 | Reconcile evidence | task record/evidence manifest | W-002–W-004 | reviewed manifest | Implemented, Partial, Open, and Blocked results are explicit; no raw disposable IDs are embedded here. |
-| W-006 | Clean disposable data | testkit/database inspector | W-005 + user confirmation | cleanup receipt | Exact listed records are deleted and absence is verified. |
-| W-007 | Run release gate | repo validation | W-006 | command output | Focused suites, typechecks, lint, builds, full check, and diff check pass. |
+| ID    | Work item                 | Owner boundary                           | Depends on                                                   | Validation / artifact                                              | Done when                                                                                                                                                                                                          |
+| ----- | ------------------------- | ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| W-001 | Prepare the run           | local services, auth, Browser, simulator | `docs/chat.generation.md`, `docs/chat.testing.md`, chat ADRs | environment manifest                                               | Revision, URLs, viewport/device, authenticated session, and run ID are recorded.                                                                                                                                   |
+| W-002 | Run Web matrix            | Vitest/MSW + Playwright/Web              | Web test setup; W-001 for the Playwright subset              | one manifest row per B-001–B-025 with boundary-specific evidence   | B-001–B-019 and B-022–B-025 have Playwright evidence; B-020/B-021 have focused Vitest/MSW evidence and optional browser smoke; each result records only the assertions and artifacts owned by its tested boundary. |
+| W-003 | Run Omiro matrix          | Maestro/Omiro                            | W-001                                                        | one artifact row per applicable scenario, excluding deferred B-011 | Equivalent semantic states and Apple-only layout/accessibility states are recorded for this task's scenarios.                                                                                                      |
+| W-004 | Resolve confirmed defects | owning Web/Omiro/testkit boundary        | W-002 or W-003                                               | focused regression test + rerun                                    | Only defects required by a failed active scenario are fixed.                                                                                                                                                       |
+| W-005 | Reconcile evidence        | task record/evidence manifest            | W-002–W-004                                                  | reviewed manifest                                                  | Implemented, Partial, Open, and Blocked results are explicit; no raw disposable IDs are embedded here.                                                                                                             |
+| W-006 | Clean disposable data     | testkit/database inspector               | W-005 + user confirmation                                    | cleanup receipt                                                    | Exact listed records are deleted and absence is verified.                                                                                                                                                          |
+| W-007 | Run release gate          | repo validation                          | W-006                                                        | command output                                                     | Focused suites, typechecks, lint, builds, full check, and diff check pass.                                                                                                                                         |
 
 The MSW portion of W-002 may run without W-001 or live services. The
 Playwright portion of W-002 and W-003 may run in parallel only after W-001, but
@@ -49,11 +49,11 @@ scenarios do not silently bypass an earlier failed scenario.
 
 ## Acceptance criteria
 
-- [ ] AC-001: Every Web scenario has its required evidence type: Playwright for browser-owned scenarios, focused component/hook MSW coverage for client states, and Node MSW SSR-loader coverage for server-rendered states such as B-020/B-021.
-- [ ] AC-002: Every applicable Omiro scenario owned by this task has Maestro and visual evidence.
-- [ ] AC-003: Every failed scenario has either a focused fix and rerun or an exact blocker.
-- [ ] AC-004: Cleanup is confirmed, exact, and verified.
-- [ ] AC-005: The final validation set passes at the recorded revision.
+- [x] AC-001: Every Web scenario has its required evidence type: Playwright for browser-owned scenarios, focused component/hook MSW coverage for client states, and Node MSW SSR-loader coverage for server-rendered states such as B-020/B-021.
+- [x] AC-002: Every applicable Omiro scenario owned by this task has Maestro and visual evidence.
+- [x] AC-003: Every failed scenario has either a focused fix and rerun or an exact blocker.
+- [x] AC-004: Cleanup is confirmed, exact, and verified.
+- [x] AC-005: The final validation set passes at the recorded revision.
 
 ## Evidence record
 
@@ -64,6 +64,9 @@ screenshots/DOM, duplicate checks where applicable, and cleanup receipt. The
 task document stores only the summary and links to that manifest. Focused
 client/SSR MSW scenarios do not require real durable IDs or browser artifacts
 unless those are part of the specific acceptance assertion.
+
+The reviewed manifest for this run is
+`docs/tasks/artifacts/011-run-manifest-2026-09-04.md`.
 
 ## Current run status
 
@@ -78,14 +81,17 @@ unless those are part of the specific acceptance assertion.
 - B-020 and B-021 do not require using Playwright failure injection.
   The chat loader fetches messages during SSR, so browser request interception
   is the wrong control boundary for these deterministic states. The focused
-  coverage is still pending: component/hook tests must use browser/jsdom MSW,
-  and the loader must use Node `setupServer`. The existing Playwright attempts
-  record the harness limitation and should be replaced or retained only as
-  optional smoke coverage.
+  coverage is now implemented in
+  `apps/web/app/lib/hooks/use-chat-messages.msw.test.tsx` (jsdom/MSW client
+  error and retry) and
+  `apps/web/app/routes/chat/chat.$chatId.loader.msw.test.ts` (Node MSW 503 and
+  500 SSR-loader preservation). The existing Playwright attempts remain
+  optional smoke coverage and explicitly record the server-side interception
+  limitation.
 - The generated Playwright HTML report and per-scenario artifacts are preserved
   under `apps/web/playwright-report` and `apps/web/test-results`. Disposable
-  records have not been deleted; cleanup still requires the W-006 confirmation
-  checkpoint.
+  records were deleted and verified by the W-006 receipt at
+  `docs/tasks/artifacts/011-cleanup-receipt-2026-09-04.md`.
 - Omiro now launches on the booted iPhone 17 Pro after rebuilding the native
   development client and reaches an authenticated chat through the local API
   at `http://localhost:4040`. The named `chat-core.yaml` Maestro flow passes
@@ -105,12 +111,16 @@ unless those are part of the specific acceptance assertion.
   `/tmp/omiro-task003-b009-tool-failure`.
 - Omiro B-010 now passes the provider-failure, inline Retry, and successful
   retry flow. The activity timeline is rendered with the newest chat content,
--  and the stop control has a stable automation identifier. B-011 has been
+- and the stop control has a stable automation identifier. B-011 has been
   split into independent follow-up Task 012 because its remaining issue is
   Omiro native callback delivery, not a prerequisite for the rest of this
   shipping-evidence matrix. Its reproduction, evidence, attempted fixes, and
   acceptance criteria are recorded in
   `012-omiro-generation-cancellation.md`.
+
+- W-007 release gate completed: `pnpm run check` passed with 28 successful
+  Turbo tasks, and `git diff --check` passed after the final client/test
+  adjustments.
 
 ## Test rule
 

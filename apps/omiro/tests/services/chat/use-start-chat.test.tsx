@@ -12,7 +12,7 @@ import { renderHookWithQueryClient } from '../../utils/render-hook';
 
 const mockRandomUUID = vi.fn();
 const mockGetAuthHeaders = vi.fn().mockResolvedValue({});
-const mockConsumeSseXhr = vi.fn();
+const mockTransportRequest = vi.fn();
 
 const chat = {
   id: 'chat-1',
@@ -45,9 +45,8 @@ vi.mock('~/services/auth/auth-provider', () => ({
 vi.mock('@react-native-community/netinfo', () => ({
   default: { fetch: vi.fn().mockResolvedValue({ isConnected: true }) },
 }));
-vi.mock('~/services/chat/consume-sse-xhr', () => ({
-  consumeSseXhr: mockConsumeSseXhr,
-  consumeGenerationSseXhr: mockConsumeSseXhr,
+vi.mock('@hominem/chat/transport/xhr', () => ({
+  xhrChatTransport: () => ({ request: mockTransportRequest }),
 }));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: { id: string; role: 'user'; content: string }) => ({
@@ -64,23 +63,21 @@ const { useStartChat } = await import('~/services/chat/use-start-chat');
 describe('useStartChat', () => {
   beforeEach(() => {
     mockRandomUUID.mockReturnValue('generation-1');
-    mockConsumeSseXhr.mockImplementation(
-      ({ onEvent }: { onEvent: (event: GenerationWireEvent) => void }) => {
-        onEvent({
-          version: 1,
+    mockTransportRequest.mockImplementation(async () => {
+      const event: GenerationWireEvent = {
+        version: 1,
+        type: 'generation.accepted',
+        generationId: 'generation-1',
+        sequence: 1,
+        payload: {
           type: 'generation.accepted',
-          generationId: 'generation-1',
-          sequence: 1,
-          payload: {
-            type: 'generation.accepted',
-            chatId: 'chat-1',
-            chat,
-            userMessage,
-          },
-        });
-        return Promise.resolve();
-      },
-    );
+          chatId: 'chat-1',
+          chat,
+          userMessage,
+        },
+      };
+      return new Response(`data: ${JSON.stringify(event)}\n\n`);
+    });
   });
 
   afterEach(() => vi.clearAllMocks());
@@ -103,23 +100,21 @@ describe('useStartChat', () => {
   });
 
   it('surfaces a durable generation failure from the stream', async () => {
-    mockConsumeSseXhr.mockImplementationOnce(
-      ({ onEvent }: { onEvent: (event: GenerationWireEvent) => void }) => {
-        onEvent({
-          version: 1,
-          generationId: 'generation-1',
-          sequence: 1,
-          type: 'generation.failed',
-          payload: { type: 'generation.failed', message: 'start failed' },
-        });
-        return Promise.resolve();
-      },
-    );
+    mockTransportRequest.mockImplementationOnce(async () => {
+      const event: GenerationWireEvent = {
+        version: 1,
+        generationId: 'generation-1',
+        sequence: 1,
+        type: 'generation.failed',
+        payload: { type: 'generation.failed', message: 'start failed' },
+      };
+      return new Response(`data: ${JSON.stringify(event)}\n\n`);
+    });
 
     const { result } = renderHookWithQueryClient(() => useStartChat());
     await expect(result.current.startChat({ title: 'Test', message: 'Hello' })).rejects.toThrow(
       'start failed',
     );
-    expect(mockConsumeSseXhr).toHaveBeenCalledOnce();
+    expect(mockTransportRequest).toHaveBeenCalledOnce();
   });
 });

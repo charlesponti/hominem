@@ -1,19 +1,13 @@
-import {
-  createGenerationClientState,
-  reduceGenerationClientEvent,
-  createGenerationEventDeduplicator,
-  getGenerationFailureMessage,
-  parseGenerationClientCheckpoint,
-  toGenerationClientCheckpoint,
-} from '@hominem/chat';
-import type { GenerationClientState, GenerationWireEvent } from '@hominem/chat';
-import { useApiClient } from '@hominem/rpc/react';
+import { getGenerationFailureMessage } from '@hominem/chat';
+import type { ChatGenerationController } from '@hominem/chat/client';
+import { parseGenerationClientCheckpoint } from '@hominem/chat/client';
+import type { GenerationClientState } from '@hominem/chat/client';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invalidateChatQueries } from '../chat/chat-cache';
-import { consumeSseResponse } from '../chat/consume-sse-response';
+import { useChatClient } from './use-chat-client';
 import type { ResponseLength } from './use-response-length';
 
 export type StreamStatus =
@@ -27,6 +21,12 @@ export type StreamStatus =
   | 'failed';
 
 export const PROVIDER_FAILURE_MESSAGE = 'I couldn’t finish that response. Please try again.';
+
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError'
+  );
+}
 
 function generationStorageKey(chatId: string) {
   return `chat-generation:${chatId}`;
@@ -68,7 +68,7 @@ interface StreamInput {
 
 export function useStreamMessage({ chatId }: { chatId: string }) {
   const queryClient = useQueryClient();
-  const client = useApiClient();
+  const chatClient = useChatClient();
   // Read browser-only recovery state after hydration so SSR and the first
   // client render produce the same composer controls.
   const [restoredCheckpoint, setRestoredCheckpoint] =
@@ -87,7 +87,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   );
   const [error, setError] = useState<Error | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const activeGenerationRef = useRef<ChatGenerationController | null>(null);
   const generationIdRef = useRef<string | null>(null);
   const resumedGenerationRef = useRef<string | null>(null);
   const cancelRequestedRef = useRef(false);
@@ -103,34 +103,9 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
     }
   }, [chatId]);
 
-  const persistCheckpoint = useCallback(
-    (state: GenerationClientState) => {
-      if (typeof window === 'undefined') return;
-      window.localStorage.setItem(
-        generationStorageKey(chatId),
-        JSON.stringify(toGenerationClientCheckpoint(state)),
-      );
-    },
-    [chatId],
-  );
-
   const clearCheckpoint = useCallback(() => {
     if (typeof window !== 'undefined') window.localStorage.removeItem(generationStorageKey(chatId));
   }, [chatId]);
-
-  const applyRestoredEvent = useCallback(
-    (state: GenerationClientState, event: GenerationWireEvent): GenerationClientState => {
-      const next = reduceGenerationClientEvent(state, event);
-      if (next.phase === 'committed') clearCheckpoint();
-      else persistCheckpoint(next);
-      setText(next.text);
-      setReasoning(next.reasoning);
-      setToolSteps([...next.toolSteps]);
-      setStatus(statusFromPhase(next.phase));
-      return next;
-    },
-    [clearCheckpoint, persistCheckpoint],
-  );
 
   useEffect(() => {
     if (
@@ -141,81 +116,104 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       return;
     }
     resumedGenerationRef.current = restoredCheckpoint.generationId;
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    let clientState: GenerationClientState = {
-      ...createGenerationClientState(restoredCheckpoint.generationId),
-      phase: restoredCheckpoint.phase,
-      lastDurableSequence: restoredCheckpoint.lastDurableSequence,
-    };
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        `chat-generation:${restoredCheckpoint.generationId}`,
+        JSON.stringify(restoredCheckpoint),
+      );
+    }
+    const generation = chatClient.resumeGeneration({
+      chatId,
+      generationId: restoredCheckpoint.generationId,
+    });
+    activeGenerationRef.current = generation;
     generationIdRef.current = restoredCheckpoint.generationId;
+    const unsubscribe = generation.subscribe((next, event) => {
+      setText(next.text);
+      setReasoning(next.reasoning);
+      setToolSteps([...next.toolSteps]);
+      setStatus(statusFromPhase(next.phase));
+      if ('event' in event) {
+        setError(new Error(event.event.message));
+        setStatus('failed');
+        failedGenerationIdRef.current = restoredCheckpoint.generationId;
+        return;
+      }
+      const failureMessage = getGenerationFailureMessage(event);
+      if (failureMessage) {
+        setError(new Error(PROVIDER_FAILURE_MESSAGE));
+        setStatus('failed');
+        failedGenerationIdRef.current = restoredCheckpoint.generationId;
+      }
+      if (event.type === 'generation.committed') clearCheckpoint();
+      if (event.type === 'generation.cancelled') clearCheckpoint();
+      if (event.type === 'generation.committed' || event.type === 'generation.cancelled') {
+        void invalidateChatQueries(queryClient, chatId);
+      }
+    });
     void (async () => {
       try {
-        const response = await client.api.chats[':id'].generations[':generationId'].stream.$get(
-          { param: { id: chatId, generationId: restoredCheckpoint.generationId } },
-          {
-            init: {
-              signal: controller.signal,
-              headers: { 'Last-Event-ID': String(clientState.lastDurableSequence) },
-            },
-          },
-        );
-        await consumeSseResponse(response, (event) => {
-          clientState = applyRestoredEvent(clientState, event);
-          const failureMessage = getGenerationFailureMessage(event);
-          if (failureMessage) throw new Error(failureMessage);
-          if (['generation.committed', 'generation.cancelled'].includes(event.type)) {
-            void invalidateChatQueries(queryClient, chatId);
+        await generation.done;
+        if (!['committed', 'cancelled', 'failed'].includes(generation.state.phase)) {
+          const run = (await chatClient.getGeneration({
+            chatId,
+            generationId: restoredCheckpoint.generationId,
+          })) as { status?: string };
+          if (run.status === 'committed' || run.status === 'cancelled') {
+            clearCheckpoint();
+            setStatus(run.status);
           }
-        });
-        if (clientState.phase !== 'cancelled') {
-          // A reconnect can receive [DONE] without the terminal event when
-          // the event was committed between the initial status read and the
-          // replay subscription. Ask durable state what actually happened.
-          const runResponse = await client.api.chats[':id'].generations[':generationId'].$get({
-            param: { id: chatId, generationId: restoredCheckpoint.generationId },
-          });
-          const run = await runResponse.json();
-          if (run.status === 'committed') {
-            clearCheckpoint();
-            setStatus('committed');
-          } else if (run.status === 'cancelled') {
-            clearCheckpoint();
-            setStatus('cancelled');
-          } else if (run.status === 'failed') {
+          if (run.status === 'failed') {
             setError(new Error(PROVIDER_FAILURE_MESSAGE));
             setStatus('failed');
             failedGenerationIdRef.current = restoredCheckpoint.generationId;
           }
-          await invalidateChatQueries(queryClient, chatId);
         }
+        await invalidateChatQueries(queryClient, chatId);
       } catch (caught) {
-        if (caught instanceof DOMException && caught.name === 'AbortError') return;
+        if (isAbortError(caught)) return;
         setError(caught instanceof Error ? caught : new Error(String(caught)));
         setStatus('failed');
         failedGenerationIdRef.current = restoredCheckpoint.generationId;
         await invalidateChatQueries(queryClient, chatId);
       } finally {
-        if (abortControllerRef.current === controller) abortControllerRef.current = null;
+        unsubscribe();
+        activeGenerationRef.current = null;
+        generationIdRef.current = null;
       }
     })();
-    return () => controller.abort();
-  }, [applyRestoredEvent, chatId, clearCheckpoint, client, queryClient, restoredCheckpoint]);
+    return () => {
+      unsubscribe();
+      generation.cancel();
+      activeGenerationRef.current = null;
+      generationIdRef.current = null;
+    };
+  }, [chatClient, chatId, clearCheckpoint, queryClient, restoredCheckpoint]);
 
   const stream = useCallback(
     async (input: StreamInput) => {
-      const generationId = crypto.randomUUID();
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
+      const generation = input.retryOfGenerationId
+        ? chatClient.retry({
+            chatId,
+            generationId: input.retryOfGenerationId,
+            body: {
+              ...(input.responseLength ? { responseLength: input.responseLength } : {}),
+            },
+          })
+        : chatClient.send({
+            chatId,
+            message: input.message ?? '',
+            ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
+            ...(input.responseLength ? { responseLength: input.responseLength } : {}),
+          });
+      activeGenerationRef.current = generation;
+      const generationId = generation.state.generationId;
       generationIdRef.current = generationId;
       if (input.retryOfGenerationId) failedGenerationIdRef.current = input.retryOfGenerationId;
       else failedGenerationIdRef.current = null;
       clearCheckpoint();
       cancelRequestedRef.current = false;
       let terminalStatus: StreamStatus | null = null;
-      let shouldReconnect = true;
-      const deduplicateEvent = createGenerationEventDeduplicator();
-      let clientState = createGenerationClientState(generationId);
       setText('');
       setReasoning('');
       setToolSteps([]);
@@ -223,21 +221,29 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
       setError(null);
       setIsRetrying(Boolean(input.retryOfGenerationId));
 
-      const handleEvent = (event: GenerationWireEvent) => {
-        clientState = applyRestoredEvent(clientState, event);
+      const unsubscribe = generation.subscribe((clientState, event) => {
         setText(clientState.text);
         setReasoning(clientState.reasoning);
         setToolSteps([...clientState.toolSteps]);
         if (clientState.phase === 'preparing') setStatus('preparing');
         if (clientState.phase === 'running' || clientState.phase === 'saving')
           setStatus('streaming');
+        if (clientState.phase === 'awaiting_confirmation') setStatus('awaiting_confirmation');
         if (clientState.phase === 'cancel_requested') setStatus('stopping');
         if (clientState.phase === 'cancelled') setStatus('cancelled');
         if (clientState.phase === 'committed') setStatus('committed');
+        if ('event' in event) {
+          setError(new Error(event.event.message));
+          setStatus('failed');
+          terminalStatus = 'failed';
+          return;
+        }
         const failureMessage = getGenerationFailureMessage(event);
         if (failureMessage) {
-          shouldReconnect = false;
-          throw new Error(failureMessage);
+          setError(new Error(PROVIDER_FAILURE_MESSAGE));
+          setStatus('failed');
+          terminalStatus = 'failed';
+          return;
         }
         if (event.type === 'generation.accepted') {
           input.onAccepted?.(event.payload.userMessage);
@@ -263,77 +269,25 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           terminalStatus = 'committed';
           input.onCommitted?.(event.payload.message);
         }
-      };
-      const consume = (response: Response) =>
-        consumeSseResponse(response, handleEvent, undefined, { deduplicateEvent });
+      });
 
       try {
-        const streamRes = input.retryOfGenerationId
-          ? await client.api.chats[':id'].generations[':generationId'].retry.$post(
-              {
-                param: { id: chatId, generationId: input.retryOfGenerationId },
-                json: {
-                  generationId,
-                  ...(input.responseLength ? { responseLength: input.responseLength } : {}),
-                },
-              },
-              { init: { signal: abortController.signal } },
-            )
-          : await client.api.chats[':id'].stream.$post(
-              {
-                param: { id: chatId },
-                json: {
-                  generationId,
-                  message: input.message ?? '',
-                  ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
-                  ...(input.responseLength ? { responseLength: input.responseLength } : {}),
-                },
-              },
-              { init: { signal: abortController.signal } },
-            );
-
-        await consume(streamRes);
+        await generation.done;
 
         if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
           await invalidateChatQueries(queryClient, chatId);
         }
       } catch (caught) {
-        if (
-          cancelRequestedRef.current ||
-          (caught instanceof DOMException && caught.name === 'AbortError')
-        ) {
+        if (cancelRequestedRef.current || isAbortError(caught)) {
           setStatus('cancelled');
           input.onCancelled?.();
           return;
         }
 
-        let streamError: unknown = caught;
-        if (shouldReconnect) {
-          try {
-            const replayResponse = await client.api.chats[':id'].generations[
-              ':generationId'
-            ].stream.$get(
-              {
-                param: { id: chatId, generationId },
-              },
-              {
-                init: {
-                  signal: abortController.signal,
-                  headers: { 'Last-Event-ID': String(clientState.lastDurableSequence) },
-                },
-              },
-            );
-            await consume(replayResponse);
-            if (terminalStatus !== 'cancelled' && !cancelRequestedRef.current) {
-              await invalidateChatQueries(queryClient, chatId);
-            }
-            return;
-          } catch (replayError) {
-            streamError = replayError;
-          }
-        }
-
-        const nextError = new Error(PROVIDER_FAILURE_MESSAGE, { cause: streamError });
+        const nextError = new Error(
+          caught instanceof Error ? caught.message : PROVIDER_FAILURE_MESSAGE,
+          { cause: caught },
+        );
         setError(nextError);
         setStatus('failed');
         setIsRetrying(false);
@@ -341,13 +295,14 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
         await invalidateChatQueries(queryClient, chatId);
         input.onFailed?.(nextError);
       } finally {
+        unsubscribe();
         input.onSettled?.();
         setIsRetrying(false);
-        abortControllerRef.current = null;
+        activeGenerationRef.current = null;
         generationIdRef.current = null;
       }
     },
-    [applyRestoredEvent, chatId, client, clearCheckpoint, queryClient],
+    [chatClient, chatId, clearCheckpoint, queryClient],
   );
 
   const retry = useCallback(
@@ -363,24 +318,22 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
 
   const cancel = useCallback(async () => {
     const generationId = generationIdRef.current;
-    const abortController = abortControllerRef.current;
-    if (!generationId || !abortController || status === 'stopping') return;
+    const generation = activeGenerationRef.current;
+    if (!generationId || !generation || status === 'stopping') return;
 
     cancelRequestedRef.current = true;
     setStatus('stopping');
 
     try {
-      await client.api.chats[':id'].generations[':generationId'].cancel.$post({
-        param: { id: chatId, generationId },
-      });
-      abortController.abort();
+      await chatClient.cancel({ chatId, generationId });
+      generation.cancel();
       setStatus('cancelled');
     } catch (caught) {
       cancelRequestedRef.current = false;
       setError(caught instanceof Error ? caught : new Error(String(caught)));
       setStatus('failed');
     }
-  }, [chatId, client, status]);
+  }, [chatClient, chatId, status]);
 
   return {
     cancel,

@@ -28,9 +28,25 @@ vi.mock('~/services/auth/auth-provider', () => ({
 }));
 vi.mock('~/components/media/audio-playback.service', () => ({ playAudioReply: vi.fn() }));
 vi.mock('@react-native-community/netinfo', () => ({ default: { fetch: mockNetInfoFetch } }));
-vi.mock('~/services/chat/consume-sse-xhr', () => ({
-  consumeSseXhr: mockConsumeSseXhr,
-  consumeGenerationSseXhr: mockConsumeSseXhr,
+vi.mock('@hominem/chat/transport/xhr', () => ({
+  xhrChatTransport: () => ({
+    request: async ({ signal }: { signal?: AbortSignal }) => {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        start(streamController) {
+          void mockConsumeSseXhr({
+            onEvent: (event: GenerationWireEvent) =>
+              streamController.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)),
+            signal,
+          }).then(
+            () => streamController.close(),
+            (error: unknown) => streamController.error(error),
+          );
+        },
+      });
+      return new Response(stream);
+    },
+  }),
 }));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: { id: string; role: 'user' | 'assistant'; content: string }) => ({
@@ -76,8 +92,7 @@ let pending: PendingStream | null = null;
 
 describe('useSendMessage', () => {
   beforeEach(() => {
-    let count = 0;
-    mockRandomUUID.mockImplementation(() => `uuid-${++count}`);
+    mockRandomUUID.mockReturnValue('uuid-1');
     mockConsumeSseXhr.mockImplementation(
       ({
         onEvent,
@@ -122,7 +137,7 @@ describe('useSendMessage', () => {
         payload: { type: 'generation.phase_changed', phase: 'saving' },
       });
     });
-    expect(result.current.generation).toMatchObject({ stage: 'saving' });
+    await waitFor(() => expect(result.current.generation).toMatchObject({ stage: 'saving' }));
 
     act(() => {
       pending?.onEvent({
@@ -150,7 +165,7 @@ describe('useSendMessage', () => {
     const { result, queryClient } = renderHookWithQueryClient(() =>
       useSendMessage({ chatId: CHAT_ID }),
     );
-    mockConsumeSseXhr.mockRejectedValueOnce(new Error('generation failed'));
+    mockConsumeSseXhr.mockRejectedValue(new Error('generation failed'));
 
     await act(async () => {
       await result.current.sendChatMessage({ message: 'Hello there' }).catch(() => undefined);

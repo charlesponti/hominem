@@ -3,12 +3,24 @@ export * from './generation-schemas';
 export * from './sse';
 export * from './capture-types';
 export * from './dates';
-export * from './generation-machine';
-export * from './generation-client';
 export * from './generation-timing';
 export { toolEventRoundTripFixture } from './generation-test-fixtures';
-export * from './generation-interpreter';
 export * from './generation-events';
-export { reconstructProviderToolCalls } from './generation-machine/provider';
-export * from './generation-projection';
-export * from './chat-sdk';
+export type {
+  ChatGenerationKind,
+  ChatGenerationStatus,
+  GenerationActivePhase,
+  GenerationDeltaEventPayload,
+  GenerationEvent,
+  GenerationHistoryEvent,
+  GenerationHistoryEventPayload,
+  GenerationHistoryEventType,
+  GenerationInput,
+  GenerationPhase,
+  GenerationState,
+  GenerationStep,
+  GenerationToolCall,
+  ProviderChunk,
+  ProviderToolCallDelta,
+  ToolResult,
+} from './generation-machine';

@@ -39,21 +39,21 @@ const CONSUMERS = [
   {
     label: 'apps/web',
     file: path.join(root, 'apps/web/app/lib/hooks/use-stream-message.ts'),
-    line: 9,
-    offset: 38,
-    symbol: 'GenerationWireEvent',
+    line: 2,
+    offset: 15,
+    symbol: 'ChatGenerationController',
   },
   {
     label: 'apps/omiro',
-    file: path.join(root, 'apps/omiro/services/chat/consume-sse-xhr.ts'),
-    line: 2,
-    offset: 15,
-    symbol: 'GenerationWireEvent',
+    file: path.join(root, 'apps/omiro/services/chat/use-chat-generation.ts'),
+    line: 1,
+    offset: 10,
+    symbol: 'ChatClient',
   },
   {
     label: 'packages/db',
     file: path.join(root, 'packages/db/src/services/chats/chat-generation.repository.ts'),
-    line: 4,
+    line: 3,
     offset: 8,
     symbol: 'GenerationHistoryEventPayload',
   },
@@ -69,12 +69,12 @@ const CONSUMERS = [
     file: path.join(root, 'services/api/src/application/chat-generation.service.ts'),
     line: 12,
     offset: 3,
-    symbol: 'GenerationHistoryEventPayload',
+    symbol: 'GenerationHistoryEvent',
   },
 ];
 
 const SOURCE_FILE = path.join(root, 'packages/chat/src/generation-machine/types.ts');
-const SOURCE_SYMBOL = { line: 115, offset: 13 }; // GenerationHistoryEvent
+const SOURCE_SYMBOL = { line: 162, offset: 13 }; // GenerationHistoryEvent
 
 function assertSymbol(file, { line, offset }, name) {
   const text = readFileSync(file, 'utf8').split('\n')[line - 1] ?? '';

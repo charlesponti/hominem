@@ -10,13 +10,13 @@ import {
 import {
   GENERATION_TIMING,
   providerChunkSchema,
-  reconstructProviderToolCalls,
-  type ChatModel,
   type GenerationInput,
   type GenerationState,
   type ProviderChunk,
   type ProviderToolCallDelta,
 } from '@hominem/chat';
+import { reconstructProviderToolCalls } from '@hominem/chat/server';
+import type { ChatModel } from '@hominem/chat/server';
 import { logger } from '@hominem/telemetry';
 
 export class ProviderInputError extends Error {

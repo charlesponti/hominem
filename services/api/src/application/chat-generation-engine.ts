@@ -1,6 +1,5 @@
 import { type AIUsageMetrics } from '@hominem/ai';
 import {
-  ChatClient,
   chatMessageJsonObjectSchema,
   chatMessageSnapshotSchema,
   type ChatMessageJsonObject,
@@ -9,6 +8,8 @@ import {
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
+import { ChatServerRuntime } from '@hominem/chat/server';
+import type { ChatServerRuntimeOperation, ChatServerRuntimeOptions } from '@hominem/chat/server';
 import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
@@ -24,6 +25,8 @@ export class ToolInputError extends Error {
     this.name = 'ToolInputError';
   }
 }
+
+const chatServerRuntime = new ChatServerRuntime<ChatGenerationEventRecord>();
 
 function parseArguments(call: GenerationToolCall): ChatMessageJsonObject {
   if (!call.arguments) return {};
@@ -96,13 +99,10 @@ export async function executeGenerationTurn(
     // Overrides the interpreter's default per-command timeouts. Production
     // callers should leave this unset; it exists so tests can make a hung
     // port fail fast instead of waiting out the real defaults.
-    effectTimeoutsMs?: ConstructorParameters<typeof ChatClient>[0]['effectTimeoutsMs'];
+    effectTimeoutsMs?: ChatServerRuntimeOptions['effectTimeoutsMs'];
   },
 ): Promise<GenerationEngineResult> {
   let usage: AIUsageMetrics | null = null;
-  const calls = new Map<string, GenerationToolCall>();
-  const results = new Map<string, ToolResult>();
-  let pendingPreview: Record<string, unknown> | null = null;
   const runtime = input.toolRuntime ?? { callTool, getToolDefinition };
   const modelOptions = {
     model: input.model,
@@ -121,19 +121,46 @@ export async function executeGenerationTurn(
     ? input.modelFactory(modelOptions)
     : new OpenRouterChatModel(modelOptions);
 
-  const chat = new ChatClient({
-    model,
+  const operation: ChatServerRuntimeOperation<ChatGenerationEventRecord> = {
+    provider: () => model,
     effectTimeoutsMs: input.effectTimeoutsMs,
     tools: {
-      execute: async ({ call, idempotencyKey }) => {
-        calls.set(call.id, call);
+      getDefinition: (toolName) => {
+        const definition = runtime.getToolDefinition(toolName);
+        return definition
+          ? {
+              requiresConfirmation: definition.requiresConfirmation,
+              preview: async (call, context) => {
+                try {
+                  const value = definition.preview
+                    ? await definition.preview(context.userId, parseArguments(call))
+                    : null;
+                  return {
+                    callId: call.id,
+                    toolName: call.name,
+                    content: JSON.stringify(value),
+                    error: false,
+                  };
+                } catch {
+                  return {
+                    callId: call.id,
+                    toolName: call.name,
+                    content: JSON.stringify({ error: 'Tool preview failed' }),
+                    error: true,
+                  };
+                }
+              },
+            }
+          : undefined;
+      },
+      execute: async ({ call, context: toolContext }) => {
+        const idempotencyKey = toolContext.idempotencyKey;
         const stored = await input.effectStore?.get({
           generationId: input.generationId,
           idempotencyKey,
           toolName: call.name,
         });
         if (stored) {
-          results.set(call.id, stored);
           return stored;
         }
         try {
@@ -146,7 +173,6 @@ export async function executeGenerationTurn(
             content: value.content[0]?.text ?? 'null',
             error: false,
           };
-          results.set(call.id, result);
           return input.effectStore
             ? await input.effectStore.save({
                 generationId: input.generationId,
@@ -162,7 +188,6 @@ export async function executeGenerationTurn(
             content: JSON.stringify({ error: 'Tool call failed' }),
             error: true,
           };
-          results.set(call.id, result);
           return input.effectStore
             ? await input.effectStore.save({
                 generationId: input.generationId,
@@ -173,89 +198,93 @@ export async function executeGenerationTurn(
             : result;
         }
       },
-      preview: async ({ call }) => {
-        calls.set(call.id, call);
-        try {
-          const definition = runtime.getToolDefinition(call.name);
-          const value = definition?.preview
-            ? await definition.preview(input.userId, parseArguments(call))
-            : null;
-          pendingPreview = value;
-          return {
-            callId: call.id,
-            toolName: call.name,
-            content: JSON.stringify(value),
-            error: false,
-          };
-        } catch {
-          return {
-            callId: call.id,
-            toolName: call.name,
-            content: JSON.stringify({ error: 'Tool preview failed' }),
-            error: true,
-          };
+    },
+    store: {
+      appendEvent: async ({ event, idempotencyKey }) => {
+        const UNSOPPORTED_EVENT_TYPES = [
+          'generation.started',
+          'generation.committed',
+          'generation.cancelled',
+          'generation.failed',
+        ];
+        if (UNSOPPORTED_EVENT_TYPES.includes(event.type)) {
+          return null;
         }
+        if (
+          event.type === 'generation.phase_changed' &&
+          (event.phase === 'running' || event.phase === 'saving')
+        ) {
+          return null;
+        }
+        const record = await input.eventStore?.append({ event, idempotencyKey });
+        if (record) await input.durableEvents?.accept(record);
+        return record ?? null;
       },
+      getEffect: async ({ generationId, idempotencyKey, toolName }) =>
+        input.effectStore?.get({ generationId, idempotencyKey, toolName }) ?? null,
+      saveEffect: async ({ generationId, idempotencyKey, toolName, result }) =>
+        input.effectStore
+          ? input.effectStore.save({ generationId, idempotencyKey, toolName, result })
+          : result,
+      saveGeneration: async (state) =>
+        chatMessageSnapshotSchema.parse({
+          id: `${input.generationId}:assistant`,
+          chatId: input.chatId,
+          userId: input.userId,
+          role: 'assistant',
+          content: state.state.assistantText,
+          files: null,
+          toolCalls: null,
+          reasoning: state.state.reasoningText || null,
+          parentMessageId: input.targetAssistantMessageId ?? null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+      stopGeneration: async () => undefined,
     },
-    lifecycle: {
-      events: {
-        persist: async (command) => {
-          if (
-            [
-              'generation.started',
-              'generation.committed',
-              'generation.cancelled',
-              'generation.failed',
-            ].includes(command.event.type)
-          ) {
-            return;
-          }
-          const record = await input.eventStore?.append({
-            event: command.event,
-            idempotencyKey: command.idempotencyKey,
-          });
-          if (record) await input.durableEvents?.accept(record);
-        },
-        emit: async (event) => {
-          await input.liveEvents?.accept(event);
-        },
-      },
-      generation: {
-        save: async (state) =>
-          chatMessageSnapshotSchema.parse({
-            id: `${input.generationId}:assistant`,
-            chatId: input.chatId,
-            userId: input.userId,
-            role: 'assistant',
-            content: state.assistantText,
-            files: null,
-            toolCalls: null,
-            reasoning: state.reasoningText || null,
-            parentMessageId: input.targetAssistantMessageId ?? null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }),
-        stop: async () => undefined,
-      },
-      control: {
-        isCancelled: input.cancellation?.isRequested,
-      },
+    emit: async (event) => {
+      await input.liveEvents?.accept(event);
     },
-  });
+    isCancelled: () => input.cancellation?.isRequested?.() ?? false,
+    context: input.context
+      ? {
+          recordCompletion: (completion) =>
+            input.context!.recordCompletion({
+              ...completion,
+              usage: completion.usage as AIUsageMetrics,
+            }),
+        }
+      : undefined,
+  };
 
-  const generation = chat.generations.create({
-    id: input.generationId,
-    context: {
+  const result = await chatServerRuntime.run(
+    {
+      generationId: input.generationId,
       chatId: input.chatId,
-      kind: input.generationKind ?? 'send',
-      userMessageId: input.userMessageId ?? null,
-      targetAssistantMessageId: input.targetAssistantMessageId ?? null,
-      requestContext: {},
+      userId: input.userId,
+      model: {
+        model: input.model,
+        messages: input.messages,
+        tools: input.tools,
+        maxTokens: input.maxTokens,
+        reasoning: input.reasoning,
+        requiresToolCall: input.initialState ? false : input.requiresToolCall,
+        onUsage: (next) => modelOptions.onUsage?.(next as AIUsageMetrics | null),
+      },
+      startContext: {
+        chatId: input.chatId,
+        kind: input.generationKind ?? 'send',
+        userMessageId: input.userMessageId ?? null,
+        targetAssistantMessageId: input.targetAssistantMessageId ?? null,
+        requestContext: {},
+      },
+      initialState: input.initialState,
+      initialInput: input.initialInput,
+      targetAssistantMessageId: input.targetAssistantMessageId,
     },
-    initialState: input.initialState,
-    initialInput: input.initialInput,
-  });
-  const state = await generation.run();
+    operation,
+  );
+  const state = result.state;
   if (state.phase === 'failed') throw new Error(state.lastError ?? 'Generation failed');
 
   const pending = state.pendingConfirmation;
@@ -265,8 +294,8 @@ export async function executeGenerationTurn(
     toolCallRecords: state.toolCalls.map((call) =>
       toToolRecord(
         call,
-        results.get(call.id) ??
-          state.completedToolResults.find((result) => result.callId === call.id),
+        result.toolResults.get(call.id) ??
+          state.completedToolResults.find((toolResult) => toolResult.callId === call.id),
       ),
     ),
     usage,
@@ -275,7 +304,7 @@ export async function executeGenerationTurn(
           toolCallId: pending.id,
           toolName: pending.name,
           args: parseArguments(pending),
-          preview: pendingPreview,
+          preview: result.pendingPreview ? JSON.parse(result.pendingPreview.content) : null,
         }
       : null,
   };

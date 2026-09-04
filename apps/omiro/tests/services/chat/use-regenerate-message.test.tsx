@@ -2,7 +2,7 @@
 import type { GenerationWireEvent } from '@hominem/chat';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { act, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatGenerationState } from '~/services/chat/chat-generation';
@@ -25,6 +25,7 @@ const {
     mockAbortControllerRef,
     mockCancelGeneration: vi.fn(),
     mockConsumeSseXhr: vi.fn(),
+    mockCreateGeneration: vi.fn(),
     mockGenerationRef,
     mockGetAuthHeaders: vi.fn().mockResolvedValue({}),
     mockRandomUUID: vi.fn(),
@@ -36,20 +37,75 @@ vi.mock('expo-crypto', () => ({ randomUUID: mockRandomUUID }));
 vi.mock('~/services/auth/auth-provider', () => ({
   useAuth: () => ({ getAuthHeaders: mockGetAuthHeaders }),
 }));
-vi.mock('~/services/chat/consume-sse-xhr', () => ({
-  consumeSseXhr: mockConsumeSseXhr,
-  consumeGenerationSseXhr: mockConsumeSseXhr,
-}));
 vi.mock('~/services/chat/use-chat-generation', () => ({
-  useChatGeneration: () => ({
-    abortControllerRef: mockAbortControllerRef,
-    cancelGeneration: mockCancelGeneration,
-    generation: mockGenerationRef.current,
-    generationRef: mockGenerationRef,
-    setGeneration: (next: ChatGenerationState | null) => {
-      mockGenerationRef.current = next;
-    },
-  }),
+  useChatGeneration: () => {
+    const [generation, setGenerationState] = useState<ChatGenerationState | null>(
+      mockGenerationRef.current,
+    );
+    const createMockGeneration = (initial: ChatGenerationState) => {
+      mockGenerationRef.current = initial;
+      let listener:
+        | ((
+            state: { phase: ChatGenerationState['stage']; lastDurableSequence: number },
+            event: GenerationWireEvent,
+          ) => void)
+        | null = null;
+      let currentPhase = initial.stage;
+      return {
+        subscribe: (next: typeof listener) => {
+          listener = next;
+          return () => {
+            listener = null;
+          };
+        },
+        start: async () => {
+          await mockConsumeSseXhr({
+            onEvent: (event: GenerationWireEvent) => {
+              const phase: ChatGenerationState['stage'] =
+                event.type === 'generation.cancelled'
+                  ? 'cancelled'
+                  : event.type === 'generation.committed'
+                    ? 'committed'
+                    : event.type === 'generation.phase_changed'
+                      ? event.payload.phase === 'cancel_requested'
+                        ? 'stopping'
+                        : event.payload.phase
+                      : 'running';
+              currentPhase = phase;
+              listener?.({ phase, lastDurableSequence: event.sequence ?? 0 }, event);
+            },
+          });
+          return { phase: currentPhase, error: null };
+        },
+        cancel: vi.fn(),
+      };
+    };
+    return {
+      cancelGeneration: mockCancelGeneration,
+      createGeneration: createMockGeneration,
+      regenerateGeneration: (_input: unknown, initial: ChatGenerationState) => {
+        const controller = createMockGeneration(initial);
+        let resolveDone!: (state: { phase: ChatGenerationState['stage']; error: null }) => void;
+        let rejectDone!: (error: unknown) => void;
+        const done = new Promise<{ phase: ChatGenerationState['stage']; error: null }>(
+          (resolve, reject) => {
+            resolveDone = resolve;
+            rejectDone = reject;
+          },
+        );
+        queueMicrotask(() => {
+          void controller.start().then(resolveDone, rejectDone);
+        });
+        return { ...controller, done };
+      },
+      generation,
+      generationRef: mockGenerationRef,
+      setGeneration: (next: ChatGenerationState | null) => {
+        mockGenerationRef.current = next;
+        setGenerationState(next);
+      },
+    };
+  },
 }));
 vi.mock('~/services/chat/use-chat-messages', () => ({
   toMessageOutput: (message: ChatMessageDto) => ({

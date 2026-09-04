@@ -4,14 +4,16 @@ import { dirname } from 'node:path';
 
 import { type AIUsageMetrics, convertSchemaToJsonSchema, type ChatFunctionTool } from '@hominem/ai';
 import {
-  createGenerationClientState,
   parseGenerationWireEvent,
-  reduceGenerationClientEvent,
-  type ChatModel,
-  type GenerationClientState,
   type GenerationInput,
   type GenerationWireEvent,
 } from '@hominem/chat';
+import {
+  createGenerationClientState,
+  reduceGenerationClientEvent,
+  type GenerationClientState,
+} from '@hominem/chat/client';
+import type { ChatModel } from '@hominem/chat/server';
 import {
   AIUsageEventRepository,
   authDb,

@@ -14,7 +14,37 @@ const getAuthHeaders = vi.fn().mockResolvedValue({});
 const { consumeGenerationSseXhr } = vi.hoisted(() => ({ consumeGenerationSseXhr: vi.fn() }));
 const key = 'chat-generation:chat-1';
 
-vi.mock('~/services/chat/consume-sse-xhr', () => ({ consumeGenerationSseXhr }));
+vi.mock('@hominem/chat/transport/xhr', () => ({
+  xhrChatTransport: () => ({
+    request: async ({
+      url,
+      init,
+      signal,
+    }: {
+      url: string;
+      init: RequestInit;
+      signal?: AbortSignal;
+    }) => {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        start(streamController) {
+          void consumeGenerationSseXhr({
+            method: init.method,
+            url,
+            getReplayCursor: () => 12,
+            onEvent: (event: unknown) =>
+              streamController.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)),
+            signal,
+          }).then(
+            () => streamController.close(),
+            (error: unknown) => streamController.error(error),
+          );
+        },
+      });
+      return new Response(stream);
+    },
+  }),
+}));
 
 describe('useChatGeneration', () => {
   beforeEach(() => {
