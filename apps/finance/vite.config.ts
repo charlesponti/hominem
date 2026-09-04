@@ -102,7 +102,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
 
     server: {
-      allowedHosts: ['localhost'],
+      allowedHosts: ['localhost', '.lvh.me'],
       port: 4444,
       strictPort: true,
     },

@@ -111,6 +111,7 @@ export default defineConfig(({ mode }) => ({
     tsconfigPaths: true,
   },
   server: {
+    allowedHosts: ['localhost', '.lvh.me'],
     port: 4451,
     strictPort: true,
   },

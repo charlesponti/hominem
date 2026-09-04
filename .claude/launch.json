@@ -7,7 +7,7 @@
       "runtimeArgs": ["--filter", "@hominem/career", "dev"],
       "port": 4451,
       "autoPort": true,
-      "url": "https://career.lvh.me:4200"
+      "url": "http://localhost:4451"
     },
     {
       "name": "finance",
@@ -15,7 +15,7 @@
       "runtimeArgs": ["--filter", "@hominem/finance", "dev"],
       "port": 4444,
       "autoPort": true,
-      "url": "https://finance.lvh.me:4200"
+      "url": "http://localhost:4444"
     },
     {
       "name": "web",
@@ -23,15 +23,12 @@
       "runtimeArgs": ["--filter", "@hominem/web", "dev"],
       "port": 4445,
       "autoPort": true,
-      "url": "https://web.lvh.me:4200"
+      "url": "http://localhost:4445"
     },
     {
       "name": "ui-storybook",
       "runtimeExecutable": "bash",
-      "runtimeArgs": [
-        "-c",
-        "cd $HOME/Developer/ui && pnpm exec storybook dev -p 6006 --ci"
-      ],
+      "runtimeArgs": ["-c", "cd $HOME/Developer/ui && pnpm exec storybook dev -p 6006 --ci"],
       "port": 6006
     },
     {

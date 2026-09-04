@@ -14,6 +14,24 @@ pane's `preview_start` for anything you'll drive or screenshot in a browser.
 Stop services you started once you're done with them, unless the user is
 actively using them.
 
+`.claude/launch.json`'s `career`/`finance`/`web` entries open the Browser
+pane at `http://localhost:<port>`, not the portless `https://<name>.lvh.me:4200`
+URL, even though `pnpm dev` itself still runs those apps through portless.
+This is deliberate: a Claude Code cloud/remote session's outbound traffic is
+sandboxed through its own egress proxy, and that proxy does not support
+non-443 HTTPS ports (see `/root/.ccr/README.md` inside such a session) —
+portless's proxy listens on 4200, so requests to `*.lvh.me:4200` fail there,
+which is why JS/CSS/HMR asset requests get silently blocked in the Browser
+pane while the initial SSR HTML sometimes still renders. Loading the app's
+own fixed local port instead avoids that proxy path entirely. The tradeoff:
+`localhost` doesn't share the cross-subdomain `AUTH_COOKIE_DOMAIN=lvh.me`
+session cookie (see [docs/authentication.md](../../../docs/authentication.md)),
+so a login performed through the Browser pane on `localhost` won't persist
+across apps the way it does when testing directly against the portless
+`lvh.me` origins (e.g. via `curl`/Playwright, which aren't proxied the same
+way). For an authenticated preview, drive the portless origins directly
+instead of the Browser pane.
+
 ## First-time setup: env files in a new worktree
 
 A freshly created worktree has none of the git-ignored `.env` files each
