@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { aiUsageMetrics } from '@hominem/utils/testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { userContext } from '../lib/middleware';
@@ -41,15 +42,12 @@ beforeEach(() => {
     model: 'job-model',
     durationMs: 1234,
     usage: {
-      provider: 'openrouter',
+      ...aiUsageMetrics,
       model: 'job-model',
       promptTokens: 10,
-      completionTokens: 4,
+      outputTokens: 4,
       totalTokens: 14,
-      reportedTotalTokens: null,
       costUsd: 0.22,
-      cachedPromptTokens: null,
-      reasoningTokens: null,
     },
   });
 });

@@ -1,3 +1,4 @@
+import { aiUsageMetrics } from '@hominem/utils/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createRedisChatContextCache, createRedisChatEffectStore } from './redis-adapters';
@@ -33,11 +34,12 @@ describe('Redis chat adapters', () => {
   it('writes completed context usage once through the adapter contract', async () => {
     const redis = { get: vi.fn(), set: vi.fn(async () => undefined) };
     const cache = createRedisChatContextCache(redis, { now: () => new Date('2026-01-01') });
+    const usage = { ...aiUsageMetrics, promptTokens: 1, outputTokens: 2, totalTokens: 3 };
 
     await cache.recordCompletion({
       chatId: 'chat-1',
       model: 'test-model',
-      usage: { promptTokens: 1, completionTokens: 2, totalTokens: 3, costUsd: null },
+      usage,
     });
 
     expect(redis.set).toHaveBeenCalledOnce();
@@ -45,10 +47,10 @@ describe('Redis chat adapters', () => {
       'chat:context-window:chat-1',
       JSON.stringify({
         model: 'test-model',
-        promptTokens: 1,
-        completionTokens: 2,
-        totalTokens: 3,
-        costUsd: null,
+        promptTokens: usage.promptTokens,
+        outputTokens: usage.outputTokens,
+        totalTokens: usage.totalTokens,
+        costUsd: usage.costUsd,
         updatedAt: '2026-01-01T00:00:00.000Z',
       }),
       'EX',

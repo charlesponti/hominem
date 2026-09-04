@@ -60,7 +60,7 @@ describe('ChatServerRuntime', () => {
         open: () =>
           (async function* () {
             yield { type: 'provider-chunk', chunk: { content: 'Hello' } };
-            onUsage?.({ promptTokens: 1, completionTokens: 1, totalTokens: 2, costUsd: null });
+            onUsage?.({ promptTokens: 1, outputTokens: 1, totalTokens: 2, costUsd: null });
             yield {
               type: 'provider-turn-completed',
               requiredToolCall: false,

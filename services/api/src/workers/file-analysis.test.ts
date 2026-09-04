@@ -1,3 +1,5 @@
+import type { ChatResult } from '@hominem/ai';
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -11,11 +13,11 @@ vi.mock('@hominem/ai', () => ({
     (result: { choices?: Array<{ message?: { content?: string } }> }) =>
       result.choices?.[0]?.message?.content ?? '',
   ),
-  getChatCompletionUsage: vi.fn((result: { model: string; usage?: Record<string, unknown> }) => ({
+  getChatCompletionUsage: vi.fn((result: Pick<ChatResult, 'model' | 'usage'>) => ({
     provider: 'openrouter',
     model: result.model,
     promptTokens: Number(result.usage?.promptTokens ?? 0),
-    completionTokens: Number(result.usage?.completionTokens ?? 0),
+    outputTokens: Number(result.usage?.completionTokens ?? 0),
     totalTokens: Number(result.usage?.totalTokens ?? 0),
     reportedTotalTokens: null,
     costUsd: Number(result.usage?.cost ?? 0),
@@ -48,7 +50,13 @@ describe('describeImageForChat', () => {
   it('records image analysis usage immediately after the provider responds', async () => {
     mocks.createChatCompletion.mockResolvedValueOnce({
       model: 'vision-model',
-      usage: { promptTokens: 6, completionTokens: 3, totalTokens: 9, cost: 0.09 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 6,
+        completionTokens: 3,
+        totalTokens: 9,
+        cost: 0.09,
+      },
       choices: [{ message: { content: 'image summary' } }],
     });
 
@@ -112,7 +120,13 @@ describe('summarizeDocumentForChat', () => {
   it('records document summarization usage for long documents', async () => {
     mocks.createChatCompletion.mockResolvedValueOnce({
       model: 'summary-model',
-      usage: { promptTokens: 20, completionTokens: 10, totalTokens: 30, cost: 0.03 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 20,
+        completionTokens: 10,
+        totalTokens: 30,
+        cost: 0.03,
+      },
       choices: [{ message: { content: 'doc summary' } }],
     });
 

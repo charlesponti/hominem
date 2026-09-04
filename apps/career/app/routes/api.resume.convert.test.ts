@@ -1,6 +1,7 @@
 // @vitest-environment node
 
-import { OpenRouterRequestError } from '@hominem/ai';
+import { OpenRouterRequestError, type ChatResult } from '@hominem/ai';
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCareerTestDb } from '~/test/db/career';
@@ -81,11 +82,11 @@ vi.mock('@hominem/ai', () => ({
     (result: { choices?: Array<{ message?: { content?: string } }> }) =>
       result.choices?.[0]?.message?.content ?? '',
   ),
-  getChatCompletionUsage: vi.fn((result: { model?: string; usage?: Record<string, unknown> }) => ({
+  getChatCompletionUsage: vi.fn((result: Pick<ChatResult, 'model' | 'usage'>) => ({
     provider: 'openrouter',
-    model: result.model ?? 'test-model',
+    model: result.model,
     promptTokens: Number(result.usage?.promptTokens ?? 0),
-    completionTokens: Number(result.usage?.completionTokens ?? 0),
+    outputTokens: Number(result.usage?.completionTokens ?? 0),
     totalTokens: Number(result.usage?.totalTokens ?? 0),
     reportedTotalTokens: null,
     costUsd: result.usage && 'cost' in result.usage ? Number(result.usage.cost ?? 0) : null,
@@ -204,7 +205,13 @@ describe('resume convert action', () => {
     mocks.extractPdfText.mockResolvedValue('resume text');
     mocks.createCompletion.mockResolvedValue({
       model: 'test-model',
-      usage: { promptTokens: 12, completionTokens: 8, totalTokens: 20, cost: 0.2 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 12,
+        completionTokens: 8,
+        totalTokens: 20,
+        cost: 0.2,
+      },
       choices: [{ message: { content: JSON.stringify(makeConvertedResumeData()) } }],
     });
     mocks.documentStorageService.storeFile.mockResolvedValue({
@@ -408,7 +415,13 @@ describe('resume convert action', () => {
   it('returns ai parse stage when the AI response is malformed JSON', async () => {
     mocks.createCompletion.mockResolvedValue({
       model: 'model',
-      usage: { promptTokens: 12, completionTokens: 8, totalTokens: 20, cost: 0.42 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 12,
+        completionTokens: 8,
+        totalTokens: 20,
+        cost: 0.42,
+      },
       choices: [{ message: { content: '{' } }],
     });
 
@@ -429,7 +442,13 @@ describe('resume convert action', () => {
   it('returns schema validation stage when the parsed resume is invalid', async () => {
     mocks.createCompletion.mockResolvedValue({
       model: 'model',
-      usage: { promptTokens: 9, completionTokens: 7, totalTokens: 16, cost: 0.31 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 9,
+        completionTokens: 7,
+        totalTokens: 16,
+        cost: 0.31,
+      },
       choices: [{ message: { content: JSON.stringify({ portfolio: { email: 'not-an-email' } }) } }],
     });
 

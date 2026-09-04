@@ -8,8 +8,8 @@ import {
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
+import type { ChatServerRuntimeOptions } from '@hominem/chat/server';
 import { ChatServerRuntime } from '@hominem/chat/server';
-import type { ChatServerRuntimeOperation, ChatServerRuntimeOptions } from '@hominem/chat/server';
 import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
@@ -70,7 +70,7 @@ function addUsage(
   return {
     ...next,
     promptTokens: totals.promptTokens + next.promptTokens,
-    completionTokens: totals.completionTokens + next.completionTokens,
+    outputTokens: totals.outputTokens + next.outputTokens,
     totalTokens: totals.totalTokens + next.totalTokens,
     costUsd:
       totals.costUsd !== null || next.costUsd !== null
@@ -121,7 +121,7 @@ export async function executeGenerationTurn(
     ? input.modelFactory(modelOptions)
     : new OpenRouterChatModel(modelOptions);
 
-  const operation: ChatServerRuntimeOperation<ChatGenerationEventRecord> = {
+  const operation: ChatServerRuntimeOptions<ChatGenerationEventRecord> = {
     provider: () => model,
     effectTimeoutsMs: input.effectTimeoutsMs,
     tools: {

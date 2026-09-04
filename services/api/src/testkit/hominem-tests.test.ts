@@ -50,7 +50,7 @@ describe('HominemTests', () => {
       provider: 'openrouter' as const,
       model: 'scripted-model',
       promptTokens: 4,
-      completionTokens: 6,
+      outputTokens: 6,
       totalTokens: 10,
       reportedTotalTokens: 10,
       costUsd: 0.01,
@@ -75,7 +75,7 @@ describe('HominemTests', () => {
       requestCount: 1,
       succeededCount: 1,
       totalTokens: 10,
-      completionTokens: 6,
+      outputTokens: 6,
     });
   });
 

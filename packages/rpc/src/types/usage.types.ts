@@ -13,7 +13,7 @@ export type UsageSummary = {
   failedCount: number;
   usageAvailableCount: number;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   totalCostUsd: number;
   lastRecordedAt: string | null;

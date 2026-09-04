@@ -41,6 +41,10 @@
     "./coerce": {
       "types": "./build/coerce.d.ts",
       "default": "./src/coerce.ts"
+    },
+    "./testing": {
+      "types": "./build/testing.d.ts",
+      "default": "./src/testing.ts"
     }
   },
   "scripts": {

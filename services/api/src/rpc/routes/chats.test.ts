@@ -1,4 +1,5 @@
 import type { ChatGenerationEventRecord } from '@hominem/db';
+import { aiUsageMetrics } from '@hominem/utils/testing';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -46,7 +47,7 @@ const mocks = vi.hoisted(() => ({
     provider: 'openrouter',
     model: 'test-tts-model',
     promptTokens: 0,
-    completionTokens: 0,
+    outputTokens: 0,
     totalTokens: 0,
     reportedTotalTokens: null,
     costUsd: 0.001,
@@ -363,17 +364,7 @@ describe('chat stream accounting', () => {
     mocks.streamChatCompletion.mockReturnValue(
       (async function* () {
         yield {
-          usage: {
-            provider: 'openrouter',
-            model: 'chat-model',
-            promptTokens: 10,
-            completionTokens: 5,
-            totalTokens: 15,
-            reportedTotalTokens: null,
-            costUsd: 0.12,
-            cachedPromptTokens: null,
-            reasoningTokens: null,
-          },
+          usage: { ...aiUsageMetrics, model: 'chat-model', promptTokens: 10, costUsd: 0.12 },
           choices: [{ delta: { content: 'hello' } }],
         };
         throw new Error('stream broke');

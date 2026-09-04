@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-import { type AIUsageMetrics, convertSchemaToJsonSchema, type ChatFunctionTool } from '@hominem/ai';
+import { convertSchemaToJsonSchema, type AIUsageMetrics, type ChatFunctionTool } from '@hominem/ai';
 import {
   parseGenerationWireEvent,
   type GenerationInput,
-  type GenerationWireEvent,
+  type GenerationEvent,
 } from '@hominem/chat';
 import {
   createGenerationClientState,
@@ -24,8 +24,10 @@ import {
 import { Hono } from 'hono';
 
 import type { CapabilityDefinition } from '../application/capability';
-import type { ChatToolRuntime } from '../application/chat-generation-types';
-import type { ChatGenerationFailureHooks } from '../application/chat-generation-types';
+import type {
+  ChatGenerationFailureHooks,
+  ChatToolRuntime,
+} from '../application/chat-generation-types';
 import { ChatGenerationService } from '../application/chat-generation.service';
 import type { ChatToolPlan } from '../mcp/chat-tool-adapter';
 import type { McpToolResult } from '../mcp/tool-registry';
@@ -50,7 +52,7 @@ const DEFAULT_TEST_USAGE: AIUsageMetrics = {
   provider: 'openrouter',
   model: 'scripted-model',
   promptTokens: 1,
-  completionTokens: 1,
+  outputTokens: 1,
   totalTokens: 2,
   reportedTotalTokens: 2,
   costUsd: 0,
@@ -203,11 +205,11 @@ export type ChatRouteResult = {
   generationId: string;
   chatId: string | null;
   response: Response;
-  events: GenerationWireEvent[];
+  events: GenerationEvent[];
   clientState: GenerationClientState;
   doneCount: number;
-  durableEvents: GenerationWireEvent[];
-  liveEvents: GenerationWireEvent[];
+  durableEvents: GenerationEvent[];
+  liveEvents: GenerationEvent[];
 };
 
 export type TestEvidenceManifest = {

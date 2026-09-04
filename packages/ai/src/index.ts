@@ -12,11 +12,13 @@ export { convertSchemaToJsonSchema } from './json-schema';
 
 export type {
   ChatFunctionTool,
-  ChatToolCall,
   ChatMessages,
   ChatRequest,
+  ChatResult,
   ChatStreamChunk,
   ChatStreamToolCall,
+  ChatToolCall,
+  ChatUsage,
 } from '@openrouter/sdk/models';
 
 export {
@@ -36,10 +38,12 @@ export { cleanupVoiceTranscript } from './voice-cleanup';
 
 export type { VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
-export { synthesizeSpeech } from './speech';
-export { synthesizeSpeechStream } from './speech';
-export { getSpeechGenerationUsage } from './speech';
-export { getSpeechUsageEstimate } from './speech';
+export {
+  getSpeechGenerationUsage,
+  getSpeechUsageEstimate,
+  synthesizeSpeech,
+  synthesizeSpeechStream,
+} from './speech';
 export type {
   SpeechGenerationUsage,
   SpeechUsageEstimate,
@@ -51,8 +55,8 @@ export { extractTimeBlock } from './time-block-extraction';
 
 export {
   assertUnderMonthlyUsageLimit,
-  getMonthlyAIUsageReport,
   getAIUsageTimeseries,
+  getMonthlyAIUsageReport,
   getMonthlyUsageStatus,
   recordAIUsageEvent,
   startAIUsageTimer,

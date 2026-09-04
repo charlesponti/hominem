@@ -15,6 +15,7 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
+    "declarationMap": true,
     "rootDir": "src",
     "outDir": "build",
     // pnpm-workspace.yaml sets injectWorkspacePackages: true, which

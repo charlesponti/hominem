@@ -61,7 +61,7 @@ function UsageTable({
       requestCount: total.requestCount + row.requestCount,
       failedCount: total.failedCount + row.failedCount,
       promptTokens: total.promptTokens + row.promptTokens,
-      completionTokens: total.completionTokens + row.completionTokens,
+      outputTokens: total.outputTokens + row.outputTokens,
       totalTokens: total.totalTokens + row.totalTokens,
       totalCostUsd: total.totalCostUsd + row.totalCostUsd,
     }),
@@ -69,7 +69,7 @@ function UsageTable({
       requestCount: 0,
       failedCount: 0,
       promptTokens: 0,
-      completionTokens: 0,
+      outputTokens: 0,
       totalTokens: 0,
       totalCostUsd: 0,
     },
@@ -108,7 +108,7 @@ function UsageTable({
                   {formatNumber(row.promptTokens, precise)}
                 </td>
                 <td className="px-3 py-3 text-right tabular-nums">
-                  {formatNumber(row.completionTokens, precise)}
+                  {formatNumber(row.outputTokens, precise)}
                 </td>
                 <td className="px-3 py-3 text-right tabular-nums">
                   {formatNumber(row.totalTokens, precise)}
@@ -135,7 +135,7 @@ function UsageTable({
               {formatNumber(totals.promptTokens, precise)}
             </td>
             <td className="px-3 py-3 text-right font-semibold tabular-nums">
-              {formatNumber(totals.completionTokens, precise)}
+              {formatNumber(totals.outputTokens, precise)}
             </td>
             <td className="px-3 py-3 text-right font-semibold tabular-nums">
               {formatNumber(totals.totalTokens, precise)}

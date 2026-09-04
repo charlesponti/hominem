@@ -45,15 +45,6 @@ export function createRedisChatEffectStore(
   };
 }
 
-export type ChatContextUsage = {
-  model: string;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  costUsd: number | null;
-  updatedAt: string;
-};
-
 export function createRedisChatContextCache(
   redis: ChatRedis,
   options: { keyPrefix?: string; ttlSeconds?: number; now?: () => Date } = {},
@@ -69,7 +60,7 @@ export function createRedisChatContextCache(
       model: string;
       usage: {
         promptTokens: number;
-        completionTokens: number;
+        outputTokens: number;
         totalTokens: number;
         costUsd: number | null;
       };
@@ -79,7 +70,7 @@ export function createRedisChatContextCache(
         JSON.stringify({
           model: input.model,
           promptTokens: input.usage.promptTokens,
-          completionTokens: input.usage.completionTokens,
+          outputTokens: input.usage.outputTokens,
           totalTokens: input.usage.totalTokens,
           costUsd: input.usage.costUsd,
           updatedAt: now().toISOString(),
