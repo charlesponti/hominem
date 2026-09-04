@@ -2,14 +2,15 @@ import type { GenerationHistoryMessageSnapshot } from './generation-events';
 import {
   runGeneration,
   type GenerationCommand,
+  type GenerationDeltaEventPayload,
   type GenerationEffectInterpreter,
   type GenerationInput,
   type GenerationState,
-  type GenerationStreamEventPayload,
   type GenerationToolCall,
   type RunGenerationInput,
   type ToolResult,
 } from './generation-machine';
+import { GENERATION_TIMING } from './generation-timing';
 
 export type GenerationPorts = {
   control?: {
@@ -49,7 +50,7 @@ export type GenerationPorts = {
       command: Extract<GenerationCommand, { type: 'persist' }>,
       state: GenerationState,
     ) => void | Promise<void>;
-    emit: (event: GenerationStreamEventPayload, state: GenerationState) => void | Promise<void>;
+    emit: (event: GenerationDeltaEventPayload, state: GenerationState) => void | Promise<void>;
   };
   generation: {
     save: (
@@ -72,12 +73,13 @@ export class EffectCommandTimeoutError extends Error {
 // Only the I/O-bound branches that can genuinely hang forever with nothing
 // left to emit are timed — `open-provider-turn`/`retry-provider` are already
 // covered by the OpenRouter provider's own idle timeout, and `emit`/
-// `stop-effects` are in-process, not arbitrary I/O, today.
+// `stop-effects` are in-process, not arbitrary I/O, today. See
+// GENERATION_TIMING for the full timeout policy.
 export const DEFAULT_EFFECT_TIMEOUTS_MS: Partial<Record<GenerationCommand['type'], number>> = {
-  persist: 15_000,
-  'execute-tool': 60_000,
-  'preview-tool': 15_000,
-  'save-generation': 15_000,
+  persist: GENERATION_TIMING.effectMs.persist,
+  'execute-tool': GENERATION_TIMING.effectMs.executeTool,
+  'preview-tool': GENERATION_TIMING.effectMs.previewTool,
+  'save-generation': GENERATION_TIMING.effectMs.saveGeneration,
 };
 
 async function withEffectTimeout<T>(

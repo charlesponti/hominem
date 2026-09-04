@@ -176,11 +176,7 @@ export type TestTool = {
   }) => Promise<Record<string, unknown> | null>;
 };
 
-export type FailurePoint =
-  | 'event-append'
-  | 'snapshot-commit'
-  | 'event-publish'
-  | 'cancellation-commit';
+export type FailurePoint = 'event-append' | 'snapshot-commit' | 'cancellation-commit';
 
 class FailureController {
   private readonly pending = new Map<FailurePoint, { error: Error; after: number }>();
@@ -285,20 +281,20 @@ async function parseSse(response: Response, generationId: string): Promise<ChatR
   let clientState = createGenerationClientState(generationId);
   for (const event of events) clientState = reduceGenerationClientEvent(clientState, event);
   const accepted = events.find(
-    (event) => 'sequence' in event && event.payload.type === 'generation.accepted',
+    (event) => event.sequence !== null && event.payload.type === 'generation.accepted',
   );
   return {
     generationId,
     chatId:
-      accepted && 'sequence' in accepted && 'chat' in accepted.payload && accepted.payload.chat
+      accepted && 'chat' in accepted.payload && accepted.payload.chat
         ? accepted.payload.chat.id
         : null,
     response,
     events,
     clientState,
     doneCount,
-    durableEvents: events.filter((event) => 'sequence' in event),
-    liveEvents: events.filter((event) => !('sequence' in event)),
+    durableEvents: events.filter((event) => event.sequence !== null),
+    liveEvents: events.filter((event) => event.sequence === null),
   };
 }
 
@@ -403,7 +399,6 @@ export class HominemTests {
     const failureHooks: ChatGenerationFailureHooks = {
       beforeEventAppend: () => this.failureController.consume('event-append'),
       beforeSnapshotCommit: () => this.failureController.consume('snapshot-commit'),
-      beforeEventPublish: () => this.failureController.consume('event-publish'),
       beforeCancellationCommit: () => this.failureController.consume('cancellation-commit'),
     };
     const service = new ChatGenerationService({

@@ -99,7 +99,7 @@ describe('useRegenerateMessage', () => {
             start(controller) {
               controller.enqueue(
                 encoder.encode(
-                  'data: {"version":1,"generationId":"g","event":{"type":"error","message":"failed"}}\n\n',
+                  'data: {"version":1,"generationId":"g","sequence":1,"type":"generation.failed","payload":{"type":"generation.failed","message":"failed"}}\n\n',
                 ),
               );
               controller.close();

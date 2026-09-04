@@ -294,11 +294,9 @@ describe('generation machine', () => {
     expect(commands).toEqual([
       'persist',
       'persist',
-      'emit',
       'open-provider-turn',
       'emit',
       'persist',
-      'emit',
       'save-generation',
       'persist',
     ]);

@@ -104,74 +104,74 @@ describe('useStreamMessage', () => {
         JSON.stringify({
           version: 1,
           generationId: 'g1',
+          sequence: null,
+          type: 'text-delta',
+          payload: { type: 'text-delta', text: 'Hi ' },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: null,
+          type: 'reasoning-delta',
+          payload: { type: 'reasoning-delta', text: 'Thinking' },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 3,
+          type: 'tool.requested',
+          payload: {
+            type: 'tool.requested',
+            call: { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' },
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 4,
+          type: 'tool.completed',
+          payload: {
+            type: 'tool.completed',
+            result: { callId: 'call-1', toolName: 'search', content: 'ok', error: false },
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 5,
+          type: 'tool.requested',
+          payload: {
+            type: 'tool.requested',
+            call: {
+              id: 'call-2',
+              name: 'write_memory',
+              arguments: '{}',
+              iteration: 0,
+              turnId: 'turn-1',
+            },
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
           sequence: 6,
+          type: 'tool.failed',
+          payload: {
+            type: 'tool.failed',
+            result: { callId: 'call-1', toolName: 'search', content: 'failed', error: true },
+          },
+        }),
+        JSON.stringify({
+          version: 1,
+          generationId: 'g1',
+          sequence: 7,
           type: 'generation.phase_changed',
           payload: { type: 'generation.phase_changed', phase: 'saving' },
         }),
         JSON.stringify({
           version: 1,
           generationId: 'g1',
-          event: { type: 'text-delta', text: 'Hi ' },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: { type: 'reasoning-delta', text: 'Thinking' },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: {
-            type: 'tool-step',
-            toolCallId: 'call-1',
-            toolName: 'search',
-            status: 'requested',
-          },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: {
-            type: 'tool-step',
-            toolCallId: 'call-1',
-            toolName: 'search',
-            status: 'completed',
-          },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: {
-            type: 'tool-step',
-            toolCallId: 'call-2',
-            toolName: 'write_memory',
-            status: 'requested',
-          },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: {
-            type: 'tool-step',
-            toolCallId: 'call-1',
-            toolName: 'search',
-            status: 'failed',
-          },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: { type: 'phase-changed', phase: 'running' },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          event: { type: 'phase-changed', phase: 'cancel_requested' },
-        }),
-        JSON.stringify({
-          version: 1,
-          generationId: 'g1',
-          sequence: 3,
+          sequence: 8,
           type: 'generation.cancel_requested',
           payload: {
             type: 'generation.cancel_requested',
@@ -182,7 +182,7 @@ describe('useStreamMessage', () => {
         JSON.stringify({
           version: 1,
           generationId: 'g1',
-          sequence: 7,
+          sequence: 9,
           type: 'generation.retry_scheduled',
           payload: {
             type: 'generation.retry_scheduled',
@@ -194,7 +194,7 @@ describe('useStreamMessage', () => {
           version: 1,
           type: 'generation.committed',
           generationId: 'g1',
-          sequence: 8,
+          sequence: 10,
           payload: {
             type: 'generation.committed',
             message: {
@@ -276,17 +276,34 @@ describe('useStreamMessage', () => {
         JSON.stringify({
           version: 1,
           generationId: 'g1',
-          event: {
-            type: 'tool-step',
-            toolCallId: 'call-1',
-            toolName: 'create_collection',
-            status: 'requested',
+          sequence: 1,
+          type: 'tool.requested',
+          payload: {
+            type: 'tool.requested',
+            call: {
+              id: 'call-1',
+              name: 'create_collection',
+              arguments: '{}',
+              iteration: 0,
+              turnId: 'turn-1',
+            },
           },
         }),
         JSON.stringify({
           version: 1,
           generationId: 'g1',
-          event: { type: 'phase-changed', phase: 'awaiting_confirmation' },
+          sequence: 2,
+          type: 'confirmation.required',
+          payload: {
+            type: 'confirmation.required',
+            call: {
+              id: 'call-1',
+              name: 'create_collection',
+              arguments: '{}',
+              iteration: 0,
+              turnId: 'turn-1',
+            },
+          },
         }),
       ]),
     );

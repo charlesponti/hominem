@@ -14,7 +14,6 @@ import type {
   GenerationInput,
   GenerationState,
   GenerationStep,
-  GenerationStreamEventPayload,
   GenerationToolCall,
   ToolResult,
 } from './types';
@@ -29,10 +28,6 @@ function runNextToolCall(state: GenerationState, call: GenerationToolCall): Gene
     },
     commands: [
       persistCommand(state.generationId, { type: 'tool.requested', call }),
-      {
-        type: 'emit',
-        event: { type: 'tool-step', toolCallId: call.id, toolName: call.name, status: 'requested' },
-      },
       {
         type: 'execute-tool',
         call,
@@ -96,12 +91,6 @@ export function reduceToolResult(state: GenerationState, result: ToolResult): Ge
   const resultEvent: GenerationHistoryEventPayload = result.error
     ? { type: 'tool.failed', result }
     : { type: 'tool.completed', result };
-  const liveEvent: GenerationStreamEventPayload = {
-    type: 'tool-step',
-    toolCallId: result.callId,
-    toolName: result.toolName,
-    status: result.error ? 'failed' : 'completed',
-  };
   const nextState = {
     ...state,
     activeToolCall: null,
@@ -112,11 +101,7 @@ export function reduceToolResult(state: GenerationState, result: ToolResult): Ge
     const next = runNextToolCall(nextState, nextCall);
     return {
       state: next.state,
-      commands: [
-        persistCommand(state.generationId, resultEvent),
-        { type: 'emit', event: liveEvent },
-        ...next.commands,
-      ],
+      commands: [persistCommand(state.generationId, resultEvent), ...next.commands],
     };
   }
 
@@ -131,7 +116,6 @@ export function reduceToolResult(state: GenerationState, result: ToolResult): Ge
     },
     commands: [
       persistCommand(state.generationId, resultEvent),
-      { type: 'emit', event: liveEvent },
       ...phaseCommands(state.generationId, 'running'),
       { type: 'open-provider-turn', turnId, iteration: state.iteration + 1 },
     ],

@@ -54,10 +54,7 @@ export function phaseCommands(
   generationId: string,
   phase: GenerationActivePhase,
 ): GenerationCommand[] {
-  return [
-    persistCommand(generationId, { type: 'generation.phase_changed', phase }),
-    { type: 'emit', event: { type: 'phase-changed', phase } },
-  ];
+  return [persistCommand(generationId, { type: 'generation.phase_changed', phase })];
 }
 
 export function toolCallIdempotencyKey(generationId: string, call: GenerationToolCall): string {

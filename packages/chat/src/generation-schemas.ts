@@ -11,7 +11,6 @@ export type ChatMessageJsonObject = z.infer<typeof chatMessageJsonObjectSchema>;
 
 export const chatGenerationKindSchema = z.enum(['send', 'start', 'regenerate']);
 export const chatGenerationStatusSchema = z.enum([
-  'queued',
   'preparing',
   'running',
   'awaiting_confirmation',
@@ -151,10 +150,11 @@ import type {
   GenerationTurn,
 } from './generation-events';
 import type {
+  DeltaEventType,
+  GenerationDeltaEventPayload,
+  GenerationEvent,
   GenerationHistoryEvent,
   GenerationHistoryEventPayload,
-  GenerationStreamEvent,
-  GenerationStreamEventPayload,
   GenerationToolCall,
   ToolResult,
 } from './generation-machine';
@@ -314,9 +314,12 @@ export const GenerationHistoryEventPayloadSchema = z.discriminatedUnion('type', 
   historySchemas['generation.failed'],
 ]) satisfies z.ZodType<GenerationHistoryEventPayload>;
 
-const historyEnvelope = <TType extends GenerationHistoryEventPayload['type']>(
+// Two small envelope factories — one per sequence shape — rather than one
+// generic with a runtime type check, so `sequence`'s type (number vs null)
+// stays a compile-time guarantee instead of a cast.
+const historyEventEnvelope = <TType extends GenerationHistoryEventPayload['type']>(
   type: TType,
-  payload: (typeof historySchemas)[TType],
+  payload: z.ZodType<Extract<GenerationHistoryEventPayload, { type: TType }>>,
 ) =>
   z.object({
     version: z.literal(GENERATION_EVENT_VERSION),
@@ -326,62 +329,60 @@ const historyEnvelope = <TType extends GenerationHistoryEventPayload['type']>(
     payload,
   });
 
+const deltaEventEnvelope = <TType extends DeltaEventType>(
+  type: TType,
+  payload: z.ZodType<Extract<GenerationDeltaEventPayload, { type: TType }>>,
+) =>
+  z.object({
+    version: z.literal(GENERATION_EVENT_VERSION),
+    generationId: z.string().min(1),
+    sequence: z.null(),
+    type: z.literal(type),
+    payload,
+  });
+
 export const GenerationHistoryEventSchema = z.discriminatedUnion('type', [
-  historyEnvelope('generation.started', historySchemas['generation.started']),
-  historyEnvelope('generation.accepted', historySchemas['generation.accepted']),
-  historyEnvelope('generation.phase_changed', historySchemas['generation.phase_changed']),
-  historyEnvelope('generation.cancel_requested', historySchemas['generation.cancel_requested']),
-  historyEnvelope('generation.checkpointed', historySchemas['generation.checkpointed']),
-  historyEnvelope('tool.requested', historySchemas['tool.requested']),
-  historyEnvelope('tool.completed', historySchemas['tool.completed']),
-  historyEnvelope('tool.failed', historySchemas['tool.failed']),
-  historyEnvelope('confirmation.required', historySchemas['confirmation.required']),
-  historyEnvelope('confirmation.approved', historySchemas['confirmation.approved']),
-  historyEnvelope('confirmation.rejected', historySchemas['confirmation.rejected']),
-  historyEnvelope('generation.retry_scheduled', historySchemas['generation.retry_scheduled']),
-  historyEnvelope('generation.committed', historySchemas['generation.committed']),
-  historyEnvelope('generation.cancelled', historySchemas['generation.cancelled']),
-  historyEnvelope('generation.failed', historySchemas['generation.failed']),
+  historyEventEnvelope('generation.started', historySchemas['generation.started']),
+  historyEventEnvelope('generation.accepted', historySchemas['generation.accepted']),
+  historyEventEnvelope('generation.phase_changed', historySchemas['generation.phase_changed']),
+  historyEventEnvelope(
+    'generation.cancel_requested',
+    historySchemas['generation.cancel_requested'],
+  ),
+  historyEventEnvelope('generation.checkpointed', historySchemas['generation.checkpointed']),
+  historyEventEnvelope('tool.requested', historySchemas['tool.requested']),
+  historyEventEnvelope('tool.completed', historySchemas['tool.completed']),
+  historyEventEnvelope('tool.failed', historySchemas['tool.failed']),
+  historyEventEnvelope('confirmation.required', historySchemas['confirmation.required']),
+  historyEventEnvelope('confirmation.approved', historySchemas['confirmation.approved']),
+  historyEventEnvelope('confirmation.rejected', historySchemas['confirmation.rejected']),
+  historyEventEnvelope('generation.retry_scheduled', historySchemas['generation.retry_scheduled']),
+  historyEventEnvelope('generation.committed', historySchemas['generation.committed']),
+  historyEventEnvelope('generation.cancelled', historySchemas['generation.cancelled']),
+  historyEventEnvelope('generation.failed', historySchemas['generation.failed']),
 ]) satisfies z.ZodType<GenerationHistoryEvent>;
 
-export const GenerationStreamEventPayloadSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('text-delta'), text: z.string() }),
-  z.object({ type: z.literal('reasoning-delta'), text: z.string() }),
-  z.object({
-    type: z.literal('tool-step'),
-    toolCallId: z.string().min(1),
-    toolName: z.string().min(1),
-    status: z.enum(['requested', 'running', 'completed', 'failed', 'reused']),
-  }),
-  z.object({
-    type: z.literal('phase-changed'),
-    phase: z.enum([
-      'preparing',
-      'running',
-      'awaiting_confirmation',
-      'saving',
-      'cancel_requested',
-      'committed',
-      'cancelled',
-      'failed',
-    ]),
-  }),
-  z.object({ type: z.literal('error'), message: z.string().min(1) }),
-]) satisfies z.ZodType<GenerationStreamEventPayload>;
+const deltaSchemas = {
+  'text-delta': z.object({ type: z.literal('text-delta'), text: z.string() }),
+  'reasoning-delta': z.object({ type: z.literal('reasoning-delta'), text: z.string() }),
+} satisfies { [T in DeltaEventType]: z.ZodType<Extract<GenerationDeltaEventPayload, { type: T }>> };
 
-export const GenerationStreamEventSchema = z.object({
-  version: z.literal(GENERATION_EVENT_VERSION),
-  generationId: z.string().min(1),
-  event: GenerationStreamEventPayloadSchema,
-}) satisfies z.ZodType<GenerationStreamEvent>;
+export const GenerationDeltaEventPayloadSchema = z.discriminatedUnion('type', [
+  deltaSchemas['text-delta'],
+  deltaSchemas['reasoning-delta'],
+]) satisfies z.ZodType<GenerationDeltaEventPayload>;
 
-// Public naming for the live-only half of the wire contract. Keeping this
-// alias here prevents transport packages from defining a second event model.
-export const GenerationLiveEventSchema = GenerationStreamEventSchema;
-export type GenerationLiveEvent = GenerationStreamEvent;
-export type GenerationLiveEventPayload = GenerationStreamEventPayload;
-export type GenerationDomainEvent = GenerationHistoryEvent;
-export type GenerationDomainEventPayload = GenerationHistoryEventPayload;
+const GenerationDeltaEventSchema = z.discriminatedUnion('type', [
+  deltaEventEnvelope('text-delta', deltaSchemas['text-delta']),
+  deltaEventEnvelope('reasoning-delta', deltaSchemas['reasoning-delta']),
+]);
+
+// The single canonical wire schema — every event this system can send,
+// persisted or ephemeral, in one envelope shape.
+export const GenerationEventSchema = z.union([
+  GenerationHistoryEventSchema,
+  GenerationDeltaEventSchema,
+]) satisfies z.ZodType<GenerationEvent>;
 
 export function parseGenerationHistoryEventPayload(input: unknown): GenerationHistoryEventPayload {
   return GenerationHistoryEventPayloadSchema.parse(input);
@@ -391,20 +392,15 @@ export function parseGenerationHistoryEvent(input: unknown): GenerationHistoryEv
   return GenerationHistoryEventSchema.parse(input);
 }
 
-export function parseGenerationStreamEvent(input: unknown): GenerationStreamEvent {
-  return GenerationStreamEventSchema.parse(input);
+export function parseGenerationEvent(input: unknown): GenerationEvent {
+  return GenerationEventSchema.parse(input);
 }
 
-export function parseGenerationLiveEvent(input: unknown): GenerationLiveEvent {
-  return GenerationStreamEventSchema.parse(input);
-}
-
-export const GenerationWireEventSchema = z.union([
-  GenerationHistoryEventSchema,
-  GenerationStreamEventSchema,
-]);
-
-export type GenerationWireEvent = GenerationHistoryEvent | GenerationStreamEvent;
+// Kept as an alias — this used to be a real union of two distinct envelope
+// shapes; now it's just the canonical event schema/type under its
+// established name, so the many existing import sites don't need renaming.
+export const GenerationWireEventSchema = GenerationEventSchema;
+export type GenerationWireEvent = GenerationEvent;
 
 export function parseGenerationWireEvent(input: unknown): GenerationWireEvent {
   return GenerationWireEventSchema.parse(input);
@@ -415,7 +411,7 @@ export function createGenerationEventDeduplicator(): (
 ) => GenerationWireEvent | null {
   const seenDurableEvents = new Set<string>();
   return (event) => {
-    if ('sequence' in event) {
+    if (event.sequence !== null) {
       const key = `${event.generationId}:${event.sequence}`;
       if (seenDurableEvents.has(key)) return null;
       seenDurableEvents.add(key);
@@ -425,7 +421,6 @@ export function createGenerationEventDeduplicator(): (
 }
 
 export function getGenerationFailureMessage(event: GenerationWireEvent): string | null {
-  if ('payload' in event && event.type === 'generation.failed') return event.payload.message;
-  if ('event' in event && event.event.type === 'error') return event.event.message;
+  if (event.type === 'generation.failed') return event.payload.message;
   return null;
 }

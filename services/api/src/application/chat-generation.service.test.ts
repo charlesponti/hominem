@@ -158,7 +158,6 @@ describe('ChatGenerationService.cancel', () => {
       'generation.cancel_requested',
       'generation.cancelled',
     ]);
-    expect(mocks.publishGenerationEvent.mock.calls).toHaveLength(3);
   });
 
   it('does not append a second terminal decision', async () => {
@@ -378,7 +377,7 @@ describe('ChatGenerationService.cancel', () => {
     const events = [];
     for await (const value of stream) events.push(value);
 
-    expect(events.map((value) => ('payload' in value ? value.type : value.event.type))).toEqual([
+    expect(events.map((value) => value.type)).toEqual([
       'generation.started',
       'generation.accepted',
       'generation.phase_changed',
@@ -389,10 +388,6 @@ describe('ChatGenerationService.cancel', () => {
       payload: { type: 'generation.failed', message: 'Generation failed' },
     });
     expect(events).not.toContainEqual(expect.objectContaining({ type: 'generation.committed' }));
-    expect(mocks.publishGenerationEvent.mock.calls.at(-1)?.[0]).toMatchObject({
-      type: 'generation.failed',
-      payload: { message: 'Generation failed' },
-    });
   });
 
   it('force-fails the run row directly when even the failure-event append throws', async () => {

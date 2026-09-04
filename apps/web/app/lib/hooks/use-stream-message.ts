@@ -164,10 +164,7 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           clientState = applyRestoredEvent(clientState, event);
           const failureMessage = getGenerationFailureMessage(event);
           if (failureMessage) throw new Error(failureMessage);
-          if (
-            'payload' in event &&
-            ['generation.committed', 'generation.cancelled'].includes(event.type)
-          ) {
+          if (['generation.committed', 'generation.cancelled'].includes(event.type)) {
             void invalidateChatQueries(queryClient, chatId);
           }
         });
@@ -242,37 +239,27 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
           shouldReconnect = false;
           throw new Error(failureMessage);
         }
-        const liveEvent = 'event' in event ? event.event : null;
-
-        if ('payload' in event && event.type === 'generation.accepted') {
+        if (event.type === 'generation.accepted') {
           input.onAccepted?.(event.payload.userMessage);
           return;
         }
 
-        if ('payload' in event && event.type === 'generation.phase_changed') {
+        if (event.type === 'generation.phase_changed') {
           terminalStatus = clientState.phase === 'preparing' ? 'preparing' : 'streaming';
           return;
         }
 
-        if (liveEvent?.type === 'text-delta') {
+        if (event.type === 'text-delta' || event.type === 'reasoning-delta') {
           return;
         }
 
-        if (liveEvent?.type === 'reasoning-delta') {
-          return;
-        }
-
-        if (liveEvent?.type === 'tool-step') {
-          return;
-        }
-
-        if ('payload' in event && event.type === 'generation.cancelled') {
+        if (event.type === 'generation.cancelled') {
           terminalStatus = 'cancelled';
           input.onCancelled?.();
           return;
         }
 
-        if ('payload' in event && event.type === 'generation.committed') {
+        if (event.type === 'generation.committed') {
           terminalStatus = 'committed';
           input.onCommitted?.(event.payload.message);
         }

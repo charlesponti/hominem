@@ -325,9 +325,7 @@ describe('chat generation service', () => {
     expect(result.usage?.totalTokens).toBe(6);
     expect(appendEvent).toHaveBeenCalled();
     expect(durableEvents.length).toBeGreaterThan(0);
-    expect(liveEvents).toEqual(
-      expect.arrayContaining(['text-delta', 'reasoning-delta', 'phase-changed']),
-    );
+    expect(liveEvents).toEqual(expect.arrayContaining(['text-delta', 'reasoning-delta']));
   });
 
   it('skips configured start and terminal persistence', async () => {

@@ -1,8 +1,4 @@
-import type {
-  GenerationHistoryEvent,
-  GenerationPhase,
-  GenerationStreamEvent,
-} from './generation-machine';
+import type { GenerationEvent, GenerationPhase } from './generation-machine';
 import {
   generationClientCheckpointSchema,
   type GenerationClientCheckpoint,
@@ -40,8 +36,11 @@ export function parseGenerationClientCheckpoint(input: unknown): GenerationClien
   return generationClientCheckpointSchema.parse(input);
 }
 
-export type GenerationClientEvent = GenerationHistoryEvent | GenerationStreamEvent;
+export type GenerationClientEvent = GenerationEvent;
 
+// A client-local, transport-failure signal (e.g. the SSE connection itself
+// dropped) — deliberately decoupled from the wire contract, since it never
+// had a server-side counterpart to derive from.
 export type GenerationClientErrorEvent = {
   version: 1;
   generationId: string;
@@ -71,47 +70,27 @@ function updateToolStep(
   return steps.map((step, stepIndex) => (stepIndex === index ? nextStep : step));
 }
 
-function isDuplicateDurableEvent(
-  state: GenerationClientState,
-  event: GenerationHistoryEvent,
-): boolean {
-  return event.sequence <= state.lastDurableSequence;
-}
-
 export function reduceGenerationClientEvent(
   state: GenerationClientState,
   event: GenerationClientInputEvent,
 ): GenerationClientState {
   if (event.generationId !== state.generationId) return state;
 
-  if ('sequence' in event) {
-    if (isDuplicateDurableEvent(state, event)) return state;
+  if ('event' in event) {
+    // GenerationClientErrorEvent — see its type definition above.
+    return { ...state, phase: 'failed', error: event.event.message };
+  }
+
+  if (event.sequence !== null) {
+    if (event.sequence <= state.lastDurableSequence) return state;
     state = { ...state, lastDurableSequence: event.sequence };
   }
 
-  if ('event' in event) {
-    switch (event.event.type) {
-      case 'text-delta':
-        return { ...state, text: state.text + event.event.text };
-      case 'reasoning-delta':
-        return { ...state, reasoning: state.reasoning + event.event.text };
-      case 'tool-step':
-        return {
-          ...state,
-          toolSteps: updateToolStep(state.toolSteps, {
-            toolCallId: event.event.toolCallId,
-            toolName: event.event.toolName,
-            status: event.event.status,
-          }),
-        };
-      case 'phase-changed':
-        return { ...state, phase: event.event.phase };
-      case 'error':
-        return { ...state, phase: 'failed', error: event.event.message };
-    }
-  }
-
   switch (event.payload.type) {
+    case 'text-delta':
+      return { ...state, text: state.text + event.payload.text };
+    case 'reasoning-delta':
+      return { ...state, reasoning: state.reasoning + event.payload.text };
     case 'generation.phase_changed':
       return { ...state, phase: event.payload.phase };
     case 'generation.cancel_requested':

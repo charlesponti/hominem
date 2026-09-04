@@ -8,7 +8,7 @@ import {
   type GenerationClientEvent,
   type GenerationClientErrorEvent,
 } from './generation-client';
-import type { GenerationHistoryEvent } from './generation-machine';
+import type { GenerationDeltaEventPayload, GenerationHistoryEvent } from './generation-machine';
 import {
   chatSnapshot,
   messageSnapshot,
@@ -73,10 +73,18 @@ function durable(
   }
 }
 
-function live(
-  event: Extract<GenerationClientEvent, { event: unknown }>['event'],
-): GenerationClientEvent {
-  return { version: 1, generationId: 'generation-1', event };
+function delta(payload: GenerationDeltaEventPayload): GenerationClientEvent {
+  const envelope: { version: 1; generationId: string; sequence: null } = {
+    version: 1,
+    generationId: 'generation-1',
+    sequence: null,
+  };
+  switch (payload.type) {
+    case 'text-delta':
+      return { ...envelope, type: 'text-delta', payload };
+    case 'reasoning-delta':
+      return { ...envelope, type: 'reasoning-delta', payload };
+  }
 }
 
 describe('generation client reducer', () => {
@@ -85,7 +93,9 @@ describe('generation client reducer', () => {
     const foreign = {
       version: 1,
       generationId: 'other',
-      event: { type: 'text-delta', text: 'ignored' },
+      sequence: null,
+      type: 'text-delta',
+      payload: { type: 'text-delta', text: 'ignored' },
     } satisfies GenerationClientEvent;
     const next = reduceGenerationClientEvent(initial, foreign);
     const acceptedEvent = durable(1, { type: 'generation.phase_changed', phase: 'running' });
@@ -95,37 +105,42 @@ describe('generation client reducer', () => {
     expect(accepted).toMatchObject({ phase: 'running', lastDurableSequence: 1 });
   });
 
-  it('accumulates live text, reasoning, and updates tool steps', () => {
+  it('accumulates streamed text and reasoning deltas, and tracks tool steps from durable events', () => {
     let state = createGenerationClientState('generation-1');
-    state = reduceGenerationClientEvent(state, live({ type: 'text-delta', text: 'Hel' }));
-    state = reduceGenerationClientEvent(state, live({ type: 'text-delta', text: 'lo' }));
-    state = reduceGenerationClientEvent(state, live({ type: 'reasoning-delta', text: 'Think' }));
+    state = reduceGenerationClientEvent(state, delta({ type: 'text-delta', text: 'Hel' }));
+    state = reduceGenerationClientEvent(state, delta({ type: 'text-delta', text: 'lo' }));
+    state = reduceGenerationClientEvent(state, delta({ type: 'reasoning-delta', text: 'Think' }));
     state = reduceGenerationClientEvent(
       state,
-      live({ type: 'tool-step', toolCallId: 'call-1', toolName: 'search', status: 'running' }),
+      durable(1, {
+        type: 'tool.requested',
+        call: { ...call, id: 'call-2', name: 'calendar' },
+      }),
     );
+    state = reduceGenerationClientEvent(state, durable(2, { type: 'tool.requested', call }));
     state = reduceGenerationClientEvent(
       state,
-      live({ type: 'tool-step', toolCallId: 'call-2', toolName: 'calendar', status: 'requested' }),
-    );
-    state = reduceGenerationClientEvent(
-      state,
-      live({ type: 'tool-step', toolCallId: 'call-1', toolName: 'search', status: 'completed' }),
+      durable(3, {
+        type: 'tool.completed',
+        result: { callId: 'call-1', toolName: 'search', content: 'ok', error: false },
+      }),
     );
 
     expect(state).toMatchObject({ text: 'Hello', reasoning: 'Think' });
     expect(state.toolSteps).toEqual([
-      { toolCallId: 'call-1', toolName: 'search', status: 'completed' },
       { toolCallId: 'call-2', toolName: 'calendar', status: 'requested' },
+      { toolCallId: 'call-1', toolName: 'search', status: 'completed' },
     ]);
   });
 
-  it('reduces live phases and errors', () => {
+  it('reduces a durable phase change and a client-local transport error', () => {
     let state = createGenerationClientState('generation-1');
     state = reduceGenerationClientEvent(
       state,
-      live({ type: 'phase-changed', phase: 'awaiting_confirmation' }),
+      durable(1, { type: 'generation.phase_changed', phase: 'awaiting_confirmation' }),
     );
+    expect(state.phase).toBe('awaiting_confirmation');
+
     const errorEvent = {
       version: 1,
       generationId: 'generation-1',
@@ -283,7 +298,7 @@ describe('generation client reducer', () => {
   it('uses committed message content and preserves prior reasoning when absent', () => {
     let state = reduceGenerationClientEvent(
       createGenerationClientState('generation-1'),
-      live({ type: 'reasoning-delta', text: 'prior' }),
+      delta({ type: 'reasoning-delta', text: 'prior' }),
     );
     state = reduceGenerationClientEvent(
       state,

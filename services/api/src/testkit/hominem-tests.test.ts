@@ -65,11 +65,9 @@ describe('HominemTests', () => {
 
     expect(result.response.status).toBe(200);
     expect(result.doneCount).toBe(1);
-    expect(
-      result.durableEvents.map((event) =>
-        'sequence' in event ? event.payload.type : event.event.type,
-      ),
-    ).toContain('generation.committed');
+    expect(result.durableEvents.map((event) => event.payload.type)).toContain(
+      'generation.committed',
+    );
     expect(result.clientState.phase).toBe('committed');
     expect(result.clientState.text).toBe('SDK reply');
     const inspected = await test.inspect(result.generationId);
@@ -408,23 +406,6 @@ describe('HominemTests', () => {
     expect(inspected.run?.status).toBe('failed');
     expect(inspected.messages).toHaveLength(1);
     expect(inspected.events.at(-1)?.payload.type).toBe('generation.failed');
-  });
-
-  it('keeps the durable event when live publication fails', async () => {
-    expectWarning('[ai-usage] provider response missing usage');
-    test = await HominemTests.create({
-      provider: scriptedProvider([textTurn('Publication failed')]),
-    });
-    test.failures.inject('event-publish');
-
-    const result = await test.chat.start({ title: 'SDK publish failure', message: 'Fail publish' });
-    const inspected = await test.inspect(result.generationId);
-    const durableTypes = inspected.events.map((event) => event.payload.type);
-
-    expect(result.clientState.phase).toBe('failed');
-    expect(durableTypes).toContain('generation.started');
-    expect(durableTypes.at(-1)).toBe('generation.failed');
-    expect(inspected.run?.status).toBe('failed');
   });
 
   it('surfaces a cancellation commit failure without fabricating cancellation', async () => {

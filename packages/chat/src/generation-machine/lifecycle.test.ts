@@ -59,7 +59,6 @@ describe('reduceStart', () => {
         event: { type: 'generation.phase_changed', phase: 'running' },
         idempotencyKey: 'generation-1:generation.phase_changed:running',
       },
-      { type: 'emit', event: { type: 'phase-changed', phase: 'running' } },
       { type: 'open-provider-turn', turnId: 'turn-1', iteration: 0 },
     ]);
   });

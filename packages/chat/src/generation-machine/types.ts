@@ -29,10 +29,7 @@ export type GenerationActivePhase =
   | 'cancel_requested';
 
 export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
-// 'queued' is part of the DB CHECK constraint and wire schema for
-// forward-compat but no reducer currently produces it — not a bug, just
-// currently unused.
-export type ChatGenerationStatus = GenerationPhase | 'queued';
+export type ChatGenerationStatus = GenerationPhase;
 
 export type GenerationToolCall = {
   id: string;
@@ -86,7 +83,14 @@ export type GenerationState = {
   lastError: string | null;
 };
 
-export type GenerationHistoryEventPayload =
+// The single canonical event vocabulary — every fact this system can report
+// about a generation, whether durably persisted (everything except the two
+// delta variants) or purely ephemeral (text-delta/reasoning-delta, which
+// exist only to stream tokens and are never persisted or replayed).
+// GenerationHistoryEventPayload/GenerationDeltaEventPayload below are
+// *derived* subsets, not hand-maintained parallel unions, so there's
+// exactly one place that declares "what is an event" in this system.
+export type GenerationEventPayload =
   | {
       type: 'generation.started';
       context: GenerationStartContext;
@@ -118,37 +122,44 @@ export type GenerationHistoryEventPayload =
       metadata?: GenerationTerminalMetadata;
     }
   | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
-  | { type: 'generation.failed'; message: string; metadata?: GenerationTerminalMetadata };
+  | { type: 'generation.failed'; message: string; metadata?: GenerationTerminalMetadata }
+  | { type: 'text-delta'; text: string }
+  | { type: 'reasoning-delta'; text: string };
+
+const DELTA_EVENT_TYPES = ['text-delta', 'reasoning-delta'] as const;
+export type DeltaEventType = (typeof DELTA_EVENT_TYPES)[number];
+
+// Persistable facts — everything the DB event log and the `persist` command
+// can carry. Derived, not hand-written: adding a new durable event type
+// only ever means adding one variant to GenerationEventPayload above.
+export type GenerationHistoryEventPayload = Exclude<
+  GenerationEventPayload,
+  { type: DeltaEventType }
+>;
+
+// Ephemeral, never-persisted token deltas — everything the `emit` command
+// can carry (after the collapse below, that's *only* these two).
+export type GenerationDeltaEventPayload = Extract<GenerationEventPayload, { type: DeltaEventType }>;
 
 export type GenerationHistoryEventType = GenerationHistoryEventPayload['type'];
 
-export type GenerationHistoryEvent = {
-  [Payload in GenerationHistoryEventPayload as Payload['type']]: {
+// One envelope shape for every event on the wire: `sequence` is a real
+// number for persisted (history) events and `null` for deltas, which are
+// never assigned a sequence. Parameterized so GenerationEvent (the full
+// union) and GenerationHistoryEvent (the persisted subset, sequence always
+// a number) both come from the same construction.
+type GenerationEventFor<Payload extends GenerationEventPayload> = {
+  [P in Payload as P['type']]: {
     version: 1;
     generationId: string;
-    sequence: number;
-    type: Payload['type'];
-    payload: Payload;
+    sequence: P['type'] extends DeltaEventType ? null : number;
+    type: P['type'];
+    payload: P;
   };
-}[GenerationHistoryEventType];
+}[Payload['type']];
 
-export type GenerationStreamEventPayload =
-  | { type: 'text-delta'; text: string }
-  | { type: 'reasoning-delta'; text: string }
-  | {
-      type: 'tool-step';
-      toolCallId: string;
-      toolName: string;
-      status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
-    }
-  | { type: 'phase-changed'; phase: GenerationPhase }
-  | { type: 'error'; message: string };
-
-export type GenerationStreamEvent = {
-  version: 1;
-  generationId: string;
-  event: GenerationStreamEventPayload;
-};
+export type GenerationEvent = GenerationEventFor<GenerationEventPayload>;
+export type GenerationHistoryEvent = GenerationEventFor<GenerationHistoryEventPayload>;
 
 export type GenerationInput =
   | { type: 'start'; turnId: string; context: GenerationStartContext }
@@ -175,7 +186,7 @@ export type GenerationInput =
 
 export type GenerationCommand =
   | { type: 'persist'; event: GenerationHistoryEventPayload; idempotencyKey: string }
-  | { type: 'emit'; event: GenerationStreamEventPayload }
+  | { type: 'emit'; event: GenerationDeltaEventPayload }
   | { type: 'open-provider-turn'; turnId: string; iteration: number }
   | { type: 'execute-tool'; call: GenerationToolCall; idempotencyKey: string }
   | { type: 'preview-tool'; call: GenerationToolCall; idempotencyKey: string }

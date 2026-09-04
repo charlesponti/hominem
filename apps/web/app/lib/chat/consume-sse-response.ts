@@ -1,4 +1,8 @@
-import { createGenerationEventDeduplicator, parseGenerationWireEvent } from '@hominem/chat';
+import {
+  createGenerationEventDeduplicator,
+  GENERATION_TIMING,
+  parseGenerationWireEvent,
+} from '@hominem/chat';
 import type { GenerationWireEvent } from '@hominem/chat';
 import { createSseDecoder, finishSse, pushSseChunk } from '@hominem/chat/sse';
 
@@ -9,12 +13,12 @@ export class SseIdleTimeoutError extends Error {
   }
 }
 
-// services/api writes a `:heartbeat` comment frame roughly every 15s while a
-// generation is in progress (see SSE_HEARTBEAT_INTERVAL_MS in
+// services/api writes a `:heartbeat` comment frame roughly every
+// GENERATION_TIMING.heartbeatMs while a generation is in progress (see
 // chats.generation.ts) specifically so this timer has something to reset
-// against even when no real event has arrived yet. Comfortably above that,
-// with margin for one missed tick.
-const DEFAULT_SSE_IDLE_TIMEOUT_MS = 35_000;
+// against even when no real event has arrived yet. clientIdleMs is defined
+// relative to that in GENERATION_TIMING, not chosen independently.
+const DEFAULT_SSE_IDLE_TIMEOUT_MS = GENERATION_TIMING.clientIdleMs;
 
 function readWithIdleTimeout(
   reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -64,7 +68,7 @@ export async function consumeSseResponse(
       if (output.kind === 'event') {
         const event = deduplicate(output.event);
         if (event) {
-          if ('sequence' in event) options?.onDurableSequence?.(event.sequence);
+          if (event.sequence !== null) options?.onDurableSequence?.(event.sequence);
           onEvent(event);
         }
       }

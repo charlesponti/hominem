@@ -8,6 +8,7 @@ import {
   streamChatCompletion,
 } from '@hominem/ai';
 import {
+  GENERATION_TIMING,
   providerChunkSchema,
   reconstructProviderToolCalls,
   type ChatModel,
@@ -39,13 +40,13 @@ export class ProviderInputError extends Error {
 // this deadline instead. Composes with CHAT_REQUEST_TIMEOUT_MS in
 // @hominem/ai's text.ts (the absolute request+stream deadline, which this
 // idle timer will almost always fire well before) via the AbortController
-// created below.
-const CHUNK_IDLE_TIMEOUT_MS = 10_000;
+// created below. See GENERATION_TIMING for the full timeout policy.
+const CHUNK_IDLE_TIMEOUT_MS = GENERATION_TIMING.providerIdleMs;
 
 // After a finish-reason chunk, OpenRouter often (not always) follows with one
 // more chunk carrying only usage/cost data before going silent. Short grace
 // window to catch it without reintroducing the original hang.
-const USAGE_TRAILER_GRACE_MS = 500;
+const USAGE_TRAILER_GRACE_MS = GENERATION_TIMING.usageTrailerGraceMs;
 
 export class StreamIdleTimeoutError extends Error {
   // Matches OpenRouterRequestError's convention (see normalizeOpenRouterError

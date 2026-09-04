@@ -8,11 +8,11 @@ import {
 } from '@hominem/ai';
 import { restoreGenerationState } from '@hominem/chat';
 import type {
+  GenerationDeltaEventPayload,
+  GenerationEvent,
   GenerationHistoryEvent,
   GenerationHistoryEventPayload,
   GenerationHistoryMessageSnapshot,
-  GenerationLiveEvent,
-  GenerationStreamEventPayload,
   GenerationStartContext,
   GenerationWireEvent,
   GenerationInput,
@@ -54,7 +54,7 @@ import type {
 } from './chat-generation-types';
 import { buildChatSystemPrompt } from './chat-prompts';
 import { chatSpeechService } from './chat-speech.service';
-import { publishGenerationEvent, subscribeToGenerationEvents } from './generation-live-bus';
+import { subscribeToGenerationEvents } from './generation-live-bus';
 
 type GenerationStreamQueue = AsyncIterable<GenerationWireEvent>;
 
@@ -321,11 +321,13 @@ function toChatSnapshot(chat: Awaited<ReturnType<typeof ChatRepository.getOwnedO
   return chatSnapshotSchema.parse(chat);
 }
 
-function toLiveEvent(
-  generationId: string,
-  event: GenerationStreamEventPayload,
-): GenerationLiveEvent {
-  return { version: 1, generationId, event };
+function toLiveEvent(generationId: string, payload: GenerationDeltaEventPayload): GenerationEvent {
+  switch (payload.type) {
+    case 'text-delta':
+      return { version: 1, generationId, sequence: null, type: 'text-delta', payload };
+    case 'reasoning-delta':
+      return { version: 1, generationId, sequence: null, type: 'reasoning-delta', payload };
+  }
 }
 
 function createEffectStore(ownerUserId: string): ChatGenerationEffectStore {
@@ -373,11 +375,6 @@ export class ChatGenerationService {
 
   private planTools(messages: ChatMessages[]): ReturnType<typeof planChatTools> {
     return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
-  }
-
-  private publishEvent(event: ChatGenerationEventRecord): void {
-    this.dependencies.failureHooks?.beforeEventPublish?.(event);
-    publishGenerationEvent(event);
   }
 
   async regenerateMessage(input: RegenerateMessageInput): Promise<GenerationStreamQueue> {
@@ -830,60 +827,52 @@ export class ChatGenerationService {
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.ownerUserId);
     await this.dependencies.failureHooks?.beforeCancellationCommit?.();
     const requestedAt = new Date().toISOString();
-    let events: ChatGenerationEventRecord[] = [];
     try {
-      events = await runInTransaction(async (trx): Promise<ChatGenerationEventRecord[]> => {
+      await runInTransaction(async (trx): Promise<void> => {
         const run = await ChatRepository.getGenerationRunById(
           trx,
           input.generationId,
           input.ownerUserId,
         );
-        if (!run || ['committed', 'cancelled', 'failed'].includes(run.status)) return [];
+        if (!run || ['committed', 'cancelled', 'failed'].includes(run.status)) return;
 
-        const cancellationEvents: ChatGenerationEventRecord[] = [];
         if (run.status === 'preparing') {
-          cancellationEvents.push(
-            await ChatGenerationRepository.appendEvent(trx, {
-              generationId: input.generationId,
-              ownerUserId: input.ownerUserId,
-              event: {
-                type: 'generation.started',
-                context: {
-                  chatId: run.chatId,
-                  kind: run.kind,
-                  userMessageId: run.userMessageId,
-                  targetAssistantMessageId: run.targetAssistantMessageId,
-                  requestContext: {},
-                },
-              },
-              idempotencyKey: `${input.generationId}:started`,
-            }),
-          );
-        }
-        cancellationEvents.push(
           await ChatGenerationRepository.appendEvent(trx, {
             generationId: input.generationId,
             ownerUserId: input.ownerUserId,
             event: {
-              type: 'generation.cancel_requested',
-              requestedAt,
-              requestedBy: input.ownerUserId,
+              type: 'generation.started',
+              context: {
+                chatId: run.chatId,
+                kind: run.kind,
+                userMessageId: run.userMessageId,
+                targetAssistantMessageId: run.targetAssistantMessageId,
+                requestContext: {},
+              },
             },
-            idempotencyKey: `${input.generationId}:cancel-requested`,
-          }),
-          await ChatGenerationRepository.appendEvent(trx, {
-            generationId: input.generationId,
-            ownerUserId: input.ownerUserId,
-            event: { type: 'generation.cancelled' },
-            idempotencyKey: `${input.generationId}:cancelled`,
-          }),
-        );
-        return cancellationEvents;
+            idempotencyKey: `${input.generationId}:started`,
+          });
+        }
+        await ChatGenerationRepository.appendEvent(trx, {
+          generationId: input.generationId,
+          ownerUserId: input.ownerUserId,
+          event: {
+            type: 'generation.cancel_requested',
+            requestedAt,
+            requestedBy: input.ownerUserId,
+          },
+          idempotencyKey: `${input.generationId}:cancel-requested`,
+        });
+        await ChatGenerationRepository.appendEvent(trx, {
+          generationId: input.generationId,
+          ownerUserId: input.ownerUserId,
+          event: { type: 'generation.cancelled' },
+          idempotencyKey: `${input.generationId}:cancelled`,
+        });
       });
     } catch (error) {
       if (!(error instanceof GenerationProjectionError)) throw error;
     }
-    for (const event of events) this.publishEvent(event);
     return ChatRepository.getGenerationRunById(db, input.generationId, input.ownerUserId);
   }
 
@@ -920,7 +909,6 @@ export class ChatGenerationService {
         sequence: record.sequence,
         delivery: 'live',
       });
-      this.publishEvent(record);
       queue.push(toHistoryEvent(record));
     };
 
@@ -1011,7 +999,6 @@ export class ChatGenerationService {
         },
         durableEvents: {
           accept: (record) => {
-            this.publishEvent(record);
             queue.push(toHistoryEvent(record));
           },
         },

@@ -5,7 +5,7 @@ import type {
   GenerationInput,
   GenerationState,
 } from '@hominem/chat';
-import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
+import type { ChatMessageToolCallRecord } from '@hominem/db';
 
 import type { callTool, getToolDefinition } from '../mcp/tool-registry';
 
@@ -29,7 +29,6 @@ export type ChatGenerationModelFactory = (input: {
 export type ChatGenerationFailureHooks = {
   beforeEventAppend?: (event: GenerationHistoryEventPayload) => void | Promise<void>;
   beforeSnapshotCommit?: () => void | Promise<void>;
-  beforeEventPublish?: (event: ChatGenerationEventRecord) => void;
   beforeCancellationCommit?: () => void | Promise<void>;
 };
 

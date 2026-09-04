@@ -39,7 +39,10 @@ export type {
 } from './services/notes/note.repository';
 
 export { ChatRepository } from './services/chats/chat.repository';
-export { ChatGenerationRepository } from './services/chats/chat-generation.repository';
+export {
+  CHAT_GENERATION_EVENTS_CHANNEL,
+  ChatGenerationRepository,
+} from './services/chats/chat-generation.repository';
 export type {
   AppendChatGenerationEventInput,
   ChatGenerationEventRecord,

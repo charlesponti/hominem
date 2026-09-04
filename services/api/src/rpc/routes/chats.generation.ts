@@ -1,4 +1,4 @@
-import type { GenerationWireEvent } from '@hominem/chat';
+import { GENERATION_TIMING, type GenerationWireEvent } from '@hominem/chat';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
@@ -27,17 +27,16 @@ type GenerationStream = {
 function writeGenerationWireEvent(stream: GenerationStream, event: GenerationWireEvent) {
   return stream.writeSSE({
     data: JSON.stringify(event),
-    ...('sequence' in event ? { id: String(event.sequence) } : {}),
+    ...(event.sequence !== null ? { id: String(event.sequence) } : {}),
   });
 }
 
-// Well under the frontend's idle timeout (see DEFAULT_SSE_IDLE_TIMEOUT_MS in
-// apps/web/app/lib/chat/consume-sse-response.ts) and typical proxy/LB idle
-// connection limits. A raw `:heartbeat` comment line is valid SSE and is
-// already silently dropped by the frontend's frame decoder (no `data:`
-// line), so it resets the client's idle timer without being mistaken for a
-// real event.
-const SSE_HEARTBEAT_INTERVAL_MS = 15_000;
+// Well under the frontend's idle timeout (see GENERATION_TIMING.clientIdleMs)
+// and typical proxy/LB idle connection limits. A raw `:heartbeat` comment
+// line is valid SSE and is already silently dropped by the frontend's frame
+// decoder (no `data:` line), so it resets the client's idle timer without
+// being mistaken for a real event.
+const SSE_HEARTBEAT_INTERVAL_MS = GENERATION_TIMING.heartbeatMs;
 
 async function writeWithHeartbeat<T>(
   stream: GenerationStream,

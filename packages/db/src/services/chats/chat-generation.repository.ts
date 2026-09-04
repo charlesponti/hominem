@@ -9,6 +9,7 @@ import {
 import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
 import type { Selectable } from 'kysely';
 
+import { sql } from '../../db';
 import { ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type {
@@ -165,6 +166,16 @@ function toToolEffectRecord(row: ToolEffectRow): ChatGenerationToolEffectRecord 
   };
 }
 
+// Fired from inside appendEvent's own transaction (see below) so live
+// delivery is atomic with the durable write — Postgres defers NOTIFY
+// delivery until commit and discards it automatically on rollback. The
+// payload is a lightweight pointer, not the full event: NOTIFY payloads are
+// hard-capped at 8000 bytes by Postgres, and a full event (long assistant
+// text, large tool-call arguments) can exceed that — which would fail
+// *inside* this same transaction as the durable insert. Listeners resolve
+// the pointer via getEventBySequence.
+export const CHAT_GENERATION_EVENTS_CHANNEL = 'chat_generation_events';
+
 namespace ChatGenerationEvents {
   export function getByIdempotencyKey(
     handle: DbHandle,
@@ -244,6 +255,11 @@ export const ChatGenerationRepository = {
       .where('ownerUserId', '=', input.ownerUserId)
       .executeTakeFirstOrThrow();
 
+    await sql`select pg_notify(${CHAT_GENERATION_EVENTS_CHANNEL}, ${JSON.stringify({
+      generationId: input.generationId,
+      sequence,
+    })})`.execute(handle);
+
     return toEventRecord(inserted);
   },
 
@@ -274,6 +290,26 @@ export const ChatGenerationRepository = {
       .execute();
 
     return rows.map(toEventRecord);
+  },
+
+  // Deliberately unscoped by ownerUserId, unlike listEvents: this is an
+  // internal server-side lookup used only to resolve a NOTIFY pointer
+  // (generationId + sequence) into a full record for local fan-out.
+  // Authorization already happened when the event was persisted; this
+  // matches the same trust boundary subscribeToGenerationEvents already
+  // has (it also takes no ownerUserId).
+  async getEventBySequence(
+    handle: DbHandle,
+    generationId: string,
+    sequence: number,
+  ): Promise<ChatGenerationEventRecord | null> {
+    const row = await handle
+      .selectFrom('app.chatGenerationEvents')
+      .selectAll()
+      .where('generationId', '=', generationId)
+      .where('sequence', '=', String(sequence))
+      .executeTakeFirst();
+    return row ? toEventRecord(row) : null;
   },
 
   async saveSnapshot(

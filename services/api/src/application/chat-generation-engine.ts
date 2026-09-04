@@ -4,8 +4,8 @@ import {
   chatMessageJsonObjectSchema,
   chatMessageSnapshotSchema,
   type ChatMessageJsonObject,
+  type GenerationDeltaEventPayload,
   type GenerationHistoryEventPayload,
-  type GenerationStreamEventPayload,
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
@@ -91,7 +91,7 @@ export async function executeGenerationTurn(
       }) => Promise<ChatGenerationEventRecord | null>;
     };
     durableEvents?: { accept: (event: ChatGenerationEventRecord) => Promise<void> | void };
-    liveEvents?: { accept: (event: GenerationStreamEventPayload) => Promise<void> | void };
+    liveEvents?: { accept: (event: GenerationDeltaEventPayload) => Promise<void> | void };
     cancellation?: { isRequested: () => boolean | Promise<boolean> };
     // Overrides the interpreter's default per-command timeouts. Production
     // callers should leave this unset; it exists so tests can make a hung
@@ -217,15 +217,7 @@ export async function executeGenerationTurn(
           if (record) await input.durableEvents?.accept(record);
         },
         emit: async (event) => {
-          if (event.type === 'text-delta') {
-            await input.liveEvents?.accept({ type: 'text-delta', text: event.text });
-          } else if (event.type === 'reasoning-delta') {
-            await input.liveEvents?.accept({ type: 'reasoning-delta', text: event.text });
-          } else if (event.type === 'tool-step') {
-            await input.liveEvents?.accept(event);
-          } else if (event.type === 'phase-changed') {
-            await input.liveEvents?.accept({ type: 'phase-changed', phase: 'running' });
-          }
+          await input.liveEvents?.accept(event);
         },
       },
       generation: {
