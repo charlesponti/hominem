@@ -85,9 +85,11 @@ describe('generation notify listener', () => {
       expect(step.done).toBe(false);
       expect(step.value).toMatchObject({
         generationId,
-        sequence: 1,
         type: 'generation.started',
       });
+      // `sequence` is a DB identity column shared across all generations
+      // (see the 20260903030000 migration), not app-computed per generation.
+      expect(Number.isSafeInteger((step.value as { sequence: number }).sequence)).toBe(true);
     } finally {
       subscription.close();
     }
@@ -125,8 +127,13 @@ describe('generation notify listener', () => {
 
       const first = await nextWithTimeout(iterator, 5_000);
       const second = await nextWithTimeout(iterator, 5_000);
-      expect(first.value).toMatchObject({ sequence: 1, type: 'generation.started' });
-      expect(second.value).toMatchObject({ sequence: 2, type: 'generation.phase_changed' });
+      expect(first.value).toMatchObject({ type: 'generation.started' });
+      expect(second.value).toMatchObject({ type: 'generation.phase_changed' });
+      // `sequence` is a DB identity column shared across all generations,
+      // so only strictly-ascending order (not literal values) is asserted.
+      expect((second.value as { sequence: number }).sequence).toBeGreaterThan(
+        (first.value as { sequence: number }).sequence,
+      );
     } finally {
       subscription.close();
     }

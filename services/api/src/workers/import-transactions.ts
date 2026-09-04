@@ -34,7 +34,7 @@ async function processImportJob(job: Job<ImportTransactionsQueuePayload>): Promi
   const jobId = String(job.id);
   const planContent = await getImportPlanContent(job.data.planId);
   if (!planContent) throw new Error('Frozen import plan was not found or expired');
-  const plan = JSON.parse(planContent) as ImportPlan;
+  const plan: ImportPlan = JSON.parse(planContent);
   const current = await updateStatus(jobId, 'processing');
   if (!current) throw new Error('Import job status was not found');
 

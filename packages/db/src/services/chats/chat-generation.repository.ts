@@ -1,6 +1,7 @@
 import {
   rebuildGenerationProjection,
   reduceGenerationProjection,
+  type ChatGenerationStatus,
   type GenerationHistoryEventPayload,
   type GenerationRunIdentity,
   type GenerationRunProjection,
@@ -9,7 +10,6 @@ import {
 import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
 import type { Selectable } from 'kysely';
 
-import { sql } from '../../db';
 import { ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type {
@@ -27,6 +27,23 @@ type GenerationRunRow = {
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
 };
+
+type GenerationRunProjectionRow = GenerationRunRow & {
+  status: string;
+  assistantMessageId: string | null;
+  errorMessage: string | null;
+};
+
+const GENERATION_STATUSES: readonly ChatGenerationStatus[] = [
+  'preparing',
+  'running',
+  'cancel_requested',
+  'awaiting_confirmation',
+  'saving',
+  'committed',
+  'cancelled',
+  'failed',
+];
 
 type JsonObject = Record<string, unknown>;
 
@@ -70,6 +87,13 @@ export function parseGenerationKind(value: string): GenerationRunIdentity['kind'
   throw invalidGenerationData('kind');
 }
 
+export function parseGenerationStatus(value: string): ChatGenerationStatus {
+  if ((GENERATION_STATUSES as readonly string[]).includes(value)) {
+    return value as ChatGenerationStatus;
+  }
+  throw invalidGenerationData('status');
+}
+
 export function toJsonValue(value: unknown): Json {
   if (value === null) return null;
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -99,6 +123,12 @@ export interface AppendChatGenerationEventInput {
   ownerUserId: string;
   event: GenerationHistoryEventPayload;
   idempotencyKey?: string;
+}
+
+export interface AppendChatGenerationEventsInput {
+  generationId: string;
+  ownerUserId: string;
+  events: ReadonlyArray<{ event: GenerationHistoryEventPayload; idempotencyKey?: string }>;
 }
 
 export interface ChatGenerationToolEffectRecord {
@@ -141,6 +171,23 @@ function toGenerationIdentity(row: GenerationRunRow): GenerationRunIdentity {
   };
 }
 
+// The run row's own denormalized columns (kept in sync by projectionUpdate
+// below) ARE the current projection — reduceGenerationProjection only ever
+// folds status/assistantMessageId/errorMessage, so there's nothing richer to
+// recover by replaying raw events. `status` starts at 'preparing' and never
+// returns to it once `generation.started` fires (no reducer case sets it
+// back), so it doubles as the "no events appended yet" sentinel that
+// reduceGenerationProjection requires as `null` for that first event.
+function toCurrentProjection(row: GenerationRunProjectionRow): GenerationRunProjection | null {
+  if (row.status === 'preparing') return null;
+  return {
+    ...toGenerationIdentity(row),
+    status: parseGenerationStatus(row.status),
+    assistantMessageId: row.assistantMessageId,
+    errorMessage: row.errorMessage,
+  };
+}
+
 function projectionUpdate(projection: GenerationRunProjection) {
   return {
     status: projection.status,
@@ -166,14 +213,14 @@ function toToolEffectRecord(row: ToolEffectRow): ChatGenerationToolEffectRecord 
   };
 }
 
-// Fired from inside appendEvent's own transaction (see below) so live
-// delivery is atomic with the durable write — Postgres defers NOTIFY
+// Fired by the app.notify_chat_generation_event trigger on every insert
+// into app.chatGenerationEvents (see the identity-sequence migration), so
+// live delivery is atomic with the durable write — Postgres defers NOTIFY
 // delivery until commit and discards it automatically on rollback. The
 // payload is a lightweight pointer, not the full event: NOTIFY payloads are
 // hard-capped at 8000 bytes by Postgres, and a full event (long assistant
-// text, large tool-call arguments) can exceed that — which would fail
-// *inside* this same transaction as the durable insert. Listeners resolve
-// the pointer via getEventBySequence.
+// text, large tool-call arguments) can exceed that. Listeners resolve the
+// pointer via getEventBySequence.
 export const CHAT_GENERATION_EVENTS_CHANNEL = 'chat_generation_events';
 
 namespace ChatGenerationEvents {
@@ -191,76 +238,129 @@ namespace ChatGenerationEvents {
   }
 }
 
+// Shared by appendEvent and appendEvents. Locks the run row once, folds the
+// whole batch of events against its own denormalized projection columns (no
+// replay of prior events — see toCurrentProjection), inserts every row in
+// one multi-row INSERT (sequence assigned by the DB identity column, NOTIFY
+// fired by the app.notify_chat_generation_event trigger), and writes the
+// run row forward once to the final folded state.
+//
+// Idempotency is checked at the batch level: if the *first* event's key is
+// already durable, the whole batch was already appended by a prior attempt
+// (appendEvent/appendEvents are each called as one atomic unit, never
+// partially), so every record is re-fetched by key instead of re-inserted.
+async function appendEventsCore(
+  handle: DbHandle,
+  input: AppendChatGenerationEventsInput,
+): Promise<ChatGenerationEventRecord[]> {
+  if (input.events.length === 0) return [];
+
+  const run = await handle
+    .selectFrom('app.chatGenerationRuns')
+    .select([
+      'id',
+      'chatId',
+      'ownerUserId',
+      'kind',
+      'userMessageId',
+      'targetAssistantMessageId',
+      'status',
+      'assistantMessageId',
+      'errorMessage',
+    ])
+    .where('id', '=', input.generationId)
+    .where('ownerUserId', '=', input.ownerUserId)
+    .forUpdate()
+    .executeTakeFirstOrThrow();
+
+  const firstKey = input.events[0]?.idempotencyKey;
+  if (firstKey) {
+    const existingFirst = await ChatGenerationEvents.getByIdempotencyKey(
+      handle,
+      input.generationId,
+      firstKey,
+    );
+    if (existingFirst) {
+      return Promise.all(
+        input.events.map(async ({ idempotencyKey }) => {
+          if (idempotencyKey === firstKey) return toEventRecord(existingFirst);
+          if (!idempotencyKey) {
+            throw invalidGenerationData('event batch', {
+              reason:
+                'batch was already appended but this event has no idempotencyKey to look it up by',
+            });
+          }
+          const record = await ChatGenerationEvents.getByIdempotencyKey(
+            handle,
+            input.generationId,
+            idempotencyKey,
+          );
+          if (!record) {
+            throw invalidGenerationData('event batch', {
+              reason: 'batch was partially appended by a prior attempt',
+              idempotencyKey,
+            });
+          }
+          return toEventRecord(record);
+        }),
+      );
+    }
+  }
+
+  const identity = toGenerationIdentity(run);
+  let current = toCurrentProjection(run);
+  const values = input.events.map(({ event, idempotencyKey }) => {
+    current = reduceGenerationProjection(current, identity, event);
+    return {
+      generationId: input.generationId,
+      type: event.type,
+      payload: toJsonValue(event),
+      idempotencyKey: idempotencyKey ?? null,
+    };
+  });
+
+  const inserted = await handle
+    .insertInto('app.chatGenerationEvents')
+    .values(values)
+    .returningAll()
+    .execute();
+
+  const next = current;
+  if (!next) throw new Error('Chat generation event batch produced no projection');
+  await handle
+    .updateTable('app.chatGenerationRuns')
+    .set({
+      ...projectionUpdate(next),
+      encryptedSnapshot: ['committed', 'cancelled', 'failed'].includes(next.status)
+        ? null
+        : undefined,
+    })
+    .where('id', '=', input.generationId)
+    .where('ownerUserId', '=', input.ownerUserId)
+    .executeTakeFirstOrThrow();
+
+  return inserted.map(toEventRecord);
+}
+
 export const ChatGenerationRepository = {
   async appendEvent(
     handle: DbHandle,
     input: AppendChatGenerationEventInput,
   ): Promise<ChatGenerationEventRecord> {
-    const run = await handle
-      .selectFrom('app.chatGenerationRuns')
-      .select(['id', 'chatId', 'ownerUserId', 'kind', 'userMessageId', 'targetAssistantMessageId'])
-      .where('id', '=', input.generationId)
-      .where('ownerUserId', '=', input.ownerUserId)
-      .forUpdate()
-      .executeTakeFirstOrThrow();
-
-    const existing = input.idempotencyKey
-      ? await ChatGenerationEvents.getByIdempotencyKey(
-          handle,
-          input.generationId,
-          input.idempotencyKey,
-        )
-      : undefined;
-
-    if (existing) return toEventRecord(existing);
-
-    const priorRows = await handle
-      .selectFrom('app.chatGenerationEvents')
-      .selectAll()
-      .where('generationId', '=', input.generationId)
-      .orderBy('sequence', 'asc')
-      .execute();
-    const events = priorRows.map(toEventRecord);
-    const prior = events.length > 0 ? events.map((event) => event.payload) : [];
-    const identity = toGenerationIdentity(run);
-    const current = prior.length > 0 ? rebuildGenerationProjection(identity, prior) : null;
-    const next = reduceGenerationProjection(current, identity, input.event);
-    const previousSequence = events.length > 0 ? BigInt(priorRows.at(-1)!.sequence) : 0n;
-    if (previousSequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new Error('Chat generation event sequence is outside the safe integer range');
-    }
-    const sequence = Number(previousSequence + 1n);
-
-    const inserted = await handle
-      .insertInto('app.chatGenerationEvents')
-      .values({
-        generationId: input.generationId,
-        sequence,
-        type: input.event.type,
-        payload: toJsonValue(input.event),
-        idempotencyKey: input.idempotencyKey ?? null,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
-
-    await handle
-      .updateTable('app.chatGenerationRuns')
-      .set({
-        ...projectionUpdate(next),
-        encryptedSnapshot: ['committed', 'cancelled', 'failed'].includes(next.status)
-          ? null
-          : undefined,
-      })
-      .where('id', '=', input.generationId)
-      .where('ownerUserId', '=', input.ownerUserId)
-      .executeTakeFirstOrThrow();
-
-    await sql`select pg_notify(${CHAT_GENERATION_EVENTS_CHANNEL}, ${JSON.stringify({
+    const [record] = await appendEventsCore(handle, {
       generationId: input.generationId,
-      sequence,
-    })})`.execute(handle);
+      ownerUserId: input.ownerUserId,
+      events: [{ event: input.event, idempotencyKey: input.idempotencyKey }],
+    });
+    if (!record) throw new Error('Chat generation event was not appended');
+    return record;
+  },
 
-    return toEventRecord(inserted);
+  appendEvents(
+    handle: DbHandle,
+    input: AppendChatGenerationEventsInput,
+  ): Promise<ChatGenerationEventRecord[]> {
+    return appendEventsCore(handle, input);
   },
 
   async listEvents(

@@ -34,9 +34,8 @@ function createErrorResult(message: string): CallToolResult {
 const PUBLIC_TOOL_ERROR = 'Unable to complete the MCP tool request.';
 
 function resolveRequestContext(authInfo?: AuthInfo) {
-  const extra = authInfo?.extra as Partial<McpAuthInfoExtra> | undefined;
-  const ownerUserId = extra?.ownerUserId;
-  if (!ownerUserId) return null;
+  const ownerUserId = authInfo?.extra?.ownerUserId;
+  if (typeof ownerUserId !== 'string' || !ownerUserId) return null;
   return { ownerUserId, grantedScopes: new Set(authInfo?.scopes ?? []) };
 }
 

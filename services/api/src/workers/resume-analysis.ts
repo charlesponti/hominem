@@ -96,9 +96,9 @@ export function startResumeAnalysisWorker() {
     return worker;
   }
 
-  worker = new Worker(
+  worker = new Worker<ResumeAnalysisQueuePayload>(
     QUEUE_NAMES.RESUME_ANALYSIS,
-    async (job) => processResumeAnalysisJob(job.data as ResumeAnalysisQueuePayload),
+    async (job) => processResumeAnalysisJob(job.data),
     { connection: cache },
   );
 

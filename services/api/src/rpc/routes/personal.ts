@@ -7,7 +7,7 @@ import {
   financeMonthlySummarySchema,
 } from '../../schemas/finance.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { respondWithData } from '../response';
+import { parseDataEnvelope } from '../response';
 
 const routes = new Hono<AppContext>();
 
@@ -19,7 +19,7 @@ routes.get(
     const userId = c.get('auth')!.userId;
     const input = c.req.valid('query');
     const summary = await getMonthlySummary({ ownerUserId: userId, ...input });
-    return respondWithData(c, financeMonthlySummarySchema, summary);
+    return c.json(parseDataEnvelope(financeMonthlySummarySchema, summary));
   },
 );
 

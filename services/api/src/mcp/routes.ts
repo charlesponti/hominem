@@ -109,7 +109,7 @@ export function createMcpRoutes(dependencies: McpDependencies) {
     const response = await auth.handler(
       new Request(authUrl, { method: c.req.method, headers: c.req.raw.headers }),
     );
-    const metadata = (await response.json()) as Record<string, unknown>;
+    const metadata: Record<string, unknown> = await response.json();
 
     return c.json({
       ...metadata,

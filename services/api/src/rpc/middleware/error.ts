@@ -1,7 +1,7 @@
 import { logger } from '@hominem/telemetry';
 import type { Context } from 'hono';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
+import { isContentfulStatusCode } from '../../utils/http-status';
 import { isServiceError, type ErrorCode, type ServiceError } from '../errors';
 import type { AppContext } from './auth';
 
@@ -47,6 +47,17 @@ export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
       logger.warn('[API Client Error]', logData);
     }
 
+    if (!isContentfulStatusCode(serviceError.statusCode)) {
+      return c.json<ApiErrorResponse>(
+        {
+          error: 'internal_error',
+          code: 'INTERNAL_ERROR',
+          message: 'An unexpected error occurred',
+        },
+        500,
+      );
+    }
+
     return c.json<ApiErrorResponse>(
       {
         error: serviceError.code.toLowerCase(),
@@ -54,7 +65,8 @@ export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
         message: serviceError.message,
         details: serviceError.details,
       },
-      serviceError.statusCode as ContentfulStatusCode,
+      // `isServiceError` (via `findServiceError`) validates this range.
+      serviceError.statusCode,
     );
   }
 

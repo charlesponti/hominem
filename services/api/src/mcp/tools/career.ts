@@ -119,9 +119,9 @@ registerTool(
   },
 );
 
-const writeTool = {
-  readOnly: false as const,
-  scopes: ['career:write'] as ['career:write'],
+const writeTool: { readOnly: false; scopes: ['career:write']; resultCap: number } = {
+  readOnly: false,
+  scopes: ['career:write'],
   resultCap: 1,
 };
 

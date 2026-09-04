@@ -1,6 +1,7 @@
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { SpanStatusCode } from '@opentelemetry/api';
 import type { MiddlewareHandler } from 'hono';
+import { routePath } from 'hono/route';
 
 const httpTracer = getTelemetryTracer('hominem.http');
 
@@ -47,8 +48,8 @@ export function requestLogger(): MiddlewareHandler {
           throw error;
         } finally {
           const durationMs = Math.max(0, Math.round(performance.now() - startedAt));
-          const routePath = (c.req as unknown as { routePath?: string }).routePath;
-          if (routePath) span.setAttribute('http.route', routePath);
+          const route = routePath(c);
+          if (route) span.setAttribute('http.route', route);
           span.setAttributes({
             'http.response.status_code': c.res.status,
             'http.server.duration_ms': durationMs,

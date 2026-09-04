@@ -1,5 +1,4 @@
 import { createMiddleware } from 'hono/factory';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import type { AppContext } from './auth';
 import type { ApiErrorResponse } from './error';
@@ -18,7 +17,7 @@ export const validationErrorMiddleware = createMiddleware<AppContext>(async (c, 
           message: 'Request validation failed',
           details: parseValidationError(err),
         },
-        400 as ContentfulStatusCode,
+        400,
       );
     }
 
@@ -32,7 +31,8 @@ function parseValidationError(err: Error): Record<string, unknown> | undefined {
   try {
     const match = err.message.match(/\{.*\}/);
     if (match) {
-      return JSON.parse(match[0]) as Record<string, unknown>;
+      const parsed: Record<string, unknown> = JSON.parse(match[0]);
+      return parsed;
     }
   } catch {
     // not JSON, no details to add

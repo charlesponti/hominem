@@ -72,7 +72,7 @@ export async function getSocialConversationActivity(
     .execute();
   const conversations = rows.map((row) => ({
     conversationId: row.conversationId,
-    platform: row.platform as string | null,
+    platform: row.platform,
     title: row.title,
     isGroup: row.isGroup,
     messageCount: Number(row.messageCount),

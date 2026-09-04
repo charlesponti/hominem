@@ -158,9 +158,9 @@ async function processCareerImport(job: Job<CareerImportQueuePayload>): Promise<
 export function startCareerJobImportWorker() {
   if (worker) return worker;
 
-  worker = new Worker(
+  worker = new Worker<CareerImportQueuePayload>(
     QUEUE_NAMES.CAREER_JOB_IMPORT,
-    (job) => processCareerImport(job as Job<CareerImportQueuePayload>),
+    (job) => processCareerImport(job),
     { connection: redis },
   );
 

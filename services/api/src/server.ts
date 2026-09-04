@@ -152,6 +152,9 @@ function registerErrorHandlers(app: Hono<AppEnv>, inputEnv: ApiEnv) {
           message: err.message,
           ...(err.details && { details: err.details }),
         },
+        // `isServiceError` already checked statusCode is an integer in [400, 599],
+        // so it's a valid HTTP status by construction.
+        // oxlint-disable-next-line typescript/consistent-type-assertions
         err.statusCode as ContentfulStatusCode,
       );
     }

@@ -27,8 +27,8 @@ export async function getPlaceVisitHistory(
       'pv.notes as notes',
     ])
     .where('pv.ownerUserid', '=', ownerUserId)
-    .$if(from !== undefined, (qb) => qb.where('pv.visitedAt', '>=', from as string))
-    .$if(to !== undefined, (qb) => qb.where('pv.visitedAt', '<=', endOfDay(to as string)))
+    .$if(from !== undefined, (qb) => qb.where('pv.visitedAt', '>=', from!))
+    .$if(to !== undefined, (qb) => qb.where('pv.visitedAt', '<=', endOfDay(to!)))
     .orderBy('pv.visitedAt', 'desc')
     .limit(limit)
     .execute();
@@ -75,9 +75,7 @@ export async function findOrCreatePlace(
     .selectFrom('app.places')
     .select('id')
     .where('ownerUserid', '=', ownerUserId)
-    .$if(input.address !== undefined, (qb) =>
-      qb.where('formattedAddress', '=', input.address as string),
-    )
+    .$if(input.address !== undefined, (qb) => qb.where('formattedAddress', '=', input.address!))
     .$if(input.address === undefined && input.latitude !== undefined, (qb) =>
       qb
         .where('latitude', '=', String(input.latitude))

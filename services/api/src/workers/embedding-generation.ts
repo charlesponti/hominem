@@ -104,9 +104,9 @@ export function startEmbeddingGenerationWorker() {
     return worker;
   }
 
-  worker = new Worker(
+  worker = new Worker<EmbeddingGenerationJob>(
     QUEUE_NAMES.EMBEDDING_GENERATION,
-    async (job) => processEmbeddingJob(job.data as EmbeddingGenerationJob),
+    async (job) => processEmbeddingJob(job.data),
     { connection: cache },
   );
 

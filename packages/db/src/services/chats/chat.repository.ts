@@ -690,9 +690,11 @@ export const ChatRepository = {
     return messages.map(toChatMessageRecord);
   },
 
-  // Returns the raw row (not the mapped record) so callers can compose this into a transaction
-  async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRow> {
-    return await handle
+  // `.returningAll()` already gives every column toChatMessageRecord needs,
+  // so this maps in-process instead of making the caller re-SELECT the row
+  // it just inserted to get a properly-typed record.
+  async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRecord> {
+    const inserted = await handle
       .insertInto('app.chatMessages')
       .values({
         chatId: input.chatId,
@@ -706,6 +708,7 @@ export const ChatRepository = {
       })
       .returningAll()
       .executeTakeFirstOrThrow();
+    return toChatMessageRecord(inserted);
   },
 
   // Idempotent — attaching a note that's already attached is a no-op, not an error

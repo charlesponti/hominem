@@ -42,14 +42,14 @@ export function startSpeechUsageReconciliationWorker() {
     return worker;
   }
 
-  worker = new Worker(
+  worker = new Worker<SpeechUsageReconciliationJob>(
     QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION,
     async (job) => {
       const span = reconciliationTracer.startSpan('speech.reconciliation', {
         attributes: { 'speech.job': QUEUE_NAMES.SPEECH_USAGE_RECONCILIATION },
       });
       try {
-        await reconcileSpeechUsage((job.data as SpeechUsageReconciliationJob).speechRunId);
+        await reconcileSpeechUsage(job.data.speechRunId);
         span.setStatus({ code: SpanStatusCode.OK });
       } catch (error) {
         span.recordException(new Error('Speech usage reconciliation failed'));

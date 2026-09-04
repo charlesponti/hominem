@@ -25,10 +25,7 @@ export const importWebSocketRoutes = new Hono<AppContext>().get(
         await subscriber.subscribe('import:progress');
         subscriber.on('message', (_channel: string, message: string) => {
           try {
-            const parsed = JSON.parse(message) as {
-              type: string;
-              data?: BaseJob[];
-            };
+            const parsed: { type: string; data?: BaseJob[] } = JSON.parse(message);
             const jobs = (parsed.data ?? []).filter((job) => job.userId === userId);
             if (jobs.length > 0) ws.send(JSON.stringify({ type: parsed.type, data: jobs }));
           } catch {
@@ -39,7 +36,7 @@ export const importWebSocketRoutes = new Hono<AppContext>().get(
       onMessage: async (event, ws) => {
         if (!userId) return;
         try {
-          const message = JSON.parse(String(event.data)) as { type?: string };
+          const message: { type?: string } = JSON.parse(String(event.data));
           if (message.type === 'subscribe') {
             const snapshot = await getUserJobs<BaseJob>(userId);
             ws.send(JSON.stringify({ type: 'subscribed', data: snapshot.jobs }));

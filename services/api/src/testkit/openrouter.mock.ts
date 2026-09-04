@@ -193,65 +193,68 @@ function responseBody(request: OpenRouterRequest) {
 }
 
 const server = setupServer(
-  http.post('https://openrouter.ai/api/v1/chat/completions', async ({ request }) => {
-    // .clone() first: with OpenTelemetry's fetch/undici auto-instrumentation
-    // active (as it is on a real server boot), the instrumentation reads the
-    // request body for span capture before this handler runs, so a direct
-    // request.json() throws "Body has already been read".
-    const body = (await request.clone().json()) as OpenRouterRequest;
-    const userText = (body.messages ?? [])
-      .filter((message) => message.role === 'user')
-      .map((message) => (typeof message.content === 'string' ? message.content : ''))
-      .join('\n');
-    const failureMarker = userText.match(/PROVIDER-B010-FAIL(?:-[A-Z0-9]+)?/i)?.[0].toUpperCase();
-    if (!body.response_format && failureMarker && !failedProviderRequests.has(failureMarker)) {
-      failedProviderRequests.add(failureMarker);
-      return HttpResponse.json(
-        { error: { code: 400, message: 'Scripted provider failure' } },
-        { status: 400 },
-      );
-    }
-    const response = responseBody(body);
-    const controlledStream =
-      body.stream &&
-      ['B012-STREAM', 'B013-DISCONNECT', 'B014-REPLAY', 'B017-ACTIVE-RELOAD'].some((control) =>
-        hasControl(userText, control),
-      );
-    if (body.stream && hasControl(userText, 'B011-CANCEL-BEFORE')) {
-      await wait(CONTROLLED_DELAY_MS * 12);
-    }
-    const frames = response
-      .split('\n\n')
-      .filter(Boolean)
-      .map((frame) => `${frame}\n\n`);
-    const frameDelayMs = ['B013-DISCONNECT', 'B014-REPLAY', 'B017-ACTIVE-RELOAD'].some((control) =>
-      hasControl(userText, control),
-    )
-      ? CONTROLLED_DELAY_MS * 2
-      : CONTROLLED_DELAY_MS;
-    const encodedBody = new TextEncoder().encode(response);
-    let frameIndex = 0;
-    const stream = new ReadableStream<Uint8Array>({
-      async pull(controller) {
-        if (!controlledStream) {
-          controller.enqueue(encodedBody);
-          controller.close();
-          return;
-        }
-        if (frameIndex >= frames.length) {
-          controller.close();
-          return;
-        }
-        if (frameIndex > 0) await wait(frameDelayMs);
-        controller.enqueue(new TextEncoder().encode(frames[frameIndex++]));
-      },
-    });
-    return new HttpResponse(stream, {
-      headers: {
-        'content-type': body.stream ? 'text/event-stream' : 'application/json',
-      },
-    });
-  }),
+  http.post<never, OpenRouterRequest>(
+    'https://openrouter.ai/api/v1/chat/completions',
+    async ({ request }) => {
+      // .clone() first: with OpenTelemetry's fetch/undici auto-instrumentation
+      // active (as it is on a real server boot), the instrumentation reads the
+      // request body for span capture before this handler runs, so a direct
+      // request.json() throws "Body has already been read".
+      const body = await request.clone().json();
+      const userText = (body.messages ?? [])
+        .filter((message) => message.role === 'user')
+        .map((message) => (typeof message.content === 'string' ? message.content : ''))
+        .join('\n');
+      const failureMarker = userText.match(/PROVIDER-B010-FAIL(?:-[A-Z0-9]+)?/i)?.[0].toUpperCase();
+      if (!body.response_format && failureMarker && !failedProviderRequests.has(failureMarker)) {
+        failedProviderRequests.add(failureMarker);
+        return HttpResponse.json(
+          { error: { code: 400, message: 'Scripted provider failure' } },
+          { status: 400 },
+        );
+      }
+      const response = responseBody(body);
+      const controlledStream =
+        body.stream &&
+        ['B012-STREAM', 'B013-DISCONNECT', 'B014-REPLAY', 'B017-ACTIVE-RELOAD'].some((control) =>
+          hasControl(userText, control),
+        );
+      if (body.stream && hasControl(userText, 'B011-CANCEL-BEFORE')) {
+        await wait(CONTROLLED_DELAY_MS * 12);
+      }
+      const frames = response
+        .split('\n\n')
+        .filter(Boolean)
+        .map((frame) => `${frame}\n\n`);
+      const frameDelayMs = ['B013-DISCONNECT', 'B014-REPLAY', 'B017-ACTIVE-RELOAD'].some(
+        (control) => hasControl(userText, control),
+      )
+        ? CONTROLLED_DELAY_MS * 2
+        : CONTROLLED_DELAY_MS;
+      const encodedBody = new TextEncoder().encode(response);
+      let frameIndex = 0;
+      const stream = new ReadableStream<Uint8Array>({
+        async pull(controller) {
+          if (!controlledStream) {
+            controller.enqueue(encodedBody);
+            controller.close();
+            return;
+          }
+          if (frameIndex >= frames.length) {
+            controller.close();
+            return;
+          }
+          if (frameIndex > 0) await wait(frameDelayMs);
+          controller.enqueue(new TextEncoder().encode(frames[frameIndex++]));
+        },
+      });
+      return new HttpResponse(stream, {
+        headers: {
+          'content-type': body.stream ? 'text/event-stream' : 'application/json',
+        },
+      });
+    },
+  ),
 );
 
 export function installOpenRouterMock() {

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   replaceAssistantMessageContent: vi.fn(),
   createGenerationRun: vi.fn(),
   appendGenerationEvent: vi.fn(),
+  appendGenerationEvents: vi.fn(),
   getToolEffect: vi.fn(),
   saveToolEffect: vi.fn(),
   listGenerationEvents: vi.fn(),
@@ -102,6 +103,7 @@ vi.mock('@hominem/db', async () => {
     },
     ChatGenerationRepository: {
       appendEvent: mocks.appendGenerationEvent,
+      appendEvents: mocks.appendGenerationEvents,
       getToolEffect: mocks.getToolEffect,
       saveToolEffect: mocks.saveToolEffect,
       listEvents: mocks.listGenerationEvents,
@@ -270,7 +272,22 @@ describe('chat stream accounting', () => {
     mocks.streamChatCompletion.mockClear();
     mocks.createChat.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000001' });
     mocks.getMessages.mockResolvedValue([]);
-    mocks.insertMessage.mockResolvedValue({ id: 'message-id' });
+    // insertMessage now returns the fully-mapped record directly (no
+    // follow-up getMessageById reload), so the mock needs every field
+    // toMessageSnapshot reads when building the generation.committed event.
+    mocks.insertMessage.mockResolvedValue({
+      id: 'message-id',
+      chatId: '00000000-0000-4000-8000-000000000001',
+      userId: 'user-id',
+      role: 'assistant',
+      content: 'reply',
+      files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
     mocks.createGenerationRun.mockResolvedValue(undefined);
     mocks.appendGenerationEvent.mockImplementation(
       async (
@@ -289,6 +306,30 @@ describe('chat stream accounting', () => {
         idempotencyKey: input.idempotencyKey ?? null,
         createdAt: '2026-01-01T00:00:00.000Z',
       }),
+    );
+    // executeGeneration batches its appends (see appendEvents in
+    // ChatGenerationRepository) instead of calling appendEvent per event.
+    let generationEventSequence = 0;
+    mocks.appendGenerationEvents.mockImplementation(
+      async (
+        _trx: unknown,
+        input: {
+          generationId: string;
+          events: ReadonlyArray<{ event: { type: string }; idempotencyKey?: string }>;
+        },
+      ) =>
+        input.events.map(({ event, idempotencyKey }) => {
+          generationEventSequence += 1;
+          return {
+            id: `event-${event.type}-${generationEventSequence}`,
+            generationId: input.generationId,
+            sequence: generationEventSequence,
+            type: event.type,
+            payload: event,
+            idempotencyKey: idempotencyKey ?? null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          };
+        }),
     );
     mocks.getToolEffect.mockResolvedValue(null);
     mocks.listGenerationEvents.mockResolvedValue([]);
@@ -836,7 +877,23 @@ describe('chat stream walkie-talkie audio leg', () => {
     mocks.insertMessage.mockReset();
     mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.getMessages.mockResolvedValue([]);
-    mocks.insertMessage.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000002' });
+    // insertMessage now returns the fully-mapped record directly (no
+    // follow-up getMessageById reload), so this needs every field
+    // toMessageSnapshot reads when building the generation.committed event —
+    // same shape as the getMessageById mock just below.
+    mocks.insertMessage.mockResolvedValue({
+      id: '00000000-0000-4000-8000-000000000002',
+      chatId: '00000000-0000-4000-8000-000000000001',
+      userId: testUser.id,
+      role: 'assistant',
+      content: 'Hi there',
+      files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
     mocks.createGenerationRun.mockResolvedValue(undefined);
     mocks.getGenerationRun.mockResolvedValue(null);
     mocks.getGenerationRunById.mockResolvedValue(null);

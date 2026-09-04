@@ -112,9 +112,10 @@ export function createLoginRoutes(dependencies: AuthDependencies) {
           { headers: c.req.raw.headers },
         ),
       );
-      const client = clientResponse.ok
-        ? ((await clientResponse.json()) as { name?: string | null })
-        : null;
+      let client: { name?: string | null } | null = null;
+      if (clientResponse.ok) {
+        client = await clientResponse.json();
+      }
       return c.html(
         <ConsentPage
           clientName={client?.name ?? consent.clientId}
@@ -180,7 +181,11 @@ export function createLoginRoutes(dependencies: AuthDependencies) {
       const form = await c.req.parseBody();
       const query = getFormValue(form, 'oauth_query');
       const consent = resolveConsentQuery(query);
-      if (!consent) return c.html(<AuthErrorPage error="invalid_request" />, 400);
+
+      if (!consent) {
+        return c.html(<AuthErrorPage error="invalid_request" />, 400);
+      }
+
       const response = await callBetterAuth({
         body: { accept: getFormValue(form, 'accept') === 'true', oauth_query: query },
         path: '/oauth2/consent',
@@ -188,13 +193,13 @@ export function createLoginRoutes(dependencies: AuthDependencies) {
         auth,
         env: inputEnv,
       });
-      if (!response.ok)
-        return c.html(<AuthErrorPage error="access_denied" />, response.status as 400);
-      const body = (await response.json().catch(() => null)) as {
-        redirect_uri?: string;
-        redirect?: boolean;
-        url?: string;
-      } | null;
+
+      if (!response.ok) {
+        return c.html(<AuthErrorPage error="access_denied" />, 400);
+      }
+
+      const body: { redirect_uri?: string; redirect?: boolean; url?: string } | null =
+        await response.json().catch(() => null);
       const redirectUrl = body?.redirect_uri ?? (body?.redirect ? body.url : undefined);
       if (!redirectUrl) return c.html(<AuthErrorPage error="server_error" />, 500);
       return c.redirect(redirectUrl, 303);

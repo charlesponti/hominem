@@ -9,10 +9,10 @@ let worker: Worker | null = null;
 export function startChatFileCleanupWorker() {
   if (worker) return worker;
 
-  worker = new Worker(
+  worker = new Worker<ChatFileCleanupQueuePayload>(
     QUEUE_NAMES.CHAT_FILE_CLEANUP,
     async (job) => {
-      const { fileIds, userId } = job.data as ChatFileCleanupQueuePayload;
+      const { fileIds, userId } = job.data;
       await Promise.all(
         fileIds.map(async (fileId) => {
           const deleted = await fileStorageService.deleteFile(fileId, userId);

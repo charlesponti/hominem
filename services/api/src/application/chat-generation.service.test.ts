@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getChatSourceContext: vi.fn(),
   createGenerationRun: vi.fn(),
   appendEvent: vi.fn(),
+  appendEvents: vi.fn(),
   forceFail: vi.fn(),
   listEvents: vi.fn(),
   rebuildProjection: vi.fn(),
@@ -38,6 +39,7 @@ vi.mock('@hominem/db', () => ({
   },
   ChatGenerationRepository: {
     appendEvent: mocks.appendEvent,
+    appendEvents: mocks.appendEvents,
     forceFail: mocks.forceFail,
     listEvents: mocks.listEvents,
     rebuildProjection: mocks.rebuildProjection,
@@ -89,6 +91,16 @@ const preparingRun = {
   userMessageId: 'message-1',
   targetAssistantMessageId: null,
 };
+
+// executeGeneration's local `append` is now a batch of 1 through appendMany,
+// so every append it makes (started/accepted/phase_changed/committed/failed/
+// confirmation.required) goes through ChatGenerationRepository.appendEvents,
+// not the singular appendEvent (still used directly by cancel() and the
+// tool-call eventStore in executeGenerationTurn — those stay on appendEvent).
+function defaultAppendEventsImpl(sequence: { current: number }) {
+  return async (_trx: unknown, args: { events: ReadonlyArray<{ event: { type: string } }> }) =>
+    args.events.map(({ event: evt }) => event(evt.type, ++sequence.current));
+}
 
 function event(type: string, sequence: number) {
   return {
@@ -143,6 +155,7 @@ describe('ChatGenerationService.cancel', () => {
     mocks.appendEvent.mockImplementation(async (_trx: unknown, args: { event: { type: string } }) =>
       event(args.event.type, mocks.appendEvent.mock.calls.length),
     );
+    mocks.appendEvents.mockImplementation(defaultAppendEventsImpl({ current: 0 }));
   });
 
   it('durably records cancellation from a preparing run in order', async () => {
@@ -343,26 +356,23 @@ describe('ChatGenerationService.cancel', () => {
     mocks.executeGenerationTurn.mockRejectedValueOnce(new Error('provider payload secret'));
 
     let sequence = 0;
-    mocks.appendEvent.mockImplementation(
-      async (_trx: unknown, args: { event: { type: string; [key: string]: unknown } }) => {
-        sequence += 1;
-        return {
-          id: `event-${sequence}`,
-          generationId: input.generationId,
-          sequence,
-          type: args.event.type,
-          payload:
-            args.event.type === 'generation.started'
-              ? args.event
-              : args.event.type === 'generation.accepted'
-                ? args.event
-                : args.event.type === 'generation.phase_changed'
-                  ? args.event
-                  : args.event,
-          idempotencyKey: `key-${sequence}`,
-          createdAt: '2026-01-01T00:00:00.000Z',
-        };
-      },
+    mocks.appendEvents.mockImplementation(
+      async (
+        _trx: unknown,
+        args: { events: ReadonlyArray<{ event: { type: string; [key: string]: unknown } }> },
+      ) =>
+        args.events.map(({ event: evt }) => {
+          sequence += 1;
+          return {
+            id: `event-${sequence}`,
+            generationId: input.generationId,
+            sequence,
+            type: evt.type,
+            payload: evt,
+            idempotencyKey: `key-${sequence}`,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          };
+        }),
     );
 
     const stream = await new ChatGenerationService().send({
@@ -400,12 +410,13 @@ describe('ChatGenerationService.cancel', () => {
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
     mocks.executeGenerationTurn.mockRejectedValueOnce(new Error('provider payload secret'));
-    mocks.appendEvent.mockImplementation(
-      async (_trx: unknown, args: { event: { type: string } }) => {
-        if (args.event.type === 'generation.failed') {
+    const sequence = { current: 0 };
+    mocks.appendEvents.mockImplementation(
+      async (_trx: unknown, args: { events: ReadonlyArray<{ event: { type: string } }> }) => {
+        if (args.events.some(({ event: evt }) => evt.type === 'generation.failed')) {
           throw new Error('DB unavailable while recording the failure');
         }
-        return event(args.event.type, mocks.appendEvent.mock.calls.length);
+        return args.events.map(({ event: evt }) => event(evt.type, ++sequence.current));
       },
     );
 
@@ -440,6 +451,7 @@ describe('ChatGenerationService.cancel', () => {
     // reset explicitly so later tests get their own mocks' defaults back.
     mocks.executeGenerationTurn.mockReset();
     mocks.appendEvent.mockReset();
+    mocks.appendEvents.mockReset();
   });
 
   it('does not commit provider output after cancellation wins during execution', async () => {
@@ -460,11 +472,13 @@ describe('ChatGenerationService.cancel', () => {
       usage: null,
       pendingToolCall: null,
     });
-    mocks.appendEvent.mockImplementation(
-      async (_trx: unknown, args: { event: Record<string, unknown> }) => ({
-        ...event(String(args.event.type), mocks.appendEvent.mock.calls.length),
-        payload: args.event,
-      }),
+    const sequence = { current: 0 };
+    mocks.appendEvents.mockImplementation(
+      async (_trx: unknown, args: { events: ReadonlyArray<{ event: Record<string, unknown> }> }) =>
+        args.events.map(({ event: evt }) => ({
+          ...event(String(evt.type), ++sequence.current),
+          payload: evt,
+        })),
     );
 
     const stream = await new ChatGenerationService().send({
@@ -481,11 +495,12 @@ describe('ChatGenerationService.cancel', () => {
 
     expect(events).not.toContainEqual(expect.objectContaining({ type: 'generation.committed' }));
     expect(mocks.executeGenerationTurn).toHaveBeenCalledOnce();
-    expect(mocks.appendEvent.mock.calls.map(([, args]) => args.event.type)).toEqual([
-      'generation.started',
-      'generation.accepted',
-      'generation.phase_changed',
-    ]);
+    expect(mocks.appendEvents).toHaveBeenCalledOnce();
+    expect(
+      mocks.appendEvents.mock.calls[0]?.[1].events.map(
+        (item: { event: { type: string } }) => item.event.type,
+      ),
+    ).toEqual(['generation.started', 'generation.accepted', 'generation.phase_changed']);
   });
 });
 
@@ -552,6 +567,7 @@ describe('ChatGenerationService.retryMessage', () => {
     mocks.appendEvent.mockImplementation(async (_trx: unknown, args: { event: { type: string } }) =>
       event(args.event.type, mocks.appendEvent.mock.calls.length),
     );
+    mocks.appendEvents.mockImplementation(defaultAppendEventsImpl({ current: 0 }));
   });
 
   it('creates a linked retry without inserting another user message', async () => {
@@ -573,19 +589,28 @@ describe('ChatGenerationService.retryMessage', () => {
         userMessageId: 'message-1',
       },
     );
-    expect(mocks.appendEvent.mock.calls).toEqual(
-      expect.arrayContaining([
-        [
-          {},
-          expect.objectContaining({
-            generationId: 'generation-retry',
-            event: expect.objectContaining({
-              type: 'generation.started',
-              context: expect.objectContaining({ retryOfGenerationId: 'generation-failed' }),
+    // executeGeneration runs as a fire-and-forget background promise (the
+    // stream isn't drained here), so wait for its first durable write
+    // instead of asserting on mock state immediately.
+    await vi.waitFor(() =>
+      expect(mocks.appendEvents.mock.calls).toEqual(
+        expect.arrayContaining([
+          [
+            {},
+            expect.objectContaining({
+              generationId: 'generation-retry',
+              events: expect.arrayContaining([
+                expect.objectContaining({
+                  event: expect.objectContaining({
+                    type: 'generation.started',
+                    context: expect.objectContaining({ retryOfGenerationId: 'generation-failed' }),
+                  }),
+                }),
+              ]),
             }),
-          }),
-        ],
-      ]),
+          ],
+        ]),
+      ),
     );
   });
 

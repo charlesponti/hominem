@@ -98,7 +98,7 @@ function getVoiceCleanupErrorStatus(error: unknown) {
   }
 
   if (typeof error === 'object' && error !== null && 'statusCode' in error) {
-    const statusCode = (error as { statusCode?: unknown }).statusCode;
+    const statusCode = error.statusCode;
     return typeof statusCode === 'number' ? statusCode : undefined;
   }
 

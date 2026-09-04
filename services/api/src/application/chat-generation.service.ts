@@ -598,7 +598,7 @@ export class ChatGenerationService {
     if (!userMessage || userMessage.role !== 'user') {
       throw new ChatGenerationInputError('The failed generation user message was not found');
     }
-    const [notes] = await Promise.all([ChatRepository.getChatSourceContext(db, input.chatId)]);
+    const notes = await ChatRepository.getChatSourceContext(db, input.chatId);
     await ChatRepository.createGenerationRun(db, {
       id: input.generationId,
       chatId: input.chatId,
@@ -895,21 +895,43 @@ export class ChatGenerationService {
     let eventOrdinal = 0;
 
     const append = async (event: GenerationHistoryEventPayload): Promise<void> => {
-      await this.dependencies.failureHooks?.beforeEventAppend?.(event);
-      const record = await runInTransaction((trx) =>
-        ChatGenerationRepository.appendEvent(trx, {
+      await appendMany([event]);
+    };
+
+    // Live-delivery bookkeeping for events that are already durably
+    // appended (by appendMany below, or — for the commit/checkpoint pair —
+    // inside commitGeneration's own transaction; see there for why).
+    const deliver = (records: ChatGenerationEventRecord[]): void => {
+      for (const record of records) {
+        recordGenerationEventDelivery({
+          generationId: record.generationId,
+          sequence: record.sequence,
+          delivery: 'live',
+        });
+        queue.push(toHistoryEvent(record));
+      }
+    };
+
+    // Folds+inserts a batch of events (no work between them) as ONE
+    // transaction instead of one per event — see appendEvents in
+    // ChatGenerationRepository. Used for the startup burst
+    // (started/accepted/phase_changed:running); a lone event just becomes a
+    // batch of 1.
+    const appendMany = async (events: GenerationHistoryEventPayload[]): Promise<void> => {
+      for (const event of events) {
+        await this.dependencies.failureHooks?.beforeEventAppend?.(event);
+      }
+      const records = await runInTransaction((trx) =>
+        ChatGenerationRepository.appendEvents(trx, {
           generationId: input.generationId,
           ownerUserId: input.userId,
-          event,
-          idempotencyKey: `${input.generationId}:service:${eventOrdinal++}:${event.type}`,
+          events: events.map((event) => ({
+            event,
+            idempotencyKey: `${input.generationId}:service:${eventOrdinal++}:${event.type}`,
+          })),
         }),
       );
-      recordGenerationEventDelivery({
-        generationId: record.generationId,
-        sequence: record.sequence,
-        delivery: 'live',
-      });
-      queue.push(toHistoryEvent(record));
+      deliver(records);
     };
 
     try {
@@ -926,14 +948,16 @@ export class ChatGenerationService {
         ? await ChatRepository.getMessageById(db, input.chatId, input.userMessageId)
         : null;
       if (!input.resume) {
-        await append({ type: 'generation.started', context: startContext });
-        await append({
-          type: 'generation.accepted',
-          chatId: input.chatId,
-          chat: toChatSnapshot(chat),
-          userMessage: userMessage ? toMessageSnapshot(userMessage) : null,
-        });
-        await append({ type: 'generation.phase_changed', phase: 'running' });
+        await appendMany([
+          { type: 'generation.started', context: startContext },
+          {
+            type: 'generation.accepted',
+            chatId: input.chatId,
+            chat: toChatSnapshot(chat),
+            userMessage: userMessage ? toMessageSnapshot(userMessage) : null,
+          },
+          { type: 'generation.phase_changed', phase: 'running' },
+        ]);
       }
 
       const result = await executeGenerationTurn({
@@ -1034,40 +1058,11 @@ export class ChatGenerationService {
         pendingToolCall: result.pendingToolCall,
         responseModality: input.responseModality,
       });
-      await append(
-        committed.awaitingConfirmation
-          ? {
-              type: 'generation.checkpointed',
-              checkpoint: {
-                turnId: input.generationId,
-                iteration: 0,
-                assistantMessage: toMessageSnapshot(committed.message),
-                pendingToolCallIds: result.pendingToolCall
-                  ? [result.pendingToolCall.toolCallId]
-                  : [],
-              },
-            }
-          : {
-              type: 'generation.committed',
-              message: toMessageSnapshot(committed.message),
-            },
-      );
-      if (committed.awaitingConfirmation && result.pendingToolCall) {
-        await append({
-          type: 'confirmation.required',
-          call: {
-            id: result.pendingToolCall.toolCallId,
-            name: result.pendingToolCall.toolName,
-            arguments: JSON.stringify(result.pendingToolCall.args),
-            iteration: 0,
-            turnId: input.generationId,
-            messageId: committed.message.id,
-            preview: result.pendingToolCall.preview
-              ? chatMessageJsonObjectSchema.parse(result.pendingToolCall.preview)
-              : null,
-          },
-        });
-      }
+      // committed.events (the committed/checkpointed event, plus
+      // confirmation.required when applicable) were already durably
+      // appended inside commitGeneration's own transaction — see there for
+      // why. This just delivers them live.
+      deliver(committed.events);
     } catch (error) {
       streamError = error;
       try {
@@ -1123,7 +1118,11 @@ export class ChatGenerationService {
       pendingToolCall: Awaited<ReturnType<typeof executeGenerationTurn>>['pendingToolCall'];
       responseModality?: 'text' | 'audio';
     },
-  ): Promise<{ message: ChatMessageRecord; awaitingConfirmation: boolean }> {
+  ): Promise<{
+    message: ChatMessageRecord;
+    awaitingConfirmation: boolean;
+    events: ChatGenerationEventRecord[];
+  }> {
     const content = result.assistantText.trim()
       ? result.assistantText
       : `I'd like to run "${result.pendingToolCall?.toolName ?? 'a tool'}", which needs your approval first.`;
@@ -1140,22 +1139,23 @@ export class ChatGenerationService {
           )
         : result.toolCallRecords;
     await this.dependencies.failureHooks?.beforeSnapshotCommit?.();
-    const message = await runInTransaction(async (trx): Promise<ChatMessageRecord> => {
-      const updated =
-        input.targetAssistantMessageId && (input.kind === 'regenerate' || input.confirmation)
-          ? await ChatRepository.replaceAssistantMessageContent(
-              trx,
-              input.chatId,
-              input.targetAssistantMessageId,
-              content,
-              {
-                reasoning: result.reasoningText,
-                toolCalls: toolCalls.length > 0 ? toolCalls : null,
-                files: audio?.file ? [audio.file] : undefined,
-              },
-            )
-          : await (async () => {
-              const inserted = await ChatRepository.insertMessage(trx, {
+    const awaitingConfirmation = result.pendingToolCall !== null;
+    const { message, events } = await runInTransaction(
+      async (trx): Promise<{ message: ChatMessageRecord; events: ChatGenerationEventRecord[] }> => {
+        const updated =
+          input.targetAssistantMessageId && (input.kind === 'regenerate' || input.confirmation)
+            ? await ChatRepository.replaceAssistantMessageContent(
+                trx,
+                input.chatId,
+                input.targetAssistantMessageId,
+                content,
+                {
+                  reasoning: result.reasoningText,
+                  toolCalls: toolCalls.length > 0 ? toolCalls : null,
+                  files: audio?.file ? [audio.file] : undefined,
+                },
+              )
+            : await ChatRepository.insertMessage(trx, {
                 chatId: input.chatId,
                 authorUserId: input.userId,
                 role: 'assistant',
@@ -1165,37 +1165,74 @@ export class ChatGenerationService {
                 files: audio?.file ? [audio.file] : null,
                 parentMessageId: input.userMessageId ?? null,
               });
-              return ChatRepository.getMessageById(trx, input.chatId, inserted.id).then((value) => {
-                if (!value) throw new Error('Committed assistant message could not be loaded');
-                return value;
-              });
-            })();
-      await ChatRepository.touchLastMessage(trx, input.chatId);
-      if (input.confirmation) {
-        const toolResult = result.toolCallRecords.find(
-          (toolCall) => toolCall.toolCallId === input.confirmation?.toolCallId,
-        );
-        await ChatRepository.updateToolCallLifecycle(
-          trx,
-          input.chatId,
-          input.confirmation.messageId,
-          input.confirmation.toolCallId,
-          input.confirmation.approved
-            ? {
-                confirmationStatus: 'approved',
-                executionStatus: toolResult?.executionStatus ?? 'failed',
-              }
-            : { confirmationStatus: 'rejected' },
-        );
-      }
-      await ChatRepository.updateGenerationRun(trx, {
-        id: input.generationId,
-        ownerUserId: input.userId,
-        status: result.pendingToolCall ? 'awaiting_confirmation' : 'committed',
-        assistantMessageId: updated.id,
-      });
-      return updated;
-    });
+        await ChatRepository.touchLastMessage(trx, input.chatId);
+        if (input.confirmation) {
+          const toolResult = result.toolCallRecords.find(
+            (toolCall) => toolCall.toolCallId === input.confirmation?.toolCallId,
+          );
+          await ChatRepository.updateToolCallLifecycle(
+            trx,
+            input.chatId,
+            input.confirmation.messageId,
+            input.confirmation.toolCallId,
+            input.confirmation.approved
+              ? {
+                  confirmationStatus: 'approved',
+                  executionStatus: toolResult?.executionStatus ?? 'failed',
+                }
+              : { confirmationStatus: 'rejected' },
+          );
+        }
+
+        // The run row's status/assistantMessageId is now updated ONLY via
+        // this event append (its projectionUpdate), not by a separate
+        // direct write — a direct write here would set the row to a
+        // terminal status ahead of the event that's supposed to cause that
+        // transition, and appendEvent(s) reads the row as its "current
+        // projection" input (see toCurrentProjection), so that ordering
+        // would make this same append fail as "followed a terminal event".
+        const commitEvent: GenerationHistoryEventPayload = awaitingConfirmation
+          ? {
+              type: 'generation.checkpointed',
+              checkpoint: {
+                turnId: input.generationId,
+                iteration: 0,
+                assistantMessage: toMessageSnapshot(updated),
+                pendingToolCallIds: result.pendingToolCall
+                  ? [result.pendingToolCall.toolCallId]
+                  : [],
+              },
+            }
+          : { type: 'generation.committed', message: toMessageSnapshot(updated) };
+        const pendingEvents: GenerationHistoryEventPayload[] = [commitEvent];
+        if (awaitingConfirmation && result.pendingToolCall) {
+          pendingEvents.push({
+            type: 'confirmation.required',
+            call: {
+              id: result.pendingToolCall.toolCallId,
+              name: result.pendingToolCall.toolName,
+              arguments: JSON.stringify(result.pendingToolCall.args),
+              iteration: 0,
+              turnId: input.generationId,
+              messageId: updated.id,
+              preview: result.pendingToolCall.preview
+                ? chatMessageJsonObjectSchema.parse(result.pendingToolCall.preview)
+                : null,
+            },
+          });
+        }
+        const appended = await ChatGenerationRepository.appendEvents(trx, {
+          generationId: input.generationId,
+          ownerUserId: input.userId,
+          events: pendingEvents.map((event, index) => ({
+            event,
+            idempotencyKey: `${input.generationId}:service:commit:${index}:${event.type}`,
+          })),
+        });
+
+        return { message: updated, events: appended };
+      },
+    );
     await (this.dependencies.embeddingQueue ?? embeddingQueue).add(
       'generate-embedding',
       {
@@ -1214,7 +1251,7 @@ export class ChatGenerationService {
         audio,
       );
     }
-    return { message, awaitingConfirmation: result.pendingToolCall !== null };
+    return { message, awaitingConfirmation, events };
   }
 }
 

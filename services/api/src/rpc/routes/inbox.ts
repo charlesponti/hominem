@@ -31,7 +31,7 @@ function decodeInboxCursor(cursor: string | undefined): InboxCursor | null {
   }
 
   try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as InboxCursor;
+    const parsed: InboxCursor = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
     if (typeof parsed.updatedAt !== 'string' || typeof parsed.id !== 'string') {
       return null;
     }

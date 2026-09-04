@@ -1,4 +1,7 @@
 import { logger } from '@hominem/telemetry';
+import { z } from 'zod';
+
+const TerminalOutcomeSchema = z.enum(['committed', 'cancelled', 'failed']);
 
 export type GenerationEventDelivery = 'live' | 'replayed';
 
@@ -10,10 +13,15 @@ export type GenerationDiagnosticRecord = {
   replayCursor?: number;
   deliveryMode?: GenerationEventDelivery;
   recoveryDecision?: 'terminal' | 'awaiting_confirmation' | 'resume_required';
-  terminalOutcome?: 'committed' | 'cancelled' | 'failed';
+  terminalOutcome?: z.infer<typeof TerminalOutcomeSchema>;
   errorCategory?: 'provider' | 'tool' | 'transport' | 'persistence' | 'unknown';
   effectOutcome?: 'reused' | 'executed' | 'failed';
 };
+
+function toTerminalOutcome(phase: string) {
+  const parsed = TerminalOutcomeSchema.safeParse(phase);
+  return parsed.success ? parsed.data : undefined;
+}
 
 export function recordGenerationDiagnostic(input: GenerationDiagnosticRecord): void {
   logger.info('chat_generation_diagnostic', {
@@ -82,7 +90,7 @@ export function recordGenerationRecovery(input: {
     replayCursor: input.lastDurableSequence,
     recoveryDecision: input.disposition,
     ...(input.disposition === 'terminal'
-      ? { terminalOutcome: input.phase as 'committed' | 'cancelled' | 'failed' }
+      ? { terminalOutcome: toTerminalOutcome(input.phase) }
       : {}),
   });
   logger.info('chat_generation_recovery', input);
