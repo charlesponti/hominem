@@ -375,8 +375,6 @@ export interface AppChatGenerationEvents {
   id: Generated<string>;
   idempotencyKey: string | null;
   payload: Json;
-  // DB identity column as of the 20260903030000 migration (retrofit from an
-  // app-computed value) — Postgres assigns it, so it's optional on insert.
   sequence: Generated<Int8>;
   type: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;
