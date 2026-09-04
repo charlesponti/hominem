@@ -10,6 +10,7 @@ ENV TURBO_TELEMETRY_DISABLED=1 \
     VITE_PUBLIC_API_URL=${VITE_PUBLIC_API_URL}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY scripts ./scripts
 COPY packages ./packages
 COPY services/api ./services/api
 COPY apps/career ./apps/career

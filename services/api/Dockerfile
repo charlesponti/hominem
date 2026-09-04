@@ -5,6 +5,7 @@ WORKDIR /app
 ENV TURBO_TELEMETRY_DISABLED=1
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY scripts ./scripts
 COPY packages ./packages
 COPY services/api ./services/api
 COPY tsconfig.profiles ./tsconfig.profiles
