@@ -21,7 +21,7 @@ catalog:
   kysely: 0.29.5
   lucide-react: 1.28.0
   pdf2json: 4.0.3
-  pg: 8.20.0
+  pg: 8.23.0
   react: 19.2.8
   react-dom: 19.2.8
   react-router: 8.3.0
