@@ -80,7 +80,7 @@
     "@vitest/coverage-v8": "4.1.11",
     "msw": "2.15.0",
     "rolldown": "^1.0.0",
-    "tsx": "^4.10.0"
+    "tsx": "^4.23.13"
   },
   "portless": {
     "name": "api",
