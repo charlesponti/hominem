@@ -33,7 +33,7 @@
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
-    "@better-auth/expo": "1.7.1",
+    "@better-auth/expo": "1.7.2",
     "@expo/metro-runtime": "~57.0.12",
     "@expo/ui": "~57.0.13",
     "@hominem/chat": "workspace:*",
