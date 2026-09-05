@@ -25,32 +25,11 @@ export type CaptureLifecycleState =
   | 'persisting'
   | 'recovering_error';
 
-export type CaptureLifecycleTransition = [from: CaptureLifecycleState, to: CaptureLifecycleState];
-
 export interface ClassificationProposal {
   proposedType: ArtifactType;
   proposedTitle: string;
   proposedChanges: string[];
   previewContent: string;
-}
-
-export interface ReviewItem extends ClassificationProposal {
-  id: string;
-  sessionId: string;
-  createdAt: string;
-}
-
-export interface CaptureBarProps {
-  state: CaptureLifecycleState;
-  onSave: (text: string) => void;
-  onStartSession: (seedText: string) => void;
-  onStartRecording?: () => void;
-  placeholder?: string;
-}
-
-export interface ClassificationReviewProps extends ClassificationProposal {
-  onAccept: () => void;
-  onReject: () => void;
 }
 
 export const CHAT_TITLE_MAX_LENGTH = 64;

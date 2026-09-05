@@ -1,6 +1,6 @@
 import type { ChatClientTransport, ChatClientTransportRequest } from './client-transport-fetch';
+import type { GenerationEvent } from './generation-machine';
 import { createGenerationEventDeduplicator, parseGenerationWireEvent } from './generation-schemas';
-import type { GenerationWireEvent } from './generation-schemas';
 import { createSseDecoder, finishSse, pushSseChunk, type SseOutput } from './sse';
 
 export type Xhr = {
@@ -160,14 +160,14 @@ export type ConsumeGenerationSseXhrOptions = {
   payload: unknown;
   replayUrl: (afterSequence: number) => string;
   getHeaders: () => Promise<Record<string, string>>;
-  onEvent: (event: GenerationWireEvent) => void;
+  onEvent: (event: GenerationEvent) => void;
   getReplayCursor: () => number;
   onDone?: () => void;
   signal?: AbortSignal;
   method?: 'GET' | 'POST';
   replayMethod?: 'GET' | 'POST';
   replayPayload?: unknown;
-  parseEvent?: (input: unknown) => GenerationWireEvent;
+  parseEvent?: (input: unknown) => GenerationEvent;
   createXhr?: XhrFactory;
 };
 

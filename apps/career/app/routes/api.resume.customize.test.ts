@@ -1,5 +1,7 @@
 // @vitest-environment node
 
+import type { ChatResult } from '@hominem/ai';
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { userContext } from '../lib/middleware';
@@ -19,11 +21,11 @@ vi.mock('@hominem/ai', () => ({
     (result: { choices?: Array<{ message?: { content?: string } }> }) =>
       result.choices?.[0]?.message?.content ?? '',
   ),
-  getChatCompletionUsage: vi.fn((result: { model: string; usage?: Record<string, unknown> }) => ({
+  getChatCompletionUsage: vi.fn((result: Pick<ChatResult, 'model' | 'usage'>) => ({
     provider: 'openrouter',
     model: result.model,
     promptTokens: Number(result.usage?.promptTokens ?? 0),
-    completionTokens: Number(result.usage?.completionTokens ?? 0),
+    outputTokens: Number(result.usage?.completionTokens ?? 0),
     totalTokens: Number(result.usage?.totalTokens ?? 0),
     reportedTotalTokens: null,
     costUsd: Number(result.usage?.cost ?? 0),
@@ -73,12 +75,24 @@ beforeEach(() => {
   mocks.createChatCompletion
     .mockResolvedValueOnce({
       model: 'resume-model',
-      usage: { promptTokens: 20, completionTokens: 30, totalTokens: 50, cost: 0.5 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 20,
+        completionTokens: 30,
+        totalTokens: 50,
+        cost: 0.5,
+      },
       choices: [{ message: { content: 'customized resume' } }],
     })
     .mockResolvedValueOnce({
       model: 'analysis-model',
-      usage: { promptTokens: 5, completionTokens: 7, totalTokens: 12, cost: 0.12 },
+      usage: {
+        ...openRouterCompletionUsage,
+        promptTokens: 5,
+        completionTokens: 7,
+        totalTokens: 12,
+        cost: 0.12,
+      },
       choices: [{ message: { content: '{"wrong":[]}' } }],
     });
 });

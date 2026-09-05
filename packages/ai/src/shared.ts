@@ -1,5 +1,6 @@
 import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
 import { HTTPClient, OpenRouter } from '@openrouter/sdk';
+import type { ChatUsage } from '@openrouter/sdk/models';
 
 import { env } from './env';
 
@@ -41,7 +42,7 @@ export type AIUsageMetrics = {
   provider: 'openrouter';
   model: string;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   reportedTotalTokens: number | null;
   costUsd: number | null;
@@ -55,29 +56,22 @@ function isJsonObject(value: unknown): value is JsonObject {
 
 export function normalizeOpenRouterChatUsage(
   model: string,
-  usage?: {
-    promptTokens?: unknown;
-    completionTokens?: unknown;
-    totalTokens?: unknown;
-    cost?: unknown;
-    promptTokensDetails?: { cachedTokens?: unknown } | null;
-    completionTokensDetails?: { reasoningTokens?: unknown } | null;
-  } | null,
+  usage?: ChatUsage | null,
 ): AIUsageMetrics | null {
   if (!usage) {
     return null;
   }
 
   const promptTokens = toRequiredNumber(usage.promptTokens);
-  const completionTokens = toRequiredNumber(usage.completionTokens);
-  const canonicalTotalTokens = promptTokens + completionTokens;
+  const outputTokens = toRequiredNumber(usage.completionTokens);
+  const canonicalTotalTokens = promptTokens + outputTokens;
   const reportedTotalTokens = toNullableNumber(usage.totalTokens);
 
   return {
     provider: 'openrouter',
     model,
     promptTokens,
-    completionTokens,
+    outputTokens,
     totalTokens: canonicalTotalTokens,
     reportedTotalTokens:
       reportedTotalTokens === null || reportedTotalTokens === canonicalTotalTokens
@@ -110,7 +104,7 @@ export function normalizeOpenRouterEmbeddingUsage(
     provider: 'openrouter',
     model,
     promptTokens,
-    completionTokens: 0,
+    outputTokens: 0,
     totalTokens: canonicalTotalTokens,
     reportedTotalTokens:
       reportedTotalTokens === null || reportedTotalTokens === canonicalTotalTokens

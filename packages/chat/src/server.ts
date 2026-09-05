@@ -1,17 +1,17 @@
 import type { GenerationStartContext } from './generation-events';
-import type { GenerationHistoryMessageSnapshot } from './generation-events';
-import { runGenerationWithPorts } from './generation-interpreter';
 import type { GenerationPorts } from './generation-interpreter';
+import { runGenerationWithPorts } from './generation-interpreter';
 import type {
   GenerationCommand,
+  GenerationDeltaEventPayload,
+  GenerationEvent,
+  GenerationHistoryEventPayload,
   GenerationInput,
   GenerationState,
   GenerationToolCall,
-  GenerationHistoryEventPayload,
   ToolResult,
 } from './generation-machine';
-import type { GenerationDeltaEventPayload } from './generation-machine';
-import type { GenerationWireEvent } from './generation-schemas';
+import type { ChatMessageSnapshot } from './generation-schemas';
 import { GENERATION_TIMING } from './generation-timing';
 
 // Recovery helpers remain server-private to consumers; applications should
@@ -82,7 +82,7 @@ export type ChatServerStore<TEvent extends ChatServerPersistedEvent = ChatServer
     chatId: string;
     userId: string;
     targetAssistantMessageId?: string | null;
-  }) => Promise<unknown>;
+  }) => Promise<ChatMessageSnapshot>;
   stopGeneration: (state: GenerationState) => Promise<void>;
 };
 
@@ -127,10 +127,6 @@ export type ChatServerGenerationResult = {
   pendingPreview: ToolResult | null;
 };
 
-export type ChatServerRuntimeOperation<
-  TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent,
-> = ChatServerRuntimeOptions<TEvent>;
-
 function addUsageTotals(current: unknown, next: unknown): unknown {
   if (!next || typeof next !== 'object') return current;
   if (!current || typeof current !== 'object') return next;
@@ -143,7 +139,7 @@ function addUsageTotals(current: unknown, next: unknown): unknown {
   return {
     ...incoming,
     promptTokens: sum('promptTokens'),
-    completionTokens: sum('completionTokens'),
+    outputTokens: sum('outputTokens'),
     totalTokens: sum('totalTokens'),
     costUsd:
       typeof previous.costUsd === 'number' && typeof incoming.costUsd === 'number'
@@ -168,7 +164,7 @@ export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatSer
 
   async run(
     input: ChatServerGenerationInput,
-    operation: ChatServerRuntimeOperation<TEvent> = {},
+    operation: ChatServerRuntimeOptions<TEvent> = {},
   ): Promise<ChatServerGenerationResult> {
     const options = { ...this.options, ...operation };
     if (!options.provider || !options.tools || !options.store) {
@@ -185,6 +181,7 @@ export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatSer
       chatId: input.chatId,
     };
     let usage: unknown = null;
+
     const model = provider({
       ...input.model,
       requiresConfirmation: (toolName) =>
@@ -257,13 +254,13 @@ export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatSer
         },
         generation: {
           save: async (stateToSave) =>
-            (await store.saveGeneration({
+            store.saveGeneration({
               state: stateToSave,
               generationId: input.generationId,
               chatId: input.chatId,
               userId: input.userId,
               targetAssistantMessageId: input.targetAssistantMessageId,
-            })) as GenerationHistoryMessageSnapshot,
+            }),
           stop: (stateToStop) => store.stopGeneration(stateToStop),
         },
         control: {
@@ -286,7 +283,7 @@ export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatSer
 }
 
 export function createGenerationSseResponse(
-  events: AsyncIterable<GenerationWireEvent>,
+  events: AsyncIterable<GenerationEvent>,
   options: { heartbeatMs?: number } = {},
 ): Response {
   const encoder = new TextEncoder();
@@ -339,34 +336,31 @@ export type ChatHttpRuntime = {
   authenticate: (
     request: Request,
   ) => Promise<ChatHttpAuthenticatedUser | Response> | ChatHttpAuthenticatedUser | Response;
-  startChat: (input: {
-    userId: string;
-    body: unknown;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  startChat: (input: { userId: string; body: unknown }) => Promise<AsyncIterable<GenerationEvent>>;
   sendMessage: (input: {
     userId: string;
     chatId: string;
     body: unknown;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  }) => Promise<AsyncIterable<GenerationEvent>>;
   regenerate: (input: {
     userId: string;
     chatId: string;
     messageId: string;
     body: unknown;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  }) => Promise<AsyncIterable<GenerationEvent>>;
   retry: (input: {
     userId: string;
     chatId: string;
     generationId: string;
     body: unknown;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  }) => Promise<AsyncIterable<GenerationEvent>>;
   respondToToolCall: (input: {
     userId: string;
     chatId: string;
     messageId: string;
     toolCallId: string;
     body: unknown;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  }) => Promise<AsyncIterable<GenerationEvent>>;
   cancel: (input: { userId: string; chatId: string; generationId: string }) => Promise<unknown>;
   getGeneration: (input: {
     userId: string;
@@ -378,7 +372,7 @@ export type ChatHttpRuntime = {
     chatId: string;
     generationId: string;
     afterSequence: number;
-  }) => Promise<AsyncIterable<GenerationWireEvent>>;
+  }) => Promise<AsyncIterable<GenerationEvent>>;
 };
 
 function jsonError(message: string, status: number): Response {

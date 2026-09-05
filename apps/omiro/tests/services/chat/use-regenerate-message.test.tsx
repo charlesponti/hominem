@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationWireEvent } from '@hominem/chat';
+import type { GenerationEvent } from '@hominem/chat';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act, useState } from 'react';
@@ -47,7 +47,7 @@ vi.mock('~/services/chat/use-chat-generation', () => ({
       let listener:
         | ((
             state: { phase: ChatGenerationState['stage']; lastDurableSequence: number },
-            event: GenerationWireEvent,
+            event: GenerationEvent,
           ) => void)
         | null = null;
       let currentPhase = initial.stage;
@@ -60,7 +60,7 @@ vi.mock('~/services/chat/use-chat-generation', () => ({
         },
         start: async () => {
           await mockConsumeSseXhr({
-            onEvent: (event: GenerationWireEvent) => {
+            onEvent: (event: GenerationEvent) => {
               const phase: ChatGenerationState['stage'] =
                 event.type === 'generation.cancelled'
                   ? 'cancelled'
@@ -132,13 +132,13 @@ const committedMessage = {
 
 const { useRegenerateMessage } = await import('~/services/chat/use-regenerate-message');
 
-function eventStream(events: GenerationWireEvent[]) {
+function eventStream(events: GenerationEvent[]) {
   mockConsumeSseXhr.mockImplementationOnce(
     ({
       onEvent,
       replayUrl,
     }: {
-      onEvent: (event: GenerationWireEvent) => void;
+      onEvent: (event: GenerationEvent) => void;
       replayUrl?: (afterSequence: number) => string;
     }) => {
       replayUrl?.(0);

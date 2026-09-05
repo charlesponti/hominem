@@ -1,5 +1,7 @@
 // @vitest-environment node
 
+import type { ChatResult } from '@hominem/ai';
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -15,11 +17,11 @@ vi.mock('@hominem/ai', () => ({
     (result: { choices?: Array<{ message?: { content?: string } }> }) =>
       result.choices?.[0]?.message?.content ?? '',
   ),
-  getChatCompletionUsage: vi.fn((result: { model: string; usage?: Record<string, unknown> }) => ({
+  getChatCompletionUsage: vi.fn((result: Pick<ChatResult, 'model' | 'usage'>) => ({
     provider: 'openrouter',
     model: result.model,
     promptTokens: Number(result.usage?.promptTokens ?? 0),
-    completionTokens: Number(result.usage?.completionTokens ?? 0),
+    outputTokens: Number(result.usage?.completionTokens ?? 0),
     totalTokens: Number(result.usage?.totalTokens ?? 0),
     reportedTotalTokens: null,
     costUsd: Number(result.usage?.cost ?? 0),
@@ -57,7 +59,7 @@ describe('deriveSkillsFromCareerHistory', () => {
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
     mocks.createChatCompletion.mockResolvedValue({
       model: 'skills-model',
-      usage: { promptTokens: 8, completionTokens: 5, totalTokens: 13, cost: 0.11 },
+      usage: { ...openRouterCompletionUsage, promptTokens: 8, totalTokens: 13, cost: 0.11 },
       choices: [{ message: { content: '{not-json' } }],
     });
   });

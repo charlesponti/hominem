@@ -40,7 +40,7 @@ function isAIUsageMetrics(value: unknown): value is AIUsageMetrics {
     Reflect.get(value, 'provider') === 'openrouter' &&
     typeof Reflect.get(value, 'model') === 'string' &&
     typeof Reflect.get(value, 'promptTokens') === 'number' &&
-    typeof Reflect.get(value, 'completionTokens') === 'number' &&
+    typeof Reflect.get(value, 'outputTokens') === 'number' &&
     typeof Reflect.get(value, 'totalTokens') === 'number'
   );
 }

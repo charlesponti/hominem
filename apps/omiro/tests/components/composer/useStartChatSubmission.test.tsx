@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationWireEvent } from '@hominem/chat';
+import type { GenerationEvent } from '@hominem/chat';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -39,7 +39,7 @@ describe('useStartChatSubmission', () => {
       async ({
         onAccepted,
       }: {
-        onAccepted?: (event: Extract<GenerationWireEvent, { type: 'generation.accepted' }>) => void;
+        onAccepted?: (event: Extract<GenerationEvent, { type: 'generation.accepted' }>) => void;
       }) => {
         onAccepted?.({
           version: 1,

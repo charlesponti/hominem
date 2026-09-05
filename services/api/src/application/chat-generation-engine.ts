@@ -5,16 +5,16 @@ import {
   type ChatMessageJsonObject,
   type GenerationDeltaEventPayload,
   type GenerationHistoryEventPayload,
+  type GenerationEffectStore,
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
+import type { ChatServerRuntimeOptions } from '@hominem/chat/server';
 import { ChatServerRuntime } from '@hominem/chat/server';
-import type { ChatServerRuntimeOperation, ChatServerRuntimeOptions } from '@hominem/chat/server';
 import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
 import { OpenRouterChatModel } from './chat-generation-provider';
-import type { ChatGenerationEffectStore } from './chat-generation-tools';
 import type { GenerationEngineInput, GenerationEngineResult } from './chat-generation-types';
 
 export class ToolInputError extends Error {
@@ -70,7 +70,7 @@ function addUsage(
   return {
     ...next,
     promptTokens: totals.promptTokens + next.promptTokens,
-    completionTokens: totals.completionTokens + next.completionTokens,
+    outputTokens: totals.outputTokens + next.outputTokens,
     totalTokens: totals.totalTokens + next.totalTokens,
     costUsd:
       totals.costUsd !== null || next.costUsd !== null
@@ -86,7 +86,7 @@ export async function executeGenerationTurn(
     generationKind?: 'send' | 'start' | 'regenerate';
     userMessageId?: string | null;
     targetAssistantMessageId?: string | null;
-    effectStore?: ChatGenerationEffectStore;
+    effectStore?: GenerationEffectStore;
     eventStore?: {
       append: (input: {
         event: GenerationHistoryEventPayload;
@@ -121,7 +121,7 @@ export async function executeGenerationTurn(
     ? input.modelFactory(modelOptions)
     : new OpenRouterChatModel(modelOptions);
 
-  const operation: ChatServerRuntimeOperation<ChatGenerationEventRecord> = {
+  const operation: ChatServerRuntimeOptions<ChatGenerationEventRecord> = {
     provider: () => model,
     effectTimeoutsMs: input.effectTimeoutsMs,
     tools: {

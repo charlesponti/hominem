@@ -88,7 +88,7 @@ describe('speech usage metadata', () => {
       provider: 'openrouter',
       model: 'tts-model',
       promptTokens: 12,
-      completionTokens: 3,
+      outputTokens: 3,
       totalTokens: 15,
       reportedTotalTokens: null,
       costUsd: 0.0042,

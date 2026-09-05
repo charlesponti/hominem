@@ -5,10 +5,10 @@ export * from './capture-types';
 export * from './generation-events';
 export type {
   ChatGenerationKind,
-  ChatGenerationStatus,
   GenerationActivePhase,
   GenerationDeltaEventPayload,
   GenerationEvent,
+  GenerationEffectStore,
   GenerationHistoryEvent,
   GenerationHistoryEventPayload,
   GenerationHistoryEventType,

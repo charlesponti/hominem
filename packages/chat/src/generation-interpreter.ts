@@ -1,4 +1,3 @@
-import type { GenerationHistoryMessageSnapshot } from './generation-events';
 import {
   runGeneration,
   type GenerationCommand,
@@ -10,6 +9,7 @@ import {
   type RunGenerationInput,
   type ToolResult,
 } from './generation-machine';
+import type { ChatMessageSnapshot } from './generation-schemas';
 import { GENERATION_TIMING } from './generation-timing';
 
 export type GenerationPorts = {
@@ -53,9 +53,7 @@ export type GenerationPorts = {
     emit: (event: GenerationDeltaEventPayload, state: GenerationState) => void | Promise<void>;
   };
   generation: {
-    save: (
-      state: GenerationState,
-    ) => GenerationHistoryMessageSnapshot | Promise<GenerationHistoryMessageSnapshot>;
+    save: (state: GenerationState) => ChatMessageSnapshot | Promise<ChatMessageSnapshot>;
     stop: (state: GenerationState) => void | Promise<void>;
   };
 };

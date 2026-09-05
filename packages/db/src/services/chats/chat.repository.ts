@@ -3,11 +3,12 @@ import {
   chatMessageToolCallsSchema,
   chatGenerationKindSchema,
   chatGenerationStatusSchema,
+  type ChatSnapshot,
   type ChatMessageSnapshot,
   type ChatMessageFileRecord,
   type ChatMessageToolCallRecord,
   type ChatGenerationKind,
-  type ChatGenerationStatus,
+  type GenerationPhase,
 } from '@hominem/chat';
 import type { Selectable } from 'kysely';
 import { z, type ZodType } from 'zod';
@@ -23,17 +24,8 @@ type ChatRow = Selectable<AppChats>;
 type ChatMessageRow = Selectable<AppChatMessages>;
 type ChatGenerationRunRow = Selectable<AppChatGenerationRuns>;
 
-export interface ChatRecord {
-  id: string;
-  userId: string;
-  title: string;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface ChatPage {
-  chats: ChatRecord[];
+  chats: ChatSnapshot[];
   nextCursor: string | null;
 }
 
@@ -42,9 +34,6 @@ const chatListCursorSchema = z.object({
   id: z.string().min(1),
   lastMessageAt: z.string().datetime(),
 });
-
-export type ChatMessageRecord = ChatMessageSnapshot;
-export type ChatMessageRole = ChatMessageSnapshot['role'];
 
 export interface ChatSourceRecord {
   id: string;
@@ -63,7 +52,7 @@ export interface DeleteChatMessagesResult {
 export interface InsertChatMessageInput {
   chatId: string;
   authorUserId: string;
-  role: ChatMessageRole;
+  role: ChatMessageSnapshot['role'];
   content: string;
   files?: unknown[] | null;
   reasoning?: string | null;
@@ -71,14 +60,14 @@ export interface InsertChatMessageInput {
   parentMessageId?: string | null;
 }
 
-export type { ChatGenerationKind, ChatGenerationStatus } from '@hominem/chat';
+export type { ChatGenerationKind, GenerationPhase } from '@hominem/chat';
 
 export interface ChatGenerationRunRecord {
   id: string;
   chatId: string;
   ownerUserId: string;
   kind: ChatGenerationKind;
-  status: ChatGenerationStatus;
+  status: GenerationPhase;
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
   assistantMessageId: string | null;
@@ -96,7 +85,7 @@ export interface CreateChatGenerationRunInput {
   targetAssistantMessageId?: string | null;
 }
 
-function toChatRecord(row: ChatRow): ChatRecord {
+function toChatRecord(row: ChatRow): ChatSnapshot {
   return {
     id: row.id,
     userId: row.ownerUserid,
@@ -153,7 +142,7 @@ function encodeChatListCursor(row: ChatRow): string {
   ).toString('base64url');
 }
 
-function toChatMessageRecord(row: ChatMessageRow): ChatMessageRecord {
+function toChatMessageRecord(row: ChatMessageRow): ChatMessageSnapshot {
   return {
     id: row.id,
     chatId: row.chatId,
@@ -293,7 +282,7 @@ export const ChatRepository = {
     input: {
       id: string;
       ownerUserId: string;
-      status: ChatGenerationStatus;
+      status: GenerationPhase;
       assistantMessageId?: string | null;
       errorMessage?: string | null;
     },
@@ -330,7 +319,7 @@ export const ChatRepository = {
     return row ? toChatGenerationRunRecord(row) : null;
   },
 
-  async getOwnedOrThrow(handle: DbHandle, chatId: string, userId: string): Promise<ChatRecord> {
+  async getOwnedOrThrow(handle: DbHandle, chatId: string, userId: string): Promise<ChatSnapshot> {
     const chat = await handle
       .selectFrom('app.chats')
       .selectAll()
@@ -384,7 +373,7 @@ export const ChatRepository = {
   async create(
     handle: DbHandle,
     input: { userId: string; title: string; archivedAt?: string | null },
-  ): Promise<ChatRecord> {
+  ): Promise<ChatSnapshot> {
     const chat = await handle
       .insertInto('app.chats')
       .values({
@@ -412,7 +401,7 @@ export const ChatRepository = {
       .executeTakeFirstOrThrow();
   },
 
-  async archive(handle: DbHandle, chatId: string, userId: string): Promise<ChatRecord> {
+  async archive(handle: DbHandle, chatId: string, userId: string): Promise<ChatSnapshot> {
     const archived = await handle
       .updateTable('app.chats')
       .set({
@@ -434,7 +423,7 @@ export const ChatRepository = {
     messageId: string,
     userId: string,
     content: string,
-  ): Promise<ChatMessageRecord> {
+  ): Promise<ChatMessageSnapshot> {
     const existing = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -530,7 +519,7 @@ export const ChatRepository = {
     handle: DbHandle,
     chatId: string,
     messageId: string,
-  ): Promise<ChatMessageRecord | undefined> {
+  ): Promise<ChatMessageSnapshot | undefined> {
     const row = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -551,7 +540,7 @@ export const ChatRepository = {
     messageId: string,
     toolCallId: string,
     lifecycle: Pick<ChatMessageToolCallRecord, 'confirmationStatus' | 'executionStatus'>,
-  ): Promise<ChatMessageRecord> {
+  ): Promise<ChatMessageSnapshot> {
     const row = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -592,7 +581,7 @@ export const ChatRepository = {
     chatId: string,
     beforeCreatedAt: string,
     limit = 200,
-  ): Promise<ChatMessageRecord[]> {
+  ): Promise<ChatMessageSnapshot[]> {
     const messages = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -617,7 +606,7 @@ export const ChatRepository = {
       toolCalls?: ChatMessageToolCallRecord[] | null;
       files?: ChatMessageFileRecord[] | null;
     },
-  ): Promise<ChatMessageRecord> {
+  ): Promise<ChatMessageSnapshot> {
     const updated = await handle
       .updateTable('app.chatMessages')
       .set({
@@ -656,7 +645,7 @@ export const ChatRepository = {
     chatId: string,
     limit = 100,
     offset = 0,
-  ): Promise<ChatMessageRecord[]> {
+  ): Promise<ChatMessageSnapshot[]> {
     const messages = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -675,7 +664,7 @@ export const ChatRepository = {
     chatId: string,
     query: string,
     limit = 50,
-  ): Promise<ChatMessageRecord[]> {
+  ): Promise<ChatMessageSnapshot[]> {
     const escapedQuery = query.trim().replace(/[\\%_]/g, '\\$&');
     const messages = await handle
       .selectFrom('app.chatMessages')
@@ -693,7 +682,10 @@ export const ChatRepository = {
   // `.returningAll()` already gives every column toChatMessageRecord needs,
   // so this maps in-process instead of making the caller re-SELECT the row
   // it just inserted to get a properly-typed record.
-  async insertMessage(handle: DbHandle, input: InsertChatMessageInput): Promise<ChatMessageRecord> {
+  async insertMessage(
+    handle: DbHandle,
+    input: InsertChatMessageInput,
+  ): Promise<ChatMessageSnapshot> {
     const inserted = await handle
       .insertInto('app.chatMessages')
       .values({

@@ -1,3 +1,4 @@
+import { aiUsageMetrics } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisSet = vi.fn();
@@ -18,17 +19,7 @@ describe('chat context cache', () => {
     await cacheCompletedChatContext({
       chatId: 'chat-1',
       model: 'test-model',
-      usage: {
-        provider: 'openrouter',
-        model: 'test-model',
-        promptTokens: 12,
-        completionTokens: 5,
-        totalTokens: 17,
-        costUsd: null,
-        reportedTotalTokens: null,
-        cachedPromptTokens: null,
-        reasoningTokens: null,
-      },
+      usage: { ...aiUsageMetrics, model: 'test-model', promptTokens: 12, totalTokens: 17 },
     });
 
     expect(redisSet).toHaveBeenCalledOnce();
@@ -37,7 +28,7 @@ describe('chat context cache', () => {
     expect(JSON.parse(rawValue)).toMatchObject({
       model: 'test-model',
       promptTokens: 12,
-      completionTokens: 5,
+      outputTokens: 5,
       totalTokens: 17,
     });
     expect(mode).toBe('EX');

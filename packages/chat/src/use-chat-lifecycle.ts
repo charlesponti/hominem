@@ -7,8 +7,9 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 
 import type { ArtifactType, ClassificationProposal, SessionSource } from './capture-types';
 import type { ChatClient, ChatGenerationController } from './client';
+import type { ChatMessageSnapshot } from './generation-schemas';
 import { isBlockingState, type CaptureLifecycleState } from './lifecycle-state';
-import { deriveSessionSource, type SessionArtifactMessage } from './session-artifacts';
+import { deriveSessionSource } from './session-artifacts';
 
 // A review proposal waiting on user confirmation. `reviewItemId` only shows
 // up in the server-side (web) flow — mobile's client-side proposals skip it.
@@ -52,7 +53,7 @@ function lifecycleReducer<TReview extends PendingReview>(
 export interface UseChatLifecycleInput<TReview extends PendingReview = PendingReview> {
   // Normalized messages for source derivation and proposal building — map
   // your platform's message type to `{ role, content }` before passing it in
-  messages: SessionArtifactMessage[];
+  messages: readonly Pick<ChatMessageSnapshot, 'role' | 'content'>[];
   // The session's initial source (e.g. an artifact anchor or 'new'), gets
   // overridden by `persistedSource` once the user saves a note
   source: SessionSource;
@@ -62,7 +63,7 @@ export interface UseChatLifecycleInput<TReview extends PendingReview = PendingRe
   // Platform-specific persistence — creates the note and returns the new
   // SessionSource for the header to show
   onAcceptReview: (review: TReview) => Promise<SessionSource>;
-  // Platform-specific rejection — discards the ReviewItem on the server
+  // Platform-specific rejection discards any server-side review item.
   // (web) or does nothing (mobile); the hook resets state either way
   onRejectReview: (review: TReview) => Promise<void>;
   // Called when any lifecycle phase throws, e.g. to show a toast

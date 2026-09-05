@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GenerationWireEvent } from '@hominem/chat';
+import type { GenerationEvent } from '@hominem/chat';
 import type { ChatMessageDto } from '@hominem/rpc/types';
 import { waitFor } from '@testing-library/react';
 import { act } from 'react';
@@ -35,7 +35,7 @@ vi.mock('@hominem/chat/transport/xhr', () => ({
       const stream = new ReadableStream<Uint8Array>({
         start(streamController) {
           void mockConsumeSseXhr({
-            onEvent: (event: GenerationWireEvent) =>
+            onEvent: (event: GenerationEvent) =>
               streamController.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)),
             signal,
           }).then(
@@ -83,7 +83,7 @@ const committedMessage = {
 } satisfies ChatMessageDto;
 
 type PendingStream = {
-  onEvent: (event: GenerationWireEvent) => void;
+  onEvent: (event: GenerationEvent) => void;
   resolve: () => void;
   reject: (error: Error) => void;
 };
@@ -98,7 +98,7 @@ describe('useSendMessage', () => {
         onEvent,
         replayUrl,
       }: {
-        onEvent: (event: GenerationWireEvent) => void;
+        onEvent: (event: GenerationEvent) => void;
         replayUrl?: (afterSequence: number) => string;
       }) =>
         new Promise<void>((resolve, reject) => {

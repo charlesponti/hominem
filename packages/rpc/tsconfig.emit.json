@@ -11,6 +11,7 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
+    "declarationMap": true,
     "rootDir": "src",
     "outDir": "build"
   },

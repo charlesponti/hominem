@@ -21,7 +21,7 @@ describe('normalizeOpenRouterChatUsage', () => {
       }),
     ).toMatchObject({
       promptTokens: 10,
-      completionTokens: 5,
+      outputTokens: 5,
       totalTokens: 15,
       reportedTotalTokens: 99,
       costUsd: 0.12,
@@ -67,7 +67,7 @@ describe('normalizeOpenRouterEmbeddingUsage', () => {
       }),
     ).toMatchObject({
       promptTokens: 12,
-      completionTokens: 0,
+      outputTokens: 0,
       totalTokens: 12,
       reportedTotalTokens: null,
     });

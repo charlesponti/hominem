@@ -1,4 +1,6 @@
+import type { ChatUsage } from '@hominem/ai';
 import { streamChatCompletion } from '@hominem/ai';
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -8,7 +10,7 @@ import { executeGenerationTurn, ToolInputError } from './chat-generation-engine'
 
 vi.mock('@hominem/ai', () => ({
   streamChatCompletion: vi.fn(),
-  getChatCompletionUsage: vi.fn((chunk: { usage?: unknown }) => chunk.usage ?? null),
+  getChatCompletionUsage: vi.fn((chunk: { usage?: ChatUsage }) => chunk.usage ?? null),
 }));
 
 const mockedStream = vi.mocked(streamChatCompletion);
@@ -257,6 +259,7 @@ describe('chat generation service', () => {
             },
           ],
           usage: {
+            ...openRouterCompletionUsage,
             promptTokens: 1,
             completionTokens: 2,
             totalTokens: 3,
@@ -270,6 +273,7 @@ describe('chat generation service', () => {
           object: 'chat.completion.chunk',
           choices: [{ index: 0, finishReason: null, delta: {} }],
           usage: {
+            ...openRouterCompletionUsage,
             promptTokens: 1,
             completionTokens: 2,
             totalTokens: 3,

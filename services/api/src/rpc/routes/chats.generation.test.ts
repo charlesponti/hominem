@@ -1,4 +1,4 @@
-import type { GenerationWireEvent } from '@hominem/chat';
+import type { GenerationEvent } from '@hominem/chat';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,7 +45,7 @@ function createApp() {
   return app.route('/api/chats/:id', chatGenerationRoutes);
 }
 
-function confirmationEvent(approved: boolean): GenerationWireEvent {
+function confirmationEvent(approved: boolean): GenerationEvent {
   return approved
     ? {
         version: 1,
@@ -144,7 +144,7 @@ describe('chat generation stream heartbeat', () => {
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
           },
-        } satisfies GenerationWireEvent;
+        } satisfies GenerationEvent;
       })(),
     );
 
@@ -206,7 +206,7 @@ describe('chat generation retry route', () => {
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
           },
-        } satisfies GenerationWireEvent;
+        } satisfies GenerationEvent;
       })(),
     );
 

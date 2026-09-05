@@ -73,6 +73,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@hominem/utils": "workspace:*",
     "@vitest/coverage-v8": "4.1.11",
     "react": "catalog:"
   },

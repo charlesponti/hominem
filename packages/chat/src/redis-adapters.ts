@@ -1,28 +1,14 @@
-import type { ToolResult } from './generation-machine';
+import type { GenerationEffectStore, ToolResult } from './generation-machine';
 
 export type ChatRedis = {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, mode: 'EX', ttlSeconds: number) => Promise<unknown>;
 };
 
-export type RedisChatEffectStore = {
-  get: (input: {
-    generationId: string;
-    idempotencyKey: string;
-    toolName: string;
-  }) => Promise<ToolResult | null>;
-  save: (input: {
-    generationId: string;
-    idempotencyKey: string;
-    toolName: string;
-    result: ToolResult;
-  }) => Promise<ToolResult>;
-};
-
 export function createRedisChatEffectStore(
   redis: ChatRedis,
   options: { keyPrefix?: string; ttlSeconds?: number } = {},
-): RedisChatEffectStore {
+): GenerationEffectStore {
   const keyPrefix = options.keyPrefix ?? 'chat:effect:';
   const ttlSeconds = options.ttlSeconds ?? 60 * 60 * 24 * 30;
   const key = (input: { generationId: string; idempotencyKey: string; toolName: string }) =>
@@ -45,15 +31,6 @@ export function createRedisChatEffectStore(
   };
 }
 
-export type ChatContextUsage = {
-  model: string;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  costUsd: number | null;
-  updatedAt: string;
-};
-
 export function createRedisChatContextCache(
   redis: ChatRedis,
   options: { keyPrefix?: string; ttlSeconds?: number; now?: () => Date } = {},
@@ -69,7 +46,7 @@ export function createRedisChatContextCache(
       model: string;
       usage: {
         promptTokens: number;
-        completionTokens: number;
+        outputTokens: number;
         totalTokens: number;
         costUsd: number | null;
       };
@@ -79,7 +56,7 @@ export function createRedisChatContextCache(
         JSON.stringify({
           model: input.model,
           promptTokens: input.usage.promptTokens,
-          completionTokens: input.usage.completionTokens,
+          outputTokens: input.usage.outputTokens,
           totalTokens: input.usage.totalTokens,
           costUsd: input.usage.costUsd,
           updatedAt: now().toISOString(),

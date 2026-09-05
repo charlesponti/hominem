@@ -1,5 +1,5 @@
 import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
-import { sql, type Selectable } from 'kysely';
+import { sql, type Insertable, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type { AppAiUsageEvents, Json, Numeric } from '../../types/database';
@@ -39,7 +39,7 @@ export interface AIUsageEventRecord {
   errorCode: string | null;
   errorStatus: number | null;
   requestId: string | null;
-  inputTokens: number;
+  promptTokens: number;
   outputTokens: number;
   totalTokens: number;
   cachedInputTokens: number | null;
@@ -57,7 +57,7 @@ export interface CreateAIUsageEventInput {
   feature: AIUsageFeature;
   operation: AIUsageOperation;
   model?: string | null;
-  inputTokens: number;
+  promptTokens: number;
   outputTokens: number;
   totalTokens: number;
   requestId?: string | null;
@@ -93,7 +93,7 @@ export interface AIUsageSummaryRecord {
   failedCount: number;
   usageAvailableCount: number;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   totalCostUsd: number;
   lastRecordedAt: string | null;
@@ -106,7 +106,7 @@ export interface AIUsageFeatureBreakdownRecord {
   failedCount: number;
   usageAvailableCount: number;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   totalCostUsd: number;
 }
@@ -118,7 +118,7 @@ export interface AIUsageModelBreakdownRecord {
   failedCount: number;
   usageAvailableCount: number;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   totalCostUsd: number;
 }
@@ -144,7 +144,7 @@ function toAIUsageEventRecord(row: AIUsageEventRow): AIUsageEventRecord {
     errorCode: row.errorCode ?? null,
     errorStatus: row.errorStatus ?? null,
     requestId: row.requestId ?? null,
-    inputTokens: row.inputTokens,
+    promptTokens: row.inputTokens,
     outputTokens: row.outputTokens,
     totalTokens: row.totalTokens,
     cachedInputTokens: row.cachedInputTokens,
@@ -153,6 +153,30 @@ function toAIUsageEventRecord(row: AIUsageEventRow): AIUsageEventRecord {
     durationMs: row.durationMs,
     metadata: row.metadata,
     createdAt: new Date(row.createdat).toISOString(),
+  };
+}
+
+function toAIUsageEventInsert(input: CreateAIUsageEventInput): Insertable<AppAiUsageEvents> {
+  return {
+    ...(input.id ? { id: input.id } : {}),
+    ownerUserid: input.userId,
+    provider: input.provider,
+    feature: input.feature,
+    operation: input.operation,
+    model: input.model ?? null,
+    status: input.status ?? 'succeeded',
+    usageAvailable: input.usageAvailable ?? true,
+    errorCode: input.errorCode ?? null,
+    errorStatus: input.errorStatus ?? null,
+    requestId: input.requestId ?? null,
+    inputTokens: input.promptTokens,
+    outputTokens: input.outputTokens,
+    totalTokens: input.totalTokens,
+    cachedInputTokens: input.cachedInputTokens ?? null,
+    reasoningTokens: input.reasoningTokens ?? null,
+    costUsd: input.costUsd ?? null,
+    durationMs: input.durationMs ?? null,
+    metadata: input.metadata ?? null,
   };
 }
 
@@ -170,27 +194,7 @@ export const AIUsageEventRepository = {
   async create(handle: DbHandle, input: CreateAIUsageEventInput): Promise<AIUsageEventRecord> {
     const row = await handle
       .insertInto('app.aiUsageEvents')
-      .values({
-        ...(input.id ? { id: input.id } : {}),
-        ownerUserid: input.userId,
-        provider: input.provider,
-        feature: input.feature,
-        operation: input.operation,
-        model: input.model ?? null,
-        status: input.status ?? 'succeeded',
-        usageAvailable: input.usageAvailable ?? true,
-        errorCode: input.errorCode ?? null,
-        errorStatus: input.errorStatus ?? null,
-        requestId: input.requestId ?? null,
-        inputTokens: input.inputTokens,
-        outputTokens: input.outputTokens,
-        totalTokens: input.totalTokens,
-        cachedInputTokens: input.cachedInputTokens ?? null,
-        reasoningTokens: input.reasoningTokens ?? null,
-        costUsd: input.costUsd ?? null,
-        durationMs: input.durationMs ?? null,
-        metadata: input.metadata ?? null,
-      })
+      .values(toAIUsageEventInsert(input))
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -200,27 +204,7 @@ export const AIUsageEventRepository = {
   async createIfAbsent(handle: DbHandle, input: CreateAIUsageEventInput): Promise<boolean> {
     const inserted = await handle
       .insertInto('app.aiUsageEvents')
-      .values({
-        ...(input.id ? { id: input.id } : {}),
-        ownerUserid: input.userId,
-        provider: input.provider,
-        feature: input.feature,
-        operation: input.operation,
-        model: input.model ?? null,
-        status: input.status ?? 'succeeded',
-        usageAvailable: input.usageAvailable ?? true,
-        errorCode: input.errorCode ?? null,
-        errorStatus: input.errorStatus ?? null,
-        requestId: input.requestId ?? null,
-        inputTokens: input.inputTokens,
-        outputTokens: input.outputTokens,
-        totalTokens: input.totalTokens,
-        cachedInputTokens: input.cachedInputTokens ?? null,
-        reasoningTokens: input.reasoningTokens ?? null,
-        costUsd: input.costUsd ?? null,
-        durationMs: input.durationMs ?? null,
-        metadata: input.metadata ?? null,
-      })
+      .values(toAIUsageEventInsert(input))
       .onConflict((conflict) => conflict.column('id').doNothing())
       .returning('id')
       .executeTakeFirst();
@@ -236,7 +220,7 @@ export const AIUsageEventRepository = {
         provider: string;
         model: string;
         promptTokens: number;
-        completionTokens: number;
+        outputTokens: number;
         totalTokens: number;
         costUsd: number | null;
         cachedPromptTokens: number | null;
@@ -251,7 +235,7 @@ export const AIUsageEventRepository = {
         provider: input.usage.provider,
         model: input.usage.model,
         inputTokens: input.usage.promptTokens,
-        outputTokens: input.usage.completionTokens,
+        outputTokens: input.usage.outputTokens,
         totalTokens: input.usage.totalTokens,
         costUsd: input.usage.costUsd,
         cachedInputTokens: input.usage.cachedPromptTokens,
@@ -284,7 +268,7 @@ export const AIUsageEventRepository = {
         sql<number>`count(*) FILTER (WHERE status = 'failed')`.as('failedCount'),
         sql<number>`count(*) FILTER (WHERE usage_available)`.as('usageAvailableCount'),
         sql<number>`coalesce(sum(input_tokens), 0)`.as('promptTokens'),
-        sql<number>`coalesce(sum(output_tokens), 0)`.as('completionTokens'),
+        sql<number>`coalesce(sum(output_tokens), 0)`.as('outputTokens'),
         sql<number>`coalesce(sum(total_tokens), 0)`.as('totalTokens'),
         sql<Numeric>`coalesce(sum(cost_usd), 0)`.as('totalCostUsd'),
         sql<Date | string | null>`max(createdat)`.as('lastRecordedAt'),
@@ -297,7 +281,7 @@ export const AIUsageEventRepository = {
       failedCount: Number(row.failedCount ?? 0),
       usageAvailableCount: Number(row.usageAvailableCount ?? 0),
       promptTokens: Number(row.promptTokens ?? 0),
-      completionTokens: Number(row.completionTokens ?? 0),
+      outputTokens: Number(row.outputTokens ?? 0),
       totalTokens: Number(row.totalTokens ?? 0),
       totalCostUsd: toRequiredNumber(row.totalCostUsd),
       lastRecordedAt:
@@ -327,7 +311,7 @@ export const AIUsageEventRepository = {
         sql<number>`count(*) FILTER (WHERE status = 'failed')`.as('failedCount'),
         sql<number>`count(*) FILTER (WHERE usage_available)`.as('usageAvailableCount'),
         sql<number>`coalesce(sum(input_tokens), 0)`.as('promptTokens'),
-        sql<number>`coalesce(sum(output_tokens), 0)`.as('completionTokens'),
+        sql<number>`coalesce(sum(output_tokens), 0)`.as('outputTokens'),
         sql<number>`coalesce(sum(total_tokens), 0)`.as('totalTokens'),
         sql<Numeric>`coalesce(sum(cost_usd), 0)`.as('totalCostUsd'),
       ])
@@ -344,7 +328,7 @@ export const AIUsageEventRepository = {
         failedCount: Number(row.failedCount ?? 0),
         usageAvailableCount: Number(row.usageAvailableCount ?? 0),
         promptTokens: Number(row.promptTokens ?? 0),
-        completionTokens: Number(row.completionTokens ?? 0),
+        outputTokens: Number(row.outputTokens ?? 0),
         totalTokens: Number(row.totalTokens ?? 0),
         totalCostUsd: toRequiredNumber(row.totalCostUsd),
       }),
@@ -373,7 +357,7 @@ export const AIUsageEventRepository = {
         sql<number>`count(*) FILTER (WHERE status = 'failed')`.as('failedCount'),
         sql<number>`count(*) FILTER (WHERE usage_available)`.as('usageAvailableCount'),
         sql<number>`coalesce(sum(input_tokens), 0)`.as('promptTokens'),
-        sql<number>`coalesce(sum(output_tokens), 0)`.as('completionTokens'),
+        sql<number>`coalesce(sum(output_tokens), 0)`.as('outputTokens'),
         sql<number>`coalesce(sum(total_tokens), 0)`.as('totalTokens'),
         sql<Numeric>`coalesce(sum(cost_usd), 0)`.as('totalCostUsd'),
       ])
@@ -390,7 +374,7 @@ export const AIUsageEventRepository = {
         failedCount: Number(row.failedCount ?? 0),
         usageAvailableCount: Number(row.usageAvailableCount ?? 0),
         promptTokens: Number(row.promptTokens ?? 0),
-        completionTokens: Number(row.completionTokens ?? 0),
+        outputTokens: Number(row.outputTokens ?? 0),
         totalTokens: Number(row.totalTokens ?? 0),
         totalCostUsd: toRequiredNumber(row.totalCostUsd),
       }),

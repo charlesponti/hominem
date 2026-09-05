@@ -1,5 +1,5 @@
 import {
-  type ChatGenerationStatus,
+  type GenerationPhase,
   type GenerationHistoryEventPayload,
   type ToolResult,
 } from '@hominem/chat';
@@ -36,7 +36,7 @@ type GenerationRunProjectionRow = GenerationRunRow & {
   errorMessage: string | null;
 };
 
-const GENERATION_STATUSES: readonly ChatGenerationStatus[] = [
+const GENERATION_STATUSES: readonly GenerationPhase[] = [
   'preparing',
   'running',
   'cancel_requested',
@@ -89,9 +89,9 @@ export function parseGenerationKind(value: string): GenerationRunIdentity['kind'
   throw invalidGenerationData('kind');
 }
 
-export function parseGenerationStatus(value: string): ChatGenerationStatus {
+export function parseGenerationStatus(value: string): GenerationPhase {
   if ((GENERATION_STATUSES as readonly string[]).includes(value)) {
-    return value as ChatGenerationStatus;
+    return value as GenerationPhase;
   }
   throw invalidGenerationData('status');
 }

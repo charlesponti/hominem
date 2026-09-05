@@ -9,6 +9,7 @@
     "skipDefaultLibCheck": true,
     "composite": true,
     "declaration": true,
+    "declarationMap": true,
     "incremental": true,
     "isolatedModules": true,
     "allowJs": false,

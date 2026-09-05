@@ -59,10 +59,7 @@ export type {
 export type {
   ChatMessageFileRecord,
   ChatGenerationRunRecord,
-  ChatMessageRecord,
-  ChatMessageRole,
   ChatMessageToolCallRecord,
-  ChatRecord,
   ChatSourceRecord,
   InsertChatMessageInput,
   NoteContext,

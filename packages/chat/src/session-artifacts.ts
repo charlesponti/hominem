@@ -1,16 +1,5 @@
-import type { ArtifactType, SessionSource } from './capture-types';
-
-export interface SessionArtifactMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string;
-}
-
-export interface ArtifactProposal {
-  proposedType: ArtifactType;
-  proposedTitle: string;
-  proposedChanges: string[];
-  previewContent: string;
-}
+import type { ArtifactType, ClassificationProposal, SessionSource } from './capture-types';
+import type { ChatMessageSnapshot } from './generation-schemas';
 
 const MAX_TITLE_LENGTH = 64;
 const MAX_CAPTURE_PREVIEW_LENGTH = 96;
@@ -49,7 +38,9 @@ function getArtifactChangeLabel(type: ArtifactType): string {
   }
 }
 
-export function getCapturePreview(messages: SessionArtifactMessage[]): string | null {
+export function getCapturePreview(
+  messages: readonly Pick<ChatMessageSnapshot, 'role' | 'content'>[],
+): string | null {
   for (const message of messages) {
     if (message.role !== 'user') {
       continue;
@@ -68,7 +59,7 @@ export function deriveSessionSource(input: {
   artifactId?: string | null;
   artifactTitle?: string | null;
   artifactType?: ArtifactType;
-  messages: SessionArtifactMessage[];
+  messages: readonly Pick<ChatMessageSnapshot, 'role' | 'content'>[];
 }): SessionSource {
   if (input.artifactId && input.artifactTitle) {
     return {
@@ -90,7 +81,7 @@ export function deriveSessionSource(input: {
   return { kind: 'new' };
 }
 
-function toTranscript(messages: SessionArtifactMessage[]): string {
+function toTranscript(messages: readonly Pick<ChatMessageSnapshot, 'role' | 'content'>[]): string {
   return messages
     .filter((message) => normalizeContent(message.content).length > 0)
     .map((message) => {
@@ -109,9 +100,9 @@ function toTranscript(messages: SessionArtifactMessage[]): string {
 }
 
 export function buildArtifactProposal(
-  messages: SessionArtifactMessage[],
+  messages: readonly Pick<ChatMessageSnapshot, 'role' | 'content'>[],
   type: ArtifactType,
-): ArtifactProposal {
+): ClassificationProposal {
   const previewContent = toTranscript(messages);
   const capturePreview = getCapturePreview(messages);
   const relevantMessageCount = messages.filter(

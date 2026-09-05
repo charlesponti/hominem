@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChatMessageToolCall } from '@hominem/chat/types';
+import type { ChatMessageToolCallRecord } from '@hominem/chat/types';
 import { CheckCircleIcon, ChevronDownIcon, ClockIcon, WrenchIcon, XCircleIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Fragment } from 'react';
@@ -23,7 +23,7 @@ export const Tool = ({ className, ...props }: ToolProps) => (
 
 export type ToolCallStatus = 'pending' | 'completed' | 'rejected' | 'failed';
 
-export function getToolCallStatus(toolCall: ChatMessageToolCall): ToolCallStatus {
+export function getToolCallStatus(toolCall: ChatMessageToolCallRecord): ToolCallStatus {
   if (toolCall.confirmationStatus === 'pending') return 'pending';
   if (toolCall.confirmationStatus === 'rejected') return 'rejected';
   if (toolCall.executionStatus === 'failed') return 'failed';
@@ -97,7 +97,7 @@ export const ToolContent = ({ className, ...props }: ToolContentProps) => (
 );
 
 export type ToolInputProps = ComponentProps<'div'> & {
-  input: ChatMessageToolCall['args'];
+  input: ChatMessageToolCallRecord['args'];
 };
 
 export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
@@ -112,7 +112,7 @@ export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
 );
 
 export type ToolPreviewProps = ComponentProps<'div'> & {
-  preview: NonNullable<ChatMessageToolCall['preview']>;
+  preview: NonNullable<ChatMessageToolCallRecord['preview']>;
 };
 
 function formatPreviewLabel(key: string): string {

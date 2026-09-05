@@ -88,7 +88,7 @@ describe('usage routes', () => {
         failedCount: 0,
         usageAvailableCount: 2,
         promptTokens: 10,
-        completionTokens: 5,
+        outputTokens: 5,
         totalTokens: 15,
         totalCostUsd: 1.25,
         lastRecordedAt: '2026-08-22T00:00:00.000Z',

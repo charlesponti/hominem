@@ -46,7 +46,7 @@ describe('reconcileSpeechUsage', () => {
       provider: 'openrouter',
       model: 'tts-model',
       promptTokens: 10,
-      completionTokens: 2,
+      outputTokens: 2,
       totalTokens: 12,
       costUsd: 0.01,
       cachedPromptTokens: null,

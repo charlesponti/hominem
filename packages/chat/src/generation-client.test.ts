@@ -5,10 +5,13 @@ import {
   parseGenerationClientCheckpoint,
   reduceGenerationClientEvent,
   toGenerationClientCheckpoint,
-  type GenerationClientEvent,
   type GenerationClientErrorEvent,
 } from './generation-client';
-import type { GenerationDeltaEventPayload, GenerationHistoryEvent } from './generation-machine';
+import type {
+  GenerationDeltaEventPayload,
+  GenerationEvent,
+  GenerationHistoryEvent,
+} from './generation-machine';
 import {
   chatSnapshot,
   messageSnapshot,
@@ -30,10 +33,7 @@ const message = messageSnapshot({
   reasoning: 'Because',
 });
 
-function durable(
-  sequence: number,
-  payload: GenerationHistoryEvent['payload'],
-): GenerationClientEvent {
+function durable(sequence: number, payload: GenerationHistoryEvent['payload']): GenerationEvent {
   const envelope: { version: 1; generationId: string; sequence: number } = {
     version: 1,
     generationId: 'generation-1',
@@ -73,7 +73,7 @@ function durable(
   }
 }
 
-function delta(payload: GenerationDeltaEventPayload): GenerationClientEvent {
+function delta(payload: GenerationDeltaEventPayload): GenerationEvent {
   const envelope: { version: 1; generationId: string; sequence: null } = {
     version: 1,
     generationId: 'generation-1',
@@ -96,7 +96,7 @@ describe('generation client reducer', () => {
       sequence: null,
       type: 'text-delta',
       payload: { type: 'text-delta', text: 'ignored' },
-    } satisfies GenerationClientEvent;
+    } satisfies GenerationEvent;
     const next = reduceGenerationClientEvent(initial, foreign);
     const acceptedEvent = durable(1, { type: 'generation.phase_changed', phase: 'running' });
     const accepted = reduceGenerationClientEvent(next, acceptedEvent);
@@ -194,7 +194,7 @@ describe('generation client reducer', () => {
       name: 'write',
       arguments: '{"value":"x"}',
     };
-    const events: GenerationClientEvent[] = [
+    const events: GenerationEvent[] = [
       durable(1, { type: 'tool.requested', call }),
       durable(2, { type: 'confirmation.required', call }),
       durable(3, {

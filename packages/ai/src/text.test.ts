@@ -1,3 +1,4 @@
+import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -26,12 +27,7 @@ describe('createStructuredChatCompletion', () => {
   it('retains usage when json parsing fails after the provider responds', async () => {
     createChatSend.mockResolvedValueOnce({
       model: 'model',
-      usage: {
-        promptTokens: 10,
-        completionTokens: 5,
-        totalTokens: 15,
-        cost: 0.25,
-      },
+      usage: openRouterCompletionUsage,
       choices: [{ message: { content: '{not-json' } }],
     });
 
@@ -55,6 +51,7 @@ describe('createStructuredChatCompletion', () => {
     createChatSend.mockResolvedValueOnce({
       model: 'model',
       usage: {
+        ...openRouterCompletionUsage,
         promptTokens: 6,
         completionTokens: 4,
         totalTokens: 10,
@@ -128,7 +125,7 @@ describe('getStructuredOutputUsage', () => {
       provider: 'openrouter' as const,
       model: 'model',
       promptTokens: 1,
-      completionTokens: 2,
+      outputTokens: 2,
       totalTokens: 3,
       reportedTotalTokens: null,
       costUsd: null,

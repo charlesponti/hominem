@@ -399,16 +399,13 @@ export function parseGenerationEvent(input: unknown): GenerationEvent {
 // Kept as an alias — this used to be a real union of two distinct envelope
 // shapes; now it's just the canonical event schema/type under its
 // established name, so the many existing import sites don't need renaming.
-export const GenerationWireEventSchema = GenerationEventSchema;
-export type GenerationWireEvent = GenerationEvent;
-
-export function parseGenerationWireEvent(input: unknown): GenerationWireEvent {
-  return GenerationWireEventSchema.parse(input);
+export function parseGenerationWireEvent(input: unknown): GenerationEvent {
+  return GenerationEventSchema.parse(input);
 }
 
 export function createGenerationEventDeduplicator(): (
-  event: GenerationWireEvent,
-) => GenerationWireEvent | null {
+  event: GenerationEvent,
+) => GenerationEvent | null {
   const seenDurableEvents = new Set<string>();
   return (event) => {
     if (event.sequence !== null) {
@@ -420,7 +417,7 @@ export function createGenerationEventDeduplicator(): (
   };
 }
 
-export function getGenerationFailureMessage(event: GenerationWireEvent): string | null {
+export function getGenerationFailureMessage(event: GenerationEvent): string | null {
   if (event.type === 'generation.failed') return event.payload.message;
   return null;
 }

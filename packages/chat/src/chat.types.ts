@@ -1,25 +1,18 @@
-import type { ChatMessageToolCallRecord } from './generation-schemas';
+import type { ChatMessageSnapshot, ChatMessageToolCallRecord } from './generation-schemas';
 
-export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
-
-export type { ChatMessageFileRecord } from './generation-schemas';
-
-export type ChatMessageRole = 'system' | 'user' | 'assistant' | 'tool';
-
-export type ChatMessageToolCall = ChatMessageToolCallRecord;
+export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from './generation-schemas';
 
 export interface ChatMessageItem {
   id: string;
   // Stable id for list rendering that survives server reconciliation
   renderKey?: string;
-  role: 'user' | 'assistant' | 'system';
+  role: Exclude<ChatMessageSnapshot['role'], 'tool'>;
   message: string;
   created_at: string;
   chat_id: string;
   profile_id: string;
   reasoning?: string | null;
-  toolCalls: ChatMessageToolCall[] | null;
+  toolCalls: ChatMessageToolCallRecord[] | null;
   isStreaming?: boolean;
   audio?: { url: string; mimeType: string } | null;
   // Set when a send fails or a stream gets interrupted, instead of removing

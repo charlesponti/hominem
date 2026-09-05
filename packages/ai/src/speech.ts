@@ -1,10 +1,10 @@
+import type { OpenRouterClientOptions } from './shared';
 import {
   AUDIO_TTS_MODEL,
   AUDIO_TTS_VOICE,
   createOpenRouterClient,
   normalizeOpenRouterError,
 } from './shared';
-import type { OpenRouterClientOptions } from './shared';
 
 type SynthesizeSpeechInput = OpenRouterClientOptions & {
   text: string;
@@ -29,7 +29,7 @@ export type SpeechGenerationUsage = {
   provider: 'openrouter';
   model: string;
   promptTokens: number;
-  completionTokens: number;
+  outputTokens: number;
   totalTokens: number;
   reportedTotalTokens: number | null;
   costUsd: number | null;
@@ -89,7 +89,7 @@ export async function getSpeechUsageEstimate(
     provider: 'openrouter',
     model: input.model,
     promptTokens: 0,
-    completionTokens: 0,
+    outputTokens: 0,
     totalTokens: 0,
     reportedTotalTokens: null,
     costUsd: Number((input.characterCount * costPerCharacterUsd).toFixed(12)),
@@ -154,14 +154,14 @@ export async function getSpeechGenerationUsage(
   const response = await client.generations.getGeneration({ id: input.generationId });
   const data = response.data;
   const promptTokens = data.tokensPrompt ?? data.nativeTokensPrompt ?? 0;
-  const completionTokens = data.tokensCompletion ?? data.nativeTokensCompletion ?? 0;
+  const outputTokens = data.tokensCompletion ?? data.nativeTokensCompletion ?? 0;
 
   return {
     provider: 'openrouter',
     model: data.model,
     promptTokens,
-    completionTokens,
-    totalTokens: promptTokens + completionTokens,
+    outputTokens,
+    totalTokens: promptTokens + outputTokens,
     reportedTotalTokens: null,
     costUsd: data.totalCost,
     cachedPromptTokens: data.nativeTokensCached,
