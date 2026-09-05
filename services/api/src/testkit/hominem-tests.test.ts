@@ -309,13 +309,6 @@ describe('HominemTests', () => {
     expect(failedState.run?.status).toBe('failed');
     expect(retriedState.run?.status).toBe('committed');
     expect(retriedState.run?.userMessageId).toBe(failedState.run?.userMessageId);
-    expect(
-      retriedState.events.find(
-        (event) => 'sequence' in event && event.payload.type === 'generation.started',
-      ),
-    ).toMatchObject({
-      payload: { context: { retryOfGenerationId: failed.generationId } },
-    });
     expect(retriedState.messages.filter((message) => message.role === 'user')).toHaveLength(1);
     expect(retriedState.messages.filter((message) => message.role === 'assistant')).toHaveLength(1);
   });

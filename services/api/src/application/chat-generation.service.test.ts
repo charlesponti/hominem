@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   getMessages: vi.fn(),
   getChatSourceContext: vi.fn(),
   createGenerationRun: vi.fn(),
+  getGenerationRunByAssistantMessageId: vi.fn(),
+  deleteAssistantMessage: vi.fn(),
   appendEvent: vi.fn(),
   appendEvents: vi.fn(),
   forceFail: vi.fn(),
@@ -17,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   rebuildProjection: vi.fn(),
   getToolEffect: vi.fn(),
   saveToolEffect: vi.fn(),
+  deleteRun: vi.fn(),
   runInTransaction: vi.fn(),
   publishGenerationEvent: vi.fn(),
   planChatTools: vi.fn(),
@@ -36,6 +39,8 @@ vi.mock('@hominem/db', () => ({
     getMessages: mocks.getMessages,
     getChatSourceContext: mocks.getChatSourceContext,
     createGenerationRun: mocks.createGenerationRun,
+    getGenerationRunByAssistantMessageId: mocks.getGenerationRunByAssistantMessageId,
+    deleteAssistantMessage: mocks.deleteAssistantMessage,
   },
   ChatGenerationRepository: {
     appendEvent: mocks.appendEvent,
@@ -45,6 +50,7 @@ vi.mock('@hominem/db', () => ({
     rebuildProjection: mocks.rebuildProjection,
     getToolEffect: mocks.getToolEffect,
     saveToolEffect: mocks.saveToolEffect,
+    deleteRun: mocks.deleteRun,
   },
   runInTransaction: mocks.runInTransaction,
 }));
@@ -603,7 +609,7 @@ describe('ChatGenerationService.retryMessage', () => {
                 expect.objectContaining({
                   event: expect.objectContaining({
                     type: 'generation.started',
-                    context: expect.objectContaining({ retryOfGenerationId: 'generation-failed' }),
+                    context: expect.objectContaining({ userMessageId: 'message-1' }),
                   }),
                 }),
               ]),
@@ -612,6 +618,10 @@ describe('ChatGenerationService.retryMessage', () => {
         ]),
       ),
     );
+    // A retried failed generation never produced a message, so nothing is
+    // deleted — unlike regenerating a completed reply.
+    expect(mocks.deleteRun).not.toHaveBeenCalled();
+    expect(mocks.deleteAssistantMessage).not.toHaveBeenCalled();
   });
 
   it('rejects retrying a non-failed generation', async () => {

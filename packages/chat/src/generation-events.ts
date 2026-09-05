@@ -22,7 +22,6 @@ export type GenerationStartContext = {
   kind: ChatGenerationKind;
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
-  retryOfGenerationId?: string;
   requestContext: GenerationRequestContext;
 };
 

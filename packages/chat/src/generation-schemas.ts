@@ -20,12 +20,6 @@ export const chatGenerationStatusSchema = z.enum([
   'cancelled',
   'failed',
 ]);
-export const chatGenerationActiveStatusSchema = chatGenerationStatusSchema.exclude([
-  'committed',
-  'cancelled',
-  'failed',
-]);
-
 export const generationClientCheckpointSchema = z
   .object({
     generationId: z.string().min(1),
@@ -195,7 +189,6 @@ const startContextSchema = z.object({
   kind: chatGenerationKindSchema,
   userMessageId: z.string().min(1).nullable(),
   targetAssistantMessageId: z.string().min(1).nullable(),
-  retryOfGenerationId: z.string().min(1).optional(),
   requestContext: requestContextSchema,
 }) satisfies z.ZodType<GenerationStartContext>;
 
@@ -232,7 +225,7 @@ const historySchemas = {
   }) satisfies z.ZodType<HistoryPayload<'generation.accepted'>>,
   'generation.phase_changed': z.object({
     type: z.literal('generation.phase_changed'),
-    phase: chatGenerationActiveStatusSchema,
+    phase: z.enum(['preparing', 'running', 'awaiting_confirmation', 'saving', 'cancel_requested']),
   }) satisfies z.ZodType<HistoryPayload<'generation.phase_changed'>>,
   'generation.cancel_requested': z.object({
     type: z.literal('generation.cancel_requested'),

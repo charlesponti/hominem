@@ -345,6 +345,20 @@ async function appendEventsCore(
 }
 
 export const ChatGenerationRepository = {
+  // Used by regenerate once the replacement generation has committed — the
+  // superseded run is gone, not kept as a branch. Its events and tool
+  // effects cascade-delete with it.
+  async deleteRun(
+    handle: DbHandle,
+    input: { generationId: string; ownerUserId: string },
+  ): Promise<void> {
+    await handle
+      .deleteFrom('app.chatGenerationRuns')
+      .where('id', '=', input.generationId)
+      .where('ownerUserId', '=', input.ownerUserId)
+      .execute();
+  },
+
   async appendEvent(
     handle: DbHandle,
     input: AppendChatGenerationEventInput,
