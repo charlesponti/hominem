@@ -1,3 +1,13 @@
+// Bridges the pure state machine (./generation-machine) to real side effects.
+// The machine itself never calls a provider, writes to a DB, or emits an SSE
+// event directly — running it just returns GenerationCommands (declarative
+// instructions like "persist this event" or "open a provider turn"). This
+// file's GenerationAdapters are the injected implementations of each command
+// type, and createGenerationInterpreter turns a command back into the
+// machine's next input by awaiting the matching adapter. That split is what
+// lets the machine be tested with no I/O at all, and lets the same machine
+// run against different concrete adapters (e.g. real provider/DB in
+// services/api vs fake adapters in tests).
 import {
   runGeneration,
   type GenerationCommand,
@@ -12,7 +22,7 @@ import {
 import type { ChatMessageSnapshot } from './generation-schemas';
 import { GENERATION_TIMING } from './generation-timing';
 
-export type GenerationPorts = {
+export type GenerationAdapters = {
   control?: {
     isCancelled?: (state: GenerationState) => boolean | Promise<boolean>;
     waitBeforeRetry?: (input: { attempt: number; state: GenerationState }) => void | Promise<void>;
@@ -97,18 +107,18 @@ async function withEffectTimeout<T>(
   }
 }
 
-async function isCancelled(ports: GenerationPorts, state: GenerationState): Promise<boolean> {
-  return (await ports.control?.isCancelled?.(state)) ?? false;
+async function isCancelled(adapters: GenerationAdapters, state: GenerationState): Promise<boolean> {
+  return (await adapters.control?.isCancelled?.(state)) ?? false;
 }
 
 async function* monitorProviderInputs(
   inputs: GenerationInput | AsyncIterable<GenerationInput>,
-  ports: GenerationPorts,
+  adapters: GenerationAdapters,
   state: GenerationState,
 ): AsyncIterable<GenerationInput> {
   if (isAsyncIterable(inputs)) {
     for await (const input of inputs) {
-      if (await isCancelled(ports, state)) {
+      if (await isCancelled(adapters, state)) {
         yield { type: 'cancel-requested' };
         return;
       }
@@ -117,7 +127,7 @@ async function* monitorProviderInputs(
     return;
   }
 
-  if (await isCancelled(ports, state)) {
+  if (await isCancelled(adapters, state)) {
     yield { type: 'cancel-requested' };
     return;
   }
@@ -129,7 +139,7 @@ function isAsyncIterable(value: object): value is AsyncIterable<GenerationInput>
 }
 
 export function createGenerationInterpreter(
-  ports: GenerationPorts,
+  adapters: GenerationAdapters,
   options?: { effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>> },
 ): GenerationEffectInterpreter {
   const timeouts = { ...DEFAULT_EFFECT_TIMEOUTS_MS, ...options?.effectTimeoutsMs };
@@ -138,45 +148,45 @@ export function createGenerationInterpreter(
       switch (command.type) {
         case 'persist':
           await withEffectTimeout('persist', timeouts.persist, () =>
-            ports.events.persist(command, state),
+            adapters.events.persist(command, state),
           );
           return;
         case 'emit':
-          await ports.events.emit(command.event, state);
+          await adapters.events.emit(command.event, state);
           return;
         case 'open-provider-turn':
           return monitorProviderInputs(
-            await ports.provider.open({
+            await adapters.provider.open({
               turnId: command.turnId,
               iteration: command.iteration,
               state,
             }),
-            ports,
+            adapters,
             state,
           );
         case 'retry-provider':
-          await ports.control?.waitBeforeRetry?.({ attempt: command.attempt, state });
+          await adapters.control?.waitBeforeRetry?.({ attempt: command.attempt, state });
           return monitorProviderInputs(
-            await ports.provider.retry({ attempt: command.attempt, state }),
-            ports,
+            await adapters.provider.retry({ attempt: command.attempt, state }),
+            adapters,
             state,
           );
         case 'execute-tool': {
-          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
+          if (await isCancelled(adapters, state)) return { type: 'cancel-requested' };
           const result = await withEffectTimeout('execute-tool', timeouts['execute-tool'], () =>
-            ports.tools.execute({
+            adapters.tools.execute({
               call: command.call,
               idempotencyKey: command.idempotencyKey,
               state,
             }),
           );
-          await ports.provider.appendToolResult?.({ call: command.call, result, state });
+          await adapters.provider.appendToolResult?.({ call: command.call, result, state });
           return { type: 'tool-result', result };
         }
         case 'preview-tool':
-          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
+          if (await isCancelled(adapters, state)) return { type: 'cancel-requested' };
           await withEffectTimeout('preview-tool', timeouts['preview-tool'], () =>
-            ports.tools.preview({
+            adapters.tools.preview({
               call: command.call,
               idempotencyKey: command.idempotencyKey,
               state,
@@ -184,24 +194,24 @@ export function createGenerationInterpreter(
           );
           return;
         case 'save-generation':
-          if (await isCancelled(ports, state)) return { type: 'cancel-requested' };
+          if (await isCancelled(adapters, state)) return { type: 'cancel-requested' };
           return {
             type: 'generation-saved',
             message: await withEffectTimeout('save-generation', timeouts['save-generation'], () =>
-              ports.generation.save(state),
+              adapters.generation.save(state),
             ),
           };
         case 'stop-effects':
-          await ports.generation.stop(state);
+          await adapters.generation.stop(state);
           return { type: 'effect-stopped' };
       }
     },
   };
 }
 
-export function runGenerationWithPorts(
+export function runGenerationWithAdapters(
   input: Omit<RunGenerationInput, 'effects'> & {
-    ports: GenerationPorts;
+    adapters: GenerationAdapters;
     effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>>;
   },
 ): Promise<GenerationState> {
@@ -210,7 +220,7 @@ export function runGenerationWithPorts(
     startContext: input.startContext,
     initialInput: input.initialInput,
     initialState: input.initialState,
-    effects: createGenerationInterpreter(input.ports, {
+    effects: createGenerationInterpreter(input.adapters, {
       effectTimeoutsMs: input.effectTimeoutsMs,
     }),
   });

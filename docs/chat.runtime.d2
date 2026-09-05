@@ -1,20 +1,82 @@
 direction: right
 
 apps: {
-  web
-  omiro
-  services
+  web: "apps/web" {
+    use_stream_message: "use-stream-message.ts\n(send + regenerate + resume + cancel)"
+    use_regenerate_message: "use-regenerate-message.ts\n(redo one message)"
+  }
+  omiro: "apps/omiro" {
+    use_chat_generation: "use-chat-generation.ts\n(owns ChatClient)"
+    use_send_message: "use-send-message.ts"
+    use_regenerate_message: "use-regenerate-message.ts"
+  }
 }
 
-client: "@hominem/chat/client"
-protocol: "Canonical HTTP + SSE"
-server: "@hominem/chat/server"
+chat_pkg: "@hominem/chat" {
+  client: "client.ts\nChatClient" {
+    methods: "send / start / regenerate\nresumeGeneration / cancel\nrespondToToolCall / getGeneration"
+  }
+  transport: "client-transport-fetch.ts /\nclient-transport-xhr.ts"
+  sse: "sse.ts\nSSE encode/decode + replay via\nafterSequence / Last-Event-ID"
+  generation_client: "generation-client.ts\nreduceGenerationClientEvent\n(client-side projection)"
 
-apps -> client: typed commands / typed lifecycle events
-client -> protocol: send, retry, replay, cancel, confirm
-protocol -> server
-server -> provider
-server -> tool_registry
-server -> chat_store
-server -> event_publisher
-server -> context_cache
+  server: "server.ts" {
+    http_runtime: "ChatHttpRuntime /\ncreateChatHttpHandler"
+    routes: "POST start-stream\nPOST :chatId/stream\nPOST messages/:messageId/regenerate\nPOST generations/:generationId/regenerate\nPOST generations/:generationId/cancel\nGET  generations/:generationId\nGET  generations/:generationId/stream (replay)\nPOST messages/:messageId/tool-calls/:toolCallId/respond"
+    server_runtime: "ChatServerRuntime.run()"
+  }
+  interpreter: "generation-interpreter.ts\nrunGenerationWithPorts\n(effect interpreter)"
+  machine: "generation-machine/*\npure reducer: preparing -> running ->\n(awaiting_confirmation) -> saving ->\ncommitted / cancelled / failed"
+  phase: "generation-phase.ts\nGenerationPhase (canonical)"
+  events: "generation-events.ts +\ngeneration-schemas.ts\n(wire types + zod)"
+  projection: "projection.ts\nrebuildGenerationProjection"
+}
+
+api: "services/api" {
+  routes: "rpc/routes/chats.generation.ts\nroute wiring for ChatHttpRuntime"
+  engine: "application/chat-generation-engine.ts\nwires provider + tool registry\ninto ChatServerRuntime"
+  provider: "chat-generation-provider.ts\nOpenRouterChatModel"
+  tool_registry: "mcp/tool-registry\ncallTool / getToolDefinition"
+  live_bus: "application/generation-live-bus.ts\npublishGenerationEvent /\nsubscribeToGenerationEvents\n(in-process pub/sub by generationId)"
+  notify_listener: "application/generation-notify-listener.ts\ndedicated LISTEN chat_generation_events\nconnection, reconnects on drop"
+}
+
+db: "packages/db/src/services/chats" {
+  chat_repo: "chat.repository.ts\nChatRepository\nchat_generation_runs"
+  generation_repo: "chat-generation.repository.ts\nChatGenerationRepository\nchat_generation_events +\nchat_generation_tool_effects"
+  notify_trigger: "app.notify_chat_generation_event\n(DB trigger, fires pg_notify\non insert, same tx)"
+}
+
+chat_pkg.server.http_runtime -> chat_pkg.server.routes: "exposes"
+
+apps.web.use_stream_message -> chat_pkg.client.methods
+apps.web.use_regenerate_message -> chat_pkg.client.methods
+apps.omiro.use_chat_generation -> chat_pkg.client.methods
+apps.omiro.use_send_message -> apps.omiro.use_chat_generation
+apps.omiro.use_regenerate_message -> apps.omiro.use_chat_generation
+
+chat_pkg.client.methods -> chat_pkg.transport
+chat_pkg.transport -> chat_pkg.sse
+chat_pkg.sse -> api.routes: "HTTP + SSE"
+chat_pkg.sse -> chat_pkg.generation_client: "consume events\n(client-side)"
+
+api.routes -> chat_pkg.server.http_runtime
+chat_pkg.server.http_runtime -> chat_pkg.server.server_runtime
+chat_pkg.server.server_runtime -> chat_pkg.interpreter
+chat_pkg.interpreter -> chat_pkg.machine: "drives pure reducer\nvia injected ports"
+chat_pkg.machine -> chat_pkg.phase
+chat_pkg.interpreter -> chat_pkg.events: "validate wire\npayloads"
+
+api.engine -> chat_pkg.server.server_runtime: "instantiates with\nprovider + tools + store"
+chat_pkg.interpreter -> api.provider: "provider port"
+chat_pkg.interpreter -> api.tool_registry: "tools port"
+chat_pkg.interpreter -> db.generation_repo: "events.persist\n(store.appendEvent)"
+chat_pkg.interpreter -> db.chat_repo: "generation.save/stop\n(store.saveGeneration)"
+chat_pkg.interpreter -> api.live_bus: "events.emit\n(live delta)"
+
+db.generation_repo -> db.notify_trigger: "INSERT event\n(trigger fires)"
+db.notify_trigger -> api.notify_listener: "LISTEN\nchat_generation_events"
+api.notify_listener -> api.live_bus: "publishGenerationEvent"
+api.live_bus -> chat_pkg.server.http_runtime: "subscribeToGenerationEvents\n(SSE stream / replay)"
+
+db.generation_repo -> chat_pkg.projection: "rebuildGenerationProjection\n(reconstruct run state)"

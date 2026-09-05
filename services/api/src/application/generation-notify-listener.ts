@@ -2,7 +2,7 @@ import { CHAT_GENERATION_EVENTS_CHANNEL, ChatGenerationRepository, db, pool } fr
 import { logger } from '@hominem/telemetry';
 import pg from 'pg';
 
-import { publishGenerationEvent } from './generation-live-bus';
+import { GenerationPubSub } from './generation-live-bus';
 
 // Fans out chat-generation events to this process's local SSE subscribers
 // (generation-live-bus.ts), fed by Postgres NOTIFY instead of a direct
@@ -49,7 +49,7 @@ async function handleNotification(payload: string | undefined): Promise<void> {
       pointer.generationId,
       pointer.sequence,
     );
-    if (record) publishGenerationEvent(record);
+    if (record) GenerationPubSub.publish(record);
   } catch (error) {
     logger.warn('generation_notify_resolve_failed', {
       generationId: pointer.generationId,

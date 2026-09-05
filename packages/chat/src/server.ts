@@ -1,6 +1,6 @@
 import type { GenerationStartContext } from './generation-events';
-import type { GenerationPorts } from './generation-interpreter';
-import { runGenerationWithPorts } from './generation-interpreter';
+import type { GenerationAdapters } from './generation-interpreter';
+import { runGenerationWithAdapters } from './generation-interpreter';
 import type {
   GenerationCommand,
   GenerationDeltaEventPayload,
@@ -18,7 +18,7 @@ import { GENERATION_TIMING } from './generation-timing';
 // not construct or reduce generation state directly.
 export { createGenerationState, restoreGenerationState } from './generation-machine';
 export { reconstructProviderToolCalls } from './generation-machine/provider';
-export type ChatModel = GenerationPorts['provider'];
+export type ChatModel = GenerationAdapters['provider'];
 
 export type ChatServerModelInput = {
   model: string;
@@ -159,6 +159,13 @@ function parseArguments(call: GenerationToolCall): Record<string, unknown> {
   }
 }
 
+// Runs ONE generation turn end to end (start -> stream -> commit/fail),
+// wiring the pure state machine to real provider/tools/persistence via
+// generation-interpreter.ts's adapters. Framework- and transport-agnostic: it
+// knows nothing about HTTP, routes, or auth — that's ChatHttpRuntime below,
+// which is a thin dispatcher that maps HTTP requests to calls like this
+// one's `.run()`. Concrete instances (real OpenRouter provider, real DB
+// store) are assembled in services/api, not here.
 export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent> {
   constructor(private readonly options: ChatServerRuntimeOptions<TEvent> = {}) {}
 
@@ -192,13 +199,13 @@ export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatSer
       },
     });
 
-    const state = await runGenerationWithPorts({
+    const state = await runGenerationWithAdapters({
       generationId: input.generationId,
       startContext: input.startContext,
       initialInput: input.initialInput,
       initialState: input.initialState,
       effectTimeoutsMs: options.effectTimeoutsMs,
-      ports: {
+      adapters: {
         provider: model,
         tools: {
           execute: async ({ call, idempotencyKey }) => {
@@ -332,6 +339,13 @@ export function createGenerationSseResponse(
 
 export type ChatHttpAuthenticatedUser = { userId: string };
 
+// The HTTP-facing contract createChatHttpHandler dispatches to — NOT the
+// same thing as ChatServerRuntime above. Each method here corresponds to one
+// route (see createChatHttpHandler's routing table) and is expected to be
+// implemented by wrapping a ChatServerRuntime.run() call with the specific
+// input-resolution and persistence a given endpoint needs (e.g. `regenerate`
+// resolves `target` to a stale run before calling `.run()`); the real
+// implementation lives in services/api/src/rpc/routes/chats.generation.ts.
 export type ChatHttpRuntime = {
   authenticate: (
     request: Request,
