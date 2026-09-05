@@ -1,3 +1,4 @@
+import type { ChatGenerationKind } from './generation-machine';
 import type { ChatMessageSnapshot } from './generation-schemas';
 
 // JSON values safe to send across the durable event boundary
@@ -18,7 +19,7 @@ export type GenerationRequestContext = {
 // The minimum you need to start or resume a generation
 export type GenerationStartContext = {
   chatId: string;
-  kind: 'send' | 'start' | 'regenerate';
+  kind: ChatGenerationKind;
   userMessageId: string | null;
   targetAssistantMessageId: string | null;
   retryOfGenerationId?: string;

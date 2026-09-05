@@ -2,6 +2,8 @@
 // It's deliberately synchronous and side-effect free — an adapter turns its
 // commands into actual provider, tool, persistence, and delivery effects.
 
+import type { z } from 'zod';
+
 import type {
   GenerationCheckpoint,
   GenerationRequestContext,
@@ -9,21 +11,14 @@ import type {
   GenerationStartContext,
   GenerationTerminalMetadata,
 } from '../generation-events';
+import type { chatGenerationKindSchema, chatGenerationStatusSchema } from '../generation-schemas';
 import type { ChatMessageSnapshot } from '../generation-schemas';
 
-export type GenerationPhase =
-  | 'preparing'
-  | 'running'
-  | 'awaiting_confirmation'
-  | 'saving'
-  | 'cancel_requested'
-  | 'committed'
-  | 'cancelled'
-  | 'failed';
+export type GenerationPhase = z.infer<typeof chatGenerationStatusSchema>;
 
 export type GenerationActivePhase = Exclude<GenerationPhase, 'committed' | 'cancelled' | 'failed'>;
 
-export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
+export type ChatGenerationKind = z.infer<typeof chatGenerationKindSchema>;
 
 export type GenerationToolCall = {
   id: string;
@@ -75,9 +70,12 @@ export type GenerationEffectStore = {
   }) => Promise<ToolResult>;
 };
 
-export type GenerationState = {
+export type GenerationLifecycleState = {
   generationId: string;
   phase: GenerationPhase;
+};
+
+export type GenerationState = GenerationLifecycleState & {
   iteration: number;
   turnId: string | null;
   assistantText: string;

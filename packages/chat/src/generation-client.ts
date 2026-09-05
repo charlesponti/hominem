@@ -1,4 +1,4 @@
-import type { GenerationEvent, GenerationPhase } from './generation-machine';
+import type { GenerationEvent, GenerationLifecycleState } from './generation-machine';
 import {
   generationClientCheckpointSchema,
   type GenerationClientCheckpoint,
@@ -12,9 +12,7 @@ export type GenerationClientToolStep = {
   status: 'requested' | 'running' | 'completed' | 'failed' | 'reused';
 };
 
-export type GenerationClientState = {
-  generationId: string;
-  phase: GenerationPhase;
+export type GenerationClientState = GenerationLifecycleState & {
   text: string;
   reasoning: string;
   toolSteps: readonly GenerationClientToolStep[];

@@ -13,6 +13,7 @@ export type {
   GenerationHistoryEventPayload,
   GenerationHistoryEventType,
   GenerationInput,
+  GenerationLifecycleState,
   GenerationPhase,
   GenerationState,
   GenerationStep,
