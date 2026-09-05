@@ -15,7 +15,7 @@ const mockClient = vi.hoisted(() => ({
             cancel: { $post: vi.fn() },
             $get: vi.fn(),
             stream: { $get: vi.fn() },
-            retry: { $post: vi.fn() },
+            regenerate: { $post: vi.fn() },
           },
         },
       },
@@ -58,8 +58,8 @@ function routeChatTransportRequest({
       param: { id: segments[2], generationId: segments[4] },
     });
   }
-  if (segments.at(-1) === 'retry') {
-    return mockClient.api.chats[':id'].generations[':generationId'].retry.$post(
+  if (segments.at(-1) === 'regenerate' && segments[3] === 'generations') {
+    return mockClient.api.chats[':id'].generations[':generationId'].regenerate.$post(
       {
         param: { id: segments[2], generationId: segments[4] },
         json: JSON.parse(String(init.body ?? '{}')),
@@ -459,7 +459,7 @@ describe('useStreamMessage', () => {
       JSON.stringify({ generationId: 'failed-1', phase: 'failed', lastDurableSequence: 4 }),
     );
     vi.stubGlobal('crypto', { randomUUID: () => 'retry-1' });
-    mockClient.api.chats[':id'].generations[':generationId'].retry.$post.mockResolvedValueOnce(
+    mockClient.api.chats[':id'].generations[':generationId'].regenerate.$post.mockResolvedValueOnce(
       streamResponse([
         JSON.stringify({
           version: 1,
@@ -498,7 +498,7 @@ describe('useStreamMessage', () => {
     await result.current.retry({ responseLength: 'short', onCommitted, onSettled });
 
     expect(
-      mockClient.api.chats[':id'].generations[':generationId'].retry.$post,
+      mockClient.api.chats[':id'].generations[':generationId'].regenerate.$post,
     ).toHaveBeenCalledWith(
       {
         param: { id: 'chat-1', generationId: 'failed-1' },

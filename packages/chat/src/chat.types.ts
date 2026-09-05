@@ -8,9 +8,8 @@ export interface ChatMessageItem {
   renderKey?: string;
   role: Exclude<ChatMessageSnapshot['role'], 'tool'>;
   message: string;
-  created_at: string;
-  chat_id: string;
-  profile_id: string;
+  createdAt: string;
+  chatId: string;
   reasoning?: string | null;
   toolCalls: ChatMessageToolCallRecord[] | null;
   isStreaming?: boolean;

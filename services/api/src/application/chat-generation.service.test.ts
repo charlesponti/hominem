@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   createGenerationRun: vi.fn(),
   getGenerationRunByAssistantMessageId: vi.fn(),
   deleteAssistantMessage: vi.fn(),
+  insertMessage: vi.fn(),
+  touchLastMessage: vi.fn(),
   appendEvent: vi.fn(),
   appendEvents: vi.fn(),
   forceFail: vi.fn(),
@@ -41,6 +43,8 @@ vi.mock('@hominem/db', () => ({
     createGenerationRun: mocks.createGenerationRun,
     getGenerationRunByAssistantMessageId: mocks.getGenerationRunByAssistantMessageId,
     deleteAssistantMessage: mocks.deleteAssistantMessage,
+    insertMessage: mocks.insertMessage,
+    touchLastMessage: mocks.touchLastMessage,
   },
   ChatGenerationRepository: {
     appendEvent: mocks.appendEvent,
@@ -104,8 +108,22 @@ const preparingRun = {
 // not the singular appendEvent (still used directly by cancel() and the
 // tool-call eventStore in executeGenerationTurn — those stay on appendEvent).
 function defaultAppendEventsImpl(sequence: { current: number }) {
-  return async (_trx: unknown, args: { events: ReadonlyArray<{ event: { type: string } }> }) =>
-    args.events.map(({ event: evt }) => event(evt.type, ++sequence.current));
+  // Echoes back the real payload the caller constructed (as the real
+  // ChatGenerationRepository.appendEvents does) instead of the synthetic
+  // `event()` helper below, which only stubs a couple of event types and
+  // would otherwise fail schema parsing for every other type (accepted,
+  // phase_changed, committed, ...).
+  return async (
+    _trx: unknown,
+    args: { events: ReadonlyArray<{ event: Record<string, unknown> & { type: string } }> },
+  ) =>
+    args.events.map(({ event: evt }) => ({
+      id: `event-${++sequence.current}`,
+      generationId: input.generationId,
+      sequence: sequence.current,
+      type: evt.type,
+      payload: evt,
+    }));
 }
 
 function event(type: string, sequence: number) {
@@ -510,7 +528,7 @@ describe('ChatGenerationService.cancel', () => {
   });
 });
 
-describe('ChatGenerationService.retryMessage', () => {
+describe('ChatGenerationService.regenerate (failedGenerationId)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getOwnedOrThrow.mockResolvedValue({
@@ -522,6 +540,9 @@ describe('ChatGenerationService.retryMessage', () => {
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
     mocks.getGenerationRun
+      // regenerate() checks for an idempotent replay (by the *new*
+      // generationId) before resolving the target, so this comes first.
+      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
         id: 'generation-failed',
         chatId: 'chat-1',
@@ -530,8 +551,7 @@ describe('ChatGenerationService.retryMessage', () => {
         status: 'failed',
         userMessageId: 'message-1',
         targetAssistantMessageId: null,
-      })
-      .mockResolvedValueOnce(null);
+      });
     mocks.getMessages.mockResolvedValue([
       {
         id: 'message-1',
@@ -562,14 +582,35 @@ describe('ChatGenerationService.retryMessage', () => {
     });
     mocks.getChatSourceContext.mockResolvedValue([]);
     mocks.createGenerationRun.mockResolvedValue(undefined);
+    mocks.insertMessage.mockResolvedValue({
+      id: 'assistant-retry-1',
+      chatId: 'chat-1',
+      userId: 'user-1',
+      role: 'assistant',
+      content: 'Recovered',
+      files: null,
+      toolCalls: null,
+      reasoning: null,
+      parentMessageId: 'message-1',
+      createdAt: '2026-01-01T00:00:02.000Z',
+      updatedAt: '2026-01-01T00:00:02.000Z',
+    });
+    mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.planChatTools.mockResolvedValue({ tools: [], requiresLookup: false });
-    mocks.executeGenerationTurn.mockResolvedValue({
+    // .mockReset() first: a leaked queued once-value from another describe
+    // block (which vi.clearAllMocks() above does not clear) would otherwise
+    // take priority over this default and silently fail the generation.
+    mocks.executeGenerationTurn.mockReset().mockResolvedValue({
       assistantText: 'Recovered',
       reasoningText: null,
       toolCallRecords: [],
       usage: null,
       pendingToolCall: null,
     });
+    mocks.getGenerationRunById.mockReset().mockResolvedValue(null);
+    mocks.runInTransaction
+      .mockReset()
+      .mockImplementation((callback: (trx: unknown) => unknown) => callback({}));
     mocks.appendEvent.mockImplementation(async (_trx: unknown, args: { event: { type: string } }) =>
       event(args.event.type, mocks.appendEvent.mock.calls.length),
     );
@@ -577,7 +618,7 @@ describe('ChatGenerationService.retryMessage', () => {
   });
 
   it('creates a linked retry without inserting another user message', async () => {
-    await new ChatGenerationService().retryMessage({
+    await new ChatGenerationService().regenerate({
       userId: 'user-1',
       chatId: 'chat-1',
       failedGenerationId: 'generation-failed',
@@ -618,25 +659,39 @@ describe('ChatGenerationService.retryMessage', () => {
         ]),
       ),
     );
-    // A retried failed generation never produced a message, so nothing is
-    // deleted — unlike regenerating a completed reply.
-    expect(mocks.deleteRun).not.toHaveBeenCalled();
+    // The failed attempt is superseded like any other regenerated attempt —
+    // its event log is deleted once the retry commits. It never produced a
+    // message, so there's nothing to delete there.
+    await vi.waitFor(() =>
+      expect(mocks.deleteRun).toHaveBeenCalledWith(
+        {},
+        {
+          generationId: 'generation-failed',
+          ownerUserId: 'user-1',
+        },
+      ),
+    );
     expect(mocks.deleteAssistantMessage).not.toHaveBeenCalled();
   });
 
   it('rejects retrying a non-failed generation', async () => {
-    mocks.getGenerationRun.mockReset().mockResolvedValue({
-      id: 'generation-active',
-      chatId: 'chat-1',
-      ownerUserId: 'user-1',
-      kind: 'send',
-      status: 'committed',
-      userMessageId: 'message-1',
-      targetAssistantMessageId: null,
-    });
+    mocks.getGenerationRun.mockReset().mockImplementation(
+      async (_handle: unknown, _chatId: string, generationId: string) =>
+        generationId === 'generation-active'
+          ? {
+              id: 'generation-active',
+              chatId: 'chat-1',
+              ownerUserId: 'user-1',
+              kind: 'send',
+              status: 'committed',
+              userMessageId: 'message-1',
+              targetAssistantMessageId: null,
+            }
+          : null, // no existing run for the new generationId ('generation-retry')
+    );
 
     await expect(
-      new ChatGenerationService().retryMessage({
+      new ChatGenerationService().regenerate({
         userId: 'user-1',
         chatId: 'chat-1',
         failedGenerationId: 'generation-active',

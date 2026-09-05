@@ -148,7 +148,6 @@ describe('ChatServerRuntime', () => {
         return stream();
       },
       regenerate: async () => stream(),
-      retry: async () => stream(),
       respondToToolCall: async () => stream(),
       cancel: async () => ({ status: 'cancelled' }),
       getGeneration: async () => ({ status: 'committed' }),

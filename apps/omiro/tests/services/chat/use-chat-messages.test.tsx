@@ -103,9 +103,8 @@ describe('useChatMessages', () => {
       renderKey: 'optimistic-assistant',
       role: 'assistant',
       message: 'hi',
-      created_at: new Date().toISOString(),
-      chat_id: CHAT_ID,
-      profile_id: '',
+      createdAt: new Date().toISOString(),
+      chatId: CHAT_ID,
       toolCalls: null,
       isStreaming: false,
     };

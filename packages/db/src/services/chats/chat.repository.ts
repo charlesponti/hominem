@@ -1,13 +1,13 @@
 import {
+  chatGenerationKindSchema,
   chatMessageFilesSchema,
   chatMessageToolCallsSchema,
-  chatGenerationKindSchema,
-  chatGenerationStatusSchema,
-  type ChatSnapshot,
-  type ChatMessageSnapshot,
-  type ChatMessageFileRecord,
-  type ChatMessageToolCallRecord,
+  generationPhaseSchema,
   type ChatGenerationKind,
+  type ChatMessageFileRecord,
+  type ChatMessageSnapshot,
+  type ChatMessageToolCallRecord,
+  type ChatSnapshot,
   type GenerationPhase,
 } from '@hominem/chat';
 import type { Selectable } from 'kysely';
@@ -188,7 +188,7 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
     chatId: row.chatId,
     ownerUserId: row.ownerUserId,
     kind: chatGenerationKindSchema.parse(row.kind),
-    status: chatGenerationStatusSchema.parse(row.status),
+    status: generationPhaseSchema.parse(row.status),
     userMessageId: row.userMessageId,
     targetAssistantMessageId: row.targetAssistantMessageId,
     assistantMessageId: row.assistantMessageId,

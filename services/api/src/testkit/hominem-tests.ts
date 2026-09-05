@@ -345,7 +345,7 @@ export class HominemTests {
       failedGenerationId: string,
       input: { generationId?: string; responseLength?: 'short' | 'medium' | 'long' },
     ) =>
-      this.request(`/api/chats/${chatId}/generations/${failedGenerationId}/retry`, {
+      this.request(`/api/chats/${chatId}/generations/${failedGenerationId}/regenerate`, {
         generationId: input.generationId ?? randomUUID(),
         responseLength: input.responseLength,
       }),

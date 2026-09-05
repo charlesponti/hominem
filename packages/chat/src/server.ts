@@ -345,13 +345,7 @@ export type ChatHttpRuntime = {
   regenerate: (input: {
     userId: string;
     chatId: string;
-    messageId: string;
-    body: unknown;
-  }) => Promise<AsyncIterable<GenerationEvent>>;
-  retry: (input: {
-    userId: string;
-    chatId: string;
-    generationId: string;
+    target: { messageId: string } | { generationId: string };
     body: unknown;
   }) => Promise<AsyncIterable<GenerationEvent>>;
   respondToToolCall: (input: {
@@ -427,7 +421,12 @@ export function createChatHttpHandler(
       }
       if (method === 'POST' && parts[3] === 'messages' && parts[4] && parts[5] === 'regenerate') {
         return createGenerationSseResponse(
-          await runtime.regenerate({ userId: auth.userId, chatId, messageId: parts[4], body }),
+          await runtime.regenerate({
+            userId: auth.userId,
+            chatId,
+            target: { messageId: parts[4] },
+            body,
+          }),
         );
       }
       if (
@@ -468,9 +467,14 @@ export function createChatHttpHandler(
       if (method === 'POST' && parts[5] === 'cancel') {
         return Response.json(await runtime.cancel({ userId: auth.userId, chatId, generationId }));
       }
-      if (method === 'POST' && parts[5] === 'retry') {
+      if (method === 'POST' && parts[5] === 'regenerate') {
         return createGenerationSseResponse(
-          await runtime.retry({ userId: auth.userId, chatId, generationId, body }),
+          await runtime.regenerate({
+            userId: auth.userId,
+            chatId,
+            target: { generationId },
+            body,
+          }),
         );
       }
       return jsonError('Route not found', 404);

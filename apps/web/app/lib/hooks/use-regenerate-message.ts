@@ -30,7 +30,7 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
       if (activeMessageId) return;
       const generation = chatClient.regenerate({
         chatId,
-        messageId,
+        target: { messageId },
         body: {
           ...(responseLength ? { responseLength } : {}),
         },

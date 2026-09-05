@@ -345,7 +345,7 @@ test('B-010 shows friendly provider recovery and retries without a duplicate use
   await page.reload();
   await expect(page.getByText('I couldn’t finish that response. Please try again.')).toBeVisible();
   const retryRequestPromise = page.waitForRequest(
-    (request) => request.method() === 'POST' && request.url().endsWith('/retry'),
+    (request) => request.method() === 'POST' && request.url().endsWith('/regenerate'),
   );
   await page.getByRole('button', { name: 'Retry' }).click();
   const retryRequest = await retryRequestPromise;
@@ -356,7 +356,12 @@ test('B-010 shows friendly provider recovery and retries without a duplicate use
   await waitForGenerationStatus(page, chat.chatId, retryBody.generationId, 'committed');
   await waitForResponse(page, assistantResponse);
   await expectSingleMessage(page, message, 'user');
-  await expectGenerationStatus(page, chat.chatId, chat.generationId, 'failed');
+  // The retried attempt supersedes the failed one outright — its run is
+  // deleted once the retry commits, same as regenerating a completed reply.
+  const deletedResponse = await page.request.get(
+    apiPath(`/chats/${chat.chatId}/generations/${chat.generationId}`),
+  );
+  expect(deletedResponse.status()).toBe(404);
   await expectGenerationStatus(page, chat.chatId, retryBody.generationId, 'committed');
   await expectMessageCount(page, chat.chatId, message, 1);
 });

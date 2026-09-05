@@ -147,13 +147,20 @@ export type SendMessageInput = {
 
 export type StartMessageInput = Omit<SendMessageInput, 'chatId'> & { title: string };
 
-export type RegenerateMessageInput = {
+// Redo the most recent attempt at a turn — whether it committed a reply
+// worth replacing (messageId) or failed before producing one
+// (failedGenerationId). Both are the same operation: rerun the same history
+// and supersede the attempt being redone.
+type RegenerateInputBase = {
   userId: string;
   generationId: string;
   chatId: string;
-  messageId: string;
   responseLength?: 'short' | 'medium' | 'long';
 };
+
+export type RegenerateInput =
+  | (RegenerateInputBase & { messageId: string })
+  | (RegenerateInputBase & { failedGenerationId: string });
 
 const RESPONSE_LENGTH_MAX_TOKENS: Record<'short' | 'medium' | 'long', number> = {
   short: 250,
@@ -374,28 +381,74 @@ export class ChatGenerationService {
     return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
   }
 
-  async regenerateMessage(input: RegenerateMessageInput): Promise<AsyncIterable<GenerationEvent>> {
+  // Redo the most recent attempt at a turn. `messageId` redoes a completed
+  // reply (deleting it and its run once the replacement commits);
+  // `failedGenerationId` redoes an attempt that never produced a message
+  // (deleting its run once the replacement commits — there's no failure
+  // trail worth keeping once it's been retried). Both resolve to the same
+  // shared redoGeneration.
+  async regenerate(input: RegenerateInput): Promise<AsyncIterable<GenerationEvent>> {
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
-    const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
-    if (!target || target.role !== 'assistant') {
-      throw new ChatGenerationInputError('Only a completed assistant message can be regenerated');
-    }
-    if (!target.parentMessageId) {
-      throw new ChatGenerationInputError('No prior message to regenerate a reply from');
-    }
-    const staleRun = await ChatRepository.getGenerationRunByAssistantMessageId(
+    // Check for an idempotent replay before resolving the target: once a
+    // regenerate/retry commits, the attempt it superseded is deleted, so a
+    // duplicate request for the *same new* generationId must not re-resolve
+    // a target that may no longer exist.
+    const existingRun = await ChatRepository.getGenerationRun(
       db,
       input.chatId,
-      target.id,
+      input.generationId,
       input.userId,
     );
+    if (existingRun) {
+      return this.replay({
+        generationId: input.generationId,
+        ownerUserId: input.userId,
+        terminal: true,
+      });
+    }
+    if ('messageId' in input) {
+      const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
+      if (!target || target.role !== 'assistant') {
+        throw new ChatGenerationInputError('Only a completed assistant message can be regenerated');
+      }
+      if (!target.parentMessageId) {
+        throw new ChatGenerationInputError('No prior message to regenerate a reply from');
+      }
+      const staleRun = await ChatRepository.getGenerationRunByAssistantMessageId(
+        db,
+        input.chatId,
+        target.id,
+        input.userId,
+      );
+      return this.redoGeneration({
+        userId: input.userId,
+        chatId: input.chatId,
+        generationId: input.generationId,
+        userMessageId: target.parentMessageId,
+        staleGenerationId: staleRun?.id ?? null,
+        staleAssistantMessageId: target.id,
+        responseLength: input.responseLength,
+      });
+    }
+
+    const failedRun = await ChatRepository.getGenerationRun(
+      db,
+      input.chatId,
+      input.failedGenerationId,
+      input.userId,
+    );
+    if (!failedRun || failedRun.status !== 'failed' || !failedRun.userMessageId) {
+      throw new ChatGenerationInputError(
+        'Only a failed generation with a user message can be retried',
+      );
+    }
     return this.redoGeneration({
       userId: input.userId,
       chatId: input.chatId,
       generationId: input.generationId,
-      userMessageId: target.parentMessageId,
-      staleGenerationId: staleRun?.id ?? null,
-      staleAssistantMessageId: target.id,
+      userMessageId: failedRun.userMessageId,
+      staleGenerationId: failedRun.id,
+      staleAssistantMessageId: null,
       responseLength: input.responseLength,
     });
   }
@@ -522,39 +575,7 @@ export class ChatGenerationService {
     });
   }
 
-  async retryMessage(input: {
-    userId: string;
-    chatId: string;
-    failedGenerationId: string;
-    generationId: string;
-    responseLength?: 'short' | 'medium' | 'long';
-  }): Promise<AsyncIterable<GenerationEvent>> {
-    await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
-    const failedRun = await ChatRepository.getGenerationRun(
-      db,
-      input.chatId,
-      input.failedGenerationId,
-      input.userId,
-    );
-    if (!failedRun || failedRun.status !== 'failed' || !failedRun.userMessageId) {
-      throw new ChatGenerationInputError(
-        'Only a failed generation with a user message can be retried',
-      );
-    }
-    // The failed run never produced a message, and its event log is kept as
-    // the failure record — nothing stale to delete here, unlike regenerate.
-    return this.redoGeneration({
-      userId: input.userId,
-      chatId: input.chatId,
-      generationId: input.generationId,
-      userMessageId: failedRun.userMessageId,
-      staleGenerationId: null,
-      staleAssistantMessageId: null,
-      responseLength: input.responseLength,
-    });
-  }
-
-  // Shared by regenerate and retry: rerun the LLM against the same chat
+  // Shared by regenerate's two branches: rerun the LLM against the same chat
   // history and land a brand-new generation for the same user message.
   private async redoGeneration(input: {
     userId: string;
@@ -566,20 +587,6 @@ export class ChatGenerationService {
     responseLength?: 'short' | 'medium' | 'long';
   }): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
-    const existingRun = await ChatRepository.getGenerationRun(
-      db,
-      input.chatId,
-      input.generationId,
-      input.userId,
-    );
-    if (existingRun) {
-      return this.replay({
-        generationId: input.generationId,
-        ownerUserId: input.userId,
-        terminal: true,
-      });
-    }
-
     const [history, notes] = await Promise.all([
       ChatRepository.getMessages(db, input.chatId, 30, 0),
       ChatRepository.getChatSourceContext(db, input.chatId),

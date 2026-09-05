@@ -47,16 +47,21 @@ function createHandler(service: ChatGenerationService, userId: string) {
         fileIds: input.fileIds ?? [],
       });
     },
-    regenerate: async ({ userId: ownerUserId, chatId, messageId, body }) => {
-      const input = parseBody(ChatsRegenerateMessageSchema, body);
-      return service.regenerateMessage({ userId: ownerUserId, chatId, messageId, ...input });
-    },
-    retry: async ({ userId: ownerUserId, chatId, generationId, body }) => {
+    regenerate: async ({ userId: ownerUserId, chatId, target, body }) => {
+      if ('messageId' in target) {
+        const input = parseBody(ChatsRegenerateMessageSchema, body);
+        return service.regenerate({
+          userId: ownerUserId,
+          chatId,
+          messageId: target.messageId,
+          ...input,
+        });
+      }
       const input = parseBody(ChatsRetryGenerationSchema, body);
-      return service.retryMessage({
+      return service.regenerate({
         userId: ownerUserId,
         chatId,
-        failedGenerationId: generationId,
+        failedGenerationId: target.generationId,
         ...input,
       });
     },
@@ -115,8 +120,10 @@ function createRouteHandler(service: ChatGenerationService) {
     .get('/generations/:generationId', (c) => delegate(c))
     .get('/generations/:generationId/stream', (c) => delegate(c))
     .post('/generations/:generationId/cancel', (c) => delegate(c))
-    .post('/generations/:generationId/retry', zValidator('json', ChatsRetryGenerationSchema), (c) =>
-      delegate(c, requestWithJsonBody(c, c.req.valid('json'))),
+    .post(
+      '/generations/:generationId/regenerate',
+      zValidator('json', ChatsRetryGenerationSchema),
+      (c) => delegate(c, requestWithJsonBody(c, c.req.valid('json'))),
     )
     .post(
       '/messages/:messageId/regenerate',

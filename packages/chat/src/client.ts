@@ -175,30 +175,22 @@ export class ChatClient {
     return this.createGenerationWith({ path: '/api/chats/start-stream', body: input });
   }
 
+  // Redoes the most recent attempt at a turn — whether it produced a reply
+  // worth replacing (target.messageId) or failed before producing one
+  // (target.generationId). Both are the same operation server-side.
   regenerate(input: {
     chatId: string;
-    messageId: string;
+    target: { messageId: string } | { generationId: string };
     body: Record<string, unknown>;
   }): ChatGenerationController {
+    const path =
+      'messageId' in input.target
+        ? `/api/chats/${input.chatId}/messages/${input.target.messageId}/regenerate`
+        : `/api/chats/${input.chatId}/generations/${input.target.generationId}/regenerate`;
     return this.createGenerationWith({
       generationId:
         typeof input.body.generationId === 'string' ? input.body.generationId : undefined,
-      path: `/api/chats/${input.chatId}/messages/${input.messageId}/regenerate`,
-      body: input.body,
-      replayPath: (generationId, afterSequence) =>
-        `/api/chats/${input.chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,
-    });
-  }
-
-  retry(input: {
-    chatId: string;
-    generationId: string;
-    body: Record<string, unknown>;
-  }): ChatGenerationController {
-    return this.createGenerationWith({
-      generationId:
-        typeof input.body.generationId === 'string' ? input.body.generationId : undefined,
-      path: `/api/chats/${input.chatId}/generations/${input.generationId}/retry`,
+      path,
       body: input.body,
       replayPath: (generationId, afterSequence) =>
         `/api/chats/${input.chatId}/generations/${generationId}/stream?afterSequence=${afterSequence}`,

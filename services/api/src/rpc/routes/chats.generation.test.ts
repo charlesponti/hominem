@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   respondToConfirmation: vi.fn(),
-  retryMessage: vi.fn(),
+  regenerate: vi.fn(),
   sendMessage: vi.fn(),
 }));
 
@@ -12,7 +12,7 @@ vi.mock('../../application/chat-generation.service', () => ({
   ChatGenerationInputError: class ChatGenerationInputError extends Error {},
   chatGenerationService: {
     respondToConfirmation: mocks.respondToConfirmation,
-    retryMessage: mocks.retryMessage,
+    regenerate: mocks.regenerate,
     sendMessage: mocks.sendMessage,
   },
 }));
@@ -183,7 +183,7 @@ describe('chat generation retry route', () => {
   });
 
   it('delegates a retry with a new generation id as canonical SSE', async () => {
-    mocks.retryMessage.mockResolvedValueOnce(
+    mocks.regenerate.mockResolvedValueOnce(
       (async function* () {
         yield {
           version: 1,
@@ -211,7 +211,7 @@ describe('chat generation retry route', () => {
     );
 
     const response = await createApp().request(
-      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000005/retry',
+      '/api/chats/00000000-0000-4000-8000-000000000001/generations/00000000-0000-4000-8000-000000000005/regenerate',
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -223,7 +223,7 @@ describe('chat generation retry route', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.retryMessage).toHaveBeenCalledWith({
+    expect(mocks.regenerate).toHaveBeenCalledWith({
       userId,
       chatId: '00000000-0000-4000-8000-000000000001',
       failedGenerationId: '00000000-0000-4000-8000-000000000005',

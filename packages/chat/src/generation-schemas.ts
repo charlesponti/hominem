@@ -6,24 +6,18 @@
 // contract without pulling in the whole generation engine.
 import { z } from 'zod';
 
+import { generationPhaseSchema } from './generation-phase';
+
+export { generationActivePhaseSchema, generationPhaseSchema } from './generation-phase';
+
 export const chatMessageJsonObjectSchema = z.record(z.string(), z.json());
 export type ChatMessageJsonObject = z.infer<typeof chatMessageJsonObjectSchema>;
 
 export const chatGenerationKindSchema = z.enum(['send', 'start', 'regenerate']);
-export const chatGenerationStatusSchema = z.enum([
-  'preparing',
-  'running',
-  'awaiting_confirmation',
-  'saving',
-  'cancel_requested',
-  'committed',
-  'cancelled',
-  'failed',
-]);
 export const generationClientCheckpointSchema = z
   .object({
     generationId: z.string().min(1),
-    phase: chatGenerationStatusSchema,
+    phase: generationPhaseSchema,
     lastDurableSequence: z.number().int().nonnegative().safe(),
   })
   .strict();
