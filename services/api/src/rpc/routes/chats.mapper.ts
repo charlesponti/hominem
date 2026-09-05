@@ -1,11 +1,7 @@
-import type {
-  ChatMessageFileRecord,
-  ChatMessageRecord,
-  ChatRecord,
-  ChatSourceRecord,
-} from '@hominem/db';
+import type { ChatMessageSnapshot, ChatSnapshot } from '@hominem/chat';
+import type { ChatMessageFileRecord, ChatSourceRecord } from '@hominem/db';
 
-export function toChatDto(record: ChatRecord) {
+export function toChatDto(record: ChatSnapshot) {
   return {
     id: record.id,
     userId: record.userId,
@@ -16,7 +12,7 @@ export function toChatDto(record: ChatRecord) {
   };
 }
 
-export function toChatMessageDto(record: ChatMessageRecord) {
+export function toChatMessageDto(record: ChatMessageSnapshot) {
   return {
     id: record.id,
     chatId: record.chatId,

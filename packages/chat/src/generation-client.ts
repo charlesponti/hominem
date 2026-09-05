@@ -36,8 +36,6 @@ export function parseGenerationClientCheckpoint(input: unknown): GenerationClien
   return generationClientCheckpointSchema.parse(input);
 }
 
-export type GenerationClientEvent = GenerationEvent;
-
 // A client-local, transport-failure signal (e.g. the SSE connection itself
 // dropped) — deliberately decoupled from the wire contract, since it never
 // had a server-side counterpart to derive from.
@@ -47,7 +45,7 @@ export type GenerationClientErrorEvent = {
   event: { type: 'error'; message: string };
 };
 
-export type GenerationClientInputEvent = GenerationClientEvent | GenerationClientErrorEvent;
+export type GenerationClientInputEvent = GenerationEvent | GenerationClientErrorEvent;
 
 export function createGenerationClientState(generationId: string): GenerationClientState {
   return {

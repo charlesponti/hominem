@@ -2,7 +2,7 @@
 // tool-call queue: kicking off a run, cancelling, and the two terminal
 // outcomes (saved/failed).
 
-import type { GenerationHistoryMessageSnapshot } from '../generation-events';
+import type { ChatMessageSnapshot } from '../generation-schemas';
 import { persistCommand, phaseCommands } from './shared';
 import type { GenerationInput, GenerationState, GenerationStep } from './types';
 
@@ -42,7 +42,7 @@ export function reduceEffectStopped(state: GenerationState): GenerationStep {
 
 export function reduceGenerationSaved(
   state: GenerationState,
-  message: GenerationHistoryMessageSnapshot,
+  message: ChatMessageSnapshot,
 ): GenerationStep {
   return {
     state: { ...state, phase: 'committed' },

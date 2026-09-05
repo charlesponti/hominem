@@ -11,11 +11,10 @@ import type {
   GenerationEvent,
   GenerationHistoryEvent,
   GenerationHistoryEventPayload,
-  GenerationHistoryMessageSnapshot,
   GenerationStartContext,
-  GenerationWireEvent,
   GenerationInput,
   GenerationState,
+  ChatMessageSnapshot,
 } from '@hominem/chat';
 import {
   chatMessageJsonObjectSchema,
@@ -23,13 +22,13 @@ import {
   chatSnapshotSchema,
   parseGenerationHistoryEvent,
 } from '@hominem/chat';
+import type { GenerationEffectStore } from '@hominem/chat';
 import { GenerationProjectionError } from '@hominem/chat/projection';
 import { restoreGenerationState } from '@hominem/chat/server';
 import type {
   ChatGenerationEventRecord,
   ChatGenerationRunRecord,
   ChatMessageFileRecord,
-  ChatMessageRecord,
   NoteContext,
 } from '@hominem/db';
 import { ChatGenerationRepository, ChatRepository, db, runInTransaction } from '@hominem/db';
@@ -47,7 +46,6 @@ import {
   recordGenerationRecovery,
   recordGenerationToolEffect,
 } from './chat-generation-telemetry';
-import type { ChatGenerationEffectStore } from './chat-generation-tools';
 import type {
   ChatGenerationFailureHooks,
   ChatGenerationModelFactory,
@@ -56,8 +54,6 @@ import type {
 import { buildChatSystemPrompt } from './chat-prompts';
 import { chatSpeechService } from './chat-speech.service';
 import { subscribeToGenerationEvents } from './generation-live-bus';
-
-type GenerationStreamQueue = AsyncIterable<GenerationWireEvent>;
 
 export class ChatGenerationInputError extends Error {
   constructor(message: string) {
@@ -112,8 +108,6 @@ type CancelInput = {
   generationId: string;
   ownerUserId: string;
 };
-
-export type GenerationRecoveryInput = GenerationLookupInput;
 
 export type GenerationRecoveryResult = {
   generationId: string;
@@ -227,7 +221,7 @@ function formatUserContentWithContext(
 }
 
 function buildMessages(
-  history: ChatMessageRecord[],
+  history: ChatMessageSnapshot[],
   currentUserContent: string,
   systemPrompt: string,
 ): ChatMessages[] {
@@ -310,7 +304,7 @@ function toHistoryEvent(record: ChatGenerationEventRecord): GenerationHistoryEve
   });
 }
 
-function toMessageSnapshot(message: ChatMessageRecord): GenerationHistoryMessageSnapshot {
+function toMessageSnapshot(message: ChatMessageSnapshot): ChatMessageSnapshot {
   const parsed = chatMessageSnapshotSchema.parse(message);
   if (parsed.role !== 'user' && parsed.role !== 'assistant') {
     throw new Error('Generation snapshots only support user and assistant messages');
@@ -331,7 +325,7 @@ function toLiveEvent(generationId: string, payload: GenerationDeltaEventPayload)
   }
 }
 
-function createEffectStore(ownerUserId: string): ChatGenerationEffectStore {
+function createEffectStore(ownerUserId: string): GenerationEffectStore {
   return {
     get: async ({ generationId, idempotencyKey, toolName }) => {
       const effect = await ChatGenerationRepository.getToolEffect(db, {
@@ -378,7 +372,7 @@ export class ChatGenerationService {
     return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
   }
 
-  async regenerateMessage(input: RegenerateMessageInput): Promise<GenerationStreamQueue> {
+  async regenerateMessage(input: RegenerateMessageInput): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
     const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
@@ -437,7 +431,7 @@ export class ChatGenerationService {
     });
   }
 
-  async startMessage(input: StartMessageInput): Promise<GenerationStreamQueue> {
+  async startMessage(input: StartMessageInput): Promise<AsyncIterable<GenerationEvent>> {
     const existingRun = await ChatRepository.getGenerationRunById(
       db,
       input.generationId,
@@ -494,7 +488,7 @@ export class ChatGenerationService {
     });
   }
 
-  async sendMessage(input: SendMessageInput): Promise<GenerationStreamQueue> {
+  async sendMessage(input: SendMessageInput): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
     const [history, notes, files] = await Promise.all([
@@ -565,7 +559,7 @@ export class ChatGenerationService {
     failedGenerationId: string;
     generationId: string;
     responseLength?: 'short' | 'medium' | 'long';
-  }): Promise<GenerationStreamQueue> {
+  }): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
     const failedRun = await ChatRepository.getGenerationRun(
@@ -630,19 +624,21 @@ export class ChatGenerationService {
     });
   }
 
-  send(input: SendGenerationInput): Promise<GenerationStreamQueue> {
+  send(input: SendGenerationInput): Promise<AsyncIterable<GenerationEvent>> {
     return this.execute({ ...input, kind: 'send' });
   }
 
-  start(input: StartGenerationInput): Promise<GenerationStreamQueue> {
+  start(input: StartGenerationInput): Promise<AsyncIterable<GenerationEvent>> {
     return this.execute({ ...input, kind: 'start' });
   }
 
-  regenerate(input: RegenerateGenerationInput): Promise<GenerationStreamQueue> {
+  regenerate(input: RegenerateGenerationInput): Promise<AsyncIterable<GenerationEvent>> {
     return this.execute({ ...input, kind: 'regenerate' });
   }
 
-  async respondToConfirmation(input: ConfirmationMessageInput): Promise<GenerationStreamQueue> {
+  async respondToConfirmation(
+    input: ConfirmationMessageInput,
+  ): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
     const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
     const message = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
@@ -739,10 +735,10 @@ export class ChatGenerationService {
     });
   }
 
-  async replay(input: ReplayInput): Promise<GenerationStreamQueue> {
+  async replay(input: ReplayInput): Promise<AsyncIterable<GenerationEvent>> {
     const afterSequence = input.afterSequence ?? 0;
     const subscriber = subscribeToGenerationEvents(input.generationId);
-    const queue = new AsyncEventQueue<GenerationWireEvent>(() => subscriber.close());
+    const queue = new AsyncEventQueue<GenerationEvent>(() => subscriber.close());
     void (async () => {
       try {
         for await (const event of replayGenerationEvents(
@@ -784,7 +780,7 @@ export class ChatGenerationService {
     return run;
   }
 
-  async recover(input: GenerationRecoveryInput): Promise<GenerationRecoveryResult | null> {
+  async recover(input: GenerationLookupInput): Promise<GenerationRecoveryResult | null> {
     const run = await this.getGeneration(input);
     if (!run) return null;
 
@@ -877,15 +873,15 @@ export class ChatGenerationService {
     return ChatRepository.getGenerationRunById(db, input.generationId, input.ownerUserId);
   }
 
-  private async execute(input: GenerationStartInput): Promise<GenerationStreamQueue> {
-    const queue = new AsyncEventQueue<GenerationWireEvent>();
+  private async execute(input: GenerationStartInput): Promise<AsyncIterable<GenerationEvent>> {
+    const queue = new AsyncEventQueue<GenerationEvent>();
     void this.executeGeneration(input, queue).catch((error: unknown) => queue.fail(error));
     return queue;
   }
 
   private async executeGeneration(
     input: GenerationStartInput,
-    queue: AsyncEventQueue<GenerationWireEvent>,
+    queue: AsyncEventQueue<GenerationEvent>,
   ): Promise<void> {
     const eventId = randomUUID();
     const getDurationMs = startAIUsageTimer();
@@ -1124,7 +1120,7 @@ export class ChatGenerationService {
       responseModality?: 'text' | 'audio';
     },
   ): Promise<{
-    message: ChatMessageRecord;
+    message: ChatMessageSnapshot;
     awaitingConfirmation: boolean;
     events: ChatGenerationEventRecord[];
   }> {
@@ -1146,7 +1142,9 @@ export class ChatGenerationService {
     await this.dependencies.failureHooks?.beforeSnapshotCommit?.();
     const awaitingConfirmation = result.pendingToolCall !== null;
     const { message, events } = await runInTransaction(
-      async (trx): Promise<{ message: ChatMessageRecord; events: ChatGenerationEventRecord[] }> => {
+      async (
+        trx,
+      ): Promise<{ message: ChatMessageSnapshot; events: ChatGenerationEventRecord[] }> => {
         const updated =
           input.targetAssistantMessageId && (input.kind === 'regenerate' || input.confirmation)
             ? await ChatRepository.replaceAssistantMessageContent(

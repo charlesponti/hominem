@@ -25,10 +25,6 @@ export type GenerationStartContext = {
   requestContext: GenerationRequestContext;
 };
 
-// Generation events carry the complete repository message snapshot. There is
-// no reduced transport-specific message shape.
-export type GenerationHistoryMessageSnapshot = ChatMessageSnapshot;
-
 // Stable identity shared by all provider/tool events within one turn
 export type GenerationTurn = {
   turnId: string;
@@ -44,12 +40,12 @@ export type GenerationRetryMetadata = GenerationTurn & {
 };
 
 export type GenerationCheckpoint = GenerationTurn & {
-  assistantMessage: GenerationHistoryMessageSnapshot;
+  assistantMessage: ChatMessageSnapshot;
   pendingToolCallIds: readonly string[];
 };
 
 export type GenerationTerminalMetadata = GenerationTurn & {
-  assistantMessage?: GenerationHistoryMessageSnapshot;
+  assistantMessage?: ChatMessageSnapshot;
   errorCategory?: string;
   errorMessage?: string;
   cancelledAt?: string;

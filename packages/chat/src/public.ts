@@ -8,10 +8,10 @@ export { toolEventRoundTripFixture } from './generation-test-fixtures';
 export * from './generation-events';
 export type {
   ChatGenerationKind,
-  ChatGenerationStatus,
   GenerationActivePhase,
   GenerationDeltaEventPayload,
   GenerationEvent,
+  GenerationEffectStore,
   GenerationHistoryEvent,
   GenerationHistoryEventPayload,
   GenerationHistoryEventType,

@@ -1,7 +1,7 @@
 import type { GenerationStartContext } from './generation-events';
 import type {
   ChatGenerationKind,
-  ChatGenerationStatus,
+  GenerationPhase,
   GenerationHistoryEventPayload,
 } from './generation-machine';
 
@@ -15,7 +15,7 @@ export type GenerationRunIdentity = {
 };
 
 export type GenerationRunProjection = GenerationRunIdentity & {
-  status: ChatGenerationStatus;
+  status: GenerationPhase;
   assistantMessageId: string | null;
   errorMessage: string | null;
 };

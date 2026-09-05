@@ -2,17 +2,10 @@ import type { InferRequestType, InferResponseType } from 'hono/client';
 
 export type {
   ArtifactType,
-  CaptureBarProps,
   ChatMessageItem,
-  ChatMessageRole,
-  ChatMessageToolCall,
-  JsonPrimitive,
-  JsonValue,
   MarkdownComponent,
-  ReviewItem,
   SessionSource,
   CaptureLifecycleState,
-  CaptureLifecycleTransition,
 } from '@hominem/chat/types';
 
 export {
@@ -30,7 +23,6 @@ import type { HonoClient } from '../core/api-client';
 type _ChatsListEndpoint = HonoClient['api']['chats']['$get'];
 export type ChatsListOutput = InferResponseType<_ChatsListEndpoint, 200>;
 export type Chat = ChatsListOutput['items'][number] & { archivedAt: string | null };
-export type ChatsListPage = ChatsListOutput;
 
 // ============================================================================
 // CREATE
@@ -55,8 +47,6 @@ type _ChatsGetEndpoint = HonoClient['api']['chats'][':id']['$get'];
 export type ChatsGetOutput = InferResponseType<_ChatsGetEndpoint, 200>;
 export type ChatMessageDto = ChatsGetOutput['messages'][number];
 export type ChatMessageFileDto = NonNullable<ChatMessageDto['files']>[number];
-export type ChatMessage = ChatMessageDto;
-export type ChatMessageFile = ChatMessageFileDto;
 export type ChatWithMessages = Chat & { messages: ChatMessageDto[] };
 
 // ============================================================================
@@ -107,18 +97,3 @@ export type ChatsAddSourceOutput = InferResponseType<_ChatsAddSourceEndpoint, 20
 type _ChatsRemoveSourceEndpoint =
   HonoClient['api']['chats'][':id']['sources'][':noteId']['$delete'];
 export type ChatsRemoveSourceOutput = InferResponseType<_ChatsRemoveSourceEndpoint, 200>;
-
-export type ChatUIMessageInput = {
-  id: string;
-  role: 'system' | 'user' | 'assistant' | 'data';
-  content: string;
-  parts?: Array<Record<string, unknown>>;
-  toolInvocations?: Array<Record<string, unknown>>;
-  createdAt?: string | Date;
-};
-
-export type ChatsUISendInput = {
-  messages: ChatUIMessageInput[];
-  chatId?: string;
-  metadata?: Record<string, unknown>;
-};

@@ -1,7 +1,7 @@
 import type { ChatClientTransport } from './client-transport-fetch';
 import type { GenerationClientInputEvent, GenerationClientState } from './generation-client';
 import { createGenerationClientState, reduceGenerationClientEvent } from './generation-client';
-import type { GenerationWireEvent } from './generation-schemas';
+import type { GenerationEvent } from './generation-machine';
 import { createGenerationEventDeduplicator } from './generation-schemas';
 import { GENERATION_TIMING } from './generation-timing';
 import { createSseDecoder, finishSse, pushSseChunk } from './sse';
@@ -14,7 +14,6 @@ export {
 } from './generation-client';
 export type {
   GenerationClientErrorEvent,
-  GenerationClientEvent,
   GenerationClientInputEvent,
   GenerationClientState,
   GenerationClientToolStep,
@@ -91,11 +90,11 @@ type StreamReadResult<T> = { done: true; value?: T } | { done: false; value: T }
 
 export async function consumeSseResponse(
   response: Response,
-  onEvent: (event: GenerationWireEvent) => void,
+  onEvent: (event: GenerationEvent) => void,
   onDone?: () => void,
   options?: {
-    deduplicateEvent?: (event: GenerationWireEvent) => GenerationWireEvent | null;
-    parseEvent?: (input: unknown) => GenerationWireEvent;
+    deduplicateEvent?: (event: GenerationEvent) => GenerationEvent | null;
+    parseEvent?: (input: unknown) => GenerationEvent;
     onDurableSequence?: (sequence: number) => void;
     idleTimeoutMs?: number;
   },
@@ -106,8 +105,8 @@ export async function consumeSseResponse(
   const deduplicate = options?.deduplicateEvent ?? createGenerationEventDeduplicator();
   const idleMs = options?.idleTimeoutMs ?? GENERATION_TIMING.clientIdleMs;
   let sseState = createSseDecoder();
-  const parse = options?.parseEvent ?? ((data: string) => JSON.parse(data) as GenerationWireEvent);
-  const process = (outputs: ReturnType<typeof pushSseChunk<GenerationWireEvent>>['outputs']) => {
+  const parse = options?.parseEvent ?? ((data: string) => JSON.parse(data) as GenerationEvent);
+  const process = (outputs: ReturnType<typeof pushSseChunk<GenerationEvent>>['outputs']) => {
     for (const output of outputs) {
       if (output.kind === 'done') onDone?.();
       if (output.kind === 'event') {
@@ -137,7 +136,7 @@ export async function consumeSseResponse(
       throw error;
     });
     if (step.done) break;
-    const result = pushSseChunk<GenerationWireEvent>(
+    const result = pushSseChunk<GenerationEvent>(
       sseState,
       decoder.decode(step.value, { stream: true }),
       parse,
@@ -145,9 +144,9 @@ export async function consumeSseResponse(
     sseState = result.state;
     process(result.outputs);
   }
-  const trailing = pushSseChunk<GenerationWireEvent>(sseState, decoder.decode(), parse);
+  const trailing = pushSseChunk<GenerationEvent>(sseState, decoder.decode(), parse);
   process(trailing.outputs);
-  process(finishSse<GenerationWireEvent>(trailing.state, parse).outputs);
+  process(finishSse<GenerationEvent>(trailing.state, parse).outputs);
 }
 
 function defaultId(): string {

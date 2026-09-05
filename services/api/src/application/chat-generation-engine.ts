@@ -5,6 +5,7 @@ import {
   type ChatMessageJsonObject,
   type GenerationDeltaEventPayload,
   type GenerationHistoryEventPayload,
+  type GenerationEffectStore,
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
@@ -14,7 +15,6 @@ import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@homi
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
 import { OpenRouterChatModel } from './chat-generation-provider';
-import type { ChatGenerationEffectStore } from './chat-generation-tools';
 import type { GenerationEngineInput, GenerationEngineResult } from './chat-generation-types';
 
 export class ToolInputError extends Error {
@@ -86,7 +86,7 @@ export async function executeGenerationTurn(
     generationKind?: 'send' | 'start' | 'regenerate';
     userMessageId?: string | null;
     targetAssistantMessageId?: string | null;
-    effectStore?: ChatGenerationEffectStore;
+    effectStore?: GenerationEffectStore;
     eventStore?: {
       append: (input: {
         event: GenerationHistoryEventPayload;

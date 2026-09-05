@@ -2,9 +2,9 @@
 // (Notes chat) both import from here — don't let a surface define its own
 // aliases for these states, this package is the single source of truth.
 
-export type { CaptureLifecycleState, CaptureLifecycleTransition } from './capture-types';
+export type { CaptureLifecycleState } from './capture-types';
 
-import type { CaptureLifecycleState, CaptureLifecycleTransition } from './capture-types';
+import type { CaptureLifecycleState } from './capture-types';
 
 // Every valid state transition — anything not listed here is not allowed.
 //
@@ -16,7 +16,7 @@ import type { CaptureLifecycleState, CaptureLifecycleTransition } from './captur
 //                ▼
 //           transcribing ──► composing
 //                     └────► classifying
-export const ALLOWED_TRANSITIONS: CaptureLifecycleTransition[] = [
+export const ALLOWED_TRANSITIONS: Array<readonly [CaptureLifecycleState, CaptureLifecycleState]> = [
   // Idle ↔ composing
   ['idle', 'composing'],
   ['composing', 'idle'],

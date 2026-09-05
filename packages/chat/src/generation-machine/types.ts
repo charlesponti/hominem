@@ -4,12 +4,12 @@
 
 import type {
   GenerationCheckpoint,
-  GenerationHistoryMessageSnapshot,
   GenerationRequestContext,
   GenerationRetryMetadata,
   GenerationStartContext,
   GenerationTerminalMetadata,
 } from '../generation-events';
+import type { ChatMessageSnapshot } from '../generation-schemas';
 
 export type GenerationPhase =
   | 'preparing'
@@ -21,15 +21,9 @@ export type GenerationPhase =
   | 'cancelled'
   | 'failed';
 
-export type GenerationActivePhase =
-  | 'preparing'
-  | 'running'
-  | 'awaiting_confirmation'
-  | 'saving'
-  | 'cancel_requested';
+export type GenerationActivePhase = Exclude<GenerationPhase, 'committed' | 'cancelled' | 'failed'>;
 
 export type ChatGenerationKind = 'send' | 'start' | 'regenerate';
-export type ChatGenerationStatus = GenerationPhase;
 
 export type GenerationToolCall = {
   id: string;
@@ -67,6 +61,20 @@ export type ToolResult = {
   error: boolean;
 };
 
+export type GenerationEffectStore = {
+  get: (input: {
+    generationId: string;
+    idempotencyKey: string;
+    toolName: string;
+  }) => Promise<ToolResult | null>;
+  save: (input: {
+    generationId: string;
+    idempotencyKey: string;
+    toolName: string;
+    result: ToolResult;
+  }) => Promise<ToolResult>;
+};
+
 export type GenerationState = {
   generationId: string;
   phase: GenerationPhase;
@@ -99,7 +107,7 @@ export type GenerationEventPayload =
       type: 'generation.accepted';
       chatId: string;
       chat: import('../generation-schemas').ChatSnapshot;
-      userMessage: GenerationHistoryMessageSnapshot | null;
+      userMessage: ChatMessageSnapshot | null;
     }
   | { type: 'generation.phase_changed'; phase: GenerationActivePhase }
   | { type: 'generation.cancel_requested'; requestedAt: string; requestedBy: string }
@@ -118,7 +126,7 @@ export type GenerationEventPayload =
     }
   | {
       type: 'generation.committed';
-      message: GenerationHistoryMessageSnapshot;
+      message: ChatMessageSnapshot;
       metadata?: GenerationTerminalMetadata;
     }
   | { type: 'generation.cancelled'; metadata?: GenerationTerminalMetadata }
@@ -181,7 +189,7 @@ export type GenerationInput =
   | { type: 'confirmation-rejected'; callId: string; reason: string }
   | { type: 'cancel-requested' }
   | { type: 'effect-stopped' }
-  | { type: 'generation-saved'; message: GenerationHistoryMessageSnapshot }
+  | { type: 'generation-saved'; message: ChatMessageSnapshot }
   | { type: 'generation-failed'; message: string };
 
 export type GenerationCommand =
