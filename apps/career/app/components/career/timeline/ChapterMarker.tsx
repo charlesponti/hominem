@@ -1,4 +1,4 @@
-import type { CareerEngagementRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db/career';
 
 function formatTenure(startDate: string | null, endDate: string | null): string {
   const start = startDate

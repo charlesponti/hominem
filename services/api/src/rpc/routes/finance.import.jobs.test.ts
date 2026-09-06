@@ -21,7 +21,7 @@ vi.mock('@hominem/queues', () => ({
   updateImportJob: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/errors', () => ({
   UnauthorizedError: class UnauthorizedError extends Error {},
   ValidationError: class ValidationError extends Error {},
 }));

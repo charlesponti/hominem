@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
-import { db } from '@hominem/db';
-import type { AppFinanceAccounts } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import type { AppFinanceAccounts } from '@hominem/db/types';
 import type { Insertable, Selectable, Updateable } from 'kysely';
 
 import { getAffectedRows } from './utils';

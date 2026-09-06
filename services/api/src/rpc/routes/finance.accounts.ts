@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';

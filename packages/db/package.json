@@ -3,11 +3,54 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "types": "./build/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "default": "./src/index.ts"
+    "./ai": {
+      "types": "./build/ai.d.ts",
+      "default": "./src/ai.ts"
+    },
+    "./career": {
+      "types": "./build/career.d.ts",
+      "default": "./src/career.ts"
+    },
+    "./chats": {
+      "types": "./build/chats.d.ts",
+      "default": "./src/chats.ts"
+    },
+    "./core": {
+      "types": "./build/core.d.ts",
+      "default": "./src/core.ts"
+    },
+    "./errors": {
+      "types": "./build/errors.d.ts",
+      "default": "./src/errors.ts"
+    },
+    "./files": {
+      "types": "./build/files.d.ts",
+      "default": "./src/files.ts"
+    },
+    "./finance": {
+      "types": "./build/finance.d.ts",
+      "default": "./src/finance.ts"
+    },
+    "./notes": {
+      "types": "./build/notes.d.ts",
+      "default": "./src/notes.ts"
+    },
+    "./tasks": {
+      "types": "./build/tasks.d.ts",
+      "default": "./src/tasks.ts"
+    },
+    "./types": {
+      "types": "./build/types.d.ts",
+      "default": "./src/types.ts"
+    },
+    "./transaction": {
+      "types": "./build/transaction.d.ts",
+      "default": "./src/transaction.ts"
+    },
+    "./vector": {
+      "types": "./build/vector.d.ts",
+      "default": "./src/vector.ts"
     },
     "./types/*": {
       "types": "./build/types/*.d.ts",

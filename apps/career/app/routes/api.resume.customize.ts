@@ -8,7 +8,8 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '@hominem/ai';
-import { db, SocialLinksRepository } from '@hominem/db';
+import { SocialLinksRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { data, type ActionFunction } from 'react-router';
 import { z } from 'zod';
 

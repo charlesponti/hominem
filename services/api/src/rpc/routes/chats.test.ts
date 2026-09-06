@@ -1,4 +1,4 @@
-import type { ChatGenerationEventRecord } from '@hominem/db';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { aiUsageMetrics } from '@hominem/utils/testing';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -77,8 +77,8 @@ vi.mock('@hominem/ai', () => ({
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
-vi.mock('@hominem/db', async () => {
-  const actual = await vi.importActual<typeof import('@hominem/db')>('@hominem/db');
+vi.mock('@hominem/db/chats', async () => {
+  const actual = await vi.importActual<typeof import('@hominem/db/chats')>('@hominem/db/chats');
   return {
     ...actual,
     db: {},
@@ -123,6 +123,7 @@ vi.mock('@hominem/db', async () => {
     runInTransaction: mocks.runInTransaction,
   };
 });
+vi.mock('@hominem/db/core', () => ({ db: {} }));
 
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {

@@ -1,4 +1,5 @@
-import { ChatSpeechRunRepository, db } from '@hominem/db';
+import { ChatSpeechRunRepository } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
 import {
   QUEUE_NAMES,
   speechUsageReconciliationQueue,

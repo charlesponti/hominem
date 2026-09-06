@@ -1,5 +1,6 @@
-import type { NoteKind, NoteRecord } from '@hominem/db';
-import { NoteRepository, runInTransaction } from '@hominem/db';
+import type { NoteKind, NoteRecord } from '@hominem/db/notes';
+import { NoteRepository } from '@hominem/db/notes';
+import { runInTransaction } from '@hominem/db/transaction';
 
 interface CreateNoteParams {
   kind?: NoteKind;

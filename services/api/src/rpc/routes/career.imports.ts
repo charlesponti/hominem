@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import { JobImportError, normalizeJobUrl } from '@hominem/career-services';
-import { CareerImportRepository, db } from '@hominem/db';
+import { CareerImportRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import {
   careerJobImportQueue,
   createImportJob,

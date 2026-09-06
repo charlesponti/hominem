@@ -14,13 +14,10 @@ import {
   type GenerationClientState,
 } from '@hominem/chat/client';
 import type { ChatModel } from '@hominem/chat/server';
-import {
-  AIUsageEventRepository,
-  authDb,
-  ChatGenerationRepository,
-  ChatRepository,
-  db,
-} from '@hominem/db';
+import { AIUsageEventRepository } from '@hominem/db/ai';
+import { ChatRepository } from '@hominem/db/chats';
+import { ChatGenerationRepository } from '@hominem/db/chats';
+import { authDb, db } from '@hominem/db/core';
 import { Hono } from 'hono';
 
 import type { CapabilityDefinition } from '../application/capability';

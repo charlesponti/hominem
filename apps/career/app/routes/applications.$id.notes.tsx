@@ -1,4 +1,5 @@
-import { ApplicationNotesRepository, CareerRepository, db } from '@hominem/db';
+import { ApplicationNotesRepository, CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { Textarea } from '@ponti-studios/ui/forms';
 import { Card, CardContent } from '@ponti-studios/ui/primitives';
 import { Form } from 'react-router';

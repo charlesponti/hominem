@@ -1,4 +1,4 @@
-import type { CareerEngagementRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db/career';
 import { Input } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { PencilIcon } from 'lucide-react';

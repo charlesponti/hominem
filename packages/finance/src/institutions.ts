@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 
-import { db } from '@hominem/db';
-import type { AppFinanceInstitutions, Selectable } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import type { Selectable } from '@hominem/db/core';
+import type { AppFinanceInstitutions } from '@hominem/db/types';
 
 type InstitutionRow = Selectable<AppFinanceInstitutions>;
 

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import { authDb, ChatGenerationRepository, db, runInTransaction } from '@hominem/db';
+import { ChatGenerationRepository } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
+import { authDb } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {

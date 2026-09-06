@@ -1,4 +1,4 @@
-import { db, pool } from '@hominem/db';
+import { db, pool } from '@hominem/db/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

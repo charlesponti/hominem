@@ -1,4 +1,5 @@
-import { ChatRepository, runInTransaction } from '@hominem/db';
+import { ChatRepository } from '@hominem/db/chats';
+import { runInTransaction } from '@hominem/db/transaction';
 import { chatFileCleanupQueue } from '@hominem/queues';
 
 export type DeleteChatMessageInput = {

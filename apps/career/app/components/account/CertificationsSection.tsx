@@ -1,4 +1,4 @@
-import type { CareerCertificationRecord } from '@hominem/db';
+import type { CareerCertificationRecord } from '@hominem/db/career';
 import { Input } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { AwardIcon, Trash2Icon } from 'lucide-react';

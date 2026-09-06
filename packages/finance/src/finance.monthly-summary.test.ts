@@ -4,7 +4,7 @@ const repositories = vi.hoisted(() => ({
   listMonthlyTransactions: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/finance', () => ({
   db: {},
   FinanceQueryRepository: {
     listMonthlyTransactions: repositories.listMonthlyTransactions,

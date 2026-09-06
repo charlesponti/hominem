@@ -1,4 +1,4 @@
-import type { ChatGenerationEventRecord } from '@hominem/db';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { describe, expect, it } from 'vitest';
 
 import { GenerationPubSub } from './generation-pub-sub';

@@ -1,7 +1,5 @@
 import {
   AIUsageEventRepository,
-  db,
-  ForbiddenError,
   type AIUsageEventStatus,
   type AIUsageFeature,
   type AIUsageFeatureBreakdownRecord,
@@ -9,9 +7,11 @@ import {
   type AIUsageOperation,
   type AIUsageSummaryRecord,
   type AIUsageTimeseriesGranularity,
-  type AIUsageTimeseriesRecord,
-  type JsonObject,
-} from '@hominem/db';
+} from '@hominem/db/ai';
+import type { AIUsageTimeseriesRecord } from '@hominem/db/ai';
+import { db } from '@hominem/db/core';
+import { ForbiddenError } from '@hominem/db/errors';
+import type { JsonObject } from '@hominem/db/types';
 import { logger } from '@hominem/telemetry';
 
 import type { AIUsageMetrics } from './shared';

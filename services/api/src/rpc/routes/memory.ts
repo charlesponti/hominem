@@ -1,4 +1,7 @@
-import { db, NoteRepository, NotFoundError, VectorDocumentRepository } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { NotFoundError } from '@hominem/db/errors';
+import { NoteRepository } from '@hominem/db/notes';
+import { VectorDocumentRepository } from '@hominem/db/vector';
 import { embeddingQueue } from '@hominem/queues';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

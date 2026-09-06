@@ -38,7 +38,7 @@ const errorClasses = vi.hoisted(() => {
   return { MockServiceError, MockUnauthorizedError };
 });
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/errors', () => ({
   ForbiddenError: errorClasses.MockServiceError,
   InternalError: errorClasses.MockServiceError,
   NotFoundError: errorClasses.MockServiceError,

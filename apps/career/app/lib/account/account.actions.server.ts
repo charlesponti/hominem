@@ -1,4 +1,9 @@
-import { CareerRepository, CertificationRepository, db, SocialLinksRepository } from '@hominem/db';
+import {
+  CareerRepository,
+  CertificationRepository,
+  SocialLinksRepository,
+} from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { imageStorageService, isStorageServiceError, validateFile } from '@hominem/storage';
 
 import { logger } from '~/lib/logger';

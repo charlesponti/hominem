@@ -1,5 +1,6 @@
-import type { CareerTimelineRecord } from '@hominem/db';
-import { CareerRepository, db } from '@hominem/db';
+import type { CareerTimelineRecord } from '@hominem/db/career';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 
 export type { CareerTimelineRecord as TimelineEntry };
 

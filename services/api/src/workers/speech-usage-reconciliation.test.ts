@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   Worker: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/chats', () => ({
   ChatSpeechRunRepository: { listPending: mocks.listPending },
   db: {},
 }));

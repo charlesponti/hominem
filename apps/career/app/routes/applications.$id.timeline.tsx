@@ -1,4 +1,4 @@
-import type { CareerApplicationWithRelations } from '@hominem/db';
+import type { CareerApplicationWithRelations } from '@hominem/db/career';
 import { Card, CardContent } from '@ponti-studios/ui/primitives';
 import { useOutletContext } from 'react-router';
 

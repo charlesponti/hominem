@@ -36,8 +36,10 @@ vi.mock('@hominem/ai', () => ({
   startAIUsageTimer: () => () => 0,
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/core', () => ({
   db: {},
+}));
+vi.mock('@hominem/db/career', () => ({
   SocialLinksRepository: {
     get: mocks.getSocialLinks,
   },

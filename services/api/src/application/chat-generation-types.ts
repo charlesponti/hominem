@@ -5,7 +5,7 @@ import type {
   GenerationState,
 } from '@hominem/chat';
 import type { ChatModel } from '@hominem/chat/server';
-import type { ChatMessageToolCallRecord } from '@hominem/db';
+import type { ChatMessageToolCallRecord } from '@hominem/db/chats';
 
 import type { callTool, getToolDefinition } from '../mcp/tool-registry';
 

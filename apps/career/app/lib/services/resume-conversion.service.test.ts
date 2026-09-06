@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { authDb, db } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { authDb } from '@hominem/db/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createCareerTestDb } from '~/test/db/career';

@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 
-import { db } from '@hominem/db';
-import type { AppPlaidItems, Selectable } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import type { Selectable } from '@hominem/db/core';
+import type { AppPlaidItems } from '@hominem/db/types';
 
 import { getAffectedRows } from './utils';
 

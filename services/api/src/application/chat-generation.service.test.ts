@@ -30,7 +30,7 @@ const mocks = vi.hoisted(() => ({
   executeGenerationTurn: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/chats', () => ({
   db: {},
   ChatRepository: {
     getOwnedOrThrow: mocks.getOwnedOrThrow,
@@ -59,6 +59,8 @@ vi.mock('@hominem/db', () => ({
   },
   runInTransaction: mocks.runInTransaction,
 }));
+vi.mock('@hominem/db/core', () => ({ db: {}, runInTransaction: mocks.runInTransaction }));
+vi.mock('@hominem/db/transaction', () => ({ runInTransaction: mocks.runInTransaction }));
 
 vi.mock('@hominem/ai', () => ({
   CHAT_MODEL: 'test-model',

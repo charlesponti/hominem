@@ -1,4 +1,5 @@
-import { CareerImportRepository, db } from '@hominem/db';
+import { CareerImportRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import type { CareerImportDraft } from '@hominem/queues';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {

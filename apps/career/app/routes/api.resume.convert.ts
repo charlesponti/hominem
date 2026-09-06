@@ -9,7 +9,8 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '@hominem/ai';
-import { db, CareerRepository } from '@hominem/db';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import {
   documentStorageService,
   isStorageServiceError,

@@ -1,4 +1,5 @@
-import { ChatRepository, db } from '@hominem/db';
+import { ChatRepository } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

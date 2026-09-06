@@ -1,4 +1,4 @@
-import type { ChatGenerationEventRecord } from '@hominem/db';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 
 // In-process pub/sub for one generation's durable events, keyed by
 // generationId. This is the ONLY thing the SSE route reads from — it never

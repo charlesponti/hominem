@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   executeTakeFirst: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/core', () => ({
   authDb: {
     selectFrom: vi.fn(() => ({
       selectAll: vi.fn(() => ({

@@ -1,5 +1,6 @@
-import { CertificationRepository, db, SocialLinksRepository } from '@hominem/db';
-import type { CareerProfileRecord } from '@hominem/db';
+import { CertificationRepository, SocialLinksRepository } from '@hominem/db/career';
+import type { CareerProfileRecord } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 
 import { logger } from '~/lib/logger';
 

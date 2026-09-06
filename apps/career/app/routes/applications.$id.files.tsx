@@ -1,4 +1,5 @@
-import { ApplicationFilesRepository, CareerRepository, db } from '@hominem/db';
+import { ApplicationFilesRepository, CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { documentStorageService, validateFile } from '@hominem/storage';
 import { DropZone, type DropZoneProps } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';

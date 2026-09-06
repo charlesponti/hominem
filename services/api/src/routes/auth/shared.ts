@@ -1,4 +1,4 @@
-import { authDb } from '@hominem/db';
+import { authDb } from '@hominem/db/core';
 import type { Context } from 'hono';
 
 import { betterAuthServer } from '../../auth/better-auth';

@@ -1,10 +1,11 @@
-import { db, sql } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { sql } from '@hominem/db/core';
 import {
-  createDeterministicIdFactory,
   ensureIntegrationUsers,
   isIntegrationDatabaseAvailable,
   tableExists,
 } from '@hominem/db/test/utils';
+import { createDeterministicIdFactory } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {

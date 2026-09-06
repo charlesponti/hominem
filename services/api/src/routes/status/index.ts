@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import { logger } from '@hominem/telemetry';
 import { Hono } from 'hono';
 

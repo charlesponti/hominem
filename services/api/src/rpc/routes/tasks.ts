@@ -6,7 +6,10 @@ import {
   extractVoiceTasks,
   getStructuredOutputUsage,
 } from '@hominem/ai';
-import { db, NotFoundError, runInTransaction, TaskRepository } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { NotFoundError } from '@hominem/db/errors';
+import { TaskRepository } from '@hominem/db/tasks';
+import { runInTransaction } from '@hominem/db/transaction';
 import { logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

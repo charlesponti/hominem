@@ -1,4 +1,5 @@
-import { CareerRepository, ProjectRepository, db } from '@hominem/db';
+import { CareerRepository, ProjectRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { redirect } from 'react-router';
 

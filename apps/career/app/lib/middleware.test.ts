@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import type { CareerProfileRecord } from '@hominem/db';
+import type { CareerProfileRecord } from '@hominem/db/career';
 import type { AuthUser as User } from '@ponti-studios/auth/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

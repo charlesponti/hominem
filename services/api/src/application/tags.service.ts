@@ -1,4 +1,4 @@
-import { db, sql } from '@hominem/db';
+import { db, sql } from '@hominem/db/core';
 import type * as z from 'zod';
 
 import type { entityTypeSchema } from '../schemas/tags.schema';

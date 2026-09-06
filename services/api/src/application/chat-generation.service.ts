@@ -25,13 +25,13 @@ import {
 import type { GenerationEffectStore } from '@hominem/chat';
 import { GenerationProjectionError } from '@hominem/chat/projection';
 import { restoreGenerationState } from '@hominem/chat/server';
-import type {
-  ChatGenerationEventRecord,
-  ChatGenerationRunRecord,
-  ChatMessageFileRecord,
-  NoteContext,
-} from '@hominem/db';
-import { ChatGenerationRepository, ChatRepository, db, runInTransaction } from '@hominem/db';
+import { ChatMessageFileRecord } from '@hominem/db/chats';
+import { NoteContext } from '@hominem/db/chats';
+import type { ChatGenerationRunRecord } from '@hominem/db/chats';
+import { ChatGenerationRepository, ChatRepository } from '@hominem/db/chats';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
 import { embeddingQueue } from '@hominem/queues';
 
 import { planChatTools } from '../mcp/chat-tool-adapter';

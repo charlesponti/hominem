@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import { sql } from 'kysely';
 
 export function toCents(amount: number | string | null | undefined): number {

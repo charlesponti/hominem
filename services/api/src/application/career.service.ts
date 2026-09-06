@@ -7,7 +7,6 @@ import {
   SkillRepository,
   SocialLinksRepository,
   TestimonialRepository,
-  db,
   type CareerApplicationRecord,
   type CareerCertificationInput,
   type CareerEducationRecord,
@@ -17,7 +16,8 @@ import {
   type CareerSkillInput,
   type CareerSocialLinksInput,
   type CareerTestimonialInput,
-} from '@hominem/db';
+} from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { z } from 'zod';
 
 import {

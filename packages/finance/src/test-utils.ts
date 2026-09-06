@@ -1,4 +1,4 @@
-import { authDb, db } from '@hominem/db';
+import { authDb, db } from '@hominem/db/core';
 import { sql } from 'kysely';
 
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';

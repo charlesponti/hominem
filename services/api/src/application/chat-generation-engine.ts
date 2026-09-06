@@ -11,7 +11,8 @@ import {
 } from '@hominem/chat';
 import type { GenerationRunnerOptions } from '@hominem/chat/server';
 import { createGenerationRunner } from '@hominem/chat/server';
-import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
+import type { ChatMessageToolCallRecord } from '@hominem/db/chats';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
 import { OpenRouterChatModel } from './chat-generation-provider';

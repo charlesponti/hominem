@@ -39,7 +39,7 @@ async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) die('DATABASE_URL is required.');
 
-  const { db, pool } = await import('@hominem/db');
+  const { db, pool } = await import('@hominem/db/core');
   const { inviteMember } = await import('../src/application/collections.service');
   const ownerEmail = process.env.DEV_INVITE_OWNER_EMAIL?.trim().toLowerCase();
 

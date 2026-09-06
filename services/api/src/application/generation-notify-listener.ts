@@ -1,4 +1,5 @@
-import { CHAT_GENERATION_EVENTS_CHANNEL, ChatGenerationRepository, db, pool } from '@hominem/db';
+import { CHAT_GENERATION_EVENTS_CHANNEL, ChatGenerationRepository } from '@hominem/db/chats';
+import { db, pool } from '@hominem/db/core';
 import { logger } from '@hominem/telemetry';
 import pg from 'pg';
 

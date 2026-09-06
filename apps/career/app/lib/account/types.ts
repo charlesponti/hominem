@@ -1,5 +1,5 @@
-import type { CareerCertificationRecord, CareerSocialLinksRecord } from '@hominem/db';
-import type { CareerProfileRecord } from '@hominem/db';
+import type { CareerCertificationRecord, CareerSocialLinksRecord } from '@hominem/db/career';
+import type { CareerProfileRecord } from '@hominem/db/career';
 
 export interface AccountPageUser {
   id: string;

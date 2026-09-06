@@ -1,4 +1,5 @@
-import { FileRepository, db } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { FileRepository } from '@hominem/db/files';
 import { QUEUE_NAMES } from '@hominem/queues';
 import { FileProcessorService } from '@hominem/services/files';
 import { redis as cache } from '@hominem/services/redis';

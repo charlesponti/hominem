@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import { COPILOT_PROVIDER, type ImportPlan } from '@hominem/finance-services/import';
 import { z } from 'zod';
 

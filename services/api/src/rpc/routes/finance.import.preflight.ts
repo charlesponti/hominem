@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import {
   applyAccountMappingsToPlan,
   createCopilotImportPlan,

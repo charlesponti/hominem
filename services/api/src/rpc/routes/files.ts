@@ -1,5 +1,6 @@
-import type { FileRecord } from '@hominem/db';
-import { FileRepository, db } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import type { FileRecord } from '@hominem/db/files';
+import { FileRepository } from '@hominem/db/files';
 import { fileProcessingQueue } from '@hominem/queues';
 import { fileStorageService, isStorageServiceError } from '@hominem/storage';
 import { logger } from '@hominem/telemetry';

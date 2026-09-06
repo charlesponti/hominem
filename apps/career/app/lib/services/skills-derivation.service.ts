@@ -7,7 +7,9 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '@hominem/ai';
-import { CareerRepository, db, ProjectRepository } from '@hominem/db';
+import { ProjectRepository } from '@hominem/db/career';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { z } from 'zod';
 
 const derivedSkillSchema = z.object({

@@ -2,12 +2,10 @@ import { Buffer } from 'node:buffer';
 import { readFile } from 'node:fs/promises';
 
 import { createChatCompletion, getChatCompletionText } from '@hominem/ai';
-import {
-  sql,
-  type CareerProfileRecord,
-  type CareerSocialLinksRecord,
-  type DbHandle,
-} from '@hominem/db';
+import { CareerSocialLinksRecord } from '@hominem/db/career';
+import type { CareerProfileRecord } from '@hominem/db/career';
+import { sql } from '@hominem/db/core';
+import type { DbHandle } from '@hominem/db/transaction';
 import type {
   ResumeImportDiff,
   ResumeListItemChange,

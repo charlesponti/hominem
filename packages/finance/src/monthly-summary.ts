@@ -1,4 +1,6 @@
-import { db, FinanceQueryRepository, ValidationError } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { ValidationError } from '@hominem/db/errors';
+import { FinanceQueryRepository } from '@hominem/db/finance';
 
 export interface FinanceMonthlySummaryInput {
   ownerUserId: string;

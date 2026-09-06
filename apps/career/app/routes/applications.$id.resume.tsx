@@ -1,4 +1,4 @@
-import type { CareerApplicationRecord } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db/career';
 import type { ActionFunctionArgs } from 'react-router';
 import { useOutletContext } from 'react-router';
 

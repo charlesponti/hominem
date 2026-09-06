@@ -41,4 +41,4 @@ Each domain has one repository file under `packages/db/src/services/<domain>/<na
 4. Export functions returning DTOs, never row types. Query-local casts are permitted before mapping, never on an exported result.
 5. Compose repositories in one direction. Put shared sibling checks in a leaf module rather than importing back into a parent domain.
 
-At the RPC layer, return repository DTOs directly with `c.json({ x })`; do not recreate a parallel response type. Use `runInTransaction` from `@hominem/db` for multi-table writes.
+At the RPC layer, return repository DTOs directly with `c.json({ x })`; do not recreate a parallel response type. Use `runInTransaction` from `@hominem/db/transaction` for multi-table writes.

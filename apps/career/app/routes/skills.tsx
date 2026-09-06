@@ -1,4 +1,5 @@
-import { SkillRepository, db, type CareerSkillRecord } from '@hominem/db';
+import { SkillRepository, type CareerSkillRecord } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { EmptyState } from '@ponti-studios/ui/feedback';
 import { TextField } from '@ponti-studios/ui/forms';
 import { SectionIntro } from '@ponti-studios/ui/layout';

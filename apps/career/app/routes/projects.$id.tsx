@@ -1,4 +1,5 @@
-import { CareerRepository, ProjectRepository, db } from '@hominem/db';
+import { CareerRepository, ProjectRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ArrowLeftIcon, CodeIcon, ExternalLinkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';

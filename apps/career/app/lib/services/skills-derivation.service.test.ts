@@ -32,7 +32,7 @@ vi.mock('@hominem/ai', () => ({
   startAIUsageTimer: () => () => 0,
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/career', () => ({
   db: {},
   CareerRepository: {
     listEngagements: mocks.listWorkExperiences,
@@ -41,6 +41,7 @@ vi.mock('@hominem/db', () => ({
     list: mocks.listProjects,
   },
 }));
+vi.mock('@hominem/db/core', () => ({ db: {} }));
 
 import { deriveSkillsFromCareerHistory } from './skills-derivation.service';
 
