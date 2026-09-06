@@ -6,8 +6,10 @@ import {
   synthesizeSpeech,
   synthesizeSpeechStream,
 } from '@hominem/ai';
-import type { ChatMessageFileRecord } from '@hominem/db';
-import { ChatRepository, ChatSpeechRunRepository, db } from '@hominem/db';
+import { ChatSpeechRunRepository } from '@hominem/db/chats';
+import { ChatRepository } from '@hominem/db/chats';
+import type { ChatMessageFileRecord } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
 import { fileStorageService } from '@hominem/storage';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { SpanStatusCode } from '@opentelemetry/api';

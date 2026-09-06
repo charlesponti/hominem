@@ -1,5 +1,7 @@
 import { importJobPosting, JobImportError } from '@hominem/career-services';
-import { CareerImportRepository, db, type CareerImportRecord } from '@hominem/db';
+import type { CareerImportRecord } from '@hominem/db/career';
+import { CareerImportRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import {
   publishImportProgress,
   QUEUE_NAMES,

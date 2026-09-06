@@ -1,4 +1,5 @@
-import { CareerRepository, db } from '@hominem/db';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 
 import { AccountSettingsPage } from '~/components/account/AccountSettingsPage';
 import { handleAccountAction } from '~/lib/account/account.actions.server';

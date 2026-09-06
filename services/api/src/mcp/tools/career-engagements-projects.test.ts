@@ -1,4 +1,5 @@
-import { CareerRepository, db, pool } from '@hominem/db';
+import { CareerRepository } from '@hominem/db/career';
+import { db, pool } from '@hominem/db/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import './career';

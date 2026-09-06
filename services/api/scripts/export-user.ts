@@ -90,7 +90,7 @@ async function main() {
   // static import wouldn't work since those get hoisted and run first.
   process.env.DATABASE_URL = databaseUrl;
 
-  const { pool } = await import('@hominem/db');
+  const { pool } = await import('@hominem/db/core');
 
   console.log(
     `→ exporting user ${userId} from ${env} (${databaseUrl.replace(/:[^:@]*@/, ':***@')})`,

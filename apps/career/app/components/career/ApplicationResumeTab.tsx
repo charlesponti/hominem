@@ -1,4 +1,4 @@
-import type { CareerApplicationRecord } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db/career';
 import {
   Input,
   Select,

@@ -1,4 +1,4 @@
-import type { CareerProjectRecord } from '@hominem/db';
+import type { CareerProjectRecord } from '@hominem/db/career';
 import { DatePicker, TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Form, useNavigation } from 'react-router';

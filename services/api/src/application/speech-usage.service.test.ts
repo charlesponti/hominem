@@ -14,7 +14,7 @@ vi.mock('@hominem/ai', () => ({
   getSpeechUsageEstimate: mocks.getSpeechUsageEstimate,
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/ai', () => ({
   AIUsageEventRepository: {
     createIfAbsent: mocks.createIfAbsent,
     getById: mocks.getUsageEventById,
@@ -26,6 +26,13 @@ vi.mock('@hominem/db', () => ({
   },
   db: {},
 }));
+vi.mock('@hominem/db/chats', () => ({
+  ChatSpeechRunRepository: {
+    getById: mocks.getSpeechRunById,
+    markReconciliation: mocks.markReconciliation,
+  },
+}));
+vi.mock('@hominem/db/core', () => ({ db: {} }));
 
 import { reconcileSpeechUsage } from './speech-usage.service';
 

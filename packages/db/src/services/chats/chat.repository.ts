@@ -1,13 +1,13 @@
 import {
+  chatGenerationKindSchema,
   chatMessageFilesSchema,
   chatMessageToolCallsSchema,
-  chatGenerationKindSchema,
-  chatGenerationStatusSchema,
-  type ChatSnapshot,
-  type ChatMessageSnapshot,
-  type ChatMessageFileRecord,
-  type ChatMessageToolCallRecord,
+  generationPhaseSchema,
   type ChatGenerationKind,
+  type ChatMessageFileRecord,
+  type ChatMessageSnapshot,
+  type ChatMessageToolCallRecord,
+  type ChatSnapshot,
   type GenerationPhase,
 } from '@hominem/chat';
 import type { Selectable } from 'kysely';
@@ -188,7 +188,7 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
     chatId: row.chatId,
     ownerUserId: row.ownerUserId,
     kind: chatGenerationKindSchema.parse(row.kind),
-    status: chatGenerationStatusSchema.parse(row.status),
+    status: generationPhaseSchema.parse(row.status),
     userMessageId: row.userMessageId,
     targetAssistantMessageId: row.targetAssistantMessageId,
     assistantMessageId: row.assistantMessageId,
@@ -251,6 +251,25 @@ export const ChatRepository = {
       .where('assistantMessageId', '=', assistantMessageId)
       .where('ownerUserId', '=', ownerUserId)
       .where('status', '=', 'awaiting_confirmation')
+      .executeTakeFirst();
+
+    return row ? toChatGenerationRunRecord(row) : null;
+  },
+
+  // Used by regenerate to find the run that produced the message being
+  // redone, so its event history can be deleted once the new one commits.
+  async getGenerationRunByAssistantMessageId(
+    handle: DbHandle,
+    chatId: string,
+    assistantMessageId: string,
+    ownerUserId: string,
+  ): Promise<ChatGenerationRunRecord | null> {
+    const row = await handle
+      .selectFrom('app.chatGenerationRuns')
+      .selectAll()
+      .where('chatId', '=', chatId)
+      .where('assistantMessageId', '=', assistantMessageId)
+      .where('ownerUserId', '=', ownerUserId)
       .executeTakeFirst();
 
     return row ? toChatGenerationRunRecord(row) : null;
@@ -574,28 +593,20 @@ export const ChatRepository = {
     return toChatMessageRecord(updated);
   },
 
-  // Used for regenerate — grabs the messages right before a given timestamp,
-  // oldest-first like getMessages.
-  async getMessagesBefore(
-    handle: DbHandle,
-    chatId: string,
-    beforeCreatedAt: string,
-    limit = 200,
-  ): Promise<ChatMessageSnapshot[]> {
-    const messages = await handle
-      .selectFrom('app.chatMessages')
-      .selectAll()
+  // Used to delete a superseded assistant reply once its regenerated
+  // replacement has committed.
+  async deleteAssistantMessage(handle: DbHandle, chatId: string, messageId: string): Promise<void> {
+    await handle
+      .deleteFrom('app.chatMessages')
+      .where('id', '=', messageId)
       .where('chatId', '=', chatId)
-      .where('createdat', '<', beforeCreatedAt)
-      .orderBy('createdat', 'desc')
-      .limit(limit)
+      .where('role', '=', 'assistant')
       .execute();
-    messages.reverse();
-
-    return messages.map(toChatMessageRecord);
   },
 
-  // Used for regenerate. Clears any attached audio file since it won't match the new text.
+  // Used to resume a checkpointed generation after tool-call confirmation —
+  // it must overwrite its own placeholder message rather than insert a new
+  // one. Clears any attached audio file since it won't match the new text.
   async replaceAssistantMessageContent(
     handle: DbHandle,
     chatId: string,

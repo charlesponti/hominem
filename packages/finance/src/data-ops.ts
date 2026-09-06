@@ -1,5 +1,6 @@
-import { db } from '@hominem/db';
-import type { AppFinanceTransactions, AppPlaidItems, AppTags, Selectable } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import type { Selectable } from '@hominem/db/core';
+import type { AppFinanceTransactions, AppPlaidItems, AppTags } from '@hominem/db/types';
 import { sql } from 'kysely';
 
 import type { AccountWithBalance } from './accounts';

@@ -1,14 +1,13 @@
 import type { ConvertedResumeData } from '@hominem/career-services/resume';
 import {
-  CareerRepository,
   ProjectRepository,
-  runInTransaction,
   SkillRepository,
   SocialLinksRepository,
   type CareerProfileRecord,
   type CareerSocialLinksRecord,
-  type TransactionHandle,
-} from '@hominem/db';
+} from '@hominem/db/career';
+import { CareerRepository } from '@hominem/db/career';
+import { runInTransaction, type TransactionHandle } from '@hominem/db/transaction';
 import {
   getJobStatus,
   removeJobFromQueue,

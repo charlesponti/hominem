@@ -1,4 +1,5 @@
-import { TestimonialRepository, db, type CareerTestimonialRecord } from '@hominem/db';
+import { TestimonialRepository, type CareerTestimonialRecord } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { PlusIcon, QuoteIcon, Trash2Icon } from 'lucide-react';
 import { Form, Link } from 'react-router';

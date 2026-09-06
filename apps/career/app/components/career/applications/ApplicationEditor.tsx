@@ -1,4 +1,4 @@
-import type { CareerApplicationWithRelations } from '@hominem/db';
+import type { CareerApplicationWithRelations } from '@hominem/db/career';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DatePicker,

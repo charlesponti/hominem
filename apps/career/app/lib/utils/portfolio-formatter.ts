@@ -1,4 +1,4 @@
-import type { CareerSocialLinksRecord } from '@hominem/db';
+import type { CareerSocialLinksRecord } from '@hominem/db/career';
 
 import type { ResumePortfolio } from '../portfolio.server';
 

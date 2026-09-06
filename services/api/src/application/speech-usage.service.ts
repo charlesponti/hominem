@@ -1,5 +1,7 @@
 import { AUDIO_TTS_MODEL, getSpeechUsageEstimate } from '@hominem/ai';
-import { AIUsageEventRepository, ChatSpeechRunRepository, db } from '@hominem/db';
+import { AIUsageEventRepository } from '@hominem/db/ai';
+import { ChatSpeechRunRepository } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
 import { getTelemetryTracer, logger } from '@hominem/telemetry';
 import { SpanStatusCode } from '@opentelemetry/api';
 

@@ -1,4 +1,4 @@
-import type { NoteRecord } from '@hominem/db';
+import type { NoteRecord } from '@hominem/db/notes';
 
 export function toNoteDto(record: NoteRecord) {
   return {

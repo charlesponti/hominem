@@ -32,9 +32,8 @@ function message(overrides: Partial<ChatMessageItem> = {}): ChatMessageItem {
     id: 'm1',
     role: 'assistant',
     message: 'Hello there',
-    created_at: '2026-08-24T17:30:00.000Z',
-    chat_id: 'chat-1',
-    profile_id: 'profile-1',
+    createdAt: '2026-08-24T17:30:00.000Z',
+    chatId: 'chat-1',
     toolCalls: null,
     ...overrides,
   };

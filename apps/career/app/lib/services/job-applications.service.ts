@@ -1,4 +1,5 @@
-import { CareerRepository, db, type CareerApplicationRecord } from '@hominem/db';
+import { CareerRepository, type CareerApplicationRecord } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 
 import { JobApplicationStatus } from '~/types/career';
 

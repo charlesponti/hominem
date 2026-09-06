@@ -193,9 +193,9 @@ export function useStreamMessage({ chatId }: { chatId: string }) {
   const stream = useCallback(
     async (input: StreamInput) => {
       const generation = input.retryOfGenerationId
-        ? chatClient.retry({
+        ? chatClient.regenerate({
             chatId,
-            generationId: input.retryOfGenerationId,
+            target: { generationId: input.retryOfGenerationId },
             body: {
               ...(input.responseLength ? { responseLength: input.responseLength } : {}),
             },

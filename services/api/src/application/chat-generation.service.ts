@@ -25,13 +25,13 @@ import {
 import type { GenerationEffectStore } from '@hominem/chat';
 import { GenerationProjectionError } from '@hominem/chat/projection';
 import { restoreGenerationState } from '@hominem/chat/server';
-import type {
-  ChatGenerationEventRecord,
-  ChatGenerationRunRecord,
-  ChatMessageFileRecord,
-  NoteContext,
-} from '@hominem/db';
-import { ChatGenerationRepository, ChatRepository, db, runInTransaction } from '@hominem/db';
+import { ChatMessageFileRecord } from '@hominem/db/chats';
+import { NoteContext } from '@hominem/db/chats';
+import type { ChatGenerationRunRecord } from '@hominem/db/chats';
+import { ChatGenerationRepository, ChatRepository } from '@hominem/db/chats';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
 import { embeddingQueue } from '@hominem/queues';
 
 import { planChatTools } from '../mcp/chat-tool-adapter';
@@ -53,7 +53,7 @@ import type {
 } from './chat-generation-types';
 import { buildChatSystemPrompt } from './chat-prompts';
 import { chatSpeechService } from './chat-speech.service';
-import { subscribeToGenerationEvents } from './generation-live-bus';
+import { GenerationPubSub } from './generation-pub-sub';
 
 export class ChatGenerationInputError extends Error {
   constructor(message: string) {
@@ -66,7 +66,7 @@ type PreparedGeneration = {
   userId: string;
   generationId: string;
   chatId: string;
-  kind: 'send' | 'start' | 'regenerate';
+  kind: 'send' | 'start';
   messages: ChatMessages[];
   tools: ChatFunctionTool[];
   model: string;
@@ -77,11 +77,14 @@ type PreparedGeneration = {
   responseModality?: 'text' | 'audio';
   targetAssistantMessageId?: string | null;
   userMessageId?: string | null;
-  retryOfGenerationId?: string;
+  // Set by regenerate: the generation/message this one supersedes outright,
+  // deleted once this one commits. See redoGeneration.
+  staleGenerationId?: string | null;
+  staleAssistantMessageId?: string | null;
 };
 
 type GenerationStartInput = Omit<PreparedGeneration, 'kind'> & {
-  kind: 'send' | 'start' | 'regenerate';
+  kind: 'send' | 'start';
   resume?: boolean;
   initialState?: GenerationState;
   initialInput?: GenerationInput;
@@ -94,7 +97,6 @@ type GenerationStartInput = Omit<PreparedGeneration, 'kind'> & {
 
 type SendGenerationInput = Omit<GenerationStartInput, 'kind'> & { kind?: 'send' };
 type StartGenerationInput = Omit<GenerationStartInput, 'kind'> & { kind?: 'start' };
-type RegenerateGenerationInput = Omit<GenerationStartInput, 'kind'> & { kind?: 'regenerate' };
 
 type ReplayInput = {
   generationId: string;
@@ -145,13 +147,20 @@ export type SendMessageInput = {
 
 export type StartMessageInput = Omit<SendMessageInput, 'chatId'> & { title: string };
 
-export type RegenerateMessageInput = {
+// Redo the most recent attempt at a turn — whether it committed a reply
+// worth replacing (messageId) or failed before producing one
+// (failedGenerationId). Both are the same operation: rerun the same history
+// and supersede the attempt being redone.
+type RegenerateInputBase = {
   userId: string;
   generationId: string;
   chatId: string;
-  messageId: string;
   responseLength?: 'short' | 'medium' | 'long';
 };
+
+export type RegenerateInput =
+  | (RegenerateInputBase & { messageId: string })
+  | (RegenerateInputBase & { failedGenerationId: string });
 
 const RESPONSE_LENGTH_MAX_TOKENS: Record<'short' | 'medium' | 'long', number> = {
   short: 250,
@@ -372,28 +381,24 @@ export class ChatGenerationService {
     return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
   }
 
-  async regenerateMessage(input: RegenerateMessageInput): Promise<AsyncIterable<GenerationEvent>> {
-    await assertUnderMonthlyUsageLimit(input.userId);
+  // Redo the most recent attempt at a turn. `messageId` redoes a completed
+  // reply (deleting it and its run once the replacement commits);
+  // `failedGenerationId` redoes an attempt that never produced a message
+  // (deleting its run once the replacement commits — there's no failure
+  // trail worth keeping once it's been retried). Both resolve to the same
+  // shared redoGeneration.
+  async regenerate(input: RegenerateInput): Promise<AsyncIterable<GenerationEvent>> {
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
-    const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
-    if (!target || target.role !== 'assistant') {
-      throw new ChatGenerationInputError('Only a completed assistant message can be regenerated');
-    }
-    const priorMessages = await ChatRepository.getMessagesBefore(
+    // Check for an idempotent replay before resolving the target: once a
+    // regenerate/retry commits, the attempt it superseded is deleted, so a
+    // duplicate request for the *same new* generationId must not re-resolve
+    // a target that may no longer exist.
+    const existingRun = await ChatRepository.getGenerationRun(
       db,
       input.chatId,
-      target.createdAt,
+      input.generationId,
+      input.userId,
     );
-    const parentIndex = [...priorMessages].reverse().findIndex((entry) => entry.role === 'user');
-    if (parentIndex === -1)
-      throw new ChatGenerationInputError('No prior message to regenerate a reply from');
-    const parentIndexFromStart = priorMessages.length - 1 - parentIndex;
-    const parent = priorMessages[parentIndexFromStart]!;
-    const history = priorMessages.slice(0, parentIndexFromStart);
-    const [notes, existingRun] = await Promise.all([
-      ChatRepository.getChatSourceContext(db, input.chatId),
-      ChatRepository.getGenerationRun(db, input.chatId, input.generationId, input.userId),
-    ]);
     if (existingRun) {
       return this.replay({
         generationId: input.generationId,
@@ -401,33 +406,50 @@ export class ChatGenerationService {
         terminal: true,
       });
     }
-    await ChatRepository.createGenerationRun(db, {
-      id: input.generationId,
-      chatId: input.chatId,
-      ownerUserId: input.userId,
-      kind: 'regenerate',
-      targetAssistantMessageId: input.messageId,
-    });
-    const messages = buildMessages(
-      history,
-      formatUserContentWithContext(parent.content, notes, parent.files ?? []),
-      buildChatSystemPrompt(input.responseLength),
+    if ('messageId' in input) {
+      const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
+      if (!target || target.role !== 'assistant') {
+        throw new ChatGenerationInputError('Only a completed assistant message can be regenerated');
+      }
+      if (!target.parentMessageId) {
+        throw new ChatGenerationInputError('No prior message to regenerate a reply from');
+      }
+      const staleRun = await ChatRepository.getGenerationRunByAssistantMessageId(
+        db,
+        input.chatId,
+        target.id,
+        input.userId,
+      );
+      return this.redoGeneration({
+        userId: input.userId,
+        chatId: input.chatId,
+        generationId: input.generationId,
+        userMessageId: target.parentMessageId,
+        staleGenerationId: staleRun?.id ?? null,
+        staleAssistantMessageId: target.id,
+        responseLength: input.responseLength,
+      });
+    }
+
+    const failedRun = await ChatRepository.getGenerationRun(
+      db,
+      input.chatId,
+      input.failedGenerationId,
+      input.userId,
     );
-    const toolPlan = await this.planTools(messages);
-    return this.regenerate({
+    if (!failedRun || failedRun.status !== 'failed' || !failedRun.userMessageId) {
+      throw new ChatGenerationInputError(
+        'Only a failed generation with a user message can be retried',
+      );
+    }
+    return this.redoGeneration({
       userId: input.userId,
-      generationId: input.generationId,
       chatId: input.chatId,
-      model: CHAT_MODEL,
-      messages,
-      tools: toolPlan.tools,
-      requiresToolCall: toolPlan.requiresLookup,
-      maxTokens: input.responseLength
-        ? RESPONSE_LENGTH_MAX_TOKENS[input.responseLength]
-        : undefined,
-      reasoning: getReasoningConfig(),
-      targetAssistantMessageId: input.messageId,
-      userMessageId: null,
+      generationId: input.generationId,
+      userMessageId: failedRun.userMessageId,
+      staleGenerationId: failedRun.id,
+      staleAssistantMessageId: null,
+      responseLength: input.responseLength,
     });
   }
 
@@ -553,53 +575,33 @@ export class ChatGenerationService {
     });
   }
 
-  async retryMessage(input: {
+  // Shared by regenerate's two branches: rerun the LLM against the same chat
+  // history and land a brand-new generation for the same user message.
+  private async redoGeneration(input: {
     userId: string;
     chatId: string;
-    failedGenerationId: string;
     generationId: string;
+    userMessageId: string;
+    staleGenerationId: string | null;
+    staleAssistantMessageId: string | null;
     responseLength?: 'short' | 'medium' | 'long';
   }): Promise<AsyncIterable<GenerationEvent>> {
     await assertUnderMonthlyUsageLimit(input.userId);
-    await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
-    const failedRun = await ChatRepository.getGenerationRun(
-      db,
-      input.chatId,
-      input.failedGenerationId,
-      input.userId,
-    );
-    if (!failedRun || failedRun.status !== 'failed' || !failedRun.userMessageId) {
-      throw new ChatGenerationInputError(
-        'Only a failed generation with a user message can be retried',
-      );
-    }
-    const existingRun = await ChatRepository.getGenerationRun(
-      db,
-      input.chatId,
-      input.generationId,
-      input.userId,
-    );
-    if (existingRun) {
-      return this.replay({
-        generationId: input.generationId,
-        ownerUserId: input.userId,
-        terminal: true,
-      });
-    }
-
-    const history = await ChatRepository.getMessages(db, input.chatId, 30, 0);
-    const userMessageIndex = history.findIndex((message) => message.id === failedRun.userMessageId);
+    const [history, notes] = await Promise.all([
+      ChatRepository.getMessages(db, input.chatId, 30, 0),
+      ChatRepository.getChatSourceContext(db, input.chatId),
+    ]);
+    const userMessageIndex = history.findIndex((message) => message.id === input.userMessageId);
     const userMessage = history[userMessageIndex];
     if (!userMessage || userMessage.role !== 'user') {
-      throw new ChatGenerationInputError('The failed generation user message was not found');
+      throw new ChatGenerationInputError('The message being answered was not found');
     }
-    const notes = await ChatRepository.getChatSourceContext(db, input.chatId);
     await ChatRepository.createGenerationRun(db, {
       id: input.generationId,
       chatId: input.chatId,
       ownerUserId: input.userId,
       kind: 'send',
-      userMessageId: failedRun.userMessageId,
+      userMessageId: input.userMessageId,
     });
     const messages = buildMessages(
       history.slice(0, userMessageIndex),
@@ -619,8 +621,9 @@ export class ChatGenerationService {
         ? RESPONSE_LENGTH_MAX_TOKENS[input.responseLength]
         : undefined,
       reasoning: getReasoningConfig(),
-      userMessageId: failedRun.userMessageId,
-      retryOfGenerationId: failedRun.id,
+      userMessageId: input.userMessageId,
+      staleGenerationId: input.staleGenerationId,
+      staleAssistantMessageId: input.staleAssistantMessageId,
     });
   }
 
@@ -630,10 +633,6 @@ export class ChatGenerationService {
 
   start(input: StartGenerationInput): Promise<AsyncIterable<GenerationEvent>> {
     return this.execute({ ...input, kind: 'start' });
-  }
-
-  regenerate(input: RegenerateGenerationInput): Promise<AsyncIterable<GenerationEvent>> {
-    return this.execute({ ...input, kind: 'regenerate' });
   }
 
   async respondToConfirmation(
@@ -737,7 +736,7 @@ export class ChatGenerationService {
 
   async replay(input: ReplayInput): Promise<AsyncIterable<GenerationEvent>> {
     const afterSequence = input.afterSequence ?? 0;
-    const subscriber = subscribeToGenerationEvents(input.generationId);
+    const subscriber = GenerationPubSub.subscribe(input.generationId);
     const queue = new AsyncEventQueue<GenerationEvent>(() => subscriber.close());
     void (async () => {
       try {
@@ -937,7 +936,6 @@ export class ChatGenerationService {
         kind: input.kind,
         userMessageId: input.userMessageId ?? null,
         targetAssistantMessageId: input.targetAssistantMessageId ?? null,
-        ...(input.retryOfGenerationId ? { retryOfGenerationId: input.retryOfGenerationId } : {}),
         requestContext: {},
       };
       const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
@@ -1146,7 +1144,7 @@ export class ChatGenerationService {
         trx,
       ): Promise<{ message: ChatMessageSnapshot; events: ChatGenerationEventRecord[] }> => {
         const updated =
-          input.targetAssistantMessageId && (input.kind === 'regenerate' || input.confirmation)
+          input.targetAssistantMessageId && input.confirmation
             ? await ChatRepository.replaceAssistantMessageContent(
                 trx,
                 input.chatId,
@@ -1169,6 +1167,22 @@ export class ChatGenerationService {
                 parentMessageId: input.userMessageId ?? null,
               });
         await ChatRepository.touchLastMessage(trx, input.chatId);
+        // Regenerate supersedes the previous attempt outright rather than
+        // branching from it — delete its event history and stale message
+        // now that the replacement has committed (or checkpointed).
+        if (input.staleGenerationId) {
+          await ChatGenerationRepository.deleteRun(trx, {
+            generationId: input.staleGenerationId,
+            ownerUserId: input.userId,
+          });
+        }
+        if (input.staleAssistantMessageId) {
+          await ChatRepository.deleteAssistantMessage(
+            trx,
+            input.chatId,
+            input.staleAssistantMessageId,
+          );
+        }
         if (input.confirmation) {
           const toolResult = result.toolCallRecords.find(
             (toolCall) => toolCall.toolCallId === input.confirmation?.toolCallId,
@@ -1263,7 +1277,6 @@ export const chatGenerationService = new ChatGenerationService();
 export type {
   CancelInput,
   GenerationStartInput,
-  RegenerateGenerationInput,
   ReplayInput,
   SendGenerationInput,
   StartGenerationInput,

@@ -1,20 +1,27 @@
 import { Collapsible } from '@base-ui/react/collapsible';
 import type {
   ResumeAnalysisStage,
-  ResumeImportDiff,
   ResumeListItemChange,
   ResumeScalarFieldChange,
 } from '@hominem/queues';
 import { DropZone, type DropZoneProps } from '@ponti-studios/ui/forms';
 import { Button, buttonVariants } from '@ponti-studios/ui/primitives';
 import { ChevronDown, FileTextIcon, Loader2Icon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useRevalidator, useSearchParams } from 'react-router';
 
 import type { AccountDocumentFile } from '~/lib/account/types';
 import { RESUME_STAGE_INFO } from '~/lib/resume-import/stages';
 import type { SseResumeEvent } from '~/lib/resume-import/types';
 import { cn } from '~/lib/utils';
+
+import {
+  createResumeImportState,
+  groupListChanges,
+  groupScalarChanges,
+  resumeImportReducer,
+  scalarKey,
+} from './resume-import.reducer';
 
 type DropZoneStatus = DropZoneProps['status'];
 
@@ -35,32 +42,6 @@ function formatBytes(size: number) {
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function scalarKey(change: ResumeScalarFieldChange) {
-  return `${change.group}.${change.field}`;
-}
-
-function groupListChanges(changes: ResumeListItemChange[]) {
-  const groups = new Map<ResumeListItemChange['group'], ResumeListItemChange[]>();
-  for (const change of changes) {
-    const existing = groups.get(change.group) ?? [];
-    existing.push(change);
-    groups.set(change.group, existing);
-  }
-  return groups;
-}
-
-function groupScalarChanges(changes: ResumeScalarFieldChange[]) {
-  const groups = new Map<ResumeScalarFieldChange['group'], ResumeScalarFieldChange[]>();
-  for (const change of changes) {
-    const existing = groups.get(change.group) ?? [];
-    existing.push(change);
-    groups.set(change.group, existing);
-  }
-  return groups;
-}
-
-type Phase = 'idle' | 'uploading' | 'analyzing' | 'reviewing' | 'applying' | 'error';
-
 export function ResumeImportSection({
   documents,
   onDelete,
@@ -71,21 +52,22 @@ export function ResumeImportSection({
   const revalidator = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
   const resumeJobId = searchParams.get('resumeJobId');
+  const [workflow, dispatch] = useReducer(
+    resumeImportReducer,
+    resumeJobId,
+    createResumeImportState,
+  );
+  const { phase, jobId, stageEvent, diff, selectedScalarKeys, selectedListKeys, applyError } =
+    workflow;
 
   const [open, setOpen] = useState(Boolean(resumeJobId));
-  const [phase, setPhase] = useState<Phase>(resumeJobId ? 'analyzing' : 'idle');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dropzoneStatus, setDropzoneStatus] = useState<DropZoneStatus>('empty');
   const [dropzoneError, setDropzoneError] = useState<string | null>(null);
   const [busyDocId, setBusyDocId] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
 
-  const [jobId, setJobId] = useState<string | null>(resumeJobId);
-  const [stageEvent, setStageEvent] = useState<SseResumeEvent | null>(null);
-  const [diff, setDiff] = useState<ResumeImportDiff | null>(null);
-  const [selectedScalarKeys, setSelectedScalarKeys] = useState<Set<string>>(new Set());
-  const [selectedListKeys, setSelectedListKeys] = useState<Set<string>>(new Set());
-  const [applyError, setApplyError] = useState<string | null>(null);
+  const [streamJobId, setStreamJobId] = useState<string | null>(resumeJobId);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -96,24 +78,25 @@ export function ResumeImportSection({
 
   const watchJob = (id: string) => {
     closeStream();
-    const es = new EventSource(`/api/resume/jobs/${id}/stream`);
+    setStreamJobId(id);
+  };
+
+  useEffect(() => {
+    if (!streamJobId) return;
+    const es = new EventSource(`/api/resume/jobs/${streamJobId}/stream`);
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
-      const parsed = JSON.parse(event.data) as SseResumeEvent;
-      setStageEvent(parsed);
+      const parsed: SseResumeEvent = JSON.parse(event.data);
+      dispatch({ type: 'stage-received', event: parsed });
 
       if (parsed.error) {
-        setPhase('error');
         closeStream();
         return;
       }
 
       if (parsed.stage === 'done' && parsed.diff) {
-        setDiff(parsed.diff);
-        setSelectedScalarKeys(new Set(parsed.diff.scalarChanges.map(scalarKey)));
-        setSelectedListKeys(new Set(parsed.diff.listChanges.map((item) => item.key)));
-        setPhase('reviewing');
+        dispatch({ type: 'review-ready', diff: parsed.diff, event: parsed });
         closeStream();
       }
     };
@@ -122,14 +105,17 @@ export function ResumeImportSection({
       // no-op: the browser reconnects on its own, and the server always
       // re-sends the current snapshot as the first event after reconnect
     };
-  };
+
+    return () => {
+      es.close();
+      if (eventSourceRef.current === es) eventSourceRef.current = null;
+    };
+  }, [streamJobId]);
 
   useEffect(() => {
-    if (resumeJobId) {
-      setJobId(resumeJobId);
-      setPhase('analyzing');
-      watchJob(resumeJobId);
-    }
+    if (!resumeJobId) return;
+    dispatch({ type: 'analysis-started', jobId: resumeJobId });
+    watchJob(resumeJobId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -138,36 +124,48 @@ export function ResumeImportSection({
   const startAnalysis = async (body: FormData) => {
     setDropzoneStatus('busy');
     setDropzoneError(null);
-    setPhase('uploading');
+    dispatch({ type: 'analysis-uploading' });
 
     try {
       const response = await fetch('/api/resume/analyze', { method: 'POST', body });
-      const result = (await response.json()) as {
+      if (!response.ok) {
+        const result: { error?: string } = await response.json();
+        setDropzoneStatus('failed');
+        setDropzoneError(result.error ?? 'Could not start resume analysis.');
+        dispatch({
+          type: 'analysis-failed',
+          message: result.error ?? 'Could not start resume analysis.',
+        });
+        return;
+      }
+      const result: {
         jobId?: string;
         fileUrl?: string;
         error?: string;
-      };
+      } = await response.json();
 
-      if (!response.ok || !result.jobId) {
+      if (!result.jobId) {
         setDropzoneStatus('failed');
         setDropzoneError(result.error ?? 'Could not start resume analysis.');
-        setPhase('idle');
+        dispatch({
+          type: 'analysis-failed',
+          message: result.error ?? 'Could not start resume analysis.',
+        });
         return;
       }
 
       setSelectedFile(null);
       setDropzoneStatus('empty');
-      setJobId(result.jobId);
+      dispatch({ type: 'analysis-started', jobId: result.jobId });
       setSearchParams((params) => {
         params.set('resumeJobId', result.jobId!);
         return params;
       });
-      setPhase('analyzing');
       watchJob(result.jobId);
     } catch {
       setDropzoneStatus('failed');
       setDropzoneError('Could not start resume analysis. Try again.');
-      setPhase('idle');
+      dispatch({ type: 'analysis-failed', message: 'Could not start resume analysis. Try again.' });
     }
   };
 
@@ -200,11 +198,7 @@ export function ResumeImportSection({
 
   const resetToIdle = () => {
     closeStream();
-    setPhase('idle');
-    setJobId(null);
-    setStageEvent(null);
-    setDiff(null);
-    setApplyError(null);
+    dispatch({ type: 'reset' });
     setOpen(false);
     setSearchParams((params) => {
       params.delete('resumeJobId');
@@ -214,8 +208,7 @@ export function ResumeImportSection({
 
   const handleApply = async () => {
     if (!jobId) return;
-    setPhase('applying');
-    setApplyError(null);
+    dispatch({ type: 'apply-started' });
 
     const formData = new FormData();
     formData.append('action', 'apply-resume-import');
@@ -225,22 +218,27 @@ export function ResumeImportSection({
 
     try {
       const response = await fetch('/profile', { method: 'POST', body: formData });
+      if (!response.ok) {
+        dispatch({ type: 'apply-failed', message: "We couldn't apply those changes. Try again." });
+        return;
+      }
       const contentType = response.headers.get('content-type');
-      const result = contentType?.includes('application/json')
-        ? ((await response.json()) as { success: boolean; error?: string })
-        : { success: response.ok, error: response.ok ? undefined : await response.text() };
+      const result: { success: boolean; error?: string } = contentType?.includes('application/json')
+        ? await response.json()
+        : { success: true };
 
       if (!result.success) {
-        setApplyError(result.error ?? "We couldn't apply those changes. Try again.");
-        setPhase('reviewing');
+        dispatch({
+          type: 'apply-failed',
+          message: result.error ?? "We couldn't apply those changes. Try again.",
+        });
         return;
       }
 
       resetToIdle();
       revalidator.revalidate();
     } catch {
-      setApplyError("We couldn't apply those changes. Try again.");
-      setPhase('reviewing');
+      dispatch({ type: 'apply-failed', message: "We couldn't apply those changes. Try again." });
     }
   };
 
@@ -261,23 +259,11 @@ export function ResumeImportSection({
     [diff],
   );
 
-  const toggleScalar = (key: string, checked: boolean) => {
-    setSelectedScalarKeys((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(key);
-      else next.delete(key);
-      return next;
-    });
-  };
+  const toggleScalar = (key: string, checked: boolean) =>
+    dispatch({ type: 'toggle-scalar', key, checked });
 
-  const toggleListKey = (key: string, checked: boolean) => {
-    setSelectedListKeys((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(key);
-      else next.delete(key);
-      return next;
-    });
-  };
+  const toggleListKey = (key: string, checked: boolean) =>
+    dispatch({ type: 'toggle-list', key, checked });
 
   const selectionCount = selectedScalarKeys.size + selectedListKeys.size;
 
@@ -343,7 +329,7 @@ export function ResumeImportSection({
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
             <div
-              className="h-full rounded-full bg-primary transition-all"
+              className="h-full rounded-full bg-primary transition-[width]"
               style={{ width: `${stageInfo.percent}%` }}
             />
           </div>

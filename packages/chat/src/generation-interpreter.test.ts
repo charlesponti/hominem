@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { GenerationStartContext } from './generation-events';
 import {
-  createGenerationInterpreter as createPortsInterpreter,
+  createGenerationInterpreter as createAdaptersInterpreter,
   EffectCommandTimeoutError,
-  runGenerationWithPorts,
+  generate,
 } from './generation-interpreter';
 import {
   createGenerationState,
@@ -72,7 +72,7 @@ describe('generation interpreter', () => {
         }),
       },
     };
-    const interpreter = createPortsInterpreter(ports);
+    const interpreter = createAdaptersInterpreter(ports);
     const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
 
     await interpreter.execute(
@@ -121,7 +121,7 @@ describe('generation interpreter', () => {
       },
       generation: { save: vi.fn(), stop: vi.fn() },
     };
-    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { persist: 5 } });
+    const interpreter = createAdaptersInterpreter(ports, { effectTimeoutsMs: { persist: 5 } });
     const state = createGenerationState('generation-1');
 
     await expect(
@@ -146,7 +146,9 @@ describe('generation interpreter', () => {
       events: { persist: vi.fn(), emit: vi.fn() },
       generation: { save: vi.fn(), stop: vi.fn() },
     };
-    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { 'execute-tool': 5 } });
+    const interpreter = createAdaptersInterpreter(ports, {
+      effectTimeoutsMs: { 'execute-tool': 5 },
+    });
     const state = createGenerationState('generation-1');
     const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
 
@@ -165,7 +167,9 @@ describe('generation interpreter', () => {
       events: { persist: vi.fn(), emit: vi.fn() },
       generation: { save: vi.fn(), stop: vi.fn() },
     };
-    const interpreter = createPortsInterpreter(ports, { effectTimeoutsMs: { 'preview-tool': 5 } });
+    const interpreter = createAdaptersInterpreter(ports, {
+      effectTimeoutsMs: { 'preview-tool': 5 },
+    });
     const state = createGenerationState('generation-1');
     const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
 
@@ -184,7 +188,7 @@ describe('generation interpreter', () => {
         stop: vi.fn(),
       },
     };
-    const interpreter = createPortsInterpreter(ports, {
+    const interpreter = createAdaptersInterpreter(ports, {
       effectTimeoutsMs: { 'save-generation': 5 },
     });
     const state = createGenerationState('generation-1');
@@ -226,7 +230,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'committed', assistantText: 'done' });
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.generation.save).toHaveBeenCalledOnce();
@@ -268,7 +272,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'cancelled', assistantText: 'partial' });
     expect(ports.generation.stop).toHaveBeenCalledOnce();
     expect(ports.generation.save).not.toHaveBeenCalled();
@@ -312,7 +316,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'committed' });
     expect(waitBeforeRetry).toHaveBeenCalledWith(
       expect.objectContaining({ attempt: 2, state: expect.any(Object) }),
@@ -363,7 +367,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithPorts({ generationId: 'generation-1', ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'cancelled' });
     expect(ports.provider.retry).toHaveBeenCalledOnce();
     expect(ports.generation.stop).toHaveBeenCalledOnce();
@@ -390,7 +394,7 @@ describe('generation interpreter', () => {
         stop: vi.fn(),
       },
     };
-    const interpreter = createPortsInterpreter(ports);
+    const interpreter = createAdaptersInterpreter(ports);
     const state = createGenerationState('generation-1');
     const call = { id: 'call-1', name: 'search', arguments: '{}', iteration: 0, turnId: 'turn-1' };
 

@@ -9,4 +9,4 @@ export {
   UnavailableError,
   ValidationError,
   type ErrorCode,
-} from '@hominem/db';
+} from '@hominem/db/errors';

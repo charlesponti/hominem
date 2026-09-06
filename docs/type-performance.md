@@ -4,6 +4,23 @@
 
 One rule we held ourselves to: every number below came from actually running the compiler with `--generateTrace`, or from driving a real `tsserver` session (the same protocol VS Code speaks) via the scripts in `scripts/`. Nothing here is "the docs say" or "this should help." A few fixes that sounded obviously right turned out to do nothing when we measured them — those are written up here too, specifically so nobody burns an afternoon re-discovering that.
 
+## A benchmark from first principles
+
+Start with the user-visible question. TypeScript has separate performance surfaces, so one number cannot represent them all:
+
+- **Editor startup:** a fresh `tsserver` opens a representative consumer file and loads its project.
+- **Editor interaction:** the warm server responds to diagnostics, quick info, references, or completion.
+- **Compiler/build:** a clean or cached `tsc`/Turbo run checks the repository for CI purposes.
+- **Freshness:** a deliberate upstream edit proves that the consumer sees the new declarations instead of stale build output.
+
+The minimum useful benchmark is therefore one real consumer, one fresh `tsserver` per run, and two measurements: cold project open followed by warm diagnostics. It lives in `scripts/bench-tsserver-minimal.mjs`. The target is a real source file, not a synthetic fixture; the script discovers no cursor coordinates and does not name a type. A benchmark succeeds only when the tsserver request completes; correctness checks such as live type resolution belong in the separate freshness scripts.
+
+Run it with `node scripts/bench-tsserver-minimal.mjs`. It writes `.cache/tsserver-benchmark.json` by default, or a chosen path with `--output results/typescript.json`; progress stays on stderr and the final line prints the output path. Use `--runs N` to control repetition. The JSON file is the benchmark artifact to retain or compare.
+
+Use several runs and report the individual samples plus the median. Median makes ordinary startup noise visible without letting one outlier define the result. Add a separate scenario only when it answers a different user question—for example, cross-project references or incremental rechecking—not merely because another file is available.
+
+Every recorded result should include the commit, Node/TypeScript versions, run count, target, measurements, summary statistic, and whether the semantic correctness check passed. A fast result that resolves the wrong project, uses stale declarations, or returns no references is not valid performance evidence.
+
 ## Tooling
 
 All of these are read-only or self-reverting, so they're safe to run against a live checkout whenever you want to sanity-check something below.
@@ -12,6 +29,7 @@ All of these are read-only or self-reverting, so they're safe to run against a l
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/lib/tsserver-client.mjs`                                   | The shared client everything else is built on: it spawns a real `tsserver` and speaks its actual protocol (newline-delimited JSON requests in, `Content-Length`-framed responses out).                                                                         |
 | `scripts/bench-tsserver.mjs`                                        | Timing (`open`/`geterr`/`references`) across every real consumer in the monorepo, plus a cross-project "Find All References" benchmark. `--label`, `--runs`, `--json`.                                                                                         |
+| `scripts/bench-tsserver-minimal.mjs`                               | Smallest editor benchmark: cold project open followed by warm diagnostics for one real consumer. Writes JSON with `--runs` and `--output`.                                                                                                                 |
 | `scripts/bench-incremental-recheck.mjs`                             | The one scenario `assumeChangesOnlyAffectDirectDependencies` actually affects: an already-warm tsserver session re-checking a downstream consumer after an _upstream_ file changes.                                                                            |
 | `scripts/check-live-types.mjs` / `scripts/check-live-types-rpc.mjs` | A correctness sweep, not a speed one: edit a type without rebuilding, then ask tsserver via `quickinfo` whether a given consumer sees the change live or is looking at something stale. Always reverts its own edit, including if it fails partway.            |
 | `scripts/find-duplicate-shapes.mjs`                                 | Uses the TypeScript Compiler API (`ts.createProgram` + `TypeChecker`) to walk every exported interface/object-type-alias under `packages/`, `services/`, `apps/` and group the ones that share an identical structural signature. `--min-members N`, `--json`. |
@@ -231,12 +249,26 @@ A fresh baseline of the current codebase, measured at commit `d3521350d` (`d3521
 
 Cross-project `references` (rooted at `packages/chat`): 1285ms, 10 results found.
 
+### Latest re-run — `08cb55de1` (2026-09-06)
+
+The same benchmarks were rerun against the current tree after the latest chat type changes. Commands: `node scripts/bench-tsserver.mjs --label latest --runs 3 --json` and `node scripts/bench-incremental-recheck.mjs --label latest --runs 3`.
+
+| consumer       | open   | geterr | RSS | resolves? |
+| -------------- | ------ | ------ | --- | --------- |
+| `apps/web`     | 3178ms | 431ms  | n/a | yes       |
+| `apps/omiro`   | 2745ms | 71ms   | n/a | yes       |
+| `packages/db`  | 980ms  | 580ms  | n/a | yes       |
+| `packages/rpc` | 1644ms | 320ms  | n/a | yes       |
+| `services/api` | 2218ms | 659ms  | n/a | yes       |
+
+Cross-project `references` (rooted at `packages/chat`): 1104ms, 10 results found. Incremental recheck after an upstream edit: 1008ms average across three runs (1009ms, 1010ms, 1005ms).
+
 ## History
 
-| consumer       | before  | after  | now    | change                                     |
-| -------------- | ------- | ------ | ------ | ------------------------------------------ |
-| `apps/web`     | 14287ms | 6207ms | 3274ms | -57%                                       |
-| `apps/omiro`   | 7033ms  | 4864ms | 2931ms | -31%                                       |
-| `packages/db`  | ------  | -----  | 1000ms |
-| `packages/rpc` | 3814ms  | 3434ms | 1645ms | -10%                                       |
-| `services/api` | 4917ms  | 4149ms | 2181ms | -16% (residual noise; already fixed above) |
+| consumer       | before  | after  | now    | latest | change                                     |
+| -------------- | ------- | ------ | ------ | ------ | ------------------------------------------ |
+| `apps/web`     | 14287ms | 6207ms | 3274ms | 3178ms | -57%                                       |
+| `apps/omiro`   | 7033ms  | 4864ms | 2931ms | 2745ms | -31%                                       |
+| `packages/db`  | ------  | -----  | 1000ms | 980ms  |                                            |
+| `packages/rpc` | 3814ms  | 3434ms | 1645ms | 1644ms | -10%                                       |
+| `services/api` | 4917ms  | 4149ms | 2181ms | 2218ms | -16% (residual noise; already fixed above) |

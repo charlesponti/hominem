@@ -1,4 +1,6 @@
-import { CareerRepository, db, runInTransaction, SkillRepository } from '@hominem/db';
+import { CareerRepository, SkillRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
 import { data } from 'react-router';
 import type { ActionFunctionArgs } from 'react-router';
 

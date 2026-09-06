@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 
-import type { AppTags, Selectable } from '@hominem/db';
-import { db } from '@hominem/db';
+import type { Selectable } from '@hominem/db/core';
+import { db } from '@hominem/db/core';
+import type { AppTags } from '@hominem/db/types';
 import { sql } from 'kysely';
 
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';

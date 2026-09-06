@@ -1,0 +1,136 @@
+# Chat regeneration & retry — end to end.
+# A detailed companion to chat.runtime.d2: zooms into the regenerate/retry
+# path specifically, from a client button click through the SSE transport,
+# application service, generation state machine, provider/tool execution,
+# and persistence, and back out as live events.
+#
+# Two behavioral asymmetries surfaced while tracing this (see edge labels
+# below): apps/web's per-message "Retry" link and all of apps/omiro's retry
+# actions never call the server's stateful POST .../generations/:id/retry
+# route — they just re-run regenerate/send as a brand-new attempt. Only
+# web's composer-level retry-after-failed-send (use-stream-message.ts) hits
+# the real retry endpoint.
+
+direction: down
+
+title: {
+  label: "Chat regeneration & retry"
+  shape: text
+  style.font-size: 22
+  style.bold: true
+}
+
+clients: "Client apps" {
+  web: "apps/web" {
+    message_ui: "chat-message.tsx\nRegenerate / Retry buttons"
+    use_regenerate: "use-regenerate-message.ts\nregenerate() + retry()\n(retry() just replays regenerate)"
+    use_stream: "use-stream-message.ts\nsend() + retry()\n(real /retry route, composer only)"
+  }
+  omiro: "apps/omiro" {
+    message_ui: "chat-message-actions.tsx\nRegenerate / Retry buttons"
+    use_regenerate: "use-regenerate-message.ts\nregenerate() + retryGeneration()\n(retryGeneration re-calls regenerate)"
+    use_send: "use-send-message.ts\nretryLastGeneration()\n(re-sends as new generation)"
+  }
+}
+
+sdk: "packages/chat/src — client SDK" {
+  chat_client: "ChatClient\nsend / start / regenerate / retry\nresumeGeneration / cancel"
+  create_generation: "createGeneration()\nconsume(): POST/GET + SSE read loop"
+  reducer: "generation-client.ts\nreduceGenerationClientEvent\nphase, text, reasoning, toolSteps"
+  checkpoint: "checkpointStore\nlocalStorage (web) / MMKV (omiro)"
+
+  chat_client -> create_generation
+  create_generation -> reducer: fold each SSE event
+  create_generation <-> checkpoint: persist after each event\nresume on remount
+}
+
+transport: "HTTP + SSE" {
+  shape: hexagon
+  routes: "POST /messages/:messageId/regenerate\nPOST /generations/:generationId/retry\nGET /generations/:generationId/stream?afterSequence=N"
+}
+
+api: "services/api" {
+  http_handler: "packages/chat/src/server.ts\ncreateChatHttpHandler"
+  routes: "rpc/routes/chats.generation.ts\nmaps HTTP verbs to service calls"
+
+  service: "application/chat-generation.service.ts" {
+    regenerateMessage: "regenerateMessage()\ntarget msg -> target.parentMessageId\n+ getGenerationRunByAssistantMessageId"
+    retryMessage: "retryMessage()\nfind the failed run\n(no stale-lookup — it never had a message)"
+    redo: "redoGeneration() [shared]\nrebuild history, create new run\n(kind: send), call send()"
+    execute: "execute() / executeGeneration()\nappends started/accepted/running events"
+    commit: "commitGeneration()\ninsert new message\ndelete stale run + message on success\n(regenerate only — retry keeps its failure record)"
+
+    regenerateMessage -> redo
+    retryMessage -> redo
+    redo -> execute: "send() with staleGenerationId / staleAssistantMessageId"
+    execute -> commit: after the model turn resolves
+  }
+
+  http_handler -> routes
+  routes -> service
+}
+
+engine: "application/chat-generation-engine.ts" {
+  execute_turn: "executeGenerationTurn()\nbuilds model + tool + store adapters\ndrives the shared runtime"
+}
+
+machine: "packages/chat/src/generation-machine — server FSM" {
+  runtime: "ChatServerRuntime.run()"
+  provider_turn: "reduceProviderTurnCompleted\nno tool calls -> saving\nneeds confirmation -> awaiting_confirmation\nelse -> execute tool, loop iteration+1"
+}
+
+provider: "Provider" {
+  model: "OpenRouterChatModel\nstreamTurn(): token-by-token\nidle-timeout per chunk"
+  ai_pkg: "@hominem/ai\nstreamChatCompletion()\nOpenRouter SDK client\nCHAT_MODEL (default: google/gemini-2.5-flash-lite)"
+
+  model -> ai_pkg
+}
+
+tools: "Tool execution" {
+  planner: "mcp/chat-tool-adapter.ts\nplanChatTools()\ncheap pre-turn routing call"
+  registry: "mcp/tool-registry.ts\nregisterTool / callTool / getToolDefinition\nin-memory capability map"
+}
+
+persistence: "Postgres — packages/db" {
+  chats: "app.chats"
+  messages: "app.chat_messages"
+  runs: "app.chat_generation_runs"
+  events: "app.chat_generation_events\nNOTIFY trigger on insert"
+  effects: "app.chat_generation_tool_effects\ntool-call idempotency"
+}
+
+live_bus: "generation-pub-sub.ts\nLISTEN/NOTIFY pub-sub, in-process fan-out"
+
+# --- flow ---
+
+clients.web.message_ui -> clients.web.use_regenerate: click Regenerate
+clients.web.message_ui -> clients.web.use_stream: click Retry\n(composer send/stream failure)
+clients.omiro.message_ui -> clients.omiro.use_regenerate: click Regenerate
+clients.omiro.message_ui -> clients.omiro.use_send: click Retry\n(re-sends, not a real retry)
+
+clients.web.use_regenerate -> sdk.chat_client: regenerate()
+clients.web.use_stream -> sdk.chat_client: "retry() — only real caller of /retry"
+clients.omiro.use_regenerate -> sdk.chat_client: regenerate()
+clients.omiro.use_send -> sdk.chat_client: "send() — new generationId, bypasses /retry"
+
+sdk.chat_client -> transport.routes
+transport.routes -> api.http_handler
+
+api.service.redo -> persistence.runs: create new run (kind: send)
+api.service.redo -> persistence.messages: read last 30 msgs\n+ target.parentMessageId
+api.service.commit -> persistence.messages: insert new reply
+api.service.commit -> persistence.runs: delete stale run\n(regenerate only)
+api.service.commit -> persistence.messages: delete stale message\n(regenerate only)
+
+api.service.execute -> engine.execute_turn
+engine.execute_turn -> machine.runtime
+
+machine.provider_turn -> tools.planner: plan relevant tools (pre-turn)
+machine.provider_turn -> provider.model: open provider turn
+machine.provider_turn -> tools.registry: execute requested tool call
+tools.registry -> machine.provider_turn: ToolResult -> appendToolResult()\n-> next turn, iteration+1
+
+engine.execute_turn -> persistence.events: append durable events\n(started, phase_changed, tool.*, committed/failed)
+persistence.events -> live_bus: NOTIFY on insert
+live_bus -> transport.routes: fan out to open SSE streams
+transport.routes -> sdk.create_generation: text-delta, tool.*, generation.committed/failed

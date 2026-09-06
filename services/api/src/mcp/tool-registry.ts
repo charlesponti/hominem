@@ -1,4 +1,4 @@
-import { ValidationError } from '@hominem/db';
+import { ValidationError } from '@hominem/db/errors';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 

@@ -1,3 +1,18 @@
+// Event-sourcing repository for one generation "run" (one send/regenerate
+// attempt). Two tables, two different roles:
+//   - app.chatGenerationEvents: the source of truth. Append-only log of every
+//     step a generation went through (started, phase changes, tool
+//     confirmations, committed/failed/cancelled). Never updated or deleted
+//     except when the whole run is deleted (regenerate supersedes it).
+//   - app.chatGenerationRuns: a denormalized PROJECTION of that log — just
+//     enough (status/assistantMessageId/errorMessage) to answer "what's this
+//     generation's current state" without replaying every event. Kept in
+//     sync by folding each newly-appended event through
+//     reduceGenerationProjection (see appendEventsCore below); rebuildable
+//     from the event log via projection.ts's rebuildGenerationProjection if
+//     it were ever wrong.
+// app.chatGenerationToolEffects is unrelated to either: it's an idempotency
+// cache keyed by tool call, not part of the generation's own history.
 import {
   type GenerationPhase,
   type GenerationHistoryEventPayload,
@@ -36,6 +51,12 @@ type GenerationRunProjectionRow = GenerationRunRow & {
   errorMessage: string | null;
 };
 
+// "Status"/"Phase" is the same concept under two names at this boundary:
+// the DB column is `status` (ordinary SQL naming), but its values are the
+// domain's GenerationPhase enum — the same type the state machine, the
+// `generation.phase_changed` event, and the client reducer all use as
+// `phase`. Don't read anything into the "status" spelling here; it's just
+// this column's name, not a separate concept from phase.
 const GENERATION_STATUSES: readonly GenerationPhase[] = [
   'preparing',
   'running',
@@ -240,23 +261,28 @@ namespace ChatGenerationEvents {
   }
 }
 
-// Shared by appendEvent and appendEvents. Locks the run row once, folds the
-// whole batch of events against its own denormalized projection columns (no
-// replay of prior events — see toCurrentProjection), inserts every row in
-// one multi-row INSERT (sequence assigned by the DB identity column, NOTIFY
-// fired by the app.notify_chat_generation_event trigger), and writes the
-// run row forward once to the final folded state.
-//
-// Idempotency is checked at the batch level: if the *first* event's key is
-// already durable, the whole batch was already appended by a prior attempt
-// (appendEvent/appendEvents are each called as one atomic unit, never
-// partially), so every record is re-fetched by key instead of re-inserted.
+// Shared by appendEvent and appendEvents (appendEvent is just this called
+// with a one-item array — there's only one real implementation). Does three
+// things in sequence, each load-bearing:
+//   1. LOCK   — forUpdate() the run row so two concurrent appends to the
+//      same generation (e.g. a retried effect racing the original) can't
+//      both read the same "current projection" and clobber each other's
+//      projection update below.
+//   2. DEDUPE — if this exact batch was already durably appended by a prior
+//      attempt (checked via the first event's idempotencyKey), skip writing
+//      entirely and just re-fetch+return the same records, so callers can
+//      safely retry without double-appending.
+//   3. WRITE  — fold the batch through the pure reducer to compute the next
+//      projection, insert all rows in one statement (sequence assigned by
+//      the DB identity column; the app.notify_chat_generation_event trigger
+//      fires NOTIFY per row), then advance the run row to the folded state.
 async function appendEventsCore(
   handle: DbHandle,
   input: AppendChatGenerationEventsInput,
 ): Promise<ChatGenerationEventRecord[]> {
   if (input.events.length === 0) return [];
 
+  // --- 1. LOCK ---
   const run = await handle
     .selectFrom('app.chatGenerationRuns')
     .select([
@@ -275,6 +301,10 @@ async function appendEventsCore(
     .forUpdate()
     .executeTakeFirstOrThrow();
 
+  // --- 2. DEDUPE ---
+  // appendEvent/appendEvents are each called as one atomic unit, never
+  // partially, so if the *first* event's key is already durable the whole
+  // batch was already appended by a prior attempt.
   const firstKey = input.events[0]?.idempotencyKey;
   if (firstKey) {
     const existingFirst = await ChatGenerationEvents.getByIdempotencyKey(
@@ -309,6 +339,7 @@ async function appendEventsCore(
     }
   }
 
+  // --- 3. WRITE ---
   const identity = toGenerationIdentity(run);
   let current = toCurrentProjection(run);
   const values = input.events.map(({ event, idempotencyKey }) => {
@@ -345,6 +376,20 @@ async function appendEventsCore(
 }
 
 export const ChatGenerationRepository = {
+  // Used by regenerate once the replacement generation has committed — the
+  // superseded run is gone, not kept as a branch. Its events and tool
+  // effects cascade-delete with it.
+  async deleteRun(
+    handle: DbHandle,
+    input: { generationId: string; ownerUserId: string },
+  ): Promise<void> {
+    await handle
+      .deleteFrom('app.chatGenerationRuns')
+      .where('id', '=', input.generationId)
+      .where('ownerUserId', '=', input.ownerUserId)
+      .execute();
+  },
+
   async appendEvent(
     handle: DbHandle,
     input: AppendChatGenerationEventInput,
@@ -398,7 +443,7 @@ export const ChatGenerationRepository = {
   // internal server-side lookup used only to resolve a NOTIFY pointer
   // (generationId + sequence) into a full record for local fan-out.
   // Authorization already happened when the event was persisted; this
-  // matches the same trust boundary subscribeToGenerationEvents already
+  // matches the same trust boundary GenerationPubSub.subscribe already
   // has (it also takes no ownerUserId).
   async getEventBySequence(
     handle: DbHandle,

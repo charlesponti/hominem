@@ -1,4 +1,5 @@
-import { TestimonialRepository, db } from '@hominem/db';
+import { TestimonialRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { TextField, Textarea } from '@ponti-studios/ui/forms';
 import { Button } from '@ponti-studios/ui/primitives';
 import { Form, redirect } from 'react-router';

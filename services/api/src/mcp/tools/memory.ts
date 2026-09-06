@@ -1,4 +1,6 @@
-import { db, NoteRepository, VectorDocumentRepository } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { NoteRepository } from '@hominem/db/notes';
+import { VectorDocumentRepository } from '@hominem/db/vector';
 import { embeddingQueue } from '@hominem/queues';
 
 import { NoteService } from '../../application/notes.service';

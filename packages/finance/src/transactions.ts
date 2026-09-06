@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 
-import type { AppFinanceTransactions, Selectable } from '@hominem/db';
-import { db } from '@hominem/db';
+import type { Selectable } from '@hominem/db/core';
+import { db } from '@hominem/db/core';
+import type { AppFinanceTransactions } from '@hominem/db/types';
 import { sql, type Insertable, type SqlBool, type Updateable } from 'kysely';
 import z from 'zod';
 

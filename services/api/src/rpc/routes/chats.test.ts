@@ -1,9 +1,9 @@
-import type { ChatGenerationEventRecord } from '@hominem/db';
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { aiUsageMetrics } from '@hominem/utils/testing';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { publishGenerationEvent } from '../../application/generation-live-bus';
+import { GenerationPubSub } from '../../application/generation-pub-sub';
 import type { AppContext, RpcUser } from '../middleware/auth';
 import { requestIdMiddleware } from '../middleware/auth';
 import { apiErrorHandler } from '../middleware/error';
@@ -15,9 +15,9 @@ const mocks = vi.hoisted(() => ({
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
   getMessageById: vi.fn(),
-  getMessagesBefore: vi.fn(),
   searchMessages: vi.fn(),
   deleteUserMessageAndFollowing: vi.fn(),
+  deleteAssistantMessage: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
   replaceAssistantMessageContent: vi.fn(),
@@ -29,9 +29,11 @@ const mocks = vi.hoisted(() => ({
   listGenerationEvents: vi.fn(),
   getGenerationRun: vi.fn(),
   getGenerationRunById: vi.fn(),
+  getGenerationRunByAssistantMessageId: vi.fn(),
   getAwaitingGenerationRunForAssistantMessage: vi.fn(),
   updateGenerationRun: vi.fn(),
   cancelGenerationRun: vi.fn(),
+  deleteGenerationRun: vi.fn(),
   createSpeechRun: vi.fn(),
   getSpeechRun: vi.fn(),
   setSpeechGenerationId: vi.fn(),
@@ -75,8 +77,8 @@ vi.mock('@hominem/ai', () => ({
   streamChatCompletion: mocks.streamChatCompletion,
 }));
 
-vi.mock('@hominem/db', async () => {
-  const actual = await vi.importActual<typeof import('@hominem/db')>('@hominem/db');
+vi.mock('@hominem/db/chats', async () => {
+  const actual = await vi.importActual<typeof import('@hominem/db/chats')>('@hominem/db/chats');
   return {
     ...actual,
     db: {},
@@ -86,15 +88,16 @@ vi.mock('@hominem/db', async () => {
       getOwnedOrThrow: mocks.getOwnedOrThrow,
       getMessages: mocks.getMessages,
       getMessageById: mocks.getMessageById,
-      getMessagesBefore: mocks.getMessagesBefore,
       searchMessages: mocks.searchMessages,
       deleteUserMessageAndFollowing: mocks.deleteUserMessageAndFollowing,
+      deleteAssistantMessage: mocks.deleteAssistantMessage,
       insertMessage: mocks.insertMessage,
       touchLastMessage: mocks.touchLastMessage,
       replaceAssistantMessageContent: mocks.replaceAssistantMessageContent,
       createGenerationRun: mocks.createGenerationRun,
       getGenerationRun: mocks.getGenerationRun,
       getGenerationRunById: mocks.getGenerationRunById,
+      getGenerationRunByAssistantMessageId: mocks.getGenerationRunByAssistantMessageId,
       getAwaitingGenerationRunForAssistantMessage:
         mocks.getAwaitingGenerationRunForAssistantMessage,
       updateGenerationRun: mocks.updateGenerationRun,
@@ -108,6 +111,7 @@ vi.mock('@hominem/db', async () => {
       getToolEffect: mocks.getToolEffect,
       saveToolEffect: mocks.saveToolEffect,
       listEvents: mocks.listGenerationEvents,
+      deleteRun: mocks.deleteGenerationRun,
     },
     ChatSpeechRunRepository: {
       create: mocks.createSpeechRun,
@@ -119,6 +123,7 @@ vi.mock('@hominem/db', async () => {
     runInTransaction: mocks.runInTransaction,
   };
 });
+vi.mock('@hominem/db/core', () => ({ db: {} }));
 
 vi.mock('@hominem/queues', () => ({
   embeddingQueue: {
@@ -553,8 +558,8 @@ describe('chat stream accounting', () => {
       status: 'running',
     });
     mocks.listGenerationEvents.mockImplementation(async () => {
-      publishGenerationEvent(phaseEvent(2));
-      publishGenerationEvent(cancelledEvent(3));
+      GenerationPubSub.publish(phaseEvent(2));
+      GenerationPubSub.publish(cancelledEvent(3));
       return [phaseEvent(1)];
     });
 
@@ -722,18 +727,37 @@ describe('chat message regenerate', () => {
     updatedAt: '2026-01-01T00:00:01.000Z',
   };
 
+  const staleRun = {
+    id: 'stale-generation-id',
+    chatId: '00000000-0000-4000-8000-000000000001',
+    ownerUserId: testUser.id,
+    kind: 'send' as const,
+    status: 'committed' as const,
+    userMessageId: userMessage.id,
+    targetAssistantMessageId: null,
+    assistantMessageId: assistantMessage.id,
+    errorMessage: null,
+    createdAt: '2026-01-01T00:00:01.000Z',
+    updatedAt: '2026-01-01T00:00:01.000Z',
+  };
+
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
     mocks.getOwnedOrThrow.mockResolvedValue(testChat);
     mocks.getChatSourceContext.mockResolvedValue([]);
-    mocks.replaceAssistantMessageContent.mockReset();
-    mocks.replaceAssistantMessageContent.mockResolvedValue({
+    mocks.insertMessage.mockReset();
+    mocks.insertMessage.mockResolvedValue({
       ...assistantMessage,
+      id: '00000000-0000-4000-8000-000000000099',
       content: 'Regenerated reply',
     });
     mocks.createGenerationRun.mockResolvedValue(undefined);
     mocks.getGenerationRun.mockResolvedValue(null);
     mocks.getGenerationRunById.mockResolvedValue(null);
+    mocks.getGenerationRunByAssistantMessageId.mockReset();
+    mocks.getGenerationRunByAssistantMessageId.mockResolvedValue(staleRun);
+    mocks.deleteGenerationRun.mockReset();
+    mocks.deleteAssistantMessage.mockReset();
     mocks.updateGenerationRun.mockResolvedValue(undefined);
     mocks.touchLastMessage.mockResolvedValue(undefined);
     mocks.recordAIUsageEvent.mockResolvedValue(undefined);
@@ -743,9 +767,9 @@ describe('chat message regenerate', () => {
       async (callback: (trx: unknown) => Promise<unknown>) => callback({}),
     );
     mocks.getMessageById.mockReset();
-    mocks.getMessagesBefore.mockReset();
+    mocks.getMessages.mockReset();
     mocks.getMessageById.mockResolvedValue(assistantMessage);
-    mocks.getMessagesBefore.mockResolvedValue([userMessage]);
+    mocks.getMessages.mockResolvedValue([userMessage, assistantMessage]);
     mocks.streamChatCompletion.mockReturnValue(
       (async function* () {
         yield { choices: [{ delta: { content: 'Regenerated reply' } }] };
@@ -753,7 +777,7 @@ describe('chat message regenerate', () => {
     );
   });
 
-  it('regenerates an assistant message using the prior user turn', async () => {
+  it('regenerates an assistant message using the prior user turn, deleting the superseded one', async () => {
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/regenerate',
       {
@@ -767,30 +791,57 @@ describe('chat message regenerate', () => {
     const body = await response.text();
     expect(body).toContain('Regenerated reply');
 
-    expect(mocks.getMessagesBefore).toHaveBeenCalledWith(
+    expect(mocks.getMessages).toHaveBeenCalledWith(
       {},
       '00000000-0000-4000-8000-000000000001',
-      '2026-01-01T00:00:01.000Z',
+      30,
+      0,
     );
 
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
 
-    expect(mocks.replaceAssistantMessageContent).toHaveBeenCalledWith(
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        chatId: '00000000-0000-4000-8000-000000000001',
+        role: 'assistant',
+        content: 'Regenerated reply',
+        parentMessageId: '00000000-0000-4000-8000-000000000004',
+      }),
+    );
+    expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, '00000000-0000-4000-8000-000000000001');
+    // The regenerated reply replaces the old one outright — its run and
+    // message are deleted rather than kept as a branch.
+    expect(mocks.deleteGenerationRun).toHaveBeenCalledWith(
+      {},
+      { generationId: 'stale-generation-id', ownerUserId: testUser.id },
+    );
+    expect(mocks.deleteAssistantMessage).toHaveBeenCalledWith(
       {},
       '00000000-0000-4000-8000-000000000001',
       '00000000-0000-4000-8000-000000000002',
-      'Regenerated reply',
-      { reasoning: null, toolCalls: null },
     );
-    expect(mocks.touchLastMessage).toHaveBeenCalledWith({}, '00000000-0000-4000-8000-000000000001');
   });
 
-  it('finds the parent user turn even when it is not the most recent prior message', async () => {
-    mocks.getMessagesBefore.mockResolvedValue([
-      { ...userMessage, id: 'earlier-user', content: 'Earlier question' },
-      { ...assistantMessage, id: 'earlier-assistant', createdAt: '2026-01-01T00:00:00.500Z' },
-      { ...userMessage, content: 'Latest question', createdAt: '2026-01-01T00:00:00.800Z' },
+  it('uses the stored parent pointer, ignoring messages that came after the target', async () => {
+    const earlierUser = { ...userMessage, id: 'earlier-user', content: 'Earlier question' };
+    const earlierAssistant = {
+      ...assistantMessage,
+      id: 'earlier-assistant',
+      content: 'Earlier answer',
+      parentMessageId: 'earlier-user',
+    };
+    const target = { ...assistantMessage, parentMessageId: userMessage.id };
+    const laterUser = { ...userMessage, id: 'later-user', content: 'Later question' };
+    const laterAssistant = { ...assistantMessage, id: 'later-assistant', content: 'Later answer' };
+    mocks.getMessageById.mockResolvedValue(target);
+    mocks.getMessages.mockResolvedValue([
+      earlierUser,
+      earlierAssistant,
+      userMessage,
+      laterUser,
+      laterAssistant,
     ]);
 
     const response = await createApp().request(
@@ -806,8 +857,9 @@ describe('chat message regenerate', () => {
     await response.text();
     const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
     expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Earlier question' });
-    expect(completionOptions.messages[2]).toEqual({ role: 'assistant', content: 'Hi' });
-    expect(completionOptions.messages[3]).toEqual({ role: 'user', content: 'Latest question' });
+    expect(completionOptions.messages[2]).toEqual({ role: 'assistant', content: 'Earlier answer' });
+    expect(completionOptions.messages[3]).toEqual({ role: 'user', content: 'Hello' });
+    expect(completionOptions.messages).toHaveLength(4);
   });
 
   it('rejects regenerating a user message', async () => {
@@ -843,7 +895,7 @@ describe('chat message regenerate', () => {
   });
 
   it('rejects regenerating an assistant message with no prior user turn', async () => {
-    mocks.getMessagesBefore.mockResolvedValue([]);
+    mocks.getMessageById.mockResolvedValue({ ...assistantMessage, parentMessageId: null });
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000002/regenerate',

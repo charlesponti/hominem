@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
 import { generateNoteFromChat } from '@hominem/ai';
-import { db, NoteRepository, VectorDocumentRepository } from '@hominem/db';
+import { db } from '@hominem/db/core';
+import { NoteRepository } from '@hominem/db/notes';
+import { VectorDocumentRepository } from '@hominem/db/vector';
 import { embeddingQueue } from '@hominem/queues';
 import { logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';

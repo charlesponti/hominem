@@ -111,8 +111,10 @@ export function buildArtifactProposal(
   const includesAssistant = messages.some(
     (message) => message.role === 'assistant' && normalizeContent(message.content).length > 0,
   );
+  const typeLabel = getArtifactChangeLabel(type);
+
   const proposedChanges = [
-    `Captured ${relevantMessageCount} message${relevantMessageCount === 1 ? '' : 's'} into this ${getArtifactChangeLabel(type)}`,
+    `Captured ${relevantMessageCount} message${relevantMessageCount === 1 ? '' : 's'} into this ${typeLabel}`,
     ...(includesAssistant ? ['Includes assistant output'] : []),
   ];
 

@@ -5,7 +5,7 @@ import { fetchClientMetadataResource } from '@better-auth/cimd/node';
 import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { mcp } from '@better-auth/mcp';
-import { authDb } from '@hominem/db';
+import { authDb } from '@hominem/db/core';
 import { logger } from '@hominem/telemetry';
 import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';

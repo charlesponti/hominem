@@ -6,7 +6,9 @@ import {
   parseResumeWithAI,
   ResumeParseError,
 } from '@hominem/career-services/resume';
-import { CareerRepository, db, SocialLinksRepository } from '@hominem/db';
+import { SocialLinksRepository } from '@hominem/db/career';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import {
   getJobStatus,
   publishImportProgress,

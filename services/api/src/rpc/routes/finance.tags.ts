@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';

@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { db } from '@hominem/db/core';
 import type * as z from 'zod';
 
 import type {

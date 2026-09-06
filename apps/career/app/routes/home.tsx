@@ -1,4 +1,5 @@
-import { ProjectRepository, db } from '@hominem/db';
+import { ProjectRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { buttonVariants } from '@ponti-studios/ui/primitives';
 import { BriefcaseIcon, FolderIcon, PlusIcon } from 'lucide-react';
 import { Link } from 'react-router';

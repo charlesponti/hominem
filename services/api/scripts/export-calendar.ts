@@ -55,7 +55,7 @@ async function main() {
   const databaseUrl = resolveDatabaseUrl(values.env);
   process.env.DATABASE_URL = databaseUrl;
 
-  const { pool } = await import('@hominem/db');
+  const { pool } = await import('@hominem/db/core');
   const userId =
     values.userId ??
     (

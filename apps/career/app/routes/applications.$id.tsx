@@ -1,4 +1,5 @@
-import { CareerRepository, db, type CareerApplicationWithRelations } from '@hominem/db';
+import { CareerRepository, type CareerApplicationWithRelations } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   ArrowLeftIcon,

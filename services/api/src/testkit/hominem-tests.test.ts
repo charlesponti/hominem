@@ -292,6 +292,7 @@ describe('HominemTests', () => {
 
     const failed = await test.chat.start({ title: 'SDK retry recovery', message: 'Retry this' });
     expect(failed.clientState.phase).toBe('failed');
+    const failedUserMessageId = (await test.inspect(failed.generationId)).run?.userMessageId;
 
     const retried = await test.chat.retry(failed.chatId!, failed.generationId, {
       generationId: '01a060d0-0000-7000-8000-000000000001',
@@ -306,16 +307,13 @@ describe('HominemTests', () => {
     expect(retried.clientState.text).toBe('Recovered reply');
     expect(duplicateRetry.clientState.text).toBe('Recovered reply');
     expect(provider.calls).toBe(2);
-    expect(failedState.run?.status).toBe('failed');
+    // Retry supersedes the failed attempt outright, same as regenerating a
+    // completed reply — its run and event log are gone, not kept as a
+    // failure record, once the retry commits.
+    expect(failedState.run).toBeNull();
+    expect(failedState.events).toEqual([]);
     expect(retriedState.run?.status).toBe('committed');
-    expect(retriedState.run?.userMessageId).toBe(failedState.run?.userMessageId);
-    expect(
-      retriedState.events.find(
-        (event) => 'sequence' in event && event.payload.type === 'generation.started',
-      ),
-    ).toMatchObject({
-      payload: { context: { retryOfGenerationId: failed.generationId } },
-    });
+    expect(retriedState.run?.userMessageId).toBe(failedUserMessageId);
     expect(retriedState.messages.filter((message) => message.role === 'user')).toHaveLength(1);
     expect(retriedState.messages.filter((message) => message.role === 'assistant')).toHaveLength(1);
   });

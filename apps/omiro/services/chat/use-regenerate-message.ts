@@ -33,7 +33,7 @@ export function useRegenerateMessage(chatId: string) {
       const controller = regenerateGeneration(
         {
           chatId,
-          messageId,
+          target: { messageId },
           body: { generationId, responseLength: getChatResponseLength() },
         },
         {

@@ -1,4 +1,4 @@
-import type { CareerEngagementRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db/career';
 import { humanizeIdentifier } from '@hominem/utils/text';
 
 export const EMPLOYMENT_TYPE_OPTIONS = [

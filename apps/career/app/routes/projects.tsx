@@ -1,4 +1,5 @@
-import { ProjectRepository, db, type CareerProjectRecord } from '@hominem/db';
+import { ProjectRepository, type CareerProjectRecord } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { FolderIcon, FolderKanbanIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';

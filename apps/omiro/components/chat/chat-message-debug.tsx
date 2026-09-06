@@ -27,7 +27,7 @@ export function MessageDebug({
     <View style={styles.debugPanel}>
       <Text style={styles.debugText}>ID: {message.id}</Text>
       <Text style={styles.debugText}>Role: {message.role}</Text>
-      <Text style={styles.debugText}>Created: {message.created_at || 'unknown'}</Text>
+      <Text style={styles.debugText}>Created: {message.createdAt || 'unknown'}</Text>
       <Text style={styles.debugText}>Reasoning: {hasReasoning ? 'present' : 'none'}</Text>
       <Text style={styles.debugText}>Tool calls: {message.toolCalls?.length ?? 0}</Text>
     </View>

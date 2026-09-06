@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { db, pool } from '@hominem/db';
+import { pool } from '@hominem/db/core';
+import { db } from '@hominem/db/core';
 import { Hono } from 'hono';
 import { beforeAll, describe, expect, it } from 'vitest';
 

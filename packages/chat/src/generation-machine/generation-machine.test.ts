@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationState,
   generationEventIdempotencyKey,
-  restoreGenerationState,
   reduceGeneration,
+  restoreGenerationState,
   runGeneration,
-  type GenerationState,
   type GenerationInput,
-} from './generation-machine';
-import { chatSnapshot, messageSnapshot } from './generation-test-fixtures';
+  type GenerationState,
+} from '.';
+import type { GenerationStartContext } from '../generation-events';
+import { chatSnapshot, messageSnapshot } from '../generation-test-fixtures';
 
 const startContext = {
   chatId: 'chat-1',

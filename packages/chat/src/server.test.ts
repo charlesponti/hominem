@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { GenerationState, ToolResult } from './generation-machine';
-import { ChatServerRuntime, createChatHttpHandler, type ChatServerPersistedEvent } from './server';
+import {
+  createChatHttpHandler,
+  createGenerationRunner,
+  type ChatServerPersistedEvent,
+} from './server';
 
 function createStore() {
   const events: ChatServerPersistedEvent[] = [];
@@ -50,12 +54,12 @@ const startContext = {
   requestContext: {},
 };
 
-describe('ChatServerRuntime', () => {
+describe('generation runner', () => {
   it('owns persistence and publication around a provider turn', async () => {
     const store = createStore();
     const published: ChatServerPersistedEvent[] = [];
     const recordCompletion = vi.fn();
-    const runtime = new ChatServerRuntime({
+    const runner = createGenerationRunner({
       provider: ({ onUsage }) => ({
         open: () =>
           (async function* () {
@@ -86,7 +90,7 @@ describe('ChatServerRuntime', () => {
       context: { recordCompletion },
     });
 
-    const result = await runtime.run({
+    const result = await runner.generate({
       generationId: 'generation-1',
       chatId: 'chat-1',
       userId: 'user-1',
@@ -99,7 +103,7 @@ describe('ChatServerRuntime', () => {
     expect(published).toEqual(store.events);
     expect(recordCompletion).toHaveBeenCalledOnce();
 
-    await runtime.run({
+    await runner.generate({
       generationId: 'generation-2',
       chatId: 'chat-1',
       userId: 'user-1',
@@ -148,7 +152,6 @@ describe('ChatServerRuntime', () => {
         return stream();
       },
       regenerate: async () => stream(),
-      retry: async () => stream(),
       respondToToolCall: async () => stream(),
       cancel: async () => ({ status: 'cancelled' }),
       getGeneration: async () => ({ status: 'committed' }),

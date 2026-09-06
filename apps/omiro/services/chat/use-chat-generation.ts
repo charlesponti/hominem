@@ -35,7 +35,9 @@ function checkpointStore(chatId: string) {
   return {
     get: (_id: string) => {
       const raw = storage.getString(generationStorageKey(chatId));
-      return raw ? (JSON.parse(raw) as GenerationClientState) : null;
+      if (!raw) return null;
+      const state: GenerationClientState = JSON.parse(raw);
+      return state;
     },
     set: (state: GenerationClientState) =>
       storage.set(generationStorageKey(chatId), JSON.stringify(state)),
@@ -56,18 +58,19 @@ export function useChatGeneration({
   getAuthHeaders,
   onGenerationTerminal,
 }: UseChatGenerationOptions) {
-  const clientRef = useRef<ChatClient | null>(null);
+  const [client] = useState(
+    () =>
+      new ChatClient({
+        baseUrl: API_BASE_URL,
+        headers: getAuthHeaders,
+        transport: xhrChatTransport(),
+        checkpointStore: checkpointStore(chatId),
+      }),
+  );
   const controllerRef = useRef<ChatGenerationController | null>(null);
-  const generationRef = useRef<ChatGenerationState | null>(restoreGeneration(chatId));
+  const [initialGeneration] = useState(() => restoreGeneration(chatId));
+  const generationRef = useRef<ChatGenerationState | null>(initialGeneration);
   const [generation, setGenerationState] = useState(generationRef.current);
-  if (!clientRef.current) {
-    clientRef.current = new ChatClient({
-      baseUrl: API_BASE_URL,
-      headers: getAuthHeaders,
-      transport: xhrChatTransport(),
-      checkpointStore: checkpointStore(chatId),
-    });
-  }
 
   const setGeneration = useCallback(
     (next: ChatGenerationState | null) => {
@@ -116,20 +119,20 @@ export function useChatGeneration({
 
   const sendGeneration = useCallback(
     (input: Parameters<ChatClient['send']>[0], initial: ChatGenerationState) => {
-      const controller = clientRef.current!.send(input);
+      const controller = client.send(input);
       bindController(controller, initial);
       return controller;
     },
-    [bindController],
+    [bindController, client],
   );
 
   const regenerateGeneration = useCallback(
     (input: Parameters<ChatClient['regenerate']>[0], initial: ChatGenerationState) => {
-      const controller = clientRef.current!.regenerate(input);
+      const controller = client.regenerate(input);
       bindController(controller, initial);
       return controller;
     },
-    [bindController],
+    [bindController, client],
   );
 
   const resumeGeneration = useCallback(async () => {
@@ -141,7 +144,7 @@ export function useChatGeneration({
     )
       return;
     resumingGenerationIds.add(current.id);
-    const controller = clientRef.current!.resumeGeneration({
+    const controller = client.resumeGeneration({
       chatId,
       generationId: current.id,
     });
@@ -153,7 +156,7 @@ export function useChatGeneration({
       resumingGenerationIds.delete(current.id);
       if (controllerRef.current === controller) controllerRef.current = null;
     }
-  }, [bindController, chatId]);
+  }, [bindController, chatId, client]);
 
   useEffect(() => {
     if (generationRef.current) void resumeGeneration().catch(() => undefined);
@@ -164,14 +167,14 @@ export function useChatGeneration({
     const controller = controllerRef.current;
     if (!current || !controller || current.stage === 'stopping') return;
     setGeneration({ ...current, stage: 'stopping' });
-    const response = await clientRef.current!.cancel({ chatId, generationId: current.id });
+    const response = await client.cancel({ chatId, generationId: current.id });
     if (!response.ok) {
       setGeneration({ ...current, stage: 'failed', error: 'Unable to stop reply.' });
       return;
     }
     controller.cancel();
     setGeneration({ ...current, stage: 'cancelled' });
-  }, [chatId, setGeneration]);
+  }, [chatId, client, setGeneration]);
 
   return {
     cancelGeneration,

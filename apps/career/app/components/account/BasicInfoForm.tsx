@@ -1,4 +1,4 @@
-import type { CareerProfileRecord } from '@hominem/db';
+import type { CareerProfileRecord } from '@hominem/db/career';
 import { Input, Switch, Textarea } from '@ponti-studios/ui/forms';
 import { Controller, useFormContext } from 'react-hook-form';
 

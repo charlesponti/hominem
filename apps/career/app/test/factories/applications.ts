@@ -1,4 +1,4 @@
-import type { CareerApplicationRecord } from '@hominem/db';
+import type { CareerApplicationRecord } from '@hominem/db/career';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApplicationOverrides = Partial<CareerApplicationRecord> & Record<string, any>;

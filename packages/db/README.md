@@ -4,7 +4,7 @@ This package exposes compiled runtime and types only. Do NOT import source files
 
 Public surface (what consumers may import):
 
-- `@hominem/db` — runtime API (compiled `build/index.js`) and types (`build/index.d.ts`)
+- `@hominem/db/ai`, `/career`, `/chats`, `/core`, `/errors`, `/files`, `/finance`, `/notes`, `/tasks`, `/types`, `/transaction`, and `/vector` — explicit entry points for new imports
 - `@hominem/db/schema/*` — compiled schema objects (`build/schema/*.schema.js`)
 - `@hominem/db/types/*` — type-only imports (TypeScript declarations in `build/schema/*.types.d.ts`)
 
@@ -12,6 +12,14 @@ Migration notes
 
 - Replace `import type { X } from '@hominem/db/schema/...'` with `import type { X } from '@hominem/db/types/...'` for purely type imports.
 - Do not deep-import `@hominem/db/src/*` — those paths are internal and not exported.
+
+Prefer an explicit entry point for new imports, for example:
+
+```ts
+import { TaskRepository } from '@hominem/db/tasks';
+import { db } from '@hominem/db/core';
+import type { AppTasks } from '@hominem/db/types';
+```
 
 Migration naming and organization
 

@@ -20,7 +20,7 @@ vi.mock('@hominem/ai', () => ({
   synthesizeSpeech: vi.fn(),
 }));
 
-vi.mock('@hominem/db', () => ({
+vi.mock('@hominem/db/chats', () => ({
   db: {},
   ChatRepository: {
     getMessageById: mocks.getMessageById,
@@ -33,6 +33,7 @@ vi.mock('@hominem/db', () => ({
     markReconciliation: mocks.markReconciliation,
   },
 }));
+vi.mock('@hominem/db/core', () => ({ db: {} }));
 
 vi.mock('@hominem/storage', () => ({ fileStorageService: {} }));
 vi.mock('@hominem/telemetry', () => ({

@@ -1,4 +1,4 @@
-import type { CareerProfileRecord, CareerSocialLinksRecord } from '@hominem/db';
+import type { CareerProfileRecord, CareerSocialLinksRecord } from '@hominem/db/career';
 import { describe, expect, it } from 'vitest';
 
 import { buildResumeImportDiff, type ConvertedResumeData } from './resume';

@@ -1,4 +1,4 @@
-import type { CareerEngagementRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db/career';
 import { useFetcher } from 'react-router';
 
 import { useCareerEditorSubmission } from './useCareerEditorSubmission';

@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto';
 
 import { generateEmbedding } from '@hominem/ai';
-import { ChatRepository, NoteRepository, VectorDocumentRepository, db } from '@hominem/db';
+import { ChatRepository } from '@hominem/db/chats';
+import { db } from '@hominem/db/core';
+import { NoteRepository } from '@hominem/db/notes';
+import { VectorDocumentRepository } from '@hominem/db/vector';
 import { QUEUE_NAMES, type EmbeddingGenerationJob } from '@hominem/queues';
 import { redis as cache } from '@hominem/services/redis';
 import { logger } from '@hominem/telemetry';

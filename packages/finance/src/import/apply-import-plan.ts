@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 
-import { runInTransaction, type JsonObject, type TransactionHandle } from '@hominem/db';
+import { runInTransaction } from '@hominem/db/transaction';
+import type { TransactionHandle } from '@hominem/db/transaction';
+import type { JsonObject } from '@hominem/db/types';
 
 import { COPILOT_PROVIDER, type ImportPlan, type PlannedTransaction } from './types';
 

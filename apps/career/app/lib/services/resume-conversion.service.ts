@@ -1,12 +1,11 @@
 import {
   CareerRepository,
   ProjectRepository,
-  runInTransaction,
   SkillRepository,
   SocialLinksRepository,
-  sql,
-  type DbHandle,
-} from '@hominem/db';
+} from '@hominem/db/career';
+import { sql } from '@hominem/db/core';
+import { runInTransaction, type DbHandle } from '@hominem/db/transaction';
 
 import type { ConvertedResumeData } from '../../types/resume';
 import { normalizePortfolioSlug } from '../../types/resume';

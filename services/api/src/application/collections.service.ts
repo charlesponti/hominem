@@ -1,4 +1,5 @@
-import { db, NotFoundError, sql } from '@hominem/db';
+import { db, sql } from '@hominem/db/core';
+import { NotFoundError } from '@hominem/db/errors';
 
 import type {
   AcceptMemberInviteInput,

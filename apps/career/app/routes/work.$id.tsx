@@ -1,4 +1,6 @@
-import { CareerRepository, db, type AppCareerEngagementKind } from '@hominem/db';
+import { CareerRepository } from '@hominem/db/career';
+import { db } from '@hominem/db/core';
+import type { AppCareerEngagementKind } from '@hominem/db/types';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import { Button } from '@ponti-studios/ui/primitives';
 import { ArrowLeftIcon, PencilIcon, Trash2Icon } from 'lucide-react';

@@ -1,4 +1,4 @@
-import type { CareerEngagementRecord } from '@hominem/db';
+import type { CareerEngagementRecord } from '@hominem/db/career';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { BriefcaseIcon, PlusIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';

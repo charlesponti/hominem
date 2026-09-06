@@ -1,4 +1,5 @@
-import { db, runInTransaction, sql } from '@hominem/db';
+import { db, sql } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
 import z from 'zod';
 
 import type { personSummarySchema } from '../schemas/people.schema';
