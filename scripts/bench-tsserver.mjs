@@ -39,54 +39,48 @@ const CONSUMERS = [
   {
     label: 'apps/web',
     file: path.join(root, 'apps/web/app/lib/hooks/use-stream-message.ts'),
-    line: 2,
-    offset: 15,
     symbol: 'ChatGenerationController',
   },
   {
     label: 'apps/omiro',
     file: path.join(root, 'apps/omiro/services/chat/use-chat-generation.ts'),
-    line: 1,
-    offset: 10,
     symbol: 'ChatClient',
   },
   {
     label: 'packages/db',
     file: path.join(root, 'packages/db/src/services/chats/chat-generation.repository.ts'),
-    line: 3,
-    offset: 8,
     symbol: 'GenerationHistoryEventPayload',
   },
   {
     label: 'packages/rpc',
     file: path.join(root, 'packages/rpc/src/types/chat.types.ts'),
-    line: 6,
-    offset: 3,
     symbol: 'ChatMessageItem',
   },
   {
     label: 'services/api',
     file: path.join(root, 'services/api/src/application/chat-generation.service.ts'),
-    line: 12,
-    offset: 3,
     symbol: 'GenerationHistoryEvent',
   },
 ];
 
 const SOURCE_FILE = path.join(root, 'packages/chat/src/generation-machine/types.ts');
-const SOURCE_SYMBOL = { line: 162, offset: 13 }; // GenerationHistoryEvent
+const SOURCE_SYMBOL = 'GenerationHistoryEvent';
 
-function assertSymbol(file, { line, offset }, name) {
-  const text = readFileSync(file, 'utf8').split('\n')[line - 1] ?? '';
-  const found = text.slice(offset - 1, offset - 1 + name.length);
-  if (found !== name) {
-    throw new Error(
-      `Benchmark fixture drifted: expected "${name}" at ${file}:${line}:${offset}, found "${found}".`,
-    );
+function findSymbolPosition(file, symbol, { declaration = false } = {}) {
+  const lines = readFileSync(file, 'utf8').split('\n');
+  const symbolPattern = declaration
+    ? new RegExp(
+        `\\b(?:export\\s+)?(?:type|interface|class|function|const|let|var)\\s+${symbol}\\b`,
+      )
+    : new RegExp(`\\b${symbol}\\b`);
+  for (const [index, line] of lines.entries()) {
+    const match = symbolPattern.exec(line);
+    if (match) return { line: index + 1, offset: match.index + 1 };
   }
+  throw new Error(`Benchmark fixture drifted: could not find "${symbol}" in ${file}.`);
 }
 
-async function benchConsumer({ file, line, offset, symbol }) {
+async function benchConsumer({ file, symbol }) {
   const client = new TsServerClient(root);
   try {
     let t0 = performance.now();
@@ -100,6 +94,7 @@ async function benchConsumer({ file, line, offset, symbol }) {
     });
     const geterr = performance.now() - t0;
 
+    const { line, offset } = findSymbolPosition(file, symbol);
     const quickinfo = await client.request('quickinfo', { file, line, offset }, 30000);
     const sees = (quickinfo.body?.displayString ?? '').includes(symbol);
 
@@ -115,14 +110,14 @@ async function benchConsumer({ file, line, offset, symbol }) {
 }
 
 async function benchReferences() {
-  assertSymbol(SOURCE_FILE, SOURCE_SYMBOL, 'GenerationHistoryEvent');
+  const sourcePosition = findSymbolPosition(SOURCE_FILE, SOURCE_SYMBOL, { declaration: true });
   const client = new TsServerClient(root);
   try {
     await client.open(SOURCE_FILE, { waitForProjectLoad: false });
     const t0 = performance.now();
     const refsResponse = await client.request(
       'references',
-      { file: SOURCE_FILE, line: SOURCE_SYMBOL.line, offset: SOURCE_SYMBOL.offset },
+      { file: SOURCE_FILE, ...sourcePosition },
       45000,
     );
     return {
@@ -140,7 +135,6 @@ function fmt(ms) {
 
 const results = {};
 for (const consumer of CONSUMERS) {
-  assertSymbol(consumer.file, { line: consumer.line, offset: consumer.offset }, consumer.symbol);
   const runsData = [];
   for (let i = 0; i < runs; i++) {
     process.stderr.write(`[bench-tsserver] ${label} / ${consumer.label} run ${i + 1}/${runs}...\n`);
