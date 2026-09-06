@@ -53,7 +53,7 @@ import type {
 } from './chat-generation-types';
 import { buildChatSystemPrompt } from './chat-prompts';
 import { chatSpeechService } from './chat-speech.service';
-import { subscribeToGenerationEvents } from './generation-live-bus';
+import { GenerationPubSub } from './generation-pub-sub';
 
 export class ChatGenerationInputError extends Error {
   constructor(message: string) {
@@ -736,7 +736,7 @@ export class ChatGenerationService {
 
   async replay(input: ReplayInput): Promise<AsyncIterable<GenerationEvent>> {
     const afterSequence = input.afterSequence ?? 0;
-    const subscriber = subscribeToGenerationEvents(input.generationId);
+    const subscriber = GenerationPubSub.subscribe(input.generationId);
     const queue = new AsyncEventQueue<GenerationEvent>(() => subscriber.close());
     void (async () => {
       try {

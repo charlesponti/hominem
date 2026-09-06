@@ -443,7 +443,7 @@ export const ChatGenerationRepository = {
   // internal server-side lookup used only to resolve a NOTIFY pointer
   // (generationId + sequence) into a full record for local fan-out.
   // Authorization already happened when the event was persisted; this
-  // matches the same trust boundary subscribeToGenerationEvents already
+  // matches the same trust boundary GenerationPubSub.subscribe already
   // has (it also takes no ownerUserId).
   async getEventBySequence(
     handle: DbHandle,

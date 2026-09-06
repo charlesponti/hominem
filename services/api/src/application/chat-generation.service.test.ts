@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
   saveToolEffect: vi.fn(),
   deleteRun: vi.fn(),
   runInTransaction: vi.fn(),
-  publishGenerationEvent: vi.fn(),
+  generationPubSubPublish: vi.fn(),
+  generationPubSubSubscribe: vi.fn(),
   planChatTools: vi.fn(),
   callTool: vi.fn(),
   executeGenerationTurn: vi.fn(),
@@ -79,9 +80,11 @@ vi.mock('./chat-generation-engine', () => ({
 }));
 vi.mock('./chat-generation-replay', () => ({ replayGenerationEvents: vi.fn() }));
 vi.mock('./chat-speech.service', () => ({ chatSpeechService: {} }));
-vi.mock('./generation-live-bus', () => ({
-  publishGenerationEvent: mocks.publishGenerationEvent,
-  subscribeToGenerationEvents: vi.fn(),
+vi.mock('./generation-pub-sub', () => ({
+  GenerationPubSub: {
+    publish: mocks.generationPubSubPublish,
+    subscribe: mocks.generationPubSubSubscribe,
+  },
 }));
 
 import { ChatGenerationService } from './chat-generation.service';
@@ -205,7 +208,7 @@ describe('ChatGenerationService.cancel', () => {
 
     expect(result).toEqual(committed);
     expect(mocks.appendEvent).not.toHaveBeenCalled();
-    expect(mocks.publishGenerationEvent).not.toHaveBeenCalled();
+    expect(mocks.generationPubSubPublish).not.toHaveBeenCalled();
   });
 
   it('recovers phase and cursor from the owner-scoped durable event log', async () => {

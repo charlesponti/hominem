@@ -1,6 +1,6 @@
 import type { GenerationStartContext } from './generation-events';
 import type { GenerationAdapters } from './generation-interpreter';
-import { runGenerationWithAdapters } from './generation-interpreter';
+import { generate as runGeneration } from './generation-interpreter';
 import type {
   GenerationCommand,
   GenerationDeltaEventPayload,
@@ -86,7 +86,7 @@ export type ChatServerStore<TEvent extends ChatServerPersistedEvent = ChatServer
   stopGeneration: (state: GenerationState) => Promise<void>;
 };
 
-export type ChatServerRuntimeOptions<
+export type GenerationRunnerOptions<
   TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent,
 > = {
   provider?: (input: ChatServerModelInput) => ChatModel;
@@ -164,129 +164,135 @@ function parseArguments(call: GenerationToolCall): Record<string, unknown> {
 // generation-interpreter.ts's adapters. Framework- and transport-agnostic: it
 // knows nothing about HTTP, routes, or auth — that's ChatHttpRuntime below,
 // which is a thin dispatcher that maps HTTP requests to calls like this
-// one's `.run()`. Concrete instances (real OpenRouter provider, real DB
+// one's `.generate()`. Concrete instances (real OpenRouter provider, real DB
 // store) are assembled in services/api, not here.
-export class ChatServerRuntime<TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent> {
-  constructor(private readonly options: ChatServerRuntimeOptions<TEvent> = {}) {}
-
-  async run(
+export type GenerationRunner<TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent> = {
+  generate: (
     input: ChatServerGenerationInput,
-    operation: ChatServerRuntimeOptions<TEvent> = {},
-  ): Promise<ChatServerGenerationResult> {
-    const options = { ...this.options, ...operation };
-    if (!options.provider || !options.tools || !options.store) {
-      throw new Error('ChatServerRuntime requires provider, tools, and store adapters');
-    }
-    const provider = options.provider;
-    const tools = options.tools;
-    const store = options.store;
-    const toolResults = new Map<string, ToolResult>();
-    let pendingPreview: ToolResult | null = null;
-    const context = {
-      userId: input.userId,
-      generationId: input.generationId,
-      chatId: input.chatId,
-    };
-    let usage: unknown = null;
+    operation?: GenerationRunnerOptions<TEvent>,
+  ) => Promise<ChatServerGenerationResult>;
+};
 
-    const model = provider({
-      ...input.model,
-      requiresConfirmation: (toolName) =>
-        tools.getDefinition(toolName)?.requiresConfirmation ?? false,
-      onUsage: (next) => {
-        usage = addUsageTotals(usage, next);
-        input.model.onUsage?.(next);
-      },
-    });
-
-    const state = await runGenerationWithAdapters({
-      generationId: input.generationId,
-      startContext: input.startContext,
-      initialInput: input.initialInput,
-      initialState: input.initialState,
-      effectTimeoutsMs: options.effectTimeoutsMs,
-      adapters: {
-        provider: model,
-        tools: {
-          execute: async ({ call, idempotencyKey }) => {
-            const stored = await store.getEffect?.({
-              generationId: input.generationId,
-              idempotencyKey,
-              toolName: call.name,
-            });
-            if (stored) {
-              toolResults.set(call.id, stored);
-              return stored;
-            }
-            const result = await tools.execute({
-              call,
-              arguments: parseArguments(call),
-              context: { ...context, idempotencyKey },
-            });
-            toolResults.set(call.id, result);
-            return store.saveEffect
-              ? store.saveEffect({
-                  generationId: input.generationId,
-                  idempotencyKey,
-                  toolName: call.name,
-                  result,
-                })
-              : result;
-          },
-          preview: async ({ call, idempotencyKey }) => {
-            const definition = tools.getDefinition(call.name);
-            const preview = definition?.preview
-              ? await definition.preview(call, { ...context, idempotencyKey })
-              : null;
-            pendingPreview = preview?.error ? null : preview;
-            return (
-              preview ?? {
-                callId: call.id,
-                toolName: call.name,
-                content: 'null',
-                error: false,
-              }
-            );
-          },
-        },
-        events: {
-          persist: async (command) => {
-            const record = await store.appendEvent({
-              event: command.event,
-              idempotencyKey: command.idempotencyKey,
-            });
-            if (record) await options.publisher?.accept(record);
-          },
-          emit: async (event) => options.emit?.(event),
-        },
-        generation: {
-          save: async (stateToSave) =>
-            store.saveGeneration({
-              state: stateToSave,
-              generationId: input.generationId,
-              chatId: input.chatId,
-              userId: input.userId,
-              targetAssistantMessageId: input.targetAssistantMessageId,
-            }),
-          stop: (stateToStop) => store.stopGeneration(stateToStop),
-        },
-        control: {
-          isCancelled: () => options.isCancelled?.(context) ?? false,
-        },
-      },
-    });
-
-    if (state.phase === 'committed' && usage) {
-      await options.context?.recordCompletion({
+export function createGenerationRunner<
+  TEvent extends ChatServerPersistedEvent = ChatServerPersistedEvent,
+>(defaults: GenerationRunnerOptions<TEvent> = {}): GenerationRunner<TEvent> {
+  return {
+    async generate(input, operation = {}) {
+      const options = { ...defaults, ...operation };
+      if (!options.provider || !options.tools || !options.store) {
+        throw new Error('Generation runner requires provider, tools, and store adapters');
+      }
+      const provider = options.provider;
+      const tools = options.tools;
+      const store = options.store;
+      const toolResults = new Map<string, ToolResult>();
+      let pendingPreview: ToolResult | null = null;
+      const context = {
+        userId: input.userId,
         generationId: input.generationId,
         chatId: input.chatId,
-        userId: input.userId,
-        usage,
-      });
-    }
+      };
+      let usage: unknown = null;
 
-    return { state, toolResults, pendingPreview };
-  }
+      const model = provider({
+        ...input.model,
+        requiresConfirmation: (toolName) =>
+          tools.getDefinition(toolName)?.requiresConfirmation ?? false,
+        onUsage: (next) => {
+          usage = addUsageTotals(usage, next);
+          input.model.onUsage?.(next);
+        },
+      });
+
+      const state = await runGeneration({
+        generationId: input.generationId,
+        startContext: input.startContext,
+        initialInput: input.initialInput,
+        initialState: input.initialState,
+        effectTimeoutsMs: options.effectTimeoutsMs,
+        adapters: {
+          provider: model,
+          tools: {
+            execute: async ({ call, idempotencyKey }) => {
+              const stored = await store.getEffect?.({
+                generationId: input.generationId,
+                idempotencyKey,
+                toolName: call.name,
+              });
+              if (stored) {
+                toolResults.set(call.id, stored);
+                return stored;
+              }
+              const result = await tools.execute({
+                call,
+                arguments: parseArguments(call),
+                context: { ...context, idempotencyKey },
+              });
+              toolResults.set(call.id, result);
+              return store.saveEffect
+                ? store.saveEffect({
+                    generationId: input.generationId,
+                    idempotencyKey,
+                    toolName: call.name,
+                    result,
+                  })
+                : result;
+            },
+            preview: async ({ call, idempotencyKey }) => {
+              const definition = tools.getDefinition(call.name);
+              const preview = definition?.preview
+                ? await definition.preview(call, { ...context, idempotencyKey })
+                : null;
+              pendingPreview = preview?.error ? null : preview;
+              return (
+                preview ?? {
+                  callId: call.id,
+                  toolName: call.name,
+                  content: 'null',
+                  error: false,
+                }
+              );
+            },
+          },
+          events: {
+            persist: async (command) => {
+              const record = await store.appendEvent({
+                event: command.event,
+                idempotencyKey: command.idempotencyKey,
+              });
+              if (record) await options.publisher?.accept(record);
+            },
+            emit: async (event) => options.emit?.(event),
+          },
+          generation: {
+            save: async (stateToSave) =>
+              store.saveGeneration({
+                state: stateToSave,
+                generationId: input.generationId,
+                chatId: input.chatId,
+                userId: input.userId,
+                targetAssistantMessageId: input.targetAssistantMessageId,
+              }),
+            stop: (stateToStop) => store.stopGeneration(stateToStop),
+          },
+          control: {
+            isCancelled: () => options.isCancelled?.(context) ?? false,
+          },
+        },
+      });
+
+      if (state.phase === 'committed' && usage) {
+        await options.context?.recordCompletion({
+          generationId: input.generationId,
+          chatId: input.chatId,
+          userId: input.userId,
+          usage,
+        });
+      }
+
+      return { state, toolResults, pendingPreview };
+    },
+  };
 }
 
 export function createGenerationSseResponse(
@@ -340,11 +346,11 @@ export function createGenerationSseResponse(
 export type ChatHttpAuthenticatedUser = { userId: string };
 
 // The HTTP-facing contract createChatHttpHandler dispatches to — NOT the
-// same thing as ChatServerRuntime above. Each method here corresponds to one
-// route (see createChatHttpHandler's routing table) and is expected to be
-// implemented by wrapping a ChatServerRuntime.run() call with the specific
+// same thing as the generation runner above. Each method here corresponds to
+// one route (see createChatHttpHandler's routing table) and is expected to be
+// implemented by wrapping a generationRunner.generate() call with the specific
 // input-resolution and persistence a given endpoint needs (e.g. `regenerate`
-// resolves `target` to a stale run before calling `.run()`); the real
+// resolves `target` to a stale run before calling `.generate()`); the real
 // implementation lives in services/api/src/rpc/routes/chats.generation.ts.
 export type ChatHttpRuntime = {
   authenticate: (

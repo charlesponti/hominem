@@ -99,7 +99,7 @@ persistence: "Postgres — packages/db" {
   effects: "app.chat_generation_tool_effects\ntool-call idempotency"
 }
 
-live_bus: "generation-live-bus.ts\nLISTEN/NOTIFY pub-sub, in-process fan-out"
+live_bus: "generation-pub-sub.ts\nLISTEN/NOTIFY pub-sub, in-process fan-out"
 
 # --- flow ---
 

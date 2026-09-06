@@ -4,7 +4,7 @@ import type { GenerationStartContext } from './generation-events';
 import {
   createGenerationInterpreter as createAdaptersInterpreter,
   EffectCommandTimeoutError,
-  runGenerationWithAdapters,
+  generate,
 } from './generation-interpreter';
 import {
   createGenerationState,
@@ -230,7 +230,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithAdapters({ generationId: 'generation-1', adapters: ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'committed', assistantText: 'done' });
     expect(ports.provider.open).toHaveBeenCalledOnce();
     expect(ports.generation.save).toHaveBeenCalledOnce();
@@ -272,7 +272,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithAdapters({ generationId: 'generation-1', adapters: ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'cancelled', assistantText: 'partial' });
     expect(ports.generation.stop).toHaveBeenCalledOnce();
     expect(ports.generation.save).not.toHaveBeenCalled();
@@ -316,7 +316,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithAdapters({ generationId: 'generation-1', adapters: ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'committed' });
     expect(waitBeforeRetry).toHaveBeenCalledWith(
       expect.objectContaining({ attempt: 2, state: expect.any(Object) }),
@@ -367,7 +367,7 @@ describe('generation interpreter', () => {
     };
 
     await expect(
-      runGenerationWithAdapters({ generationId: 'generation-1', adapters: ports, startContext }),
+      generate({ generationId: 'generation-1', adapters: ports, startContext }),
     ).resolves.toMatchObject({ phase: 'cancelled' });
     expect(ports.provider.retry).toHaveBeenCalledOnce();
     expect(ports.generation.stop).toHaveBeenCalledOnce();

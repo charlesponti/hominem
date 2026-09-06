@@ -2,10 +2,10 @@ import { CHAT_GENERATION_EVENTS_CHANNEL, ChatGenerationRepository, db, pool } fr
 import { logger } from '@hominem/telemetry';
 import pg from 'pg';
 
-import { GenerationPubSub } from './generation-live-bus';
+import { GenerationPubSub } from './generation-pub-sub';
 
 // Fans out chat-generation events to this process's local SSE subscribers
-// (generation-live-bus.ts), fed by Postgres NOTIFY instead of a direct
+// (generation-pub-sub.ts), fed by Postgres NOTIFY instead of a direct
 // in-process call. ChatGenerationRepository.appendEvent fires `pg_notify`
 // from inside its own transaction (atomic with the durable write), so this
 // listener — one per process, on every instance — replaces the old

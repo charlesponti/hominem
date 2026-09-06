@@ -3,11 +3,11 @@ import { randomUUID } from 'node:crypto';
 import { authDb, ChatGenerationRepository, db, runInTransaction } from '@hominem/db';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { subscribeToGenerationEvents } from './generation-live-bus';
 import {
   startGenerationNotifyListener,
   type GenerationNotifyListener,
 } from './generation-notify-listener';
+import { GenerationPubSub } from './generation-pub-sub';
 
 function nextWithTimeout<T>(iterator: AsyncIterator<T>, ms: number): Promise<IteratorResult<T>> {
   return Promise.race([
@@ -60,7 +60,7 @@ describe('generation notify listener', () => {
 
   it('delivers a durably-appended event to a local subscriber via NOTIFY', async () => {
     const { userId, chatId, generationId } = await createGeneration();
-    const subscription = subscribeToGenerationEvents(generationId);
+    const subscription = GenerationPubSub.subscribe(generationId);
     const iterator = subscription[Symbol.asyncIterator]();
 
     try {
@@ -97,7 +97,7 @@ describe('generation notify listener', () => {
 
   it('delivers events in order across multiple appends to the same generation', async () => {
     const { userId, chatId, generationId } = await createGeneration();
-    const subscription = subscribeToGenerationEvents(generationId);
+    const subscription = GenerationPubSub.subscribe(generationId);
     const iterator = subscription[Symbol.asyncIterator]();
 
     try {

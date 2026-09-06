@@ -9,8 +9,8 @@ import {
   type GenerationToolCall,
   type ToolResult,
 } from '@hominem/chat';
-import type { ChatServerRuntimeOptions } from '@hominem/chat/server';
-import { ChatServerRuntime } from '@hominem/chat/server';
+import type { GenerationRunnerOptions } from '@hominem/chat/server';
+import { createGenerationRunner } from '@hominem/chat/server';
 import type { ChatGenerationEventRecord, ChatMessageToolCallRecord } from '@hominem/db';
 
 import { callTool, getToolDefinition } from '../mcp/tool-registry';
@@ -26,7 +26,7 @@ export class ToolInputError extends Error {
   }
 }
 
-const chatServerRuntime = new ChatServerRuntime<ChatGenerationEventRecord>();
+const generationRunner = createGenerationRunner<ChatGenerationEventRecord>();
 
 function parseArguments(call: GenerationToolCall): ChatMessageJsonObject {
   if (!call.arguments) return {};
@@ -99,7 +99,7 @@ export async function executeGenerationTurn(
     // Overrides the interpreter's default per-command timeouts. Production
     // callers should leave this unset; it exists so tests can make a hung
     // port fail fast instead of waiting out the real defaults.
-    effectTimeoutsMs?: ChatServerRuntimeOptions['effectTimeoutsMs'];
+    effectTimeoutsMs?: GenerationRunnerOptions['effectTimeoutsMs'];
   },
 ): Promise<GenerationEngineResult> {
   let usage: AIUsageMetrics | null = null;
@@ -121,7 +121,7 @@ export async function executeGenerationTurn(
     ? input.modelFactory(modelOptions)
     : new OpenRouterChatModel(modelOptions);
 
-  const operation: ChatServerRuntimeOptions<ChatGenerationEventRecord> = {
+  const operation: GenerationRunnerOptions<ChatGenerationEventRecord> = {
     provider: () => model,
     effectTimeoutsMs: input.effectTimeoutsMs,
     tools: {
@@ -257,7 +257,7 @@ export async function executeGenerationTurn(
       : undefined,
   };
 
-  const result = await chatServerRuntime.run(
+  const result = await generationRunner.generate(
     {
       generationId: input.generationId,
       chatId: input.chatId,

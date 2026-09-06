@@ -3,7 +3,7 @@ import { aiUsageMetrics } from '@hominem/utils/testing';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { publishGenerationEvent } from '../../application/generation-live-bus';
+import { GenerationPubSub } from '../../application/generation-pub-sub';
 import type { AppContext, RpcUser } from '../middleware/auth';
 import { requestIdMiddleware } from '../middleware/auth';
 import { apiErrorHandler } from '../middleware/error';
@@ -557,8 +557,8 @@ describe('chat stream accounting', () => {
       status: 'running',
     });
     mocks.listGenerationEvents.mockImplementation(async () => {
-      publishGenerationEvent(phaseEvent(2));
-      publishGenerationEvent(cancelledEvent(3));
+      GenerationPubSub.publish(phaseEvent(2));
+      GenerationPubSub.publish(cancelledEvent(3));
       return [phaseEvent(1)];
     });
 

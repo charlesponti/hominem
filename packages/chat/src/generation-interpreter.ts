@@ -209,7 +209,7 @@ export function createGenerationInterpreter(
   };
 }
 
-export function runGenerationWithAdapters(
+export function generate(
   input: Omit<RunGenerationInput, 'effects'> & {
     adapters: GenerationAdapters;
     effectTimeoutsMs?: Partial<Record<GenerationCommand['type'], number>>;
