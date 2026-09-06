@@ -11,11 +11,12 @@ import type {
   GenerationStartContext,
   GenerationTerminalMetadata,
 } from '../generation-events';
-import type { GenerationActivePhase, GenerationPhase } from '../generation-phase';
+import { generationActivePhaseSchema, generationPhaseSchema } from '../generation-phase';
 import type { chatGenerationKindSchema } from '../generation-schemas';
 import type { ChatMessageSnapshot } from '../generation-schemas';
 
-export type { GenerationActivePhase, GenerationPhase } from '../generation-phase';
+export type GenerationPhase = z.infer<typeof generationPhaseSchema>;
+export type GenerationActivePhase = z.infer<typeof generationActivePhaseSchema>;
 
 export type ChatGenerationKind = z.infer<typeof chatGenerationKindSchema>;
 

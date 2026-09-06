@@ -6,16 +6,8 @@ export type { CaptureLifecycleState } from './capture-types';
 
 import type { CaptureLifecycleState } from './capture-types';
 
-// Every valid state transition — anything not listed here is not allowed.
-//
-//   idle ──► composing ──► classifying ──► reviewing_changes ──► persisting ──► idle
-//                │                │                │                 │
-//                ▼                ▼                ▼                 ▼
-//            recording      recovering_error    idle           recovering_error
-//                │
-//                ▼
-//           transcribing ──► composing
-//                     └────► classifying
+// Shared lifecycle predicates for the capture state machine. Transition
+// ownership remains with the platform-specific hooks that dispatch actions.
 // True when the state is mid-flight and the UI should block new user input
 export function isBlockingState(state: CaptureLifecycleState): boolean {
   return state === 'classifying' || state === 'persisting' || state === 'transcribing';
