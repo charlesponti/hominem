@@ -1,4 +1,4 @@
-import { LogOut, Settings } from 'lucide-react';
+import { Library, LogOut, Settings } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
 import { CollaborationNotifications } from '~/components/collaboration-notifications';
@@ -45,6 +45,12 @@ export function AccountMenu({ user }: { user: User }) {
         <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
         <CollaborationNotifications />
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/collections" viewTransition>
+            <Library />
+            Collections
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/settings" viewTransition>
             <Settings />

@@ -1,5 +1,5 @@
 import { db, sql } from '@hominem/db/core';
-import { NotFoundError } from '@hominem/db/errors';
+import { NotFoundError, ValidationError } from '@hominem/db/errors';
 
 import type {
   AcceptMemberInviteInput,
@@ -9,10 +9,15 @@ import type {
   CollectionMember,
   CollectionSummary,
   CreateCollectionInput,
+  DeleteCollectionInput,
   InviteMemberInput,
+  LeaveCollectionInput,
   ListCollectionsInput,
   ListPendingInvitesInput,
   RemoveCollectionItemInput,
+  RemoveMemberInput,
+  UpdateCollectionInput,
+  UpdateMemberRoleInput,
 } from '../schemas/collections.schema';
 import { ENTITY_TABLE_MAP, getEntityDisplayName, type EntityType } from './tags.service';
 
@@ -157,6 +162,51 @@ export async function createCollection(ownerUserId: string, input: CreateCollect
   return { collection };
 }
 
+export async function updateCollection(ownerUserId: string, input: UpdateCollectionInput) {
+  const result = await db
+    .updateTable('app.collections')
+    .set({
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.visibility !== undefined ? { visibility: input.visibility } : {}),
+    })
+    .where('id', '=', input.collectionId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+
+  if (Number(result.numUpdatedRows) === 0) throw new NotFoundError('Collection');
+
+  const collection = await loadCollectionSummary(input.collectionId);
+  if (!collection) throw new Error('Failed to load updated collection');
+  return { collection };
+}
+
+export async function deleteCollection(ownerUserId: string, input: DeleteCollectionInput) {
+  const result = await db
+    .deleteFrom('app.collections')
+    .where('id', '=', input.collectionId)
+    .where('ownerUserid', '=', ownerUserId)
+    .executeTakeFirst();
+
+  return { deleted: result.numDeletedRows > 0n };
+}
+
+export async function leaveCollection(userId: string, input: LeaveCollectionInput) {
+  const role = await getAccessRole(userId, input.collectionId);
+  if (role === 'owner') {
+    throw new ValidationError('Owners cannot leave their own collection — delete it instead');
+  }
+  if (!role) throw new NotFoundError('Collection');
+
+  const result = await db
+    .deleteFrom('app.collectionMembers')
+    .where('collectionId', '=', input.collectionId)
+    .where('userId', '=', userId)
+    .executeTakeFirst();
+
+  return { left: result.numDeletedRows > 0n };
+}
+
 export async function addCollectionItem(ownerUserId: string, input: AddCollectionItemInput) {
   const entityTable = ENTITY_TABLE_MAP[input.entityType];
   if (!entityTable) {
@@ -223,14 +273,18 @@ export async function removeCollectionItem(ownerUserId: string, input: RemoveCol
 }
 
 function mapMemberRow(row: {
+  id: string;
   userId: string | null;
+  userEmail: string | null;
   invitedEmail: string | null;
   role: string;
   invitedAt: string | Date;
   acceptedAt: string | Date | null;
 }): CollectionMember {
   return {
+    id: row.id,
     userId: row.userId,
+    userEmail: row.userEmail,
     invitedEmail: row.invitedEmail,
     role: toMemberRole(row.role),
     invitedAt: toIso(row.invitedAt)!,
@@ -238,7 +292,37 @@ function mapMemberRow(row: {
   };
 }
 
+/**
+ * Base select for a collection member row, left-joined to `user` so an
+ * account-linked member's email comes along for display — invite-by-email
+ * members with no account yet naturally get a null userEmail here.
+ */
+function memberSelectQuery() {
+  return db
+    .selectFrom('app.collectionMembers as m')
+    .leftJoin('user as u', 'u.id', 'm.userId')
+    .select([
+      'm.id as id',
+      'm.userId as userId',
+      'u.email as userEmail',
+      'm.invitedEmail as invitedEmail',
+      'm.role as role',
+      'm.invitedAt as invitedAt',
+      'm.acceptedAt as acceptedAt',
+    ]);
+}
+
 export async function inviteMember(ownerUserId: string, input: InviteMemberInput) {
+  const caller = await db
+    .selectFrom('user')
+    .select('email')
+    .where('id', '=', ownerUserId)
+    .executeTakeFirstOrThrow();
+
+  if (caller.email.toLowerCase() === input.email) {
+    throw new ValidationError('Cannot invite yourself to a collection');
+  }
+
   const role = await getAccessRole(ownerUserId, input.collectionId);
   if (!hasAtLeast(role, 'owner')) throw new NotFoundError('Collection');
 
@@ -260,11 +344,9 @@ export async function inviteMember(ownerUserId: string, input: InviteMemberInput
       .onConflict((oc) => oc.columns(['collectionId', 'userId']).doUpdateSet({ role: input.role }))
       .execute();
 
-    const row = await db
-      .selectFrom('app.collectionMembers')
-      .selectAll()
-      .where('collectionId', '=', input.collectionId)
-      .where('userId', '=', invitee.id)
+    const row = await memberSelectQuery()
+      .where('m.collectionId', '=', input.collectionId)
+      .where('m.userId', '=', invitee.id)
       .executeTakeFirstOrThrow();
 
     return { member: mapMemberRow(row) };
@@ -288,14 +370,49 @@ export async function inviteMember(ownerUserId: string, input: InviteMemberInput
     )
     .execute();
 
-  const row = await db
-    .selectFrom('app.collectionMembers')
-    .selectAll()
-    .where('collectionId', '=', input.collectionId)
-    .where('invitedEmail', '=', input.email)
+  const row = await memberSelectQuery()
+    .where('m.collectionId', '=', input.collectionId)
+    .where('m.invitedEmail', '=', input.email)
     .executeTakeFirstOrThrow();
 
   return { member: mapMemberRow(row) };
+}
+
+export async function updateMemberRole(ownerUserId: string, input: UpdateMemberRoleInput) {
+  const role = await getAccessRole(ownerUserId, input.collectionId);
+  if (!hasAtLeast(role, 'owner')) throw new NotFoundError('Collection');
+
+  const result = await db
+    .updateTable('app.collectionMembers')
+    .set({ role: input.role })
+    .where('id', '=', input.memberId)
+    .where('collectionId', '=', input.collectionId)
+    .where('role', '!=', 'owner')
+    .executeTakeFirst();
+
+  if (Number(result.numUpdatedRows) === 0) {
+    throw new NotFoundError('Collection member', { memberId: input.memberId });
+  }
+
+  const row = await memberSelectQuery()
+    .where('m.id', '=', input.memberId)
+    .executeTakeFirstOrThrow();
+
+  return { member: mapMemberRow(row) };
+}
+
+export async function removeMember(ownerUserId: string, input: RemoveMemberInput) {
+  const role = await getAccessRole(ownerUserId, input.collectionId);
+  if (!hasAtLeast(role, 'owner')) throw new NotFoundError('Collection');
+
+  const result = await db
+    .deleteFrom('app.collectionMembers')
+    .where('id', '=', input.memberId)
+    .where('collectionId', '=', input.collectionId)
+    .where('role', '!=', 'owner')
+    .executeTakeFirst();
+
+  return { removed: result.numDeletedRows > 0n };
 }
 
 /**
@@ -333,7 +450,12 @@ export async function acceptMemberInvite(ownerUserId: string, input: AcceptMembe
     .where('userId', '=', ownerUserId)
     .execute();
 
-  return { member: mapMemberRow({ ...existing, acceptedAt: now }) };
+  const row = await memberSelectQuery()
+    .where('m.collectionId', '=', input.collectionId)
+    .where('m.userId', '=', ownerUserId)
+    .executeTakeFirstOrThrow();
+
+  return { member: mapMemberRow(row) };
 }
 
 export async function declineMemberInvite(ownerUserId: string, input: AcceptMemberInviteInput) {
@@ -365,13 +487,8 @@ export async function listCollections(ownerUserId: string, input: ListCollection
 
   const rows = await ownedRows.union(memberRows).execute();
 
-  const collections: CollectionSummary[] = [];
-  for (const row of rows) {
-    const summary = await loadCollectionSummary(row.id);
-    if (summary) {
-      collections.push(summary);
-    }
-  }
+  const summaries = await Promise.all(rows.map((row) => loadCollectionSummary(row.id)));
+  const collections = summaries.filter((summary) => summary !== null);
 
   collections.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const limited = collections.slice(0, input.limit);
@@ -388,21 +505,22 @@ export async function listPendingInvites(ownerUserId: string, input: ListPending
     .orderBy('invitedAt', 'desc')
     .execute();
 
+  const withCollections = await Promise.all(
+    rows.map(async (row) => ({
+      collection: await loadCollectionSummary(row.collectionId),
+      role: toMemberRole(row.role),
+      invitedAt: toIso(row.invitedAt)!,
+    })),
+  );
+
   const invites: Array<{
     collection: CollectionSummary;
     role: CollectionMember['role'];
     invitedAt: string;
-  }> = [];
-  for (const row of rows) {
-    const collection = await loadCollectionSummary(row.collectionId);
-    if (collection) {
-      invites.push({
-        collection,
-        role: toMemberRole(row.role),
-        invitedAt: toIso(row.invitedAt)!,
-      });
-    }
-  }
+  }> = withCollections.filter(
+    (invite): invite is { collection: CollectionSummary; role: MemberRole; invitedAt: string } =>
+      invite.collection !== null,
+  );
 
   const limited = invites.slice(0, input.limit);
   return { invites: limited, count: limited.length };
@@ -413,7 +531,7 @@ export async function collectionDetail(
   collectionId: string,
 ): Promise<CollectionDetail> {
   const role = await getAccessRole(ownerUserId, collectionId);
-  if (!role) return { collection: null, items: [], members: [] };
+  if (!role) return { collection: null, items: [], members: [], viewerRole: null };
 
   const collection = await loadCollectionSummary(collectionId);
 
@@ -424,11 +542,7 @@ export async function collectionDetail(
     .orderBy('createdat', 'desc')
     .execute();
 
-  const memberRows = await db
-    .selectFrom('app.collectionMembers')
-    .selectAll()
-    .where('collectionId', '=', collectionId)
-    .execute();
+  const memberRows = await memberSelectQuery().where('m.collectionId', '=', collectionId).execute();
 
   const items: CollectionItem[] = await Promise.all(
     itemRows.map(async (row): Promise<CollectionItem> => {
@@ -451,5 +565,5 @@ export async function collectionDetail(
 
   const members: CollectionMember[] = memberRows.map(mapMemberRow);
 
-  return { collection, items, members };
+  return { collection, items, members, viewerRole: role };
 }

@@ -12,6 +12,11 @@
  * Needs the server running with NODE_ENV != production — local dev captures
  * outbound OTP email to the mailbox by default (explicit ENV=scripted enables capture).
  * OTPs are never exposed over the API; this script reads the same-host file directly.
+ *
+ * To provision a second account (e.g. a collaborator for multi-user e2e specs),
+ * override E2E_TEST_EMAIL and E2E_EXPORT_PREFIX so the printed export names don't
+ * collide with the primary account's:
+ *   eval "$(E2E_TEST_EMAIL=e2e-collaborator@test.hakumi.io E2E_EXPORT_PREFIX=E2E_COLLABORATOR pnpm --filter @hominem/api --silent e2e:setup 2>/dev/null | grep 'export ')"
  */
 
 import { readLatestScriptedOtp, resolveScriptedMailboxPath } from '@hominem/utils/scripted-mailbox';
@@ -20,7 +25,8 @@ import z from 'zod';
 
 const API_URL = (process.env.API_URL ?? 'http://localhost:4040').replace(/\/$/, '');
 const ORIGIN = process.env.E2E_ORIGIN ?? process.env.WEB_URL ?? 'http://localhost:4445';
-const TEST_EMAIL = 'e2e@test.hakumi.io';
+const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e@test.hakumi.io';
+const EXPORT_PREFIX = process.env.E2E_EXPORT_PREFIX ?? 'E2E';
 const OTP_POLL_TIMEOUT_MS = 15_000;
 const OTP_POLL_INTERVAL_MS = 500;
 
@@ -143,10 +149,10 @@ async function main() {
   console.log('\n──────────────────────────────────────────────────────────\n');
   console.log('E2E credentials ready.\n');
   console.log('Export these before running iOS E2E tests:\n');
-  console.log(`  export E2E_SESSION_COOKIE="${sessionCookie}"`);
-  console.log(`  export E2E_USER_ID="${user.id}"`);
-  console.log(`  export E2E_USER_EMAIL="${user.email}"`);
-  if (user.name) console.log(`  export E2E_USER_NAME="${user.name}"`);
+  console.log(`  export ${EXPORT_PREFIX}_SESSION_COOKIE="${sessionCookie}"`);
+  console.log(`  export ${EXPORT_PREFIX}_USER_ID="${user.id}"`);
+  console.log(`  export ${EXPORT_PREFIX}_USER_EMAIL="${user.email}"`);
+  if (user.name) console.log(`  export ${EXPORT_PREFIX}_USER_NAME="${user.name}"`);
   console.log('\n──────────────────────────────────────────────────────────');
   console.log('\nOr pipe into your shell:\n');
   console.log(`  eval "$(pnpm --silent e2e:setup 2>/dev/null | grep 'export ')"\n`);
