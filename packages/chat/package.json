@@ -60,8 +60,9 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "rm -rf build && tsc -p tsconfig.json",
     "typecheck": "rm -rf .cache && tsc --noEmit",
+    "test": "vitest run src --passWithNoTests",
     "test:coverage": "vitest run --coverage",
     "format": "oxfmt src --write",
     "format:check": "oxfmt src --check",
