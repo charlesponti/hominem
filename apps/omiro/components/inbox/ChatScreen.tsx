@@ -33,7 +33,7 @@ import {
 import { formatRelativeAge } from '~/services/date/format-relative-age';
 import { invalidateInboxQueries } from '~/services/inbox/inbox-refresh';
 import { clearResumeTarget, writeResumeTarget } from '~/services/navigation/launch-state';
-import { HOME_ROUTE, NEW_CHAT_ROUTE } from '~/services/navigation/routes';
+import { NEW_CHAT_ROUTE, STREAM_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
 function isNotFoundError(error: unknown): boolean {
@@ -82,7 +82,7 @@ export function ChatScreen({ id }: { id: string }) {
   );
 
   const handleChatArchive = useCallback(() => {
-    router.dismissTo(HOME_ROUTE);
+    router.dismissTo(STREAM_ROUTE);
   }, [router]);
 
   const { messages, messagesError, isMessagesLoading, isMessagesRefreshing, refetchMessages } =
@@ -181,7 +181,7 @@ export function ChatScreen({ id }: { id: string }) {
   );
   const missingConversationState = (
     <EmptyState
-      action={{ label: t.chat.goBack, onPress: () => router.dismissTo(HOME_ROUTE) }}
+      action={{ label: t.chat.goBack, onPress: () => router.dismissTo(STREAM_ROUTE) }}
       description={t.chat.missingMessage}
       sfSymbol="bubble.left.and.exclamationmark.bubble.right"
       title={t.chat.missingTitle}

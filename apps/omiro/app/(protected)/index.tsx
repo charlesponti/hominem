@@ -1,19 +1,7 @@
-import { Stack } from 'expo-router';
+import { Redirect } from 'expo-router';
 
-import { ChatEntryScreen } from '~/components/home/ChatEntryScreen';
-import { NavDrawerMenuButton } from '~/components/navigation/NavDrawerMenuButton';
+import { STREAM_ROUTE } from '~/services/navigation/routes';
 
 export default function HomeRoute() {
-  return (
-    <>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerLargeTitle: false,
-          headerLeft: () => <NavDrawerMenuButton />,
-        }}
-      />
-      <ChatEntryScreen />
-    </>
-  );
+  return <Redirect href={STREAM_ROUTE} />;
 }
