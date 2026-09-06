@@ -48,10 +48,10 @@ export function ProfileImageUpload({
 
     setUploadError(null);
     const reader = new FileReader();
-    reader.addEventListener('load', () => {
+    reader.onload = () => {
       setImgSrc(reader.result?.toString() || '');
       setShowCropper(true);
-    });
+    };
     reader.readAsDataURL(file);
   };
 

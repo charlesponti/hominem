@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { FinanceHonoProvider, useFinanceApiClient } from './provider';
@@ -39,7 +40,7 @@ describe('FinanceHonoProvider', () => {
 
     function IdentityConsumer({ onRender }: { onRender: (client: unknown) => void }) {
       const client = useFinanceApiClient();
-      onRender(client);
+      useEffect(() => onRender(client), [client, onRender]);
       return null;
     }
 

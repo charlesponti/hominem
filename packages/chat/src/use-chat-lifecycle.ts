@@ -3,7 +3,7 @@
 // Platform-specific async work (classification, persisting) gets injected as
 // callbacks so neither surface has to know about the other's dependencies.
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import type { ArtifactType, ClassificationProposal, SessionSource } from './capture-types';
 import type { ChatClient, ChatGenerationController } from './client';
@@ -160,9 +160,7 @@ export function useChatLifecycle<TReview extends PendingReview = PendingReview>(
 
 /** React binding for the framework-neutral generation controller. */
 export function useChatGeneration(client: ChatClient) {
-  const controllerRef = useRef<ChatGenerationController | null>(null);
-  if (!controllerRef.current) controllerRef.current = client.createGeneration();
-  const controller = controllerRef.current;
+  const [controller] = useState<ChatGenerationController>(() => client.createGeneration());
   const [state, setState] = useState(controller.state);
 
   useEffect(() => controller.subscribe((next) => setState(next)), [controller]);
