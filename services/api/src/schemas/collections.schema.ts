@@ -13,7 +13,9 @@ export const collectionSummarySchema = z.object({
 });
 
 export const collectionMemberSchema = z.object({
+  id: z.string(),
   userId: z.string().nullable(),
+  userEmail: z.string().nullable(),
   invitedEmail: z.string().nullable(),
   role: z.enum(['owner', 'editor', 'viewer']),
   invitedAt: z.string(),
@@ -34,6 +36,7 @@ const collectionDetailSchema = z.object({
   collection: collectionSummarySchema.nullable(),
   items: z.array(collectionItemSchema),
   members: z.array(collectionMemberSchema),
+  viewerRole: z.enum(['owner', 'editor', 'viewer']).nullable(),
 });
 
 // ── create_collection ────────────────────────────────────────────────
@@ -46,6 +49,39 @@ export const createCollectionInputSchema = z.object({
 
 export const createCollectionOutputSchema = z.object({
   collection: collectionSummarySchema,
+});
+
+// ── update_collection ───────────────────────────────────────────────
+
+export const updateCollectionInputSchema = z.object({
+  collectionId: z.string().uuid(),
+  name: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().max(2000).nullable().optional(),
+  visibility: z.enum(['private', 'shared']).optional(),
+});
+
+export const updateCollectionOutputSchema = z.object({
+  collection: collectionSummarySchema,
+});
+
+// ── delete_collection ───────────────────────────────────────────────
+
+export const deleteCollectionInputSchema = z.object({
+  collectionId: z.string().uuid(),
+});
+
+export const deleteCollectionOutputSchema = z.object({
+  deleted: z.boolean(),
+});
+
+// ── leave_collection ────────────────────────────────────────────────
+
+export const leaveCollectionInputSchema = z.object({
+  collectionId: z.string().uuid(),
+});
+
+export const leaveCollectionOutputSchema = z.object({
+  left: z.boolean(),
 });
 
 // ── add_collection_item ──────────────────────────────────────────────
@@ -76,7 +112,7 @@ export const removeCollectionItemOutputSchema = z.object({
 // ── list_collections ─────────────────────────────────────────────────
 
 export const listCollectionsInputSchema = z.object({
-  limit: z.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export const listCollectionsOutputSchema = z.object({
@@ -102,6 +138,29 @@ export const inviteMemberInputSchema = z.object({
 
 export const inviteMemberOutputSchema = z.object({
   member: collectionMemberSchema,
+});
+
+// ── update_member_role ──────────────────────────────────────────────
+
+export const updateMemberRoleInputSchema = z.object({
+  collectionId: z.string().uuid(),
+  memberId: z.string().uuid(),
+  role: z.enum(['editor', 'viewer']),
+});
+
+export const updateMemberRoleOutputSchema = z.object({
+  member: collectionMemberSchema,
+});
+
+// ── remove_member ────────────────────────────────────────────────────
+
+export const removeMemberInputSchema = z.object({
+  collectionId: z.string().uuid(),
+  memberId: z.string().uuid(),
+});
+
+export const removeMemberOutputSchema = z.object({
+  removed: z.boolean(),
 });
 
 // ── accept_member_invite ─────────────────────────────────────────────
@@ -136,9 +195,14 @@ export type CollectionMember = z.output<typeof collectionMemberSchema>;
 export type CollectionItem = z.output<typeof collectionItemSchema>;
 export type CollectionDetail = z.output<typeof collectionDetailSchema>;
 export type CreateCollectionInput = z.output<typeof createCollectionInputSchema>;
+export type UpdateCollectionInput = z.output<typeof updateCollectionInputSchema>;
+export type DeleteCollectionInput = z.output<typeof deleteCollectionInputSchema>;
+export type LeaveCollectionInput = z.output<typeof leaveCollectionInputSchema>;
 export type AddCollectionItemInput = z.output<typeof addCollectionItemInputSchema>;
 export type RemoveCollectionItemInput = z.output<typeof removeCollectionItemInputSchema>;
 export type ListCollectionsInput = z.output<typeof listCollectionsInputSchema>;
 export type InviteMemberInput = z.output<typeof inviteMemberInputSchema>;
+export type UpdateMemberRoleInput = z.output<typeof updateMemberRoleInputSchema>;
+export type RemoveMemberInput = z.output<typeof removeMemberInputSchema>;
 export type AcceptMemberInviteInput = z.output<typeof acceptMemberInviteInputSchema>;
 export type ListPendingInvitesInput = z.output<typeof listPendingInvitesInputSchema>;

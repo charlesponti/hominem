@@ -12,6 +12,11 @@ fi
 
 while IFS= read -r -d '' file; do
   case "$file" in
+    # Mirror .oxfmtrc.json's ignorePatterns — oxfmt errors out ("Expected at
+    # least one target file") rather than no-op'ing when every file passed to
+    # it is one it ignores.
+    *.config.ts|*.config.js)
+      ;;
     *.cjs|*.cts|*.js|*.jsx|*.json|*.jsonc|*.mjs|*.mts|*.ts|*.tsx)
       pnpm exec oxfmt "$file" --write
       git add -- "$file"

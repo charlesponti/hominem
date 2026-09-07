@@ -17,6 +17,8 @@ export default [
       index('routes/home.tsx'),
       route('chats', 'routes/chats.tsx'),
       route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
+      route('collections', 'routes/collections/collections.tsx'),
+      route('collections/:collectionId', 'routes/collections/collections.$collectionId.tsx'),
       route('settings', 'routes/settings.tsx'),
       route('settings/archived-chats', 'routes/settings.archived-chats.tsx'),
       route('settings/memories', 'routes/settings.memories.tsx'),
@@ -26,4 +28,4 @@ export default [
 
   // Catch-all 404 route
   route('*', 'routes/$.tsx'),
-] as RouteConfig;
+] satisfies RouteConfig;

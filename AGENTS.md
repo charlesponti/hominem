@@ -53,6 +53,7 @@ just db migrate
 - Formatter: **oxfmt** — single quotes, imports sorted ascending case-insensitively
 - Run `pnpm format` to apply formatting before any edit is considered done
 - If a function only calls a function use `() => <function name>(<args>)` style instead of unnecessary curly braces
+- **Never hand-write a `packages/rpc/src/types/*.ts` output type and then cast a hook's `response.json()` to it with `as Promise<X>`.** Derive the type from the live route instead, with `InferResponseType`/`InferRequestType` from `hono/client` against `HonoClient` (`packages/rpc/src/core/api-client.ts`), e.g. `type _FooEndpoint = HonoClient['api']['foo']['$get']; export type FooOutput = InferResponseType<_FooEndpoint, 200>;` — see `packages/rpc/src/types/chat.types.ts` or `tasks.types.ts` for the pattern. This keeps the type wired to the actual route (renames/shape changes fail typecheck instead of silently drifting) and needs no cast at the call site, since `response.json()` is already correctly typed. A hand-written duplicate type is always the wrong fix here, no matter how closely it mirrors the zod schema.
 
 ## Git conventions
 
