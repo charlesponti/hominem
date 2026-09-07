@@ -1,15 +1,12 @@
-import { z } from 'zod';
-
-import {
-  TIME_BLOCK_EXTRACTION_MODEL,
-  normalizeOpenRouterError,
-  type AIUsageMetrics,
-  type OpenRouterClientOptions,
-} from './shared';
 import {
   createStructuredChatCompletion,
-  StructuredOutputError as AITextStructuredOutputError,
-} from './text';
+  normalizeOpenRouterError,
+  StructuredOutputError,
+  TIME_BLOCK_EXTRACTION_MODEL,
+  type AIUsageMetrics,
+  type OpenRouterClientOptions,
+} from '@hominem/ai';
+import { z } from 'zod';
 
 const TimeBlockIntent = z.enum([
   'add_task',
@@ -149,7 +146,7 @@ export async function extractTimeBlock(
     const block = normalizeExplicitWeekday(parseTimeBlockExtractionOutput(output), input);
     return { block, usage };
   } catch (error) {
-    if (error instanceof AITextStructuredOutputError) throw error;
+    if (error instanceof StructuredOutputError) throw error;
     throw normalizeOpenRouterError(error);
   }
 }

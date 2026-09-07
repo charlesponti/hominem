@@ -6,7 +6,6 @@ import {
   createOpenRouterClient,
   DEFAULT_APP_TITLE,
   DEFAULT_HTTP_REFERER,
-  ENHANCE_MODEL,
   normalizeOpenRouterChatUsage,
   normalizeOpenRouterError,
   type AIUsageMetrics,
@@ -214,59 +213,4 @@ export async function createStructuredChatCompletion<TSchema extends z.ZodTypeAn
 export function getChatCompletionText(response: ChatResult, fallback = ''): string {
   const content = response.choices?.[0]?.message?.content;
   return typeof content === 'string' ? content : fallback;
-}
-
-export async function enhanceText(
-  input: { text: string; instruction?: string },
-  systemPrompt: string,
-) {
-  const response = await createChatCompletion({
-    model: ENHANCE_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: input.instruction
-          ? `Instruction: ${input.instruction}\n\nText:\n${input.text}`
-          : input.text,
-      },
-    ],
-    temperature: 0.2,
-    maxCompletionTokens: 2000,
-  });
-
-  return {
-    text: getChatCompletionText(response, input.text).trim() || input.text,
-    usage: getChatCompletionUsage(response),
-  };
-}
-
-export async function generateNoteFromChat(
-  input: { transcript: string; instruction?: string },
-  systemPrompt: string,
-) {
-  const response = await createChatCompletion({
-    model: ENHANCE_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: input.instruction
-          ? `Instruction: ${input.instruction}\n\nConversation transcript:\n${input.transcript}`
-          : `Conversation transcript:\n${input.transcript}`,
-      },
-    ],
-    temperature: 0.4,
-    maxCompletionTokens: 4000,
-  });
-
-  const text = getChatCompletionText(response).trim();
-  if (!text) {
-    throw new Error('Model returned an empty note');
-  }
-
-  return {
-    text,
-    usage: getChatCompletionUsage(response),
-  };
 }

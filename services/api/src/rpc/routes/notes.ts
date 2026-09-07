@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { generateNoteFromChat } from '@hominem/ai';
+import {
+  createChatCompletion,
+  ENHANCE_MODEL,
+  getChatCompletionText,
+  getChatCompletionUsage,
+} from '@hominem/ai';
 import { db } from '@hominem/db/core';
 import { NoteRepository } from '@hominem/db/notes';
 import { VectorDocumentRepository } from '@hominem/db/vector';
@@ -75,10 +80,28 @@ export const notesRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
 
     try {
-      const generated = await generateNoteFromChat(
-        { transcript, instruction },
-        CHAT_TO_NOTE_PROMPT,
-      );
+      const response = await createChatCompletion({
+        model: ENHANCE_MODEL,
+        messages: [
+          { role: 'system', content: CHAT_TO_NOTE_PROMPT },
+          {
+            role: 'user',
+            content: instruction
+              ? `Instruction: ${instruction}\n\nConversation transcript:\n${transcript}`
+              : `Conversation transcript:\n${transcript}`,
+          },
+        ],
+        temperature: 0.4,
+        maxCompletionTokens: 4000,
+      });
+      const responseText = getChatCompletionText(response).trim();
+      if (!responseText) {
+        throw new Error('Model returned an empty note');
+      }
+      const generated = {
+        text: responseText,
+        usage: getChatCompletionUsage(response),
+      };
       await recordAIUsageEvent({
         eventId,
         userId,

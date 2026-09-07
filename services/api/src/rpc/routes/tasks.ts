@@ -1,11 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-  extractTasks,
-  extractTimeBlock,
-  extractVoiceTasks,
-  getStructuredOutputUsage,
-} from '@hominem/ai';
+import { getStructuredOutputUsage } from '@hominem/ai';
 import { db } from '@hominem/db/core';
 import { NotFoundError } from '@hominem/db/errors';
 import { TaskRepository } from '@hominem/db/tasks';
@@ -19,6 +14,8 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
+import { extractTasks, extractVoiceTasks } from '../../application/task-extraction.service';
+import { extractTimeBlock } from '../../application/time-block-extraction.service';
 import {
   CreateTaskBatchSchema,
   CreateTaskSchema,

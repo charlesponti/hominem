@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { enhanceText } from '@hominem/ai';
+import {
+  createChatCompletion,
+  ENHANCE_MODEL,
+  getChatCompletionText,
+  getChatCompletionUsage,
+} from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -28,7 +33,22 @@ export const enhanceRoutes = new Hono<AppContext>()
     const getDurationMs = startAIUsageTimer();
 
     try {
-      const enhanced = await enhanceText({ text, instruction }, TEXT_ENHANCE_PROMPT);
+      const response = await createChatCompletion({
+        model: ENHANCE_MODEL,
+        messages: [
+          { role: 'system', content: TEXT_ENHANCE_PROMPT },
+          {
+            role: 'user',
+            content: instruction ? `Instruction: ${instruction}\n\nText:\n${text}` : text,
+          },
+        ],
+        temperature: 0.2,
+        maxCompletionTokens: 2000,
+      });
+      const enhanced = {
+        text: getChatCompletionText(response, text).trim() || text,
+        usage: getChatCompletionUsage(response),
+      };
       await recordAIUsageEvent({
         eventId,
         userId,

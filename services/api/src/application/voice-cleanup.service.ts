@@ -1,22 +1,95 @@
 import {
-  cleanupVoiceTranscript,
+  createStructuredChatCompletion,
+  normalizeOpenRouterError,
   OpenRouterRequestError,
   StructuredOutputError,
+  VOICE_CLEANUP_MODEL,
   type AIUsageMetrics,
-  type VoiceTranscriptCleanupOutput,
+  type OpenRouterClientOptions,
 } from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
+import { z } from 'zod';
 
 import {
   VoiceCleanupOutputSchema,
   type VoiceCleanupInput,
   type VoiceCleanupOutput,
-} from '../../schemas/voice.schema';
+} from '../schemas/voice.schema';
 
 const VOICE_CLEANUP_MIN_LENGTH = 8;
 const VOICE_CLEANUP_MIN_WORDS = 2;
 const VOICE_CLEANUP_MIN_LENGTH_RATIO = 0.45;
 const VOICE_CLEANUP_MAX_LENGTH_RATIO = 2.5;
+
+type VoiceTranscriptCleanupInput = OpenRouterClientOptions & {
+  rawText: string;
+  locale?: string;
+  model?: string;
+};
+
+type VoiceTranscriptCleanupOutput = {
+  cleanedText: string;
+};
+
+type VoiceTranscriptCleanupResult = VoiceTranscriptCleanupOutput & {
+  usage: AIUsageMetrics | null;
+};
+
+const VOICE_TRANSCRIPT_CLEANUP_SYSTEM_PROMPT = [
+  'You clean up raw on-device speech transcripts.',
+  'Preserve the user meaning, names, numbers, dates, and intent.',
+  'Fix casing, punctuation, spacing, repeated filler fragments, and obvious speech recognition artifacts.',
+  'Do not summarize, expand, add facts, or heavily paraphrase.',
+  'If you are uncertain, return the original transcript unchanged.',
+  'Return only the JSON required by the schema.',
+].join(' ');
+
+const VoiceTranscriptCleanupOutputSchema = z.object({
+  cleanedText: z.string(),
+});
+
+export function parseVoiceTranscriptCleanupOutput(value: unknown): VoiceTranscriptCleanupOutput {
+  return VoiceTranscriptCleanupOutputSchema.parse(value);
+}
+
+export async function cleanupVoiceTranscript(
+  input: VoiceTranscriptCleanupInput,
+): Promise<VoiceTranscriptCleanupResult> {
+  const model = input.model ?? VOICE_CLEANUP_MODEL;
+
+  try {
+    const { output, usage } = await createStructuredChatCompletion(
+      {
+        model,
+        schema: VoiceTranscriptCleanupOutputSchema,
+        schemaName: 'voice_transcript_cleanup',
+        schemaDescription: 'A minimally cleaned voice transcript preserving original meaning.',
+        messages: [
+          { role: 'system', content: VOICE_TRANSCRIPT_CLEANUP_SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              rawText: input.rawText,
+              ...(input.locale ? { locale: input.locale } : {}),
+            }),
+          },
+        ],
+      },
+      input,
+    );
+
+    return {
+      ...parseVoiceTranscriptCleanupOutput(output),
+      usage,
+    };
+  } catch (error) {
+    if (error instanceof StructuredOutputError) {
+      throw error;
+    }
+
+    throw normalizeOpenRouterError(error);
+  }
+}
 
 type VoiceCleanupProviderError = {
   kind: 'provider-error';

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeExplicitWeekday, parseTimeBlockExtractionOutput } from './time-block-extraction';
+import {
+  normalizeExplicitWeekday,
+  parseTimeBlockExtractionOutput,
+} from './time-block-extraction.service';
 
 describe('parseTimeBlockExtractionOutput', () => {
   it('preserves fixed event fields and explicit participants', () => {

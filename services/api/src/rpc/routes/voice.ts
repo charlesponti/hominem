@@ -8,10 +8,13 @@ import {
   recordAIUsageEvent,
   startAIUsageTimer,
 } from '../../application/ai-usage.service';
+import {
+  cleanupVoiceInput,
+  shouldBypassVoiceCleanup,
+} from '../../application/voice-cleanup.service';
 import { VoiceCleanupInputSchema } from '../../schemas/voice.schema';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
-import { cleanupVoiceInput, shouldBypassVoiceCleanup } from './voice-cleanup.service';
 
 const authenticatedVoiceRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)

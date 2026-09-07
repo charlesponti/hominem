@@ -1,5 +1,6 @@
 import { OpenRouterRequestError } from '@hominem/ai';
 import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 vi.mock('@hominem/telemetry', () => ({
   logger: {
@@ -11,6 +12,7 @@ import {
   buildFallbackOutput,
   cleanupVoiceInput,
   isSafeVoiceCleanup,
+  parseVoiceTranscriptCleanupOutput,
   shouldBypassVoiceCleanup,
 } from './voice-cleanup.service';
 
@@ -137,5 +139,31 @@ describe('voice cleanup service', () => {
       output: buildFallbackOutput(baseInput.rawText),
       usage: null,
     });
+  });
+});
+
+describe('parseVoiceTranscriptCleanupOutput', () => {
+  it('accepts a valid structured output payload', () => {
+    expect(parseVoiceTranscriptCleanupOutput({ cleanedText: 'Hello there.' })).toEqual({
+      cleanedText: 'Hello there.',
+    });
+  });
+
+  it('rejects when choices are missing from a raw provider-style payload', () => {
+    expect(() => parseVoiceTranscriptCleanupOutput({})).toThrow(z.ZodError);
+  });
+
+  it('rejects when message content is missing', () => {
+    expect(() => parseVoiceTranscriptCleanupOutput({ choices: [{ message: {} }] })).toThrow(
+      z.ZodError,
+    );
+  });
+
+  it('rejects invalid json content strings', () => {
+    expect(() => parseVoiceTranscriptCleanupOutput('{not-valid-json')).toThrow(z.ZodError);
+  });
+
+  it('rejects invalid schema shapes', () => {
+    expect(() => parseVoiceTranscriptCleanupOutput({ cleanedText: 123 })).toThrow(z.ZodError);
   });
 });
