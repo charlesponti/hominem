@@ -69,7 +69,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 | MCP tool   | `services/api/src/mcp/tools/<domain>.ts`                                                                                                                   | `registerTool` wiring only                     |
 | RPC routes | `services/api/src/rpc/routes/<domain>.ts`                                                                                                                  | Hono route wiring only                         |
 | RPC types  | `packages/rpc/src/types/<domain>.types.ts` (optional)                                                                                                      | `InferResponseType`/`InferRequestType` only, never hand-written |
-| Web hook   | `apps/web/app/hooks/use-<domain>.ts` (optional)                                                                                                            | `useQuery`/`useMutation` wiring only            |
+| Client hook | `apps/web/app/hooks/use-<domain>.ts` and/or `apps/omiro/hooks/use-<domain>.ts` (optional, whichever app(s) actually consume it) | `useQuery`/`useMutation` wiring only |
 | Tests      | `services/api/src/application/<domain>.service.test.ts`, `services/api/src/mcp/tools/<domain>.test.ts`, `services/api/src/rpc/routes/<domain>.test.ts`, optional `services/api/src/schemas/<domain>.schema.test.ts`, optional `apps/web/tests/e2e/<domain>.spec.ts` | Behavior verification                          |
 
 ## Workflow
@@ -202,7 +202,15 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
       duplicate silently drifts from the real route shape instead of failing typecheck when the
       route changes, and it's the reason every call site ends up needing a cast.
 
-   c. **Write the hook** in `apps/web/app/hooks/use-<domain>.ts`:
+   c. **Write the hook**, in whichever app(s) actually consume the resource — this is not always
+      `apps/web`:
+
+      - `apps/web` → `apps/web/app/hooks/use-<domain>.ts`. Mirror `use-chats.ts` or
+        `use-collections.ts`.
+      - `apps/omiro` → `apps/omiro/hooks/use-<domain>.ts` (or `apps/omiro/services/<domain>/`
+        for a larger feature area). Same `@hominem/rpc/react` client, same pattern — mirror
+        `useArchivedChats.ts`. Do not also add an `apps/web` hook nobody calls just because this
+        step's example lives there.
 
       ```ts
       export function useFoo() {
@@ -214,8 +222,12 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
       }
       ```
 
-      One query key per resource. Mutations call `queryClient.invalidateQueries({ queryKey })` in
-      `onSuccess`. Mirror `use-chats.ts` or `use-collections.ts`.
+      One base query key per resource, plus a derived key per parameterized query (e.g. a detail
+      lookup) — `use-collections.ts`'s `collectionsKey`/`collectionDetailKey(id)` is the pattern to
+      copy, not a single flat key for everything. Mutations call
+      `queryClient.invalidateQueries({ queryKey })` in `onSuccess`, invalidating both the specific
+      detail key and the base list key when a single-resource mutation should also refresh the
+      list.
 
 7. **Tests.** Write integration tests against the real `app-test` Postgres database:
    - **Service** (`application/<domain>.service.test.ts`) — call the service functions directly
@@ -262,9 +274,12 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
   Hono wiring. Duplicated query logic across `mcp/` and `rpc/` is a defect.
 - MCP and RPC import the same schema objects and the same service functions — no per-surface
   schema redefinitions.
-- Every MCP operation must also exist as an RPC route. RPC-only write operations are allowed
-  (deleting a resource, revoking access) but only as an explicit choice confirmed with the user —
-  never a default, and never a reason to duplicate service logic.
+- A resource does not need both surfaces — MCP-only (`health`, `media`, `social`, `places`,
+  `calendar`, `tags`, all with no RPC route today) and RPC-only are both normal, existing shapes.
+  Add the RPC surface only when a web/mobile client actually needs to call it, and add the MCP
+  surface only when an AI client actually needs it — never both by default. Whichever surfaces do
+  exist for a resource must share the one service implementation; that sharing is the only
+  invariant, not universal presence on both transports.
 - Every query is scoped by `ownerUserid` (multi-tenant correctness; `app.*` is RLS-forced).
 - Read-only operations use `readOnly: true`; write operations must declare write scopes
   (e.g. `tags:write`) and gate their file import on them in `mcp/routes.ts`.

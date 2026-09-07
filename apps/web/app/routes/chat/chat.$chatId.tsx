@@ -178,7 +178,7 @@ export default function ChatPage({
         initial={{ opacity: 0, transform: 'translateY(8px)' }}
         transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
       >
-        <RouteHeader showNewChat={false}>
+        <RouteHeader>
           <div className="relative flex min-w-0 flex-1 items-center">
             <div
               aria-hidden={isSearchOpen}

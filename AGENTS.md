@@ -74,15 +74,19 @@ just db migrate
 
 ## Adding a new package, app, or service
 
-**Never add a `workspace:*` dependency for a type-only import.** If you only `import type { X } from '@hominem/y'`, do not list `@hominem/y` in `package.json`. pnpm/turbo build their task graph from `package.json` edges with no idea an import is type-only — a single `import type` turned into a real dependency once dragged another package's entire build/test/lint/typecheck into every consumer's CI scope. Instead, add a `paths` alias directly in your own `tsconfig.json` pointing at the emitted declaration, never at source (see `docs/type-system.md` D1/D3 — resolving another package's source instead of its `.d.ts` is exactly the failure class that document exists to eliminate):
+**Never add a `workspace:*` dependency for a type-only import.** If you only `import type { X } from '@hominem/y'`, do not list `@hominem/y` in `package.json`. pnpm/turbo build their task graph from `package.json` edges with no idea an import is type-only — a single `import type` turned into a real dependency once dragged another package's entire build/test/lint/typecheck into every consumer's CI scope. Instead, add a `paths` alias directly in your own `tsconfig.json` pointing at the emitted declaration, never at source (see `docs/type-system.md`'s Rules section — resolving another package's source instead of its `.d.ts` is exactly the failure class that document exists to eliminate):
 
 ```json
-"paths": { "@hominem/api/types": ["../../services/api/build/rpc/app.d.ts"] }
+"paths": { 
+    "@hominem/api/types": [
+        "../../services/api/build/rpc/app.d.ts"
+    ] 
+}
 ```
 
 Keep it in sync with whatever `services/api/package.json`'s `exports` map says that subpath resolves to. `packages/rpc`, `apps/career`, `apps/omiro`, `apps/finance`, and `apps/web` all do this for `@hominem/api` — copy the pattern.
 
-**New library package (something other packages depend on at runtime):**
+**New package used by other packages at runtime:**
 
 1. `tsconfig.json`: `rootDir: "src"`, `outDir: "./build"`, `tsBuildInfoFile: "./.cache/tsconfig.tsbuildinfo"` — always package-local, never a shared cross-package `.cache/` path. Turbo can't safely cache outputs that escape a package's own directory.
 2. Add a `"references"` array mirroring your real `package.json` dependencies exactly (only other composite library packages — see below).
@@ -109,8 +113,7 @@ Keep it in sync with whatever `services/api/package.json`'s `exports` map says t
 - `turbo.json`'s `typecheck` task `dependsOn: ["^build"]` — a package's composite dependencies get built (and turbo-cached) before it typechecks, so referenced projects have real declaration output to resolve against.
 
 ### TypeScript type-checking
-
-Full investigation, numbers, and the distilled DO/DO NOT rules: `docs/type-system.md`. Don't restate its findings here — that's exactly the kind of second copy that goes stale.
+Documentation on type-checking in this monorepo can be found in `docs/type-system.md`.
 
 ## Monorepo
 

@@ -26,14 +26,18 @@ pnpm test --filter=@hominem/api...
 
 ## Build order after changing a `services/api` route or schema
 
-Rule: if the change also touches `apps/web`/`apps/omiro`, `@hominem/api` typechecking clean is
-not enough — rebuild it before touching the frontend, in this order:
+Rule: if the change also touches `apps/web` and/or `apps/omiro`, `@hominem/api` typechecking
+clean is not enough — rebuild it before touching the frontend, in this order:
 
 ```bash
 pnpm --filter @hominem/api build     # regenerates build/rpc/app.d.ts — required, not optional
 pnpm --filter @hominem/rpc typecheck # or build, if packages/rpc/src/types/*.ts changed too
-pnpm --filter @hominem/web typecheck
+pnpm --filter @hominem/web typecheck   # only if apps/web actually consumes the change
+pnpm --filter @hominem/omiro typecheck # only if apps/omiro actually consumes the change
 ```
+
+Typecheck whichever app(s) actually changed, not both by default — an Omiro-only consumer doesn't
+need `@hominem/web` validated, and vice versa.
 
 Why: `packages/rpc`'s `HonoClient`/`AppType` (and anything derived via
 `InferResponseType`/`InferRequestType`) resolve against the committed
