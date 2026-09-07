@@ -1,5 +1,6 @@
 import type { NoteSearchResult } from '@hominem/rpc/types/notes.types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { z } from 'zod';
 
 import { useNoteSearch } from '~/hooks/use-notes';
 
@@ -22,6 +23,45 @@ export interface ChatComposerAttachment {
   content?: string;
 }
 
+const chatComposerAttachmentSchema = z.object({
+  id: z.string(),
+  originalName: z.string(),
+  url: z.string(),
+  textContent: z.string().optional(),
+  content: z.string().optional(),
+});
+
+const chatComposerPersistedStateSchema = z.object({
+  draft: z.string().default(''),
+  attachments: z.array(chatComposerAttachmentSchema).default([]),
+});
+
+export type ChatComposerPersistedState = z.infer<typeof chatComposerPersistedStateSchema>;
+
+const CHAT_COMPOSER_STORAGE_PREFIX = 'chat-composer:';
+
+function readPersistedComposerState(chatId: string): ChatComposerPersistedState | null {
+  if (typeof window === 'undefined') return null;
+
+  const storageKey = `${CHAT_COMPOSER_STORAGE_PREFIX}${chatId}`;
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const result = chatComposerPersistedStateSchema.safeParse(parsed);
+    if (!result.success) {
+      window.localStorage.removeItem(storageKey);
+      return null;
+    }
+
+    return result.data;
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return null;
+  }
+}
+
 function getMentionQuery(value: string) {
   const match = value.match(/#([a-z0-9-]*)$/i);
   return match?.[1] ?? '';
@@ -38,9 +78,40 @@ export function useChatComposerState({
   chatId: string;
   seedNote: ChatComposerSeedNote | null;
 }) {
+  // Draft/attachments start empty (matching SSR) and are restored from
+  // localStorage in an effect after mount, rather than in the useState
+  // initializer, so the client's first render matches the server-rendered
+  // HTML and React doesn't hit a hydration mismatch on the composer's
+  // disabled/value state.
   const [draft, setDraft] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<ChatComposerAttachment[]>([]);
+  const [isRestored, setIsRestored] = useState(false);
   const { uploadFiles, uploadState } = useFileUpload();
+
+  useEffect(() => {
+    const persisted = readPersistedComposerState(chatId);
+    setDraft(persisted?.draft ?? '');
+    setAttachedFiles(persisted?.attachments ?? []);
+    setIsRestored(true);
+  }, [chatId]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+
+    const storageKey = `${CHAT_COMPOSER_STORAGE_PREFIX}${chatId}`;
+    if (draft.trim().length === 0 && attachedFiles.length === 0) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        attachments: attachedFiles,
+        draft,
+      }),
+    );
+  }, [attachedFiles, chatId, draft, isRestored]);
 
   const { data: sources = [] } = useChatSources(chatId);
   const { mutate: addSource } = useAddChatSource();
@@ -96,19 +167,10 @@ export function useChatComposerState({
     setAttachedFiles([]);
   }, []);
 
-  const restore = useCallback(
-    ({
-      draft: nextDraft,
-      attachments,
-    }: {
-      draft: string;
-      attachments: ChatComposerAttachment[];
-    }) => {
-      setDraft(nextDraft);
-      setAttachedFiles(attachments);
-    },
-    [],
-  );
+  const restore = useCallback(({ draft: nextDraft, attachments }: ChatComposerPersistedState) => {
+    setDraft(nextDraft);
+    setAttachedFiles(attachments);
+  }, []);
 
   return {
     attachFiles,
