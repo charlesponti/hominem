@@ -70,14 +70,14 @@ The first durable terminal decision wins cancellation races.
 
 ## Governing records
 
-Stable decisions are recorded in [the canonical contract ADR](chat.canonical-contract.adr.md),
-[the application workflows ADR](chat.application-workflows.adr.md),
-[the durable events ADR](chat.durable-events.adr.md),
-[the typed boundaries ADR](chat.typed-boundaries.adr.md), and
+Stable decisions are recorded in [the canonical contract ADR](decisions/chat.canonical-contract.md),
+[the application workflows ADR](decisions/chat.application-workflows.md),
+[the durable events ADR](decisions/chat.durable-events.md),
+[the typed boundaries ADR](decisions/chat.typed-boundaries.md), and
 the [chat testing contract](chat.testing.md).
 
-Active execution work remains in [Task 011](tasks/011-functional-chat-shipping-evidence.md)
-and [Task 012](tasks/012-omiro-generation-cancellation.md).
+Active execution work remains in [the functional chat shipping evidence task](tasks/functional-chat-shipping-evidence.md)
+and [the Omiro generation cancellation task](tasks/omiro-generation-cancellation.md).
 
 User-facing capability status is maintained in
 [`chat.capabilities.md`](chat.capabilities.md).

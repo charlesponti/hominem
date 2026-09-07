@@ -3,7 +3,7 @@ title: 'Complete functional chat shipping evidence'
 status: 'Implemented'
 priority: 'high'
 labels: [chat, e2e, browser, ios, evidence]
-depends_on: [010-chat-runtime-consolidation.md]
+depends_on: [chat-runtime-consolidation.md]
 blocks: []
 estimated_size: 'L'
 ---
@@ -65,8 +65,9 @@ task document stores only the summary and links to that manifest. Focused
 client/SSR MSW scenarios do not require real durable IDs or browser artifacts
 unless those are part of the specific acceptance assertion.
 
-The reviewed manifest for this run is
-`docs/tasks/artifacts/011-run-manifest-2026-09-04.md`.
+The run manifest for this task was reviewed and closed out; per the
+`docs/tasks/artifacts/` scratch-evidence lifecycle, it was removed once this
+task reached `Implemented`.
 
 ## Current run status
 
@@ -90,8 +91,8 @@ The reviewed manifest for this run is
   limitation.
 - The generated Playwright HTML report and per-scenario artifacts are preserved
   under `apps/web/playwright-report` and `apps/web/test-results`. Disposable
-  records were deleted and verified by the W-006 receipt at
-  `docs/tasks/artifacts/011-cleanup-receipt-2026-09-04.md`.
+  records were deleted and verified by the W-006 cleanup receipt (scratch
+  evidence, removed after this task reached `Implemented`).
 - Omiro now launches on the booted iPhone 17 Pro after rebuilding the native
   development client and reaches an authenticated chat through the local API
   at `http://localhost:4040`. The named `chat-core.yaml` Maestro flow passes
@@ -116,7 +117,7 @@ The reviewed manifest for this run is
   Omiro native callback delivery, not a prerequisite for the rest of this
   shipping-evidence matrix. Its reproduction, evidence, attempted fixes, and
   acceptance criteria are recorded in
-  `012-omiro-generation-cancellation.md`.
+  `omiro-generation-cancellation.md`.
 
 - W-007 release gate completed: `pnpm run check` passed with 28 successful
   Turbo tasks, and `git diff --check` passed after the final client/test

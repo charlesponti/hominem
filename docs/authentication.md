@@ -1,4 +1,4 @@
-# II. Authentication
+# Authentication
 
 Better Auth, running inside the API, is the sole authority for sessions. Keep
 its session database, signed cookies, and native client-storage contract —
@@ -42,7 +42,7 @@ derives every cookie attribute from env config:
   `localhost` and `test`), with no console error, so sign-in looks like it
   works but no session ever persists. A real registrable domain like
   `lvh.me` isn't subject to that restriction. See
-  [local development domain ADR](auth.local-tld.adr.md) for the full investigation
+  [local development domain ADR](decisions/auth.local-tld.md) for the full investigation
   and the alternatives ruled out.
 - `sameSite: 'lax'` and `httpOnly: true` are constant in both environments.
 

@@ -1,8 +1,8 @@
 # Type System
 
-The monorepo resolves TypeScript types through **compiled declaration contracts**, not source files. This document records why the system moved to contracts, the verified diagnosis of the failure class it replaces, the target model, the decisions that govern it, the Phase 0 evidence, and the remaining tasks.
+The monorepo resolves TypeScript types through **compiled declaration contracts**, not source files. This document is the whole story on that: why it moved to contracts, the model and the decisions that govern it, how fast it actually is, which speed fixes measured real and which didn't, and a correctness tradeoff we made on purpose. It used to be split across three files; it isn't anymore, because a reader chasing "why can't I add a `references` entry here" shouldn't have to hop between docs to get the full picture.
 
-For everything about _how fast_ type-checking is within this model — the live project-reference redirect, the `pnpm` injected-package staleness trap, which speed fixes actually measured out and which didn't, `services/api`'s zero-`references` invariant — see [`docs/type-performance.md`](type-performance.md). This document is the "why declarations, not source" record; that one is the "we tried N things, here's what was real" record.
+One rule held throughout the performance sections below: every number came from actually running the compiler with `--generateTrace`, or from driving a real `tsserver` session (the same protocol VS Code speaks) via the scripts in `scripts/`. Nothing here is "the docs say" or "this should help." A few fixes that sounded obviously right turned out to do nothing when measured — those are written up too, so nobody burns an afternoon re-discovering that.
 
 ## Why this exists
 
@@ -45,59 +45,232 @@ Turbo's existing `typecheck`/`test` → `^build` ordering already guarantees dec
 
 - **TS2883** forbids inferring exported types (Hono's `typeof app` `AppType`) across composite project boundaries without explicit annotations that defeat the RPC pattern. Hence `services/api` and `packages/rpc` stay out of the composite graph — but they can still emit declarations.
 - **Runtime is source/bundle based.** Dev runs `tsx watch` from `src`; production bundles with rolldown. Declaration emit is a types-only artifact, never a runtime dependency.
-- **`assumeChangesOnlyAffectDirectDependencies` stays** (editor-only responsiveness flag), and the standard caveat — restart tsserver when a change ripples beyond one hop — continues to apply.
+- **`assumeChangesOnlyAffectDirectDependencies` stays** (editor-only responsiveness flag), and the standard caveat — restart tsserver when a change ripples beyond one hop — continues to apply. A targeted incremental-recheck benchmark (below) didn't reproduce a measurable benefit from this flag either way; it's kept as a deliberate tradeoff, not because it was reproven.
 
 ## Evidence (Phase 0 spike)
 
 A scratch `emitDeclarationOnly` build of `services/api` produced 176 self-contained `.d.ts`. Consumers pointed at the emitted declarations, cold-cached:
 
 | Consumer       | Alias target                 | Typecheck | Program content                                                                        |
-| -------------- | ---------------------------- | --------- | -------------------------------------------------------------------------------------- |
+| -------------- | ----------------------------- | --------- | --------------------------------------------------------------------------------------- |
 | `packages/rpc` | emitted `app.d.ts`           | ✅ exit 0 | Hono client-inference chain (`client.api.notes[':id'].$get`) survives declaration emit |
 | `apps/omiro`   | emitted `app.d.ts`           | ✅ exit 0 | **0 `services/api/src` files in program**; cold 9.1s (source) → 6.4s (declarations)    |
 | `apps/career`  | emitted `routes/career.d.ts` | ✅ exit 0 | per-route alias pattern works too                                                      |
 
-`apps/finance` uses the same `app.ts` alias as rpc/omiro and is covered by that proof.
+`apps/finance` uses the same `app.ts` alias as rpc/omiro and is covered by that proof. The four phases that landed this model — flipping composite exports to `build/`, api/rpc declaration-only emit with alias retargeting, the editor watch wiring, and removing residual write-only cruft — all shipped 2026-08-27; the detailed task-by-task record lives in git history, not here.
 
-## Guards
+## How type-checking speed was actually measured
 
-- A dedicated `services/api/tsconfig.emit.json` with a **hardcoded `outDir: build`** — declaration emit is never configured via CLI flags or a `rootDir` dance.
-- A guard script (modeled on `just db lint`) that **fails if any `*.d.ts` appears under a package's `src/`** — the stray-declarations incident becomes a loud CI error, not a quiet git-status surprise.
-- `pnpm run check` (or the per-package typecheck gates) is the evidence standard for every phase below.
+TypeScript has separate performance surfaces, so one number can't represent all of them: editor startup (a fresh `tsserver` opening a project), editor interaction (warm diagnostics/references/completion), compiler/build (a clean or cached `tsc`/Turbo CI run), and freshness (does a consumer see a new declaration or a stale one). Every finding below names which surface it's measuring.
 
-## Tasks
+| Script | What it answers |
+| --- | --- |
+| `scripts/lib/tsserver-client.mjs` | The shared client everything else is built on: spawns a real `tsserver` and speaks its actual protocol. |
+| `scripts/bench-tsserver.mjs` | Timing (`open`/`geterr`/`references`) across every real consumer in the monorepo, plus cross-project "Find All References." `--label`, `--runs`, `--json`. |
+| `scripts/bench-tsserver-minimal.mjs` | Smallest editor benchmark: cold project open, then warm diagnostics, for one real consumer. |
+| `scripts/bench-incremental-recheck.mjs` | An already-warm tsserver session re-checking a downstream consumer after an upstream file changes — the one scenario `assumeChangesOnlyAffectDirectDependencies` could plausibly affect. |
+| `scripts/check-live-types.mjs` / `scripts/check-live-types-rpc.mjs` | Correctness, not speed: edit a type without rebuilding, ask tsserver via `quickinfo` whether a consumer sees it live or stale. Always reverts its own edit. |
+| `scripts/find-duplicate-shapes.mjs` | Walks every exported interface/object-type-alias under `packages/`, `services/`, `apps/` via the TS Compiler API and groups ones with an identical structural signature. |
 
-Temporary execution belongs to the work tracker; promote these to `docs/tasks/` tickets when picked up. Each lands with `pnpm run check` green as evidence.
+All of these are read-only or self-reverting — safe to run against a live checkout any time.
 
-### Task 1 — Composite packages flip `exports.types` to `build/` — COMPLETE (2026-08-27)
+## The live-redirect model
 
-- **Objective:** composite packages serve declarations, not source.
-- **Done:** all 11 composite packages flipped (`db`, `env`, `telemetry`, `utils` then `ai`, `chat`, `queues`, `storage`, `career`, `finance`, `services`; `auth` was already flipped). `career`/`finance` string-shorthand exports were converted to structured `types`/`default` form.
-- **Evidence:** `--traceResolution` shows composite (`packages/ai`), source (`services/api`), and app (`apps/career`) consumers resolving `build/*.d.ts` (incl. subpaths `env/base`, `env/api`, `env/brand`, `telemetry/node`); runtime smoke test from `services/api` confirms `default` still loads `src`; full `pnpm run check` green (lint 17, typecheck 32, build 16, test 23). One transient gate failure was a load-induced 15s timeout in `auth.e2e-login.test.ts`; isolated rerun passed 220/220 and the final gate run exited 0.
-- **Steps:** flip `exports` `types` conditions (`"."` and subpath patterns) to `./build/*.d.ts` for the core packages first (`db`, `env`, `telemetry`, `utils`), run the full gate, then the remaining composite packages, gate again.
-- **Acceptance:** consumers resolve `packages/*/build/*.d.ts` (verify via `--traceResolution` on one composite and one app consumer); no runtime behavior change; `pnpm run check` green after each batch.
+Worth knowing before the fixes below, since several lean on it: a consumer with a `references` entry to a composite package gets tsserver's live project-reference source redirect for free — and that redirect doesn't depend on the referenced package's `build/*.d.ts` being fresh at all. Verified directly via go-to-definition, even from a completely clean checkout with no build output anywhere. The exception is `services/api`: it deliberately has no `references` entries and resolves its composite dependencies through `paths` to `build/*.d.ts`, so the root `tsc -b --watch` leg must stay active. `scripts/watch-types.sh` separately watches the two non-composite declaration boundaries, `services/api` and `packages/rpc` — this is why the watcher stays a small script-backed adapter instead of a pure `turbo watch` graph; the required root `tsc -b --watch` project isn't a workspace package, so independent package watchers would change the project-reference behavior this document measures. Run `pnpm dev:types` alongside the relevant Turbo runtime dev task.
 
-### Task 2 — `services/api` + `packages/rpc` emit declarations; aliases retarget — COMPLETE (2026-08-27)
+Two flags in the root `tsconfig.json` — `disableReferencedProjectLoad` and `disableSolutionSearching` — are tsserver-only (`tsc`/CI ignore them). Measured: a real, reproducible 2.35x speedup on cross-project "Find All References" (1518ms vs. 3574ms average, 4 runs each, rooted at a type used across `packages/chat` → `packages/db`/`packages/rpc`). This holds even though nothing literally `extends` the root `tsconfig.json` — tsserver's "solution search" auto-discovers sibling and ancestor tsconfigs on its own.
 
-- **Objective:** api/rpc expose compiled contracts; consumers stop compiling api source.
-- **Done:** `services/api/tsconfig.emit.json` and `packages/rpc/tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`, tests excluded); `build:types` chained into `services/api`'s `build`; `packages/rpc` gained a `build` script and its exports `types` flipped to `build/*.d.ts`; the `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, and `packages/rpc` now target the emitted declarations; `scripts/check-src-declarations.sh` fails on any untracked `.d.ts` under `src/` and runs first in `check:all`; `check:all` reordered to build before typecheck so consumer checks never race the api emit. **`apps/web` was missed in the original pass** — its `@hominem/api/types` alias still pointed at `services/api/src/rpc/app.ts` (source), reintroducing the exact failure class this task exists to eliminate; retargeted to `services/api/build/rpc/app.d.ts` and given a `references` array mirroring its `package.json` dependencies (matching the `apps/omiro`/`apps/career` convention), which it also lacked.
-- **Evidence:** api emits 135 declarations (tests excluded), rpc 21; `--listFiles` shows **zero `services/api/src` and zero `packages/rpc/src` files** in the `omiro`, `career`, and `finance` programs (declarations exclusively); rpc/omiro/career/finance typecheck clean against the emitted `AppType`; full `pnpm run check` green (guard → lint 17 → build 17 → typecheck 33 → test 24). `apps/web` fix verified separately: `turbo typecheck --filter @hominem/web` and `--filter @hominem/finance` both pass clean after the retarget, and `scripts/check-src-declarations.sh` still reports no stray declarations.
-- **Steps:** add `tsconfig.emit.json` (hardcoded `outDir: build`, `emitDeclarationOnly`) + `build:types` scripts; retarget `@hominem/api/*` path aliases in `apps/omiro`, `apps/career`, `apps/finance`, `packages/rpc` to the emitted declarations; add the `*.d.ts`-under-`src/` guard script; verify rpc/omiro/career/finance typechecks resolve declarations exclusively.
-- **Acceptance:** zero `services/api/src` or `packages/rpc/src` files in consumer programs; `AppType` and client inference intact; guard script wired into the gate.
+## Zero-references invariant for inference-boundary packages
 
-### Task 3 — Editor watch-builds and dev hygiene — COMPLETE (2026-08-27)
+`services/api` and `packages/rpc` both infer an exported type across their own module boundary — Hono's `typeof rpcApp` RPC pattern. TS2883 ("portable type") won't infer an exported type like `AppType` across a real **composite** project boundary without an explicit annotation, and adding that annotation would defeat the pattern entirely.
 
-- **Objective:** tsserver always sees fresh declarations during development.
-- **Done:** `scripts/watch-types.sh` runs three TypeScript watch processes (root `tsc -b` for the composite graph plus `tsc -p tsconfig.emit.json` for `services/api` and `packages/rpc`); it is exposed as the root `pnpm dev:types` script, with the tsserver-restart caveat documented in the `hominem-development` skill (Development rules) for ripples beyond one hop.
-- **Evidence:** with the watcher running, appending a probe type to `packages/utils/src/text.ts` produced the updated `WatchTypesProbe` export in `packages/utils/build/text.d.ts` within seconds and `services/api` typecheck stayed clean; probe removed afterward and build state verified clean. Runtime (tsx, metro, vite) resolves `default` → src so the declaration rebuilds never touch the running apps.
-- **Steps:** add the `just`/pnpm recipe backed by the root and boundary TypeScript watchers; document the tsserver-restart caveat; confirm the dev loop (tsx watch, metro) is unaffected by declaration-only changes.
-- **Acceptance:** editing a package's types is reflected in dependents' editors within the watch rebuild time; documented in the `hominem-development` skill.
-- **Note (2026-08-30):** the root `tsc -b --watch` leg was briefly removed on the theory that every consumer gets tsserver's live redirect and doesn't need it — true for consumers _with_ a `references` entry (`packages/db`, `packages/rpc`, `apps/web`, `apps/omiro`), false for `services/api`, which by design has none and resolves `packages/chat` and 8 other composite packages purely via `paths` to `build/*.d.ts`. Restored. See `docs/type-performance.md` for the full investigation.
+The specific, tested finding: **TS2883 fires because the package itself is `composite`, not because it merely has a bare `references` entry.** Confirmed by adding a `references: [{ path: "../../packages/chat" }]` entry with `composite: false` — both `tsc --noEmit` and `tsc -p tsconfig.emit.json` passed cleanly — and separately confirming `composite: true` does trigger TS2883, isolating which flag actually causes it.
 
-### Task 4 — Remove the residual write-only cruft — COMPLETE (2026-08-27)
+That distinction was tried directly on `services/api`, then reverted: `services/api`'s rule is stricter than "avoid TS2883 today" — it's zero `references`, period, so the invariant holds as `AppType`'s shape evolves, not just for its shape today. A bare reference to one small, stable package passing today doesn't prove it'll still pass once `AppType` picks up something structurally different.
 
-- **Objective:** no package writes declarations it doesn't ship.
-- **Done:** audited every `tsc` invocation and tsconfig (package.json scripts, watch mode, orphan configs, CI). All 12 composite packages have `outDir: build`; api/rpc emits target `build`; `deepeval` and api `dev` configs are `noEmit`. Two flat-flagged configs resolve safe via extends (`auth/tsconfig.build.json` → outDir build; `services/api/tsconfig.dev.json` → inherited noEmit). The one true hazard, orphan `packages/services/ts-test-rel/tsconfig.json` (no noEmit/outDir/composite), got `noEmit: true`. CI: `_validate-app.yml` now runs `check:dts` first, builds **before** typechecking (consumer checks resolve api's emitted declarations, unreachable via package.json edges), and includes `@hominem/api` in the build filter.
-- **Evidence:** `find` acceptance — no `.d.ts` outside `build/`/`.cache`/output dirs beyond the six tracked hand-written declarations; full `pnpm run check` green (guard → lint 17 → build 17 → typecheck 33 → test 24).
-- **Steps:** audit for any remaining `tsc` invocation that could emit without an explicit `outDir` (the incident root cause); enforce the guard from Task 2 across all packages.
-- **Acceptance:** `find . -name '*.d.ts' -not -path '*/build/*' -not -path '*/.cache/*'` (excluding the six tracked hand-written files) is empty after a full `pnpm run check`.
+`packages/rpc/tsconfig.json` had drifted from this: it carried a `references: [{ path: "../chat" }]` entry since 2026-08-25 (added directly to `main`, predating this investigation) — a real disagreement between the documented invariant and the actual repo state. It's reconciled now: the `references` entry is gone, replaced with a `paths` override pinning `@hominem/chat` and `@hominem/chat/types` straight to `packages/chat/build/{public,types-only}.d.ts`, the same pattern `services/api` uses.
+
+That specific fix didn't move `packages/rpc`'s own `tsc --noEmit` time in isolation (~2.9–3.1s before and after) — `packages/rpc/node_modules/@hominem/chat` is a direct symlink, not an injected copy, so the `injectWorkspacePackages` trap below never applied to that particular import path on its own. (It does apply one hop further out: `packages/chat` has a `react` peer dependency, so pnpm still hard-copies it into a peer-isolated variant for `packages/rpc`'s own peer context.) The real win for `packages/rpc` came from the broader `@hominem/api/types`-consumer fix described next.
+
+**Practical rule:** any new `typeof app`-style inference boundary should get zero `references` entries from the start. Resolve every dependency via plain `paths` to `build/*.d.ts`, the way `services/api` and `packages/rpc` do.
+
+## The `pnpm-workspace.yaml` injected-package trap
+
+`pnpm-workspace.yaml` sets `injectWorkspacePackages: true`, which changes how pnpm links any package with a `react` peer dependency (like `packages/career-services` or `packages/ai`): instead of a cheap symlink to live source, pnpm copies the package's files into a peer-isolated spot in `.pnpm`'s virtual store — once, at `pnpm install` time, before anyone has run `pnpm build`.
+
+That timing is the problem. The copy's `package.json` still points `types` at `./build/index.d.ts`, but there's no `build/` folder in the copy — it's a point-in-time snapshot taken before build output existed. So an internal cross-package import from inside that copy 404s on the `types` condition and falls through to the `default` condition — real `src/*.ts` source. That forces a full structural check of the real source (Kysely query builders, in `packages/db`'s case) instead of reading a pre-built `.d.ts`, for every package the react-peer-dependent package imports internally. For `services/api`'s own typecheck this cost about 1.6s of direct check time across 9 packages, 80 files — before counting the downstream ripple.
+
+**The fix:** a `paths` override in `services/api/tsconfig.emit.json` pinning each affected specifier straight to its real `build/*.d.ts`, skipping the injected copy's broken `exports` map:
+
+```json
+"paths": {
+  "@hominem/db": ["../../packages/db/build/index.d.ts"],
+  "@hominem/ai": ["../../packages/ai/build/index.d.ts"]
+}
+```
+
+Where this lives matters: putting it in `services/api/tsconfig.json` broke `pnpm build` in CI with `MISSING_EXPORT` errors, because `rolldown`'s `build.mjs` also reads that file for real runtime bundling, and it needs the exports-map runtime condition, not a types-only file. It has to live in `tsconfig.emit.json` instead (type-check/declaration-emit only, never read by the bundler), leaving `tsconfig.json`'s `paths` as just the `@/*` alias rolldown expects.
+
+This is safe on a completely fresh checkout with no `build/` output anywhere — a `paths` target that doesn't exist on disk falls through to normal resolution instead of hard-failing. Verified directly by deleting `packages/db/build`, running the typecheck, and confirming via `--traceResolution` that it fell through cleanly.
+
+**Measured win for `services/api` alone:** ~13% faster on `tsc -p tsconfig.emit.json --noEmit` (11.6s → 10.1s average, 2 runs each).
+
+### The trap reappears at every consumer of `@hominem/api/types` — this is the fix that actually explains "`dev:types` feels slow"
+
+The `services/api` override above only fixes the trap for `services/api`'s own compile. `services/api/build/rpc/app.d.ts` doesn't inline the types it references — it preserves them as literal `import("@hominem/career-services").JobImportErrorCode`-style queries, so every downstream program that loads it (`packages/rpc`, `apps/web`, `apps/omiro`, and formerly `apps/finance`) re-resolves that specifier independently and walks into the same trap for `@hominem/career-services`, `@hominem/ai`, `@hominem/db`, and `@hominem/finance-services`.
+
+**The fix** is the same `paths` override duplicated into every consumer: `packages/rpc/tsconfig.json`, `apps/web/tsconfig.json`, `apps/omiro/tsconfig.json`. None of these four packages is a real dependency of the apps or of `packages/rpc` — the override exists purely because their types leak in through the `AppType` boundary. No bundler-breakage risk here (Vite/Metro don't read these tsconfig files for a package nothing actually imports).
+
+**Measured win** (tsserver `open`→`projectLoad`, 3 runs each):
+
+| consumer | before | after | change |
+| --- | --- | --- | --- |
+| `apps/web` | 14287ms | 6207ms | -57% |
+| `apps/omiro` | 7033ms | 4864ms | -31% |
+| `packages/rpc` | 3814ms | 3434ms | -10% |
+| `services/api` | 4917ms | 4149ms | -16% |
+
+`packages/rpc`'s own `tsc --noEmit` also dropped, from ~2.9s to ~2.1s, once these four specifiers were added on top of the zero-references fix above — the zero-references fix alone couldn't move that number, because `db`/`career-services`/`ai`/`finance-services` were still hitting the trap unfixed.
+
+## Per-domain route splitting: avoiding the root `AppType` entirely
+
+Where possible, the cheaper fix is to not depend on the root `@hominem/api/types` at all. `rpcRoutes` (`services/api/src/rpc/app.ts`) mounts 15 domains — career, chats, collections, enhance, files, finance, inbox, memory, notes, people, personal, tasks, telemetry, usage, voice — into one Hono chain, and `@hominem/api/types` is `typeof rpcApp` over the whole thing. A consumer that only calls one domain still forces tsserver to structurally resolve all 15.
+
+`services/api/package.json` already exports each domain's router individually (`./finance`, `./career`, etc.), each with its own scoped `AppType`. `apps/career` was already built on the narrow `@hominem/api/career` export. `apps/finance` wasn't — both its SSR and browser clients were built on the root type despite only ever calling `.api.finance`.
+
+**Fixed for `apps/finance`:** its SSR client now uses `hc<typeof financeRoutes>` directly against `@hominem/api/finance`. Its browser client needed a real structural split — `packages/rpc`'s shared `HonoClient` stays as-is (genuinely needed by `apps/web`/`apps/omiro`, which call multiple domains), but `packages/rpc/src/finance.ts`'s `FinanceClient` type now derives from `@hominem/api/finance` directly, and its React binding (`FinanceClientContext`, `useFinanceApiClient()`, `FinanceHonoProvider`) moved out of the shared package into `apps/finance` itself, since it had exactly one caller. `apps/finance/tsconfig.json` dropped the `@hominem/api/types`, `@hominem/db`, `@hominem/career-services`, and `@hominem/ai` overrides entirely — it kept only `@hominem/api/finance` and `@hominem/finance-services` (the one package the narrow type itself embeds).
+
+**Measured win** (opening `apps/finance/app/lib/api/client.ts`, 3 runs each):
+
+| metric | before | after | change |
+| --- | --- | --- | --- |
+| `open`→`projectLoad` | ~2869ms | ~2505ms | -13% |
+| `geterr` | ~331ms | ~177ms | -46% |
+
+`geterr` — which scales with how much of the type graph needs checking — is the cleaner signal: the file's dependency footprint shrank from all 15 domains to just `finance`. No regressions found on `apps/career`, `apps/web`, or `apps/omiro`.
+
+**Unfinished, quantified opportunity:** `apps/web` only calls 6 of 15 domains (`chats`, `collections`, `memory`, `notes`, `tasks`, `usage`); `apps/omiro` calls 8 of 15 (`chats`, `enhance`, `files`, `inbox`, `notes`, `people`, `tasks`, `voice`). Neither touches `career` or `finance`. Confirmed by grepping each app's actual call sites against the full domain list. Not attempted — composing several domain routers into one app-scoped client type is a bigger lift than pointing at a single existing export was.
+
+## Explicit return types on generic callbacks
+
+An unannotated callback passed to a generic higher-order function forces TypeScript to infer the callback's full return shape bottom-up, then check that against the HOF's own signature — often one of the most expensive expressions in a file. An explicit return-type annotation skips the bottom-up inference step.
+
+**Confirmed real fixes** (measured via `--generateTrace`):
+
+- `upgradeWebSocket((c): WSEvents<WebSocketLike> => {...})` in `finance.import.websocket.ts` — callback's own check cost dropped from ~780ms to ~6ms.
+- `runInTransaction(async (trx): Promise<NoteRecord> => {...})` (×2) in `notes.service.ts` — `createNote`'s callback-inference cost dropped by ~765ms.
+
+This only fixes bottom-up inference of _your own_ code — it doesn't help when the expensive part is baked into a third-party library's own type declaration:
+
+- `better-auth`'s `mcp()` plugin factory is typed as `(options: McpOptions) => ReturnType<typeof oauthProvider>` — every call instantiates that computed type regardless of the caller. Wrapping the call site in `satisfies BetterAuthPlugin` made the measured cost marginally _worse_. Reverted.
+- Even the `upgradeWebSocket` fix above only ate the callback's own cost — the outer `.get('/ws', upgradeWebSocket(...))` call still costs ~980ms resolving Hono's own overloaded `.get()` against `UpgradeWebSocket`'s overloaded signature. Nothing fixable from the call site.
+
+**Rule of thumb:** annotate a call to your own function whose return type TS has to infer. Don't expect an annotation at the call site to fix cost baked into a third-party factory's own declared return type (`ReturnType<...>`, heavy overloads, deep generics) — verify with a trace before spending time either way.
+
+## Splitting a large Hono route chain: no compile-time win
+
+`services/api/src/rpc/routes/career.ts` was one 554-line file chaining 48 `.get`/`.post`/`.patch`/`.delete` calls — the largest such chain in the codebase. The hypothesis, following `finance.ts`'s own 11-way `.route()`-composed precedent: Hono's fluent builder re-checks the accumulated route type on every chained call, so splitting into smaller composed sub-routers should cut total check time.
+
+**Tested directly, doesn't hold at this scale.** A 3-run A/B, git-restoring the monolithic file between measurements:
+
+| | run 1 | run 2 | run 3 | avg |
+| --- | --- | --- | --- | --- |
+| monolithic (48 chained calls) | 12.0s | 11.9s | 11.4s | 11.76s |
+| split (11 sub-routers) | 12.2s | 11.9s | 11.7s | 11.96s |
+
+Statistically indistinguishable — if anything, marginally slower split. The `.route()` composition/merge layer (`app.ts`, which composes all 15 domains) is cheap to begin with — ~3.3% of a full `services/api` typecheck — so it was never the bottleneck splitting could have moved.
+
+**Kept the split anyway** (`career.ts` → `career.imports.ts`, `career.profile.ts`, `career.applications.ts`, etc.) — not for speed, for file organization and headroom: the pathological Hono chain-checking blowups reported in the wild show up around 100–300+ routes in one file, well past today's 48. Don't split a route file expecting a compile-speed win as a general technique; verify with a trace first if that's the actual goal.
+
+## The `DbHandle` union: a one-time, unavoidable cost
+
+The single most expensive individual expression found anywhere in `services/api`'s typecheck — ~994ms — was `NoteRepository.create(trx, {...})` in `notes.service.ts`, despite the method's own signature being completely unremarkable and already fully resolved through `packages/db`'s built `.d.ts`. Every _other_ `NoteRepository.xxx(trx, ...)` call in the same file, passing the exact same `trx`, costs 0.3ms.
+
+The explanation: `DbHandle = Kysely<Database> | Transaction<Database>` is a union of two classes each wrapping `Database` — 77 tables, 1399 lines of declarations. The _first_ time TypeScript structurally compares two classes shaped like that within a compilation, it's expensive; every later comparison in the same program reuses the cached result for free. `notes.service.ts` just happened to trigger it first.
+
+**Not fixable by restructuring the triggering file** — the cost would just relocate to whichever file becomes "first" instead. Actually eliminating it means changing `DbHandle`'s shape itself (overloads instead of a union parameter) across all ~11 of `packages/db`'s repositories — a materially bigger, riskier change than anything else here. Not attempted.
+
+## Kysely query-builder chains: real cost, impractical to hand-fix
+
+A handful of `application/*.service.ts` files (`calendar.service.ts`, `finance-mcp.service.ts`, `media.service.ts`, `tags.service.ts`, ~50–100ms each) have the same shape of issue as the callback case above: an unannotated helper returns a raw `db.selectFrom(...).join(...).select([...]).where(...)` chain that gets chained further at the call site.
+
+Unlike `runInTransaction`, not fixed. Kysely's `SelectQueryBuilder<...>` return types are enormous, effectively-generated-looking generics — table aliases crossed with selected-column shape crossed with join state. Hand-writing an accurate annotation is genuinely impractical, and getting it slightly wrong risks silently narrowing or breaking the type. The combined cost across all four files (~300–400ms total) doesn't justify that risk.
+
+## Duplicate type shapes
+
+`scripts/find-duplicate-shapes.mjs` walked all 993 source files under `packages/`, `services/`, `apps/` and found 447 distinct structural shapes with at least 2 members, 16 declared more than once. Triaged into two categories:
+
+- **Coincidentally identical, not actual duplicates** — a db-internal record type and an RPC wire type that just happen to match today (`AIUsageSummaryRecord`/`UsageSummary`, `AIUsageTimeseriesRecord`/`UsageTimeseriesPoint`, `MonthlyUsageStatus` declared twice). These stay separate with an explicit mapper — merging a persistence type with a wire type because they're structurally identical today is exactly the coupling that breaks silently the moment either side changes independently.
+- **Genuine copy-paste, safe to consolidate** — `ProcessedFile`/`UploadedFile` were declared identically in both `apps/web` and `apps/omiro`, both already mapping the real RPC wire type into this same client-normalized shape. Consolidated into `packages/rpc/src/types/files.types.ts`, kept deliberately separate from the wire type, without touching the wire/client boundary.
+
+Worth rerunning `scripts/find-duplicate-shapes.mjs` periodically rather than trusting this list to stay accurate (read-only, ~8s on the full tree) — the actual set of duplicates drifts as the codebase grows.
+
+## Typecheck cache correctness tradeoff
+
+**Status:** Accepted (2026-08-31)
+
+Every package on the shared `tsconfig.profiles/package.json` profile (everything except `services/ori` and `services/deepeval`) sets `composite: true`, forcing `incremental: true` with a persisted `./.cache/tsconfig.tsbuildinfo` per package, and each package's `typecheck` script ran plain `tsc --noEmit` against it.
+
+**The failure that forced this decision:** after fixing a real type error in `packages/db`, `pnpm -w typecheck` reported all 34 tasks green — including `packages/ai`, which had its own genuine, unrelated type error (`RecordAIUsageEventInput.metadata: Record<string, unknown>` not assignable to `Json`). Turborepo correctly re-invoked `@hominem/ai`'s `tsc --noEmit` as a cache miss, but `tsc` itself consulted its own stale `.tsbuildinfo` and never re-checked against `@hominem/db`'s freshly-rebuilt declarations. Deleting `packages/ai/.cache` and rerunning surfaced the error immediately; clearing every package's cache repo-wide and forcing a full re-run reproduced the same result everywhere. That's a real, reproducible false-pass in a check whose entire job is to not do that.
+
+Three options were considered: do nothing (rejected — this is the bug itself); a surgical fix hashing each package's workspace-dependency `.d.ts` output to invalidate `.cache` conditionally (rejected for now — real, ongoing cache-invalidation logic for a benefit bounded to a few packages); or clear `.cache` before every `typecheck` invocation, forcing a full re-check every time (**chosen**).
+
+**Decision:** every affected package's `typecheck` script now runs `rm -rf .cache && tsc --noEmit` (existing `-p`/prefix/suffix flags preserved). `build` scripts are untouched — a stale build-time cache doesn't produce this same silent-pass mode, since build output is content-addressed and consumed downstream via the `paths` overrides above.
+
+**Cost, measured** (cold vs. warm-unchanged `tsc --noEmit`, i.e. exactly the reuse given up):
+
+| package | cold | warm (unchanged) | reuse lost |
+| --- | --- | --- | --- |
+| `services/api` | 5.30s | 5.08s | ~0% (noise) |
+| `apps/omiro` | 5.10s | 4.63s | ~9% |
+| `packages/rpc` | 1.79s | 0.95s | ~47% |
+| `packages/db` | 1.46s | 0.57s | ~61% |
+| `packages/utils` | 0.57s | 0.50s | ~12% |
+
+This cost is real but bounded: it's only paid on invocations Turborepo already decided were necessary (Turbo's own content-hash cache still skips the script entirely when nothing relevant changed); it never applies to CI, which always starts cold anyway; and it has zero effect on `pnpm dev:types`/tsserver/editor responsiveness, since that path (`scripts/watch-types.sh`) is a persistent process built on the live-redirect model above and never touches these per-package `.tsbuildinfo` files. `services/api` itself shows ~0 measured cost from this fix — its time is dominated by the one-time `DbHandle` comparison and Kysely chains above, not incremental reuse — so this fix and the speed fixes above are complementary, not in tension.
+
+**Not done:** the surgical hash-based conditional-invalidation approach. Revisit if the blanket `rm -rf .cache` cost is ever actually felt in normal iteration, not just in this one-off benchmark.
+
+## DO / DO NOT
+
+These conclusions are stated as investigation narrative above; this is the same set of conclusions as rules, collected so they don't get silently re-litigated in either direction. `AGENTS.md` points here rather than restating them.
+
+**DO**
+
+- Resolve every dependency of a `typeof app`-style inference-boundary package (`services/api`, `packages/rpc`) via plain `paths` to `build/*.d.ts` — never `references`.
+- Put an `injectWorkspacePackages` `paths` override in a type-check-only config (e.g. `tsconfig.emit.json`), never in a `tsconfig.json` a bundler also reads for runtime resolution.
+- Point a new package's `paths` alias at another package's emitted `.d.ts`, never at its source (D1/D3 above).
+- Give your own unannotated callback passed to a generic higher-order function an explicit return-type annotation when a trace shows it's expensive.
+- Clear `.cache`/`tsbuildinfo` before `typecheck` on any package using the shared composite profile — `tsc`'s own incremental cache can silently mask a cross-package type error.
+- Hardcode declaration emit's `outDir` — never assemble it via CLI flags or a `rootDir` dance.
+- Verify a claimed speedup with `--generateTrace` or a real tsserver session before writing it down. Several plausible-sounding fixes above measured to zero.
+
+**DO NOT**
+
+- Do not add a `references` entry — not even one, not even to a small, stable package — to a package that infers an exported type across its own module boundary (`services/api`, `packages/rpc`). The zero-references rule exists to hold as the type's shape evolves, not just for its shape today.
+- Do not add a `workspace:*` dependency for a type-only import — pnpm/turbo build the task graph from `package.json` edges with no notion of `import type`, so it drags a whole extra package into every consumer's build/test/lint/typecheck scope.
+- Do not expect splitting a large Hono route chain into `.route()`-composed sub-routers to speed up typechecking — measured statistically indistinguishable at 48-route scale. Split for file-size/organization reasons only.
+- Do not expect an explicit return-type annotation at a call site to fix inference cost baked into a third-party library's own type declaration (`ReturnType<...>`, heavy overloads) — it doesn't reach that cost, and measured marginally _worse_ once.
+- Do not assume a `paths` override safe for `tsc` is safe for everything else that reads the same tsconfig — a bundler needing the runtime `exports` condition is a real, previously-hit breakage.
+- Do not assume `assumeChangesOnlyAffectDirectDependencies` measurably speeds up incremental rechecks — a targeted benchmark showed no effect. It's kept as a deliberate, already-documented tradeoff, not because it was reproven.
+
+## Current numbers
+
+The numbers throughout this document are historical — recorded at the fix that produced them, and left as-is even though the tree has moved on since. For where things stand today, rerun the benchmark rather than trusting a stale table:
+
+```bash
+node scripts/bench-tsserver.mjs --label current --runs 3
+node scripts/bench-incremental-recheck.mjs --label current --runs 3
+```
+
+Latest recorded run (commit `08cb55de1`, 2026-09-06):
+
+| consumer | open | geterr | resolves? |
+| --- | --- | --- | --- |
+| `apps/web` | 3178ms | 431ms | yes |
+| `apps/omiro` | 2745ms | 71ms | yes |
+| `packages/db` | 980ms | 580ms | yes |
+| `packages/rpc` | 1644ms | 320ms | yes |
+| `services/api` | 2218ms | 659ms | yes |
+
+Cross-project `references` (rooted at `packages/chat`): 1104ms, 10 results found. Incremental recheck after an upstream edit: 1008ms average across three runs. Prior-commit comparisons live in this file's git history, not as accumulating tables here.

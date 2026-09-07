@@ -7,36 +7,36 @@ Hominem is a product monorepo. Active products:
 - **Career** — web product, server-owned data access
 - **Finance** — in monorepo, release tier governed by explicit portfolio decision
 
-## The Bible
-
-The repository's operating law lives in `docs/`. Read the relevant part before
-changing a system boundary. Package READMEs are setup entrypoints only.
-
-### I. Product
-
-Hominem is one product system made up of the API, Omiro, and shared packages.
-
-#### Product today
+## Product today
 
 - **API** owns identity, persistence, orchestration, and work that clients cannot be trusted to perform.
 - **Career** is a web product whose data access is owned by the server.
 - **Finance** is in the monorepo. Its release tier must be decided explicitly; do not infer it from a command or workflow.
 
-- [Product philosophy](#philosophy)
+Product opinions and design philosophy live below in [Philosophy](#philosophy).
 
-### II. System
+## The Bible
 
-- [Architecture](./docs/architecture.md) — data flow, ownership boundaries, and open architecture decisions
-- [Authentication](./docs/authentication.md) — session authority, the shared hosted login/cookie mechanism, how apps talk to the API, MCP OAuth, and production incident investigation
-- Design system: `@ponti-studios/ui/docs/`
-- [Chat design](./docs/chat.design.md) — Omiro chat's motion/UX rules
-- [Chat capabilities](./docs/chat.capabilities.md) — client feature ownership, verification coverage, and `apps/web` parity gaps (remaining tasks tracked in `docs/tasks/`)
+The repository's operating law lives in `docs/`. Read the relevant doc before
+changing a system boundary. Package READMEs are setup entrypoints only — the
+Bible is the only place durable decisions live, so it's never split across
+both. (The published design system's own docs, under `@ponti-studios/ui`,
+work the same way for design-system decisions specifically.)
 
-### III. Operations
+`docs/` has four jobs, each with its own spot:
 
-- [Developer](./.agents/skills/hominem-development/SKILL.md) — commands, development, and deployment rules
-- [Evidence](./docs/evidence.md) — validation standards before calling a change complete
-- [Testing](./docs/testing.md) — test-level selection, MSW boundaries, and when E2E evidence is required
+- **`docs/` itself** — one file per subject, describing how the system works
+  right now (architecture, auth, testing, evidence, chat, and so on). This is
+  where you go to understand a boundary before you touch it.
+- **`docs/decisions/`** — accepted decisions (ADRs). Small, topic-named,
+  flat — no queue, no numbering. Read one when you need to know *why*
+  something is shaped the way it is, not just *what* it is.
+- **`docs/tasks/`** — work that's currently open, ordered entirely by each
+  file's `status` and `depends_on` frontmatter, never by filename.
+- **`docs/incidents/`** — postmortems. They record what broke and why; any
+  rule worth keeping gets folded back into the relevant subject doc, so you
+  never have to go spelunking through an incident writeup to find a rule
+  that's supposed to be durable.
 
 ### App-specific facts
 
@@ -44,7 +44,7 @@ Each app documents its own architecture, navigation, and behavior in its own REA
 
 ## Philosophy
 
-This section holds Hominem's product and design opinions. The numbered documents under `docs/` describe facts, current behavior, and explicit technical decisions.
+This section holds Hominem's product and design opinions. The documents under `docs/` describe facts, current behavior, and explicit technical decisions.
 
 ### Product
 
