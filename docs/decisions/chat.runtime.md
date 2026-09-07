@@ -1,5 +1,11 @@
 # Chat Runtime Ownership
 
+## Status
+
+Accepted (2026-09-04)
+
+## Decision
+
 `@hominem/chat` owns the reusable chat plumbing used by studio applications and
 services. Its server runtime owns generation lifecycle orchestration, tool
 confirmation and idempotency, durable event sequencing, persistence-before-

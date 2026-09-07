@@ -3,7 +3,7 @@ title: 'Verify web chat parity and accessibility states'
 status: 'Proposed'
 priority: 'high'
 labels: [web, chat, browser, accessibility]
-depends_on: [21-composer-parity.md, 22-motion-and-persistence.md]
+depends_on: [composer-parity.md, motion-and-persistence.md]
 blocks: []
 estimated_size: 'L'
 ---

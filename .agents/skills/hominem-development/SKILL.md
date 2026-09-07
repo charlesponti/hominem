@@ -86,7 +86,7 @@ itself supports any custom `--tld`, and a self-hosted reverse proxy (Caddy,
 etc.) with its own local CA doesn't change this either — the constraint is
 Chrome's cookie policy, not the proxying layer. Only a real, non-reserved
 registrable domain works. See
-[ADR 0002](../../../docs/adr/0002-local-dev-tld-lvh-me.md) for the full
+[the local dev domain ADR](../../../docs/decisions/auth.local-tld.md) for the full
 investigation and the alternatives ruled out.
 
 Before the first `pnpm dev`, start the proxy once on an unprivileged port —
@@ -237,7 +237,7 @@ pnpm dlx @railway/cli@5.25.1 connect database --tunnel-only --environment produc
 
 - Use `just` and the root `pnpm` scripts as the repository command interface. Package scripts are Turbo implementation details, not contributor instructions.
 - Start with the smallest relevant validation command: `pnpm lint`, `pnpm typecheck`, `pnpm build`, or `pnpm test`. Scope it with `--filter=@hominem/<package>...`, for example `--filter=@hominem/api...`.
-- The monorepo resolves types through compiled declaration contracts, not source. Package `exports` `types` conditions point at `build/`, and declaration emit is a types-only artifact. Run `pnpm dev:types` alongside `pnpm dev` when editing shared types: composite packages are watched via `tsc -b`, while the API/RPC boundaries use declaration-only emit watchers. Runtime (tsx, metro, vite) runs from source and is unaffected. If a type change ripples further than one hop, restart the TypeScript server. See [docs/type-system.md](../../../docs/type-system.md) for the model and its remaining tasks, and [docs/type-performance.md](../../../docs/type-performance.md) for why the watcher is shaped the way it is and what else was tried to speed up type-checking.
+- The monorepo resolves types through compiled declaration contracts, not source. Package `exports` `types` conditions point at `build/`, and declaration emit is a types-only artifact. Run `pnpm dev:types` alongside `pnpm dev` when editing shared types: composite packages are watched via `tsc -b`, while the API/RPC boundaries use declaration-only emit watchers. Runtime (tsx, metro, vite) runs from source and is unaffected. If a type change ripples further than one hop, restart the TypeScript server. See [docs/type-system.md](../../../docs/type-system.md) for the model, why the watcher is shaped the way it is, and what else was tried to speed up type-checking.
 - Published shared packages expose compiled artifacts. Local development may use source aliases for hot reload, but CI, deployables, EAS, and external consumers must use the same compiled public exports.
 - Keep the shared UI package registry-resolved in manifests and lockfiles. Use `just ui link [path]`, `just ui status`, and `just ui unlink` for a reversible local source link. Never commit the local path.
 - Use the same Node and pnpm versions in local development, CI, Docker, Railway, and EAS. A version mismatch is a defect.

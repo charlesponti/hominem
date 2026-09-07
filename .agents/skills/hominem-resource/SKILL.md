@@ -7,38 +7,44 @@ tags:
   - mcp
   - rpc
   - zod
+  - web
 description: >
   Add a new resource (domain) to the hominem API: shared Zod schemas in
   services/api/src/schemas, one implementation in
-  services/api/src/application/*.service.ts, and two thin adapters that reuse
-  it — an MCP tool in services/api/src/mcp/tools and Hono RPC routes in
-  services/api/src/rpc/routes — plus integration tests. Use when adding a
-  feature that must be reachable over MCP and/or HTTP/RPC, or when reviewing
-  whether new tool/route code follows the shared-implementation pattern.
+  services/api/src/application/*.service.ts, thin adapters that reuse it — an
+  MCP tool in services/api/src/mcp/tools and Hono RPC routes in
+  services/api/src/rpc/routes — a typed client layer in packages/rpc/src/types
+  when apps/web or apps/omiro needs to consume it, plus integration tests. Use
+  when adding a feature that must be reachable over MCP and/or HTTP/RPC and/or
+  a web UI, or when reviewing whether new tool/route/hook code follows the
+  shared-implementation pattern.
 license: MIT
-compatibility: Hominem API service work.
+compatibility: Hominem API service work, optionally extending into apps/web.
 metadata:
   author: project
-  version: "1.0"
+  version: "1.1"
   category: API
 when:
-  - adding a resource that must be reachable over MCP and/or HTTP/RPC
-  - reviewing whether new tool/route code follows the shared-implementation pattern
-  - adding Zod schemas, an application service, or integration tests in the hominem API
+  - adding a resource that must be reachable over MCP and/or HTTP/RPC and/or a web UI
+  - reviewing whether new tool/route/hook code follows the shared-implementation pattern
+  - adding Zod schemas, an application service, RPC types, or integration tests in hominem
 termination:
-  - Both MCP and RPC surfaces are thin adapters over the one shared implementation
-  - Integration tests pass for the new resource
+  - MCP, RPC, and (if applicable) the web hook are thin adapters over the one shared implementation
+  - Integration tests (and, for multi-user web flows, e2e tests) pass for the new resource
 outputs:
-  - Shared schema + service implementation and both adapter surfaces
+  - Shared schema + service implementation, adapter surfaces, and (if applicable) RPC types + web hook
 argumentHint: the resource (domain) to add to the hominem API
 ---
 
 # Add an API resource to hominem
 
-A resource (e.g. `calendar`, `people`, `career`) is exposed over **two outward surfaces**:
+A resource (e.g. `calendar`, `people`, `career`) is exposed over **two required outward
+surfaces, plus an optional third**:
 
 1. **MCP tools** — `services/api/src/mcp/tools/*.ts`, called by AI clients via `callTool`.
 2. **RPC routes** — `services/api/src/rpc/routes/*.ts`, plain HTTP JSON under `/api`, called by web/mobile clients.
+3. **Web/mobile client types + hook** (optional, step 6) — `packages/rpc/src/types/*.ts` +
+   `apps/web/app/hooks/use-*.ts`, when `apps/web`/`apps/omiro` needs to consume the resource.
 
 **Golden rule: MCP and RPC are thin adapters over ONE shared implementation.** Both surfaces import
 the _same_ Zod schemas from `services/api/src/schemas/` and the _same_ query logic from
@@ -62,7 +68,9 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 | Service    | `services/api/src/application/<domain>.service.ts`                                                                                                         | All query/business logic, `ownerUserId`-scoped |
 | MCP tool   | `services/api/src/mcp/tools/<domain>.ts`                                                                                                                   | `registerTool` wiring only                     |
 | RPC routes | `services/api/src/rpc/routes/<domain>.ts`                                                                                                                  | Hono route wiring only                         |
-| Tests      | `services/api/src/mcp/tools/<domain>.test.ts`, `services/api/src/rpc/routes/<domain>.test.ts`, optional `services/api/src/schemas/<domain>.schema.test.ts` | Behavior verification                          |
+| RPC types  | `packages/rpc/src/types/<domain>.types.ts` (optional)                                                                                                      | `InferResponseType`/`InferRequestType` only, never hand-written |
+| Client hook | `apps/web/app/hooks/use-<domain>.ts` and/or `apps/omiro/hooks/use-<domain>.ts` (optional, whichever app(s) actually consume it) | `useQuery`/`useMutation` wiring only |
+| Tests      | `services/api/src/application/<domain>.service.test.ts`, `services/api/src/mcp/tools/<domain>.test.ts`, `services/api/src/rpc/routes/<domain>.test.ts`, optional `services/api/src/schemas/<domain>.schema.test.ts`, optional `apps/web/tests/e2e/<domain>.spec.ts` | Behavior verification                          |
 
 ## Workflow
 
@@ -127,8 +135,12 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
      listed scope (`hasRequiredScopes` uses `every`). A cross-domain tool (e.g. `person_timeline`
      reads people + calendar + travel) must list all of them.
 
-5. **RPC adapter** (`rpc/routes/<domain>.ts`): Hono routes calling the same service, with
-   `zValidator` for input and `respondWithData` for the `{ data }` envelope:
+5. **RPC adapter** (`rpc/routes/<domain>.ts`): Hono routes calling the same service.
+   - Response shape: `return c.json(outputSchema.parse(result));` — flat, no envelope. This is the
+     convention in `tasks.ts`, `notes.ts`, `collections.ts`, `chats.ts`, and every other route file
+     but one.
+   - Do NOT use `parseDataEnvelope`/`{ data }` (`../response`) for a new resource. It exists for
+     exactly one legacy route (`personal.ts`). Copying it for a new resource is a defect.
 
    ```ts
    import { zValidator } from '@hono/zod-validator';
@@ -140,7 +152,6 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
      calendarEventsOutputSchema,
    } from '../../schemas/calendar.schema';
    import { authMiddleware, type AppContext } from '../middleware/auth';
-   import { respondWithData } from '../response';
 
    const routes = new Hono<AppContext>().use('*', authMiddleware);
 
@@ -148,7 +159,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
      const userId = c.get('auth')!.userId;
      const input = c.req.valid('query');
      const events = await getCalendarEvents({ ownerUserId: userId, ...input });
-     return respondWithData(c, calendarEventsOutputSchema, events);
+     return c.json(calendarEventsOutputSchema.parse(events));
    });
 
    export const calendarRoutes: Hono<AppContext> = routes;
@@ -158,11 +169,75 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
    `import { calendarRoutes } from './routes/calendar';` then
    `.route('', calendarRoutes)` (prefixed routes use `.route('/prefix', ...)`).
    Route handlers must be one-liners that delegate to the service — no query logic in the route.
+   No status code arg to `c.json()` means Hono defaults to 200; pass one explicitly only when the
+   route genuinely returns something else (e.g. 201 for a create).
 
-6. **Tests.** Write integration tests against the real `app-test` Postgres database:
+6. **If `apps/web`/`apps/omiro` needs to consume this resource**, add the client layer in this order:
+
+   a. **Rebuild the API first, always:**
+
+      ```bash
+      pnpm --filter @hominem/api build
+      ```
+
+      `packages/rpc`'s `HonoClient`/`AppType` resolve against the committed
+      `services/api/build/rpc/app.d.ts`, not live source. Skip this step and you get a
+      "property doesn't exist on client" error in frontend code that hasn't changed — the fix is
+      never in the file the error points at.
+
+   b. **Derive types, never hand-write them.** In `packages/rpc/src/types/<domain>.types.ts`:
+
+      ```ts
+      import type { InferRequestType, InferResponseType } from 'hono/client';
+      import type { HonoClient } from '../core/api-client';
+
+      type _FooEndpoint = HonoClient['api']['foo']['$get'];
+      export type FooOutput = InferResponseType<_FooEndpoint, 200>;
+      export type FooInput = InferRequestType<_FooEndpoint>['query']; // or ['json'] for a body
+      ```
+
+      Copy this pattern from `chat.types.ts` or `tasks.types.ts`. **Never** write
+      `export type FooOutput = { ... }` by hand and cast a hook's `response.json()` to it with
+      `as Promise<FooOutput>` — see the Code style rule in the repo's `AGENTS.md`. A hand-written
+      duplicate silently drifts from the real route shape instead of failing typecheck when the
+      route changes, and it's the reason every call site ends up needing a cast.
+
+   c. **Write the hook**, in whichever app(s) actually consume the resource — this is not always
+      `apps/web`:
+
+      - `apps/web` → `apps/web/app/hooks/use-<domain>.ts`. Mirror `use-chats.ts` or
+        `use-collections.ts`.
+      - `apps/omiro` → `apps/omiro/hooks/use-<domain>.ts` (or `apps/omiro/services/<domain>/`
+        for a larger feature area). Same `@hominem/rpc/react` client, same pattern — mirror
+        `useArchivedChats.ts`. Do not also add an `apps/web` hook nobody calls just because this
+        step's example lives there.
+
+      ```ts
+      export function useFoo() {
+        const client = useApiClient();
+        return useQuery({
+          queryKey: ['foo'],
+          queryFn: async () => (await client.api.foo.$get()).json(), // already correctly typed
+        });
+      }
+      ```
+
+      One base query key per resource, plus a derived key per parameterized query (e.g. a detail
+      lookup) — `use-collections.ts`'s `collectionsKey`/`collectionDetailKey(id)` is the pattern to
+      copy, not a single flat key for everything. Mutations call
+      `queryClient.invalidateQueries({ queryKey })` in `onSuccess`, invalidating both the specific
+      detail key and the base list key when a single-resource mutation should also refresh the
+      list.
+
+7. **Tests.** Write integration tests against the real `app-test` Postgres database:
+   - **Service** (`application/<domain>.service.test.ts`) — call the service functions directly
+     against the real test DB; `beforeAll`/`afterAll` do `pool.query('DELETE FROM "user" WHERE id
+     = $1', [id])` for one or more fixed test user ids (cascades to all owned `app.*` rows), insert
+     the user(s), then exercise the functions and assert both the returned shape and, for
+     destructive operations, that dependent rows are actually gone (query the table directly,
+     don't just trust a `{ removed: true }` return value).
    - **MCP** (`mcp/tools/<domain>.test.ts`) — mirror `mcp/tools/people.test.ts` / `calendar.test.ts`:
-     in `beforeAll`, `DELETE FROM "user" WHERE id = $1` for a fixed test `userId` (cascades to all
-     owned `app.*` rows), insert the user plus seed rows, then `await import('./<domain>')`,
+     same `beforeAll`/`afterAll` setup, then `await import('./<domain>')`,
      `await callTool(userId, '<tool>', input)` from `'../tools'`, and assert
      `res.structuredContent`. Assert exact timestamp strings in the DB's raw format.
    - **RPC** (`rpc/routes/<domain>.test.ts`) — mirror `rpc/routes/personal.test.ts`: build a Hono
@@ -170,7 +245,18 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
      route, and exercise it with `app.request(...)`, mocking `@hominem/db` (or the service) with
      `vi.hoisted`.
    - **Schema** — add `schemas/<domain>.schema.test.ts` when validation logic is non-trivial.
-7. **Validate** (from `services/api`):
+   - **Web e2e** (`apps/web/tests/e2e/<domain>.spec.ts`) — required when the resource has a web UI
+     and the flow spans two users (invites, sharing, collaboration). One `storageState` project is
+     not enough for that:
+     1. Mint a second test account:
+        `E2E_TEST_EMAIL=<email> E2E_EXPORT_PREFIX=E2E_COLLABORATOR pnpm --filter @hominem/api e2e:setup`
+     2. Drive it with a manually-created context, not the default `page` fixture:
+        `const ctx = await browser.newContext({ storageState: collaboratorAuthPath });`
+     3. Assert destructive/permission-boundary actions via `page.request.*` directly, not by
+        clicking a `window.confirm()` button — clicking one reliably hangs this environment's
+        browser automation (a following `page.goto`/`page.reload` recovers the session, but the
+        click itself still reports a timeout).
+8. **Validate** (from `services/api`):
 
    ```bash
    pnpm exec vitest run <path/to/test>          # targeted tests first
@@ -188,6 +274,12 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
   Hono wiring. Duplicated query logic across `mcp/` and `rpc/` is a defect.
 - MCP and RPC import the same schema objects and the same service functions — no per-surface
   schema redefinitions.
+- A resource does not need both surfaces — MCP-only (`health`, `media`, `social`, `places`,
+  `calendar`, `tags`, all with no RPC route today) and RPC-only are both normal, existing shapes.
+  Add the RPC surface only when a web/mobile client actually needs to call it, and add the MCP
+  surface only when an AI client actually needs it — never both by default. Whichever surfaces do
+  exist for a resource must share the one service implementation; that sharing is the only
+  invariant, not universal presence on both transports.
 - Every query is scoped by `ownerUserid` (multi-tenant correctness; `app.*` is RLS-forced).
 - Read-only operations use `readOnly: true`; write operations must declare write scopes
   (e.g. `tags:write`) and gate their file import on them in `mcp/routes.ts`.
@@ -195,8 +287,11 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 - New MCP scopes are added to `MCP_SCOPES` (advertised in OAuth discovery), gated in
   `mcp/routes.ts`, and reflected in the `WWW-Authenticate` scope string asserted by
   `mcp/server.test.ts`.
-- Keep responses to the shared output schema; let `callTool`/`respondWithData` do the parsing
-  rather than hand-assembling payloads.
+- Keep responses to the shared output schema; let `callTool`/`outputSchema.parse(result)` do the
+  validation rather than hand-assembling payloads.
+- If a web/mobile hook exists for this resource, its RPC output/input types come from
+  `InferResponseType`/`InferRequestType` against `HonoClient`, never a hand-written duplicate of
+  the zod schema — see step 6.
 
 ## Cross-cutting references
 

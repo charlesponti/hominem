@@ -140,8 +140,8 @@ This part covers user-facing behavior and client ownership only. A feature is
 exists but does not match Omiro's behavior or is stubbed, and **present** when
 the web client has a working equivalent. Remaining implementation work for
 this gap map is tracked as standardized Linear-style tasks in `docs/tasks/`
-(`21-composer-parity.md`, `22-motion-and-persistence.md`,
-`23-web-chat-verification.md`); earlier phases of this project were completed
+(`composer-parity.md`, `motion-and-persistence.md`,
+`web-chat-verification.md`); earlier phases of this project were completed
 and their task specs removed.
 
 ### Executive summary

@@ -4,7 +4,7 @@ status: 'Proposed'
 priority: 'medium'
 labels: [web, chat, composer]
 depends_on: []
-blocks: [23-web-chat-verification.md]
+blocks: [web-chat-verification.md]
 estimated_size: 'M'
 ---
 

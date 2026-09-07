@@ -1,4 +1,4 @@
-# II. Architecture
+# Architecture
 
 Hominem is a monorepo containing several products and shared packages. They do not all use the same path to reach data.
 

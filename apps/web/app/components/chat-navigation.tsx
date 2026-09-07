@@ -1,4 +1,4 @@
-import { History, LoaderCircle, Plus } from 'lucide-react';
+import { History, LoaderCircle, LucideMessageCirclePlus } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import {
@@ -26,7 +26,7 @@ function getLastMessageLabel(query: { isPending: boolean; data?: Array<{ created
   return query.isPending ? 'Loading…' : formatLastMessageDate(query.data?.[0]?.createdAt);
 }
 
-export function ChatNavigation({ showNewChat = true }: { showNewChat?: boolean }) {
+export function ChatNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: chats = [], isPending } = useChatsList();
@@ -43,22 +43,23 @@ export function ChatNavigation({ showNewChat = true }: { showNewChat?: boolean }
 
   return (
     <div className="flex items-center gap-1">
-      {showNewChat ? (
-        <Button
-          aria-label="Start a new chat"
-          disabled={createChat.isPending}
-          onClick={handleNewChat}
-          size="sm"
-          variant="outline"
-        >
-          {createChat.isPending ? <LoaderCircle className="animate-spin" /> : <Plus />}
-          <span className="hidden sm:inline">New chat</span>
-        </Button>
-      ) : null}
+      <Button
+        aria-label="Start a new chat"
+        disabled={createChat.isPending}
+        onClick={handleNewChat}
+        size="sm"
+        className="gap-2"
+      >
+        {createChat.isPending ? (
+          <LoaderCircle className="animate-spin" />
+        ) : (
+          <LucideMessageCirclePlus />
+        )}
+      </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button aria-label="Open previous chats" size="sm" variant="ghost">
+          <Button aria-label="Open previous chats" size="sm" variant="outline">
             <History />
             <span className="hidden sm:inline">Chats</span>
           </Button>

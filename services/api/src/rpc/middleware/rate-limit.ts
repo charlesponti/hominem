@@ -41,7 +41,7 @@ export function rateLimitMiddleware(input: RateLimitInput) {
         );
       }
     } catch {
-      // if Redis is down, let the request through rather than blocking everyone
+      // NOTE: if Redis is down, let the request through rather than blocking everyone
     }
 
     return next();

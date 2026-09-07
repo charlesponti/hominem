@@ -7,16 +7,11 @@ repo-specific rules.
 
 ## Scopes
 
-Use the hominem domain scope, lowercase, consistent with recent history:
-
-- `api`
-- `career`
-- `omiro`
-- `db`
-- `auth`
-- `workflows`
-- `test-db`
-- `deps`
+Use the hominem domain scope, lowercase, matching the resource/package/feature the change is
+actually about — not a fixed enum. `git log --oneline -20` shows current practice, e.g. `api`,
+`career`, `omiro`, `db`, `auth`, `workflows`, `test-db`, `deps`, `chat`, `collections`, `inbox`,
+`git-hooks`, `dev`, `deploy`, `build`, `env`, `utils` — check recent history for the scope that
+already exists for the area you're touching before inventing a new one.
 
 ## Repo rules
 

@@ -1,4 +1,4 @@
-# III. Evidence
+# Evidence
 
 A change is complete only when its validation proves the behavior or artifact that changed in the environment where it matters. Choose evidence for the risk of the change, not from habit.
 
