@@ -44,8 +44,8 @@ catalogs:
       specifier: 17.4.2
       version: 17.4.2
     hono:
-      specifier: 4.12.34
-      version: 4.12.34
+      specifier: 4.13.5
+      version: 4.13.5
     ioredis:
       specifier: 6.0.0
       version: 6.0.0
@@ -212,7 +212,7 @@ importers:
         version: 17.4.2
       hono:
         specifier: 'catalog:'
-        version: 4.12.34
+        version: 4.13.5
       isbot:
         specifier: ^5.1.27
         version: 5.2.1
@@ -351,7 +351,7 @@ importers:
         version: 4.4.0
       hono:
         specifier: 'catalog:'
-        version: 4.12.34
+        version: 4.13.5
       isbot:
         specifier: ^5
         version: 5.2.1
@@ -1025,7 +1025,7 @@ importers:
         version: 5.101.4(react@19.2.8)
       hono:
         specifier: 'catalog:'
-        version: 4.12.34
+        version: 4.13.5
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1173,10 +1173,10 @@ importers:
         version: link:../../packages/utils
       '@hono/node-server':
         specifier: ^2.1.1
-        version: 2.1.1(hono@4.12.34)
+        version: 2.1.1(hono@4.13.5)
       '@hono/zod-validator':
         specifier: 0.7.6
-        version: 0.7.6(hono@4.12.34)(zod@4.4.3)
+        version: 0.7.6(hono@4.13.5)(zod@4.4.3)
       '@modelcontextprotocol/server':
         specifier: 2.0.0
         version: 2.0.0
@@ -1188,7 +1188,7 @@ importers:
         version: link:../../packages/auth
       '@scalar/hono-api-reference':
         specifier: ^0.12.0
-        version: 0.12.0(hono@4.12.34)
+        version: 0.12.0(hono@4.13.5)
       '@sentry/node':
         specifier: ^10.70.0
         version: 10.70.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.8.0))(@opentelemetry/exporter-trace-otlp-http@0.203.0(@opentelemetry/api@1.8.0))(supports-color@8.1.1)
@@ -1203,7 +1203,7 @@ importers:
         version: 17.4.2
       hono:
         specifier: 'catalog:'
-        version: 4.12.34
+        version: 4.13.5
       pg:
         specifier: 'catalog:'
         version: 8.23.0
@@ -8749,8 +8749,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.12.34:
-    resolution: {integrity: sha512-GqXJqY/xJkJmuloTrnV1ZEXG3fqte+VjkUqoRNZXcrUidiUOP4fMSIHHY4tsqZBK++kVyWmt/AAfSUuy57/eSA==}
+  hono@4.13.5:
+    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@7.0.2:
@@ -14324,17 +14324,17 @@ snapshots:
       '@hominem/storage': file:packages/storage
       '@hominem/telemetry': file:packages/telemetry
       '@hominem/utils': file:packages/utils
-      '@hono/node-server': 2.1.1(hono@4.12.34)
-      '@hono/zod-validator': 0.7.6(hono@4.12.34)(zod@4.4.3)
+      '@hono/node-server': 2.1.1(hono@4.13.5)
+      '@hono/zod-validator': 0.7.6(hono@4.13.5)(zod@4.4.3)
       '@modelcontextprotocol/server': 2.0.0
       '@opentelemetry/api': 1.8.0
       '@ponti-studios/auth': file:packages/auth
-      '@scalar/hono-api-reference': 0.12.0(hono@4.12.34)
+      '@scalar/hono-api-reference': 0.12.0(hono@4.13.5)
       '@sentry/node': 10.70.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.8.0))(@opentelemetry/exporter-trace-otlp-http@0.203.0(@opentelemetry/api@1.8.0))(supports-color@8.1.1)
       better-auth: 1.7.1(@opentelemetry/api@1.8.0)(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       bullmq: 6.0.8(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0)
       dotenv: 17.4.2
-      hono: 4.12.34
+      hono: 4.13.5
       pg: 8.23.0
       resend: 6.12.4
       ws: 8.21.1
@@ -14477,13 +14477,13 @@ snapshots:
 
   '@hominem/utils@file:packages/utils': {}
 
-  '@hono/node-server@2.1.1(hono@4.12.34)':
+  '@hono/node-server@2.1.1(hono@4.13.5)':
     dependencies:
-      hono: 4.12.34
+      hono: 4.13.5
 
-  '@hono/zod-validator@0.7.6(hono@4.12.34)(zod@4.4.3)':
+  '@hono/zod-validator@0.7.6(hono@4.13.5)(zod@4.4.3)':
     dependencies:
-      hono: 4.12.34
+      hono: 4.13.5
       zod: 4.4.3
 
   '@humanfs/core@0.19.2':
@@ -16925,10 +16925,10 @@ snapshots:
 
   '@scalar/helpers@0.11.2': {}
 
-  '@scalar/hono-api-reference@0.12.0(hono@4.12.34)':
+  '@scalar/hono-api-reference@0.12.0(hono@4.13.5)':
     dependencies:
       '@scalar/client-side-rendering': 0.3.10
-      hono: 4.12.34
+      hono: 4.13.5
 
   '@scalar/schemas@0.8.4':
     dependencies:
@@ -20366,7 +20366,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.12.34: {}
+  hono@4.13.5: {}
 
   hosted-git-info@7.0.2:
     dependencies:
