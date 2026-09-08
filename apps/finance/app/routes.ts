@@ -26,6 +26,24 @@ const routes = [
     route('finance/affordability', 'routes/finance.affordability.tsx'),
     route('finance/reconcile', 'routes/finance.reconcile.tsx'),
     route('finance/transfers', 'routes/finance.transfers.tsx'),
+
+    // Copilot import API (moved out of services/api; same-origin so the
+    // UI's relative fetches hit the finance app directly)
+    route('api/finance/import/preflight', 'routes/api.finance.import.preflight.tsx'),
+    route(
+      'api/finance/import/preflight/:preflightId',
+      'routes/api.finance.import.preflight.$preflightId.tsx',
+    ),
+    route(
+      'api/finance/import/preflight/:preflightId/confirm',
+      'routes/api.finance.import.preflight.$preflightId.confirm.tsx',
+    ),
+    route('api/finance/import/jobs', 'routes/api.finance.import.jobs.tsx'),
+    route(
+      'api/finance/import/jobs/:jobId/cancel',
+      'routes/api.finance.import.jobs.$jobId.cancel.tsx',
+    ),
+
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
 

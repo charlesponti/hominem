@@ -12,6 +12,8 @@ import {
   deletePlaidTransaction,
   deleteTransaction,
   getTransactionByPlaidId,
+  insertTransaction,
+  listCopilotExternalIds,
   queryTransactions,
   updateTransaction,
 } from './index';
@@ -87,6 +89,38 @@ describeIntegration('finance transactions integration', () => {
     const stillOwned = await queryTransactions(ownerId);
     expect(stillOwned).toHaveLength(1);
     expect(stillOwned[0]?.description).toBe('Protected tx');
+  });
+
+  it('lists only copilot-sourced external ids for the user', async () => {
+    await insertTransaction({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      amount: -5,
+      description: 'Copilot row',
+      postedOn: '2026-02-01',
+      source: 'copilot-money',
+      externalId: 'copilot-ext-1',
+    });
+    await insertTransaction({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      amount: -6,
+      description: 'Backfilled row',
+      postedOn: '2026-02-02',
+      source: 'hominem',
+      externalId: 'old-ext-1',
+    });
+    await insertTransaction({
+      userId: otherUserId,
+      accountId: ownerAccountId,
+      amount: -7,
+      description: 'Foreign row',
+      postedOn: '2026-02-03',
+      source: 'copilot-money',
+      externalId: 'copilot-ext-2',
+    });
+
+    await expect(listCopilotExternalIds(ownerId)).resolves.toEqual(new Set(['copilot-ext-1']));
   });
 
   it('supports plaid external id lookup and delete', async () => {

@@ -164,6 +164,37 @@ export const getAccountWithPlaidInfo = getAccountById;
 
 export const listAccountsWithPlaidInfo = listAccounts;
 
+export interface AccountImportSnapshot {
+  id: string;
+  name: string;
+  mask: string | null;
+  csvImportKey: string | null;
+}
+
+/** Narrow account rows for the import preflight flow (no balance queries). */
+export async function listImportAccountSnapshots(userId: string): Promise<AccountImportSnapshot[]> {
+  return db
+    .selectFrom('app.financeAccounts')
+    .select(['id', 'name', 'mask', 'csvImportKey'])
+    .where('userId', '=', userId)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+}
+
+/** How many of the given ids are owned by the user (idempotency/ownership guard). */
+export async function countOwnedAccounts(userId: string, accountIds: string[]): Promise<number> {
+  const uniqueIds = [...new Set(accountIds)];
+  if (uniqueIds.length === 0) return 0;
+  const rows = await db
+    .selectFrom('app.financeAccounts')
+    .select('id')
+    .where('userId', '=', userId)
+    .where('id', 'in', uniqueIds)
+    .execute();
+  return rows.length;
+}
+
 export async function getAccountsForInstitution(
   institutionId: string,
   userId: string,

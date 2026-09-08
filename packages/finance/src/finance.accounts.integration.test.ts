@@ -6,12 +6,14 @@ import {
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  countOwnedAccounts,
   createAccount,
   createTransaction,
   deleteAccount,
   getAccountById,
   getAccountByPlaidId,
   listAccounts,
+  listImportAccountSnapshots,
   updateAccount,
   upsertAccount,
 } from './index';
@@ -34,6 +36,35 @@ describeIntegration('finance accounts integration', () => {
       { id: ownerId, name: 'Finance User' },
       { id: otherUserId, name: 'Finance User' },
     ]);
+  });
+
+  it('lists import snapshots with the resolution fields and counts owned accounts', async () => {
+    const checking = await createAccount({
+      userId: ownerId,
+      name: 'Checking',
+      accountType: 'depository',
+      metadata: {},
+    });
+    const stranger = await createAccount({
+      userId: otherUserId,
+      name: 'Stranger',
+      accountType: 'depository',
+      metadata: {},
+    });
+
+    const snapshots = await listImportAccountSnapshots(ownerId);
+    expect(snapshots).toEqual([
+      {
+        id: checking.id,
+        name: 'Checking',
+        mask: null,
+        csvImportKey: null,
+      },
+    ]);
+
+    expect(await countOwnedAccounts(ownerId, [checking.id])).toBe(1);
+    expect(await countOwnedAccounts(ownerId, [checking.id, stranger.id])).toBe(1);
+    expect(await countOwnedAccounts(ownerId, [])).toBe(0);
   });
 
   it('creates, lists, and fetches accounts, deriving balance from posted transactions', async () => {
