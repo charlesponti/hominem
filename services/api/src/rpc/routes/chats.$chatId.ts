@@ -3,32 +3,10 @@ import { db } from '@hominem/db/core';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import {
-  ChatsCreateSchema,
-  ChatsListQuerySchema,
-  ChatsUpdateSchema,
-} from '../../schemas/chats.schema';
+import { ChatsUpdateSchema } from '../../schemas/chats.schema';
 import type { AppContext } from '../middleware/auth';
 import { toChatDto, toChatMessageDto } from './chats.mapper';
 import { getChatId } from './chats.route-helpers';
-
-export const chatCollectionRoutes = new Hono<AppContext>()
-  .get('/', zValidator('query', ChatsListQuerySchema), async (c) => {
-    const userId = c.get('auth')!.userId;
-    const { cursor, includeArchived, limit } = c.req.valid('query');
-    const page = await ChatRepository.listForUser(db, userId, {
-      cursor,
-      includeArchived: includeArchived === 'true',
-      limit,
-    });
-    return c.json({ items: page.chats.map(toChatDto), nextCursor: page.nextCursor });
-  })
-  .post('/', zValidator('json', ChatsCreateSchema), async (c) => {
-    const userId = c.get('auth')!.userId;
-    const { title } = c.req.valid('json');
-    const chat = await ChatRepository.create(db, { userId, title });
-    return c.json(toChatDto(chat), 201);
-  });
 
 export const chatResourceRoutes = new Hono<AppContext>()
   .get('/', async (c) => {

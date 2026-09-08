@@ -30,7 +30,7 @@ import { apiErrorHandler } from '../rpc/middleware/error';
 import {
   createChatGenerationRoutes,
   createChatStartGenerationRoute,
-} from '../rpc/routes/chats.generation';
+} from '../rpc/routes/chats.$chatId.generation';
 
 export type ScriptedProviderTurn = readonly GenerationInput[];
 

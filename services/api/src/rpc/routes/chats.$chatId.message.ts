@@ -6,11 +6,18 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import {
+  ChatSpeechMessageNotFoundError,
+  ChatSpeechUnavailableError,
+  streamMessageSpeech,
+} from '../../chat/chat-speech.service';
+import {
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
   ChatsSearchMessagesQuerySchema,
 } from '../../schemas/chats.schema';
+import { NotFoundError, UnavailableError } from '../errors';
 import type { AppContext } from '../middleware/auth';
+import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { toChatMessageDto } from './chats.mapper';
 import { getChatId, getMessageId } from './chats.route-helpers';
 
@@ -82,4 +89,39 @@ export const chatMessageRoutes = new Hono<AppContext>()
       );
     }
     return c.json({ deletedMessageIds: result.deletedMessageIds });
+  })
+  .use(
+    '/messages/:messageId/speech',
+    rateLimitMiddleware({ bucket: 'chat-speech', windowSec: 60, max: 20 }),
+  )
+  .get('/messages/:messageId/speech', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+
+    let result;
+    try {
+      result = await streamMessageSpeech({
+        chatId,
+        messageId,
+        ownerUserId: userId,
+      });
+    } catch (error) {
+      if (error instanceof ChatSpeechMessageNotFoundError) {
+        throw new NotFoundError(error.message);
+      }
+      if (error instanceof ChatSpeechUnavailableError) {
+        throw new UnavailableError(error.message);
+      }
+      throw error;
+    }
+
+    return new Response(result.stream, {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': result.mimeType,
+        'X-Content-Type-Options': 'nosniff',
+        'Server-Timing': `speech-provider;dur=${result.providerReadyDurationMs}`,
+      },
+    });
   });
