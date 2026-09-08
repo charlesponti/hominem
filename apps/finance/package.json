@@ -20,6 +20,7 @@
   "dependencies": {
     "@base-ui/react": "catalog:",
     "@hominem/env": "workspace:*",
+    "@hominem/finance-services": "workspace:*",
     "@hominem/queues": "workspace:*",
     "@hominem/rpc": "workspace:*",
     "@hominem/utils": "workspace:*",

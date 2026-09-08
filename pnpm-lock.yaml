@@ -332,6 +332,9 @@ importers:
       '@hominem/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@hominem/finance-services':
+        specifier: workspace:*
+        version: link:../../packages/finance
       '@hominem/queues':
         specifier: workspace:*
         version: link:../../packages/queues

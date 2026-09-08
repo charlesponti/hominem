@@ -20,6 +20,8 @@ const LINKS: NavLink[] = [
   { href: '/analytics', label: 'Analytics' },
   { href: '/accounts', label: 'Accounts' },
   { href: '/finance/affordability', label: 'Afford It?' },
+  { href: '/finance/reconcile', label: 'Reconcile' },
+  { href: '/finance/transfers', label: 'Transfers' },
 ];
 
 function isActive(pathname: string, href: string) {

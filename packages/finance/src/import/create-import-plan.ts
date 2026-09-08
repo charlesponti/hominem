@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { isRecurringActive, ledgerCompositeKey, resolveCopilotSign } from './copilot-sign';
 import { accountTempKey } from './resolve-copilot-accounts';
 import {
   COPILOT_PROVIDER,
@@ -35,23 +36,18 @@ function hash(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
-function normalizeAmount(row: ParsedRow): {
-  amount: string;
-  transactionType: PlannedTransaction['transactionType'];
-} {
-  if (row.type === 'internal transfer') {
-    return { amount: row.amount, transactionType: 'transfer' };
-  }
-
-  const absolute = row.amount.replace(/^-/, '');
-  if (row.type === 'income') return { amount: absolute, transactionType: 'credit' };
-  return { amount: `-${absolute}`, transactionType: 'debit' };
+export interface CreateImportPlanOptions {
+  /** Line numbers forced credit by a verified description-split rule. */
+  forcedCreditLines?: ReadonlySet<number>;
+  /** Ledger composite keys already in the books (any source) — matches deselect by default. */
+  existingCompositeKeys?: ReadonlySet<string>;
 }
 
 export function createCopilotImportPlan(
   rows: ParsedRow[],
   resolution: AccountResolution,
   existingExternalIds: ReadonlySet<string> = new Set(),
+  options: CreateImportPlanOptions = {},
 ): ImportPlan {
   const groupsByKey = new Map(resolution.groups.map((group) => [group.groupKey, group]));
   const unresolvedGroups: AccountResolutionFailure[] = resolution.groups
@@ -80,7 +76,19 @@ export function createCopilotImportPlan(
     rowIds.push(rowId);
     rowIdsByBaseKey.set(baseKey, rowIds);
 
-    const { amount, transactionType } = normalizeAmount(row);
+    const { amount, transactionType, needsReview, reviewReason } = resolveCopilotSign(
+      row.type,
+      row.amount,
+      { forceCredit: options.forcedCreditLines?.has(row.line) },
+    );
+    const selectedByExternalId = !workingExternalIds.has(externalId);
+    const ledgerDuplicate =
+      selectedByExternalId &&
+      group.matchedAccountId !== null &&
+      (options.existingCompositeKeys?.has(
+        ledgerCompositeKey(group.matchedAccountId, row.date, amount, row.name),
+      ) ??
+        false);
     const transaction: PlannedTransaction = {
       rowId,
       line: row.line,
@@ -89,12 +97,16 @@ export function createCopilotImportPlan(
       accountId: group.matchedAccountId,
       accountTempKey: group.matchedAccountId ? null : accountTempKey(group.importKey),
       externalId,
-      selected: !workingExternalIds.has(externalId),
+      selected: selectedByExternalId && !ledgerDuplicate,
+      ledgerDuplicate,
       amount,
       postedOn: row.date,
       description: row.name,
       merchantName: row.name,
       transactionType,
+      needsReview,
+      reviewReason,
+      recurring: isRecurringActive(row.recurring),
       pending: row.status === 'pending',
       excluded: row.excluded,
       notes: row.note,
@@ -112,6 +124,9 @@ export function createCopilotImportPlan(
     .flat();
 
   const selected = transactions.filter((transaction) => transaction.selected).length;
+  const needsReview = transactions.filter(
+    (transaction) => transaction.selected && transaction.needsReview,
+  ).length;
   return {
     source: COPILOT_PROVIDER,
     accountGroups: resolution.groups,
@@ -126,6 +141,7 @@ export function createCopilotImportPlan(
       skipped: transactions.length - selected,
       invalid: 0,
       unresolved: unresolvedGroups.reduce((count, group) => count + group.rowIndexes.length, 0),
+      needsReview,
     },
   };
 }
@@ -146,6 +162,9 @@ export function updatePlanSelection(
       ...plan.stats,
       selected,
       skipped: transactions.length - selected,
+      needsReview: transactions.filter(
+        (transaction) => transaction.selected && transaction.needsReview,
+      ).length,
     },
   };
 }

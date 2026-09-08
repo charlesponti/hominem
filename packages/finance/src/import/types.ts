@@ -88,6 +88,11 @@ export interface PlannedTransaction {
   description: string;
   merchantName: string;
   transactionType: 'debit' | 'credit' | 'transfer';
+  needsReview: boolean;
+  reviewReason: string | null;
+  recurring: boolean;
+  /** True when the ledger already holds this row under another source — deselected by default. */
+  ledgerDuplicate: boolean;
   pending: boolean;
   excluded: boolean;
   notes: string | null;
@@ -111,6 +116,7 @@ export interface ImportPlan {
     skipped: number;
     invalid: number;
     unresolved: number;
+    needsReview: number;
   };
 }
 

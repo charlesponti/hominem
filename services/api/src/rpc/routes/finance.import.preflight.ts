@@ -9,6 +9,7 @@ import {
   updatePlanSelection,
   type ImportPlan,
 } from '@hominem/finance-services/import';
+import { listTransactionCompositeKeys } from '@hominem/finance-services/transactions';
 import {
   claimPreflight,
   createImportJob,
@@ -72,6 +73,7 @@ export const importPreflightRoutes = new Hono<AppContext>()
       parsed.rows,
       resolution,
       await getExistingExternalIds(userId),
+      { existingCompositeKeys: await listTransactionCompositeKeys(userId) },
     );
     plan.invalidRows = parsed.invalidRows;
     plan.stats.invalid = parsed.invalidRows.length;
