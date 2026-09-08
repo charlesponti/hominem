@@ -1,5 +1,6 @@
 import { CareerRepository } from '@hominem/db/career';
 import { db } from '@hominem/db/core';
+import type { AppCareerEngagementKind } from '@hominem/db/types';
 import { SectionIntro } from '@ponti-studios/ui/layout';
 import { redirect } from 'react-router';
 
@@ -45,7 +46,7 @@ export async function action({ context, request }: Route.ActionArgs) {
       contactName: (formData.get('contactName') as string) || null,
       contactPhone: (formData.get('contactPhone') as string) || null,
       source: (formData.get('source') as string) || null,
-      kind: (formData.get('kind') as string) || 'EMPLOYMENT',
+      kind: (formData.get('kind') as AppCareerEngagementKind) || 'EMPLOYMENT',
     });
 
     return redirect(`/work/${engagement.id}`);

@@ -1,4 +1,4 @@
-import type { Selectable } from 'kysely';
+import { sql, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type {
@@ -141,7 +141,10 @@ export const ProjectRepository = {
       .values({
         ownerUserid: ownerUserId,
         ...projectInput,
-        technologies: JSON.stringify(technologies ?? []) as unknown as JsonArray,
+        // pg serializes a bare JS array parameter as a Postgres array literal,
+        // not JSON, so a jsonb array column needs the value passed as a JSON
+        // string with an explicit ::jsonb cast.
+        technologies: sql<JsonArray>`${JSON.stringify(technologies ?? [])}::jsonb`,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -170,7 +173,7 @@ export const ProjectRepository = {
             .set({
               ...projectInput,
               ...(technologies !== undefined
-                ? { technologies: JSON.stringify(technologies) as unknown as JsonArray }
+                ? { technologies: sql<JsonArray>`${JSON.stringify(technologies)}::jsonb` }
                 : {}),
             })
             .where('id', '=', id)

@@ -65,7 +65,7 @@ function toFileRecord(row: FileRow): FileRecord {
     url: row.url,
     ...(row.content ? { content: row.content } : {}),
     ...(row.textContent ? { textContent: row.textContent } : {}),
-    ...(isObject(row.metadata) ? { metadata: row.metadata as Record<string, unknown> } : {}),
+    ...(isObject(row.metadata) ? { metadata: row.metadata } : {}),
     uploadedAt: new Date(row.createdat).toISOString(),
   };
 }

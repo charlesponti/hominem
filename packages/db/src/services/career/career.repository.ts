@@ -1,4 +1,4 @@
-import { sql, type Selectable } from 'kysely';
+import { sql, type Insertable, type Selectable } from 'kysely';
 
 import type { DbHandle } from '../../transaction';
 import type {
@@ -21,6 +21,12 @@ type CareerApplicationWithCurrentStage = CareerApplicationRecord & {
 };
 type CareerEngagementUpdate = Partial<CareerEngagementRecord> &
   Pick<CareerEngagementRecord, 'id' | 'ownerUserid'>;
+type CareerEngagementInsert = Partial<Omit<Insertable<AppCareerEngagements>, 'ownerUserid'>> &
+  Pick<Insertable<AppCareerEngagements>, 'company' | 'title'>;
+type CareerEducationInsert = Partial<Omit<Insertable<AppCareerEducation>, 'ownerUserid'>> &
+  Pick<Insertable<AppCareerEducation>, 'school'>;
+type CareerApplicationInsert = Partial<Omit<Insertable<AppCareerApplications>, 'ownerUserid'>> &
+  Pick<Insertable<AppCareerApplications>, 'company' | 'title' | 'status'>;
 
 export type CareerApplicationWithRelations = CareerApplicationWithCurrentStage & {
   stages: CareerApplicationStageRecord[];
@@ -173,19 +179,13 @@ export const CareerRepository = {
   async createEngagement(
     handle: DbHandle,
     ownerUserId: string,
-    data: Record<string, unknown> & {
-      company: string;
-      title: string;
-    },
+    data: CareerEngagementInsert,
   ): Promise<CareerEngagementRecord> {
-    return (
-      handle
-        .insertInto('app.careerEngagements')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .values({ ...data, ownerUserid: ownerUserId } as any)
-        .returningAll()
-        .executeTakeFirstOrThrow()
-    );
+    return handle
+      .insertInto('app.careerEngagements')
+      .values({ ...data, ownerUserid: ownerUserId })
+      .returningAll()
+      .executeTakeFirstOrThrow();
   },
 
   async updateEngagement(
@@ -235,24 +235,13 @@ export const CareerRepository = {
   async createEducation(
     handle: DbHandle,
     ownerUserId: string,
-    data: {
-      school: string;
-      degree?: string | null;
-      fieldOfStudy?: string | null;
-      startDate?: string | null;
-      endDate?: string | null;
-      activities?: string | null;
-      notes?: string | null;
-    },
+    data: CareerEducationInsert,
   ): Promise<CareerEducationRecord> {
-    return (
-      handle
-        .insertInto('app.careerEducation')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .values({ ...data, ownerUserid: ownerUserId } as any)
-        .returningAll()
-        .executeTakeFirstOrThrow()
-    );
+    return handle
+      .insertInto('app.careerEducation')
+      .values({ ...data, ownerUserid: ownerUserId })
+      .returningAll()
+      .executeTakeFirstOrThrow();
   },
 
   async updateEducation(
@@ -408,26 +397,13 @@ export const CareerRepository = {
   async createApplication(
     handle: DbHandle,
     ownerUserId: string,
-    data: {
-      company: string;
-      title: string;
-      location?: string | null;
-      source?: string | null;
-      appliedAt?: string | null;
-      status?: string | null;
-      jobPostingUrl?: string | null;
-      salaryExpectation?: number | null;
-      notes?: string | null;
-    },
+    data: CareerApplicationInsert,
   ): Promise<CareerApplicationRecord> {
-    return (
-      handle
-        .insertInto('app.careerApplications')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .values({ ...data, ownerUserid: ownerUserId } as any)
-        .returningAll()
-        .executeTakeFirstOrThrow()
-    );
+    return handle
+      .insertInto('app.careerApplications')
+      .values({ ...data, ownerUserid: ownerUserId })
+      .returningAll()
+      .executeTakeFirstOrThrow();
   },
 
   async updateApplication(

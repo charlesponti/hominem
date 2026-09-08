@@ -1,6 +1,7 @@
 import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
 import { sql, type Insertable, type Selectable } from 'kysely';
 
+import { ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type { AppAiUsageEvents, Json, Numeric } from '../../types/database';
 
@@ -26,6 +27,50 @@ export type AIUsageFeature =
 
 export type AIUsageOperation = 'chat_completion' | 'structured_output' | 'embedding' | 'speech';
 export type AIUsageEventStatus = 'succeeded' | 'failed';
+
+const AI_USAGE_FEATURES: readonly AIUsageFeature[] = [
+  'chat_stream',
+  'text_enhance',
+  'note_generate',
+  'task_extract',
+  'voice_task_extract',
+  'time_block_extract',
+  'voice_cleanup',
+  'chat_speech',
+  'embedding',
+  'mcp_tool_call',
+  'career_resume_convert',
+  'career_resume_customize',
+  'career_job_scrape',
+  'career_skills_derive',
+  'file_image_analyze',
+  'file_document_summarize',
+];
+const AI_USAGE_OPERATIONS: readonly AIUsageOperation[] = [
+  'chat_completion',
+  'structured_output',
+  'embedding',
+  'speech',
+];
+const AI_USAGE_EVENT_STATUSES: readonly AIUsageEventStatus[] = ['succeeded', 'failed'];
+
+function parseAIUsageFeature(value: string): AIUsageFeature {
+  const feature = AI_USAGE_FEATURES.find((candidate) => candidate === value);
+  if (feature) return feature;
+  throw new ValidationError(`Invalid AI usage feature: ${value}`, { feature: value });
+}
+
+function parseAIUsageOperation(value: string): AIUsageOperation {
+  const operation = AI_USAGE_OPERATIONS.find((candidate) => candidate === value);
+  if (operation) return operation;
+  throw new ValidationError(`Invalid AI usage operation: ${value}`, { operation: value });
+}
+
+function parseAIUsageEventStatus(value: string): AIUsageEventStatus {
+  const status = AI_USAGE_EVENT_STATUSES.find((candidate) => candidate === value);
+  if (status) return status;
+  throw new ValidationError(`Invalid AI usage event status: ${value}`, { status: value });
+}
 
 export interface AIUsageEventRecord {
   id: string;
@@ -136,10 +181,10 @@ function toAIUsageEventRecord(row: AIUsageEventRow): AIUsageEventRecord {
     id: row.id,
     userId: row.ownerUserid,
     provider: row.provider,
-    feature: row.feature as AIUsageFeature,
-    operation: row.operation as AIUsageOperation,
+    feature: parseAIUsageFeature(row.feature),
+    operation: parseAIUsageOperation(row.operation),
     model: row.model ?? null,
-    status: row.status as AIUsageEventStatus,
+    status: parseAIUsageEventStatus(row.status),
     usageAvailable: row.usageAvailable,
     errorCode: row.errorCode ?? null,
     errorStatus: row.errorStatus ?? null,
@@ -322,7 +367,7 @@ export const AIUsageEventRepository = {
 
     return rows.map(
       (row): AIUsageFeatureBreakdownRecord => ({
-        feature: row.feature as AIUsageFeature,
+        feature: parseAIUsageFeature(row.feature),
         requestCount: Number(row.requestCount ?? 0),
         succeededCount: Number(row.succeededCount ?? 0),
         failedCount: Number(row.failedCount ?? 0),
