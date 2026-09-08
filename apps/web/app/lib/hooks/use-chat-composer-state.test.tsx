@@ -131,7 +131,13 @@ describe('useChatComposerState', () => {
   it('persists the draft and attachments for the chat across reloads', async () => {
     window.localStorage.clear();
     mockUploadFiles.mockResolvedValueOnce([
-      { id: 'file-1', originalName: 'brief.pdf', url: '/files/brief.pdf' },
+      {
+        content: 'binary-contents',
+        id: 'file-1',
+        originalName: 'brief.pdf',
+        textContent: 'uploaded transcript',
+        url: '/files/brief.pdf',
+      },
     ]);
     const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' });
     const fileList: FileList = {
@@ -154,6 +160,12 @@ describe('useChatComposerState', () => {
       expect(window.localStorage.getItem('chat-composer:chat-2')).toContain(
         'Draft text for reload',
       );
+    });
+    const persisted = JSON.parse(window.localStorage.getItem('chat-composer:chat-2') ?? '{}');
+    expect(persisted.attachments[0]).toEqual({
+      id: 'file-1',
+      originalName: 'brief.pdf',
+      url: '/files/brief.pdf',
     });
 
     unmount();

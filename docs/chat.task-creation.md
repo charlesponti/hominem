@@ -21,9 +21,10 @@ through `useChatLifecycle` (`@hominem/chat/react`):
 
 1. **Extract** - the transcript is sent to `POST /api/tasks/extract`
    (`services/api/src/rpc/routes/tasks.ts`), which calls `extractTasks`
-   (`@hominem/ai`, OpenRouter) with `TASK_EXTRACTION_PROMPT` and returns a
-   list of `{ title }` drafts. Rate-limited (`ai-task-extract`, 20/min) and
-   gated by the caller's monthly AI usage limit.
+   (`services/api/src/application/task-extraction.service.ts`, OpenRouter)
+   with `TASK_EXTRACTION_PROMPT` and returns a list of `{ title }` drafts.
+   Rate-limited (`ai-task-extract`, 20/min) and gated by the caller's monthly
+   AI usage limit.
 2. **Review** - the drafts render in the shared review surface
    (`ClassificationReview`, via `chat-review-overlay.tsx`) as a
    `task_list`-typed proposal; the user can accept or reject before anything

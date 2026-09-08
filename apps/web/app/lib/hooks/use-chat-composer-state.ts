@@ -27,8 +27,6 @@ const chatComposerAttachmentSchema = z.object({
   id: z.string(),
   originalName: z.string(),
   url: z.string(),
-  textContent: z.string().optional(),
-  content: z.string().optional(),
 });
 
 const chatComposerPersistedStateSchema = z.object({
@@ -107,7 +105,7 @@ export function useChatComposerState({
     window.localStorage.setItem(
       storageKey,
       JSON.stringify({
-        attachments: attachedFiles,
+        attachments: attachedFiles.map(({ id, originalName, url }) => ({ id, originalName, url })),
         draft,
       }),
     );
