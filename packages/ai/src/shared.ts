@@ -21,7 +21,8 @@ export type OpenRouterClientOptions = {
   httpReferer?: string;
   appTitle?: string;
   appCategories?: string;
-  client?: OpenRouterClientLike;
+  // Only enable the supported OpenRouter features.
+  client?: Pick<OpenRouter, 'chat' | 'embeddings' | 'tts' | 'generations' | 'models'>;
   responseHook?: (response: Response) => void;
   // Composed with the request's own absolute deadline (see
   // CHAT_REQUEST_TIMEOUT_MS in text.ts) via AbortSignal.any — passing a
@@ -33,10 +34,6 @@ export type OpenRouterClientOptions = {
 };
 
 type JsonObject = Record<string, unknown>;
-type OpenRouterClientLike = Pick<
-  OpenRouter,
-  'chat' | 'embeddings' | 'tts' | 'generations' | 'models'
->;
 
 export type AIUsageMetrics = {
   provider: 'openrouter';
