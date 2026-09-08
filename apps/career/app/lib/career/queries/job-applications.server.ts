@@ -32,16 +32,6 @@ function toCard(
   };
 }
 
-export async function getApplicationCards(ownerUserId: string): Promise<JobApplicationCard[]> {
-  const applications = await CareerRepository.listApplications(db, ownerUserId);
-  const stats = await CareerRepository.getApplicationCardStats(
-    db,
-    applications.map((app) => app.id),
-  );
-
-  return applications.map((app) => toCard(app, stats.get(app.id)));
-}
-
 export type ApplicationPageData = {
   applications: JobApplicationCard[];
   total: number;

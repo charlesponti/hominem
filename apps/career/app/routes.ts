@@ -8,7 +8,6 @@ export default [
   route('prototypes/application-cockpit', 'routes/prototypes.application-cockpit.tsx'),
   route('health', 'routes/health.ts'),
   route('api/portfolio/:owner_userid', 'routes/api.portfolio.$userId.ts'),
-  route('api/career/applications', 'routes/api.career.applications.ts'),
   // only hit by onboarding's "create my first profile" flow (UploadResumeForm mode="create")
   route('api/resume/convert', 'routes/api.resume.convert.ts'),
   route('api/resume/analyze', 'routes/api.resume.analyze.ts'),
