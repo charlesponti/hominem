@@ -277,7 +277,11 @@ function cancelledEvent(sequence: number): ChatGenerationEventRecord {
 describe('chat stream accounting', () => {
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
-    mocks.createChat.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000001' });
+    // Matches what ChatRepository.create actually returns (a full row via
+    // .returningAll()) — startMessage now forwards this straight into the
+    // generation flow instead of re-fetching by id, so it needs every field
+    // toChatSnapshot's schema requires.
+    mocks.createChat.mockResolvedValue(testChat);
     mocks.getMessages.mockResolvedValue([]);
     // insertMessage now returns the fully-mapped record directly (no
     // follow-up getMessageById reload), so the mock needs every field
@@ -685,8 +689,11 @@ describe('chat message deletion', () => {
     );
   });
 
-  it('does not delete when the chat is not owned', async () => {
-    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+  it('does not delete when the message is not owned', async () => {
+    // deleteUserMessageAndFollowing scopes its own lookup by authorUserid,
+    // so this is where "not owned" now surfaces — there's no separate
+    // ownership check ahead of it any more.
+    mocks.deleteUserMessageAndFollowing.mockRejectedValue(new Error('ChatMessage not found'));
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
@@ -696,7 +703,6 @@ describe('chat message deletion', () => {
     );
 
     expect(response.status).not.toBe(200);
-    expect(mocks.deleteUserMessageAndFollowing).not.toHaveBeenCalled();
   });
 });
 
@@ -743,8 +749,11 @@ describe('chat message edit', () => {
     );
   });
 
-  it('does not edit when the chat is not owned', async () => {
-    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+  it('does not edit when the message is not owned', async () => {
+    // updateMessage scopes its own lookup by authorUserid, so this is where
+    // "not owned" now surfaces — there's no separate ownership check ahead
+    // of it any more.
+    mocks.updateMessage.mockRejectedValue(new Error('ChatMessage not found'));
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
@@ -756,7 +765,6 @@ describe('chat message edit', () => {
     );
 
     expect(response.status).not.toBe(200);
-    expect(mocks.updateMessage).not.toHaveBeenCalled();
   });
 });
 
@@ -974,7 +982,7 @@ describe('chat message regenerate', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111118' }),
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111122' }),
       },
     );
 

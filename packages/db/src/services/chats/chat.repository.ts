@@ -449,20 +449,30 @@ export const ChatRepository = {
     return toChatRecord(chat);
   },
 
+  // Scoped by ownerUserid in the same statement, so this both mutates and
+  // enforces ownership in one round trip — callers should not do a separate
+  // getOwnedOrThrow first. Throws NotFoundError explicitly (rather than
+  // relying on kysely's default executeTakeFirstOrThrow) so a missing/
+  // unowned chat maps to the same 404 that getOwnedOrThrow would have.
   async updateTitle(
     handle: DbHandle,
     chatId: string,
     userId: string,
     title: string,
   ): Promise<void> {
-    await handle
+    const result = await handle
       .updateTable('app.chats')
       .set({ title, updatedat: new Date().toISOString() })
       .where('id', '=', chatId)
       .where('ownerUserid', '=', userId)
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+
+    if ((result.numUpdatedRows ?? 0n) === 0n) {
+      throw new NotFoundError('Chat', { chatId });
+    }
   },
 
+  // See updateTitle's note on scoping + explicit NotFoundError.
   async archive(handle: DbHandle, chatId: string, userId: string): Promise<ChatSnapshot> {
     const archived = await handle
       .updateTable('app.chats')
@@ -473,7 +483,11 @@ export const ChatRepository = {
       .where('id', '=', chatId)
       .where('ownerUserid', '=', userId)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+
+    if (!archived) {
+      throw new NotFoundError('Chat', { chatId });
+    }
 
     return toChatRecord(archived);
   },

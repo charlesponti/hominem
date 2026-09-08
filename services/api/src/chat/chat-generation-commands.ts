@@ -1,5 +1,5 @@
 import { CHAT_MODEL, type ChatMessages } from '@hominem/ai';
-import type { GenerationEvent } from '@hominem/chat';
+import type { ChatSnapshot, GenerationEvent } from '@hominem/chat';
 import { restoreGenerationState } from '@hominem/chat/server';
 import { ChatGenerationRepository, ChatRepository } from '@hominem/db/chats';
 import { db } from '@hominem/db/core';
@@ -46,7 +46,7 @@ export async function regenerate(
   dependencies: ChatGenerationDependencies,
   input: RegenerateInput,
 ): Promise<AsyncIterable<GenerationEvent>> {
-  await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
+  const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
   // Check for an idempotent replay before resolving the target: once a
   // regenerate/retry commits, the attempt it superseded is deleted, so a
   // duplicate request for the *same new* generationId must not re-resolve
@@ -85,6 +85,7 @@ export async function regenerate(
         );
       }
       return redoGeneration(dependencies, {
+        chat,
         userId: input.userId,
         chatId: input.chatId,
         generationId: input.generationId,
@@ -104,6 +105,7 @@ export async function regenerate(
       input.userId,
     );
     return redoGeneration(dependencies, {
+      chat,
       userId: input.userId,
       chatId: input.chatId,
       generationId: input.generationId,
@@ -126,6 +128,7 @@ export async function regenerate(
     );
   }
   return redoGeneration(dependencies, {
+    chat,
     userId: input.userId,
     chatId: input.chatId,
     generationId: input.generationId,
@@ -181,6 +184,7 @@ export async function startMessage(
   );
   const toolPlan = await planTools(dependencies, messages);
   return start(dependencies, {
+    chat: created.chat,
     userId: input.userId,
     generationId: input.generationId,
     chatId: created.chat.id,
@@ -199,7 +203,7 @@ export async function sendMessage(
   input: SendMessageInput,
 ): Promise<AsyncIterable<GenerationEvent>> {
   await assertUnderMonthlyUsageLimit(input.userId);
-  await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
+  const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
   const [history, notes, files] = await Promise.all([
     ChatRepository.getMessages(db, input.chatId, 30, 0),
     ChatRepository.getChatSourceContext(db, input.chatId),
@@ -246,6 +250,7 @@ export async function sendMessage(
   );
   const toolPlan = await planTools(dependencies, messages);
   return send(dependencies, {
+    chat,
     userId: input.userId,
     generationId: input.generationId,
     chatId: input.chatId,
@@ -265,6 +270,7 @@ export async function sendMessage(
 async function redoGeneration(
   dependencies: ChatGenerationDependencies,
   input: {
+    chat: ChatSnapshot;
     userId: string;
     chatId: string;
     generationId: string;
@@ -298,6 +304,7 @@ async function redoGeneration(
   );
   const toolPlan = await planTools(dependencies, messages);
   return send(dependencies, {
+    chat: input.chat,
     userId: input.userId,
     generationId: input.generationId,
     chatId: input.chatId,
@@ -381,6 +388,7 @@ export async function respondToConfirmation(
     reasoningText: '',
   };
   return execute(dependencies, {
+    chat,
     userId: input.userId,
     generationId: run.id,
     chatId: chat.id,

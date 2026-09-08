@@ -45,7 +45,8 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
     const { content } = c.req.valid('json');
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    // updateMessage scopes its own lookup by authorUserid and throws
+    // NotFoundError itself, so no separate ownership round trip is needed.
     const result = await runInTransaction((trx) =>
       ChatRepository.updateMessage(trx, chatId, messageId, userId, content),
     );
@@ -71,7 +72,9 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    // deleteUserMessageAndFollowing scopes its own lookup by authorUserid
+    // and throws NotFoundError itself, so no separate ownership round trip
+    // is needed.
     const result = await runInTransaction((trx) =>
       ChatRepository.deleteUserMessageAndFollowing(trx, chatId, messageId, userId),
     );

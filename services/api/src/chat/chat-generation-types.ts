@@ -1,5 +1,6 @@
 import type { AIUsageMetrics, ChatFunctionTool, ChatMessages, ChatRequest } from '@hominem/ai';
 import type {
+  ChatSnapshot,
   GenerationHistoryEventPayload,
   GenerationInput,
   GenerationState,
@@ -99,6 +100,11 @@ type PreparedGeneration = {
   // deleted once this one commits. See redoGeneration.
   staleGenerationId?: string | null;
   staleAssistantMessageId?: string | null;
+  // The chat row, when the caller already fetched (or just created) it —
+  // lets executeGeneration skip its own getOwnedOrThrow round trip. Falls
+  // back to fetching by chatId/userId when omitted, so callers that only
+  // have a chatId (e.g. a direct service.send() call) still work.
+  chat?: ChatSnapshot;
 };
 
 export type GenerationStartInput = Omit<PreparedGeneration, 'kind'> & {

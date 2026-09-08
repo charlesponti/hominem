@@ -122,7 +122,11 @@ async function executeGeneration(
       targetAssistantMessageId: input.targetAssistantMessageId ?? null,
       requestContext: {},
     };
-    const chat = await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
+    // Reuse the chat the caller already fetched (or just created) when
+    // provided, instead of re-verifying ownership a second time in the
+    // same request.
+    const chat =
+      input.chat ?? (await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId));
     const userMessage = input.userMessageId
       ? await ChatRepository.getMessageById(db, input.chatId, input.userMessageId)
       : null;

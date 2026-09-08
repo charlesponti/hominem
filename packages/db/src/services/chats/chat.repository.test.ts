@@ -248,6 +248,52 @@ describe('ChatRepository message deletion', () => {
     await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toHaveLength(3);
   });
 
+  it('updates the title and rejects when the chat is not owned', async () => {
+    const fixture = await createFixture();
+    const otherUserId = randomUUID();
+    userIds.push(otherUserId);
+    await authDb
+      .insertInto('user')
+      .values({ id: otherUserId, name: 'Other User', email: `${otherUserId}@example.com` })
+      .execute();
+
+    await ChatRepository.updateTitle(db, fixture.chatId, fixture.userId, 'Renamed');
+    const chat = await db
+      .selectFrom('app.chats')
+      .select('title')
+      .where('id', '=', fixture.chatId)
+      .executeTakeFirstOrThrow();
+    expect(chat.title).toBe('Renamed');
+
+    await expect(
+      ChatRepository.updateTitle(db, fixture.chatId, otherUserId, 'Hijacked'),
+    ).rejects.toThrow('Chat not found');
+  });
+
+  it('archives the chat and rejects when it is not owned', async () => {
+    const fixture = await createFixture();
+    const otherUserId = randomUUID();
+    userIds.push(otherUserId);
+    await authDb
+      .insertInto('user')
+      .values({ id: otherUserId, name: 'Other User', email: `${otherUserId}@example.com` })
+      .execute();
+
+    await expect(ChatRepository.archive(db, fixture.chatId, otherUserId)).rejects.toThrow(
+      'Chat not found',
+    );
+
+    await expect(ChatRepository.archive(db, fixture.chatId, fixture.userId)).resolves.toMatchObject(
+      { id: fixture.chatId },
+    );
+    const chat = await db
+      .selectFrom('app.chats')
+      .select('archivedAt')
+      .where('id', '=', fixture.chatId)
+      .executeTakeFirstOrThrow();
+    expect(chat.archivedAt).not.toBeNull();
+  });
+
   it('raises a safe validation error for invalid persisted message JSON', async () => {
     const fixture = await createFixture();
 
