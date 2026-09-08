@@ -9,7 +9,7 @@ export type ErrorCode =
   | 'INTERNAL_ERROR'
   | 'UNAVAILABLE';
 
-const ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
+const ERROR_CODES: ReadonlySet<string> = new Set<ErrorCode>([
   'VALIDATION_ERROR',
   'NOT_FOUND',
   'UNAUTHORIZED',
@@ -99,7 +99,7 @@ export function isServiceError(value: unknown): value is ServiceError {
   return (
     typeof candidate.message === 'string' &&
     typeof candidate.code === 'string' &&
-    ERROR_CODES.has(candidate.code as ErrorCode) &&
+    ERROR_CODES.has(candidate.code) &&
     typeof candidate.statusCode === 'number' &&
     Number.isInteger(candidate.statusCode) &&
     candidate.statusCode >= 400 &&
