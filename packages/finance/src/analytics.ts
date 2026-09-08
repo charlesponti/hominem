@@ -32,7 +32,7 @@ export async function getTagBreakdown(
 
   return result.map((row) => ({
     tag: row.tag,
-    total: toNumber(row.total as number),
+    total: toNumber(row.total),
   }));
 }
 
@@ -59,8 +59,8 @@ export async function getTopMerchants(
     .execute();
 
   return result.map((row) => ({
-    merchant: (row as unknown as { merchant: string }).merchant ?? 'Unknown',
-    total: toNumber(row.total as number),
+    merchant: row.merchant ?? 'Unknown',
+    total: toNumber(row.total),
   }));
 }
 

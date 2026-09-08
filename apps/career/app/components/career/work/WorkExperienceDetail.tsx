@@ -11,23 +11,18 @@ import {
 } from '@ponti-studios/ui/overlays';
 import { Button } from '@ponti-studios/ui/primitives';
 import { TrashIcon } from 'lucide-react';
-import { useMemo } from 'react';
 import { useFetcher, useNavigate } from 'react-router';
 
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { useCareerEditorSubmission } from '~/hooks/useCareerEditorSubmission';
 import { submitDelete } from '~/hooks/useWorkExperienceSection';
-import type { WorkExperienceMetadata } from '~/lib/career/queries/career-progression';
 import { formatDateRange } from '~/lib/career/work-experience-form';
-import { jsonObject } from '~/lib/db-json';
 
-import { AchievementsSection } from './AchievementsSection';
 import { CompensationSection } from './CompensationSection';
 import { ExitSection } from './ExitSection';
 import { OverviewSection } from './OverviewSection';
 import { ProjectsSection } from './ProjectsSection';
 import { TeamSection } from './TeamSection';
-import { TechnologiesSection } from './TechnologiesSection';
 
 export function WorkExperienceDetail({
   workExperience,
@@ -37,11 +32,6 @@ export function WorkExperienceDetail({
   linkedProjectCount: number;
 }) {
   const navigate = useNavigate();
-  const we = workExperience as unknown as Record<string, unknown>;
-  const metadata = useMemo(
-    () => jsonObject<WorkExperienceMetadata>(we.metadata as string | null) ?? {},
-    [we.metadata],
-  );
 
   const deleteFetcher = useFetcher();
   const { submissionError, clearSubmissionError } = useCareerEditorSubmission({
@@ -118,9 +108,7 @@ export function WorkExperienceDetail({
       </section>
 
       <div className="grid gap-4">
-        <OverviewSection workExperience={workExperience} metadata={metadata} />
-        <AchievementsSection achievements={metadata.achievements ?? []} />
-        <TechnologiesSection technologies={metadata.technologies ?? []} />
+        <OverviewSection workExperience={workExperience} />
         <ProjectsSection
           linkedProjectCount={linkedProjectCount}
           onOpen={() => navigate(`/projects?client=${workExperience.id}`)}

@@ -7,7 +7,6 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import { FormErrorAlert } from '~/components/FormErrorAlert';
 import { useWorkExperienceSection } from '~/hooks/useWorkExperienceSection';
-import type { WorkExperienceMetadata } from '~/lib/career/queries/career-progression';
 import {
   formatDateRange,
   normalizeOptionalText,
@@ -17,13 +16,7 @@ import {
 
 import { DetailRow, SectionCard, SectionEmptyState, SectionFormActions } from './section-ui';
 
-export function OverviewSection({
-  workExperience,
-  metadata,
-}: {
-  workExperience: CareerEngagementRecord;
-  metadata: WorkExperienceMetadata;
-}) {
+export function OverviewSection({ workExperience }: { workExperience: CareerEngagementRecord }) {
   const [isEditing, setIsEditing] = useState(false);
   const defaultValues = useMemo(
     () => ({
@@ -32,9 +25,9 @@ export function OverviewSection({
       startDate: toMonthInputValue(workExperience.startDate),
       endDate: toMonthInputValue(workExperience.endDate),
       description: workExperience.description ?? '',
-      location: metadata.location ?? '',
+      location: workExperience.location ?? '',
     }),
-    [metadata.location, workExperience],
+    [workExperience],
   );
   const { isSubmitting, submissionError, submitUpdates, clearSubmissionError } =
     useWorkExperienceSection({
@@ -58,9 +51,7 @@ export function OverviewSection({
       startDate: values.startDate || null,
       endDate: values.endDate || null,
       description: values.description.trim(),
-      metadata: {
-        location: normalizeOptionalText(values.location),
-      },
+      location: normalizeOptionalText(values.location),
     });
 
   return (
@@ -141,7 +132,7 @@ export function OverviewSection({
               label="Timeline"
               value={formatDateRange(workExperience.startDate, workExperience.endDate)}
             />
-            <DetailRow label="Location" value={metadata.location ?? 'Not set'} />
+            <DetailRow label="Location" value={workExperience.location ?? 'Not set'} />
           </div>
 
           <div className="space-y-2">

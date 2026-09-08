@@ -51,14 +51,6 @@ export interface OverviewFormValues {
   location: string;
 }
 
-export interface AchievementsFormValues {
-  items: Array<{ value: string }>;
-}
-
-export interface TechnologiesFormValues {
-  technologies: string;
-}
-
 export interface CompensationFormValues {
   baseSalary: string;
   signingBonus: string;
