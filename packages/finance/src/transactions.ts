@@ -8,6 +8,7 @@ import z from 'zod';
 
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';
 import { ledgerCompositeKey } from './import/copilot-sign';
+import { COPILOT_PROVIDER } from './import/types';
 import { getAffectedRows, sqlValueList, toNumber } from './utils';
 
 type TransactionRow = Selectable<AppFinanceTransactions>;
@@ -38,6 +39,18 @@ export type FinanceTransactionQueryContract = z.infer<typeof financeTransactionQ
 
 export async function queryTransactions(userId: string): Promise<TransactionRow[]> {
   return queryTransactionsByContract({ userId });
+}
+
+/** Copilot-sourced external ids already in the ledger for one user. */
+export async function listCopilotExternalIds(userId: string): Promise<Set<string>> {
+  const rows = await db
+    .selectFrom('app.financeTransactions')
+    .select('externalId')
+    .where('userId', '=', userId)
+    .where('source', '=', COPILOT_PROVIDER)
+    .where('externalId', 'is not', null)
+    .execute();
+  return new Set(rows.flatMap((row) => (row.externalId ? [row.externalId] : [])));
 }
 
 /**

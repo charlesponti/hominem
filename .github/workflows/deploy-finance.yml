@@ -1,0 +1,27 @@
+name: deploy-finance
+
+on:
+  workflow_run:
+    workflows: [validate-finance]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-finance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-finance:
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    uses: ./.github/workflows/railway-deploy-service.yml
+    secrets:
+      service_target: ${{ secrets.RAILWAY_SERVICE_FINANCE }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    with:
+      service_name: finance
+      checkout_ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      config_path: apps/finance/railway.json

@@ -70,14 +70,15 @@ function checkedDate(value: string | undefined): string {
   return date;
 }
 
-async function getLedgerSum(userId: string, accountId: string): Promise<number> {
-  const row = await db
+async function getLedgerSum(userId: string, accountId: string, asOf?: string): Promise<number> {
+  let query = db
     .selectFrom('app.financeTransactions')
     .select((eb) => eb.fn.sum<number>('amount').as('total'))
     .where('userId', '=', userId)
     .where('accountId', '=', accountId)
-    .where('excluded', '=', false)
-    .executeTakeFirst();
+    .where('excluded', '=', false);
+  if (asOf) query = query.where('postedOn', '<=', asOf);
+  const row = await query.executeTakeFirst();
   return roundMoney(toNumber(row?.total ?? 0));
 }
 
@@ -185,8 +186,11 @@ export async function getAccountLedgerBreakdown(
 /**
  * Reconcile one account to a real balance reading by posting a dated
  * `adjustment` plug transaction sized to close the gap exactly — the same
- * mechanism banks already use for reconciling entries. Never touches an
- * existing row; a sub-cent gap is a no-op (no $0 journal entry is booked).
+ * mechanism banks already use for reconciling entries. The gap is measured
+ * as of the reading date (transactions after that date are untouched by the
+ * plug, so both the historical reconciliation and later balances stay
+ * correct). Never touches an existing row; a sub-cent gap is a no-op (no
+ * $0 journal entry is booked).
  */
 export async function postReconciliationAdjustment(
   input: PostAdjustmentInput,
@@ -218,7 +222,7 @@ export async function postReconciliationAdjustment(
     );
   }
 
-  const ledgerSumBefore = await getLedgerSum(input.userId, input.accountId);
+  const ledgerSumBefore = await getLedgerSum(input.userId, input.accountId, date);
   const plug = roundMoney(targetBalance - ledgerSumBefore);
 
   if (Math.abs(plug) < 0.01) {

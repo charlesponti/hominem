@@ -96,6 +96,19 @@ describe('createCopilotImportPlan', () => {
     ]);
   });
 
+  it('clears the ledger-duplicate marker when the user explicitly selects the row', () => {
+    const rows = [row(2, { amount: '10.00' })];
+    const snapshots = [{ id: 'acc-1', name: 'Checking', mask: '1234', csvImportKey: null }];
+    const resolution = resolveCopilotAccounts(rows, snapshots);
+    const plan = createCopilotImportPlan(rows, resolution, new Set(), {
+      existingCompositeKeys: new Set(['acc-1|2026-01-01|10.00|coffee']),
+    });
+    expect(plan.transactions[0]).toMatchObject({ selected: false, ledgerDuplicate: true });
+
+    const updated = updatePlanSelection(plan, new Set([plan.transactions[0]?.rowId ?? '']));
+    expect(updated.transactions[0]).toMatchObject({ selected: true, ledgerDuplicate: false });
+  });
+
   it('recomputes review counts when rows are deselected', () => {
     const rows = [
       row(2, { type: 'internal transfer', amount: '500.00' }),

@@ -1,0 +1,39 @@
+name: validate-finance
+
+on:
+  push:
+    branches: [main]
+    paths: &validation-paths
+      - 'apps/finance/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig*.json'
+      - 'tsconfig.profiles/**'
+      - 'just/**'
+      - 'justfile'
+      - 'scripts/**'
+      - '.github/actions/setup-pnpm-workspace/**'
+      - '.github/workflows/validate-finance.yml'
+      - '.github/workflows/deploy-finance.yml'
+      - '.github/workflows/_validate-app.yml'
+  pull_request:
+    branches: [main, preview]
+    paths: *validation-paths
+
+concurrency:
+  group: validate-finance-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  validate-finance:
+    uses: ./.github/workflows/_validate-app.yml
+    with:
+      package-filter: '@hominem/finance'
+      public-app-url: 'http://localhost:4453'

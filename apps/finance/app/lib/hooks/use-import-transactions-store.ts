@@ -2,7 +2,10 @@ import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ImportPreflightPreview } from '~/lib/finance/import-types';
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store';
+
+export type { ImportPreflightPreview } from '~/lib/finance/import-types';
 
 const IMPORT_PROGRESS_CHANNEL = 'import:progress';
 const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = 'subscribed';
@@ -11,40 +14,6 @@ const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const;
 const PREFLIGHT_STORAGE_KEY = 'finance:copilot-import:preflight-id';
 
 const PROGRESS_UPDATE_THROTTLE = 100; // ms
-
-export type ImportPreflightPreview = {
-  preflight: { preflightId: string; fileName: string; expiresAt: number };
-  plan: {
-    accountGroups: Array<{
-      groupKey: string;
-      account: string;
-      accountMask: string | null;
-      matchedAccountId: string | null;
-      unresolved: boolean;
-    }>;
-    unresolvedGroups: Array<{ groupKey: string }>;
-    duplicateCandidateRowIds: string[];
-    transactions: Array<{
-      rowId: string;
-      groupKey: string;
-      selected: boolean;
-      amount: string;
-      postedOn: string;
-      description: string;
-      transactionType: string;
-      pending: boolean;
-      excluded: boolean;
-    }>;
-    stats: {
-      total: number;
-      selected: number;
-      skipped: number;
-      invalid: number;
-      unresolved: number;
-    };
-  };
-  accounts: Array<{ id: string; name: string; mask: string | null }>;
-};
 
 export function useImportTransactionsStore() {
   const queryClient = useQueryClient();

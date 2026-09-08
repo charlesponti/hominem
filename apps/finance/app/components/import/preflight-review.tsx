@@ -31,6 +31,12 @@ export function PreflightReview({ preflight, onConfirm }: PreflightReviewProps) 
   const candidates = preflight.plan.transactions.filter((transaction) =>
     preflight.plan.duplicateCandidateRowIds.includes(transaction.rowId),
   );
+  const signReview = preflight.plan.transactions.filter(
+    (transaction) => transaction.selected && transaction.needsReview,
+  );
+  const ledgerDuplicates = preflight.plan.transactions.filter(
+    (transaction) => transaction.ledgerDuplicate,
+  ).length;
 
   const toggleRow = (rowId: string) => {
     setSelectedRowIds((current) => {
@@ -69,8 +75,35 @@ export function PreflightReview({ preflight, onConfirm }: PreflightReviewProps) 
         <p className="body-3 text-muted-foreground">
           {preflight.plan.stats.total} rows · {preflight.plan.stats.selected} ready · expires{' '}
           {new Date(preflight.preflight.expiresAt).toLocaleDateString()}
+          {ledgerDuplicates > 0 ? ` · ${ledgerDuplicates} skipped (already in your ledger)` : ''}
         </p>
       </div>
+
+      {signReview.length > 0 ? (
+        <div className="space-y-2">
+          <h3 className="font-medium text-amber-600">Sign-review rows</h3>
+          <p className="body-3 text-muted-foreground">
+            These rows have an inferred sign (internal transfers and unrecognized types) that is not
+            auto-verified. Leave the ones you have checked selected only if the sign is right;
+            untick anything that should be skipped before confirming.
+          </p>
+          {signReview.map((row) => (
+            <label className="flex items-center gap-3 text-sm" key={row.rowId}>
+              <input
+                type="checkbox"
+                checked={selectedRowIds.has(row.rowId)}
+                onChange={() => toggleRow(row.rowId)}
+              />
+              <span>
+                {row.postedOn} · {row.description} · {row.amount}
+              </span>
+              {row.reviewReason ? (
+                <span className="body-3 text-muted-foreground">— {row.reviewReason}</span>
+              ) : null}
+            </label>
+          ))}
+        </div>
+      ) : null}
 
       {unresolved.length > 0 ? (
         <div className="space-y-3">
