@@ -553,6 +553,7 @@ export interface AppFinanceTransactions {
   pending: Generated<boolean>;
   postedOn: ColumnType<string, Date | string, Date | string>;
   providerPayload: Generated<Json>;
+  recurring: Generated<boolean>;
   source: string | null;
   transactionType: string;
   updatedAt: Generated<ColumnType<string, Date | string, Date | string>>;

@@ -174,6 +174,7 @@ export async function applyCopilotImportBatch(
         transactionType: transaction.transactionType,
         notes: transaction.notes,
         excluded: transaction.excluded,
+        recurring: transaction.recurring,
         providerPayload: transaction.providerPayload as JsonObject,
       };
     });

@@ -88,6 +88,9 @@ export interface PlannedTransaction {
   description: string;
   merchantName: string;
   transactionType: 'debit' | 'credit' | 'transfer';
+  needsReview: boolean;
+  reviewReason: string | null;
+  recurring: boolean;
   pending: boolean;
   excluded: boolean;
   notes: string | null;
@@ -111,6 +114,7 @@ export interface ImportPlan {
     skipped: number;
     invalid: number;
     unresolved: number;
+    needsReview: number;
   };
 }
 
