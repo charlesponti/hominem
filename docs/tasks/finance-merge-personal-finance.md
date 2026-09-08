@@ -42,6 +42,7 @@ all deliberately left dropped (see work-sequence notes).
 | W-005 | Verify September load + remediate `recurring` flags | `packages/finance/scripts/backfill-pfin-to-postgres.mjs` (throwaway, excluded from exports) | W-001 | all parity checks green; PG `recurring` 0 → 731; re-run plans 0 updates | Dev PG already held the full 20,560-row load, so no inserts were needed — only flag updates |
 | W-006 | Wire tools into `apps/finance` (no new API routes, per user) + retire PF checkout | `apps/finance` routes + server data module | W-002, W-003, W-004, W-005 | app typecheck/lint/tests/build green; dev-server smoke (auth redirects + public runway 200) | `finance/reconcile` (staleness, true-up, breakdown, health), `finance/transfers`, live ledger section on `finance/runway` |
 | W-007 | Composite-key import dedup (plan + apply) | `packages/finance` import pipeline, preflight route | W-001, W-005 | new unit + integration tests; full suite 17/62 green; API typecheck clean | Re-imports impossible even when re-selected; three latent apply-path bugs fixed along the way |
+| W-008 | Open merge PR; PF GitHub archival by owner | branch `feature/merge-personal-finance` | W-001–W-007 | PR green; PF checkout archived read-only | Follow-ups live on as `finance-copilot-description-splits.md` and `finance-runway-budgets.md` (both `Proposed`) |
 
 ## Acceptance criteria
 
@@ -131,6 +132,8 @@ notes, and the PF checkout is tagged read-only.
   `hominem`/`copilot-gap-import` sources) — the import flow needs
   composite-key dedup (account/date/abs/description) before the next
   real Copilot import lands.
+- W-008: merge PR opened; PF checkpoint tag `pfin-final-sqlite` is local,
+  GitHub-side archival left to the owner with the merge.
 - W-007 done: composite-key dedup at plan time (matching rows deselect
   by default with a `ledgerDuplicate` flag, unresolved rows untouched)
   and enforcement at apply time (re-selected rows still refuse to
