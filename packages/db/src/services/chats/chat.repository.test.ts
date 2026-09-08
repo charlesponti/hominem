@@ -183,6 +183,20 @@ describe('ChatRepository message deletion', () => {
     ).rejects.toThrow('ChatMessage not found');
   });
 
+  it('reports whether a message has anything after it', async () => {
+    const fixture = await createFixture();
+
+    await expect(
+      ChatRepository.hasMessagesAfter(db, fixture.chatId, fixture.messageIds.target),
+    ).resolves.toBe(true);
+    await expect(
+      ChatRepository.hasMessagesAfter(db, fixture.chatId, fixture.messageIds.later),
+    ).resolves.toBe(false);
+    await expect(ChatRepository.hasMessagesAfter(db, fixture.chatId, randomUUID())).resolves.toBe(
+      false,
+    );
+  });
+
   it('returns a stable cursor page ordered by activity and id', async () => {
     const fixture = await createFixture();
     const chatIds = [randomUUID(), randomUUID(), randomUUID()];

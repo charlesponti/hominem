@@ -2,7 +2,7 @@
 // relationships between them expressed as real code instead of comments
 // that can drift. Previously five independently-chosen constants lived
 // across chat-generation-provider.ts, generation-interpreter.ts,
-// chats.generation.ts and the client transport implementations.
+// chats.$chatId.generation.ts and the client transport implementations.
 //
 // CHAT_REQUEST_TIMEOUT_MS in @hominem/ai's text.ts is the one exception —
 // it's a general AI-client request deadline used by unrelated

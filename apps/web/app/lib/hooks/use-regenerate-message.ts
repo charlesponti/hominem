@@ -24,10 +24,16 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
   const lastRequestRef = useRef<{ messageId: string; responseLength?: ResponseLength } | null>(
     null,
   );
+  // React state updates only land on the next render, so two overlapping
+  // calls (e.g. saving two edited messages back to back) can both read
+  // `activeMessageId` as null and both pass the guard. A ref is written
+  // synchronously, so the second call always sees the first's claim.
+  const activeMessageRef = useRef<string | null>(null);
 
   const regenerate = useCallback(
     async (messageId: string, responseLength?: ResponseLength) => {
-      if (activeMessageId) return;
+      if (activeMessageRef.current) return;
+      activeMessageRef.current = messageId;
       const generation = chatClient.regenerate({
         chatId,
         target: { messageId },
@@ -70,10 +76,11 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
       } finally {
         unsubscribe();
         generationRef.current = null;
+        activeMessageRef.current = null;
         setActiveMessageId(null);
       }
     },
-    [activeMessageId, chatClient, chatId, queryClient],
+    [chatClient, chatId, queryClient],
   );
 
   const cancel = useCallback(async () => {

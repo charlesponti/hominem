@@ -66,12 +66,24 @@ export async function regenerate(
   }
   if ('messageId' in input) {
     const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
-    if (!target || (target.role !== 'assistant' && target.role !== 'user')) {
+    if (!target) {
+      throw new ChatGenerationInputError('Message not found');
+    }
+    if (target.role !== 'assistant' && target.role !== 'user') {
       throw new ChatGenerationInputError('Only a user or assistant message can be regenerated');
     }
     // An edited user message has no reply to supersede yet — generate a
-    // fresh one directly for it.
+    // fresh one directly for it. Only valid when the edit's own cleanup
+    // already removed any stale reply (or later turns): otherwise this
+    // would branch off a duplicate assistant message instead of
+    // superseding the existing one.
     if (target.role === 'user') {
+      const hasExistingReply = await ChatRepository.hasMessagesAfter(db, input.chatId, target.id);
+      if (hasExistingReply) {
+        throw new ChatGenerationInputError(
+          'This message already has a reply — regenerate the reply instead',
+        );
+      }
       return redoGeneration(dependencies, {
         userId: input.userId,
         chatId: input.chatId,

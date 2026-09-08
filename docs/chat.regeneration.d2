@@ -51,7 +51,7 @@ transport: "HTTP + SSE" {
 
 api: "services/api" {
   http_handler: "packages/chat/src/server.ts\ncreateChatHttpHandler"
-  routes: "rpc/routes/chats.generation.ts\nmaps HTTP verbs to service calls"
+  routes: "rpc/routes/chats.$chatId.generation.ts\nmaps HTTP verbs to service calls"
 
   service: "application/chat-generation.service.ts" {
     regenerateMessage: "regenerateMessage()\ntarget msg -> target.parentMessageId\n+ getGenerationRunByAssistantMessageId"

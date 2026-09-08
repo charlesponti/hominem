@@ -576,6 +576,34 @@ export const ChatRepository = {
     return toChatMessageRecord(row);
   },
 
+  // Used by regenerate's user-message target: it must have nothing after it
+  // (its edit already deleted any stale reply) — otherwise regenerating
+  // would branch off a new assistant reply instead of superseding the
+  // existing one.
+  async hasMessagesAfter(handle: DbHandle, chatId: string, messageId: string): Promise<boolean> {
+    const target = await handle
+      .selectFrom('app.chatMessages')
+      .select(['createdat'])
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .executeTakeFirst();
+    if (!target) return false;
+
+    const next = await handle
+      .selectFrom('app.chatMessages')
+      .select(['id'])
+      .where('chatId', '=', chatId)
+      .where((eb) =>
+        eb.or([
+          eb('createdat', '>', target.createdat),
+          eb.and([eb('createdat', '=', target.createdat), eb('id', '>', messageId)]),
+        ]),
+      )
+      .executeTakeFirst();
+
+    return next !== undefined;
+  },
+
   // Updates lifecycle fields for one entry inside a message's toolCalls array.
   // Throws if the message or tool call can't be found.
   async updateToolCallLifecycle(

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   getOwnedOrThrow: vi.fn(),
   getMessages: vi.fn(),
   getMessageById: vi.fn(),
+  hasMessagesAfter: vi.fn(),
   searchMessages: vi.fn(),
   deleteUserMessageAndFollowing: vi.fn(),
   updateMessage: vi.fn(),
@@ -89,6 +90,7 @@ vi.mock('@hominem/db/chats', async () => {
       getOwnedOrThrow: mocks.getOwnedOrThrow,
       getMessages: mocks.getMessages,
       getMessageById: mocks.getMessageById,
+      hasMessagesAfter: mocks.hasMessagesAfter,
       searchMessages: mocks.searchMessages,
       deleteUserMessageAndFollowing: mocks.deleteUserMessageAndFollowing,
       updateMessage: mocks.updateMessage,
@@ -827,6 +829,7 @@ describe('chat message regenerate', () => {
     );
     mocks.getMessageById.mockReset();
     mocks.getMessages.mockReset();
+    mocks.hasMessagesAfter.mockReset();
     mocks.getMessageById.mockResolvedValue(assistantMessage);
     mocks.getMessages.mockResolvedValue([userMessage, assistantMessage]);
     mocks.streamChatCompletion.mockReturnValue(
@@ -927,6 +930,7 @@ describe('chat message regenerate', () => {
     // only the (just-edited) user message.
     mocks.getMessageById.mockResolvedValue(userMessage);
     mocks.getMessages.mockResolvedValue([userMessage]);
+    mocks.hasMessagesAfter.mockResolvedValue(false);
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
@@ -955,6 +959,27 @@ describe('chat message regenerate', () => {
     // Nothing to supersede — no stale run or message to delete.
     expect(mocks.deleteGenerationRun).not.toHaveBeenCalled();
     expect(mocks.deleteAssistantMessage).not.toHaveBeenCalled();
+  });
+
+  it('rejects regenerating a user message that already has a reply', async () => {
+    // Guards against branching: a user-message target is only valid when
+    // nothing follows it (its edit already deleted any stale reply). If a
+    // reply (or later turn) already exists, regenerating here would create
+    // a duplicate assistant message instead of superseding the existing one.
+    mocks.getMessageById.mockResolvedValue(userMessage);
+    mocks.hasMessagesAfter.mockResolvedValue(true);
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111118' }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
   });
 
   it('rejects regenerating a message that does not exist', async () => {
