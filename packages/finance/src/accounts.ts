@@ -80,15 +80,16 @@ export async function createAccount(input: CreateAccountInput): Promise<AccountW
   return withBalance(result);
 }
 
-export async function listAccounts(userId: string): Promise<AccountWithBalance[]> {
-  const accounts = await db
+function accountsForUser(userId: string) {
+  return db
     .selectFrom('app.financeAccounts')
-    .selectAll()
     .where('userId', '=', userId)
     .orderBy('name', 'asc')
-    .orderBy('id', 'asc')
-    .execute();
+    .orderBy('id', 'asc');
+}
 
+export async function listAccounts(userId: string): Promise<AccountWithBalance[]> {
+  const accounts = await accountsForUser(userId).selectAll().execute();
   return withBalances(accounts);
 }
 
@@ -173,13 +174,7 @@ export interface AccountImportSnapshot {
 
 /** Narrow account rows for the import preflight flow (no balance queries). */
 export async function listImportAccountSnapshots(userId: string): Promise<AccountImportSnapshot[]> {
-  return db
-    .selectFrom('app.financeAccounts')
-    .select(['id', 'name', 'mask', 'csvImportKey'])
-    .where('userId', '=', userId)
-    .orderBy('name', 'asc')
-    .orderBy('id', 'asc')
-    .execute();
+  return accountsForUser(userId).select(['id', 'name', 'mask', 'csvImportKey']).execute();
 }
 
 /** How many of the given ids are owned by the user (idempotency/ownership guard). */

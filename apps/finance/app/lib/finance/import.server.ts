@@ -41,24 +41,37 @@ const confirmationSchema = z.object({
   selectedRowIds: z.array(z.string().min(1)),
 });
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  });
-}
-
 function errorJson(message: string, status = 400): Response {
-  return json({ error: message }, status);
+  return Response.json({ error: message }, { status });
 }
 
 /** Session user for the import API; API-style 401 instead of a login redirect. */
-export async function importUserId(request: Request): Promise<string | Response> {
-  const { user } = await getServerSession(request);
+async function importUserId(
+  request: Request,
+): Promise<{ userId: string; headers: Headers } | Response> {
+  const { user, headers } = await getServerSession(request);
   if (!user?.id) {
-    return json({ error: 'Authentication required' }, 401);
+    return Response.json({ error: 'Authentication required' }, { status: 401, headers });
   }
-  return user.id;
+  return { userId: user.id, headers };
+}
+
+export function methodNotAllowed(): Response {
+  return Response.json({ error: 'Method not allowed' }, { status: 405 });
+}
+
+/** Resolves the session user and re-attaches any refreshed session headers to the response. */
+export async function withImportUser(
+  request: Request,
+  handler: (userId: string) => Promise<Response>,
+): Promise<Response> {
+  const result = await importUserId(request);
+  if (result instanceof Response) return result;
+  const response = await handler(result.userId);
+  for (const [key, value] of result.headers) {
+    response.headers.append(key, value);
+  }
+  return response;
 }
 
 function parseImportPlan(planContent: string): ImportPlan {
@@ -96,9 +109,10 @@ function previewPlan(plan: ImportPlan) {
 
 /** POST /api/finance/import/preflight — parse the upload and build a plan. */
 export async function createImportPreflight(request: Request): Promise<Response> {
-  const userId = await importUserId(request);
-  if (userId instanceof Response) return userId;
+  return withImportUser(request, (userId) => createImportPreflightForUser(request, userId));
+}
 
+async function createImportPreflightForUser(request: Request, userId: string): Promise<Response> {
   const contentLength = Number(request.headers.get('content-length') ?? 0);
   if (contentLength > MAX_UPLOAD_BYTES) {
     return errorJson('Copilot CSV exceeds the 10 MB upload limit');
@@ -118,14 +132,15 @@ export async function createImportPreflight(request: Request): Promise<Response>
   if (!('rows' in parsed)) return errorJson(parsed.message);
   if (parsed.rows.length === 0) return errorJson('Copilot CSV contains no valid rows');
 
-  const accounts = await listImportAccountSnapshots(userId);
+  const [accounts, externalIds, compositeKeys] = await Promise.all([
+    listImportAccountSnapshots(userId),
+    listCopilotExternalIds(userId),
+    listTransactionCompositeKeys(userId),
+  ]);
   const resolution = resolveCopilotAccounts(parsed.rows, accounts);
-  const plan = createCopilotImportPlan(
-    parsed.rows,
-    resolution,
-    await listCopilotExternalIds(userId),
-    { existingCompositeKeys: await listTransactionCompositeKeys(userId) },
-  );
+  const plan = createCopilotImportPlan(parsed.rows, resolution, externalIds, {
+    existingCompositeKeys: compositeKeys,
+  });
   plan.invalidRows = parsed.invalidRows;
   plan.stats.invalid = parsed.invalidRows.length;
   plan.stats.total = parsed.rows.length + parsed.invalidRows.length;
@@ -153,19 +168,21 @@ export async function createImportPreflight(request: Request): Promise<Response>
       mask: account.mask,
     })),
   };
-  return json(preview, 201);
+  return Response.json(preview, { status: 201 });
 }
 
 /** GET /api/finance/import/preflight/:preflightId — resume a stored preflight. */
 export async function getImportPreflight(userId: string, preflightId: string): Promise<Response> {
   const { getPreflight, getPreflightPlanContent } = await import('@hominem/queues');
-  const preflight = await getPreflight(preflightId, userId);
-  const planContent = await getPreflightPlanContent(preflightId, userId);
+  const [preflight, planContent, accounts] = await Promise.all([
+    getPreflight(preflightId, userId),
+    getPreflightPlanContent(preflightId, userId),
+    listImportAccountSnapshots(userId),
+  ]);
   if (!preflight || !planContent) {
     return errorJson('Preflight was not found or expired', 404);
   }
-  const accounts = await listImportAccountSnapshots(userId);
-  return json({
+  return Response.json({
     preflight,
     plan: previewPlan(parseImportPlan(planContent)),
     accounts: accounts.map((account) => ({
@@ -184,7 +201,7 @@ export async function deleteImportPreflight(
   const { deletePreflight } = await import('@hominem/queues');
   const deleted = await deletePreflight(preflightId, userId);
   if (!deleted) return errorJson('Preflight was not found or expired', 404);
-  return json({ success: true });
+  return Response.json({ success: true });
 }
 
 /** POST /api/finance/import/preflight/:preflightId/confirm — queue the import job. */
@@ -275,13 +292,13 @@ export async function confirmImportPreflight(
   await updatePreflightStatus(preflightId, userId, 'confirmed');
   await deletePreflight(preflightId, userId);
 
-  return json({ success: true, jobId, fileName: preflight.fileName, status: 'queued' });
+  return Response.json({ success: true, jobId, fileName: preflight.fileName, status: 'queued' });
 }
 
 /** GET /api/finance/import/jobs — active import jobs for the session user. */
 export async function listImportJobs(userId: string): Promise<Response> {
   const { getUserJobs } = await import('@hominem/queues');
-  return json(await getUserJobs<ImportTransactionsJob>(userId));
+  return Response.json(await getUserJobs<ImportTransactionsJob>(userId));
 }
 
 /** POST /api/finance/import/jobs/:jobId/cancel. */
@@ -296,7 +313,7 @@ export async function cancelImportJob(userId: string, jobId: string): Promise<Re
 
   const job = await getJobStatus<ImportTransactionsJob>(jobId);
   if (!job || job.userId !== userId) return errorJson('Import job was not found', 404);
-  if (['done', 'error', 'cancelled'].includes(job.status)) return json(job);
+  if (['done', 'error', 'cancelled'].includes(job.status)) return Response.json(job);
 
   const queueJob = await importTransactionsQueue.getJob(jobId);
   const state = queueJob ? await queueJob.getState() : null;
@@ -305,10 +322,10 @@ export async function cancelImportJob(userId: string, jobId: string): Promise<Re
     const cancelled = { ...job, status: 'cancelled' as const, endTime: Date.now() };
     await updateImportJob(jobId, cancelled);
     await publishImportProgress([cancelled]);
-    return json(cancelled);
+    return Response.json(cancelled);
   }
 
   const requested = await requestImportCancellation(jobId, userId);
   if (!requested) return errorJson('Import job cannot be cancelled');
-  return json({ ...job, status: 'processing' as const });
+  return Response.json({ ...job, status: 'processing' as const });
 }

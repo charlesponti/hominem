@@ -168,15 +168,13 @@ export async function applyCopilotImportBatch(
       return { created: 0, skipped: 0, accountIds };
     }
 
-    // Composite-key enforcement: a row still flagged as a ledger duplicate
-    // is refused when the ledger holds the same composite key outside this
-    // import (matched by external id, so duplicate occurrences inside one
-    // import all proceed — the worker applies batches sequentially, and an
-    // exact external-id clash still falls through to the conflict arbiter).
-    // A flag cleared at confirm time means the user explicitly overrode the
-    // default-deselect, so those rows always proceed.
+    // A row flagged as a ledger duplicate is refused only if the ledger holds
+    // its composite key from outside this import; a cleared flag (explicit
+    // user override, or updatePlanSelection on confirm) always proceeds.
     const batchAccountIds = [...new Set(resolved.map((row) => row.accountId))];
-    const planExternalIds = new Set(input.plan.transactions.map((row) => row.externalId));
+    const planExternalIds = new Set(
+      input.plan.transactions.filter((row) => row.selected).map((row) => row.externalId),
+    );
     const ledgerRows = await trx
       .selectFrom('app.financeTransactions')
       .select(['accountId', 'postedOn', 'amount', 'description', 'externalId'])
