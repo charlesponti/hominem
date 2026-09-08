@@ -1,1 +1,0 @@
-export { WorkExperienceDetail } from './WorkExperienceDetail';
