@@ -28,7 +28,6 @@
     "@hominem/db": "workspace:*",
     "@hominem/utils": "workspace:*",
     "csv-parse": "^7.0.2",
-    "effect": "^3.16.10",
     "kysely": "catalog:",
     "zod": "catalog:"
   },
