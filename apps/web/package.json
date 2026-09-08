@@ -42,7 +42,6 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tanstack/react-query": "catalog:",
-    "@tanstack/react-virtual": "^3.13.9",
     "@uppy/core": "^4.5.2",
     "@uppy/xhr-upload": "^4.2.3",
     "better-auth": "catalog:",

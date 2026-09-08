@@ -41,6 +41,7 @@
     "typecheck": "rm -rf .cache && tsc --noEmit"
   },
   "dependencies": {
+    "@hominem/api": "workspace:*",
     "@hominem/chat": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "hono": "catalog:",

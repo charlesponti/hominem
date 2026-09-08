@@ -42,16 +42,12 @@
     "ui:check-canonical": "test ! -e packages/ui && ! rg -n '@hominem/ui' --glob '!node_modules/**' --glob '!package.json' .",
     "check:dts": "bash scripts/check-src-declarations.sh"
   },
-  "dependencies": {
-    "@ponti-studios/ui": "catalog:"
-  },
   "devDependencies": {
     "@expo/image-utils": "^0.11.4",
     "@expo/prebuild-config": "~56.0.16",
     "@types/node": "catalog:",
     "@types/pg": "^8.23.1",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "@xmldom/xmldom": "0.9.12",
     "knip": "^6.4.1",
     "oxfmt": "0.56.0",
