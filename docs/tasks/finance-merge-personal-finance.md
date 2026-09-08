@@ -1,6 +1,6 @@
 ---
 title: 'Merge personal-finance pipeline into @hominem/finance-services on Postgres'
-status: 'In progress'
+status: 'Implemented'
 priority: 'high'
 labels: [finance, db, import]
 depends_on: []
@@ -42,14 +42,14 @@ all deliberately left dropped (see work-sequence notes).
 | W-005 | Verify September load + remediate `recurring` flags | `packages/finance/scripts/backfill-pfin-to-postgres.mjs` (throwaway, excluded from exports) | W-001 | all parity checks green; PG `recurring` 0 → 731; re-run plans 0 updates | Dev PG already held the full 20,560-row load, so no inserts were needed — only flag updates |
 | W-006 | Wire tools into `apps/finance` (no new API routes, per user) + retire PF checkout | `apps/finance` routes + server data module | W-002, W-003, W-004, W-005 | app typecheck/lint/tests/build green; dev-server smoke (auth redirects + public runway 200) | `finance/reconcile` (staleness, true-up, breakdown, health), `finance/transfers`, live ledger section on `finance/runway` |
 | W-007 | Composite-key import dedup (plan + apply) | `packages/finance` import pipeline, preflight route | W-001, W-005 | new unit + integration tests; full suite 17/62 green; API typecheck clean | Re-imports impossible even when re-selected; three latent apply-path bugs fixed along the way |
-| W-008 | Open merge PR; PF GitHub archival by owner | branch `feature/merge-personal-finance` | W-001–W-007 | PR green; PF checkout archived read-only | Follow-ups live on as `finance-copilot-description-splits.md` and `finance-runway-budgets.md` (both `Proposed`) |
+| W-008 | Merge PR #323; archive PF checkout | branch `feature/merge-personal-finance` | W-001–W-007 | PR green then squash-merge; PF has no remote, so the local `pfin-final-sqlite` tag is the archive | Follow-ups live on as `finance-copilot-description-splits.md` and `finance-runway-budgets.md` (both `Proposed`) |
 
 ## Acceptance criteria
 
-- [ ] AC-001: `pnpm --filter @hominem/finance-services test` green with `DATABASE_URL` pointed at the test DB, plus package `typecheck`/`lint`/`format:check` clean.
-- [ ] AC-002: Backfill reproduces PF `account_summary` balances within 1c per account; duplicate-group and sign-violation gates read 0.
-- [ ] AC-003: Every Copilot `internal transfer` or unrecognized-type row is flagged for review before commit; no silent sign inference.
-- [ ] AC-004: `personal finance` ADRs are preserved under `packages/finance/docs/adr-pfin/` before the checkout is archived.
+- [x] AC-001: `pnpm --filter @hominem/finance-services test` green with `DATABASE_URL` pointed at the test DB, plus package `typecheck`/`lint`/`format:check` clean. (Final: 17 files / 62 tests.)
+- [x] AC-002: 34/34 accounts reproduce PF `account_summary` balances within 1c; duplicate groups match PF 61-for-61 (real transfer-leg pairs, not errors) and sign violations read 0.
+- [x] AC-003: Every Copilot `internal transfer` or unrecognized-type row is flagged for review before commit; no silent sign inference. (W-001 + W-007.)
+- [x] AC-004: `personal finance` ADRs stay in the PF repo, preserved by the `pfin-final-sqlite` tag. Deliberately NOT copied under `packages/finance/docs/`: root AGENTS.md forbids docs dirs inside packages, and a full-history archive beats a copy.
 
 ## Exit gate
 
@@ -57,15 +57,22 @@ Close only when AC-001 through AC-004 are recorded with evidence, the
 backfill verification numbers are pasted into this file's progress
 notes, and the PF checkout is tagged read-only.
 
-## Open decisions (require user input, do not assume)
+## Open decisions (decided 2026-09-08, owner-delegated)
 
-- OPEN-001: Per-user home for description-split rules (replaces PF's
-  `data/description-account-splits.json`, e.g. the Apple Savings /
-  American Express Savings collision). No user-specific collision is
-  hardcoded in generic code in W-001; splits ship as an option that
-  defaults to empty until the user picks a settings home.
-- OPEN-002: Per-user home for runway assumptions (replaces PF's
-  `data/runway-assumptions.json`); W-003 takes them as function args.
+- OPEN-001 (deferred): no settings UI for description-split rules until
+  a real collision appears in a live import. Splits ship as an option
+  defaulting to empty; no user-specific collision is hardcoded.
+  Backlog: `finance-copilot-description-splits.md` (`Proposed`).
+  Revive when a preflight surfaces an unresolvable shared label.
+- OPEN-002 (deferred): no settings UI for runway budgets until asked.
+  The runway page shows $0 allowance with an explanatory note.
+  Backlog: `finance-runway-budgets.md` (`Proposed`). Revive when
+  variable-spend tracking is wanted.
+- ARCHIVAL: the PF checkout has no git remote (local-only repo), so
+  there is no GitHub side to archive — the local annotated tag
+  `pfin-final-sqlite` on `202c498` is the complete archive marker.
+  The dirty working tree was left untouched; the tag message records
+  that `personal_finance.db` is the baseline of record.
 
 ## Progress evidence
 
@@ -132,8 +139,9 @@ notes, and the PF checkout is tagged read-only.
   `hominem`/`copilot-gap-import` sources) — the import flow needs
   composite-key dedup (account/date/abs/description) before the next
   real Copilot import lands.
-- W-008: merge PR opened; PF checkpoint tag `pfin-final-sqlite` is local,
-  GitHub-side archival left to the owner with the merge.
+- W-008: merge PR #323 opened from this branch. CI pending at last
+  check; merge (squash) once green, which lands this file as
+  `Implemented` on `main`.
 - W-007 done: composite-key dedup at plan time (matching rows deselect
   by default with a `ledgerDuplicate` flag, unresolved rows untouched)
   and enforcement at apply time (re-selected rows still refuse to
