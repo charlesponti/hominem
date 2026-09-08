@@ -91,6 +91,8 @@ export interface PlannedTransaction {
   needsReview: boolean;
   reviewReason: string | null;
   recurring: boolean;
+  /** True when the ledger already holds this row under another source — deselected by default. */
+  ledgerDuplicate: boolean;
   pending: boolean;
   excluded: boolean;
   notes: string | null;

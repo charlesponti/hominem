@@ -4,6 +4,8 @@ import { runInTransaction } from '@hominem/db/transaction';
 import type { TransactionHandle } from '@hominem/db/transaction';
 import type { JsonObject } from '@hominem/db/types';
 
+import { FINANCE_TRANSACTION_ENTITY_TYPE } from '../contracts';
+import { ledgerCompositeKey } from './copilot-sign';
 import { COPILOT_PROVIDER, type ImportPlan, type PlannedTransaction } from './types';
 
 function tagSlug(value: string): string {
@@ -183,10 +185,43 @@ export async function applyCopilotImportBatch(
       return { created: 0, skipped: 0, accountIds };
     }
 
+    // Composite-key enforcement: never re-import a row the ledger already
+    // holds under another source, even if it was re-selected after planning.
+    // Earlier batches in the same import are visible here because the worker
+    // applies batches sequentially; identical rows within one batch are
+    // distinct import rows and all proceed.
+    const batchAccountIds = [...new Set(rows.map((row) => row.accountId))];
+    const ledgerRows = await trx
+      .selectFrom('app.financeTransactions')
+      .select(['accountId', 'postedOn', 'amount', 'description'])
+      .where('userId', '=', input.userId)
+      .where('accountId', 'in', batchAccountIds)
+      .execute();
+    const seen = new Set(
+      ledgerRows.map((row) =>
+        ledgerCompositeKey(row.accountId, row.postedOn, row.amount, row.description),
+      ),
+    );
+    const fresh = rows.filter((row) => {
+      const key = ledgerCompositeKey(row.accountId, row.postedOn, row.amount, row.description);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (fresh.length === 0) {
+      return { created: 0, skipped: rows.length, accountIds };
+    }
+
     const inserted = await trx
       .insertInto('app.financeTransactions')
-      .values(rows)
-      .onConflict((conflict) => conflict.columns(['userId', 'source', 'externalId']).doNothing())
+      .values(fresh)
+      .onConflict((conflict) =>
+        conflict
+          .columns(['userId', 'source', 'externalId'])
+          .where('source', 'is not', null)
+          .where('externalId', 'is not', null)
+          .doNothing(),
+      )
       .returning(['id', 'externalId'])
       .execute();
 
@@ -210,13 +245,16 @@ export async function applyCopilotImportBatch(
           .values({
             id: crypto.randomUUID(),
             tagId,
-            entityTable: 'app.financeTransactions',
+            entityTable: FINANCE_TRANSACTION_ENTITY_TYPE,
             entityId: transactionId,
-            assignmentSource: 'copilot-money-import',
+            assignmentSource: 'import',
             removedAt: null,
           })
           .onConflict((conflict) =>
-            conflict.columns(['tagId', 'entityTable', 'entityId']).doNothing(),
+            conflict
+              .columns(['tagId', 'entityTable', 'entityId'])
+              .where('removedAt', 'is', null)
+              .doNothing(),
           )
           .execute();
       }

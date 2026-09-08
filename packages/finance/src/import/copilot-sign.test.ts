@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyDescriptionSplits, isRecurringActive, resolveCopilotSign } from './copilot-sign';
+import {
+  applyDescriptionSplits,
+  isRecurringActive,
+  ledgerCompositeKey,
+  resolveCopilotSign,
+} from './copilot-sign';
 import type { ParsedRow } from './types';
 
 function row(line: number, overrides: Partial<ParsedRow> = {}): ParsedRow {
@@ -101,6 +106,22 @@ describe('applyDescriptionSplits', () => {
 
     expect(rows[0]?.account).toBe('Checking');
     expect(forcedCreditLines.size).toBe(0);
+  });
+});
+
+describe('ledgerCompositeKey', () => {
+  it('is insensitive to sign, case, and surrounding whitespace', () => {
+    expect(ledgerCompositeKey('acc-1', '2026-01-01', '-10.00', 'Coffee')).toBe(
+      ledgerCompositeKey('acc-1', '2026-01-01', '10', '  COFFEE '),
+    );
+  });
+
+  it('distinguishes accounts, dates, and amounts', () => {
+    const base = ledgerCompositeKey('acc-1', '2026-01-01', '10.00', 'Coffee');
+    expect(ledgerCompositeKey('acc-2', '2026-01-01', '10.00', 'Coffee')).not.toBe(base);
+    expect(ledgerCompositeKey('acc-1', '2026-01-02', '10.00', 'Coffee')).not.toBe(base);
+    expect(ledgerCompositeKey('acc-1', '2026-01-01', '10.01', 'Coffee')).not.toBe(base);
+    expect(ledgerCompositeKey('acc-1', '2026-01-01', '10.00', 'Tea')).not.toBe(base);
   });
 });
 

@@ -38,6 +38,7 @@ export function previewPlan(plan: ImportPlan) {
       needsReview: transaction.needsReview,
       reviewReason: transaction.reviewReason,
       recurring: transaction.recurring,
+      ledgerDuplicate: transaction.ledgerDuplicate,
       pending: transaction.pending,
       excluded: transaction.excluded,
     })),

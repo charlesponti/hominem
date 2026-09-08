@@ -109,6 +109,35 @@ describe('createCopilotImportPlan', () => {
     expect(updated.stats.needsReview).toBe(0);
   });
 
+  it('deselects rows the ledger already holds under another source', () => {
+    const rows = [row(2, { amount: '10.00' }), row(3, { amount: '99.00' })];
+    const snapshots = [{ id: 'acc-1', name: 'Checking', mask: '1234', csvImportKey: null }];
+    const resolution = resolveCopilotAccounts(rows, snapshots);
+    const plan = createCopilotImportPlan(rows, resolution, new Set(), {
+      existingCompositeKeys: new Set(['acc-1|2026-01-01|10.00|coffee']),
+    });
+
+    expect(plan.transactions.map((transaction) => transaction.selected)).toEqual([false, true]);
+    expect(plan.transactions.map((transaction) => transaction.ledgerDuplicate)).toEqual([
+      true,
+      false,
+    ]);
+    expect(plan.stats.selected).toBe(1);
+    expect(plan.stats.skipped).toBe(1);
+  });
+
+  it('leaves unresolved rows to the account-mapping step', () => {
+    const rows = [row(2, { amount: '10.00' })];
+    const resolution = resolveCopilotAccounts(rows, []);
+    expect(resolution.groups[0]?.matchedAccountId).toBeNull();
+    const plan = createCopilotImportPlan(rows, resolution, new Set(), {
+      existingCompositeKeys: new Set(['acc-1|2026-01-01|10.00|coffee']),
+    });
+
+    expect(plan.transactions[0]?.selected).toBe(true);
+    expect(plan.transactions[0]?.ledgerDuplicate).toBe(false);
+  });
+
   it('supports explicit deselection without changing row identities', () => {
     const rows = [row(2), row(3)];
     const resolution = resolveCopilotAccounts(rows, []);

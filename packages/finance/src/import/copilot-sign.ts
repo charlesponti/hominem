@@ -105,3 +105,21 @@ export function isRecurringActive(value: string | null): boolean {
   const normalized = value?.trim().toLowerCase() ?? '';
   return normalized !== '' && normalized !== 'false';
 }
+
+/**
+ * Canonical ledger identity for cross-source dedup: resolved account,
+ * posting date, absolute 2dp amount, and trimmed lowercase description.
+ * Matches the pfin archive's dedup key, so a fresh Copilot export can
+ * never re-import a row the books already hold under another source.
+ */
+export function ledgerCompositeKey(
+  accountId: string,
+  postedOn: string | Date,
+  amount: string | number,
+  description: string | null,
+): string {
+  const date =
+    postedOn instanceof Date ? postedOn.toISOString().slice(0, 10) : postedOn.slice(0, 10);
+  const absolute = Math.abs(Number(amount)).toFixed(2);
+  return `${accountId}|${date}|${absolute}|${(description ?? '').trim().toLowerCase()}`;
+}

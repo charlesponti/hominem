@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { isRecurringActive, resolveCopilotSign } from './copilot-sign';
+import { isRecurringActive, ledgerCompositeKey, resolveCopilotSign } from './copilot-sign';
 import { accountTempKey } from './resolve-copilot-accounts';
 import {
   COPILOT_PROVIDER,
@@ -39,6 +39,8 @@ function hash(value: string): string {
 export interface CreateImportPlanOptions {
   /** Line numbers forced credit by a verified description-split rule. */
   forcedCreditLines?: ReadonlySet<number>;
+  /** Ledger composite keys already in the books (any source) — matches deselect by default. */
+  existingCompositeKeys?: ReadonlySet<string>;
 }
 
 export function createCopilotImportPlan(
@@ -79,6 +81,14 @@ export function createCopilotImportPlan(
       row.amount,
       { forceCredit: options.forcedCreditLines?.has(row.line) },
     );
+    const selectedByExternalId = !workingExternalIds.has(externalId);
+    const ledgerDuplicate =
+      selectedByExternalId &&
+      group.matchedAccountId !== null &&
+      (options.existingCompositeKeys?.has(
+        ledgerCompositeKey(group.matchedAccountId, row.date, amount, row.name),
+      ) ??
+        false);
     const transaction: PlannedTransaction = {
       rowId,
       line: row.line,
@@ -87,7 +97,8 @@ export function createCopilotImportPlan(
       accountId: group.matchedAccountId,
       accountTempKey: group.matchedAccountId ? null : accountTempKey(group.importKey),
       externalId,
-      selected: !workingExternalIds.has(externalId),
+      selected: selectedByExternalId && !ledgerDuplicate,
+      ledgerDuplicate,
       amount,
       postedOn: row.date,
       description: row.name,
