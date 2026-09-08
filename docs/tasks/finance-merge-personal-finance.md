@@ -88,3 +88,11 @@ notes, and the PF checkout is tagged read-only.
   rows, budget-cap allowance, chained weekly projection; assumptions are
   function args per OPEN-002); 4 integration tests with hand-computed 2dp
   values green, full suite 15 files / 54 tests green, package gates clean.
+- W-004 done: `src/diagnostics.ts` with `findTransferPairs` (same-amount
+  cross-account `transfer` legs within a day window) and
+  `getValidationGates` (orphans, empty accounts, duplicate groups, sign
+  violations, category coverage); 3 integration tests green, full suite
+  16 files / 57 tests green, package gates clean. Caught and fixed a real
+  scoping bug: an unparenthesized `AND`/`OR` in the sign-violation
+  predicate leaked other users' credit rows (AND binds tighter); the
+  regression test now seeds a stranger's violation to guard it.

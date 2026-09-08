@@ -10,6 +10,7 @@ export * from './monthly-summary';
 export * from './analytics';
 export * from './reports';
 export * from './data-ops';
+export * from './diagnostics';
 export * from './reconcile';
 export * from './runway';
 export * from './import';
