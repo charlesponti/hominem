@@ -5,9 +5,7 @@ import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';
 import { queryAnalyticsTransactionsByContract } from './transactions';
 import { toNumber } from './utils';
 
-export async function getTagBreakdown(
-  ownerId: string,
-): Promise<Array<{ tag: string; total: number }>> {
+async function getTagBreakdown(ownerId: string): Promise<Array<{ tag: string; total: number }>> {
   const result = await db
     .selectFrom('app.financeTransactions as t')
     .innerJoin('app.tagAssignments as ti', (join) =>
