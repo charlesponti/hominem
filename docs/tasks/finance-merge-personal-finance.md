@@ -83,3 +83,8 @@ notes, and the PF checkout is tagged read-only.
   no-op, same-day guard with `force`, credit-card/loan sign warning,
   deterministic `balance-recon|` external ids); 7 integration tests green,
   full suite 14 files / 50 tests green, package gates clean.
+- W-003 done: `src/runway.ts:computeLedgerRunway` (liquid-type ledger cash,
+  trailing `recurring` average excluding adjustments/credits/out-of-window
+  rows, budget-cap allowance, chained weekly projection; assumptions are
+  function args per OPEN-002); 4 integration tests with hand-computed 2dp
+  values green, full suite 15 files / 54 tests green, package gates clean.
