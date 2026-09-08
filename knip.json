@@ -12,16 +12,11 @@
     },
 
     "services/api": {
-      "entry": ["src/index.ts", "src/worker.ts"],
+      "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"]
     },
 
     "packages/*": {
-      "project": ["src/**/*.{ts,tsx}"]
-    },
-
-    "tools/*": {
-      "entry": ["src/cli.ts", "src/**/*.ts", "*.ts", "*.mts", "vitest.config.ts"],
       "project": ["src/**/*.{ts,tsx}"]
     }
   },
@@ -38,12 +33,7 @@
 
   "ignoreBinaries": [],
 
-  "ignoreUnresolved": ["^vite/client$", "^\\.\\/\\+types\\/"],
+  "ignoreUnresolved": ["^\\.\\/\\+types\\/"],
 
-  "ignore": [
-    "packages/ui/src/components/**",
-    "apps/omiro/components/**",
-    "apps/omiro/services/**",
-    "apps/omiro/modules/**"
-  ]
+  "ignore": ["apps/omiro/components/**", "apps/omiro/services/**", "apps/omiro/modules/**"]
 }

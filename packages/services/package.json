@@ -22,10 +22,6 @@
       "types": "./build/files.d.ts",
       "default": "./src/files.ts"
     },
-    "./types": {
-      "types": "./build/types.d.ts",
-      "default": "./src/types.ts"
-    },
     "./env": {
       "types": "./build/env.d.ts",
       "default": "./src/env.ts"
