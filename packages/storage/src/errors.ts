@@ -6,7 +6,7 @@ export type StorageErrorCode =
   | 'storage.network.unreachable'
   | 'storage.bucket.access_unknown';
 
-export const STORAGE_ERROR_CODES: readonly StorageErrorCode[] = [
+const STORAGE_ERROR_CODES: readonly StorageErrorCode[] = [
   'storage.config.missing',
   'storage.credentials.invalid',
   'storage.bucket.access_denied',

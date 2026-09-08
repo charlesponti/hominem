@@ -20,7 +20,7 @@ import { reconstructProviderToolCalls } from '@hominem/chat/server';
 import type { ChatModel } from '@hominem/chat/server';
 import { logger } from '@hominem/telemetry';
 
-export class ProviderInputError extends Error {
+class ProviderInputError extends Error {
   constructor(
     readonly diagnostics: {
       issuePaths: readonly string[];
@@ -49,7 +49,7 @@ const CHUNK_IDLE_TIMEOUT_MS = GENERATION_TIMING.providerIdleMs;
 // window to catch it without reintroducing the original hang.
 const USAGE_TRAILER_GRACE_MS = GENERATION_TIMING.usageTrailerGraceMs;
 
-export class StreamIdleTimeoutError extends Error {
+class StreamIdleTimeoutError extends Error {
   // Matches OpenRouterRequestError's convention (see normalizeOpenRouterError
   // in @hominem/ai) so the existing transient-retry classification below
   // picks this up for free.

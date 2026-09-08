@@ -21,7 +21,7 @@ export type StreamStatus =
   | 'committed'
   | 'failed';
 
-export const PROVIDER_FAILURE_MESSAGE = 'I couldn’t finish that response. Please try again.';
+const PROVIDER_FAILURE_MESSAGE = 'I couldn’t finish that response. Please try again.';
 
 function isAbortError(error: unknown): boolean {
   return isObject(error) && 'name' in error && error.name === 'AbortError';

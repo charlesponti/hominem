@@ -15,11 +15,7 @@ import {
   reduceGenerationSaved,
   reduceStart,
 } from './lifecycle';
-import {
-  reconstructProviderToolCalls,
-  reduceProviderChunk,
-  reduceProviderTurnFailed,
-} from './provider';
+import { reduceProviderChunk, reduceProviderTurnFailed } from './provider';
 import {
   reduceConfirmationApproved,
   reduceConfirmationRejected,
@@ -37,7 +33,6 @@ import type {
 } from './types';
 
 export type * from './types';
-export { reconstructProviderToolCalls };
 export { generationEventIdempotencyKey } from './shared';
 
 export function createGenerationState(generationId: string): GenerationState {

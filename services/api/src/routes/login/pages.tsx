@@ -26,7 +26,7 @@ type PageFrameProps = {
   title?: string;
 };
 
-export function PageFrame({ children, title = 'Secure access | Hominem' }: PageFrameProps) {
+function PageFrame({ children, title = 'Secure access | Hominem' }: PageFrameProps) {
   return (
     <html lang="en">
       <head>

@@ -1,4 +1,4 @@
-export type ButtonVariant =
+type ButtonVariant =
   | 'default'
   | 'primary'
   | 'destructive'
@@ -8,7 +8,7 @@ export type ButtonVariant =
   | 'outline'
   | 'secondary';
 
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xs' | 'icon';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'xs' | 'icon';
 
 export interface ButtonBaseProps {
   isLoading?: boolean | undefined;

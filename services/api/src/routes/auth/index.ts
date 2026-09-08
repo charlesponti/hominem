@@ -1,7 +1,5 @@
 import { Hono } from 'hono';
 
-import { betterAuthServer } from '../../auth/better-auth';
-import { env } from '../../env';
 import type { AppEnv } from '../../server';
 import {
   buildSessionResponse,
@@ -57,5 +55,3 @@ export function createAuthRoutes(dependencies: AuthDependencies) {
 
   return authRoutes;
 }
-
-export const authRoutes = createAuthRoutes({ env, auth: betterAuthServer });

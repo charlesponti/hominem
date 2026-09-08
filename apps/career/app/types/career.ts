@@ -13,10 +13,3 @@ export const JOB_APPLICATION_STATUSES = Object.values(JobApplicationStatus);
 export function isJobApplicationStatus(value: string): value is JobApplicationStatus {
   return JOB_APPLICATION_STATUSES.includes(value as JobApplicationStatus);
 }
-
-export enum JobApplicationStage {
-  APPLICATION = 'APPLICATION',
-  SCREEN = 'SCREEN',
-  OFFER = 'OFFER',
-  OUTCOME = 'OUTCOME',
-}

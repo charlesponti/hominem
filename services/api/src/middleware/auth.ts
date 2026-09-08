@@ -82,8 +82,6 @@ export function createAuthMiddleware(
   };
 }
 
-export const authMiddleware = createAuthMiddleware();
-
 export async function setMcpAuthContext(
   c: Parameters<MiddlewareHandler>[0],
   claims: VerifiedJwtClaims,
