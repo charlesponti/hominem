@@ -18,8 +18,6 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { isObject } from '@hominem/utils';
-
 const LOCAL_DEV_DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5434/hominem';
 
 function die(message: string): never {
