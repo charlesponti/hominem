@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Tracks which message ids are newly appended since this hook instance first
@@ -8,11 +8,10 @@ import { useEffect, useRef } from 'react';
  * (e.g. `key={chatId}`) rather than resetting this hook's internal state.
  */
 export function useNewMessageIds(messageIds: string[]): Set<string> {
-  const seenIdsRef = useRef<Set<string> | null>(null);
-  if (seenIdsRef.current === null) {
-    seenIdsRef.current = new Set(messageIds);
-  }
-  const seenIds = seenIdsRef.current;
+  // Lazy useState initializer instead of a ref written during render: it
+  // gives the same "create once, mutate in place thereafter" semantics
+  // without touching `.current` outside an effect.
+  const [seenIds] = useState<Set<string>>(() => new Set(messageIds));
   const newIds = new Set(messageIds.filter((id) => !seenIds.has(id)));
 
   useEffect(() => {
