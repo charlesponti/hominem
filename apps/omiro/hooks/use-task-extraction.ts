@@ -41,16 +41,8 @@ export function buildExtractedTasksProposal(previewContent: string, tasks: { tit
   };
 }
 
-// Backs the "Create tasks" conversation action: pulls a task list out of the
-// chat transcript deterministically, shows it in ClassificationReview via
-// useChatLifecycle, and creates the tasks in a batch on accept.
-//
-// "Save as note" is a separate flow -- ChatScreen intercepts that menu item
-// before it ever calls handleExtract and routes to chat-to-note-sheet.tsx
-// instead (an AI rewrite, not this hook's deterministic transcript-to-artifact
-// path). Since TRANSFORM_ITEMS in conversation-actions.model.ts only offers
-// 'note' and 'task_list', and 'note' never reaches here, onTransform below
-// only ever needs to handle 'task_list'.
+// The chat action surface only sends task_list; other ArtifactType values remain
+// in the shared lifecycle contract for other transforms.
 export function useTaskExtraction({
   chatId,
   source,
@@ -137,11 +129,7 @@ export function useTaskExtraction({
         };
       }
 
-      // onTransform above only ever produces a task_list proposal (or throws),
-      // and buildExtractedTasksProposal always sets `items`, so this branch
-      // is unreachable in the real UI flow. It's here because
-      // PendingReview['proposedType'] is the shared ArtifactType, which
-      // still includes types this hook doesn't handle (e.g. 'note').
+      // This hook only produces task_list reviews with items.
       throw new Error(`Unsupported review type: ${review.proposedType}`);
     },
     onRejectReview: async () => {},

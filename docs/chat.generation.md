@@ -76,8 +76,10 @@ Stable decisions are recorded in [the canonical contract ADR](decisions/chat.can
 [the typed boundaries ADR](decisions/chat.typed-boundaries.md), and
 the [chat testing contract](chat.testing.md).
 
-Active execution work remains in [the functional chat shipping evidence task](tasks/functional-chat-shipping-evidence.md)
-and [the Omiro generation cancellation task](tasks/omiro-generation-cancellation.md).
+Historical execution records are not part of the durable generation contract.
+Current testing and evidence requirements live in the
+[chat testing contract](chat.testing.md); active follow-up work belongs in
+the task tracker and must not be treated as an architectural source of truth.
 
 User-facing capability status is maintained in
 [`chat.capabilities.md`](chat.capabilities.md).

@@ -15,15 +15,14 @@ Hominem is a product monorepo. Active products:
 
 Product opinions and design philosophy live below in [Philosophy](#philosophy).
 
-## The Bible
+## Documentation
 
-The repository's operating law lives in `docs/`. Read the relevant doc before
-changing a system boundary. Package READMEs are setup entrypoints only — the
-Bible is the only place durable decisions live, so it's never split across
-both. (The published design system's own docs, under `@ponti-studios/ui`,
-work the same way for design-system decisions specifically.)
+The repository's operating law lives in `docs/`. 
 
-`docs/` has four jobs, each with its own spot:
+Read the relevant doc before changing a system boundary. Package READMEs are setup entrypoints only — the
+`docs/` are where durable decisions live.
+
+`docs/` has four jobs:
 
 - **`docs/` itself** — one file per subject, describing how the system works
   right now (architecture, auth, testing, evidence, chat, and so on). This is
@@ -48,15 +47,16 @@ This section holds Hominem's product and design opinions. The documents under `d
 
 ### Product
 
-Hominem should make it easier to capture, understand, continue, and act on work. Add complexity only when it removes friction from that process.
+Hominem should make it easier to capture, understand, and act. Complexity is only justifiable if it removes friction.
 
+**Capture-first**
 Capture should be immediate. A person should be able to type, speak, attach context, or resume work without configuring the system first.
 
+**Naming**
 The product should name real things. It should not hide ordinary work behind metaphors, slogans, or invented categories.
 
+**Artificial Intelligence (AI)**
 AI should support a visible human outcome: clearer text, a continued conversation, or tasks that a person can inspect and change. AI is not a substitute for state, authority, or recovery.
-
-A user should not lose submitted meaning when secondary automation fails. Preserve raw text before optional cleanup. If task extraction fails, show the transcript so the user can recover it.
 
 Keep setup, permissions, and operational details out of the task surface until the person needs them.
 

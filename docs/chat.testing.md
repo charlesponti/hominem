@@ -75,6 +75,27 @@ Product evidence is separate from API-local correctness. Playwright and
 Maestro artifacts are required for their respective acceptance surfaces; API
 correctness alone is not a passing cross-client result.
 
+## Boundary lessons
+
+Deterministic dependency failures are injected at the boundary that owns the
+state under test. Client loading, error, and retry states use Vitest with MSW
+against the real component or hook. SSR loading and error preservation use
+Node MSW against the real loader. Playwright may provide optional browser
+smoke coverage, but server-rendered data failures must not be forced through
+browser request interception or a new proxy solely to manufacture a failure.
+
+Retry evidence must assert both recovery and cleanup: a temporary assistant
+message is removed when retry settles, and the committed response is reloaded
+without a duplicate streaming message. Web scenarios that exercise a
+stateful API failure must use a fresh isolated chat when prior durable history
+could obscure the state being asserted.
+
+Omiro tool-confirmation scenarios use isolated fresh chats and visual evidence
+for the pending, approved or rejected, and terminal states. A deterministic
+provider fixture must emit the confirmation request first and emit the
+post-decision response only after the tool result, so the evidence proves the
+real approval boundary rather than a pre-scripted terminal message.
+
 ## Cleanup and validation
 
 Every chat test context that creates durable records owns those records and

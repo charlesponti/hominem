@@ -237,6 +237,16 @@ export function createOpenRouterClient(options: OpenRouterClientOptions = {}) {
     httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
     appTitle: options.appTitle ?? DEFAULT_APP_TITLE,
     appCategories: options.appCategories,
+    // The SDK's default retry (backoff up to a 1-hour maxElapsedTime on 5XX
+    // and connection errors) only ever fires before a stream starts, and
+    // only covers a subset of what we treat as transient (it skips 429).
+    // Callers (see isTransient/attempt handling in chat-generation-provider.ts)
+    // already retry transient failures at the turn level — a level the SDK's
+    // retry can't reach anyway, since a mid-stream error chunk arrives after
+    // the request already succeeded with a 200. Disabling it here keeps
+    // retry policy in one place instead of stacking a hidden, much longer
+    // backoff underneath our own bounded one.
+    retryConfig: { strategy: 'none' },
     ...(httpClient ? { httpClient } : {}),
   });
 }
