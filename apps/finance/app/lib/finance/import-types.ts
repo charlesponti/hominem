@@ -1,4 +1,4 @@
-import type { ImportPreflight, ImportRequestResponse } from '@hominem/queues';
+import type { ImportPreflight } from '@hominem/queues';
 
 /**
  * Shared client/server shapes for the Copilot import flow. The server route
@@ -7,9 +7,8 @@ import type { ImportPreflight, ImportRequestResponse } from '@hominem/queues';
  * between the API's route module and the store's hand-rolled type) is what
  * guarantees a new plan field can never silently drop out of the UI.
  */
-export type { ImportPreflight, ImportRequestResponse };
 
-export type ImportAccountGroupPreview = {
+type ImportAccountGroupPreview = {
   groupKey: string;
   account: string;
   accountMask: string | null;
@@ -17,7 +16,7 @@ export type ImportAccountGroupPreview = {
   unresolved: boolean;
 };
 
-export type ImportPlanRowPreview = {
+type ImportPlanRowPreview = {
   rowId: string;
   line: number;
   groupKey: string;
@@ -38,7 +37,7 @@ export type ImportPlanRowPreview = {
   excluded: boolean;
 };
 
-export type ImportPreflightStats = {
+type ImportPreflightStats = {
   total: number;
   selected: number;
   skipped: number;
@@ -47,7 +46,7 @@ export type ImportPreflightStats = {
   needsReview: number;
 };
 
-export type ImportPlanPreview = {
+type ImportPlanPreview = {
   source: string;
   accountGroups: ImportAccountGroupPreview[];
   unresolvedGroups: Array<{ groupKey: string; rowIndexes: number[]; reason: string }>;
@@ -57,7 +56,7 @@ export type ImportPlanPreview = {
   stats: ImportPreflightStats;
 };
 
-export type ImportAccountPreview = { id: string; name: string; mask: string | null };
+type ImportAccountPreview = { id: string; name: string; mask: string | null };
 
 export type ImportPreflightPreview = {
   preflight: ImportPreflight;

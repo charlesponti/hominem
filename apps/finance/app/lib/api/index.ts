@@ -1,2 +1,2 @@
-export { FinanceHonoProvider, useFinanceApiClient } from './provider';
-export { useHonoQuery, useHonoMutation, useHonoUtils } from './client';
+export { FinanceHonoProvider } from './provider';
+export { useHonoQuery, useHonoMutation } from './client';

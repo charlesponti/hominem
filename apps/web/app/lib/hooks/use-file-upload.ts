@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { UploadResponseSchema } from '~/lib/schemas/files.schema';
 
 /** idle -> uploading -> done, with error reachable from either non-terminal state */
-export type UploadStateMachine = 'idle' | 'uploading' | 'done' | 'error';
+type UploadStateMachine = 'idle' | 'uploading' | 'done' | 'error';
 
 function toUploadedFile(file: ReturnType<typeof UploadResponseSchema.parse>['file']): UploadedFile {
   return {

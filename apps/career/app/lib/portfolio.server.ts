@@ -1,7 +1,6 @@
 import { CareerRepository, ProjectRepository, SkillRepository } from '@hominem/db/career';
 import { db } from '@hominem/db/core';
 
-import { fetchCareerProfile } from './api.server';
 import { jsonArray } from './db-json';
 
 export interface ResumePortfolio {
@@ -35,12 +34,6 @@ export interface ResumePortfolio {
   }>;
 }
 
-// profiles come from a data migration now, not created on-the-fly like the old portfolio did
-export async function ensureUserHasProfile(request: Request): Promise<boolean> {
-  const profile = await fetchCareerProfile(request);
-  return profile !== null;
-}
-
 export async function getFullCareerContext(ownerUserId: string) {
   const [profile, positions, education] = await Promise.all([
     CareerRepository.getProfile(db, ownerUserId),
@@ -53,15 +46,6 @@ export async function getFullCareerContext(ownerUserId: string) {
     positions,
     education,
   };
-}
-
-export async function getPublicCareerProfile(ownerUserId: string) {
-  const [profile, positions] = await Promise.all([
-    CareerRepository.getProfile(db, ownerUserId),
-    CareerRepository.listEngagements(db, ownerUserId, { type: 'employment' }),
-  ]);
-
-  return { profile, positions };
 }
 
 export async function getResumePortfolioContext(

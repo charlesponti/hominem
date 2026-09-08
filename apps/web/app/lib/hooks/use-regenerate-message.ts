@@ -106,5 +106,3 @@ export function useRegenerateMessage({ chatId }: { chatId: string }) {
     status,
   };
 }
-
-export type RegeneratingMessage = { id: string };

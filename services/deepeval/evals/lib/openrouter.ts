@@ -6,7 +6,7 @@ export type ChatMessage = {
   toolCallId?: string;
 };
 
-export type ToolDefinition = { type: string; function: Record<string, unknown> };
+type ToolDefinition = { type: string; function: Record<string, unknown> };
 
 export type ModelConfig = {
   model: string;
@@ -26,7 +26,7 @@ export type ModelConfig = {
 
 export type ChatReply = { content: string; toolCalls: unknown[] };
 
-export const DEFAULT_TARGET_MODEL = 'openai/gpt-4o-mini';
+const DEFAULT_TARGET_MODEL = 'openai/gpt-4o-mini';
 export const TARGET_MODEL = process.env.DEEPEVAL_TARGET_MODEL?.trim() || DEFAULT_TARGET_MODEL;
 const reasoningEfforts = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
 export const TARGET_REASONING = reasoningEfforts.find(

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const UploadedFileSchema = z.object({
+const UploadedFileSchema = z.object({
   id: z.uuid(),
   originalName: z.string().min(1),
   type: z.enum(['image', 'document', 'audio', 'video', 'unknown']),
@@ -20,5 +20,3 @@ export const UploadResponseSchema = z.object({
   file: UploadedFileSchema,
   message: z.string().min(1),
 });
-
-export type UploadResponse = z.infer<typeof UploadResponseSchema>;

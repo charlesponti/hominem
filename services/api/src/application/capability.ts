@@ -21,8 +21,8 @@ export const CAPABILITIES = [
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
-export type ScopeAction = 'read' | 'write';
-export type Scope = `${Capability}:${ScopeAction}`;
+type ScopeAction = 'read' | 'write';
+type Scope = `${Capability}:${ScopeAction}`;
 
 export interface CapabilityDefinition<
   Name extends string = string,

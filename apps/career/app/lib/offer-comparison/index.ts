@@ -24,7 +24,7 @@ export interface Offer {
   relocationAllowance: number;
 }
 
-export interface MonthlyBreakdown {
+interface MonthlyBreakdown {
   gross: number;
   tax: number;
   net: number;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export interface EditorSubmissionResult<TRecord> {
+interface EditorSubmissionResult<TRecord> {
   success: boolean;
   error?: string;
   message?: string;

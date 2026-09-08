@@ -4,13 +4,13 @@
 
 export type FilingStatus = 'single' | 'married';
 
-export interface Bracket {
+interface Bracket {
   min: number;
   max: number;
   rate: number;
 }
 
-export interface FederalTaxData {
+interface FederalTaxData {
   standardDeduction: Record<FilingStatus, number>;
   brackets: Record<FilingStatus, Bracket[]>;
 }
@@ -35,7 +35,7 @@ const BRACKETS_MARRIED: Bracket[] = [
   { min: 768_700, max: Infinity, rate: 37 },
 ];
 
-export const FEDERAL: FederalTaxData = {
+const FEDERAL: FederalTaxData = {
   standardDeduction: {
     single: 16_100,
     married: 32_200,

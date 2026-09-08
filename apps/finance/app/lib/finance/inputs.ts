@@ -1,4 +1,4 @@
-export interface TrueUpInput {
+interface TrueUpInput {
   accountId: string;
   targetBalance: number;
   date?: string;

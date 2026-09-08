@@ -6,13 +6,7 @@ import type {
 
 import type { SseResumeEvent } from '~/lib/resume-import/types';
 
-export type ResumeImportPhase =
-  | 'idle'
-  | 'uploading'
-  | 'analyzing'
-  | 'reviewing'
-  | 'applying'
-  | 'error';
+type ResumeImportPhase = 'idle' | 'uploading' | 'analyzing' | 'reviewing' | 'applying' | 'error';
 
 export interface ResumeImportState {
   phase: ResumeImportPhase;

@@ -28,10 +28,3 @@ export function registerUiTranslations() {
     i18next.addResourceBundle(DEFAULT_LANGUAGE, UI_NAMESPACE, UI_TRANSLATIONS_EN, true, false);
   }
 }
-
-export function translateUi(key: string, options?: Record<string, string | number | boolean>) {
-  registerUiTranslations();
-  return String(i18next.t(key, { ns: UI_NAMESPACE, ...options }));
-}
-
-export { UI_TRANSLATIONS_EN };

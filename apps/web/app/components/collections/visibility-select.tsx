@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 
-export function isVisibility(value: string): value is 'private' | 'shared' {
+function isVisibility(value: string): value is 'private' | 'shared' {
   return value === 'private' || value === 'shared';
 }
 
