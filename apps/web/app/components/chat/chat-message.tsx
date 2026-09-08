@@ -479,7 +479,7 @@ export const ChatMessage = memo(function ChatMessage({
                           ease: [0.23, 1, 0.32, 1],
                         }}
                       >
-                        {canEdit && !isRegenerationActive ? (
+                        {canEdit && !isRegenerationActive && !isGenerationActive ? (
                           <MessageAction
                             label="Edit message"
                             onClick={() => {

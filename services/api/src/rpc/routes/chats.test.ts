@@ -921,8 +921,12 @@ describe('chat message regenerate', () => {
     expect(completionOptions.messages).toHaveLength(4);
   });
 
-  it('rejects regenerating a user message', async () => {
+  it('regenerates a fresh reply for a user message with nothing to supersede (post-edit)', async () => {
+    // Simulates regenerating right after an edit: the stale assistant reply
+    // and its run were already deleted by the edit itself, so history holds
+    // only the (just-edited) user message.
     mocks.getMessageById.mockResolvedValue(userMessage);
+    mocks.getMessages.mockResolvedValue([userMessage]);
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
@@ -933,8 +937,24 @@ describe('chat message regenerate', () => {
       },
     );
 
-    expect(response.status).toBe(400);
-    expect(mocks.streamChatCompletion).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain('Regenerated reply');
+
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        chatId: '00000000-0000-4000-8000-000000000001',
+        role: 'assistant',
+        content: 'Regenerated reply',
+        parentMessageId: '00000000-0000-4000-8000-000000000004',
+      }),
+    );
+    // Nothing to supersede — no stale run or message to delete.
+    expect(mocks.deleteGenerationRun).not.toHaveBeenCalled();
+    expect(mocks.deleteAssistantMessage).not.toHaveBeenCalled();
   });
 
   it('rejects regenerating a message that does not exist', async () => {

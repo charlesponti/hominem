@@ -385,12 +385,14 @@ export class ChatGenerationService {
     return (this.dependencies.planChatTools ?? planChatTools)({ model: CHAT_MODEL, messages });
   }
 
-  // Redo the most recent attempt at a turn. `messageId` redoes a completed
-  // reply (deleting it and its run once the replacement commits);
-  // `failedGenerationId` redoes an attempt that never produced a message
-  // (deleting its run once the replacement commits — there's no failure
-  // trail worth keeping once it's been retried). Both resolve to the same
-  // shared redoGeneration.
+  // Redo the most recent attempt at a turn. `messageId` targeting an
+  // assistant message redoes its completed reply (deleting it and its run
+  // once the replacement commits); targeting a user message (e.g. right
+  // after editing it, once its own stale reply was already deleted) starts
+  // a fresh reply with nothing to supersede. `failedGenerationId` redoes an
+  // attempt that never produced a message (deleting its run once the
+  // replacement commits — there's no failure trail worth keeping once it's
+  // been retried). All three resolve to the same shared redoGeneration.
   async regenerate(input: RegenerateInput): Promise<AsyncIterable<GenerationEvent>> {
     await ChatRepository.getOwnedOrThrow(db, input.chatId, input.userId);
     // Check for an idempotent replay before resolving the target: once a
@@ -412,8 +414,21 @@ export class ChatGenerationService {
     }
     if ('messageId' in input) {
       const target = await ChatRepository.getMessageById(db, input.chatId, input.messageId);
-      if (!target || target.role !== 'assistant') {
-        throw new ChatGenerationInputError('Only a completed assistant message can be regenerated');
+      if (!target || (target.role !== 'assistant' && target.role !== 'user')) {
+        throw new ChatGenerationInputError('Only a user or assistant message can be regenerated');
+      }
+      // An edited user message has no reply to supersede yet — generate a
+      // fresh one directly for it.
+      if (target.role === 'user') {
+        return this.redoGeneration({
+          userId: input.userId,
+          chatId: input.chatId,
+          generationId: input.generationId,
+          userMessageId: target.id,
+          staleGenerationId: null,
+          staleAssistantMessageId: null,
+          responseLength: input.responseLength,
+        });
       }
       if (!target.parentMessageId) {
         throw new ChatGenerationInputError('No prior message to regenerate a reply from');

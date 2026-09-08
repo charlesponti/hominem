@@ -217,6 +217,13 @@ export default function ChatPage({
     (messageId: string) => void regeneration.regenerate(messageId, responseLength),
     [regeneration.regenerate, responseLength],
   );
+  const handleUpdateMessage = useCallback(
+    async (messageId: string, content: string) => {
+      await updateMessage(messageId, content);
+      regenerateMessage(messageId);
+    },
+    [updateMessage, regenerateMessage],
+  );
   const cancelRegenerate = useCallback(() => void regeneration.cancel(), [regeneration.cancel]);
   const retryRegenerate = useCallback(() => void regeneration.retry(), [regeneration.retry]);
 
@@ -320,7 +327,7 @@ export default function ChatPage({
             onActivateSpeech={activateSpeech}
             onDeactivateSpeech={deactivateSpeech}
             onDelete={deleteMessage}
-            onUpdateMessage={updateMessage}
+            onUpdateMessage={handleUpdateMessage}
             isDeleting={isDeleting}
             onRegenerate={regenerateMessage}
             onCancelRegenerate={cancelRegenerate}
