@@ -85,7 +85,7 @@ export function isServiceError(value: unknown): value is ServiceError {
     return true;
   }
 
-  if (!value || typeof value !== 'object') {
+  if (!isObject(value)) {
     return false;
   }
 
@@ -106,3 +106,4 @@ export function isServiceError(value: unknown): value is ServiceError {
     candidate.statusCode <= 599
   );
 }
+import { isObject } from '@hominem/utils';

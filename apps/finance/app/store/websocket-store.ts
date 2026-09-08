@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import { create } from 'zustand';
 
 export type WebSocketMessage<T = unknown> = {
@@ -138,11 +139,7 @@ const useWebSocketStore = create<WebSocketStore>((set, get) => {
           try {
             const parsedData = JSON.parse(event.data);
 
-            if (
-              typeof parsedData !== 'object' ||
-              parsedData === null ||
-              typeof parsedData.type !== 'string'
-            ) {
+            if (!isObject(parsedData) || typeof parsedData.type !== 'string') {
               console.error('Received invalid WebSocket message structure');
               return;
             }

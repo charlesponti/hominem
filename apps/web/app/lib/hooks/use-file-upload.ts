@@ -4,6 +4,7 @@ import {
   UPLOAD_MAX_FILE_COUNT,
   UPLOAD_MAX_FILE_SIZE_BYTES,
 } from '@hominem/storage/constants';
+import { isObject } from '@hominem/utils';
 // type-only import, doesn't pull in the actual Uppy bundle
 import type { Body, Meta, UppyFile } from '@uppy/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -55,7 +56,7 @@ interface ApiErrorResponse {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return isObject(value);
 }
 
 export function parseApiErrorResponse(value: unknown): ApiErrorResponse | null {
@@ -102,7 +103,7 @@ export function getUploadErrorMessage(value: unknown): string {
     return value;
   }
 
-  if (value && typeof value === 'object' && 'message' in value) {
+  if (isObject(value) && 'message' in value) {
     const message = value.message;
     if (typeof message === 'string') {
       return message;

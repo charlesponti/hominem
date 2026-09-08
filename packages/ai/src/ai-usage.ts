@@ -13,6 +13,7 @@ import { db } from '@hominem/db/core';
 import { ForbiddenError } from '@hominem/db/errors';
 import type { JsonObject } from '@hominem/db/types';
 import { logger } from '@hominem/telemetry';
+import { isObject } from '@hominem/utils';
 
 import type { AIUsageMetrics } from './shared';
 
@@ -53,7 +54,7 @@ function sanitizeErrorCode(value: unknown): string | null {
 }
 
 export function getAIUsageFailureDetails(error: unknown): AIUsageFailureDetails {
-  if (!error || typeof error !== 'object') {
+  if (!isObject(error)) {
     return { errorCode: null, errorStatus: null };
   }
 

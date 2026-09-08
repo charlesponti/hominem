@@ -1,4 +1,4 @@
-import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
+import { isObject, toNullableNumber, toRequiredNumber } from '@hominem/utils';
 import { HTTPClient, OpenRouter } from '@openrouter/sdk';
 import type { ChatUsage } from '@openrouter/sdk/models';
 
@@ -48,7 +48,7 @@ export type AIUsageMetrics = {
 };
 
 function isJsonObject(value: unknown): value is JsonObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return isObject(value);
 }
 
 export function normalizeOpenRouterChatUsage(
@@ -179,7 +179,7 @@ export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError
     return error;
   }
 
-  if (typeof error === 'object' && error !== null) {
+  if (isObject(error)) {
     const message = Reflect.get(error, 'message');
     const statusValue = Reflect.get(error, 'status');
     const statusCodeValue = Reflect.get(error, 'statusCode');

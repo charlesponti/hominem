@@ -1,4 +1,5 @@
 import { db, sql } from '@hominem/db/core';
+import { isObject } from '@hominem/utils';
 
 import type {
   HealthDailySummaryOutput,
@@ -11,7 +12,7 @@ function endOfDay(value: string): string {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return isObject(value);
 }
 
 function metricsRecord(metrics: unknown): Record<string, unknown> {

@@ -1,6 +1,7 @@
 import { CHAT_GENERATION_EVENTS_CHANNEL, ChatGenerationRepository } from '@hominem/db/chats';
 import { db, pool } from '@hominem/db/core';
 import { logger } from '@hominem/telemetry';
+import { isObject } from '@hominem/utils';
 import pg from 'pg';
 
 import { GenerationPubSub } from './generation-pub-sub';
@@ -25,8 +26,7 @@ function parseNotifyPointer(payload: string | undefined): NotifyPointer | null {
   try {
     const parsed: unknown = JSON.parse(payload);
     if (
-      parsed &&
-      typeof parsed === 'object' &&
+      isObject(parsed) &&
       'generationId' in parsed &&
       'sequence' in parsed &&
       typeof parsed.generationId === 'string' &&

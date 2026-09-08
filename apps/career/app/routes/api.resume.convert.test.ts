@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { OpenRouterRequestError, type ChatResult } from '@hominem/ai';
+import { isObject } from '@hominem/utils';
 import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -61,6 +62,7 @@ vi.mock('../lib/rate-limit', () => ({
 }));
 
 vi.mock('@hominem/ai', () => ({
+  convertSchemaToJsonSchema: vi.fn(() => ({})),
   OpenRouterRequestError: class OpenRouterRequestError extends Error {
     status?: number;
     statusText?: string;
@@ -133,14 +135,12 @@ function toRouteResponse(result: unknown): Response {
   }
 
   if (
-    result &&
-    typeof result === 'object' &&
+    isObject(result) &&
     'type' in result &&
     result.type === 'DataWithResponseInit' &&
     'data' in result
   ) {
-    const init =
-      'init' in result && result.init && typeof result.init === 'object' ? result.init : undefined;
+    const init = 'init' in result && isObject(result.init) ? result.init : undefined;
 
     return Response.json(result.data, init as ResponseInit | undefined);
   }
@@ -350,7 +350,6 @@ describe('resume convert action', () => {
           type: 'json_schema',
           jsonSchema: expect.objectContaining({
             name: 'resume_parser',
-            strict: true,
           }),
         }),
         messages: expect.arrayContaining([

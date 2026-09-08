@@ -24,6 +24,27 @@ vi.mock('./shared', async (importOriginal) => {
 });
 
 describe('createStructuredChatCompletion', () => {
+  it('allows optional fields to be absent and validates the response with Zod', async () => {
+    createChatSend.mockResolvedValueOnce({
+      model: 'model',
+      usage: openRouterCompletionUsage,
+      choices: [{ message: { content: JSON.stringify({ required: 'present' }) } }],
+    });
+
+    await expect(
+      createStructuredChatCompletion({
+        model: 'model',
+        messages: [{ role: 'user', content: 'hello' }],
+        schema: z.object({ required: z.string(), optional: z.string().optional() }),
+        schemaName: 'optional_fields',
+      }),
+    ).resolves.toMatchObject({ output: { required: 'present' } });
+
+    expect(createChatSend.mock.calls[0]?.[0]).not.toHaveProperty(
+      'responseFormat.jsonSchema.strict',
+    );
+  });
+
   it('retains usage when json parsing fails after the provider responds', async () => {
     createChatSend.mockResolvedValueOnce({
       model: 'model',

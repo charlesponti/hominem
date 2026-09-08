@@ -1,6 +1,7 @@
 import { CareerImportRepository } from '@hominem/db/career';
 import { db } from '@hominem/db/core';
 import type { CareerImportDraft } from '@hominem/queues';
+import { isObject } from '@hominem/utils';
 import { humanizeIdentifier } from '@hominem/utils/text';
 import {
   DatePicker,
@@ -142,7 +143,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   if (typeof jobPostingDataValue === 'string' && jobPostingDataValue) {
     try {
       const parsed = JSON.parse(jobPostingDataValue) as unknown;
-      if (parsed && typeof parsed === 'object') {
+      if (isObject(parsed)) {
         const value = parsed as { url?: unknown; jobDescription?: unknown };
         jobPostingData = {
           url: typeof value.url === 'string' ? value.url : undefined,

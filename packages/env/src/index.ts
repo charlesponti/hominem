@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import { z } from 'zod';
 
 // Vite's own `import.meta.env` mixes real env strings with native booleans
@@ -9,8 +10,7 @@ type EnvSource = Record<string, string | boolean | undefined>;
 
 function isEnvSource(value: unknown): value is EnvSource {
   return (
-    typeof value === 'object' &&
-    value !== null &&
+    isObject(value) &&
     Object.values(value).every(
       (item) => typeof item === 'string' || typeof item === 'boolean' || item === undefined,
     )
@@ -78,7 +78,7 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
   context = 'serverEnv',
 ): z.infer<T> {
   const proc = Reflect.get(globalThis, 'process');
-  const candidateSource = proc && typeof proc === 'object' ? Reflect.get(proc, 'env') : undefined;
+  const candidateSource = isObject(proc) ? Reflect.get(proc, 'env') : undefined;
   const source = isEnvSource(candidateSource) ? candidateSource : {};
 
   if (typeof proc === 'undefined') {

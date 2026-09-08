@@ -9,8 +9,9 @@ interface ApiResponseLike {
 
 export async function parseApiError(response: ApiResponseLike): Promise<ApiErrorBody> {
   const body: unknown = await response.json().catch(() => null);
-  if (!body || typeof body !== 'object') {
+  if (!isObject(body)) {
     return {};
   }
   return body as ApiErrorBody;
 }
+import { isObject } from '@hominem/utils';

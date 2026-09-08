@@ -1,4 +1,5 @@
 import { db } from '@hominem/db/core';
+import { isObject } from '@hominem/utils';
 import { sql } from 'kysely';
 
 export function toCents(amount: number | string | null | undefined): number {
@@ -30,7 +31,7 @@ export function toIsoStringOrNull(value: string | Date | null | undefined): stri
 }
 
 export function getAffectedRows(result: unknown): number {
-  if (!result || typeof result !== 'object') {
+  if (!isObject(result)) {
     return 0;
   }
   if ('numDeletedRows' in result) {

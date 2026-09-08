@@ -992,6 +992,9 @@ importers:
 
   packages/env:
     dependencies:
+      '@hominem/utils':
+        specifier: workspace:*
+        version: link:../utils
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1275,6 +1278,9 @@ importers:
 
   services/deepeval:
     devDependencies:
+      '@hominem/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@types/node':
         specifier: 'catalog:'
         version: 25.4.0

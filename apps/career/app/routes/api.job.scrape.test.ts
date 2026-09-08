@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { isObject } from '@hominem/utils';
 import { aiUsageMetrics } from '@hominem/utils/testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -65,14 +66,12 @@ function toRouteResponse(result: unknown): Response {
   }
 
   if (
-    result &&
-    typeof result === 'object' &&
+    isObject(result) &&
     'type' in result &&
     result.type === 'DataWithResponseInit' &&
     'data' in result
   ) {
-    const init =
-      'init' in result && result.init && typeof result.init === 'object' ? result.init : undefined;
+    const init = 'init' in result && isObject(result.init) ? result.init : undefined;
 
     return Response.json(result.data, init as ResponseInit | undefined);
   }

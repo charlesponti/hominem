@@ -1,4 +1,5 @@
 import 'deepeval/vitest';
+import { isObject } from '@hominem/utils';
 import { EvaluationDataset, Golden } from 'deepeval/dataset';
 import {
   StepEfficiencyMetric,
@@ -115,7 +116,7 @@ const toolResults: Record<string, unknown> = {
 
 function parseToolCalls(reply: ChatReply): FunctionToolCall[] {
   return reply.toolCalls.filter((call): call is FunctionToolCall => {
-    if (call === null || typeof call !== 'object') return false;
+    if (!isObject(call)) return false;
     const candidate = call as FunctionToolCall;
     return typeof candidate.function?.name === 'string';
   });

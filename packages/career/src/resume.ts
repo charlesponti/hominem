@@ -1,7 +1,11 @@
 import { Buffer } from 'node:buffer';
 import { readFile } from 'node:fs/promises';
 
-import { createChatCompletion, getChatCompletionText } from '@hominem/ai';
+import {
+  convertSchemaToJsonSchema,
+  createChatCompletion,
+  getChatCompletionText,
+} from '@hominem/ai';
 import { CareerSocialLinksRecord } from '@hominem/db/career';
 import type { CareerProfileRecord } from '@hominem/db/career';
 import { sql } from '@hominem/db/core';
@@ -136,7 +140,7 @@ export const resumeSchema = z.object({
 });
 
 export type ConvertedResumeData = z.infer<typeof resumeSchema>;
-const resumeParserJsonSchema = z.toJSONSchema(resumeSchema);
+const resumeParserJsonSchema = convertSchemaToJsonSchema(resumeSchema);
 
 const RESUME_PARSER_PROMPT_URL = new URL('./prompts/resume-parser.md', import.meta.url);
 let resumeParserSystemPromptPromise: Promise<string> | null = null;
@@ -203,7 +207,6 @@ export async function parseResumeWithAI(pdfText: string): Promise<ConvertedResum
       jsonSchema: {
         name: 'resume_parser',
         schema: resumeParserJsonSchema,
-        strict: true,
       },
     },
     messages: [

@@ -7,6 +7,7 @@ export {
   stringToDate,
 } from './dates';
 export { delay } from './delay';
+export { isObject } from './object';
 export {
   buildStoredFileName,
   classifyFileByMimeType,

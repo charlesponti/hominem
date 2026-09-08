@@ -1,4 +1,5 @@
 import { db } from '@hominem/db/core';
+import { isObject } from '@hominem/utils';
 import type * as z from 'zod';
 
 import type {
@@ -26,7 +27,7 @@ function endOfDay(isoDate: string): string {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return isObject(value);
 }
 
 function metaRecord(metadata: unknown): Record<string, unknown> {

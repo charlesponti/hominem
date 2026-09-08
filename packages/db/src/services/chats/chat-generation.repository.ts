@@ -25,6 +25,7 @@ import {
   type GenerationRunProjection,
 } from '@hominem/chat/projection';
 import { GenerationHistoryEventPayloadSchema } from '@hominem/chat/schemas';
+import { isObject } from '@hominem/utils';
 import type { Selectable } from 'kysely';
 
 import { ValidationError } from '../../errors';
@@ -71,7 +72,7 @@ const GENERATION_STATUSES: readonly GenerationPhase[] = [
 type JsonObject = Record<string, unknown>;
 
 function isJsonObject(value: unknown): value is JsonObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return isObject(value);
 }
 
 function isString(value: unknown): value is string {
@@ -123,7 +124,7 @@ export function toJsonValue(value: unknown): Json {
     return value;
   }
   if (Array.isArray(value)) return value.map(toJsonValue);
-  if (typeof value === 'object') {
+  if (isObject(value)) {
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => [key, toJsonValue(entry)]),
     );

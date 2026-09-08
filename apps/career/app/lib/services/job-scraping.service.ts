@@ -5,6 +5,7 @@ import {
   getChatCompletionUsage,
   type AIUsageMetrics,
 } from '@hominem/ai';
+import { isObject } from '@hominem/utils';
 import { z } from 'zod';
 
 import extractionPrompt from './prompts/job-extraction.prompt.md?raw';
@@ -122,8 +123,7 @@ export function parseScrapedJobPostingContent(content: string, jobUrl: string): 
   let parsed: Record<string, unknown>;
   try {
     const value = JSON.parse(jsonString) as unknown;
-    if (!value || typeof value !== 'object' || Array.isArray(value))
-      throw new Error('not an object');
+    if (!isObject(value)) throw new Error('not an object');
     parsed = value as Record<string, unknown>;
   } catch {
     throw new Error(

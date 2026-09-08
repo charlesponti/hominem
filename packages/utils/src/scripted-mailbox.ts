@@ -2,6 +2,8 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
+import { isObject } from './object';
+
 // Local mailbox for OTPs captured by the scripted email provider.
 //
 // Why a file and not an API route: authentication secrets must never be
@@ -52,7 +54,7 @@ function parseMailboxLine(line: string): ScriptedMailboxRecord | null {
   } catch {
     return null;
   }
-  if (!value || typeof value !== 'object') return null;
+  if (!isObject(value)) return null;
   const to = Reflect.get(value, 'to');
   const otp = Reflect.get(value, 'otp');
   const subject = Reflect.get(value, 'subject');

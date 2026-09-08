@@ -33,6 +33,7 @@ import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { db } from '@hominem/db/core';
 import { runInTransaction } from '@hominem/db/transaction';
 import { embeddingQueue } from '@hominem/queues';
+import { isObject } from '@hominem/utils';
 
 import { planChatTools } from '../mcp/chat-tool-adapter';
 import { recordAIUsageEvent, startAIUsageTimer } from './ai-usage.service';
@@ -215,7 +216,7 @@ function formatUserContentWithContext(
         'Attached files:',
         ...files.map((file, index) => {
           const extractedText =
-            file.metadata && typeof file.metadata === 'object' && 'extractedText' in file.metadata
+            isObject(file.metadata) && 'extractedText' in file.metadata
               ? String(file.metadata.extractedText)
               : '';
           return [
