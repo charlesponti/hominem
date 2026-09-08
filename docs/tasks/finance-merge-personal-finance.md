@@ -78,3 +78,8 @@ notes, and the PF checkout is tagged read-only.
   `analytics.ts`/`apply-import-plan.ts` assertion warnings); `@hominem/api`
   typecheck clean. Transfers now default-negate AND flag `needsReview`
   (surfaced in preflight preview); `recurring` persists on import.
+- W-002 done: `src/reconcile.ts` with `getReconciliationStaleness`,
+  `getAccountLedgerBreakdown`, and `postReconciliationAdjustment` (sub-cent
+  no-op, same-day guard with `force`, credit-card/loan sign warning,
+  deterministic `balance-recon|` external ids); 7 integration tests green,
+  full suite 14 files / 50 tests green, package gates clean.
