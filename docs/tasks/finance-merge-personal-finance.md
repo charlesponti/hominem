@@ -137,11 +137,30 @@ notes, and the PF checkout is tagged read-only.
   pre-migration transactions would bypass `getExistingExternalIds`
   (it only checks source `copilot-money`, while backfilled rows carry
   `hominem`/`copilot-gap-import` sources) — the import flow needs
-  composite-key dedup (account/date/abs/description) before the next
-  real Copilot import lands.
+  composite-key dedup (account/date/abs/description), which landed in
+  W-007 (see below). PR #323 review feedback also shaped apply-time
+  dedup: ledger rows are matched by external id, and re-selected
+  duplicates act as explicit override via `updatePlanSelection`
+  clearing `ledgerDuplicate`.
 - W-008: merge PR #323 opened from this branch. CI pending at last
   check; merge (squash) once green, which lands this file as
-  `Implemented` on `main`.
+  `Implemented` on `main`. Merged (`c80845a62`); the original
+  W-006 follow-up (composite-key dedup before the next real Copilot
+  import) is resolved by W-007 applied on top in #324.
+- Post-merge (PR #324, squash `e6d752a21`): the import HTTP routes
+  moved out of `services/api` into `apps/finance` resource routes
+  (`api.finance.import.*`, handlers in `app/lib/finance/import.server.ts`)
+  so the import UI's same-origin fetches hit the finance origin;
+  WS + worker stayed on the API. Review feedback applied: apply-time
+  dedup by external id, depository in runway default, reconcile plug
+  as-of the reading date, session headers propagated on runway, sign-
+  review rows surfaced in the preflight UI. Then deployed: finance app
+  provisioned on Railway (Dockerfile builder via service `dockerfilePath`,)
+  env mirrored from api/career, `finance.ponti.io` registered (DNS CNAME
+  `finance` → `yuz6fi8c.up.railway.app` + TXT `_railway-verify.finance`
+  pending in Cloudflare), `validate-finance.yml`/`deploy-finance.yml`
+  workflows + `RAILWAY_SERVICE_FINANCE` secret added, `finance` allowed
+  in `just/deploy.sh`.
 - W-007 done: composite-key dedup at plan time (matching rows deselect
   by default with a `ledgerDuplicate` flag, unresolved rows untouched)
   and enforcement at apply time (re-selected rows still refuse to
