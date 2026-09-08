@@ -3,7 +3,7 @@ import { aiUsageMetrics } from '@hominem/utils/testing';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GenerationPubSub } from '../../application/generation-pub-sub';
+import { ChatGenerationStore } from '../../chat/chat-generation-store';
 import type { AppContext, RpcUser } from '../middleware/auth';
 import { requestIdMiddleware } from '../middleware/auth';
 import { apiErrorHandler } from '../middleware/error';
@@ -163,13 +163,11 @@ vi.mock('../../application/ai-usage.service', () => ({
   startAIUsageTimer: () => () => 0,
 }));
 
-vi.mock('../../application/chat-speech.service', () => ({
+vi.mock('../../chat/chat-speech.service', () => ({
   ChatSpeechUnavailableError: class ChatSpeechUnavailableError extends Error {},
-  chatSpeechService: {
-    streamMessageSpeech: mocks.streamMessageSpeech,
-    synthesizeReplyAudioFile: mocks.synthesizeReplyAudioFile,
-    persistSpeechRun: mocks.persistSpeechRun,
-  },
+  streamMessageSpeech: mocks.streamMessageSpeech,
+  synthesizeReplyAudioFile: mocks.synthesizeReplyAudioFile,
+  persistSpeechRun: mocks.persistSpeechRun,
 }));
 
 vi.mock('../../mcp/chat-tool-adapter', () => ({
@@ -191,7 +189,6 @@ vi.mock('@hominem/services/redis', () => ({
 vi.mock('./chats.mapper', () => ({
   toChatDto: vi.fn((chat: { id: string }) => ({ id: chat.id })),
   toChatMessageDto: vi.fn((message: unknown) => message),
-  toStoredUserMessageContent: vi.fn((message: string) => message),
 }));
 
 import { chatsRoutes } from './chats';
@@ -558,8 +555,8 @@ describe('chat stream accounting', () => {
       status: 'running',
     });
     mocks.listGenerationEvents.mockImplementation(async () => {
-      GenerationPubSub.publish(phaseEvent(2));
-      GenerationPubSub.publish(cancelledEvent(3));
+      ChatGenerationStore.publish(phaseEvent(2));
+      ChatGenerationStore.publish(cancelledEvent(3));
       return [phaseEvent(1)];
     });
 

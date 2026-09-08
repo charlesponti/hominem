@@ -1,9 +1,10 @@
 import { ChatRepository } from '@hominem/db/chats';
 import { db } from '@hominem/db/core';
+import { runInTransaction } from '@hominem/db/transaction';
+import { chatFileCleanupQueue } from '@hominem/queues';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { chatMessageService } from '../../application/chat-message.service';
 import {
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
@@ -52,10 +53,21 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const result = await chatMessageService.deleteFollowing({
-      chatId,
-      messageId,
-      ownerUserId: userId,
-    });
+    const result = await runInTransaction((trx) =>
+      ChatRepository.deleteUserMessageAndFollowing(trx, chatId, messageId, userId),
+    );
+    if (result.cleanupFileIds.length > 0) {
+      await chatFileCleanupQueue.add(
+        'delete-chat-files',
+        { userId, fileIds: result.cleanupFileIds },
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1_000 },
+          jobId: `chat-file-cleanup:${chatId}:${messageId}`,
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
     return c.json({ deletedMessageIds: result.deletedMessageIds });
   });

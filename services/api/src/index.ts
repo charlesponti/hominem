@@ -2,7 +2,7 @@ import { logger, LOG_MESSAGES } from '@hominem/telemetry';
 import { serve } from '@hono/node-server';
 import { WebSocketServer } from 'ws';
 
-import { startGenerationNotifyListener } from './application/generation-notify-listener';
+import { ChatGenerationStore } from './chat/chat-generation-store';
 import { env } from './env';
 import { resolveAiProvider, resolveEmailProvider } from './provider-mode';
 import { initRuntime } from './runtime';
@@ -40,7 +40,7 @@ const app = createServer();
 const port = env.PORT ?? 4040;
 const host = '0.0.0.0';
 const websocketServer = new WebSocketServer({ noServer: true });
-const generationNotifyListener = startGenerationNotifyListener();
+ChatGenerationStore.start();
 
 logger.info(LOG_MESSAGES.SERVER_STARTED, { host, port });
 
@@ -52,4 +52,4 @@ serve({
   overrideGlobalObjects: false,
 });
 
-initRuntime('api').installSignalHandlers(() => generationNotifyListener.close());
+initRuntime('api').installSignalHandlers(() => ChatGenerationStore.stop());

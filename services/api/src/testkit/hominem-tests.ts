@@ -21,11 +21,8 @@ import { authDb, db } from '@hominem/db/core';
 import { Hono } from 'hono';
 
 import type { CapabilityDefinition } from '../application/capability';
-import type {
-  ChatGenerationFailureHooks,
-  ChatToolRuntime,
-} from '../application/chat-generation-types';
-import { ChatGenerationService } from '../application/chat-generation.service';
+import type { ChatGenerationFailureHooks, ChatToolRuntime } from '../chat/chat-generation-types';
+import { ChatGenerationService } from '../chat/chat-generation.service';
 import type { ChatToolPlan } from '../mcp/chat-tool-adapter';
 import type { McpToolResult } from '../mcp/tool-registry';
 import type { AppContext, RpcUser } from '../rpc/middleware/auth';

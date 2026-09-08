@@ -48,7 +48,7 @@ vi.mock('@hominem/telemetry', () => ({
   }),
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
-vi.mock('./ai-usage.service', () => ({
+vi.mock('../application/ai-usage.service', () => ({
   assertUnderMonthlyUsageLimit: mocks.assertUnderMonthlyUsageLimit,
   recordAIUsageEvent: mocks.recordAIUsageEvent,
   startAIUsageTimer: () => () => 0,
@@ -56,8 +56,8 @@ vi.mock('./ai-usage.service', () => ({
 
 import {
   ChatSpeechMessageNotFoundError,
-  ChatSpeechService,
   ChatSpeechUnavailableError,
+  streamMessageSpeech,
 } from './chat-speech.service';
 
 const message = {
@@ -67,7 +67,7 @@ const message = {
   content: 'Hello there',
 };
 
-describe('ChatSpeechService.streamMessageSpeech', () => {
+describe('streamMessageSpeech', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getMessageById.mockResolvedValue(message);
@@ -88,7 +88,7 @@ describe('ChatSpeechService.streamMessageSpeech', () => {
   });
 
   it('persists and reconciles a successful stream', async () => {
-    const result = await new ChatSpeechService().streamMessageSpeech({
+    const result = await streamMessageSpeech({
       chatId: 'chat-1',
       messageId: 'message-1',
       ownerUserId: 'user-1',
@@ -112,7 +112,7 @@ describe('ChatSpeechService.streamMessageSpeech', () => {
     mocks.synthesizeSpeechStream.mockRejectedValue(new Error('provider secret'));
 
     await expect(
-      new ChatSpeechService().streamMessageSpeech({
+      streamMessageSpeech({
         chatId: 'chat-1',
         messageId: 'message-1',
         ownerUserId: 'user-1',
@@ -135,7 +135,7 @@ describe('ChatSpeechService.streamMessageSpeech', () => {
     mocks.getMessageById.mockResolvedValue(null);
 
     await expect(
-      new ChatSpeechService().streamMessageSpeech({
+      streamMessageSpeech({
         chatId: 'chat-1',
         messageId: 'message-1',
         ownerUserId: 'user-1',
@@ -155,7 +155,7 @@ describe('ChatSpeechService.streamMessageSpeech', () => {
       mimeType: 'audio/mpeg',
       generationId: null,
     });
-    const result = await new ChatSpeechService().streamMessageSpeech({
+    const result = await streamMessageSpeech({
       chatId: 'chat-1',
       messageId: 'message-1',
       ownerUserId: 'user-1',

@@ -3,8 +3,8 @@ import { Hono } from 'hono';
 import {
   ChatSpeechMessageNotFoundError,
   ChatSpeechUnavailableError,
-  chatSpeechService,
-} from '../../application/chat-speech.service';
+  streamMessageSpeech,
+} from '../../chat/chat-speech.service';
 import { NotFoundError, UnavailableError } from '../errors';
 import type { AppContext } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rate-limit';
@@ -22,7 +22,7 @@ export const chatSpeechRoutes = new Hono<AppContext>()
 
     let result;
     try {
-      result = await chatSpeechService.streamMessageSpeech({
+      result = await streamMessageSpeech({
         chatId,
         messageId,
         ownerUserId: userId,

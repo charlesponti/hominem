@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   sendMessage: vi.fn(),
 }));
 
-vi.mock('../../application/chat-generation.service', () => ({
+vi.mock('../../chat/chat-generation.service', () => ({
   ChatGenerationInputError: class ChatGenerationInputError extends Error {},
   chatGenerationService: {
     respondToConfirmation: mocks.respondToConfirmation,

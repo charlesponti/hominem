@@ -1,6 +1,5 @@
 import type { ChatMessageSnapshot, ChatSnapshot } from '@hominem/chat';
 import type { ChatSourceRecord } from '@hominem/db/chats';
-import type { ChatMessageFileRecord } from '@hominem/db/chats';
 
 export function toChatDto(record: ChatSnapshot) {
   return {
@@ -38,14 +37,4 @@ export function toChatSourceDto(record: ChatSourceRecord) {
     addedByUserId: record.addedByUserId,
     createdAt: record.createdAt,
   };
-}
-
-export function toStoredUserMessageContent(
-  message: string,
-  files: ChatMessageFileRecord[],
-): string {
-  const trimmed = message.trim();
-  if (trimmed.length > 0) return trimmed;
-  if (files.length > 0) return files.map((file) => file.filename ?? 'Attachment').join(', ');
-  return '';
 }

@@ -32,13 +32,15 @@ import { ChatGenerationRepository, ChatRepository } from '@hominem/db/chats';
 import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { db } from '@hominem/db/core';
 import { runInTransaction } from '@hominem/db/transaction';
+import { createRedisChatContextCache } from '@hominem/chat/adapters/redis';
 import { embeddingQueue } from '@hominem/queues';
+import { redis } from '@hominem/services/redis';
 import { isObject } from '@hominem/utils';
 
 import { planChatTools } from '../mcp/chat-tool-adapter';
-import { recordAIUsageEvent, startAIUsageTimer } from './ai-usage.service';
-import { assertUnderMonthlyUsageLimit } from './ai-usage.service';
-import { cacheCompletedChatContext } from './chat-context-cache';
+import { recordAIUsageEvent, startAIUsageTimer } from '../application/ai-usage.service';
+import { assertUnderMonthlyUsageLimit } from '../application/ai-usage.service';
+import { ChatGenerationStore } from './chat-generation-store';
 import { executeGenerationTurn } from './chat-generation-engine';
 import { replayGenerationEvents } from './chat-generation-replay';
 import {
@@ -53,8 +55,9 @@ import type {
   ChatToolRuntime,
 } from './chat-generation-types';
 import { buildChatSystemPrompt } from './chat-prompts';
-import { chatSpeechService } from './chat-speech.service';
-import { GenerationPubSub } from './generation-pub-sub';
+import { persistSpeechRun, synthesizeReplyAudioFile } from './chat-speech.service';
+
+const chatContextCache = createRedisChatContextCache(redis);
 
 export class ChatGenerationInputError extends Error {
   constructor(message: string) {
@@ -737,7 +740,7 @@ export class ChatGenerationService {
 
   async replay(input: ReplayInput): Promise<AsyncIterable<GenerationEvent>> {
     const afterSequence = input.afterSequence ?? 0;
-    const subscriber = GenerationPubSub.subscribe(input.generationId);
+    const subscriber = ChatGenerationStore.subscribe(input.generationId);
     const queue = new AsyncEventQueue<GenerationEvent>(() => subscriber.close());
     void (async () => {
       try {
@@ -1034,7 +1037,9 @@ export class ChatGenerationService {
         },
         context: {
           recordCompletion: ({ chatId, usage }) =>
-            cacheCompletedChatContext({ chatId, model: CHAT_MODEL, usage }).catch(() => undefined),
+            chatContextCache
+              .recordCompletion({ chatId, model: CHAT_MODEL, usage })
+              .catch(() => undefined),
         },
       });
       usage = result.usage;
@@ -1128,7 +1133,7 @@ export class ChatGenerationService {
       : `I'd like to run "${result.pendingToolCall?.toolName ?? 'a tool'}", which needs your approval first.`;
     const audio =
       result.responseModality === 'audio' && result.assistantText.trim()
-        ? await chatSpeechService.synthesizeReplyAudioFile(input.userId, result.assistantText)
+        ? await synthesizeReplyAudioFile(input.userId, result.assistantText)
         : null;
     const toolCalls =
       input.confirmation?.approved === false
@@ -1262,12 +1267,7 @@ export class ChatGenerationService {
       { jobId: `chat-${input.chatId}`, removeOnComplete: true, removeOnFail: false },
     );
     if (audio) {
-      await chatSpeechService.persistSpeechRun(
-        message.id,
-        input.userId,
-        result.assistantText,
-        audio,
-      );
+      await persistSpeechRun(message.id, input.userId, result.assistantText, audio);
     }
     return { message, awaitingConfirmation, events };
   }
