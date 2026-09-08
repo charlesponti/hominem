@@ -120,19 +120,23 @@ export function useChatLifecycle<TReview extends PendingReview = PendingReview>(
     [onError, onTransform],
   );
 
-  const handleAcceptReview = useCallback(async () => {
-    if (!state.pendingReview) return;
-    dispatch({ type: 'set-lifecycle', lifecycleState: 'persisting' });
-    try {
-      const nextSource = await onAcceptReview(state.pendingReview);
-      dispatch({ type: 'set-persisted-source', persistedSource: nextSource });
-      dispatch({ type: 'set-lifecycle', lifecycleState: 'idle' });
-      dispatch({ type: 'set-pending-review', pendingReview: null });
-    } catch (error) {
-      dispatch({ type: 'set-lifecycle', lifecycleState: 'reviewing_changes' });
-      onError('accept', error);
-    }
-  }, [onAcceptReview, onError, state.pendingReview]);
+  const handleAcceptReview = useCallback(
+    async (review?: TReview) => {
+      const current = review ?? state.pendingReview;
+      if (!current) return;
+      dispatch({ type: 'set-lifecycle', lifecycleState: 'persisting' });
+      try {
+        const nextSource = await onAcceptReview(current);
+        dispatch({ type: 'set-persisted-source', persistedSource: nextSource });
+        dispatch({ type: 'set-lifecycle', lifecycleState: 'idle' });
+        dispatch({ type: 'set-pending-review', pendingReview: null });
+      } catch (error) {
+        dispatch({ type: 'set-lifecycle', lifecycleState: 'reviewing_changes' });
+        onError('accept', error);
+      }
+    },
+    [onAcceptReview, onError, state.pendingReview],
+  );
 
   const handleRejectReview = useCallback(async () => {
     if (!state.pendingReview) return;

@@ -64,13 +64,13 @@ just db migrate
 
 ## Documentation
 
-- The root `README.md` is the front door to the Hominem Bible ([docs/](docs/)).
-- Durable product, architecture, design, security, and operational decisions in the appropriate numbered Bible part under the root `docs/` directory.
+- The root `README.md` is the front door to Hominem documentation ([docs/](docs/)).
+- Durable product, architecture, design, security, and operational decisions in the appropriate numbered documentation under the root `docs/` directory.
   - Do not create `docs/` directories inside apps, packages, or services.
-- Keep package READMEs to setup and local entrypoint information; link to the root Bible for governing decisions.
+- Keep package READMEs to setup and local entrypoint information; link to the root documentation for governing decisions.
 - Write current rules and invariants, not incident narratives or temporary task lists. Git history preserves history; the work tracker owns temporary execution.
 - `docs/incidents/` is the one sanctioned exception to that rule: it's where a postmortem's play-by-play actually belongs. But a postmortem is not where a durable rule gets to live — if an incident teaches you something worth keeping, fold it into the relevant subject doc or an ADR in the same change, then let the incident writeup just be the record of what happened.
-- Update the relevant Bible document in the same change when a durable implementation decision changes.
+- Update the relevant documentation in the same change when a durable implementation decision changes.
 
 ## Adding a new package, app, or service
 

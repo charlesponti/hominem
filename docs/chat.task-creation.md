@@ -16,32 +16,55 @@ only ever proposes `task_list`.
 
 ## How "Create tasks" works
 
-`apps/omiro/hooks/use-task-extraction.ts` backs the action, orchestrated
-through `useChatLifecycle` (`@hominem/chat/react`):
+One shared hook backs the action on every surface: `useTaskExtraction`
+(`@hominem/chat/react`, `packages/chat/src/use-task-extraction.ts`),
+orchestrated through `useChatLifecycle`. Each platform supplies a thin
+adapter — `apps/omiro/hooks/use-task-extraction.ts` on mobile,
+`apps/web/app/routes/chat/chat.$chatId.tsx` on web — injecting its RPC
+calls, cache invalidation, user-facing copy, and error presentation, plus
+the shared review surface described below. There is no per-platform
+reimplementation of the flow.
 
 1. **Extract** - the transcript is sent to `POST /api/tasks/extract`
-   (`services/api/src/rpc/routes/tasks.ts`), which calls `extractTasks`
-   (`@hominem/ai`, OpenRouter) with `TASK_EXTRACTION_PROMPT` and returns a
+   (`services/api/src/rpc/routes/tasks.extract.ts`), which calls
+   `extractTasks` (`services/api/src/application/task-extraction.service.ts`, OpenRouter structured output)
+   with `TASK_EXTRACTION_PROMPT` and returns a
    list of `{ title }` drafts. Rate-limited (`ai-task-extract`, 20/min) and
    gated by the caller's monthly AI usage limit.
-2. **Review** - the drafts render in the shared review surface
-   (`ClassificationReview`, via `chat-review-overlay.tsx`) as a
-   `task_list`-typed proposal; the user can accept or reject before anything
-   is persisted.
+2. **Review** - the drafts render as a shared lifecycle/proposal model in a
+   platform-specific review surface (`ClassificationReview` on mobile and
+   `ChatTaskReview` on web) as a `task_list`-typed proposal; the user can
+   accept or reject before anything is persisted. Proposal items receive
+   stable client-local IDs so duplicate titles remain independently usable.
 3. **Create** - on accept, `POST /api/tasks/batch`
    (`CreateTaskBatchSchema`: 1-10 tasks, each title <=120 chars) persists the
    result:
    - **Exactly one task** -> a single row with `artifactType: 'task'`, no
      parent (`{ parent: null, tasks: [task] }`).
-   - **More than one** -> `TaskRepository.createBatch` creates a parent row
-     with `artifactType: 'task_list'` (title auto-derived as `${n} tasks`
-     via `buildTaskListTitle`) plus child task rows under it via
-     `parentTaskId`.
+   - **More than one** -> `persistExtractedTasks`
+     (`services/api/src/application/tasks.service.ts`) creates a parent row
+     with `artifactType: 'task_list'` (title auto-derived as `${n} tasks`)
+     plus child task rows under it via `parentTaskId`.
 
 The hook then resolves a canonical `SessionSource` (`kind: 'artifact'`, the
 created row's real `artifactType`) so the surrounding chat state updates
 immediately - the user never sees the artifact type they were promised
 ("task list") diverge from what actually got saved.
+
+### Platform adapters
+
+- **Mobile** (`apps/omiro/hooks/use-task-extraction.ts`) - maps
+  `ChatMessageItem`s to `{ role, content }`, calls the RPC client, and
+  invalidates `taskKeys.all` after creation; errors surface via `Alert.alert`.
+- **Web** (`apps/web/app/routes/chat/chat.$chatId.tsx`) - maps
+  `ChatMessageView`s the same way, calls the same endpoints through
+  `useApiClient`, and invalidates `['tasks']` after creation. Dialog states map onto the
+  lifecycle: `classifying` shows the extracting shimmer,
+  `reviewing_changes` shows `ChatTaskReview` (`chat-task-review.tsx`, with
+  per-item reject tracked locally and the accepted subset passed to
+  `handleAcceptReview`), `persisting` drives its saving state, and failures
+  land in the dialog's error panel with retry. The accepted subset — not
+  the full proposal — is what gets created.
 
 ### Recovery and submitted meaning
 
@@ -59,9 +82,12 @@ not a deterministic task extraction).
 ## Adjacent extraction paths
 
 - `POST /api/tasks/voice` - same idea for a voice transcript
-  (`extractVoiceTasks`), its own rate-limit bucket (`ai-task-voice`).
+  (`extractVoiceTasks`, same service and route module as `/extract`), its
+  own rate-limit bucket (`ai-task-voice`).
 - `POST /api/tasks/parse` - time-block parsing for calendar scheduling
-  (`extractTimeBlock`); unrelated to task creation.
+  (`extractTimeBlock` in
+  `services/api/src/application/time-block-extraction.service.ts`, routed by
+  `services/api/src/rpc/routes/tasks.parse.ts`); unrelated to task creation.
 - `POST /api/tasks` - direct single-task creation with the full scheduling
   field set (`dueAt`, `schedulingWindowStartAt`, `scheduledStartAt`,
   `participants`, ...) and an explicit `parentTaskId`/`artifactType`. This is

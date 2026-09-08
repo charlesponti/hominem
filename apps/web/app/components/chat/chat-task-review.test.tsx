@@ -6,8 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { ChatTaskReview } from './chat-task-review';
 
 const tasks = [
-  { title: 'Send the brief', description: 'Email the project brief.' },
-  { title: 'Book review' },
+  { id: 'task-1', title: 'Send the brief', description: 'Email the project brief.' },
+  { id: 'task-2', title: 'Book review' },
 ];
 
 describe('ChatTaskReview', () => {
@@ -25,7 +25,7 @@ describe('ChatTaskReview', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Reject Book review' }));
-    expect(onReject).toHaveBeenCalledWith('Book review');
+    expect(onReject).toHaveBeenCalledWith('task-2');
     fireEvent.click(screen.getByRole('button', { name: 'Accept selected' }));
     expect(onAccept).toHaveBeenCalledWith(tasks);
   });

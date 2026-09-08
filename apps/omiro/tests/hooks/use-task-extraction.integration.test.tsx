@@ -106,7 +106,10 @@ describe('useTaskExtraction', () => {
       expect.objectContaining({
         proposedType: 'task_list',
         proposedTitle: '2 tasks',
-        items: [{ title: 'Book venue' }, { title: 'Send invites' }],
+        items: [
+          { id: 'task-proposal-0', title: 'Book venue' },
+          { id: 'task-proposal-1', title: 'Send invites' },
+        ],
       }),
     );
   });
