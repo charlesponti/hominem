@@ -118,6 +118,71 @@ describe('ChatRepository message deletion', () => {
     expect(new Date(chat.lastMessageAt).toISOString()).toBe('2026-01-01T00:00:01.000Z');
   });
 
+  it('edits a message and truncates all later messages', async () => {
+    const fixture = await createFixture();
+
+    await expect(
+      ChatRepository.updateMessage(
+        db,
+        fixture.chatId,
+        fixture.messageIds.target,
+        fixture.userId,
+        'Edited content',
+      ),
+    ).resolves.toMatchObject({
+      message: { id: fixture.messageIds.target, content: 'Edited content' },
+      deletedMessageIds: [fixture.messageIds.later],
+      cleanupFileIds: [],
+    });
+
+    await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toMatchObject([
+      { id: fixture.messageIds.first, content: 'Keep this message' },
+      { id: fixture.messageIds.target, content: 'Edited content' },
+    ]);
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select('id')
+        .where('chatId', '=', fixture.chatId)
+        .execute(),
+    ).resolves.toEqual([]);
+  });
+
+  it("does not delete another user's message when editing", async () => {
+    const fixture = await createFixture();
+    const otherUserId = randomUUID();
+    userIds.push(otherUserId);
+    await authDb
+      .insertInto('user')
+      .values({ id: otherUserId, name: 'Other User', email: `${otherUserId}@example.com` })
+      .execute();
+
+    await expect(
+      ChatRepository.updateMessage(
+        db,
+        fixture.chatId,
+        fixture.messageIds.target,
+        otherUserId,
+        'Hijacked content',
+      ),
+    ).rejects.toThrow('ChatMessage not found');
+    await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toHaveLength(3);
+  });
+
+  it('rejects editing a non-user message', async () => {
+    const fixture = await createFixture();
+
+    await expect(
+      ChatRepository.updateMessage(
+        db,
+        fixture.chatId,
+        fixture.messageIds.later,
+        fixture.userId,
+        'Rewritten assistant reply',
+      ),
+    ).rejects.toThrow('ChatMessage not found');
+  });
+
   it('returns a stable cursor page ordered by activity and id', async () => {
     const fixture = await createFixture();
     const chatIds = [randomUUID(), randomUUID(), randomUUID()];

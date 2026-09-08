@@ -391,6 +391,26 @@ export const ChatGenerationRepository = {
       .execute();
   },
 
+  // Used when messages are deleted or truncated (message delete, message edit)
+  // so the generation runs that produced or targeted them don't dangle.
+  async deleteByMessageIds(
+    handle: DbHandle,
+    input: { chatId: string; messageIds: string[] },
+  ): Promise<void> {
+    if (input.messageIds.length === 0) return;
+    await handle
+      .deleteFrom('app.chatGenerationRuns')
+      .where('chatId', '=', input.chatId)
+      .where((eb) =>
+        eb.or([
+          eb('userMessageId', 'in', input.messageIds),
+          eb('targetAssistantMessageId', 'in', input.messageIds),
+          eb('assistantMessageId', 'in', input.messageIds),
+        ]),
+      )
+      .execute();
+  },
+
   async appendEvent(
     handle: DbHandle,
     input: AppendChatGenerationEventInput,

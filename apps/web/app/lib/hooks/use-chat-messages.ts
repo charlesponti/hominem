@@ -69,13 +69,17 @@ export function useChatMessages({
       const queryKey = chatQueryKeys.messages(chatId);
       await queryClient.cancelQueries({ queryKey });
       const previousMessages = queryClient.getQueryData<ChatMessageView[]>(queryKey);
-      queryClient.setQueryData<ChatMessageView[]>(queryKey, (currentMessages = []) =>
-        currentMessages.map((message) =>
-          message.id === messageId
-            ? { ...message, content, updatedAt: new Date().toISOString() }
-            : message,
-        ),
-      );
+      queryClient.setQueryData<ChatMessageView[]>(queryKey, (currentMessages = []) => {
+        const targetIndex = currentMessages.findIndex((message) => message.id === messageId);
+        if (targetIndex === -1) return currentMessages;
+        return currentMessages
+          .slice(0, targetIndex + 1)
+          .map((message, index) =>
+            index === targetIndex
+              ? { ...message, content, updatedAt: new Date().toISOString() }
+              : message,
+          );
+      });
       return { previousMessages };
     },
     onError: (_error, _variables, context) => {

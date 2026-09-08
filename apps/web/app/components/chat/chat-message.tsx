@@ -309,26 +309,6 @@ export const ChatMessage = memo(function ChatMessage({
                       value={draft}
                     />
                     {editError ? <p className="text-xs text-destructive">{editError}</p> : null}
-                    <div className="flex gap-1">
-                      <MessageAction
-                        label="Save edit"
-                        onClick={() => void saveEdit()}
-                        tooltip="Save edit"
-                      >
-                        <Check aria-hidden="true" size={14} />
-                      </MessageAction>
-                      <MessageAction
-                        label="Cancel edit"
-                        onClick={() => {
-                          setDraft(message.content);
-                          setEditError(null);
-                          setIsEditing(false);
-                        }}
-                        tooltip="Cancel edit"
-                      >
-                        <X aria-hidden="true" size={14} />
-                      </MessageAction>
-                    </div>
                   </div>
                 ) : (
                   <>
@@ -453,57 +433,109 @@ export const ChatMessage = memo(function ChatMessage({
                   ) : null}
                 </>
               ) : null}
-              {canEdit && !isRegenerationActive ? (
-                <MessageAction
-                  label="Edit message"
-                  onClick={() => {
-                    setDraft(message.content);
-                    setEditError(null);
-                    setIsEditing(true);
-                  }}
-                  tooltip="Edit message"
-                >
-                  <Pencil aria-hidden="true" size={14} />
-                </MessageAction>
-              ) : null}
-              {canDelete ? (
-                <AlertDialog
-                  onOpenChange={(open) => {
-                    setIsDeleteOpen(open);
-                    if (open) setDeleteError(null);
-                  }}
-                  open={isDeleteOpen}
-                >
-                  <AlertDialogTrigger asChild>
-                    <MessageAction
-                      disabled={isDeleting || isGenerationActive || isEditing}
-                      label="Delete user message"
-                      tooltip="Delete message"
-                    >
-                      <Trash2 aria-hidden="true" size={14} />
-                    </MessageAction>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete this message?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete this message and all later messages in the conversation.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        disabled={isDeleting}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          void confirmDelete();
+              {canEdit || canDelete ? (
+                <div className="grid">
+                  <AnimatePresence initial={false}>
+                    {isEditing ? (
+                      <m.div
+                        animate={{ opacity: 1 }}
+                        className="col-start-1 row-start-1 flex gap-1"
+                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0 }}
+                        key="edit-confirm-actions"
+                        transition={{
+                          duration: reduceMotion ? 0.08 : 0.15,
+                          ease: [0.23, 1, 0.32, 1],
                         }}
                       >
-                        {isDeleting ? 'Deleting…' : 'Delete message'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <MessageAction
+                          label="Save edit"
+                          onClick={() => void saveEdit()}
+                          tooltip="Save edit"
+                        >
+                          <Check aria-hidden="true" size={14} />
+                        </MessageAction>
+                        <MessageAction
+                          label="Cancel edit"
+                          onClick={() => {
+                            setDraft(message.content);
+                            setEditError(null);
+                            setIsEditing(false);
+                          }}
+                          tooltip="Cancel edit"
+                        >
+                          <X aria-hidden="true" size={14} />
+                        </MessageAction>
+                      </m.div>
+                    ) : (
+                      <m.div
+                        animate={{ opacity: 1 }}
+                        className="col-start-1 row-start-1 flex gap-1"
+                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0 }}
+                        key="edit-trigger-actions"
+                        transition={{
+                          duration: reduceMotion ? 0.08 : 0.15,
+                          ease: [0.23, 1, 0.32, 1],
+                        }}
+                      >
+                        {canEdit && !isRegenerationActive ? (
+                          <MessageAction
+                            label="Edit message"
+                            onClick={() => {
+                              setDraft(message.content);
+                              setEditError(null);
+                              setIsEditing(true);
+                            }}
+                            tooltip="Edit message"
+                          >
+                            <Pencil aria-hidden="true" size={14} />
+                          </MessageAction>
+                        ) : null}
+                        {canDelete ? (
+                          <AlertDialog
+                            onOpenChange={(open) => {
+                              setIsDeleteOpen(open);
+                              if (open) setDeleteError(null);
+                            }}
+                            open={isDeleteOpen}
+                          >
+                            <AlertDialogTrigger asChild>
+                              <MessageAction
+                                disabled={isDeleting || isGenerationActive}
+                                label="Delete user message"
+                                tooltip="Delete message"
+                              >
+                                <Trash2 aria-hidden="true" size={14} />
+                              </MessageAction>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will delete this message and all later messages in the
+                                  conversation.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  disabled={isDeleting}
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    void confirmDelete();
+                                  }}
+                                >
+                                  {isDeleting ? 'Deleting…' : 'Delete message'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : null}
+                      </m.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ) : null}
               {message.role === 'assistant' && onRegenerate ? (
                 <MessageAction

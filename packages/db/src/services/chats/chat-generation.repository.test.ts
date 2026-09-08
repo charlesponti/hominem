@@ -173,6 +173,78 @@ describe('ChatGenerationRepository', () => {
     expect(() => toJsonValue(Symbol('not-json'))).toThrow('Value is not JSON serializable');
   });
 
+  it('deletes generation runs referencing any of the given message ids', async () => {
+    const { userId, chatId, generationId } = await createGeneration();
+    const userMessageId = await createAssistantMessage(chatId, userId);
+    const targetAssistantMessageId = await createAssistantMessage(chatId, userId);
+    const assistantMessageId = await createAssistantMessage(chatId, userId);
+    const unrelatedRunId = randomUUID();
+
+    await db
+      .insertInto('app.chatGenerationRuns')
+      .values([
+        {
+          id: randomUUID(),
+          chatId,
+          ownerUserId: userId,
+          kind: 'send',
+          status: 'committed',
+          userMessageId,
+        },
+        {
+          id: randomUUID(),
+          chatId,
+          ownerUserId: userId,
+          kind: 'regenerate',
+          status: 'committed',
+          targetAssistantMessageId,
+        },
+        {
+          id: randomUUID(),
+          chatId,
+          ownerUserId: userId,
+          kind: 'send',
+          status: 'committed',
+          assistantMessageId,
+        },
+        {
+          id: unrelatedRunId,
+          chatId,
+          ownerUserId: userId,
+          kind: 'send',
+          status: 'committed',
+        },
+      ])
+      .execute();
+
+    await ChatGenerationRepository.deleteByMessageIds(db, {
+      chatId,
+      messageIds: [userMessageId, targetAssistantMessageId, assistantMessageId],
+    });
+
+    const remaining = await db
+      .selectFrom('app.chatGenerationRuns')
+      .select('id')
+      .where('chatId', '=', chatId)
+      .execute();
+    // The fixture's own generation (from createGeneration) plus the unrelated run survive.
+    expect(remaining.map((run) => run.id).sort()).toEqual([generationId, unrelatedRunId].sort());
+  });
+
+  it('no-ops on an empty message id list', async () => {
+    const { chatId, generationId } = await createGeneration();
+
+    await ChatGenerationRepository.deleteByMessageIds(db, { chatId, messageIds: [] });
+
+    await expect(
+      db
+        .selectFrom('app.chatGenerationRuns')
+        .select('id')
+        .where('id', '=', generationId)
+        .executeTakeFirst(),
+    ).resolves.toMatchObject({ id: generationId });
+  });
+
   it('appends ordered events idempotently and updates the projection atomically', async () => {
     const { userId, chatId, generationId } = await createGeneration();
     const event = {

@@ -17,6 +17,7 @@ import { sql } from '../../db';
 import { NotFoundError, ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
+import { ChatGenerationRepository } from './chat-generation.repository';
 
 export type { ChatMessageFileRecord, ChatMessageToolCallRecord } from '@hominem/chat';
 
@@ -45,6 +46,12 @@ export interface ChatSourceRecord {
 }
 
 export interface DeleteChatMessagesResult {
+  deletedMessageIds: string[];
+  cleanupFileIds: string[];
+}
+
+export interface UpdateMessageResult {
+  message: ChatMessageSnapshot;
   deletedMessageIds: string[];
   cleanupFileIds: string[];
 }
@@ -200,6 +207,42 @@ function toChatGenerationRunRecord(row: ChatGenerationRunRow): ChatGenerationRun
 
 function toJsonColumnValue(value: readonly unknown[] | null | undefined): string | null {
   return value ? JSON.stringify(value) : null;
+}
+
+// Deletes the given messages (and their generation runs), returning the ids
+// deleted plus any audio file ids that need queue-based cleanup. Shared by
+// message delete (deletes the target + following) and message edit (deletes
+// only the following messages, keeping the edited target).
+async function deleteMessages(
+  handle: DbHandle,
+  chatId: string,
+  messages: { id: string; files: unknown }[],
+): Promise<DeleteChatMessagesResult> {
+  const cleanupFileIdsSet = new Set<string>();
+  for (const message of messages) {
+    for (const file of parseChatMessageFiles(message.files, message.id) ?? []) {
+      if (file.type === 'audio' && file.fileId) {
+        cleanupFileIdsSet.add(file.fileId);
+      }
+    }
+  }
+  const cleanupFileIds = [...cleanupFileIdsSet];
+  const deletedMessageIds = messages.map((message) => message.id);
+
+  if (deletedMessageIds.length > 0) {
+    await ChatGenerationRepository.deleteByMessageIds(handle, {
+      chatId,
+      messageIds: deletedMessageIds,
+    });
+
+    await handle
+      .deleteFrom('app.chatMessages')
+      .where('chatId', '=', chatId)
+      .where('id', 'in', deletedMessageIds)
+      .execute();
+  }
+
+  return { deletedMessageIds, cleanupFileIds };
 }
 
 export const ChatRepository = {
@@ -435,14 +478,16 @@ export const ChatRepository = {
     return toChatRecord(archived);
   },
 
-  // Only the author can edit their own message, and only user messages are editable
-  async updateMessageContent(
+  // Only the author can edit their own message, and only user messages are editable.
+  // Editing truncates the conversation: everything after the edited message is
+  // deleted, since it was generated in response to the now-stale content.
+  async updateMessage(
     handle: DbHandle,
     chatId: string,
     messageId: string,
     userId: string,
     content: string,
-  ): Promise<ChatMessageSnapshot> {
+  ): Promise<UpdateMessageResult> {
     const existing = await handle
       .selectFrom('app.chatMessages')
       .selectAll()
@@ -464,7 +509,21 @@ export const ChatRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return toChatMessageRecord(updated);
+    const following = await handle
+      .selectFrom('app.chatMessages')
+      .select(['id', 'files'])
+      .where('chatId', '=', chatId)
+      .where((eb) =>
+        eb.or([
+          eb('createdat', '>', existing.createdat),
+          eb.and([eb('createdat', '=', existing.createdat), eb('id', '>', existing.id)]),
+        ]),
+      )
+      .execute();
+
+    const { deletedMessageIds, cleanupFileIds } = await deleteMessages(handle, chatId, following);
+
+    return { message: toChatMessageRecord(updated), deletedMessageIds, cleanupFileIds };
   },
 
   async deleteUserMessageAndFollowing(
@@ -489,49 +548,15 @@ export const ChatRepository = {
       .selectFrom('app.chatMessages')
       .select(['id', 'files'])
       .where('chatId', '=', chatId)
-      .where((expressionBuilder) =>
-        expressionBuilder.or([
-          expressionBuilder('createdat', '>', target.createdat),
-          expressionBuilder.and([
-            expressionBuilder('createdat', '=', target.createdat),
-            expressionBuilder('id', '>=', target.id),
-          ]),
+      .where((eb) =>
+        eb.or([
+          eb('createdat', '>', target.createdat),
+          eb.and([eb('createdat', '=', target.createdat), eb('id', '>=', target.id)]),
         ]),
       )
       .execute();
 
-    const cleanupFileIdsSet = new Set<string>();
-    for (const message of messages) {
-      for (const file of parseChatMessageFiles(message.files, message.id) ?? []) {
-        if (file.type === 'audio' && file.fileId) {
-          cleanupFileIdsSet.add(file.fileId);
-        }
-      }
-    }
-    const cleanupFileIds = [...cleanupFileIdsSet];
-    const deletedMessageIds = messages.map((message) => message.id);
-
-    if (deletedMessageIds.length > 0) {
-      await handle
-        .deleteFrom('app.chatGenerationRuns')
-        .where('chatId', '=', chatId)
-        .where((expressionBuilder) =>
-          expressionBuilder.or([
-            expressionBuilder('userMessageId', 'in', deletedMessageIds),
-            expressionBuilder('targetAssistantMessageId', 'in', deletedMessageIds),
-            expressionBuilder('assistantMessageId', 'in', deletedMessageIds),
-          ]),
-        )
-        .execute();
-
-      await handle
-        .deleteFrom('app.chatMessages')
-        .where('chatId', '=', chatId)
-        .where('id', 'in', deletedMessageIds)
-        .execute();
-    }
-
-    return { deletedMessageIds, cleanupFileIds };
+    return deleteMessages(handle, chatId, messages);
   },
 
   async getMessageById(

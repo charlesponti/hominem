@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   getMessageById: vi.fn(),
   searchMessages: vi.fn(),
   deleteUserMessageAndFollowing: vi.fn(),
+  updateMessage: vi.fn(),
   deleteAssistantMessage: vi.fn(),
   insertMessage: vi.fn(),
   touchLastMessage: vi.fn(),
@@ -90,6 +91,7 @@ vi.mock('@hominem/db/chats', async () => {
       getMessageById: mocks.getMessageById,
       searchMessages: mocks.searchMessages,
       deleteUserMessageAndFollowing: mocks.deleteUserMessageAndFollowing,
+      updateMessage: mocks.updateMessage,
       deleteAssistantMessage: mocks.deleteAssistantMessage,
       insertMessage: mocks.insertMessage,
       touchLastMessage: mocks.touchLastMessage,
@@ -693,6 +695,66 @@ describe('chat message deletion', () => {
 
     expect(response.status).not.toBe(200);
     expect(mocks.deleteUserMessageAndFollowing).not.toHaveBeenCalled();
+  });
+});
+
+describe('chat message edit', () => {
+  const editedUserMessage = {
+    ...testAssistantMessage,
+    id: '00000000-0000-4000-8000-000000000003',
+    role: 'user' as const,
+    content: 'Edited content',
+  };
+
+  beforeEach(() => {
+    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
+    mocks.updateMessage.mockReset();
+    mocks.updateMessage.mockResolvedValue({
+      message: editedUserMessage,
+      deletedMessageIds: ['message-2'],
+      cleanupFileIds: [],
+    });
+  });
+
+  it('updates the message content and reports the deleted following messages', async () => {
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: 'Edited content' }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      id: editedUserMessage.id,
+      content: 'Edited content',
+      deletedMessageIds: ['message-2'],
+    });
+    expect(mocks.updateMessage).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000003',
+      testUser.id,
+      'Edited content',
+    );
+  });
+
+  it('does not edit when the chat is not owned', async () => {
+    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: 'Edited content' }),
+      },
+    );
+
+    expect(response.status).not.toBe(200);
+    expect(mocks.updateMessage).not.toHaveBeenCalled();
   });
 });
 

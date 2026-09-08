@@ -39,14 +39,26 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const messageId = getMessageId(c);
     const { content } = c.req.valid('json');
     await ChatRepository.getOwnedOrThrow(db, chatId, userId);
-    const updated = await ChatRepository.updateMessageContent(
-      db,
-      chatId,
-      messageId,
-      userId,
-      content,
+    const result = await runInTransaction((trx) =>
+      ChatRepository.updateMessage(trx, chatId, messageId, userId, content),
     );
-    return c.json(toChatMessageDto(updated));
+    if (result.cleanupFileIds.length > 0) {
+      await chatFileCleanupQueue.add(
+        'delete-chat-files',
+        { userId, fileIds: result.cleanupFileIds },
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1_000 },
+          jobId: `chat-file-cleanup:${chatId}:${messageId}`,
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
+    return c.json({
+      ...toChatMessageDto(result.message),
+      deletedMessageIds: result.deletedMessageIds,
+    });
   })
   .delete('/messages/:messageId', async (c) => {
     const userId = c.get('auth')!.userId;
