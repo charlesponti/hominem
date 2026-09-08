@@ -107,6 +107,11 @@ Flag these with evidence, not as automatic violations:
 - A route catches broad errors and decides product-visible failure behavior.
 - A route maps directly from database rows to client DTOs.
 - `packages/rpc` contains domain state transitions or server workflow logic.
+- A route or service calls `getOwnedOrThrow` (or equivalent) before calling a
+  repository method that already scopes its own query by owner — see
+  [packages/db/AGENTS.md](../../../packages/db/AGENTS.md)'s "Ownership-scoped
+  mutations" rule. That's a redundant DB round trip, not a defensible
+  authorization crossing.
 
 Preserve route-local code when it is genuinely transport-specific: validating
 the route input, setting HTTP headers/status, adapting an async iterable to

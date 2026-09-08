@@ -22,14 +22,14 @@ export const chatResourceRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
     const { title } = c.req.valid('json');
-
+    // updateTitle is ownership-scoped and throws NotFoundError itself.
     await ChatRepository.updateTitle(db, chatId, userId, title);
-
     return c.json({ success: true });
   })
   .post('/archive', async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
+    // archive is ownership-scoped and throws NotFoundError itself.
     const archived = await ChatRepository.archive(db, chatId, userId);
     return c.json(toChatDto(archived));
   });

@@ -42,3 +42,28 @@ Each domain has one repository file under `packages/db/src/services/<domain>/<na
 5. Compose repositories in one direction. Put shared sibling checks in a leaf module rather than importing back into a parent domain.
 
 At the RPC layer, return repository DTOs directly with `c.json({ x })`; do not recreate a parallel response type. Use `runInTransaction` from `@hominem/db/transaction` for multi-table writes.
+
+### Ownership-scoped mutations — no separate `getOwnedOrThrow` round trip
+
+For a repository method that mutates (or looks up before mutating) a single
+row owned by a user or otherwise access-scoped resource:
+
+- Scope the query's `WHERE` by both the row id and the owner column in the
+  same statement (e.g. `.where('id', '=', chatId).where('ownerUserid', '=',
+  userId)`), so the statement both performs the operation and enforces
+  ownership in one round trip.
+- Never rely on Kysely's default `executeTakeFirstOrThrow()` for that
+  owner-scoped query — it throws a generic `NoResultError`, not a
+  `ServiceError`, so the API error middleware falls through to a 500 instead
+  of a 404. Use `executeTakeFirst()` (checking the row, or
+  `numUpdatedRows`/`numDeletedRows` for an update/delete with no
+  `.returning()`) and throw `NotFoundError` explicitly, so a missing or
+  unowned row maps to the same 404 a preceding `getOwnedOrThrow` would have
+  produced.
+- Callers (routes, application services) must not call `getOwnedOrThrow` (or
+  equivalent) before calling such a method — it is a pure redundant round
+  trip once the method enforces the same boundary itself.
+- This only applies when the method's own query is scoped by owner. A read
+  that queries by resource id alone (e.g. `getMessages`, `listChatSources`)
+  is not self-scoping — an explicit ownership check stays load-bearing there
+  until the query itself is extended (JOIN or owner clause) to cover it.
