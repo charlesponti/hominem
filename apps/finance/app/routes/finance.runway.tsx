@@ -16,8 +16,18 @@ import {
   YAxis,
 } from 'recharts';
 
+import { getServerSession } from '~/lib/auth.server';
+import { getLiveRunway } from '~/lib/finance/ledger.server';
 import { useCalculateRunway } from '~/lib/hooks/use-runway';
 import { formatCurrency } from '~/lib/number.utils';
+
+import type { Route } from './+types/finance.runway';
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const { user } = await getServerSession(request);
+  if (!user?.id) return { live: null };
+  return { live: await getLiveRunway(user.id) };
+}
 
 interface PlannedPurchase {
   description: string;
@@ -25,7 +35,8 @@ interface PlannedPurchase {
   date: string;
 }
 
-export default function RunwayPage() {
+export default function RunwayPage({ loaderData }: Route.ComponentProps) {
+  const { live } = loaderData;
   const initialBalanceId = useId();
   const monthlyExpensesId = useId();
   const descriptionId = useId();
@@ -153,6 +164,107 @@ export default function RunwayPage() {
           </Badge>
         )}
       </div>
+
+      {live ? (
+        <div className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ledger Cash</CardTitle>
+                <DollarSign className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatCurrency(live.startingCash)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Across {live.liquidAccounts.length} liquid accounts, as of {live.asOfDate}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Burn</CardTitle>
+                <TrendingDown className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(live.weeklyRecurringOutflow + live.weeklyVariableAllowance)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(live.weeklyRecurringOutflow)} recurring ·{' '}
+                  {formatCurrency(live.weeklyVariableAllowance)} allowance
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Projected Ending</CardTitle>
+                <Calendar className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(
+                    live.weeks[live.weeks.length - 1]?.endingCash ?? live.startingCash,
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  After {live.weeks.length} weeks at the current burn
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recurring Basis</CardTitle>
+                <TrendingDown className="size-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{live.recurringTxnCount}</div>
+                <p className="text-xs text-muted-foreground">
+                  Recurring debits in the trailing {live.recurringLookbackMonths} months
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Live trajectory</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="pb-2 font-medium">Week</th>
+                    <th className="pb-2 font-medium">Starting</th>
+                    <th className="pb-2 text-right font-medium">Net change</th>
+                    <th className="pb-2 text-right font-medium">Ending</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {live.weeks.slice(0, 8).map((week) => (
+                    <tr key={week.week} className="border-t border-border">
+                      <td className="py-2 tabular-nums">
+                        {week.week} · {week.weekStart}
+                      </td>
+                      <td className="py-2 tabular-nums">{formatCurrency(week.beginningCash)}</td>
+                      <td className="py-2 text-right tabular-nums">
+                        {formatCurrency(week.netChange)}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">
+                        {formatCurrency(week.endingCash)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {live.weeklyVariableAllowance === 0 ? (
+                <p className="pt-2 text-xs text-muted-foreground">
+                  No monthly budgets configured yet, so the variable allowance is $0 — this shows
+                  recurring burn only.
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
       {chartData.length > 0 && (
         <div className="grid gap-6 md:grid-cols-4">

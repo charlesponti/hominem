@@ -40,7 +40,7 @@ all deliberately left dropped (see work-sequence notes).
 | W-003 | Ledger runway service | `packages/finance/src/runway.ts` | W-001 | `finance.runway.integration.test.ts` | `computeLedgerRunway` matches `pfin runway` math (liquid-type cash, trailing recurring average, budget-cap allowance) to 2dp on migrated data |
 | W-004 | Diagnostics (transfer-pairs, gates) | `packages/finance/src/diagnostics.ts` | W-001 | `finance.diagnostics.integration.test.ts` | `findTransferPairs` and `getValidationGates` reproduce PF gate outputs on the same dataset |
 | W-005 | Verify September load + remediate `recurring` flags | `packages/finance/scripts/backfill-pfin-to-postgres.mjs` (throwaway, excluded from exports) | W-001 | all parity checks green; PG `recurring` 0 → 731; re-run plans 0 updates | Dev PG already held the full 20,560-row load, so no inserts were needed — only flag updates |
-| W-006 | API/RPC wiring + retire PF checkout | `services/api` finance routes, docs | W-002, W-003, W-004, W-005 | preflight/confirm e2e on migrated data; PF archived read-only | Read endpoints for reconcile/runway/pairs/gates and the `true-up` mutation are live; no `commander` CLI in the package |
+| W-006 | Wire tools into `apps/finance` (no new API routes, per user) + retire PF checkout | `apps/finance` routes + server data module | W-002, W-003, W-004, W-005 | app typecheck/lint/tests/build green; dev-server smoke (auth redirects + public runway 200) | `finance/reconcile` (staleness, true-up, breakdown, health), `finance/transfers`, live ledger section on `finance/runway` |
 
 ## Acceptance criteria
 
@@ -109,6 +109,21 @@ notes, and the PF checkout is tagged read-only.
   on re-run; fixed before commit). PF `sources/archive/` CSVs are absent
   from the PF checkout, so `personal_finance.db` (read-only) was the
   source of truth throughout; PF CSVs and DB were never written.
+- W-006 done in `apps/finance` (user chose app wiring over new API
+  routes): `app/lib/finance/ledger.server.ts` is the single server-only
+  entry to `@hominem/finance-services` (new workspace dep; DATABASE_URL
+  added to `.env.example` + local `.env` since loaders now need it).
+  `finance/reconcile` (staleness, true-up action with validation,
+  per-account breakdown, health gates), `finance/transfers` (window/min
+  filters), and a live-ledger section atop the existing runway page
+  (public calculator untouched; loader uses `getServerSession`, not
+  `requireAuth`). Evidence: app typecheck/lint/format/tests green (10
+  new: pure input parsing + mocked loader/action tests), full `build`
+  green (proves server bundling with pg), dev-server smoke (reconcile
+  and transfers 302 to hosted login, runway 200). Detour fixed: the
+  worktree's node_modules had broken `file:`-protocol links (nuked +
+  fresh install) and several workspace builds were missing (built the
+  dep chain). PF checkout archival still open.
   Follow-up for W-006 or later: a future Copilot export containing
   pre-migration transactions would bypass `getExistingExternalIds`
   (it only checks source `copilot-money`, while backfilled rows carry
