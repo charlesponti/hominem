@@ -11,7 +11,9 @@ import {
 import { Message, MessageContent } from '~/components/chat/message';
 import { Shimmer } from '~/components/chat/shimmer';
 import { Button } from '~/components/ui/button';
+import type { ChatLoadState } from '~/lib/chat/compute-chat-load-state';
 import type { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
+import { useNewMessageIds } from '~/lib/hooks/use-new-message-ids';
 import type { useRegenerateMessage } from '~/lib/hooks/use-regenerate-message';
 import type { useToolCallRespond } from '~/lib/hooks/use-tool-call-respond';
 import type { ChatMessageView as ChatMessage } from '~/lib/types/chat';
@@ -40,7 +42,7 @@ interface ChatConversationProps {
   onRegenerate: (messageId: string) => void;
   onCancelRegenerate: () => void;
   onRetryRegenerate: () => void;
-  loadState: 'loading' | 'error' | 'not-found' | 'ready';
+  loadState: ChatLoadState;
   loadErrorMessage?: string;
   onRetryLoad: () => void;
   onStartNewChat: () => void;
@@ -145,6 +147,7 @@ export const ChatConversation = memo(function ChatConversation({
       void toolCallRespond.respond({ messageId, toolCallId, approved: false }),
     [toolCallRespond.respond],
   );
+  const newMessageIds = useNewMessageIds(display.displayMessages.map((message) => message.id));
 
   return (
     <Conversation>
@@ -153,16 +156,16 @@ export const ChatConversation = memo(function ChatConversation({
         scrollClassName="overflow-y-auto overscroll-contain"
       >
         <AnimatePresence initial mode="wait">
-          {loadState === 'loading' ? (
+          {loadState.kind === 'initial' ? (
             <ChatConversationState key="loading" kind="loading" onAction={onRetryLoad} />
-          ) : loadState === 'error' ? (
+          ) : loadState.kind === 'error' ? (
             <ChatConversationState
               key="error"
               kind="error"
               message={loadErrorMessage}
               onAction={onRetryLoad}
             />
-          ) : loadState === 'not-found' ? (
+          ) : loadState.kind === 'not-found' ? (
             <ChatConversationState key="not-found" kind="not-found" onAction={onStartNewChat} />
           ) : (
             <m.div
@@ -173,6 +176,11 @@ export const ChatConversation = memo(function ChatConversation({
               key="messages"
               transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
             >
+              {loadState.kind === 'ready' && loadState.isRestoring ? (
+                <span className="sr-only" role="status">
+                  Restoring conversation
+                </span>
+              ) : null}
               {seedNote ? (
                 <ChatLinkedNoteContext
                   excerpt={seedNote.excerpt}
@@ -188,6 +196,7 @@ export const ChatConversation = memo(function ChatConversation({
               {visibleMessages.map((message) => (
                 <ChatMessageView
                   key={message.id}
+                  isNewMessage={newMessageIds.has(message.id)}
                   isSpeechActive={activeSpeechMessageId === message.id}
                   shouldAutoSpeak={autoSpeakMessageId === message.id}
                   isGenerationActive={

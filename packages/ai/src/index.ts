@@ -2,11 +2,16 @@ export {
   AUDIO_TTS_MODEL,
   AUDIO_TTS_VOICE,
   CHAT_MODEL,
+  ENHANCE_MODEL,
   JOB_EXTRACTION_MODEL,
+  normalizeOpenRouterError,
   OpenRouterRequestError,
+  TASK_EXTRACTION_MODEL,
+  TIME_BLOCK_EXTRACTION_MODEL,
+  VOICE_CLEANUP_MODEL,
 } from './shared';
 
-export type { AIUsageMetrics } from './shared';
+export type { AIUsageMetrics, OpenRouterClientOptions } from './shared';
 
 export { convertSchemaToJsonSchema } from './json-schema';
 
@@ -24,8 +29,6 @@ export type {
 export {
   createChatCompletion,
   createStructuredChatCompletion,
-  enhanceText,
-  generateNoteFromChat,
   getChatCompletionText,
   getChatCompletionUsage,
   getStructuredOutputUsage,
@@ -34,9 +37,6 @@ export {
 } from './text';
 
 export { generateEmbedding } from './embeddings';
-export { cleanupVoiceTranscript } from './voice-cleanup';
-
-export type { VoiceTranscriptCleanupOutput } from './voice-cleanup';
 
 export {
   getSpeechGenerationUsage,
@@ -49,9 +49,6 @@ export type {
   SpeechUsageEstimate,
   SynthesizeSpeechStreamResult,
 } from './speech';
-
-export { extractTasks, extractVoiceTasks } from './task-extraction';
-export { extractTimeBlock } from './time-block-extraction';
 
 export {
   assertUnderMonthlyUsageLimit,

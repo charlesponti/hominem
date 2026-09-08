@@ -27,6 +27,7 @@ import {
   type ProposedChatTask,
 } from '~/hooks/use-chat-tasks';
 import { useChatsList, useUpdateChatTitle } from '~/hooks/use-chats';
+import { computeChatLoadState } from '~/lib/chat/compute-chat-load-state';
 import { serverEnv } from '~/lib/env.server';
 import { useChatDisplayMessages } from '~/lib/hooks/use-chat-display-messages';
 import { useChatMessageSearch } from '~/lib/hooks/use-chat-message-search';
@@ -153,7 +154,6 @@ export default function ChatPage({
     transcript.length > 0 && !streamMessage.isStreaming && !regeneration.isRegenerating;
   const visibleMessages =
     isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
-  const showLoadingState = isLoading || (isFetching && messages.length === 0);
   const regenerateMessage = useCallback(
     (messageId: string) => void regeneration.regenerate(messageId, responseLength),
     [regeneration.regenerate, responseLength],
@@ -161,14 +161,14 @@ export default function ChatPage({
   const cancelRegenerate = useCallback(() => void regeneration.cancel(), [regeneration.cancel]);
   const retryRegenerate = useCallback(() => void regeneration.retry(), [regeneration.retry]);
 
-  const loadState =
-    messagesStatus === 404 || isNotFound
-      ? 'not-found'
-      : messagesError
-        ? 'error'
-        : showLoadingState
-          ? 'loading'
-          : 'ready';
+  const loadState = computeChatLoadState({
+    messagesStatus,
+    isNotFound,
+    hasError: Boolean(messagesError),
+    isLoading,
+    isFetching,
+    messageCount: messages.length,
+  });
 
   return (
     <LazyMotion features={domAnimation}>
@@ -228,7 +228,7 @@ export default function ChatPage({
         </RouteHeader>
 
         <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-          {loadState === 'ready' ? (
+          {loadState.kind === 'ready' ? (
             <Sheet onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
               {isSettingsOpen ? (
                 <SheetContent
@@ -251,6 +251,7 @@ export default function ChatPage({
           ) : null}
 
           <ChatConversation
+            key={chatId}
             activeSpeechMessageId={activeSpeechMessageId}
             autoSpeakMessageId={autoSpeakMessageId}
             chatId={chatId}
@@ -372,9 +373,10 @@ export default function ChatPage({
             </DialogContent>
           </Dialog>
 
-          {loadState === 'ready' ? (
+          {loadState.kind === 'ready' ? (
             <div className="mx-auto w-full max-w-5xl">
               <ChatComposerPanel
+                key={chatId}
                 chatId={chatId}
                 currentChatTitle={currentChat?.title}
                 display={display}

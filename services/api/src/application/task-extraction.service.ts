@@ -1,14 +1,12 @@
-import { z } from 'zod';
-
-import {
-  TASK_EXTRACTION_MODEL,
-  normalizeOpenRouterError,
-  type OpenRouterClientOptions,
-} from './shared';
 import {
   createStructuredChatCompletion,
-  StructuredOutputError as AITextStructuredOutputError,
-} from './text';
+  normalizeOpenRouterError,
+  StructuredOutputError,
+  TASK_EXTRACTION_MODEL,
+  type AIUsageMetrics,
+  type OpenRouterClientOptions,
+} from '@hominem/ai';
+import { z } from 'zod';
 
 type TaskExtractionInput = OpenRouterClientOptions & {
   transcript: string;
@@ -26,7 +24,7 @@ type TaskExtractionOutput = {
 
 type TaskExtractionResult = {
   tasks: ExtractedTask[];
-  usage: import('./shared').AIUsageMetrics | null;
+  usage: AIUsageMetrics | null;
 };
 
 // OpenRouter's structured-output mode marks optional fields nullable rather than
@@ -79,7 +77,7 @@ export async function extractTasks(
       usage,
     };
   } catch (error) {
-    if (error instanceof AITextStructuredOutputError) {
+    if (error instanceof StructuredOutputError) {
       throw error;
     }
 
@@ -107,7 +105,7 @@ type VoiceTaskExtractionOutput = {
 
 type VoiceTaskExtractionResult = {
   tasks: ExtractedVoiceTask[];
-  usage: import('./shared').AIUsageMetrics | null;
+  usage: AIUsageMetrics | null;
 };
 
 // Same nullable-vs-omitted normalization as RawTaskExtractionOutputSchema.
@@ -303,7 +301,7 @@ export async function extractVoiceTasks(
       usage,
     };
   } catch (error) {
-    if (error instanceof AITextStructuredOutputError) {
+    if (error instanceof StructuredOutputError) {
       throw error;
     }
 

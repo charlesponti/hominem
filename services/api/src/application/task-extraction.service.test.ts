@@ -4,7 +4,7 @@ import {
   formatVoiceTaskReferenceDate,
   normalizeVoiceTaskDueAt,
   parseVoiceTaskExtractionOutput,
-} from './task-extraction';
+} from './task-extraction.service';
 
 describe('formatVoiceTaskReferenceDate', () => {
   it('formats the reference date in the caller timezone with an explicit offset', () => {

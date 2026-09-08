@@ -127,4 +127,56 @@ describe('useChatComposerState', () => {
 
     await waitFor(() => expect(result.current.attachedFiles[0]?.id).toBe('file-1'));
   });
+
+  it('persists the draft and attachments for the chat across reloads', async () => {
+    window.localStorage.clear();
+    mockUploadFiles.mockResolvedValueOnce([
+      {
+        content: 'binary-contents',
+        id: 'file-1',
+        originalName: 'brief.pdf',
+        textContent: 'uploaded transcript',
+        url: '/files/brief.pdf',
+      },
+    ]);
+    const file = new File(['brief'], 'brief.pdf', { type: 'application/pdf' });
+    const fileList: FileList = {
+      0: file,
+      length: 1,
+      item: (index) => (index === 0 ? file : null),
+      [Symbol.iterator]: [file][Symbol.iterator],
+    };
+
+    const { result, unmount } = renderHook(() =>
+      useChatComposerState({ chatId: 'chat-2', seedNote: null }),
+    );
+
+    await act(async () => {
+      result.current.setDraft('Draft text for reload');
+      await result.current.attachFiles(fileList);
+    });
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem('chat-composer:chat-2')).toContain(
+        'Draft text for reload',
+      );
+    });
+    const persisted = JSON.parse(window.localStorage.getItem('chat-composer:chat-2') ?? '{}');
+    expect(persisted.attachments[0]).toEqual({
+      id: 'file-1',
+      originalName: 'brief.pdf',
+      url: '/files/brief.pdf',
+    });
+
+    unmount();
+
+    const { result: restored } = renderHook(() =>
+      useChatComposerState({ chatId: 'chat-2', seedNote: null }),
+    );
+
+    await waitFor(() => {
+      expect(restored.current.draft).toBe('Draft text for reload');
+      expect(restored.current.attachedFiles[0]?.id).toBe('file-1');
+    });
+  });
 });

@@ -7,10 +7,14 @@ import { OpenRouterChatModel } from './chat-generation-provider';
 
 const mockedLogger = vi.hoisted(() => ({ warn: vi.fn() }));
 
-vi.mock('@hominem/ai', () => ({
-  streamChatCompletion: vi.fn(),
-  getChatCompletionUsage: vi.fn((response: { usage?: unknown }) => response.usage ?? null),
-}));
+vi.mock('@hominem/ai', async () => {
+  const actual = await vi.importActual<typeof import('@hominem/ai')>('@hominem/ai');
+  return {
+    OpenRouterRequestError: actual.OpenRouterRequestError,
+    streamChatCompletion: vi.fn(),
+    getChatCompletionUsage: vi.fn((response: { usage?: unknown }) => response.usage ?? null),
+  };
+});
 
 vi.mock('@hominem/telemetry', () => ({ logger: mockedLogger }));
 

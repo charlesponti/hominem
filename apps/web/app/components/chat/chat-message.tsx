@@ -63,6 +63,7 @@ export interface ChatMessageProps {
   isRegenerating?: boolean;
   regenerationStatus?: RegenerationStatus;
   isGenerationActive?: boolean;
+  isNewMessage?: boolean;
   regenerationError?: string | null;
   onActivateSpeech?: (messageId: string) => void;
   onApproveTool?: (input: { messageId: string; toolCallId: string }) => void;
@@ -128,6 +129,7 @@ export const ChatMessage = memo(function ChatMessage({
   isRegenerating = false,
   regenerationStatus = 'idle',
   isGenerationActive = false,
+  isNewMessage = false,
   regenerationError,
   onActivateSpeech,
   onApproveTool,
@@ -242,7 +244,9 @@ export const ChatMessage = memo(function ChatMessage({
         from={toMessageRole(message.role)}
       >
         <MessageContent className="ml-0! w-full!">
-          <AnimatePresence initial={false} mode="wait">
+          {/* initial gates entrance motion to this row's own first mount: history present
+              when the transcript loaded stays quiet, a just-added message still animates in */}
+          <AnimatePresence initial={isNewMessage} mode="wait">
             {isRegenerationActive ? (
               <m.div
                 animate={{ opacity: 1, transform: reduceMotion ? 'none' : 'translateY(0px)' }}

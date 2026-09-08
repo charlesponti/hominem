@@ -5,6 +5,7 @@ import {
   type ChatRequest,
   type ChatStreamChunk,
   getChatCompletionUsage,
+  OpenRouterRequestError,
   streamChatCompletion,
 } from '@hominem/ai';
 import {
@@ -141,7 +142,11 @@ function toProviderChunk(chunk: ChatStreamChunk): ProviderChunk {
 function isTransient(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   const status = 'status' in error ? Reflect.get(error, 'status') : undefined;
-  if (status === 429 || status === 503) return true;
+  // 502 is included alongside 429/503 because OpenRouter uses it for
+  // mid-stream provider disconnect/overload errors (delivered as an `error`
+  // chunk inside an already-200 SSE stream), which are retryable the same as
+  // a pre-stream 429/503.
+  if (status === 429 || status === 502 || status === 503) return true;
   // A request that timed out or dropped its connection (see
   // CHAT_REQUEST_TIMEOUT_MS in @hominem/ai) never got a response at all, so
   // there's no HTTP status to check — retry it the same as a 429/503.
@@ -201,7 +206,14 @@ export class OpenRouterChatModel implements ChatModel {
         }
         if (step.done) break;
         const chunk = step.value;
-        if (chunk.error) throw new Error(chunk.error.message);
+        if (chunk.error) {
+          // A mid-stream error chunk still carries an HTTP-style status in
+          // `code` (429/502/503 etc. — see OpenRouter's usage-accounting and
+          // streaming docs). Preserve it as `status` so isTransient() below
+          // and getAIUsageFailureDetails() (ai-usage.ts) can classify and
+          // report it instead of seeing a bare, code-less Error.
+          throw new OpenRouterRequestError(chunk.error.message, { status: chunk.error.code });
+        }
         this.options.onUsage?.(getChatCompletionUsage(chunk));
         const providerChunk = toProviderChunk(chunk);
         for (const call of providerChunk.toolCalls ?? []) {

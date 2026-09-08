@@ -538,3 +538,50 @@ test('B-025 exposes keyboard-reachable named chat controls', async ({ page }) =>
   await expectSingleMessage(page, 'B025-ACCESSIBILITY', 'user');
   await expectSingleMessage(page, 'B025-KEYBOARD', 'user');
 });
+
+test('B-026 preserves an unsent composer draft across reload, and only the draft', async ({
+  page,
+}) => {
+  await startChat(page, 'B026-DRAFT-SEED');
+  await waitForResponse(page, 'Scripted response: B026-DRAFT-SEED');
+  const composer = page.getByRole('textbox', { name: 'Chat message' });
+  await composer.fill('B026-UNSENT-DRAFT');
+  await page.reload();
+  await expect(page.getByRole('textbox', { name: 'Chat message' })).toHaveValue(
+    'B026-UNSENT-DRAFT',
+  );
+  await expectSingleMessage(page, 'B026-DRAFT-SEED', 'user');
+  await expectSingleMessage(page, 'Scripted response: B026-DRAFT-SEED');
+  // Regression guard: the persisted-draft `useState` initializer used to read
+  // localStorage synchronously on first client render, diffing against the
+  // empty SSR output and producing a React hydration-mismatch console error.
+  const evidence = evidenceByPage.get(page);
+  expect(evidence?.consoleErrors ?? []).toEqual([]);
+
+  await page.getByRole('textbox', { name: 'Chat message' }).fill('');
+  await page.reload();
+  await expect(page.getByRole('textbox', { name: 'Chat message' })).toHaveValue('');
+});
+
+test('B-027 sends and reads a message under prefers-reduced-motion without errors', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await startChat(page, 'B027-REDUCED-MOTION');
+  await waitForResponse(page, 'Scripted response: B027-REDUCED-MOTION');
+  await expectSingleMessage(page, 'B027-REDUCED-MOTION', 'user');
+  await expectSingleMessage(page, 'Scripted response: B027-REDUCED-MOTION');
+  const evidence = evidenceByPage.get(page);
+  expect(evidence?.consoleErrors ?? []).toEqual([]);
+});
+
+test('B-028 keeps the composer interactive immediately after send, before the reply arrives', async ({
+  page,
+}) => {
+  await startChat(page, 'B028-NO-BLOCK');
+  const composer = page.getByRole('textbox', { name: 'Chat message' });
+  await expect(composer).toHaveValue('');
+  await composer.fill('typed while the reply is still generating');
+  await expect(composer).toHaveValue('typed while the reply is still generating');
+  await waitForResponse(page, 'Scripted response: B028-NO-BLOCK');
+});
