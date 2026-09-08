@@ -83,7 +83,7 @@ export class EffectCommandTimeoutError extends Error {
 // covered by the OpenRouter provider's own idle timeout, and `emit`/
 // `stop-effects` are in-process, not arbitrary I/O, today. See
 // GENERATION_TIMING for the full timeout policy.
-export const DEFAULT_EFFECT_TIMEOUTS_MS: Partial<Record<GenerationCommand['type'], number>> = {
+const DEFAULT_EFFECT_TIMEOUTS_MS: Partial<Record<GenerationCommand['type'], number>> = {
   persist: GENERATION_TIMING.effectMs.persist,
   'execute-tool': GENERATION_TIMING.effectMs.executeTool,
   'preview-tool': GENERATION_TIMING.effectMs.previewTool,

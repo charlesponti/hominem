@@ -351,7 +351,7 @@ export type ChatHttpAuthenticatedUser = { userId: string };
 // implemented by wrapping a generationRunner.generate() call with the specific
 // input-resolution and persistence a given endpoint needs (e.g. `regenerate`
 // resolves `target` to a stale run before calling `.generate()`); the real
-// implementation lives in services/api/src/rpc/routes/chats.generation.ts.
+// implementation lives in services/api/src/rpc/routes/chats.$chatId.generation.ts.
 export type ChatHttpRuntime = {
   authenticate: (
     request: Request,

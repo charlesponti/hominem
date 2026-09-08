@@ -35,6 +35,14 @@ export interface NoteFileRecord {
 
 export type NoteKind = 'note' | 'memory';
 
+const NOTE_KINDS: readonly NoteKind[] = ['note', 'memory'];
+
+function parseNoteKind(value: string): NoteKind {
+  const kind = NOTE_KINDS.find((candidate) => candidate === value);
+  if (kind) return kind;
+  throw new ValidationError(`Invalid note kind: ${value}`, { kind: value });
+}
+
 export interface NoteRecord {
   id: string;
   userId: string;
@@ -113,7 +121,7 @@ function toNoteFile(row: NoteFileSource): NoteFileRecord {
     uploadedAt: new Date(row.createdat).toISOString(),
     ...(row.content ? { content: row.content } : {}),
     ...(row.textContent ? { textContent: row.textContent } : {}),
-    ...(isObject(row.metadata) ? { metadata: row.metadata as Record<string, unknown> } : {}),
+    ...(isObject(row.metadata) ? { metadata: row.metadata } : {}),
   };
 }
 
@@ -121,7 +129,7 @@ function toNoteRecord(row: NoteRow, files: NoteFileRecord[]): NoteRecord {
   return {
     id: row.id,
     userId: row.ownerUserid,
-    kind: row.kind as NoteKind,
+    kind: parseNoteKind(row.kind),
     title: row.title,
     content: row.content,
     excerpt: row.excerpt,
@@ -137,10 +145,9 @@ function encodeNoteSearchCursor(updatedAt: string, id: string): string {
 
 function decodeNoteSearchCursor(cursor: string): { updatedAt: string; id: string } | null {
   try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
-      updatedAt?: unknown;
-      id?: unknown;
-    };
+    const parsed: { updatedAt?: unknown; id?: unknown } = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    );
 
     if (typeof parsed.updatedAt !== 'string' || typeof parsed.id !== 'string') {
       return null;

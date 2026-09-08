@@ -1,24 +1,6 @@
-import type {
-  BudgetCategoriesListOutput,
-  BudgetHistoryOutput,
-  BudgetCalculateInput,
-  BudgetCalculateOutput,
-  TransactionCategoryAnalysisOutput,
-} from '@hominem/rpc/finance';
+import type { BudgetCategoriesListOutput } from '@hominem/rpc/finance';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/api';
-
-const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable';
-
-function rejectBudgetMutation<T>(): Promise<T> {
-  return Promise.reject(new Error(BUDGET_API_UNAVAILABLE_MESSAGE));
-}
-
-export const useTransactionCategories = () =>
-  useHonoQuery<TransactionCategoryAnalysisOutput>(
-    ['finance', 'budget', 'transaction-categories'],
-    async () => [],
-  );
+import { useHonoQuery } from '~/lib/api';
 
 export const useBudgetCategories = () =>
   useHonoQuery<BudgetCategoriesListOutput>(
@@ -37,23 +19,3 @@ export const useBudgetCategories = () =>
       });
     },
   );
-
-export const useBudgetHistory = (params: { months: number }) =>
-  useHonoQuery<BudgetHistoryOutput>(
-    ['finance', 'budget', 'history', params.months],
-    async () => [],
-  );
-
-export const useCalculateBudget = (options?: { onError?: (error: Error) => void }) => {
-  const utils = useHonoUtils();
-
-  return useHonoMutation<BudgetCalculateOutput, BudgetCalculateInput | undefined>(
-    async () => rejectBudgetMutation<BudgetCalculateOutput>(),
-    {
-      onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'calculate']);
-      },
-      ...(options?.onError && { onError: options.onError }),
-    },
-  );
-};

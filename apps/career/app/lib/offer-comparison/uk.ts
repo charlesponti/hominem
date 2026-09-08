@@ -1,7 +1,7 @@
 // 2026 UK Income Tax and National Insurance rates
 // Sources: HMRC, UK government
 
-export interface UKTaxData {
+interface UKTaxData {
   personalAllowance: number;
   personalAllowanceTaperThreshold: number;
   personalAllowanceTaperRate: number; // £1 lost per £2 over threshold
@@ -9,7 +9,7 @@ export interface UKTaxData {
   bands: Array<{ min: number; max: number; rate: number }>;
 }
 
-export interface UKNIData {
+interface UKNIData {
   primaryThreshold: number;
   upperEarningsLimit: number;
   primaryRate: number; // rate between PT and UEL
@@ -23,7 +23,7 @@ const TAX_BANDS = [
   { min: 125_140, max: Infinity, rate: 45 },
 ];
 
-export const UK_TAX: UKTaxData = {
+const UK_TAX: UKTaxData = {
   personalAllowance: 12_570,
   personalAllowanceTaperThreshold: 100_000,
   personalAllowanceTaperRate: 2, // £1 per £2
@@ -31,7 +31,7 @@ export const UK_TAX: UKTaxData = {
   bands: TAX_BANDS,
 };
 
-export const UK_NI: UKNIData = {
+const UK_NI: UKNIData = {
   primaryThreshold: 12_570,
   upperEarningsLimit: 50_270,
   primaryRate: 8, // percent

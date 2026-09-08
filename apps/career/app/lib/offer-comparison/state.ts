@@ -3,13 +3,13 @@
 // License: CC BY 4.0 — attribution: LevyIO (levyio.com)
 // Auto-generated from state-raw.json — do not edit directly
 
-export interface StateBracket {
+interface StateBracket {
   min: number;
   max: number;
   rate: number;
 }
 
-export interface StateData {
+interface StateData {
   slug: string;
   name: string;
   abbreviation: string;
@@ -35,7 +35,7 @@ function normalize(bracket: StateBracket): StateBracket {
   };
 }
 
-export const STATES: Record<string, StateData> = {
+const STATES: Record<string, StateData> = {
   alabama: {
     slug: 'alabama',
     name: 'Alabama',
@@ -2472,10 +2472,6 @@ for (const key of Object.keys(STATES)) {
       married: s.brackets.married.map(normalize),
     },
   });
-}
-
-export function getState(slug: string): StateData | undefined {
-  return stateMap.get(slug);
 }
 
 export function computeStateTax(

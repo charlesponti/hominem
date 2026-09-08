@@ -2,7 +2,7 @@ import { getServerAuth as sharedGetServerAuth } from '@ponti-studios/auth/server
 
 import { serverEnv } from './env.server';
 
-export const authConfig = {
+const authConfig = {
   apiBaseUrl: serverEnv.HOMINEM_INTERNAL_API_URL,
 };
 

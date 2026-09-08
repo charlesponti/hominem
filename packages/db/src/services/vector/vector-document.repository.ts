@@ -1,11 +1,22 @@
 import { sql, type Selectable } from 'kysely';
 
+import { ValidationError } from '../../errors';
 import type { DbHandle } from '../../transaction';
 import type { AppVectorDocuments, Json } from '../../types/database';
 
 type VectorDocumentRow = Selectable<AppVectorDocuments>;
 
 export type VectorDocumentEntityType = 'note' | 'chat';
+
+const VECTOR_DOCUMENT_ENTITY_TYPES: readonly VectorDocumentEntityType[] = ['note', 'chat'];
+
+function parseVectorDocumentEntityType(value: string): VectorDocumentEntityType {
+  const entityType = VECTOR_DOCUMENT_ENTITY_TYPES.find((candidate) => candidate === value);
+  if (entityType) return entityType;
+  throw new ValidationError(`Invalid vector document entity type: ${value}`, {
+    entityType: value,
+  });
+}
 
 export interface VectorDocumentRecord {
   id: string;
@@ -43,7 +54,7 @@ function toVectorDocumentRecord(row: VectorDocumentRow): VectorDocumentRecord {
   return {
     id: row.id,
     ownerUserId: row.ownerUserid,
-    entityType: row.entityType as VectorDocumentEntityType,
+    entityType: parseVectorDocumentEntityType(row.entityType),
     entityId: row.entityId,
     content: row.content,
     metadata: row.metadata,

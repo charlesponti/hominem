@@ -33,7 +33,7 @@ chat_pkg: "@hominem/chat" {
 }
 
 api: "services/api" {
-  routes: "rpc/routes/chats.generation.ts\nroute wiring for ChatHttpRuntime"
+  routes: "rpc/routes/chats.$chatId.generation.ts\nroute wiring for ChatHttpRuntime"
   engine: "application/chat-generation-engine.ts\nwires provider + tool registry\ninto ChatServerRuntime"
   provider: "chat-generation-provider.ts\nOpenRouterChatModel"
   tool_registry: "mcp/tool-registry\ncallTool / getToolDefinition"

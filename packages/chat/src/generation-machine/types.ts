@@ -96,7 +96,7 @@ export type GenerationState = GenerationLifecycleState & {
 // GenerationHistoryEventPayload/GenerationDeltaEventPayload below are
 // *derived* subsets, not hand-maintained parallel unions, so there's
 // exactly one place that declares "what is an event" in this system.
-export type GenerationEventPayload =
+type GenerationEventPayload =
   | {
       type: 'generation.started';
       context: GenerationStartContext;

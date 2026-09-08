@@ -1,16 +1,16 @@
 export type PrototypePanelId = 'brief' | 'timeline' | 'packet';
 
-export interface PrototypePanel {
+interface PrototypePanel {
   id: PrototypePanelId;
   label: string;
 }
 
-export interface PrototypePrepTask {
+interface PrototypePrepTask {
   id: string;
   label: string;
 }
 
-export interface PrototypeStage {
+interface PrototypeStage {
   id: string;
   label: string;
   shortLabel: string;
@@ -21,27 +21,27 @@ export interface PrototypeStage {
   prepTasks: PrototypePrepTask[];
 }
 
-export interface PrototypeTimelineEvent {
+interface PrototypeTimelineEvent {
   id: string;
   label: string;
   date: string;
   detail: string;
 }
 
-export interface PrototypePacketItem {
+interface PrototypePacketItem {
   id: string;
   label: string;
   detail: string;
   freshness: string;
 }
 
-export interface PrototypeSignal {
+interface PrototypeSignal {
   label: string;
   value: string;
   detail: string;
 }
 
-export interface PrototypeApplicationCockpitData {
+interface PrototypeApplicationCockpitData {
   role: string;
   company: string;
   location: string;

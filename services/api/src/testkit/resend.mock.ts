@@ -86,13 +86,3 @@ export function installResendMock(options: { mailboxFile?: string } = {}) {
 export function getScriptedEmail(to: string): ScriptedEmail | null {
   return capturedEmails.get(to) ?? null;
 }
-
-export function clearScriptedEmails(): void {
-  capturedEmails.clear();
-}
-
-// Test-only: seed a capture directly instead of round-tripping a real HTTP
-// call through the mocked Resend endpoint.
-export function setScriptedEmailForTest(email: Omit<ScriptedEmail, 'capturedAt'>): void {
-  capturedEmails.set(email.to, { ...email, capturedAt: new Date() });
-}

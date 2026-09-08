@@ -6,11 +6,18 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import {
+  ChatSpeechMessageNotFoundError,
+  ChatSpeechUnavailableError,
+  streamMessageSpeech,
+} from '../../chat/chat-speech.service';
+import {
   ChatsEditMessageSchema,
   ChatsMessagesQuerySchema,
   ChatsSearchMessagesQuerySchema,
 } from '../../schemas/chats.schema';
+import { NotFoundError, UnavailableError } from '../errors';
 import type { AppContext } from '../middleware/auth';
+import { rateLimitMiddleware } from '../middleware/rate-limit';
 import { toChatMessageDto } from './chats.mapper';
 import { getChatId, getMessageId } from './chats.route-helpers';
 
@@ -18,19 +25,21 @@ export const chatMessageRoutes = new Hono<AppContext>()
   .get('/messages', zValidator('query', ChatsMessagesQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
     const query = c.req.valid('query');
     const limit = query.limit ? Number.parseInt(query.limit, 10) : 100;
     const offset = query.offset ? Number.parseInt(query.offset, 10) : 0;
-    const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
+    // getMessagesForOwner combines the ownership check and the fetch into
+    // one query; null means the chat doesn't exist or isn't owned.
+    const messages = await ChatRepository.getMessagesForOwner(db, chatId, userId, limit, offset);
+    if (!messages) throw new NotFoundError('Chat', { chatId });
     return c.json(messages.map(toChatMessageDto));
   })
   .get('/messages/search', zValidator('query', ChatsSearchMessagesQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
     const { query, limit } = c.req.valid('query');
-    const messages = await ChatRepository.searchMessages(db, chatId, query, limit);
+    const messages = await ChatRepository.searchMessagesForOwner(db, chatId, userId, query, limit);
+    if (!messages) throw new NotFoundError('Chat', { chatId });
     return c.json(messages.map(toChatMessageDto));
   })
   .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {
@@ -38,7 +47,8 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
     const { content } = c.req.valid('json');
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    // updateMessage scopes its own lookup by authorUserid and throws
+    // NotFoundError itself, so no separate ownership round trip is needed.
     const result = await runInTransaction((trx) =>
       ChatRepository.updateMessage(trx, chatId, messageId, userId, content),
     );
@@ -64,7 +74,9 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
+    // deleteUserMessageAndFollowing scopes its own lookup by authorUserid
+    // and throws NotFoundError itself, so no separate ownership round trip
+    // is needed.
     const result = await runInTransaction((trx) =>
       ChatRepository.deleteUserMessageAndFollowing(trx, chatId, messageId, userId),
     );
@@ -82,4 +94,39 @@ export const chatMessageRoutes = new Hono<AppContext>()
       );
     }
     return c.json({ deletedMessageIds: result.deletedMessageIds });
+  })
+  .use(
+    '/messages/:messageId/speech',
+    rateLimitMiddleware({ bucket: 'chat-speech', windowSec: 60, max: 20 }),
+  )
+  .get('/messages/:messageId/speech', async (c) => {
+    const userId = c.get('auth')!.userId;
+    const chatId = getChatId(c);
+    const messageId = getMessageId(c);
+
+    let result;
+    try {
+      result = await streamMessageSpeech({
+        chatId,
+        messageId,
+        ownerUserId: userId,
+      });
+    } catch (error) {
+      if (error instanceof ChatSpeechMessageNotFoundError) {
+        throw new NotFoundError(error.message);
+      }
+      if (error instanceof ChatSpeechUnavailableError) {
+        throw new UnavailableError(error.message);
+      }
+      throw error;
+    }
+
+    return new Response(result.stream, {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': result.mimeType,
+        'X-Content-Type-Options': 'nosniff',
+        'Server-Timing': `speech-provider;dur=${result.providerReadyDurationMs}`,
+      },
+    });
   });

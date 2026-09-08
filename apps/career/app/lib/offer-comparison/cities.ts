@@ -8,7 +8,7 @@ export interface CityData {
   stateSlug?: string;
 }
 
-export const CITIES: Record<string, CityData> = {
+const CITIES: Record<string, CityData> = {
   'los-angeles': {
     rent: 3_000,
     transit: 0,

@@ -4,7 +4,7 @@
 - Agents may commit code, but every commit must follow the Conventional Commits standard. Load the globally installed `conventional-commit` skill before staging, committing, or pushing.
 - `apps/omiro` should only support Apple devices. Do not add fallbacks for other platforms such as Android.
 - Agents may start local dev services (Expo/Metro, `pnpm dev`, the API, workers, databases, Docker containers, etc.) when needed to test or verify a change. `api`/`web`/`career`/`finance` run through the [portless](https://github.com/vercel-labs/portless) proxy under `pnpm dev` (each gets a stable `https://<name>.lvh.me:4200` URL instead of a fixed port, which is what lets the same app run from multiple worktrees at once without a port collision — `lvh.me`, not `.localhost`, because cross-subdomain login cookies require a real domain), and a fresh worktree needs its git-ignored `.env` files bootstrapped first. See the `hominem-development` skill for that setup and how to run services — read it before telling the user a service "won't start" in a new worktree.
-- **After any `packages/db` schema/migration change, run it yourself**: `just db migrate` (and `just db migrate test` if a test DB is running) then `just db codegen`, against the already-running local dev/test databases — do not leave this as a follow-up for the user. See [packages/db/AGENTS.md](packages/db/AGENTS.md).
+- **`packages/db` work (schema/migration changes, or any repository method) loads the `hominem-database` skill first.** It covers migration/codegen mechanics, the repository/DTO boundary, and the ownership-scoped-mutation convention. After any schema/migration change, run it yourself: `just db migrate` (and `just db migrate test` if a test DB is running) then `just db codegen`, against the already-running local dev/test databases — do not leave this as a follow-up for the user.
 - **Evidence**: A change is not complete until it meets that standard. Validation and evidence standards are documented in [docs/evidence.md](docs/evidence.md); run the `hominem-evidence` skill's checklist before reporting a change complete.
 - **Web auth**: Career and Finance redirect unauthenticated browsers to the API hosted login. Browser traffic uses the public API, while server auth/data calls require the private API URL (Railway-internal in production). Development and production use the same cookie mechanism with different env values. See [docs/authentication.md](docs/authentication.md). After changing auth config or deployment topology, run the `hominem-auth-production-verify` skill.
 - **Runbook skills**: `.agents/skills/` holds operational runbooks alongside app skills. A runbook skill that has a companion decision doc names that doc inside its own `SKILL.md` — the doc holds the "why", the skill holds the "how". Look there rather than expecting a list of pairings here; a list like that only goes stale.
@@ -26,7 +26,7 @@ pnpm monorepo orchestrated with Turbo. Key directories:
 - `apps/omiro` — Expo/React Native iOS app (Apple-only; no Android fallbacks). See [apps/omiro/AGENTS.md](apps/omiro/AGENTS.md).
 - `apps/career` — React Router v7 web app
 - `services/api` — Hono HTTP + BullMQ worker. See [services/api/AGENTS.md](services/api/AGENTS.md).
-- `packages/db` — PostgreSQL + Kysely + Goose migrations. See [packages/db/AGENTS.md](packages/db/AGENTS.md).
+- `packages/db` — PostgreSQL + Kysely + Goose migrations. See the `hominem-database` skill.
 - `packages/auth` — Better-auth (passkeys + OTP)
 - `packages/ai` — OpenRouter integration
 - `justfile` and `just/*.just` — the repository command interface and its domain modules
@@ -117,7 +117,7 @@ Documentation on type-checking in this monorepo can be found in `docs/type-syste
 
 ## Monorepo
 
-- This root file is the primary agent instruction authority for the repository. Nested `AGENTS.md` files in [apps/omiro/](apps/omiro/AGENTS.md), [services/api/](services/api/AGENTS.md), and [packages/db/](packages/db/AGENTS.md) add directory-scoped detail for agents working in those trees; they must not duplicate or contradict these root rules.
+- This root file is the primary agent instruction authority for the repository. Nested `AGENTS.md` files in [apps/omiro/](apps/omiro/AGENTS.md) and [services/api/](services/api/AGENTS.md) add directory-scoped detail for agents working in those trees; they must not duplicate or contradict these root rules. `packages/db` has no nested `AGENTS.md` — its conventions live in the `hominem-database` skill instead, since that skill is already the required entry point for any schema/migration/repository work there (see the `packages/db` rule above).
 - The work tracker owns temporary execution.
 - **Execute task plans by dependency order, not by filename.** Use the Markdown files in `docs/tasks/` as the task source of truth; do not require a separate task index. A task's own `status` and `depends_on` frontmatter is the only ordering signal — pick any task that isn't `Implemented` and whose `depends_on` are all `Implemented`. If several qualify at once, they're genuinely independent; work one all the way through before starting another rather than interleaving. Treat a task blocked by an unfinished dependency as locked even when its code looks easy or useful as groundwork. Do not mark a task `Implemented` until its own observable evidence and all required validation are complete. If a task is `Blocked`, report the blocker and stop rather than working around it; only proceed past it after the user explicitly changes the plan. When earlier implementation already exists, reconcile its task record and evidence first, then resume with the next eligible task. A task's `docs/tasks/artifacts/` evidence is scratch, not durable record — it's gitignored, and once its parent task is `Implemented` there's no reason to keep it around.
 
@@ -125,4 +125,4 @@ Documentation on type-checking in this monorepo can be found in `docs/type-syste
 
 - [apps/omiro/AGENTS.md](apps/omiro/AGENTS.md) — Expo/EAS, navigation, mobile commands, Maestro/simulator evidence.
 - [services/api/AGENTS.md](services/api/AGENTS.md) — Hono/BullMQ implementation rules, production authentication.
-- [packages/db/AGENTS.md](packages/db/AGENTS.md) — migrations, generated types, repository boundary.
+- `packages/db` — migrations, generated types, repository boundary. Covered by the `hominem-database` skill, not a nested `AGENTS.md`.

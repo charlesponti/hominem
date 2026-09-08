@@ -183,6 +183,20 @@ describe('ChatRepository message deletion', () => {
     ).rejects.toThrow('ChatMessage not found');
   });
 
+  it('reports whether a message has anything after it', async () => {
+    const fixture = await createFixture();
+
+    await expect(
+      ChatRepository.hasMessagesAfter(db, fixture.chatId, fixture.messageIds.target),
+    ).resolves.toBe(true);
+    await expect(
+      ChatRepository.hasMessagesAfter(db, fixture.chatId, fixture.messageIds.later),
+    ).resolves.toBe(false);
+    await expect(ChatRepository.hasMessagesAfter(db, fixture.chatId, randomUUID())).resolves.toBe(
+      false,
+    );
+  });
+
   it('returns a stable cursor page ordered by activity and id', async () => {
     const fixture = await createFixture();
     const chatIds = [randomUUID(), randomUUID(), randomUUID()];
@@ -234,6 +248,52 @@ describe('ChatRepository message deletion', () => {
     await expect(ChatRepository.getMessages(db, fixture.chatId, 50)).resolves.toHaveLength(3);
   });
 
+  it('updates the title and rejects when the chat is not owned', async () => {
+    const fixture = await createFixture();
+    const otherUserId = randomUUID();
+    userIds.push(otherUserId);
+    await authDb
+      .insertInto('user')
+      .values({ id: otherUserId, name: 'Other User', email: `${otherUserId}@example.com` })
+      .execute();
+
+    await ChatRepository.updateTitle(db, fixture.chatId, fixture.userId, 'Renamed');
+    const chat = await db
+      .selectFrom('app.chats')
+      .select('title')
+      .where('id', '=', fixture.chatId)
+      .executeTakeFirstOrThrow();
+    expect(chat.title).toBe('Renamed');
+
+    await expect(
+      ChatRepository.updateTitle(db, fixture.chatId, otherUserId, 'Hijacked'),
+    ).rejects.toThrow('Chat not found');
+  });
+
+  it('archives the chat and rejects when it is not owned', async () => {
+    const fixture = await createFixture();
+    const otherUserId = randomUUID();
+    userIds.push(otherUserId);
+    await authDb
+      .insertInto('user')
+      .values({ id: otherUserId, name: 'Other User', email: `${otherUserId}@example.com` })
+      .execute();
+
+    await expect(ChatRepository.archive(db, fixture.chatId, otherUserId)).rejects.toThrow(
+      'Chat not found',
+    );
+
+    await expect(ChatRepository.archive(db, fixture.chatId, fixture.userId)).resolves.toMatchObject(
+      { id: fixture.chatId },
+    );
+    const chat = await db
+      .selectFrom('app.chats')
+      .select('archivedAt')
+      .where('id', '=', fixture.chatId)
+      .executeTakeFirstOrThrow();
+    expect(chat.archivedAt).not.toBeNull();
+  });
+
   it('raises a safe validation error for invalid persisted message JSON', async () => {
     const fixture = await createFixture();
 
@@ -257,5 +317,121 @@ describe('ChatRepository message deletion', () => {
         },
       });
     }
+  });
+});
+
+describe('ChatRepository owner-scoped reads', () => {
+  const userIds: string[] = [];
+
+  afterEach(async () => {
+    for (const userId of userIds.splice(0)) {
+      await authDb.deleteFrom('user').where('id', '=', userId).execute();
+    }
+  });
+
+  async function createFixtureWithOutsider() {
+    const userId = randomUUID();
+    const chatId = randomUUID();
+    const otherUserId = randomUUID();
+    userIds.push(userId, otherUserId);
+
+    await authDb
+      .insertInto('user')
+      .values([
+        { id: userId, name: 'Owner', email: `${userId}@example.com` },
+        { id: otherUserId, name: 'Outsider', email: `${otherUserId}@example.com` },
+      ])
+      .execute();
+    await db
+      .insertInto('app.chats')
+      .values({
+        id: chatId,
+        ownerUserid: userId,
+        title: 'Owner-scoped test chat',
+        createdat: new Date('2026-01-01T00:00:00.000Z'),
+        lastMessageAt: new Date('2026-01-01T00:00:00.000Z'),
+      })
+      .execute();
+    const messageIds = { first: randomUUID(), second: randomUUID() };
+    await db
+      .insertInto('app.chatMessages')
+      .values([
+        {
+          id: messageIds.first,
+          chatId,
+          authorUserid: userId,
+          role: 'user',
+          content: 'Find this message',
+          createdat: new Date('2026-01-01T00:00:01.000Z'),
+        },
+        {
+          id: messageIds.second,
+          chatId,
+          authorUserid: userId,
+          role: 'assistant',
+          content: 'Later reply',
+          createdat: new Date('2026-01-01T00:00:02.000Z'),
+        },
+      ])
+      .execute();
+
+    return { chatId, messageIds, userId, otherUserId };
+  }
+
+  it('getMessagesForOwner returns ordered messages for the owner, null otherwise', async () => {
+    const fixture = await createFixtureWithOutsider();
+
+    await expect(
+      ChatRepository.getMessagesForOwner(db, fixture.chatId, fixture.userId),
+    ).resolves.toMatchObject([
+      { id: fixture.messageIds.first, content: 'Find this message' },
+      { id: fixture.messageIds.second, content: 'Later reply' },
+    ]);
+    await expect(
+      ChatRepository.getMessagesForOwner(db, fixture.chatId, fixture.otherUserId),
+    ).resolves.toBeNull();
+    await expect(
+      ChatRepository.getMessagesForOwner(db, randomUUID(), fixture.userId),
+    ).resolves.toBeNull();
+  });
+
+  it('searchMessagesForOwner matches content for the owner, null otherwise', async () => {
+    const fixture = await createFixtureWithOutsider();
+
+    await expect(
+      ChatRepository.searchMessagesForOwner(db, fixture.chatId, fixture.userId, 'Later'),
+    ).resolves.toMatchObject([{ id: fixture.messageIds.second }]);
+    await expect(
+      ChatRepository.searchMessagesForOwner(db, fixture.chatId, fixture.otherUserId, 'Later'),
+    ).resolves.toBeNull();
+  });
+
+  it('getOwnedWithMessages returns the chat and its messages for the owner, null otherwise', async () => {
+    const fixture = await createFixtureWithOutsider();
+
+    const result = await ChatRepository.getOwnedWithMessages(db, fixture.chatId, fixture.userId);
+    expect(result?.chat).toMatchObject({ id: fixture.chatId, title: 'Owner-scoped test chat' });
+    expect(result?.messages).toHaveLength(2);
+
+    await expect(
+      ChatRepository.getOwnedWithMessages(db, fixture.chatId, fixture.otherUserId),
+    ).resolves.toBeNull();
+  });
+
+  it('listChatSourcesForOwner returns sources for the owner, null otherwise', async () => {
+    const fixture = await createFixtureWithOutsider();
+    const noteId = randomUUID();
+    await db
+      .insertInto('app.notes')
+      .values({ id: noteId, ownerUserid: fixture.userId, title: 'A note' })
+      .execute();
+    await ChatRepository.addChatSource(db, fixture.chatId, noteId, fixture.userId);
+
+    await expect(
+      ChatRepository.listChatSourcesForOwner(db, fixture.chatId, fixture.userId),
+    ).resolves.toMatchObject([{ noteId, title: 'A note' }]);
+    await expect(
+      ChatRepository.listChatSourcesForOwner(db, fixture.chatId, fixture.otherUserId),
+    ).resolves.toBeNull();
   });
 });

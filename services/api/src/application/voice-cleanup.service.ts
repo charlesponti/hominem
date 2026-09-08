@@ -53,7 +53,7 @@ export function parseVoiceTranscriptCleanupOutput(value: unknown): VoiceTranscri
   return VoiceTranscriptCleanupOutputSchema.parse(value);
 }
 
-export async function cleanupVoiceTranscript(
+async function cleanupVoiceTranscript(
   input: VoiceTranscriptCleanupInput,
 ): Promise<VoiceTranscriptCleanupResult> {
   const model = input.model ?? VOICE_CLEANUP_MODEL;

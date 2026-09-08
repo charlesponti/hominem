@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { entityTypeSchema } from './tags.schema';
 
-export const collectionSummarySchema = z.object({
+const collectionSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -12,7 +12,7 @@ export const collectionSummarySchema = z.object({
   updatedAt: z.string(),
 });
 
-export const collectionMemberSchema = z.object({
+const collectionMemberSchema = z.object({
   id: z.string(),
   userId: z.string().nullable(),
   userEmail: z.string().nullable(),
@@ -66,7 +66,7 @@ export const updateCollectionOutputSchema = z.object({
 
 // ── delete_collection ───────────────────────────────────────────────
 
-export const deleteCollectionInputSchema = z.object({
+const deleteCollectionInputSchema = z.object({
   collectionId: z.string().uuid(),
 });
 
@@ -76,7 +76,7 @@ export const deleteCollectionOutputSchema = z.object({
 
 // ── leave_collection ────────────────────────────────────────────────
 
-export const leaveCollectionInputSchema = z.object({
+const leaveCollectionInputSchema = z.object({
   collectionId: z.string().uuid(),
 });
 
@@ -154,7 +154,7 @@ export const updateMemberRoleOutputSchema = z.object({
 
 // ── remove_member ────────────────────────────────────────────────────
 
-export const removeMemberInputSchema = z.object({
+const removeMemberInputSchema = z.object({
   collectionId: z.string().uuid(),
   memberId: z.string().uuid(),
 });

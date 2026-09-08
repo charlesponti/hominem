@@ -1,15 +1,9 @@
 // Error classes for database services. Internal to @hominem/db - used by
 // services that need to throw errors the API layer can catch.
 
-export type ErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'NOT_FOUND'
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'INTERNAL_ERROR'
-  | 'UNAVAILABLE';
+import { z } from 'zod';
 
-const ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
+const errorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'NOT_FOUND',
   'UNAUTHORIZED',
@@ -17,6 +11,8 @@ const ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
   'INTERNAL_ERROR',
   'UNAVAILABLE',
 ]);
+
+export type ErrorCode = z.infer<typeof errorCodeSchema>;
 
 export class ServiceError extends Error {
   public readonly code: ErrorCode;
@@ -34,7 +30,12 @@ export class ServiceError extends Error {
     this.statusCode = statusCode;
     this.details = details;
     Object.setPrototypeOf(this, ServiceError.prototype);
-    this.name = this.constructor.name;
+    // `this.constructor.name` would read back 'ServiceError' here, since the
+    // line above just reset this instance's prototype to ServiceError's —
+    // ahead of the subclass's own Object.setPrototypeOf fixing it back.
+    // `new.target` names whichever constructor `new` was actually called
+    // with (e.g. NotFoundError), independent of that timing.
+    this.name = new.target.name;
   }
 }
 
@@ -80,30 +81,21 @@ export class InternalError extends ServiceError {
   }
 }
 
+// Matches the duck-typed shape of a ServiceError — used for errors that
+// cross a serialization boundary (e.g. a worker/queue payload) and so
+// aren't `instanceof ServiceError` even though they came from one.
+// `details` isn't validated: callers only need message/code/statusCode to
+// treat something as a service error.
+const serviceErrorShapeSchema = z.object({
+  message: z.string(),
+  code: errorCodeSchema,
+  statusCode: z.number().int().min(400).max(599),
+});
+
 export function isServiceError(value: unknown): value is ServiceError {
   if (value instanceof ServiceError) {
     return true;
   }
 
-  if (!isObject(value)) {
-    return false;
-  }
-
-  const candidate = value as {
-    message?: string;
-    code?: string;
-    statusCode?: number;
-    details?: Record<string, unknown> | undefined;
-  };
-
-  return (
-    typeof candidate.message === 'string' &&
-    typeof candidate.code === 'string' &&
-    ERROR_CODES.has(candidate.code as ErrorCode) &&
-    typeof candidate.statusCode === 'number' &&
-    Number.isInteger(candidate.statusCode) &&
-    candidate.statusCode >= 400 &&
-    candidate.statusCode <= 599
-  );
+  return serviceErrorShapeSchema.safeParse(value).success;
 }
-import { isObject } from '@hominem/utils';

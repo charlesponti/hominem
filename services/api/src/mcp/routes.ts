@@ -18,7 +18,7 @@ type McpDependencies = {
   auth: typeof betterAuthServer;
 };
 
-export function createMcpAuthorizationMiddleware(dependencies: McpDependencies) {
+function createMcpAuthorizationMiddleware(dependencies: McpDependencies) {
   const { env: inputEnv, auth } = dependencies;
 
   return async (c: Context<McpHonoEnv>, next: Next) => {

@@ -148,6 +148,23 @@ export const ChatConversation = memo(function ChatConversation({
     [toolCallRespond.respond],
   );
   const newMessageIds = useNewMessageIds(display.displayMessages.map((message) => message.id));
+  // Regenerate can target a user message directly (right after editing it,
+  // with no assistant reply left to show progress on) as well as the usual
+  // assistant message. For a user-message target there's no row to overlay
+  // a "Thinking" state on, so it gets the same trailing indicator as a
+  // brand-new send instead of the per-row treatment below.
+  const activeRegenerationTarget = visibleMessages.find(
+    (message) => message.id === regeneration.activeMessageId,
+  );
+  const isRegeneratingUserMessage =
+    regeneration.isRegenerating && activeRegenerationTarget?.role === 'user';
+  const lastRegenerationTarget = visibleMessages.find(
+    (message) => message.id === regeneration.lastMessageId,
+  );
+  const userRegenerationError =
+    !regeneration.isRegenerating && lastRegenerationTarget?.role === 'user'
+      ? regeneration.error?.message
+      : null;
 
   return (
     <Conversation>
@@ -205,12 +222,18 @@ export const ChatConversation = memo(function ChatConversation({
                     streamMessage.status === 'stopping' ||
                     regeneration.isRegenerating
                   }
-                  isRegenerating={regeneration.activeMessageId === message.id}
+                  isRegenerating={
+                    message.role === 'assistant' && regeneration.activeMessageId === message.id
+                  }
                   regenerationStatus={
-                    regeneration.lastMessageId === message.id ? regeneration.status : 'idle'
+                    message.role === 'assistant' && regeneration.lastMessageId === message.id
+                      ? regeneration.status
+                      : 'idle'
                   }
                   regenerationError={
-                    regeneration.lastMessageId === message.id ? regeneration.error?.message : null
+                    message.role === 'assistant' && regeneration.lastMessageId === message.id
+                      ? regeneration.error?.message
+                      : null
                   }
                   isToolResponding={toolCallRespond.isResponding}
                   message={message}
@@ -228,12 +251,19 @@ export const ChatConversation = memo(function ChatConversation({
                   speechSrc={getSpeechUrl(chatId, message.id)}
                 />
               ))}
-              {display.isThinking ? (
+              {display.isThinking || isRegeneratingUserMessage ? (
                 <Message from="assistant">
                   <MessageContent>
                     <Shimmer>Thinking</Shimmer>
                   </MessageContent>
                 </Message>
+              ) : userRegenerationError ? (
+                <p aria-live="polite" className="text-xs text-destructive" role="alert">
+                  {userRegenerationError}
+                  <button className="ml-1 underline" onClick={onRetryRegenerate} type="button">
+                    Retry
+                  </button>
+                </p>
               ) : null}
             </m.div>
           )}

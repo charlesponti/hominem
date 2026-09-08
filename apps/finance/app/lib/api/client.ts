@@ -1,5 +1,5 @@
 import type { FinanceClient } from '@hominem/rpc/finance';
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, useQuery, type UseQueryOptions } from '@tanstack/react-query';
 
 import { useFinanceApiClient } from './provider';
 
@@ -38,19 +38,4 @@ export function useHonoMutation<TData = unknown, TVariables = unknown>(
     },
     ...options,
   });
-}
-
-export function useHonoUtils() {
-  const queryClient = useQueryClient();
-  return {
-    invalidate: (queryKey?: unknown[]) => {
-      if (queryKey) return queryClient.invalidateQueries({ queryKey });
-      return queryClient.invalidateQueries();
-    },
-    invalidateQueries: (queryKey?: unknown[]) => {
-      if (queryKey) return queryClient.invalidateQueries({ queryKey });
-      return queryClient.invalidateQueries();
-    },
-    setQueryData: (queryKey: unknown[], data: unknown) => queryClient.setQueryData(queryKey, data),
-  };
 }

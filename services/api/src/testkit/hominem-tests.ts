@@ -22,7 +22,7 @@ import { Hono } from 'hono';
 
 import type { CapabilityDefinition } from '../application/capability';
 import type { ChatGenerationFailureHooks, ChatToolRuntime } from '../chat/chat-generation-types';
-import { ChatGenerationService } from '../chat/chat-generation.service';
+import { createChatGenerationService } from '../chat/chat-generation.service';
 import type { ChatToolPlan } from '../mcp/chat-tool-adapter';
 import type { McpToolResult } from '../mcp/tool-registry';
 import type { AppContext, RpcUser } from '../rpc/middleware/auth';
@@ -30,7 +30,7 @@ import { apiErrorHandler } from '../rpc/middleware/error';
 import {
   createChatGenerationRoutes,
   createChatStartGenerationRoute,
-} from '../rpc/routes/chats.generation';
+} from '../rpc/routes/chats.$chatId.generation';
 
 export type ScriptedProviderTurn = readonly GenerationInput[];
 
@@ -399,7 +399,7 @@ export class HominemTests {
       beforeSnapshotCommit: () => this.failureController.consume('snapshot-commit'),
       beforeCancellationCommit: () => this.failureController.consume('cancellation-commit'),
     };
-    const service = new ChatGenerationService({
+    const service = createChatGenerationService({
       modelFactory: (input) => new ScriptedChatModel(provider, input.onUsage),
       planChatTools: async () =>
         provider.plan ?? { capabilities: [], requiresLookup: false, tools: [], usage: null },

@@ -11,6 +11,7 @@ import {
   type GenerationPhase,
 } from '@hominem/chat';
 import type { Selectable } from 'kysely';
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { z, type ZodType } from 'zod';
 
 import { sql } from '../../db';
@@ -449,18 +450,25 @@ export const ChatRepository = {
     return toChatRecord(chat);
   },
 
+  // Ownership-scoped mutation — see packages/db/AGENTS.md's
+  // "Ownership-scoped mutations" rule. Callers should not call
+  // getOwnedOrThrow first.
   async updateTitle(
     handle: DbHandle,
     chatId: string,
     userId: string,
     title: string,
   ): Promise<void> {
-    await handle
+    const result = await handle
       .updateTable('app.chats')
       .set({ title, updatedat: new Date().toISOString() })
       .where('id', '=', chatId)
       .where('ownerUserid', '=', userId)
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+
+    if ((result.numUpdatedRows ?? 0n) === 0n) {
+      throw new NotFoundError('Chat', { chatId });
+    }
   },
 
   async archive(handle: DbHandle, chatId: string, userId: string): Promise<ChatSnapshot> {
@@ -473,7 +481,11 @@ export const ChatRepository = {
       .where('id', '=', chatId)
       .where('ownerUserid', '=', userId)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+
+    if (!archived) {
+      throw new NotFoundError('Chat', { chatId });
+    }
 
     return toChatRecord(archived);
   },
@@ -574,6 +586,34 @@ export const ChatRepository = {
     if (!row) return undefined;
 
     return toChatMessageRecord(row);
+  },
+
+  // Used by regenerate's user-message target: it must have nothing after it
+  // (its edit already deleted any stale reply) — otherwise regenerating
+  // would branch off a new assistant reply instead of superseding the
+  // existing one.
+  async hasMessagesAfter(handle: DbHandle, chatId: string, messageId: string): Promise<boolean> {
+    const target = await handle
+      .selectFrom('app.chatMessages')
+      .select(['createdat'])
+      .where('id', '=', messageId)
+      .where('chatId', '=', chatId)
+      .executeTakeFirst();
+    if (!target) return false;
+
+    const next = await handle
+      .selectFrom('app.chatMessages')
+      .select(['id'])
+      .where('chatId', '=', chatId)
+      .where((eb) =>
+        eb.or([
+          eb('createdat', '>', target.createdat),
+          eb.and([eb('createdat', '=', target.createdat), eb('id', '>', messageId)]),
+        ]),
+      )
+      .executeTakeFirst();
+
+    return next !== undefined;
   },
 
   // Updates lifecycle fields for one entry inside a message's toolCalls array.
@@ -695,6 +735,79 @@ export const ChatRepository = {
     return messages.map(toChatMessageRecord);
   },
 
+  // Same pagination as getMessages, but combines the ownership check and the
+  // fetch into one query (a correlated JSON-aggregated subquery) instead of
+  // a separate getOwnedOrThrow round trip. Returns null when the chat
+  // doesn't exist or isn't owned by ownerUserId — callers throw
+  // NotFoundError themselves — so "not found" stays distinguishable from
+  // "found but empty" (both a bare WHERE chatId = ? would conflate as []).
+  async getMessagesForOwner(
+    handle: DbHandle,
+    chatId: string,
+    ownerUserId: string,
+    limit = 100,
+    offset = 0,
+  ): Promise<ChatMessageSnapshot[] | null> {
+    const row = await handle
+      .selectFrom('app.chats')
+      .select((eb) => [
+        jsonArrayFrom(
+          eb
+            .selectFrom('app.chatMessages')
+            .selectAll()
+            .whereRef('app.chatMessages.chatId', '=', 'app.chats.id')
+            .orderBy('createdat', 'desc')
+            .limit(limit)
+            .offset(offset),
+        ).as('messages'),
+      ])
+      .where('id', '=', chatId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    return row.messages.reverse().map(toChatMessageRecord);
+  },
+
+  // Same as getMessagesForOwner, but also returns the chat itself — for the
+  // chat-detail route, which needs both instead of just the ownership
+  // check. One query instead of getOwnedOrThrow + getMessages in parallel.
+  async getOwnedWithMessages(
+    handle: DbHandle,
+    chatId: string,
+    ownerUserId: string,
+    limit = 100,
+    offset = 0,
+  ): Promise<{ chat: ChatSnapshot; messages: ChatMessageSnapshot[] } | null> {
+    const row = await handle
+      .selectFrom('app.chats')
+      .selectAll('app.chats')
+      .select((eb) => [
+        jsonArrayFrom(
+          eb
+            .selectFrom('app.chatMessages')
+            .selectAll()
+            .whereRef('app.chatMessages.chatId', '=', 'app.chats.id')
+            .orderBy('createdat', 'desc')
+            .limit(limit)
+            .offset(offset),
+        ).as('messages'),
+      ])
+      .where('id', '=', chatId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    const { messages, ...chatRow } = row;
+
+    return {
+      chat: toChatRecord(chatRow),
+      messages: messages.reverse().map(toChatMessageRecord),
+    };
+  },
+
   async searchMessages(
     handle: DbHandle,
     chatId: string,
@@ -713,6 +826,39 @@ export const ChatRepository = {
       .execute();
 
     return messages.map(toChatMessageRecord);
+  },
+
+  // See getMessagesForOwner's note on combining the ownership check with
+  // the fetch in one query.
+  async searchMessagesForOwner(
+    handle: DbHandle,
+    chatId: string,
+    ownerUserId: string,
+    query: string,
+    limit = 50,
+  ): Promise<ChatMessageSnapshot[] | null> {
+    const escapedQuery = query.trim().replace(/[\\%_]/g, '\\$&');
+    const row = await handle
+      .selectFrom('app.chats')
+      .select((eb) => [
+        jsonArrayFrom(
+          eb
+            .selectFrom('app.chatMessages')
+            .selectAll()
+            .whereRef('app.chatMessages.chatId', '=', 'app.chats.id')
+            .where('role', '!=', 'tool')
+            .where('content', 'ilike', `%${escapedQuery}%`)
+            .orderBy('createdat', 'asc')
+            .limit(limit),
+        ).as('messages'),
+      ])
+      .where('id', '=', chatId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    return row.messages.map(toChatMessageRecord);
   },
 
   // `.returningAll()` already gives every column toChatMessageRecord needs,
@@ -800,6 +946,41 @@ export const ChatRepository = {
       .execute();
 
     return rows.map((row) => toChatSourceRecord(row, row.title));
+  },
+
+  // See getMessagesForOwner's note on combining the ownership check with
+  // the fetch in one query.
+  async listChatSourcesForOwner(
+    handle: DbHandle,
+    chatId: string,
+    ownerUserId: string,
+  ): Promise<ChatSourceRecord[] | null> {
+    const row = await handle
+      .selectFrom('app.chats')
+      .select((eb) => [
+        jsonArrayFrom(
+          eb
+            .selectFrom('app.chatSources as source')
+            .innerJoin('app.notes as note', 'note.id', 'source.noteId')
+            .select([
+              'source.id',
+              'source.chatId',
+              'source.noteId',
+              'note.title',
+              'source.addedByUserid',
+              'source.createdAt',
+            ])
+            .whereRef('source.chatId', '=', 'app.chats.id')
+            .orderBy('source.createdAt', 'desc'),
+        ).as('sources'),
+      ])
+      .where('id', '=', chatId)
+      .where('ownerUserid', '=', ownerUserId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    return row.sources.map((source) => toChatSourceRecord(source, source.title));
   },
 
   // Pulls full note content + attached files for every note on this chat — read once per generation turn

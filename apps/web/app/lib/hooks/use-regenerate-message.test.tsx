@@ -90,6 +90,42 @@ describe('useRegenerateMessage', () => {
     await first;
   });
 
+  it('prevents a concurrent request fired before the first render lands', async () => {
+    // Regression: `activeMessageId` (React state) only updates on the next
+    // render, so two calls issued back-to-back in the same tick — e.g.
+    // saving two edited messages in quick succession — could previously
+    // both read it as unset and both start a generation.
+    const encoder = new TextEncoder();
+    let closeStream: () => void = () => undefined;
+    mockClient.api.chats[':id'].messages[':messageId'].regenerate.$post.mockResolvedValueOnce(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode(
+                'data: {"version":1,"generationId":"g","sequence":1,"type":"generation.phase_changed","payload":{"type":"generation.phase_changed","phase":"preparing"}}\n\n',
+              ),
+            );
+            closeStream = () => controller.close();
+          },
+        }),
+      ),
+    );
+
+    const { result } = renderHook(() => useRegenerateMessage({ chatId: 'chat-1' }), { wrapper });
+    let first: Promise<void> = Promise.resolve();
+    await act(async () => {
+      first = result.current.regenerate('message-1');
+      void result.current.regenerate('message-2');
+    });
+
+    expect(
+      mockClient.api.chats[':id'].messages[':messageId'].regenerate.$post,
+    ).toHaveBeenCalledOnce();
+    closeStream();
+    await first;
+  });
+
   it('passes an abort signal and cancels the active generation before aborting', async () => {
     let resolveStream: (response: Response) => void = () => undefined;
     mockClient.api.chats[':id'].messages[':messageId'].regenerate.$post.mockImplementationOnce(

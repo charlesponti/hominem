@@ -112,9 +112,8 @@ export function parseGenerationKind(value: string): GenerationRunIdentity['kind'
 }
 
 export function parseGenerationStatus(value: string): GenerationPhase {
-  if ((GENERATION_STATUSES as readonly string[]).includes(value)) {
-    return value as GenerationPhase;
-  }
+  const status = GENERATION_STATUSES.find((candidate) => candidate === value);
+  if (status) return status;
   throw invalidGenerationData('status');
 }
 

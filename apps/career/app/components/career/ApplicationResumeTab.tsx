@@ -9,13 +9,14 @@ import {
 } from '@ponti-studios/ui/forms';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 import { AlertCircle, CheckCircle, Copy, Download, FileText, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useFetcher } from 'react-router';
 
 import type {
   CustomizeResumeApiRequest,
   CustomizeResumeApiResponse,
   JobAnalysis,
+  JobScrapeApiResponse,
 } from '~/lib/api-contracts';
 import type { JobPosting } from '~/lib/services/job-scraping.service';
 import { getCompanyName } from '~/lib/utils/applicationUtils';
@@ -51,7 +52,6 @@ export function ApplicationResumeTab({
   application,
   applicationId: _applicationId,
 }: ApplicationResumeTabProps) {
-  const app = application as unknown as Record<string, unknown>;
   const fetcher = useFetcher();
 
   const [resumeFormat, setResumeFormat] = useState<
@@ -65,19 +65,11 @@ export function ApplicationResumeTab({
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [showRegenerate, setShowRegenerate] = useState(false);
+  // Job postings are no longer stored as raw text; the only source of job
+  // posting content is scraping application.jobPostingUrl on demand.
+  const [scrapedJobPosting, setScrapedJobPosting] = useState<JobPosting | null>(null);
 
-  const parsedJobPosting = useMemo<JobPosting | null>(() => {
-    if (!app.jobPosting) return null;
-    try {
-      return JSON.parse(app.jobPosting as string) as JobPosting;
-    } catch {
-      return null;
-    }
-  }, [app.jobPosting]);
-
-  const hasStructuredPosting = parsedJobPosting !== null;
-  const hasRawPosting = !hasStructuredPosting && Boolean(app.jobPosting);
-  const hasAnyPosting = hasStructuredPosting || hasRawPosting;
+  const hasAnyPosting = Boolean(application.jobPostingUrl);
   const resumeFilename = `${toFilenamePart(getCompanyName(application.company))}-${toFilenamePart(
     application.title,
   )}-resume.md`;
@@ -87,9 +79,29 @@ export function ApplicationResumeTab({
     fetcher.data && (fetcher.data as { message?: string }).message === 'Resume saved successfully';
 
   async function handleGenerate() {
+    if (!application.jobPostingUrl) {
+      setError('This application has no job posting URL to generate a resume from.');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
     try {
+      let jobPostingData = scrapedJobPosting;
+      if (!jobPostingData) {
+        const scrapeResponse = await fetch('/api/job/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: application.jobPostingUrl }),
+        });
+        const scrapeData = (await scrapeResponse.json()) as JobScrapeApiResponse;
+        if (!scrapeResponse.ok || scrapeData.error || !scrapeData.job_posting) {
+          throw new Error(scrapeData.error || 'Could not read the job posting');
+        }
+        jobPostingData = scrapeData.job_posting;
+        setScrapedJobPosting(jobPostingData);
+      }
+
       const request: CustomizeResumeApiRequest = {
         resumeFormat,
         targetLength,
@@ -97,9 +109,7 @@ export function ApplicationResumeTab({
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
-        ...(hasStructuredPosting
-          ? { jobPostingData: parsedJobPosting! }
-          : { jobPosting: app.jobPosting ?? undefined }),
+        jobPostingData,
       };
       const response = await fetch('/api/resume/customize', {
         method: 'POST',
@@ -146,7 +156,7 @@ export function ApplicationResumeTab({
           No job description stored for this application.
         </p>
         <p className="body-3 text-muted-foreground">
-          Add a job posting URL or description in the Overview tab to generate a tailored resume.
+          Add a job posting URL in the Overview tab to generate a tailored resume.
         </p>
       </div>
     );
@@ -156,19 +166,19 @@ export function ApplicationResumeTab({
 
   return (
     <div className="space-y-4">
-      {hasStructuredPosting && parsedJobPosting && (
+      {scrapedJobPosting && (
         <Card>
           <CardContent>
             <div className="flex flex-wrap items-center gap-2">
               <span className="subheading-4 text-foreground">
-                {parsedJobPosting.job_title || application.title}
+                {scrapedJobPosting.job_title || application.title}
               </span>
-              {parsedJobPosting.companyName && (
+              {scrapedJobPosting.companyName && (
                 <span className="body-3 text-muted-foreground">
-                  at {parsedJobPosting.companyName}
+                  at {scrapedJobPosting.companyName}
                 </span>
               )}
-              {parsedJobPosting.skills?.slice(0, 6).map((skill) => (
+              {scrapedJobPosting.skills?.slice(0, 6).map((skill) => (
                 <span
                   key={skill}
                   className="px-2 py-0.5 bg-accent/20 text-muted-foreground caption1 rounded-md"
@@ -176,9 +186,9 @@ export function ApplicationResumeTab({
                   {skill}
                 </span>
               ))}
-              {(parsedJobPosting.skills?.length ?? 0) > 6 && (
+              {(scrapedJobPosting.skills?.length ?? 0) > 6 && (
                 <span className="text-sm text-muted-foreground">
-                  +{(parsedJobPosting.skills?.length ?? 0) - 6} more
+                  +{(scrapedJobPosting.skills?.length ?? 0) - 6} more
                 </span>
               )}
             </div>

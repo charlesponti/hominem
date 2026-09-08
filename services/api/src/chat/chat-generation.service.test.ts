@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getGenerationRun: vi.fn(),
   getGenerationRunById: vi.fn(),
   getMessageById: vi.fn(),
+  hasMessagesAfter: vi.fn(),
   getAwaitingGenerationRunForAssistantMessage: vi.fn(),
   updateToolCallLifecycle: vi.fn(),
   getMessages: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock('@hominem/db/chats', () => ({
     getGenerationRun: mocks.getGenerationRun,
     getGenerationRunById: mocks.getGenerationRunById,
     getMessageById: mocks.getMessageById,
+    hasMessagesAfter: mocks.hasMessagesAfter,
     getAwaitingGenerationRunForAssistantMessage: mocks.getAwaitingGenerationRunForAssistantMessage,
     updateToolCallLifecycle: mocks.updateToolCallLifecycle,
     getMessages: mocks.getMessages,
@@ -94,7 +96,7 @@ vi.mock('./chat-generation-store', () => ({
   },
 }));
 
-import { ChatGenerationService } from './chat-generation.service';
+import { createChatGenerationService } from './chat-generation.service';
 
 const input = {
   chatId: 'chat-1',
@@ -197,7 +199,7 @@ describe('ChatGenerationService.cancel', () => {
       .mockResolvedValueOnce(preparingRun)
       .mockResolvedValueOnce({ ...preparingRun, status: 'cancelled' });
 
-    const result = await new ChatGenerationService().cancel(input);
+    const result = await createChatGenerationService().cancel(input);
 
     expect(result?.status).toBe('cancelled');
     expect(mocks.appendEvent.mock.calls.map(([, args]) => args.event.type)).toEqual([
@@ -211,7 +213,7 @@ describe('ChatGenerationService.cancel', () => {
     const committed = { ...preparingRun, status: 'committed' as const };
     mocks.getGenerationRunById.mockResolvedValueOnce(committed).mockResolvedValueOnce(committed);
 
-    const result = await new ChatGenerationService().cancel(input);
+    const result = await createChatGenerationService().cancel(input);
 
     expect(result).toEqual(committed);
     expect(mocks.appendEvent).not.toHaveBeenCalled();
@@ -223,7 +225,7 @@ describe('ChatGenerationService.cancel', () => {
     mocks.listEvents.mockResolvedValue([{ sequence: 1 }, { sequence: 2 }, { sequence: 3 }]);
     mocks.rebuildProjection.mockResolvedValue({ status: 'awaiting_confirmation' });
 
-    await expect(new ChatGenerationService().recover(input)).resolves.toEqual({
+    await expect(createChatGenerationService().recover(input)).resolves.toEqual({
       generationId: input.generationId,
       chatId: input.chatId,
       phase: 'awaiting_confirmation',
@@ -282,7 +284,7 @@ describe('ChatGenerationService.cancel', () => {
       },
     ]);
 
-    await new ChatGenerationService().respondToConfirmation({
+    await createChatGenerationService().respondToConfirmation({
       userId: input.ownerUserId,
       chatId: input.chatId,
       messageId: pendingMessage.id,
@@ -349,7 +351,7 @@ describe('ChatGenerationService.cancel', () => {
       },
     ]);
 
-    await new ChatGenerationService().respondToConfirmation({
+    await createChatGenerationService().respondToConfirmation({
       userId: input.ownerUserId,
       chatId: input.chatId,
       messageId: pendingMessage.id,
@@ -409,7 +411,7 @@ describe('ChatGenerationService.cancel', () => {
         }),
     );
 
-    const stream = await new ChatGenerationService().send({
+    const stream = await createChatGenerationService().send({
       userId: input.ownerUserId,
       generationId: input.generationId,
       chatId: input.chatId,
@@ -454,7 +456,7 @@ describe('ChatGenerationService.cancel', () => {
       },
     );
 
-    const stream = await new ChatGenerationService().send({
+    const stream = await createChatGenerationService().send({
       userId: input.ownerUserId,
       generationId: input.generationId,
       chatId: input.chatId,
@@ -515,7 +517,7 @@ describe('ChatGenerationService.cancel', () => {
         })),
     );
 
-    const stream = await new ChatGenerationService().send({
+    const stream = await createChatGenerationService().send({
       userId: input.ownerUserId,
       generationId: input.generationId,
       chatId: input.chatId,
@@ -628,7 +630,7 @@ describe('ChatGenerationService.regenerate (failedGenerationId)', () => {
   });
 
   it('creates a linked retry without inserting another user message', async () => {
-    await new ChatGenerationService().regenerate({
+    await createChatGenerationService().regenerate({
       userId: 'user-1',
       chatId: 'chat-1',
       failedGenerationId: 'generation-failed',
@@ -701,7 +703,7 @@ describe('ChatGenerationService.regenerate (failedGenerationId)', () => {
     );
 
     await expect(
-      new ChatGenerationService().regenerate({
+      createChatGenerationService().regenerate({
         userId: 'user-1',
         chatId: 'chat-1',
         failedGenerationId: 'generation-active',

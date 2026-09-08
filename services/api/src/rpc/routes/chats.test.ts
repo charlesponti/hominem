@@ -13,9 +13,14 @@ const mocks = vi.hoisted(() => ({
   listForUser: vi.fn(),
   createChat: vi.fn(),
   getOwnedOrThrow: vi.fn(),
+  getOwnedWithMessages: vi.fn(),
   getMessages: vi.fn(),
+  getMessagesForOwner: vi.fn(),
   getMessageById: vi.fn(),
+  hasMessagesAfter: vi.fn(),
   searchMessages: vi.fn(),
+  searchMessagesForOwner: vi.fn(),
+  listChatSourcesForOwner: vi.fn(),
   deleteUserMessageAndFollowing: vi.fn(),
   updateMessage: vi.fn(),
   deleteAssistantMessage: vi.fn(),
@@ -87,9 +92,14 @@ vi.mock('@hominem/db/chats', async () => {
       listForUser: mocks.listForUser,
       create: mocks.createChat,
       getOwnedOrThrow: mocks.getOwnedOrThrow,
+      getOwnedWithMessages: mocks.getOwnedWithMessages,
       getMessages: mocks.getMessages,
+      getMessagesForOwner: mocks.getMessagesForOwner,
       getMessageById: mocks.getMessageById,
+      hasMessagesAfter: mocks.hasMessagesAfter,
       searchMessages: mocks.searchMessages,
+      searchMessagesForOwner: mocks.searchMessagesForOwner,
+      listChatSourcesForOwner: mocks.listChatSourcesForOwner,
       deleteUserMessageAndFollowing: mocks.deleteUserMessageAndFollowing,
       updateMessage: mocks.updateMessage,
       deleteAssistantMessage: mocks.deleteAssistantMessage,
@@ -191,6 +201,7 @@ vi.mock('@hominem/services/redis', () => ({
 vi.mock('./chats.mapper', () => ({
   toChatDto: vi.fn((chat: { id: string }) => ({ id: chat.id })),
   toChatMessageDto: vi.fn((message: unknown) => message),
+  toChatSourceDto: vi.fn((source: unknown) => source),
 }));
 
 import { chatsRoutes } from './chats';
@@ -275,7 +286,11 @@ function cancelledEvent(sequence: number): ChatGenerationEventRecord {
 describe('chat stream accounting', () => {
   beforeEach(() => {
     mocks.streamChatCompletion.mockClear();
-    mocks.createChat.mockResolvedValue({ id: '00000000-0000-4000-8000-000000000001' });
+    // Matches what ChatRepository.create actually returns (a full row via
+    // .returningAll()) — startMessage now forwards this straight into the
+    // generation flow instead of re-fetching by id, so it needs every field
+    // toChatSnapshot's schema requires.
+    mocks.createChat.mockResolvedValue(testChat);
     mocks.getMessages.mockResolvedValue([]);
     // insertMessage now returns the fully-mapped record directly (no
     // follow-up getMessageById reload), so the mock needs every field
@@ -622,11 +637,107 @@ describe('chat list pagination', () => {
   });
 });
 
+describe('chat detail', () => {
+  beforeEach(() => {
+    mocks.getOwnedWithMessages.mockReset();
+    mocks.getOwnedWithMessages.mockResolvedValue({ chat: testChat, messages: [] });
+  });
+
+  it('returns the chat with its messages for an owned chat', async () => {
+    const response = await createApp().request('/api/chats/00000000-0000-4000-8000-000000000001');
+
+    expect(response.status).toBe(200);
+    expect(mocks.getOwnedWithMessages).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      testUser.id,
+      100,
+      0,
+    );
+    // toChatDto is stubbed above to {id} only — this asserts the route
+    // passes the repository result through the mapper and merges messages.
+    await expect(response.json()).resolves.toEqual({
+      id: testChat.id,
+      messages: [],
+    });
+  });
+
+  it('returns not found when the chat does not exist or is not owned', async () => {
+    mocks.getOwnedWithMessages.mockResolvedValue(null);
+
+    const response = await createApp().request('/api/chats/00000000-0000-4000-8000-000000000001');
+
+    expect(response.status).toBe(404);
+  });
+});
+
+describe('chat sources', () => {
+  beforeEach(() => {
+    mocks.listChatSourcesForOwner.mockReset();
+    mocks.listChatSourcesForOwner.mockResolvedValue([]);
+  });
+
+  it('lists sources for an owned chat', async () => {
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/sources',
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.listChatSourcesForOwner).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      testUser.id,
+    );
+    await expect(response.json()).resolves.toEqual([]);
+  });
+
+  it('returns not found when the chat does not exist or is not owned', async () => {
+    mocks.listChatSourcesForOwner.mockResolvedValue(null);
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/sources',
+    );
+
+    expect(response.status).toBe(404);
+  });
+});
+
+describe('chat message list', () => {
+  beforeEach(() => {
+    mocks.getMessagesForOwner.mockReset();
+    mocks.getMessagesForOwner.mockResolvedValue([]);
+  });
+
+  it('lists messages for an owned chat', async () => {
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages?limit=25&offset=5',
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.getMessagesForOwner).toHaveBeenCalledWith(
+      {},
+      '00000000-0000-4000-8000-000000000001',
+      testUser.id,
+      25,
+      5,
+    );
+  });
+
+  it('returns not found when the chat does not exist or is not owned', async () => {
+    mocks.getMessagesForOwner.mockResolvedValue(null);
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages',
+    );
+
+    expect(response.status).toBe(404);
+  });
+});
+
 describe('chat message search', () => {
   beforeEach(() => {
-    mocks.getOwnedOrThrow.mockResolvedValue(testChat);
-    mocks.searchMessages.mockClear();
-    mocks.searchMessages.mockResolvedValue([]);
+    mocks.searchMessagesForOwner.mockReset();
+    mocks.searchMessagesForOwner.mockResolvedValue([]);
   });
 
   it('searches all messages for an owned chat', async () => {
@@ -635,12 +746,23 @@ describe('chat message search', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.searchMessages).toHaveBeenCalledWith(
+    expect(mocks.searchMessagesForOwner).toHaveBeenCalledWith(
       {},
       '00000000-0000-4000-8000-000000000001',
+      testUser.id,
       'important',
       25,
     );
+  });
+
+  it('returns not found when the chat does not exist or is not owned', async () => {
+    mocks.searchMessagesForOwner.mockResolvedValue(null);
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/search?query=important',
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it('rejects a search without a query', async () => {
@@ -683,8 +805,11 @@ describe('chat message deletion', () => {
     );
   });
 
-  it('does not delete when the chat is not owned', async () => {
-    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+  it('does not delete when the message is not owned', async () => {
+    // deleteUserMessageAndFollowing scopes its own lookup by authorUserid,
+    // so this is where "not owned" now surfaces — there's no separate
+    // ownership check ahead of it any more.
+    mocks.deleteUserMessageAndFollowing.mockRejectedValue(new Error('ChatMessage not found'));
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
@@ -694,7 +819,6 @@ describe('chat message deletion', () => {
     );
 
     expect(response.status).not.toBe(200);
-    expect(mocks.deleteUserMessageAndFollowing).not.toHaveBeenCalled();
   });
 });
 
@@ -741,8 +865,11 @@ describe('chat message edit', () => {
     );
   });
 
-  it('does not edit when the chat is not owned', async () => {
-    mocks.getOwnedOrThrow.mockRejectedValue(new Error('Chat not found'));
+  it('does not edit when the message is not owned', async () => {
+    // updateMessage scopes its own lookup by authorUserid, so this is where
+    // "not owned" now surfaces — there's no separate ownership check ahead
+    // of it any more.
+    mocks.updateMessage.mockRejectedValue(new Error('ChatMessage not found'));
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000003',
@@ -754,7 +881,6 @@ describe('chat message edit', () => {
     );
 
     expect(response.status).not.toBe(200);
-    expect(mocks.updateMessage).not.toHaveBeenCalled();
   });
 });
 
@@ -827,6 +953,7 @@ describe('chat message regenerate', () => {
     );
     mocks.getMessageById.mockReset();
     mocks.getMessages.mockReset();
+    mocks.hasMessagesAfter.mockReset();
     mocks.getMessageById.mockResolvedValue(assistantMessage);
     mocks.getMessages.mockResolvedValue([userMessage, assistantMessage]);
     mocks.streamChatCompletion.mockReturnValue(
@@ -921,8 +1048,13 @@ describe('chat message regenerate', () => {
     expect(completionOptions.messages).toHaveLength(4);
   });
 
-  it('rejects regenerating a user message', async () => {
+  it('regenerates a fresh reply for a user message with nothing to supersede (post-edit)', async () => {
+    // Simulates regenerating right after an edit: the stale assistant reply
+    // and its run were already deleted by the edit itself, so history holds
+    // only the (just-edited) user message.
     mocks.getMessageById.mockResolvedValue(userMessage);
+    mocks.getMessages.mockResolvedValue([userMessage]);
+    mocks.hasMessagesAfter.mockResolvedValue(false);
 
     const response = await createApp().request(
       '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
@@ -930,6 +1062,43 @@ describe('chat message regenerate', () => {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111116' }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain('Regenerated reply');
+
+    const completionOptions = mocks.streamChatCompletion.mock.calls[0]?.[0];
+    expect(completionOptions.messages[1]).toEqual({ role: 'user', content: 'Hello' });
+    expect(mocks.insertMessage).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        chatId: '00000000-0000-4000-8000-000000000001',
+        role: 'assistant',
+        content: 'Regenerated reply',
+        parentMessageId: '00000000-0000-4000-8000-000000000004',
+      }),
+    );
+    // Nothing to supersede — no stale run or message to delete.
+    expect(mocks.deleteGenerationRun).not.toHaveBeenCalled();
+    expect(mocks.deleteAssistantMessage).not.toHaveBeenCalled();
+  });
+
+  it('rejects regenerating a user message that already has a reply', async () => {
+    // Guards against branching: a user-message target is only valid when
+    // nothing follows it (its edit already deleted any stale reply). If a
+    // reply (or later turn) already exists, regenerating here would create
+    // a duplicate assistant message instead of superseding the existing one.
+    mocks.getMessageById.mockResolvedValue(userMessage);
+    mocks.hasMessagesAfter.mockResolvedValue(true);
+
+    const response = await createApp().request(
+      '/api/chats/00000000-0000-4000-8000-000000000001/messages/00000000-0000-4000-8000-000000000004/regenerate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ generationId: '11111111-1111-4111-8111-111111111122' }),
       },
     );
 

@@ -22,10 +22,6 @@
       "types": "./build/files.d.ts",
       "default": "./src/files.ts"
     },
-    "./types": {
-      "types": "./build/types.d.ts",
-      "default": "./src/types.ts"
-    },
     "./env": {
       "types": "./build/env.d.ts",
       "default": "./src/env.ts"
@@ -53,7 +49,6 @@
     "@hominem/env": "workspace:*",
     "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "bullmq": "catalog:",
     "dotenv": "catalog:",
     "ioredis": "catalog:",
     "mammoth": "^1.9.1",

@@ -159,12 +159,6 @@ export async function deleteAccount(accountId: string, userId?: string): Promise
   return getAffectedRows(result) > 0;
 }
 
-export const listAccountsWithRecentTransactions = listAccounts;
-
-export const getAccountWithPlaidInfo = getAccountById;
-
-export const listAccountsWithPlaidInfo = listAccounts;
-
 export interface AccountImportSnapshot {
   id: string;
   name: string;

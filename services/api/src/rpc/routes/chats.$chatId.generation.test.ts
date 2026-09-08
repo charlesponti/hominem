@@ -18,7 +18,7 @@ vi.mock('../../chat/chat-generation.service', () => ({
 }));
 
 import type { AppContext } from '../middleware/auth';
-import { chatGenerationRoutes } from './chats.generation';
+import { chatGenerationRoutes } from './chats.$chatId.generation';
 
 const userId = '00000000-0000-4000-8000-000000000004';
 

@@ -8,7 +8,7 @@ import { sql } from 'kysely';
 import { FINANCE_TRANSACTION_ENTITY_TYPE } from './contracts';
 import { getAffectedRows, toNumber } from './utils';
 
-export async function getAllTags(ownerId: string): Promise<Selectable<AppTags>[]> {
+async function getAllTags(ownerId: string): Promise<Selectable<AppTags>[]> {
   return db
     .selectFrom('app.tags')
     .selectAll()
@@ -20,9 +20,8 @@ export async function getAllTags(ownerId: string): Promise<Selectable<AppTags>[]
 
 export const getSpendingCategories = getAllTags;
 export const getTransactionTags = getAllTags;
-export const getUserExpenseCategories = getAllTags;
 
-export async function createTag(
+async function createTag(
   input: Partial<Selectable<AppTags>> & { ownerUserid: string; name: string },
 ): Promise<Selectable<AppTags>> {
   const id = input.id ?? crypto.randomUUID();
@@ -45,7 +44,7 @@ export async function createTag(
 }
 export const createBudgetCategory = createTag;
 
-export async function updateTag(
+async function updateTag(
   id: string,
   ownerUserid: string,
   input: Partial<Selectable<AppTags>>,
@@ -75,7 +74,7 @@ export async function updateTag(
 }
 export const updateBudgetCategory = updateTag;
 
-export async function deleteTag(id: string, ownerUserid: string): Promise<boolean> {
+async function deleteTag(id: string, ownerUserid: string): Promise<boolean> {
   const result = await db
     .deleteFrom('app.tags')
     .where('id', '=', id)
@@ -85,10 +84,7 @@ export async function deleteTag(id: string, ownerUserid: string): Promise<boolea
 }
 export const deleteBudgetCategory = deleteTag;
 
-export async function getTagById(
-  id: string,
-  ownerUserid: string,
-): Promise<Selectable<AppTags> | null> {
+async function getTagById(id: string, ownerUserid: string): Promise<Selectable<AppTags> | null> {
   const result = await db
     .selectFrom('app.tags')
     .selectAll()
@@ -100,7 +96,7 @@ export async function getTagById(
 }
 export const getBudgetCategoryById = getTagById;
 
-export async function checkTagNameExists(ownerUserid: string, name: string): Promise<boolean> {
+async function checkTagNameExists(ownerUserid: string, name: string): Promise<boolean> {
   const result = await db
     .selectFrom('app.tags')
     .select('id')

@@ -296,7 +296,7 @@ DB (packages/db)  →  schemas/  ←  application/*.service.ts  →  mcp/tools  
 ## Cross-cutting references
 
 - Goose migrations + type regen: `just db migrate` + `just db codegen` (see
-  [packages/db/AGENTS.md](../../../packages/db/AGENTS.md)).
+  the `hominem-database` skill).
 - Full pre-push validation: `pnpm run check`.
 - Warehouse (legacy SQLite data source): cross-check the warehouse schema
   directly when a new resource maps to tables that still exist in
