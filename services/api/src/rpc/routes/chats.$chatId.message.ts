@@ -25,19 +25,21 @@ export const chatMessageRoutes = new Hono<AppContext>()
   .get('/messages', zValidator('query', ChatsMessagesQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
     const query = c.req.valid('query');
     const limit = query.limit ? Number.parseInt(query.limit, 10) : 100;
     const offset = query.offset ? Number.parseInt(query.offset, 10) : 0;
-    const messages = await ChatRepository.getMessages(db, chatId, limit, offset);
+    // getMessagesForOwner combines the ownership check and the fetch into
+    // one query; null means the chat doesn't exist or isn't owned.
+    const messages = await ChatRepository.getMessagesForOwner(db, chatId, userId, limit, offset);
+    if (!messages) throw new NotFoundError('Chat', { chatId });
     return c.json(messages.map(toChatMessageDto));
   })
   .get('/messages/search', zValidator('query', ChatsSearchMessagesQuerySchema), async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
-    await ChatRepository.getOwnedOrThrow(db, chatId, userId);
     const { query, limit } = c.req.valid('query');
-    const messages = await ChatRepository.searchMessages(db, chatId, query, limit);
+    const messages = await ChatRepository.searchMessagesForOwner(db, chatId, userId, query, limit);
+    if (!messages) throw new NotFoundError('Chat', { chatId });
     return c.json(messages.map(toChatMessageDto));
   })
   .patch('/messages/:messageId', zValidator('json', ChatsEditMessageSchema), async (c) => {

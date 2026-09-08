@@ -4,6 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { ChatsUpdateSchema } from '../../schemas/chats.schema';
+import { NotFoundError } from '../errors';
 import type { AppContext } from '../middleware/auth';
 import { toChatDto, toChatMessageDto } from './chats.mapper';
 import { getChatId } from './chats.route-helpers';
@@ -12,11 +13,15 @@ export const chatResourceRoutes = new Hono<AppContext>()
   .get('/', async (c) => {
     const userId = c.get('auth')!.userId;
     const chatId = getChatId(c);
-    const [chat, messages] = await Promise.all([
-      ChatRepository.getOwnedOrThrow(db, chatId, userId),
-      ChatRepository.getMessages(db, chatId, 100, 0),
-    ]);
-    return c.json({ ...toChatDto(chat), messages: messages.map(toChatMessageDto) });
+    // getOwnedWithMessages combines the ownership check and the messages
+    // fetch into one query; null means the chat doesn't exist or isn't
+    // owned.
+    const result = await ChatRepository.getOwnedWithMessages(db, chatId, userId, 100, 0);
+    if (!result) throw new NotFoundError('Chat', { chatId });
+    return c.json({
+      ...toChatDto(result.chat),
+      messages: result.messages.map(toChatMessageDto),
+    });
   })
   .patch('/', zValidator('json', ChatsUpdateSchema), async (c) => {
     const userId = c.get('auth')!.userId;
