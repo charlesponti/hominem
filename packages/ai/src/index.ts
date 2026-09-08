@@ -13,7 +13,7 @@ export {
 
 export type { AIUsageMetrics, OpenRouterClientOptions } from './shared';
 
-export { convertSchemaToJsonSchema } from './json-schema';
+export { convertZodToJsonSchema as convertSchemaToJsonSchema } from '@openrouter/sdk/lib/tool-executor';
 
 export type {
   ChatFunctionTool,

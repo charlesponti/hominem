@@ -1,4 +1,5 @@
 import { ValidationError } from '@hominem/db/errors';
+import { isObject } from '@hominem/utils';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
@@ -47,7 +48,7 @@ function toolResult(structuredContent: Record<string, unknown> | null): McpToolR
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return isObject(value);
 }
 
 function enforceResultCap(result: Record<string, unknown>, toolName: string, resultCap: number) {

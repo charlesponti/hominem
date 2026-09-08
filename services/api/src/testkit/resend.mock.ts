@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import { appendScriptedMailboxRecord } from '@hominem/utils/scripted-mailbox';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -31,7 +32,7 @@ function extractOtp(text: string): string | null {
 function isResendEmailBody(
   value: unknown,
 ): value is { to: string | string[]; subject: string; text: string } {
-  if (!value || typeof value !== 'object') return false;
+  if (!isObject(value)) return false;
   const to = Reflect.get(value, 'to');
   return (
     (typeof to === 'string' ||

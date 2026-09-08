@@ -1,4 +1,5 @@
 import { useApiClient } from '@hominem/rpc/react';
+import { isObject } from '@hominem/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { chatQueryKeys } from '~/lib/query-keys';
@@ -22,7 +23,7 @@ export interface UseChatMessagesReturn {
 }
 
 function getErrorStatus(error: Error | null): number | undefined {
-  if (!error || typeof error !== 'object' || !('status' in error)) return undefined;
+  if (!isObject(error) || !('status' in error)) return undefined;
   const status = error.status;
   return typeof status === 'number' ? status : undefined;
 }

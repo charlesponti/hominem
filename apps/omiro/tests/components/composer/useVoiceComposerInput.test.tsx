@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 // @vitest-environment jsdom
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,9 +31,7 @@ let mockIsCleaningVoice = false;
 
 vi.mock('~/hooks/useVoiceRecorder', () => ({
   getNativeErrorCode: (error: unknown) =>
-    error && typeof error === 'object' && 'code' in error
-      ? (error as { code?: string }).code
-      : undefined,
+    isObject(error) && 'code' in error ? (error as { code?: string }).code : undefined,
   useVoiceRecorder: (options: typeof fakeRecorder.lastOptions) => {
     fakeRecorder.lastOptions = options;
     return {

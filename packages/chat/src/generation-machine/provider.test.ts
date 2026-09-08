@@ -97,12 +97,33 @@ describe('reconstructProviderToolCalls', () => {
 
 describe('reduceProviderTurnFailed', () => {
   it('schedules a retry for a transient failure under the attempt limit', () => {
-    const step = reduceProviderTurnFailed(baseState(), {
-      type: 'provider-turn-failed',
-      message: 'rate limited',
-      transient: true,
-      attempt: 0,
-      maxAttempts: 2,
+    const step = reduceProviderTurnFailed(
+      baseState({
+        assistantText: 'partial answer',
+        reasoningText: 'partial reasoning',
+        requestedToolCalls: [
+          {
+            id: 'call-1',
+            name: 'search',
+            arguments: '{"q":"partial"}',
+            iteration: 0,
+            turnId: 'turn-1',
+          },
+        ],
+      }),
+      {
+        type: 'provider-turn-failed',
+        message: 'rate limited',
+        transient: true,
+        attempt: 0,
+        maxAttempts: 2,
+      },
+    );
+
+    expect(step.state).toMatchObject({
+      assistantText: '',
+      reasoningText: '',
+      requestedToolCalls: [],
     });
 
     expect(step.commands).toEqual([

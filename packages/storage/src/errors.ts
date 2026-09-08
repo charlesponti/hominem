@@ -35,7 +35,7 @@ export function isStorageServiceError(value: unknown): value is StorageServiceEr
     return true;
   }
 
-  if (!value || typeof value !== 'object') {
+  if (!isObject(value)) {
     return false;
   }
 
@@ -46,3 +46,4 @@ export function isStorageServiceError(value: unknown): value is StorageServiceEr
     typeof code === 'string' && STORAGE_ERROR_CODE_SET.has(code) && typeof message === 'string'
   );
 }
+import { isObject } from '@hominem/utils';

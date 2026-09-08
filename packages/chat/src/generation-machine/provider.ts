@@ -76,7 +76,9 @@ export function reduceProviderTurnFailed(
 ): GenerationStep {
   if (input.transient && input.attempt < input.maxAttempts) {
     return {
-      state,
+      // A retry restarts the provider turn from the beginning. Do not append
+      // the new stream to output or tool-call fragments from the failed turn.
+      state: { ...state, assistantText: '', reasoningText: '', requestedToolCalls: [] },
       commands: [
         persistCommand(state.generationId, {
           type: 'generation.retry_scheduled',

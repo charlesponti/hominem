@@ -3,6 +3,7 @@ import type { ChatGenerationController } from '@hominem/chat/client';
 import { parseGenerationClientCheckpoint } from '@hominem/chat/client';
 import type { GenerationClientState } from '@hominem/chat/client';
 import type { ChatMessageDto } from '@hominem/rpc/types';
+import { isObject } from '@hominem/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -23,9 +24,7 @@ export type StreamStatus =
 export const PROVIDER_FAILURE_MESSAGE = 'I couldn’t finish that response. Please try again.';
 
 function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError'
-  );
+  return isObject(error) && 'name' in error && error.name === 'AbortError';
 }
 
 function generationStorageKey(chatId: string) {

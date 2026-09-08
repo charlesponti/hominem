@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 import {
+  convertSchemaToJsonSchema,
   createChatCompletion,
   getChatCompletionText,
   getChatCompletionUsage,
@@ -18,7 +19,6 @@ import {
   validateFile,
 } from '@hominem/storage';
 import { data, type ActionFunction } from 'react-router';
-import { z } from 'zod';
 
 import type { UploadResumeApiResponse } from '../lib/api-contracts';
 import { logger } from '../lib/logger';
@@ -36,7 +36,7 @@ const PDF_RESUME_VALIDATION = {
 } as const;
 const RESUME_PARSER_PROMPT_URL = new URL('../lib/prompts/resume-parser.md', import.meta.url);
 let resumeParserSystemPromptPromise: Promise<string> | null = null;
-const resumeParserJsonSchema = z.toJSONSchema(resumeSchema);
+const resumeParserJsonSchema = convertSchemaToJsonSchema(resumeSchema);
 
 async function loadResumeParserSystemPrompt(): Promise<string> {
   if (!resumeParserSystemPromptPromise) {
@@ -342,7 +342,6 @@ export const action: ActionFunction = async ({ request, context }) => {
           jsonSchema: {
             name: 'resume_parser',
             schema: resumeParserJsonSchema,
-            strict: true,
           },
         },
         messages: [

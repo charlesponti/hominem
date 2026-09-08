@@ -81,6 +81,18 @@ function toMessageRole(role: ChatMessageDto['role']): 'user' | 'assistant' {
   return role === 'user' ? 'user' : 'assistant';
 }
 
+function getChatRegenerationLabel(isRegenerationStopping: boolean, isRegenerationActive: boolean) {
+  if (isRegenerationStopping) {
+    return 'Stopping regeneration';
+  }
+
+  if (isRegenerationActive) {
+    return 'Stop regenerating response';
+  }
+
+  return 'Regenerate response';
+}
+
 function ToolCall({
   messageId,
   toolCall,
@@ -501,13 +513,7 @@ export const ChatMessage = memo(function ChatMessage({
                     (isGenerationActive && !isRegenerationActive) ||
                     isRegenerationStopping
                   }
-                  label={
-                    isRegenerationStopping
-                      ? 'Stopping regeneration'
-                      : isRegenerationActive
-                        ? 'Stop regenerating response'
-                        : 'Regenerate response'
-                  }
+                  label={getChatRegenerationLabel(isRegenerationStopping, isRegenerationActive)}
                   onClick={() => {
                     if (isRegenerationActive && !isRegenerationStopping) {
                       onCancelRegenerate?.();
@@ -515,13 +521,7 @@ export const ChatMessage = memo(function ChatMessage({
                       onRegenerate(message.id);
                     }
                   }}
-                  tooltip={
-                    isRegenerationStopping
-                      ? 'Stopping regeneration'
-                      : isRegenerationActive
-                        ? 'Stop regenerating response'
-                        : 'Regenerate response'
-                  }
+                  tooltip={getChatRegenerationLabel(isRegenerationStopping, isRegenerationActive)}
                 >
                   <AnimatePresence initial={false} mode="wait">
                     <m.span

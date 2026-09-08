@@ -1,4 +1,5 @@
 import type { VoiceDiscardReason } from '@hominem/rpc/voice-events';
+import { isObject } from '@hominem/utils';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 
@@ -16,7 +17,7 @@ import VoiceTranscriberModule from '~/modules/voice-transcriber';
 // Expo Modules attaches a stable `code` string to errors thrown from a native
 // Exception (see VoiceTranscriberModule.swift's VoiceTranscriberException).
 export function getNativeErrorCode(error: unknown): string | undefined {
-  if (error && typeof error === 'object' && 'code' in error) {
+  if (isObject(error) && 'code' in error) {
     const code = (error as { code?: unknown }).code;
     return typeof code === 'string' ? code : undefined;
   }

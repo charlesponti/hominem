@@ -1,4 +1,5 @@
 import { logger, LOG_MESSAGES } from '@hominem/telemetry';
+import { isObject } from '@hominem/utils';
 import type { AuthUser as User } from '@ponti-studios/auth/types';
 import { z } from 'zod';
 
@@ -33,8 +34,7 @@ async function initializeStore(): Promise<boolean> {
 
 const normalizeNull = <T>(value: T | null): T | null => {
   if (
-    value &&
-    typeof value === 'object' &&
+    isObject(value) &&
     'constructor' in value &&
     typeof value.constructor === 'function' &&
     value.constructor.name === 'NSNull'

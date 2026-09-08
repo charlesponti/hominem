@@ -17,6 +17,7 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
+    "@hominem/utils": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/expect": "4.1.11",
     "deepeval": "0.9.9",

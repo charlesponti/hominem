@@ -1,6 +1,6 @@
 ---
 title: 'Add web chat motion and persistence parity'
-status: 'In progress'
+status: 'Blocked'
 priority: 'medium'
 labels: [web, chat, motion, persistence]
 depends_on: []
@@ -23,10 +23,10 @@ loading semantics. Out of scope: new navigation or server architecture.
 
 | ID | Work item | Owner boundary | Depends on | Validation / artifact | Done when |
 | --- | --- | --- | --- | --- | --- |
-| W-001 | Confirm motion contract | Web design/docs | — | [chat.design.md#web-parity](../chat.design.md#web-parity) | Adapted from Omiro's approved contract — **not yet reviewed/approved by a human**; flag for design sign-off. |
-| W-002 | Implement motion | Web chat transcript | W-001 | `use-new-message-ids.ts`/`.test.ts`, `chat-message.tsx` (`AnimatePresence initial={isNewMessage}`), e2e B-027/B-028 | Done. |
-| W-003 | Implement persistence | Web composer/lifecycle | W-001 | `use-chat-composer-state.ts`/`.test.tsx`, e2e B-026 | Done. |
-| W-004 | Separate loading modes | Web routes/hooks | W-002, W-003 | `compute-chat-load-state.ts`/`.test.ts` | Done. |
+| W-001 | Confirm motion contract | Web design/docs | — | [chat.design.md#web-parity](../chat.design.md#web-parity) | **OPEN — USER DECISION REQUIRED.** Adapted from Omiro's contract; human design sign-off is still required. |
+| W-002 | Implement motion | Web chat transcript | W-001 | `use-new-message-ids.ts`/`.test.ts`, `chat-message.tsx` (`AnimatePresence initial={isNewMessage}`), e2e B-027/B-028 | Implementation exists, pending W-001 approval. |
+| W-003 | Implement persistence | Web composer/lifecycle | W-001 | `use-chat-composer-state.ts`/`.test.tsx`, e2e B-026 | Implementation exists, pending W-001 approval. |
+| W-004 | Separate loading modes | Web routes/hooks | W-002, W-003 | `compute-chat-load-state.ts`/`.test.ts` | Implementation exists, pending W-001 approval. |
 
 ## Acceptance criteria
 

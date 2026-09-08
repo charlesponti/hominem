@@ -2,8 +2,8 @@ export {
   buildChatSystemPrompt,
   CHAT_ASSISTANT_PROMPT,
   CHAT_RESPONSE_LENGTH_GUIDANCE,
-} from '../application/chat-prompts';
-export type { ChatResponseLength } from '../application/chat-prompts';
+} from '../chat/chat-prompts';
+export type { ChatResponseLength } from '../chat/chat-prompts';
 
 export const TEXT_ENHANCE_PROMPT = `You are a careful text editor.
 

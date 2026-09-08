@@ -1,7 +1,8 @@
+import { isObject } from '@hominem/utils';
+import { convertZodToJsonSchema } from '@openrouter/sdk/lib/tool-executor';
 import type { ChatRequest, ChatResult, ChatStreamChunk } from '@openrouter/sdk/models';
 import { z } from 'zod';
 
-import { convertSchemaToJsonSchema } from './json-schema';
 import {
   createOpenRouterClient,
   DEFAULT_APP_TITLE,
@@ -34,7 +35,7 @@ function withRequestTimeout(signal?: AbortSignal): { signal: AbortSignal } {
 }
 
 function isAIUsageMetrics(value: unknown): value is AIUsageMetrics {
-  if (!value || typeof value !== 'object') return false;
+  if (!isObject(value)) return false;
   return (
     Reflect.get(value, 'provider') === 'openrouter' &&
     typeof Reflect.get(value, 'model') === 'string' &&
@@ -96,7 +97,7 @@ export async function* streamChatCompletion(
   options: OpenRouterClientOptions = {},
 ): AsyncGenerator<ChatStreamChunk> {
   try {
-    const client = createOpenRouterClient(options);
+    const client = createOpenRouterClient({ ...options, disableRetries: true });
     const stream = await client.chat.send(
       {
         httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
@@ -136,7 +137,7 @@ function parseStructuredOutputText(response: ChatResult) {
 }
 
 export function getStructuredOutputUsage(value: unknown) {
-  if (value && typeof value === 'object' && 'usage' in value) {
+  if (isObject(value) && 'usage' in value) {
     const usage = Reflect.get(value, 'usage');
     if (usage === null) return null;
     if (isAIUsageMetrics(usage)) {
@@ -172,8 +173,7 @@ export async function createStructuredChatCompletion<TSchema extends z.ZodTypeAn
         jsonSchema: {
           name: input.schemaName,
           ...(input.schemaDescription ? { description: input.schemaDescription } : {}),
-          schema: convertSchemaToJsonSchema(input.schema, { forStructuredOutput: true }),
-          strict: true,
+          schema: convertZodToJsonSchema(input.schema),
         },
       },
       reasoning: { effort: 'none' },

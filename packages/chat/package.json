@@ -19,8 +19,8 @@
       "default": "./src/session-artifacts.ts"
     },
     "./react": {
-      "types": "./build/use-chat-lifecycle.d.ts",
-      "default": "./src/use-chat-lifecycle.ts"
+      "types": "./build/react.d.ts",
+      "default": "./src/react.ts"
     },
     "./constants": {
       "types": "./build/constants.d.ts",

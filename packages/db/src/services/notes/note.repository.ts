@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import type { Selectable, UpdateObject } from 'kysely';
 
 import type { Database } from '../../db';
@@ -112,9 +113,7 @@ function toNoteFile(row: NoteFileSource): NoteFileRecord {
     uploadedAt: new Date(row.createdat).toISOString(),
     ...(row.content ? { content: row.content } : {}),
     ...(row.textContent ? { textContent: row.textContent } : {}),
-    ...(row.metadata && typeof row.metadata === 'object'
-      ? { metadata: row.metadata as Record<string, unknown> }
-      : {}),
+    ...(isObject(row.metadata) ? { metadata: row.metadata as Record<string, unknown> } : {}),
   };
 }
 

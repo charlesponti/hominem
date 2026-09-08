@@ -20,7 +20,7 @@ describe('buildExtractedTasksProposal', () => {
 
     expect(proposal.proposedTitle).toBe('Write docs');
     expect(proposal.proposedChanges).toEqual(['Write docs']);
-    expect(proposal.items).toEqual([{ title: 'Write docs' }]);
+    expect(proposal.items).toEqual([{ id: 'task-proposal-0', title: 'Write docs' }]);
   });
 
   it('uses the plural count title when multiple tasks are found', () => {

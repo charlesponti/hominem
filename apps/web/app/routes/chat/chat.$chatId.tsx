@@ -1,7 +1,12 @@
+import type { ExtractedTask } from '@hominem/chat/react';
+import { useTaskExtraction } from '@hominem/chat/react';
+import type { ArtifactType } from '@hominem/chat/types';
+import { useApiClient } from '@hominem/rpc/react';
 import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@ponti-studios/ui/overlays';
+import { useQueryClient } from '@tanstack/react-query';
 import { domAnimation, LazyMotion, m } from 'motion/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
 import { ChatComposerPanel } from '~/components/chat/chat-composer-panel';
@@ -21,11 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
-import {
-  useCreateChatTasks,
-  useExtractChatTasks,
-  type ProposedChatTask,
-} from '~/hooks/use-chat-tasks';
 import { useChatsList, useUpdateChatTitle } from '~/hooks/use-chats';
 import { computeChatLoadState } from '~/lib/chat/compute-chat-load-state';
 import { serverEnv } from '~/lib/env.server';
@@ -97,8 +97,8 @@ export default function ChatPage({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [proposedTasks, setProposedTasks] = useState<ProposedChatTask[] | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
+  const [rejectedTaskIds, setRejectedTaskIds] = useState<string[]>([]);
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState<string | null>(null);
   const [autoSpeakMessageId, setAutoSpeakMessageId] = useState<string | null>(null);
   const { walkieTalkieMode, setWalkieTalkieMode } = useWalkieTalkieMode();
@@ -137,8 +137,60 @@ export default function ChatPage({
   const toolCallRespond = useToolCallRespond({ chatId });
   const display = useChatDisplayMessages({ messages });
   const search = useChatMessageSearch(chatId, isSearchOpen);
-  const extractTasks = useExtractChatTasks();
-  const createTasks = useCreateChatTasks();
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  const taskMessages = useMemo(
+    () => messages.map((message) => ({ role: message.role, content: message.content })),
+    [messages],
+  );
+  const taskFlow = useTaskExtraction({
+    messages: taskMessages,
+    source: { kind: 'new' },
+    extractTasks: async (transcript: string) => {
+      const response = await client.api.tasks.extract.$post({ json: { transcript } });
+      if (!response.ok) throw new Error('Task extraction failed.');
+      return response.json();
+    },
+    createTasks: async (tasks: ExtractedTask[]) => {
+      const response = await client.api.tasks.batch.$post({ json: { tasks } });
+      if (!response.ok) throw new Error('Task creation failed.');
+      const result = await response.json();
+      const toCreatedRef = (task: {
+        id: string;
+        title: string;
+        artifactType: ArtifactType;
+        updatedAt?: string | null;
+      }) => ({
+        id: task.id,
+        title: task.title,
+        type: task.artifactType,
+        ...(task.updatedAt ? { updatedAt: task.updatedAt } : {}),
+      });
+      return {
+        parent: result.parent ? toCreatedRef(result.parent) : null,
+        tasks: result.tasks.map(toCreatedRef),
+      };
+    },
+    onTasksChanged: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+    strings: {
+      noTasksFoundTitle: 'No tasks found',
+      noTasksFoundDescription: 'No actionable tasks found in this conversation.',
+      tasksFoundTitle: (count: number) => `${count} tasks`,
+      prepareReviewErrorTitle: 'Could not prepare review',
+      saveContentErrorTitle: 'Could not save content',
+      errorMessage: 'Please try again.',
+    },
+    onErrorNotice: (_title, _message, error) => {
+      setTaskError(error instanceof Error ? error.message : 'Please try again.');
+    },
+    onContentCreated: async () => {
+      setIsTaskDialogOpen(false);
+      setTaskError(null);
+      setRejectedTaskIds([]);
+    },
+  });
   const updateChatTitle = useUpdateChatTitle();
   const { data: chats = [] } = useChatsList();
   const { responseLength, setResponseLength } = useResponseLength();
@@ -151,7 +203,14 @@ export default function ChatPage({
     }, [])
     .join('\n\n');
   const canExtractTasks =
-    transcript.length > 0 && !streamMessage.isStreaming && !regeneration.isRegenerating;
+    transcript.length > 0 &&
+    !streamMessage.isStreaming &&
+    !regeneration.isRegenerating &&
+    taskFlow.canTransform;
+  const rejectedTaskIdSet = useMemo(() => new Set(rejectedTaskIds), [rejectedTaskIds]);
+  const visibleProposedTasks = (taskFlow.pendingReview?.items ?? []).filter(
+    (task) => !rejectedTaskIdSet.has(task.id),
+  );
   const visibleMessages =
     isSearchOpen && search.debouncedQuery ? search.results : display.displayMessages;
   const regenerateMessage = useCallback(
@@ -193,7 +252,7 @@ export default function ChatPage({
                 chatId={chatId}
                 isDebugOpen={isDebugOpen}
                 canExtractTasks={canExtractTasks}
-                isExtractingTasks={extractTasks.isPending}
+                isExtractingTasks={taskFlow.lifecycleState === 'classifying'}
                 isSearchOpen={isSearchOpen}
                 isSettingsOpen={isSettingsOpen}
                 onDebug={() => setIsDebugOpen((open) => !open)}
@@ -202,15 +261,9 @@ export default function ChatPage({
                 onExtractTasks={() => {
                   if (!canExtractTasks) return;
                   setIsTaskDialogOpen(true);
-                  setProposedTasks(null);
                   setTaskError(null);
-                  extractTasks.mutate(
-                    { transcript },
-                    {
-                      onSuccess: (result) => setProposedTasks(result.tasks),
-                      onError: (error) => setTaskError(error.message),
-                    },
-                  );
+                  setRejectedTaskIds([]);
+                  void taskFlow.handleTransform('task_list');
                 }}
               />
             </div>
@@ -285,9 +338,9 @@ export default function ChatPage({
           <Dialog
             onOpenChange={(open) => {
               setIsTaskDialogOpen(open);
-              if (!open && !extractTasks.isPending && !createTasks.isPending) {
-                setProposedTasks(null);
+              if (!open && taskFlow.lifecycleState === 'idle') {
                 setTaskError(null);
+                setRejectedTaskIds([]);
               }
             }}
             open={isTaskDialogOpen}
@@ -298,15 +351,15 @@ export default function ChatPage({
             >
               <DialogHeader>
                 <DialogTitle>
-                  {proposedTasks ? 'Review proposed tasks' : 'Extracting tasks'}
+                  {taskFlow.isReviewVisible ? 'Review proposed tasks' : 'Extracting tasks'}
                 </DialogTitle>
                 <DialogDescription id="task-extraction-description">
-                  {proposedTasks
+                  {taskFlow.isReviewVisible
                     ? 'Choose the tasks you want to add to your task list.'
                     : 'Reading this conversation for actionable tasks.'}
                 </DialogDescription>
               </DialogHeader>
-              {extractTasks.isPending ? (
+              {taskFlow.lifecycleState === 'classifying' ? (
                 <div
                   aria-label="Extracting tasks"
                   className="flex min-h-48 items-center justify-center"
@@ -314,39 +367,25 @@ export default function ChatPage({
                 >
                   <Shimmer duration={1}>Thinking</Shimmer>
                 </div>
-              ) : proposedTasks ? (
+              ) : taskFlow.isReviewVisible && taskFlow.pendingReview ? (
                 <ChatTaskReview
                   error={taskError ?? undefined}
-                  isSaving={createTasks.isPending}
+                  isSaving={taskFlow.lifecycleState === 'persisting'}
                   onAccept={(tasks) => {
                     setTaskError(null);
-                    createTasks.mutate(
-                      { tasks },
-                      {
-                        onSuccess: () => {
-                          setProposedTasks(null);
-                          setIsTaskDialogOpen(false);
-                        },
-                        onError: (error) => setTaskError(error.message),
-                      },
-                    );
+                    const review = taskFlow.pendingReview;
+                    if (!review) return;
+                    void taskFlow.handleAcceptReview({ ...review, items: tasks });
                   }}
-                  onReject={(title) =>
-                    setProposedTasks(
-                      (tasks) => tasks?.filter((task) => task.title !== title) ?? null,
-                    )
+                  onReject={(id) =>
+                    setRejectedTaskIds((ids) => (ids.includes(id) ? ids : [...ids, id]))
                   }
                   onRetry={() => {
                     setTaskError(null);
-                    extractTasks.mutate(
-                      { transcript },
-                      {
-                        onSuccess: (result) => setProposedTasks(result.tasks),
-                        onError: (error) => setTaskError(error.message),
-                      },
-                    );
+                    setRejectedTaskIds([]);
+                    void taskFlow.handleTransform('task_list');
                   }}
-                  tasks={proposedTasks}
+                  tasks={visibleProposedTasks}
                 />
               ) : taskError ? (
                 <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
@@ -354,13 +393,7 @@ export default function ChatPage({
                   <Button
                     onClick={() => {
                       setTaskError(null);
-                      extractTasks.mutate(
-                        { transcript },
-                        {
-                          onSuccess: (result) => setProposedTasks(result.tasks),
-                          onError: (error) => setTaskError(error.message),
-                        },
-                      );
+                      void taskFlow.handleTransform('task_list');
                     }}
                     size="sm"
                     type="button"

@@ -1,3 +1,5 @@
+import { isObject } from '@hominem/utils';
+
 import type { ChatClientTransport, ChatClientTransportRequest } from './client-transport-fetch';
 import type { GenerationEvent } from './generation-machine';
 import { createGenerationEventDeduplicator, parseGenerationWireEvent } from './generation-schemas';
@@ -172,7 +174,7 @@ export type ConsumeGenerationSseXhrOptions = {
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return isObject(value);
 }
 
 function getDurableSequence(value: unknown): number | undefined {

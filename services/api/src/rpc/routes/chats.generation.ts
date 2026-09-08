@@ -5,8 +5,8 @@ import { Hono, type Context } from 'hono';
 import {
   ChatGenerationInputError,
   chatGenerationService,
-} from '../../application/chat-generation.service';
-import type { ChatGenerationService } from '../../application/chat-generation.service';
+} from '../../chat/chat-generation.service';
+import type { ChatGenerationService } from '../../chat/chat-generation.service';
 import {
   ChatsRegenerateMessageSchema,
   ChatsRetryGenerationSchema,
@@ -103,19 +103,26 @@ function createHandler(service: ChatGenerationService, userId: string) {
   });
 }
 
+function delegateToHandler(
+  service: ChatGenerationService,
+  c: Context<AppContext>,
+  request: Request = c.req.raw,
+) {
+  const userId = c.get('auth')!.userId;
+  return createHandler(
+    service,
+    userId,
+  )(request).catch((error: unknown) => {
+    if (error instanceof ChatGenerationInputError) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
+    throw error;
+  });
+}
+
 function createRouteHandler(service: ChatGenerationService) {
-  const delegate = async (c: Context<AppContext>, request: Request = c.req.raw) => {
-    const userId = c.get('auth')!.userId;
-    return createHandler(
-      service,
-      userId,
-    )(request).catch((error: unknown) => {
-      if (error instanceof ChatGenerationInputError) {
-        return Response.json({ error: error.message }, { status: 400 });
-      }
-      throw error;
-    });
-  };
+  const delegate = (c: Context<AppContext>, request?: Request) =>
+    delegateToHandler(service, c, request);
   return new Hono<AppContext>()
     .get('/generations/:generationId', (c) => delegate(c))
     .get('/generations/:generationId/stream', (c) => delegate(c))
@@ -147,20 +154,8 @@ export function createChatGenerationRoutes(service: ChatGenerationService = chat
 export function createChatStartGenerationRoute(
   service: ChatGenerationService = chatGenerationService,
 ) {
-  const delegate = async (c: Context<AppContext>, request: Request = c.req.raw) => {
-    const userId = c.get('auth')!.userId;
-    return createHandler(
-      service,
-      userId,
-    )(request).catch((error: unknown) => {
-      if (error instanceof ChatGenerationInputError) {
-        return Response.json({ error: error.message }, { status: 400 });
-      }
-      throw error;
-    });
-  };
   return new Hono<AppContext>().post('/', zValidator('json', ChatsStartStreamSchema), (c) =>
-    delegate(c, requestWithJsonBody(c, c.req.valid('json'))),
+    delegateToHandler(service, c, requestWithJsonBody(c, c.req.valid('json'))),
   );
 }
 

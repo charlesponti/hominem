@@ -49,6 +49,7 @@
     "lint:fix": "oxlint src --fix"
   },
   "dependencies": {
+    "@hominem/utils": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

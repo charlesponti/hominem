@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -48,11 +49,7 @@ vi.mock('@hominem/db/errors', () => ({
   ValidationError: errorClasses.MockServiceError,
   isServiceError: (value: unknown) =>
     value instanceof errorClasses.MockServiceError ||
-    (typeof value === 'object' &&
-      value !== null &&
-      'code' in value &&
-      'statusCode' in value &&
-      'message' in value),
+    (isObject(value) && 'code' in value && 'statusCode' in value && 'message' in value),
 }));
 
 vi.mock('@hominem/finance-services', () => ({

@@ -72,7 +72,7 @@ vi.mock('../mcp/tool-registry', () => ({
   callTool: mocks.callTool,
   getToolDefinition: vi.fn(),
 }));
-vi.mock('./ai-usage.service', () => ({
+vi.mock('../application/ai-usage.service', () => ({
   assertUnderMonthlyUsageLimit: vi.fn(),
   recordAIUsageEvent: vi.fn(),
   startAIUsageTimer: () => () => 0,
@@ -81,11 +81,16 @@ vi.mock('./chat-generation-engine', () => ({
   executeGenerationTurn: mocks.executeGenerationTurn,
 }));
 vi.mock('./chat-generation-replay', () => ({ replayGenerationEvents: vi.fn() }));
-vi.mock('./chat-speech.service', () => ({ chatSpeechService: {} }));
-vi.mock('./generation-pub-sub', () => ({
-  GenerationPubSub: {
+vi.mock('./chat-speech.service', () => ({
+  synthesizeReplyAudioFile: vi.fn(),
+  persistSpeechRun: vi.fn(),
+}));
+vi.mock('./chat-generation-store', () => ({
+  ChatGenerationStore: {
     publish: mocks.generationPubSubPublish,
     subscribe: mocks.generationPubSubSubscribe,
+    start: vi.fn(),
+    stop: vi.fn(),
   },
 }));
 

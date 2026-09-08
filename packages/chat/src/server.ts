@@ -128,8 +128,8 @@ export type ChatServerGenerationResult = {
 };
 
 function addUsageTotals(current: unknown, next: unknown): unknown {
-  if (!next || typeof next !== 'object') return current;
-  if (!current || typeof current !== 'object') return next;
+  if (!isObject(next)) return current;
+  if (!isObject(current)) return next;
   const previous = current as Record<string, unknown>;
   const incoming = next as Record<string, unknown>;
   const sum = (key: string) =>
@@ -152,7 +152,7 @@ function parseArguments(call: GenerationToolCall): Record<string, unknown> {
   if (!call.arguments) return {};
   try {
     const value: unknown = JSON.parse(call.arguments);
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    if (!isObject(value)) return {};
     return value as Record<string, unknown>;
   } catch {
     return {};
@@ -500,12 +500,7 @@ export function createChatHttpHandler(
       return jsonError('Route not found', 404);
     } catch (error) {
       if (error instanceof Response) return error;
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'statusCode' in error &&
-        typeof error.statusCode === 'number'
-      ) {
+      if (isObject(error) && 'statusCode' in error && typeof error.statusCode === 'number') {
         return jsonError(
           error instanceof Error ? error.message : 'Chat request failed',
           error.statusCode,
@@ -515,3 +510,4 @@ export function createChatHttpHandler(
     }
   };
 }
+import { isObject } from '@hominem/utils';

@@ -3,7 +3,7 @@
 The mobile app is an Expo app that targets iOS only.
 
 Its governing product, UI, and voice architecture live in the repository
-[Bible](../../README.md#the-bible), not in an app-local documentation directory.
+[repository documentation](../../README.md), not in an app-local documentation directory.
 
 ## Quick Start
 
@@ -66,7 +66,7 @@ If the error still appears, the local generated `apps/omiro/ios` directory is li
 | Publish a JS-only OTA update         | `just mobile update "<message>"`              | Ship a fix without a new store build                               |
 | Start Metro / Expo                   | `just mobile start`                           | When you want to attach to an existing native build                |
 | Run Maestro evidence                 | `just mobile maestro [flow-or-directory]`     | Checks the local simulator/API, authenticates, then runs flows     |
-| Read Omiro's governing decisions     | [Repository Bible](../../README.md#the-bible) | Before changing product, UI, or voice behavior                     |
+| Read Omiro's governing decisions     | [Repository documentation](../../README.md) | Before changing product, UI, or voice behavior                     |
 
 ## App architecture
 

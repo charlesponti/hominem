@@ -1,3 +1,4 @@
+import { isObject } from '@hominem/utils';
 import type { Selectable } from 'kysely';
 
 import { NotFoundError } from '../../errors';
@@ -64,9 +65,7 @@ function toFileRecord(row: FileRow): FileRecord {
     url: row.url,
     ...(row.content ? { content: row.content } : {}),
     ...(row.textContent ? { textContent: row.textContent } : {}),
-    ...(row.metadata && typeof row.metadata === 'object'
-      ? { metadata: row.metadata as Record<string, unknown> }
-      : {}),
+    ...(isObject(row.metadata) ? { metadata: row.metadata as Record<string, unknown> } : {}),
     uploadedAt: new Date(row.createdat).toISOString(),
   };
 }

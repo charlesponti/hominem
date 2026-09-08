@@ -4,8 +4,8 @@ import { openRouterCompletionUsage } from '@hominem/utils/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import type { CapabilityDefinition } from '../application/capability';
 import type { McpToolResult } from '../mcp/tool-registry';
-import type { CapabilityDefinition } from './capability';
 import { executeGenerationTurn, ToolInputError } from './chat-generation-engine';
 
 vi.mock('@hominem/ai', () => ({

@@ -75,9 +75,7 @@ function isChatHttpError(error: unknown): error is ChatHttpError {
 }
 
 function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError'
-  );
+  return isObject(error) && 'name' in error && error.name === 'AbortError';
 }
 
 function chatRequestError(response: Response): ChatHttpError {
@@ -397,3 +395,4 @@ export class ChatClient {
     };
   }
 }
+import { isObject } from '@hominem/utils';

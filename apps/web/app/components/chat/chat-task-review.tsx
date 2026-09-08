@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import type { TaskProposalItem } from '@hominem/chat/react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '~/components/ui/button';
-import type { ProposedChatTask } from '~/hooks/use-chat-tasks';
 
 export function ChatTaskReview({
   error,
@@ -13,13 +13,17 @@ export function ChatTaskReview({
 }: {
   error?: string;
   isSaving: boolean;
-  onAccept: (tasks: ProposedChatTask[]) => void;
+  onAccept: (tasks: TaskProposalItem[]) => void;
   onRetry: () => void;
-  onReject: (title: string) => void;
-  tasks: ProposedChatTask[];
+  onReject: (id: string) => void;
+  tasks: TaskProposalItem[];
 }) {
-  const [selected, setSelected] = useState(() => new Set(tasks.map((task) => task.title)));
-  const selectedTasks = tasks.filter((task) => selected.has(task.title));
+  const [selected, setSelected] = useState(() => new Set(tasks.map((task) => task.id)));
+  const taskIdentity = tasks.map((task) => task.id).join('\0');
+  useEffect(() => {
+    setSelected(new Set(taskIdentity ? taskIdentity.split('\0') : []));
+  }, [taskIdentity]);
+  const selectedTasks = tasks.filter((task) => selected.has(task.id));
 
   return (
     <section
@@ -32,17 +36,14 @@ export function ChatTaskReview({
       </div>
       <div className="space-y-2">
         {tasks.map((task) => (
-          <label
-            className="flex gap-2 rounded-md border border-border p-2 text-sm"
-            key={task.title}
-          >
+          <label className="flex gap-2 rounded-md border border-border p-2 text-sm" key={task.id}>
             <input
-              checked={selected.has(task.title)}
+              checked={selected.has(task.id)}
               onChange={() =>
                 setSelected((current) => {
                   const next = new Set(current);
-                  if (next.has(task.title)) next.delete(task.title);
-                  else next.add(task.title);
+                  if (next.has(task.id)) next.delete(task.id);
+                  else next.add(task.id);
                   return next;
                 })
               }
@@ -59,7 +60,7 @@ export function ChatTaskReview({
               className="ml-auto"
               onClick={(event) => {
                 event.preventDefault();
-                onReject(task.title);
+                onReject(task.id);
               }}
               size="icon-xs"
               type="button"

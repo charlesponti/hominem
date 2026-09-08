@@ -1,4 +1,4 @@
-import { toNullableNumber, toRequiredNumber } from '@hominem/utils';
+import { isObject, toNullableNumber, toRequiredNumber } from '@hominem/utils';
 import { HTTPClient, OpenRouter } from '@openrouter/sdk';
 import type { ChatUsage } from '@openrouter/sdk/models';
 
@@ -21,7 +21,8 @@ export type OpenRouterClientOptions = {
   httpReferer?: string;
   appTitle?: string;
   appCategories?: string;
-  client?: OpenRouterClientLike;
+  // Only enable the supported OpenRouter features.
+  client?: Pick<OpenRouter, 'chat' | 'embeddings' | 'tts' | 'generations' | 'models'>;
   responseHook?: (response: Response) => void;
   // Composed with the request's own absolute deadline (see
   // CHAT_REQUEST_TIMEOUT_MS in text.ts) via AbortSignal.any — passing a
@@ -30,13 +31,11 @@ export type OpenRouterClientOptions = {
   // stalled stream (e.g. an idle-chunk timeout) need this to still keep the
   // absolute deadline.
   signal?: AbortSignal;
+  /** Disable SDK retries for callers that implement their own retry policy. */
+  disableRetries?: boolean;
 };
 
 type JsonObject = Record<string, unknown>;
-type OpenRouterClientLike = Pick<
-  OpenRouter,
-  'chat' | 'embeddings' | 'tts' | 'generations' | 'models'
->;
 
 export type AIUsageMetrics = {
   provider: 'openrouter';
@@ -51,7 +50,7 @@ export type AIUsageMetrics = {
 };
 
 function isJsonObject(value: unknown): value is JsonObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return isObject(value);
 }
 
 export function normalizeOpenRouterChatUsage(
@@ -182,7 +181,7 @@ export function normalizeOpenRouterError(error: unknown): OpenRouterRequestError
     return error;
   }
 
-  if (typeof error === 'object' && error !== null) {
+  if (isObject(error)) {
     const message = Reflect.get(error, 'message');
     const statusValue = Reflect.get(error, 'status');
     const statusCodeValue = Reflect.get(error, 'statusCode');
@@ -246,7 +245,7 @@ export function createOpenRouterClient(options: OpenRouterClientOptions = {}) {
     // the request already succeeded with a 200. Disabling it here keeps
     // retry policy in one place instead of stacking a hidden, much longer
     // backoff underneath our own bounded one.
-    retryConfig: { strategy: 'none' },
+    ...(options.disableRetries ? { retryConfig: { strategy: 'none' as const } } : {}),
     ...(httpClient ? { httpClient } : {}),
   });
 }

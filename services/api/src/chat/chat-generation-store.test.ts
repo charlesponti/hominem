@@ -1,16 +1,65 @@
 import { randomUUID } from 'node:crypto';
 
+import type { ChatGenerationEventRecord } from '@hominem/db/chats';
 import { ChatGenerationRepository } from '@hominem/db/chats';
-import { db } from '@hominem/db/core';
-import { authDb } from '@hominem/db/core';
+import { authDb, db } from '@hominem/db/core';
 import { runInTransaction } from '@hominem/db/transaction';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import {
-  startGenerationNotifyListener,
-  type GenerationNotifyListener,
-} from './generation-notify-listener';
-import { GenerationPubSub } from './generation-pub-sub';
+import { ChatGenerationStore } from './chat-generation-store';
+
+const event = (sequence: number): ChatGenerationEventRecord => ({
+  id: `event-${sequence}`,
+  generationId: 'generation-1',
+  sequence,
+  type: 'generation.phase_changed',
+  payload: { type: 'generation.phase_changed', phase: 'running' },
+  idempotencyKey: `phase-${sequence}`,
+  createdAt: '2026-01-01T00:00:00.000Z',
+});
+
+describe('ChatGenerationStore local pub/sub', () => {
+  it('delivers events published after subscription and closes cleanly', async () => {
+    const subscription = ChatGenerationStore.subscribe('generation-1');
+    ChatGenerationStore.publish(event(1));
+
+    await expect(subscription[Symbol.asyncIterator]().next()).resolves.toMatchObject({
+      done: false,
+      value: event(1),
+    });
+    subscription.close();
+    await expect(subscription[Symbol.asyncIterator]().next()).resolves.toMatchObject({
+      done: true,
+    });
+  });
+
+  it('isolates subscribers by generation', async () => {
+    const subscription = ChatGenerationStore.subscribe('generation-2');
+    ChatGenerationStore.publish(event(1));
+
+    const iterator = subscription[Symbol.asyncIterator]();
+    const pending = iterator.next();
+    subscription.close();
+    await expect(pending).resolves.toMatchObject({ done: true });
+  });
+
+  it('queues multiple events and closes through iterator return', async () => {
+    const subscription = ChatGenerationStore.subscribe('generation-1');
+    const iterator = subscription[Symbol.asyncIterator]();
+    const pending = iterator.next();
+
+    ChatGenerationStore.publish(event(1));
+    await expect(pending).resolves.toMatchObject({ done: false, value: event(1) });
+
+    ChatGenerationStore.publish(event(2));
+    ChatGenerationStore.publish(event(3));
+    await expect(iterator.next()).resolves.toMatchObject({ done: false, value: event(2) });
+    await expect(iterator.next()).resolves.toMatchObject({ done: false, value: event(3) });
+    await expect(iterator.return?.()).resolves.toMatchObject({ done: true });
+    await expect(iterator.next()).resolves.toMatchObject({ done: true });
+    subscription.close();
+  });
+});
 
 function nextWithTimeout<T>(iterator: AsyncIterator<T>, ms: number): Promise<IteratorResult<T>> {
   return Promise.race([
@@ -21,19 +70,18 @@ function nextWithTimeout<T>(iterator: AsyncIterator<T>, ms: number): Promise<Ite
   ]);
 }
 
-describe('generation notify listener', () => {
-  let listener: GenerationNotifyListener;
+describe('ChatGenerationStore Postgres NOTIFY listener', () => {
   const userIds: string[] = [];
 
   beforeEach(async () => {
-    listener = startGenerationNotifyListener();
+    ChatGenerationStore.start();
     // Give the dedicated client time to connect and issue LISTEN before any
     // test fires a NOTIFY — there's no synchronous "ready" signal to await.
     await new Promise((resolve) => setTimeout(resolve, 300));
   });
 
   afterEach(async () => {
-    await listener.close();
+    await ChatGenerationStore.stop();
     for (const userId of userIds.splice(0)) {
       await authDb.deleteFrom('user').where('id', '=', userId).execute();
     }
@@ -63,7 +111,7 @@ describe('generation notify listener', () => {
 
   it('delivers a durably-appended event to a local subscriber via NOTIFY', async () => {
     const { userId, chatId, generationId } = await createGeneration();
-    const subscription = GenerationPubSub.subscribe(generationId);
+    const subscription = ChatGenerationStore.subscribe(generationId);
     const iterator = subscription[Symbol.asyncIterator]();
 
     try {
@@ -100,7 +148,7 @@ describe('generation notify listener', () => {
 
   it('delivers events in order across multiple appends to the same generation', async () => {
     const { userId, chatId, generationId } = await createGeneration();
-    const subscription = GenerationPubSub.subscribe(generationId);
+    const subscription = ChatGenerationStore.subscribe(generationId);
     const iterator = subscription[Symbol.asyncIterator]();
 
     try {

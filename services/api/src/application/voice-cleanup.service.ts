@@ -8,6 +8,7 @@ import {
   type OpenRouterClientOptions,
 } from '@hominem/ai';
 import { logger } from '@hominem/telemetry';
+import { isObject } from '@hominem/utils';
 import { z } from 'zod';
 
 import {
@@ -170,7 +171,7 @@ function getVoiceCleanupErrorStatus(error: unknown) {
     return error.status;
   }
 
-  if (typeof error === 'object' && error !== null && 'statusCode' in error) {
+  if (isObject(error) && 'statusCode' in error) {
     const statusCode = error.statusCode;
     return typeof statusCode === 'number' ? statusCode : undefined;
   }

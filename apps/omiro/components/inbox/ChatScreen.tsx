@@ -1,4 +1,5 @@
 import type { SessionSource } from '@hominem/rpc/types';
+import { isObject } from '@hominem/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -37,7 +38,7 @@ import { NEW_CHAT_ROUTE, STREAM_ROUTE } from '~/services/navigation/routes';
 import t from '~/translations';
 
 function isNotFoundError(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;
+  return isObject(error) && 'status' in error && error.status === 404;
 }
 
 const NEW_SESSION_SOURCE: SessionSource = { kind: 'new' };

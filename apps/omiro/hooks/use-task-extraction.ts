@@ -1,9 +1,12 @@
-import type { ChatMessageItem } from '@hominem/chat';
-import type { PendingReview } from '@hominem/chat/react';
-import { useChatLifecycle } from '@hominem/chat/react';
-import { buildArtifactProposal } from '@hominem/chat/ui';
+import {
+  buildExtractedTasksProposal as buildSharedProposal,
+  useTaskExtraction as useSharedTaskExtraction,
+  type CreatedTaskRef,
+  type ExtractedTask,
+  type ExtractedTasksCreated,
+} from '@hominem/chat/react';
+import type { ArtifactType, ChatMessageItem, SessionSource } from '@hominem/chat/types';
 import { useApiClient } from '@hominem/rpc/react';
-import type { ArtifactType, SessionSource } from '@hominem/rpc/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
@@ -11,10 +14,7 @@ import { Alert } from 'react-native';
 import { taskKeys } from '~/services/tasks/query-keys';
 import t from '~/translations';
 
-export interface ExtractedTasksCreated {
-  source: { kind: 'artifact'; id: string; type: Exclude<ArtifactType, 'tracker'>; title: string };
-  updatedAt?: string;
-}
+export type { ExtractedTasksCreated };
 
 interface UseTaskExtractionInput {
   chatId: string;
@@ -23,26 +23,26 @@ interface UseTaskExtractionInput {
   onContentCreated?: (content: ExtractedTasksCreated) => Promise<void>;
 }
 
+const toCreatedRef = (task: {
+  id: string;
+  title: string;
+  artifactType: ArtifactType;
+  updatedAt?: string | null;
+}): CreatedTaskRef => ({
+  id: task.id,
+  title: task.title,
+  type: task.artifactType,
+  ...(task.updatedAt ? { updatedAt: task.updatedAt } : {}),
+});
+
 export function buildExtractedTasksProposal(previewContent: string, tasks: { title: string }[]) {
-  return {
-    proposedType: 'task_list' as const,
-    proposedTitle:
-      tasks.length === 0
-        ? t.chat.actions.noTasksFoundTitle
-        : tasks.length === 1
-          ? tasks[0].title
-          : t.chat.actions.tasksFoundTitle(tasks.length),
-    proposedChanges:
-      tasks.length === 0
-        ? [t.chat.actions.noTasksFoundDescription]
-        : tasks.map((task) => task.title),
-    previewContent,
-    items: tasks,
-  };
+  return buildSharedProposal(previewContent, tasks, {
+    noTasksFoundTitle: t.chat.actions.noTasksFoundTitle,
+    noTasksFoundDescription: t.chat.actions.noTasksFoundDescription,
+    tasksFoundTitle: (count: number) => t.chat.actions.tasksFoundTitle(count),
+  });
 }
 
-// The chat action surface only sends task_list; other ArtifactType values remain
-// in the shared lifecycle contract for other transforms.
 export function useTaskExtraction({
   chatId,
   source,
@@ -52,23 +52,20 @@ export function useTaskExtraction({
   const client = useApiClient();
   const queryClient = useQueryClient();
 
+  // Normalized transcript messages for the shared hook.
   const proposalMessages = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.message })),
     [messages],
   );
 
-  const extractTasksFromTranscript = useMutation({
-    mutationKey: ['chat-task-extract', chatId],
-    mutationFn: async (input: { transcript: string }) => {
-      const res = await client.api.tasks.extract.$post({ json: input });
-      const json = await res.json();
-      if ('error' in json) {
-        throw new Error(json.error);
-      }
-      return json;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: taskKeys.all }),
-  });
+  const extractTasksFromTranscript = async (input: { transcript: string }) => {
+    const res = await client.api.tasks.extract.$post({ json: input });
+    const json = await res.json();
+    if ('error' in json) {
+      throw new Error(json.error);
+    }
+    return json;
+  };
 
   const createTasksBatch = useMutation({
     mutationKey: ['chat-task-batch', chatId],
@@ -79,75 +76,28 @@ export function useTaskExtraction({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: taskKeys.all }),
   });
 
-  const {
-    pendingReview,
-    resolvedSource,
-    canTransform,
-    isReviewVisible,
-    handleTransform,
-    handleAcceptReview,
-    handleRejectReview,
-  } = useChatLifecycle({
+  // The batch endpoint speaks transport shape (`artifactType`); the shared
+  // hook works in domain shape (`type`).
+  return useSharedTaskExtraction({
     messages: proposalMessages,
     source,
-    onTransform: async (type: ArtifactType): Promise<PendingReview> => {
-      if (type === 'task_list') {
-        const { previewContent } = buildArtifactProposal(proposalMessages, 'task_list');
-        const { tasks } = await extractTasksFromTranscript.mutateAsync({
-          transcript: previewContent,
-        });
-        return buildExtractedTasksProposal(previewContent, tasks);
-      }
-
-      throw new Error(`Unsupported extraction type: ${type}`);
+    extractTasks: (transcript: string) => extractTasksFromTranscript({ transcript }),
+    createTasks: async (tasks: ExtractedTask[]) => {
+      const result = await createTasksBatch.mutateAsync({ tasks });
+      return {
+        parent: result.parent ? toCreatedRef(result.parent) : null,
+        tasks: result.tasks.map(toCreatedRef),
+      };
     },
-    onAcceptReview: async (review): Promise<SessionSource> => {
-      if (review.items) {
-        if (review.items.length === 0) {
-          throw new Error('No tasks to create');
-        }
-
-        const result = await createTasksBatch.mutateAsync({ tasks: review.items });
-        const created = result.parent ?? result.tasks[0];
-        if (onContentCreated) {
-          await onContentCreated({
-            source: {
-              kind: 'artifact',
-              id: created.id,
-              title: created.title,
-              type: created.artifactType,
-            },
-            updatedAt: created.updatedAt,
-          });
-        }
-
-        return {
-          kind: 'artifact' as const,
-          id: created.id,
-          type: created.artifactType,
-          title: created.title,
-        };
-      }
-
-      // This hook only produces task_list reviews with items.
-      throw new Error(`Unsupported review type: ${review.proposedType}`);
+    strings: {
+      noTasksFoundTitle: t.chat.actions.noTasksFoundTitle,
+      noTasksFoundDescription: t.chat.actions.noTasksFoundDescription,
+      tasksFoundTitle: (count: number) => t.chat.actions.tasksFoundTitle(count),
+      prepareReviewErrorTitle: 'Could not prepare review',
+      saveContentErrorTitle: 'Could not save content',
+      errorMessage: 'Please try again.',
     },
-    onRejectReview: async () => {},
-    onError: (_phase, _error) => {
-      Alert.alert(
-        _phase === 'accept' ? 'Could not save content' : 'Could not prepare review',
-        'Please try again.',
-      );
-    },
+    onErrorNotice: (title: string, message: string) => Alert.alert(title, message),
+    onContentCreated,
   });
-
-  return {
-    pendingReview,
-    resolvedSource,
-    canTransform,
-    isReviewVisible,
-    handleTransform,
-    handleAcceptReview,
-    handleRejectReview,
-  };
 }

@@ -22,7 +22,7 @@ export function setTelemetryLogSink(sink: TelemetryLogSink | null) {
 }
 
 function isRecord(value: LogValue): value is LogData {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return isObject(value);
 }
 
 function isSensitiveField(key: string) {
@@ -102,3 +102,4 @@ export const logger = {
   info: (message: string, data?: LogData) => writeLog('info', message, data),
   warn: (message: string, data?: LogData) => writeLog('warn', message, data),
 };
+import { isObject } from '@hominem/utils';
