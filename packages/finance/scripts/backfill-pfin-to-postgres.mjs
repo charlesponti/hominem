@@ -11,12 +11,12 @@
  *
  * Not exported, not typechecked, not linted. Delete after W-005.
  *
- *   node backfill-pfin-to-postgres.mjs --user charles.ponti@icloud.com [--commit]
- *   Options: --db-url (default $DATABASE_URL, required), --sqlite (default the
- *   personal_finance.db path), --allow-remote (refuse non-local hosts otherwise)
+ *   node backfill-pfin-to-postgres.mjs --user charles.ponti@icloud.com
+ *       --sqlite <personal_finance.db path> [--commit]
+ *   Options: --db-url (default $DATABASE_URL, required), --sqlite (required),
+ *   --allow-remote (refuse non-local hosts otherwise)
  */
 
-import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -26,15 +26,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const requireFromDb = createRequire(path.join(here, '..', '..', 'db', 'package.json'));
 const { Pool } = requireFromDb('pg');
 
-const DEFAULT_SQLITE = '/Users/charlesponti/Developer/personal finance/personal_finance.db';
-
 function parseArgs(argv) {
   const out = {
     commit: false,
     allowRemote: false,
     dbUrl: null,
     user: null,
-    sqlite: DEFAULT_SQLITE,
+    sqlite: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -58,6 +56,9 @@ async function main() {
   const dbUrl = args.dbUrl ?? process.env.DATABASE_URL;
   if (!dbUrl) throw new Error('missing --db-url and $DATABASE_URL');
   if (!args.user) throw new Error('missing --user <email|uuid>');
+  if (!args.sqlite) {
+    throw new Error('missing --sqlite <path to personal_finance.db> (the pfin product database)');
+  }
   const host = new URL(dbUrl).hostname;
   if (!['localhost', '127.0.0.1', '::1'].includes(host) && !args.allowRemote) {
     throw new Error(`refusing non-local host ${host} without --allow-remote`);

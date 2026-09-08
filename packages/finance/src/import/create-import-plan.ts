@@ -150,9 +150,13 @@ export function updatePlanSelection(
   plan: ImportPlan,
   selectedRowIds: ReadonlySet<string>,
 ): ImportPlan {
+  // A ledger-duplicate row present in the submitted selection got there by
+  // explicit user tick (planning deselects them all), which clears the
+  // apply-time enforcement marker — the tick is the override.
   const transactions = plan.transactions.map((transaction) => ({
     ...transaction,
     selected: selectedRowIds.has(transaction.rowId),
+    ledgerDuplicate: transaction.ledgerDuplicate && !selectedRowIds.has(transaction.rowId),
   }));
   const selected = transactions.filter((transaction) => transaction.selected).length;
   return {

@@ -98,6 +98,49 @@ describeIntegration('finance reconcile integration', () => {
     expect(forced.plug).toBe(10);
   });
 
+  it('measures the plug as of the reading date, ignoring later rows', async () => {
+    // Ledger: -100 on 01-10. Reading on 02-01 says -90, so the plug is +10.
+    const posted = await postReconciliationAdjustment({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      targetBalance: -90,
+      date: '2026-02-01',
+    });
+    expect(posted.plug).toBe(10);
+    expect(posted.committed).toBe(true);
+
+    // A transaction after the reading date must not change the 02-01 gap.
+    await insertTransaction({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      amount: -50,
+      description: 'Later spend',
+      postedOn: '2026-03-01',
+    });
+
+    const current = await getAccountLedgerBreakdown(ownerId, ownerAccountId);
+    expect(current?.balance).toBe(-140);
+
+    // Same reading again on 02-01 is already reconciled — no second plug.
+    const again = await postReconciliationAdjustment({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      targetBalance: -90,
+      date: '2026-02-01',
+    });
+    expect(again.alreadyReconciled).toBe(true);
+    expect(again.committed).toBe(false);
+
+    // A fresh reading on 03-15 plugs only the post-02-01 delta.
+    const fresh = await postReconciliationAdjustment({
+      userId: ownerId,
+      accountId: ownerAccountId,
+      targetBalance: -140,
+      date: '2026-03-15',
+    });
+    expect(fresh.alreadyReconciled).toBe(true);
+  });
+
   it('lists never-reconciled accounts first with ledger balances', async () => {
     const stale = await createAccount({
       userId: ownerId,

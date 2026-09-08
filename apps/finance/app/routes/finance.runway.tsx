@@ -5,6 +5,7 @@ import { Button } from '@ponti-studios/ui/primitives';
 import { Card, CardContent, CardHeader, CardTitle } from '@ponti-studios/ui/primitives';
 import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
+import { data } from 'react-router';
 import {
   CartesianGrid,
   Line,
@@ -24,9 +25,9 @@ import { formatCurrency } from '~/lib/number.utils';
 import type { Route } from './+types/finance.runway';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { user } = await getServerSession(request);
-  if (!user?.id) return { live: null };
-  return { live: await getLiveRunway(user.id) };
+  const { user, headers } = await getServerSession(request);
+  if (!user?.id) return data({ live: null }, { headers });
+  return data({ live: await getLiveRunway(user.id) }, { headers });
 }
 
 interface PlannedPurchase {

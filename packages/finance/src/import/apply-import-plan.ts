@@ -156,65 +156,80 @@ export async function applyCopilotImportBatch(
     );
     await assertAccountOwnership(trx, input.userId, explicitAccountIds);
 
-    const rows = input.transactions.map((transaction) => {
+    const resolved = input.transactions.map((transaction) => {
       const accountId =
         transaction.accountId ??
         (transaction.accountTempKey ? accountIdsByTempKey[transaction.accountTempKey] : undefined);
       if (!accountId) throw new Error(`No account resolved for row ${transaction.rowId}`);
-
-      return {
-        id: crypto.randomUUID(),
-        userId: input.userId,
-        accountId,
-        amount: transaction.amount,
-        description: transaction.description,
-        merchantName: transaction.merchantName,
-        postedOn: transaction.postedOn,
-        pending: transaction.pending,
-        source: COPILOT_PROVIDER,
-        externalId: transaction.externalId,
-        transactionType: transaction.transactionType,
-        notes: transaction.notes,
-        excluded: transaction.excluded,
-        recurring: transaction.recurring,
-        providerPayload: transaction.providerPayload as JsonObject,
-      };
+      return { transaction, accountId };
     });
 
-    if (rows.length === 0) {
+    if (resolved.length === 0) {
       return { created: 0, skipped: 0, accountIds };
     }
 
-    // Composite-key enforcement: never re-import a row the ledger already
-    // holds under another source, even if it was re-selected after planning.
-    // Earlier batches in the same import are visible here because the worker
-    // applies batches sequentially; identical rows within one batch are
-    // distinct import rows and all proceed.
-    const batchAccountIds = [...new Set(rows.map((row) => row.accountId))];
+    // Composite-key enforcement: a row still flagged as a ledger duplicate
+    // is refused when the ledger holds the same composite key outside this
+    // import (matched by external id, so duplicate occurrences inside one
+    // import all proceed — the worker applies batches sequentially, and an
+    // exact external-id clash still falls through to the conflict arbiter).
+    // A flag cleared at confirm time means the user explicitly overrode the
+    // default-deselect, so those rows always proceed.
+    const batchAccountIds = [...new Set(resolved.map((row) => row.accountId))];
+    const planExternalIds = new Set(input.plan.transactions.map((row) => row.externalId));
     const ledgerRows = await trx
       .selectFrom('app.financeTransactions')
-      .select(['accountId', 'postedOn', 'amount', 'description'])
+      .select(['accountId', 'postedOn', 'amount', 'description', 'externalId'])
       .where('userId', '=', input.userId)
       .where('accountId', 'in', batchAccountIds)
       .execute();
-    const seen = new Set(
-      ledgerRows.map((row) =>
-        ledgerCompositeKey(row.accountId, row.postedOn, row.amount, row.description),
-      ),
-    );
-    const fresh = rows.filter((row) => {
+    const ledgerExternalIds = new Map<string, Set<string | null>>();
+    for (const row of ledgerRows) {
       const key = ledgerCompositeKey(row.accountId, row.postedOn, row.amount, row.description);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-    if (fresh.length === 0) {
-      return { created: 0, skipped: rows.length, accountIds };
+      const bucket = ledgerExternalIds.get(key) ?? new Set<string | null>();
+      bucket.add(row.externalId);
+      ledgerExternalIds.set(key, bucket);
     }
+    const freshPairs = resolved.filter(({ transaction, accountId }) => {
+      if (!transaction.ledgerDuplicate) return true;
+      const bucket = ledgerExternalIds.get(
+        ledgerCompositeKey(
+          accountId,
+          transaction.postedOn,
+          transaction.amount,
+          transaction.description,
+        ),
+      );
+      if (!bucket) return true;
+      return ![...bucket].some(
+        (externalId) => externalId === null || !planExternalIds.has(externalId),
+      );
+    });
+    if (freshPairs.length === 0) {
+      return { created: 0, skipped: resolved.length, accountIds };
+    }
+
+    const rows = freshPairs.map(({ transaction, accountId }) => ({
+      id: crypto.randomUUID(),
+      userId: input.userId,
+      accountId,
+      amount: transaction.amount,
+      description: transaction.description,
+      merchantName: transaction.merchantName,
+      postedOn: transaction.postedOn,
+      pending: transaction.pending,
+      source: COPILOT_PROVIDER,
+      externalId: transaction.externalId,
+      transactionType: transaction.transactionType,
+      notes: transaction.notes,
+      excluded: transaction.excluded,
+      recurring: transaction.recurring,
+      providerPayload: transaction.providerPayload as JsonObject,
+    }));
 
     const inserted = await trx
       .insertInto('app.financeTransactions')
-      .values(fresh)
+      .values(rows)
       .onConflict((conflict) =>
         conflict
           .columns(['userId', 'source', 'externalId'])
@@ -262,7 +277,7 @@ export async function applyCopilotImportBatch(
 
     return {
       created: inserted.length,
-      skipped: rows.length - inserted.length,
+      skipped: resolved.length - inserted.length,
       accountIds,
     };
   });

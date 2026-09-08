@@ -63,6 +63,11 @@ describeIntegration('finance runway integration', () => {
       accountType: 'checking',
     });
     checkingId = checking.id;
+    const imported = await createAccount({
+      userId: ownerId,
+      name: 'Imported Savings',
+      accountType: 'depository',
+    });
     const savings = await createAccount({
       userId: ownerId,
       name: 'Savings',
@@ -136,6 +141,7 @@ describeIntegration('finance runway integration', () => {
     expect(result.asOfDate).toBe('2026-04-01');
     expect(result.liquidAccounts).toEqual([
       { accountName: 'Checking', balance: 1760 },
+      { accountName: 'Imported Savings', balance: 0 },
       { accountName: 'Savings', balance: 500 },
     ]);
     expect(result.startingCash).toBe(2260);

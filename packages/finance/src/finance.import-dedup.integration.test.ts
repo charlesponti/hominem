@@ -3,7 +3,7 @@ import { createDeterministicIdFactory } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { applyCopilotImportBatch } from './import/apply-import-plan';
-import { createCopilotImportPlan } from './import/create-import-plan';
+import { createCopilotImportPlan, updatePlanSelection } from './import/create-import-plan';
 import { resolveCopilotAccounts } from './import/resolve-copilot-accounts';
 import type { ParsedRow } from './import/types';
 import { createAccount, insertTransaction, listTransactionCompositeKeys } from './index';
@@ -85,5 +85,44 @@ describeIntegration('finance import composite dedup integration', () => {
     expect(keys.has(`${checkingId}|2026-03-05|42.50|blue bottle`)).toBe(true);
     expect(keys.has(`${checkingId}|2026-03-05|9.00|croissant`)).toBe(true);
     expect(keys.size).toBe(2);
+  });
+
+  it('imports duplicate occurrences split across sequential batches', async () => {
+    const rows = [row(2, { amount: '5.00', name: 'Gum' }), row(3, { amount: '5.00', name: 'Gum' })];
+    const snapshots = [{ id: checkingId, name: 'Checking', mask: null, csvImportKey: null }];
+    const resolution = resolveCopilotAccounts(rows, snapshots);
+    const plan = createCopilotImportPlan(rows, resolution);
+    expect(plan.transactions.map((transaction) => transaction.selected)).toEqual([true, true]);
+
+    const first = await applyCopilotImportBatch({
+      userId: ownerId,
+      plan,
+      transactions: [plan.transactions[0]],
+    });
+    const second = await applyCopilotImportBatch({
+      userId: ownerId,
+      plan,
+      transactions: [plan.transactions[1]],
+    });
+    expect(first).toMatchObject({ created: 1, skipped: 0 });
+    expect(second).toMatchObject({ created: 1, skipped: 0 });
+  });
+
+  it('honors an explicit user override of a ledger duplicate', async () => {
+    const rows = [row(2)];
+    const snapshots = [{ id: checkingId, name: 'Checking', mask: null, csvImportKey: null }];
+    const resolution = resolveCopilotAccounts(rows, snapshots);
+    const plan = createCopilotImportPlan(rows, resolution, new Set(), {
+      existingCompositeKeys: await listTransactionCompositeKeys(ownerId),
+    });
+    expect(plan.transactions[0]).toMatchObject({ selected: false, ledgerDuplicate: true });
+
+    const confirmed = updatePlanSelection(plan, new Set([plan.transactions[0]?.rowId ?? '']));
+    const result = await applyCopilotImportBatch({
+      userId: ownerId,
+      plan: confirmed,
+      transactions: confirmed.transactions,
+    });
+    expect(result).toMatchObject({ created: 1, skipped: 0 });
   });
 });

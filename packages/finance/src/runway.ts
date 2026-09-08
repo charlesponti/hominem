@@ -7,7 +7,10 @@ import { toNumber } from './utils';
 const WEEKS_PER_MONTH = 365.25 / 12 / 7;
 const DAYS_PER_MONTH = 30.4375;
 
-const DEFAULT_LIQUID_TYPES = ['cash', 'checking', 'savings'];
+// 'depository' is Plaid's umbrella for checking/savings-like accounts and is
+// also the type the Copilot import assigns every newly created account, so
+// leaving it out zeroes the projection for exactly the import-flow users.
+const DEFAULT_LIQUID_TYPES = ['cash', 'checking', 'savings', 'depository'];
 const DEFAULT_LOOKBACK_MONTHS = 3;
 const DEFAULT_PROJECTION_WEEKS = 16;
 
