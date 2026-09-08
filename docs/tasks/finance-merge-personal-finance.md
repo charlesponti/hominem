@@ -39,7 +39,7 @@ all deliberately left dropped (see work-sequence notes).
 | W-002 | Reconciliation service (`true-up` port) | `packages/finance/src/reconcile.ts` | W-001 | `finance.reconcile.integration.test.ts` | Staleness view, per-description ledger breakdown, and `postReconciliationAdjustment` (sub-cent no-op, same-day guard with `force`, credit-card sign warning) behave like `pfin true-up` |
 | W-003 | Ledger runway service | `packages/finance/src/runway.ts` | W-001 | `finance.runway.integration.test.ts` | `computeLedgerRunway` matches `pfin runway` math (liquid-type cash, trailing recurring average, budget-cap allowance) to 2dp on migrated data |
 | W-004 | Diagnostics (transfer-pairs, gates) | `packages/finance/src/diagnostics.ts` | W-001 | `finance.diagnostics.integration.test.ts` | `findTransferPairs` and `getValidationGates` reproduce PF gate outputs on the same dataset |
-| W-005 | One-time backfill SQLite/CSV to Postgres | `scripts/backfill-pfin-to-postgres.ts` (throwaway, excluded from exports) | W-001 | dry-run counts + per-account sums within 1c of PF baselines; re-run creates 0 rows | 20,560 txns mapped by natural key, idempotent on `(user_id, source, external_id)` |
+| W-005 | Verify September load + remediate `recurring` flags | `packages/finance/scripts/backfill-pfin-to-postgres.mjs` (throwaway, excluded from exports) | W-001 | all parity checks green; PG `recurring` 0 → 731; re-run plans 0 updates | Dev PG already held the full 20,560-row load, so no inserts were needed — only flag updates |
 | W-006 | API/RPC wiring + retire PF checkout | `services/api` finance routes, docs | W-002, W-003, W-004, W-005 | preflight/confirm e2e on migrated data; PF archived read-only | Read endpoints for reconcile/runway/pairs/gates and the `true-up` mutation are live; no `commander` CLI in the package |
 
 ## Acceptance criteria
@@ -96,3 +96,22 @@ notes, and the PF checkout is tagged read-only.
   scoping bug: an unparenthesized `AND`/`OR` in the sign-violation
   predicate leaked other users' credit rows (AND binds tighter); the
   regression test now seeds a stranger's violation to guard it.
+- W-005 done (pivoted, no inserts needed): dev PG for
+  `charles.ponti@icloud.com` already held the full September load, so the
+  script verifies instead of inserting — 34/34 accounts with counts+sums
+  within 1c, 19,190 external ids 1:1, gates dups 61/61 sign 0 orphans 0
+  uncat 581/581. Two findings: (1) PG uses source label `hominem` where
+  PF says `hominem-prod` (19,166 rows; accepted as the live convention,
+  documented in-script, no rewrite); (2) PG `recurring` was all-false vs
+  PF's 731 — remediated via 1:1 matching (645 by external id, 86 by
+  occurrence), committed in one txn with sum-unchanged guard, re-run
+  plans 0 updates (a first version double-planned the occurrence group
+  on re-run; fixed before commit). PF `sources/archive/` CSVs are absent
+  from the PF checkout, so `personal_finance.db` (read-only) was the
+  source of truth throughout; PF CSVs and DB were never written.
+  Follow-up for W-006 or later: a future Copilot export containing
+  pre-migration transactions would bypass `getExistingExternalIds`
+  (it only checks source `copilot-money`, while backfilled rows carry
+  `hominem`/`copilot-gap-import` sources) — the import flow needs
+  composite-key dedup (account/date/abs/description) before the next
+  real Copilot import lands.
