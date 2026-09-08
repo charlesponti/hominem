@@ -27,8 +27,6 @@ const chatComposerAttachmentSchema = z.object({
   id: z.string(),
   originalName: z.string(),
   url: z.string(),
-  textContent: z.string().optional(),
-  content: z.string().optional(),
 });
 
 const chatComposerPersistedStateSchema = z.object({
@@ -44,20 +42,33 @@ function readPersistedComposerState(chatId: string): ChatComposerPersistedState 
   if (typeof window === 'undefined') return null;
 
   const storageKey = `${CHAT_COMPOSER_STORAGE_PREFIX}${chatId}`;
-  const raw = window.localStorage.getItem(storageKey);
+  let raw: string | null;
+  try {
+    raw = window.localStorage.getItem(storageKey);
+  } catch {
+    return null;
+  }
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
     const result = chatComposerPersistedStateSchema.safeParse(parsed);
     if (!result.success) {
-      window.localStorage.removeItem(storageKey);
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // Persistence is best-effort when storage is unavailable.
+      }
       return null;
     }
 
     return result.data;
   } catch {
-    window.localStorage.removeItem(storageKey);
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // Persistence is best-effort when storage is unavailable.
+    }
     return null;
   }
 }
@@ -100,17 +111,29 @@ export function useChatComposerState({
 
     const storageKey = `${CHAT_COMPOSER_STORAGE_PREFIX}${chatId}`;
     if (draft.trim().length === 0 && attachedFiles.length === 0) {
-      window.localStorage.removeItem(storageKey);
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // Persistence is best-effort when storage is unavailable.
+      }
       return;
     }
 
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        attachments: attachedFiles,
-        draft,
-      }),
-    );
+    try {
+      window.localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          attachments: attachedFiles.map(({ id, originalName, url }) => ({
+            id,
+            originalName,
+            url,
+          })),
+          draft,
+        }),
+      );
+    } catch {
+      // Persistence is best-effort when storage is unavailable or full.
+    }
   }, [attachedFiles, chatId, draft, isRestored]);
 
   const { data: sources = [] } = useChatSources(chatId);

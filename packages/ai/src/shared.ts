@@ -31,6 +31,8 @@ export type OpenRouterClientOptions = {
   // stalled stream (e.g. an idle-chunk timeout) need this to still keep the
   // absolute deadline.
   signal?: AbortSignal;
+  /** Disable SDK retries for callers that implement their own retry policy. */
+  disableRetries?: boolean;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -243,7 +245,7 @@ export function createOpenRouterClient(options: OpenRouterClientOptions = {}) {
     // the request already succeeded with a 200. Disabling it here keeps
     // retry policy in one place instead of stacking a hidden, much longer
     // backoff underneath our own bounded one.
-    retryConfig: { strategy: 'none' },
+    ...(options.disableRetries ? { retryConfig: { strategy: 'none' as const } } : {}),
     ...(httpClient ? { httpClient } : {}),
   });
 }

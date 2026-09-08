@@ -97,7 +97,7 @@ export async function* streamChatCompletion(
   options: OpenRouterClientOptions = {},
 ): AsyncGenerator<ChatStreamChunk> {
   try {
-    const client = createOpenRouterClient(options);
+    const client = createOpenRouterClient({ ...options, disableRetries: true });
     const stream = await client.chat.send(
       {
         httpReferer: options.httpReferer ?? DEFAULT_HTTP_REFERER,
