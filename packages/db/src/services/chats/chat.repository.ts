@@ -767,9 +767,7 @@ export const ChatRepository = {
 
     if (!row) return null;
 
-    const messages = row.messages as ChatMessageRow[];
-    messages.reverse();
-    return messages.map(toChatMessageRecord);
+    return row.messages.reverse().map(toChatMessageRecord);
   },
 
   // Same as getMessagesForOwner, but also returns the chat itself — for the
@@ -802,13 +800,11 @@ export const ChatRepository = {
 
     if (!row) return null;
 
-    const { messages: rawMessages, ...chatRow } = row;
-    const messages = rawMessages as ChatMessageRow[];
-    messages.reverse();
+    const { messages, ...chatRow } = row;
 
     return {
-      chat: toChatRecord(chatRow as ChatRow),
-      messages: messages.map(toChatMessageRecord),
+      chat: toChatRecord(chatRow),
+      messages: messages.reverse().map(toChatMessageRecord),
     };
   },
 
@@ -862,7 +858,7 @@ export const ChatRepository = {
 
     if (!row) return null;
 
-    return (row.messages as ChatMessageRow[]).map(toChatMessageRecord);
+    return row.messages.map(toChatMessageRecord);
   },
 
   // `.returningAll()` already gives every column toChatMessageRecord needs,
