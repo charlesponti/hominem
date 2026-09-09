@@ -1,4 +1,0 @@
-interface:
-  display_name: "Hominem Database"
-  short_description: "Operate Hominem PostgreSQL safely"
-  default_prompt: "Back up, maintain, deploy, monitor, and recover Hominem's Railway PostgreSQL database safely."
