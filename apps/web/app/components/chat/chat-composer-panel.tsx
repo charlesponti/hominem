@@ -1,4 +1,3 @@
-import type { ChatMessageDto } from '@hominem/rpc/types/chat.types';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { ChatComposer } from '~/components/chat/chat-composer';
@@ -91,7 +90,7 @@ export function ChatComposerPanel({
       createdAt: startedAt,
       updatedAt: startedAt,
       isStreaming: true,
-    } as ChatMessageDto);
+    });
   }, [
     chatId,
     setPendingAssistantMessage,
@@ -134,7 +133,7 @@ export function ChatComposerPanel({
       parentMessageId: null,
       createdAt: now,
       updatedAt: now,
-    } as ChatMessageDto);
+    });
     display.setPendingAssistantMessage(null);
     composer.clear();
 
@@ -186,6 +185,7 @@ export function ChatComposerPanel({
   return (
     <ChatComposer
       attachments={composer.attachedFiles}
+      className="mx-auto w-full max-w-3xl"
       contextContent={
         composer.suggestions.length > 0 || composer.selectedNotesForSend.length > 0 ? (
           <div className="mb-2 flex flex-wrap gap-1.5">

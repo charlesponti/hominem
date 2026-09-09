@@ -23,6 +23,7 @@ interface ChatComposerFile {
 
 interface ChatComposerProps {
   draft: string;
+  className?: string;
   isSubmitting?: boolean;
   isOffline?: boolean;
   isStreaming?: boolean;
@@ -44,6 +45,7 @@ interface ChatComposerProps {
 }
 
 export function ChatComposer({
+  className,
   draft,
   isSubmitting = false,
   isOffline = false,
@@ -75,7 +77,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+    <div className={cn('px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]', className)}>
       {contextContent}
       {attachments.length > 0 ? (
         <div className="mb-2 flex flex-wrap gap-1.5" aria-label="Attached files">
@@ -133,17 +135,21 @@ export function ChatComposer({
           {statusMessage}
         </p>
       ) : null}
-      <PromptInput onSubmit={handleSubmit}>
+      <PromptInput
+        inputGroupClassName="rounded-xl border-border/50 bg-card/40 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-card/35"
+        onSubmit={handleSubmit}
+      >
         <PromptInputBody>
           <PromptInputTextarea
             aria-label="Chat message"
+            className="min-h-10 text-sm"
             disabled={isSubmitting}
             onChange={(event) => onChangeDraft(event.target.value)}
             placeholder="Ask anything"
             value={draft}
           />
         </PromptInputBody>
-        <PromptInputFooter className="!justify-end">
+        <PromptInputFooter className="!justify-end !gap-0.5 !pb-1 !pt-0">
           <PromptInputTools>
             {onAttachFiles ? (
               <PromptInputButton asChild tooltip="Attach file">

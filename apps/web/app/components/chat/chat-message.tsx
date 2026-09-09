@@ -64,6 +64,7 @@ export interface ChatMessageProps {
   regenerationStatus?: RegenerationStatus;
   isGenerationActive?: boolean;
   isNewMessage?: boolean;
+  isFocused?: boolean;
   regenerationError?: string | null;
   onActivateSpeech?: (messageId: string) => void;
   onApproveTool?: (input: { messageId: string; toolCallId: string }) => void;
@@ -74,6 +75,8 @@ export interface ChatMessageProps {
   onRetryRegenerate?: () => void;
   onEdit?: (messageId: string, content: string) => Promise<void> | void;
   onDelete?: (messageId: string) => Promise<void>;
+  onFocusMessage?: (messageId: string) => void;
+  onBlurMessage?: (messageId: string) => void;
   isDeleting?: boolean;
 }
 
@@ -142,6 +145,7 @@ export const ChatMessage = memo(function ChatMessage({
   regenerationStatus = 'idle',
   isGenerationActive = false,
   isNewMessage = false,
+  isFocused = false,
   regenerationError,
   onActivateSpeech,
   onApproveTool,
@@ -152,6 +156,8 @@ export const ChatMessage = memo(function ChatMessage({
   onRetryRegenerate,
   onEdit,
   onDelete,
+  onFocusMessage,
+  onBlurMessage,
   isDeleting = false,
 }: ChatMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -249,13 +255,30 @@ export const ChatMessage = memo(function ChatMessage({
     <LazyMotion features={domAnimation}>
       <Message
         aria-label={`Message ${presentationState}`}
-        className={cn('ml-0! max-w-full! justify-start!', {
-          'mt-4': message.role === 'user',
-        })}
+        className={cn(
+          'ml-0! justify-start! outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring/40',
+          message.role === 'user' ? 'mt-3' : 'mt-0',
+        )}
         data-presentation-state={presentationState}
+        data-chat-message
+        data-focused={isFocused ? 'true' : 'false'}
         from={toMessageRole(message.role)}
+        onBlur={(event) => {
+          const relatedTarget = event.relatedTarget;
+          if (!(relatedTarget instanceof Node) || !event.currentTarget.contains(relatedTarget)) {
+            onBlurMessage?.(message.id);
+          }
+        }}
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest('button')) return;
+          onFocusMessage?.(message.id);
+        }}
+        onFocus={() => onFocusMessage?.(message.id)}
+        tabIndex={0}
       >
-        <MessageContent className="ml-0! w-full!">
+        <MessageContent
+          className={cn('ml-0! w-full!', isFocused && 'border-ring/35 bg-card ring-1 ring-ring/25')}
+        >
           {/* initial gates entrance motion to this row's own first mount: history present
               when the transcript loaded stays quiet, a just-added message still animates in */}
           <AnimatePresence initial={isNewMessage} mode="wait">
@@ -323,7 +346,14 @@ export const ChatMessage = memo(function ChatMessage({
                         </Shimmer>
                       </p>
                     ) : null}
-                    <MessageResponse className="font-assistant">{message.content}</MessageResponse>
+                    <MessageResponse
+                      className={cn(
+                        'font-assistant',
+                        message.role === 'assistant' && 'text-[1.05rem] leading-8',
+                      )}
+                    >
+                      {message.content}
+                    </MessageResponse>
                   </>
                 )}
               </m.div>
@@ -372,7 +402,13 @@ export const ChatMessage = memo(function ChatMessage({
           canDelete ||
           (message.role === 'assistant' && onRegenerate) ||
           (!message.isStreaming && message.content.trim()) ? (
-            <MessageActions className="justify-end">
+            <MessageActions
+              className={cn(
+                'justify-start pt-1 text-muted-foreground',
+                'invisible opacity-0 transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100',
+                isFocused && 'visible opacity-100',
+              )}
+            >
               {canSpeak ? (
                 <SpeechPlayer
                   autoPlay={shouldAutoSpeak}

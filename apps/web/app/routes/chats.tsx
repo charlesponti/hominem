@@ -36,14 +36,8 @@ export default function ChatsPage() {
       <RouteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         <div className="mb-8 flex items-center gap-3">
-          <Button aria-label="Back to chat" asChild size="icon-sm" variant="ghost">
-            <Link to="/" viewTransition>
-              <ArrowLeft />
-            </Link>
-          </Button>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Chats</h1>
-            <p className="text-sm text-muted-foreground">Your previous conversations.</p>
           </div>
         </div>
 

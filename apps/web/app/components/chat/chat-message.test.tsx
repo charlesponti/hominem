@@ -47,6 +47,40 @@ describe('ChatMessage', () => {
     ).toBe('complete');
   });
 
+  it('focuses a message and exposes its focused action state', () => {
+    const onFocusMessage = vi.fn();
+    const onBlurMessage = vi.fn();
+    const { rerender } = render(
+      <ChatMessage
+        isFocused={false}
+        message={message()}
+        onBlurMessage={onBlurMessage}
+        onFocusMessage={onFocusMessage}
+      />,
+    );
+
+    const messageElement = screen.getByLabelText('Message complete');
+    expect(messageElement.getAttribute('tabindex')).toBe('0');
+    fireEvent.focus(messageElement);
+    fireEvent.click(messageElement);
+    expect(onFocusMessage).toHaveBeenCalledWith('message-1');
+    fireEvent.blur(messageElement, { relatedTarget: document.body });
+    expect(onBlurMessage).toHaveBeenCalledWith('message-1');
+
+    rerender(
+      <ChatMessage
+        isFocused
+        message={message()}
+        onBlurMessage={onBlurMessage}
+        onFocusMessage={onFocusMessage}
+      />,
+    );
+    const actions = screen
+      .getByRole('button', { name: 'Copy assistant message' })
+      .closest('.visible');
+    expect(actions?.className).toContain('opacity-100');
+  });
+
   it('renders tool approval actions and reports the selected action', () => {
     const onApproveTool = vi.fn();
     const onRejectTool = vi.fn();

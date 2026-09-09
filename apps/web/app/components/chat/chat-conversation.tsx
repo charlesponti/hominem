@@ -1,5 +1,5 @@
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { ChatLinkedNoteContext } from '~/components/chat/chat-linked-note-context';
 import { ChatMessage as ChatMessageView } from '~/components/chat/chat-message';
@@ -148,6 +148,12 @@ export const ChatConversation = memo(function ChatConversation({
     [toolCallRespond.respond],
   );
   const newMessageIds = useNewMessageIds(display.displayMessages.map((message) => message.id));
+  const [focusedMessageId, setFocusedMessageId] = useState<string | null>(null);
+  const clearFocusedMessage = useCallback((messageId: string) => {
+    setFocusedMessageId((currentMessageId) =>
+      currentMessageId === messageId ? null : currentMessageId,
+    );
+  }, []);
   // Regenerate can target a user message directly (right after editing it,
   // with no assistant reply left to show progress on) as well as the usual
   // assistant message. For a user-message target there's no row to overlay
@@ -167,9 +173,15 @@ export const ChatConversation = memo(function ChatConversation({
       : null;
 
   return (
-    <Conversation>
+    <Conversation
+      onClick={(event) => {
+        if (!(event.target instanceof Element) || !event.target.closest('[data-chat-message]')) {
+          setFocusedMessageId(null);
+        }
+      }}
+    >
       <ConversationContent
-        className="mx-auto min-h-full w-full max-w-5xl"
+        className="mx-auto min-h-full w-full max-w-3xl px-5 py-8 sm:px-8 sm:py-10"
         scrollClassName="overflow-y-auto overscroll-contain"
       >
         <AnimatePresence initial mode="wait">
@@ -187,7 +199,7 @@ export const ChatConversation = memo(function ChatConversation({
           ) : (
             <m.div
               animate={{ opacity: 1, transform: 'translateY(0)' }}
-              className="flex min-h-full flex-1 flex-col gap-8"
+              className="flex min-h-full flex-1 flex-col gap-6"
               exit={{ opacity: 0, transform: 'translateY(-4px)' }}
               initial={{ opacity: 0, transform: 'translateY(8px)' }}
               key="messages"
@@ -214,6 +226,7 @@ export const ChatConversation = memo(function ChatConversation({
                 <ChatMessageView
                   key={message.id}
                   isNewMessage={newMessageIds.has(message.id)}
+                  isFocused={focusedMessageId === message.id}
                   isSpeechActive={activeSpeechMessageId === message.id}
                   shouldAutoSpeak={autoSpeakMessageId === message.id}
                   isGenerationActive={
@@ -241,6 +254,8 @@ export const ChatConversation = memo(function ChatConversation({
                   onActivateSpeech={onActivateSpeech}
                   onApproveTool={approveTool}
                   onDeactivateSpeech={onDeactivateSpeech}
+                  onFocusMessage={setFocusedMessageId}
+                  onBlurMessage={clearFocusedMessage}
                   onDelete={onDelete}
                   onRejectTool={rejectTool}
                   onRegenerate={onRegenerate}
