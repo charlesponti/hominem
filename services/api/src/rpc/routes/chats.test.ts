@@ -857,7 +857,6 @@ describe('chat message edit', () => {
       deletedMessageIds: ['message-2'],
     });
     expect(mocks.updateMessage).toHaveBeenCalledWith(
-      {},
       '00000000-0000-4000-8000-000000000001',
       '00000000-0000-4000-8000-000000000003',
       testUser.id,

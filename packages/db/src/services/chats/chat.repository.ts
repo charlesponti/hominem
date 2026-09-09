@@ -16,7 +16,7 @@ import { z, type ZodType } from 'zod';
 
 import { sql } from '../../db';
 import { NotFoundError, ValidationError } from '../../errors';
-import type { DbHandle } from '../../transaction';
+import { runInTransaction, type DbHandle } from '../../transaction';
 import type { AppChatGenerationRuns, AppChatMessages, AppChats } from '../../types/database';
 import { ChatGenerationRepository } from './chat-generation.repository';
 
@@ -493,49 +493,52 @@ export const ChatRepository = {
   // Only the author can edit their own message, and only user messages are editable.
   // Editing truncates the conversation: everything after the edited message is
   // deleted, since it was generated in response to the now-stale content.
+  // Runs its own transaction so the content update and the truncation of the
+  // following messages commit or roll back together.
   async updateMessage(
-    handle: DbHandle,
     chatId: string,
     messageId: string,
     userId: string,
     content: string,
   ): Promise<UpdateMessageResult> {
-    const existing = await handle
-      .selectFrom('app.chatMessages')
-      .selectAll()
-      .where('id', '=', messageId)
-      .where('chatId', '=', chatId)
-      .where('authorUserid', '=', userId)
-      .executeTakeFirst();
+    return runInTransaction(async (trx) => {
+      const existing = await trx
+        .selectFrom('app.chatMessages')
+        .selectAll()
+        .where('id', '=', messageId)
+        .where('chatId', '=', chatId)
+        .where('authorUserid', '=', userId)
+        .executeTakeFirst();
 
-    if (!existing || existing.role !== 'user') {
-      throw new NotFoundError('ChatMessage', { chatId, messageId });
-    }
+      if (!existing || existing.role !== 'user') {
+        throw new NotFoundError('ChatMessage', { chatId, messageId });
+      }
 
-    const updated = await handle
-      .updateTable('app.chatMessages')
-      .set({ content, updatedat: new Date().toISOString() })
-      .where('id', '=', messageId)
-      .where('chatId', '=', chatId)
-      .where('authorUserid', '=', userId)
-      .returningAll()
-      .executeTakeFirstOrThrow();
+      const updated = await trx
+        .updateTable('app.chatMessages')
+        .set({ content, updatedat: new Date().toISOString() })
+        .where('id', '=', messageId)
+        .where('chatId', '=', chatId)
+        .where('authorUserid', '=', userId)
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    const following = await handle
-      .selectFrom('app.chatMessages')
-      .select(['id', 'files'])
-      .where('chatId', '=', chatId)
-      .where((eb) =>
-        eb.or([
-          eb('createdat', '>', existing.createdat),
-          eb.and([eb('createdat', '=', existing.createdat), eb('id', '>', existing.id)]),
-        ]),
-      )
-      .execute();
+      const following = await trx
+        .selectFrom('app.chatMessages')
+        .select(['id', 'files'])
+        .where('chatId', '=', chatId)
+        .where((eb) =>
+          eb.or([
+            eb('createdat', '>', existing.createdat),
+            eb.and([eb('createdat', '=', existing.createdat), eb('id', '>', existing.id)]),
+          ]),
+        )
+        .execute();
 
-    const { deletedMessageIds, cleanupFileIds } = await deleteMessages(handle, chatId, following);
+      const { deletedMessageIds, cleanupFileIds } = await deleteMessages(trx, chatId, following);
 
-    return { message: toChatMessageRecord(updated), deletedMessageIds, cleanupFileIds };
+      return { message: toChatMessageRecord(updated), deletedMessageIds, cleanupFileIds };
+    });
   },
 
   async deleteUserMessageAndFollowing(

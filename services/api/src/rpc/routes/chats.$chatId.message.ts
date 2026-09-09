@@ -47,11 +47,8 @@ export const chatMessageRoutes = new Hono<AppContext>()
     const chatId = getChatId(c);
     const messageId = getMessageId(c);
     const { content } = c.req.valid('json');
-    // updateMessage scopes its own lookup by authorUserid and throws
-    // NotFoundError itself, so no separate ownership round trip is needed.
-    const result = await runInTransaction((trx) =>
-      ChatRepository.updateMessage(trx, chatId, messageId, userId, content),
-    );
+
+    const result = await ChatRepository.updateMessage(chatId, messageId, userId, content);
     if (result.cleanupFileIds.length > 0) {
       await chatFileCleanupQueue.add(
         'delete-chat-files',

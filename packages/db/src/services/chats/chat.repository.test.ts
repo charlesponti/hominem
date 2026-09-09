@@ -123,7 +123,6 @@ describe('ChatRepository message deletion', () => {
 
     await expect(
       ChatRepository.updateMessage(
-        db,
         fixture.chatId,
         fixture.messageIds.target,
         fixture.userId,
@@ -159,7 +158,6 @@ describe('ChatRepository message deletion', () => {
 
     await expect(
       ChatRepository.updateMessage(
-        db,
         fixture.chatId,
         fixture.messageIds.target,
         otherUserId,
@@ -174,7 +172,6 @@ describe('ChatRepository message deletion', () => {
 
     await expect(
       ChatRepository.updateMessage(
-        db,
         fixture.chatId,
         fixture.messageIds.later,
         fixture.userId,
