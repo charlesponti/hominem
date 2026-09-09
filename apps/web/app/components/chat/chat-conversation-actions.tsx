@@ -1,4 +1,4 @@
-import { Archive, Bug, Check, MoreHorizontal, Plus, Search, Settings2 } from 'lucide-react';
+import { Archive, Bug, Check, MoreHorizontal, Search, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -7,11 +7,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/dropdown-menu';
 import { Button } from '~/components/ui/button';
-import { useArchiveChat, useCreateChat } from '~/hooks/use-chats';
+import { useArchiveChat } from '~/hooks/use-chats';
 
 export interface ChatConversationActionsProps {
   chatId: string;
@@ -44,17 +43,8 @@ export function ChatConversationActions({
     chatId,
     onSuccess: () => navigate('/', { viewTransition: true }),
   });
-  const createChat = useCreateChat();
 
   const onArchive = () => archiveChat.mutate({ chatId });
-  const onNewChat = () => {
-    if (createChat.isPending) return;
-    createChat.mutate(
-      { title: 'New chat' },
-      { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
-    );
-  };
-
   return (
     <div
       aria-label="Conversation actions"
@@ -100,12 +90,6 @@ export function ChatConversationActions({
           <DropdownMenuItem aria-pressed={isDebugOpen} onClick={onDebug}>
             <Bug aria-hidden="true" />
             {isDebugOpen ? 'Disable debug mode' : 'Enable debug mode'}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs color-muted-foreground">Manage</DropdownMenuLabel>
-          <DropdownMenuItem disabled={createChat.isPending} onClick={onNewChat}>
-            <Plus aria-hidden="true" />
-            {createChat.isPending ? 'Creating new chat…' : 'New chat'}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={archiveChat.isPending}

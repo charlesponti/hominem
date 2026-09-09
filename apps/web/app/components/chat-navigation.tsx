@@ -1,6 +1,7 @@
-import { History, LoaderCircle, LucideMessageCirclePlus } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { History } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
 
+import { ChatStartButton } from '~/components/chat/chat-start-button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/dropdown-menu';
 import { Button } from '~/components/ui/button';
-import { useChatLastMessages, useChatsList, useCreateChat } from '~/hooks/use-chats';
+import { useChatLastMessages, useChatsList } from '~/hooks/use-chats';
 
 const chatDateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
@@ -28,34 +29,13 @@ function getLastMessageLabel(query: { isPending: boolean; data?: Array<{ created
 
 export function ChatNavigation() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { data: chats = [], isPending } = useChatsList();
-  const createChat = useCreateChat();
   const recentChats = chats.slice(0, 10);
   const lastMessageQueries = useChatLastMessages(recentChats.map((chat) => chat.id));
 
-  function handleNewChat() {
-    createChat.mutate(
-      { title: 'New chat' },
-      { onSuccess: (chat) => navigate(`/chat/${chat.id}`, { viewTransition: true }) },
-    );
-  }
-
   return (
     <div className="flex items-center gap-1">
-      <Button
-        aria-label="Start a new chat"
-        disabled={createChat.isPending}
-        onClick={handleNewChat}
-        size="sm"
-        className="gap-2"
-      >
-        {createChat.isPending ? (
-          <LoaderCircle className="animate-spin" />
-        ) : (
-          <LucideMessageCirclePlus />
-        )}
-      </Button>
+      <ChatStartButton className="gap-2" size="sm" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -6,6 +6,26 @@
 @source '../../node_modules/@ponti-studios/ui/src/**/*.{ts,tsx}';
 @source './';
 
+@keyframes omiro-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.omiro-float {
+  animation: omiro-float 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .omiro-float {
+    animation: none;
+  }
+}
+
 @font-face {
   font-family: 'Geist Pixel Square';
   src: url('/fonts/geist-pixel-square-latin.woff2') format('woff2');

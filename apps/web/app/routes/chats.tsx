@@ -1,7 +1,8 @@
-import { Archive, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { ChatStartButton } from '~/components/chat/chat-start-button';
 import { RouteHeader } from '~/components/route-header';
 import { Button } from '~/components/ui/button';
 import { useArchiveChat, useChatLastMessages, useChatsList } from '~/hooks/use-chats';
@@ -35,10 +36,26 @@ export default function ChatsPage() {
     <div className="h-full overflow-auto">
       <RouteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
-        <div className="mb-8 flex items-center gap-3">
+        <div className="mb-8 flex justify-center">
+          <picture>
+            <source srcSet="/omiro-float.avif" type="image/avif" />
+            <source srcSet="/omiro-float.webp" type="image/webp" />
+            <img
+              alt="Omiro floating on a cloud"
+              className="omiro-float h-[100px] w-auto"
+              decoding="async"
+              fetchPriority="high"
+              height="234"
+              src="/omiro-float.png"
+              width="256"
+            />
+          </picture>
+        </div>
+        <div className="mb-8 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Chats</h1>
           </div>
+          <ChatStartButton className="gap-2" size="sm" />
         </div>
 
         <section className="overflow-hidden rounded-xl border border-border bg-card">
